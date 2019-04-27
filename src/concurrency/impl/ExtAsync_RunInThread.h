@@ -36,6 +36,7 @@
 #include "ExtFuture_make_xxx_future.h"
 #include "ExtFutureImplHelpers.h"
 #include "../ExtFuture.h"
+#include <logic/PerfectDeleter.h>
 
 
 namespace ExtAsync
@@ -123,6 +124,9 @@ namespace detail
 
 		/// @todo Set thread name before starting it.
 //		new_thread->setObjectName();
+
+		// Add to PerfectDeleter.
+		PerfectDeleter::instance().addQThread(new_thread);
 
 		// Start the thread.
 		new_thread->start();

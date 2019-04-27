@@ -56,9 +56,9 @@ protected:
     QTextEdit* m_widget_text;
     QPointer<LibraryModel> m_sources_model;
 
-    ModelChangeWatcher* m_sources_model_watcher { nullptr };
+	QPointer<ModelChangeWatcher> m_sources_model_watcher { nullptr };
 
-    QSortFilterProxyModel* m_summary_model { nullptr };
+	QPointer<QSortFilterProxyModel> m_summary_model { nullptr };
 
 };
 

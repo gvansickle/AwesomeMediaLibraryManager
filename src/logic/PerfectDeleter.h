@@ -33,10 +33,11 @@
 
 // KF5
 #include <KJob>
+class AMLMJob;
 
 // Ours
-#include <src/concurrency/AMLMJob.h>
-#include <QtGui/QTextDocument>
+//#include <src/concurrency/AMLMJob.h>
+//#include <QtGui/QTextDocument>
 
 struct Deletable
 {

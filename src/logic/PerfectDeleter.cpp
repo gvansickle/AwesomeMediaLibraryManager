@@ -20,15 +20,19 @@
 #include "PerfectDeleter.h"
 
 // Std C++
-#include <QTextCursor>
-#include <QTextList>
 #include <algorithm>
 
 // Future Std C++
 #include <future/future_algorithms.h> ///< For Uniform Container Erasure.
 
+// Qt5
+//#include <QTextCursor>
+//#include <QTextList>
+
+
 // Ours
-#include <concurrency/ExtFuturePropagationHandler.h>
+#include <utils/DebugHelpers.h>
+#include <concurrency/AMLMJob.h>
 
 
 PerfectDeleter::PerfectDeleter(QObject* parent) : QObject(parent)
@@ -92,7 +96,7 @@ void PerfectDeleter::cancel_and_wait_for_all()
 //	scan_and_purge_futures();
 	qIno() << "Canceling" << m_future_synchronizer.futures().size() << "QFuture<void>'s and waiting for them to finish...";
 	m_future_synchronizer.waitForFinished();
-	qIno() << "Wait complete.";
+	qIno() << "QFuture<void> wait complete.";
 
 	// Wait for the AMLMJobs to finish.
 	/// @todo Probably need to keep event loop running here.
@@ -155,8 +159,7 @@ void PerfectDeleter::addAMLMJob(AMLMJob* amlmjob)
 	auto remover_lambda = [=](QObject* obj) {
 		qIn() << "AMLMJob destroyed:" << obj->objectName();
 		std::lock_guard lock(m_mutex);
-		m_watched_AMLMJobs.erase(std::remove(m_watched_AMLMJobs.begin(), m_watched_AMLMJobs.end(), obj),
-				m_watched_AMLMJobs.end());
+		std::experimental::erase(m_watched_AMLMJobs, obj);
 	};
 
 M_WARNING("These both want to remove the same amlmjob, maybe ok?");
@@ -185,6 +188,7 @@ void PerfectDeleter::addQThread(QThread* qthread)
 		// except for deferred deletion events. This signal can be connected to QObject::deleteLater(), to free objects in that thread."
 		connect_or_die(qthread, &QThread::finished, this, [=](){
 			qIn() << "Deleting QThread:" << qthread;
+			std::lock_guard lock(m_mutex);
 			/// @todo Uniquify, don't rely on pointer.
 			std::experimental::erase(m_watched_QThreads, qthread);
 			qthread->deleteLater();
@@ -193,50 +197,7 @@ void PerfectDeleter::addQThread(QThread* qthread)
 	}
 }
 
-//template <class T>
-//QTextTable& operator<<(QTextTable& table, T NextColumnText)
-//{
-//	if constexpr(NextColumnText == std::endl)
-//	{
-//		// EOL, insert a new row.
 
-//	}
-//	else if(std::is_convertible_v<T, const QString&>)
-//	{
-
-//	}
-//	else
-//	{
-//		static_assert(dependent_false<T>, "")
-//	}
-//}
-
-#if 0
-QTextDocument* PerfectDeleter::stats() const
-{
-	/// @todo This should really be a Threadsafe Interface pattern.
-//	std::lock_guard lock(m_mutex);
-
-	// Generate and return a stats object.
-	QTextDocument* retval = new QTextDocument();
-	QTextCursor cursor(retval);
-	cursor.movePosition(QTextCursor::Start);
-	QTextList* list = cursor.insertList(QTextListFormat::ListDisc);
-
-	cursor.insertText(tr("Num QThreads: %1").arg(m_watched_QThreads.size()));
-
-	// QFutureSynchronizer<> stats.
-	int num_futures = m_future_synchronizer.futures().size();
-
-	cursor.insertText(tr("Total added QFutures: %1").arg(m_total_num_added_qfutures));
-	cursor.insertText(tr("Total unfinished QFutures: %1").arg(m_future_synchronizer.futures().size()));
-	cursor.insertText(tr("Number of QFutures added since last purge: %1").arg(m_num_qfutures_added_since_last_purge));
-
-	cursor.insertText(tr("Watched QFuture<void>s: %1").arg(num_futures));
-
-	return retval;
-}
-#endif
 QStringList PerfectDeleter::stats() const
 {
 	/// @todo This should really be a Threadsafe Interface pattern.
@@ -245,22 +206,25 @@ QStringList PerfectDeleter::stats() const
 	// Generate and return a stats object.
 	QStringList retval;
 
-	retval << tr("Num QThreads: %1").arg(m_watched_QThreads.size());
-
-	// QFutureSynchronizer<> stats.
 	int num_futures = m_future_synchronizer.futures().size();
 
+	retval << tr("Watched QThreads: %1").arg(m_watched_QThreads.size());
+	retval << tr("Watched QFuture<void>s: %1").arg(num_futures);
+	retval << tr("Watched KJobs: %1").arg(m_watched_KJobs.size());
+	retval << tr("Watched AMLMJobs: %1").arg(m_watched_AMLMJobs.size());
+
+	// QFutureSynchronizer<> stats.
 	retval << tr("Total added QFutures: %1").arg(m_total_num_added_qfutures);
-	retval << tr("Total unfinished QFutures: %1").arg(m_future_synchronizer.futures().size());
 	retval << tr("Number of QFutures added since last purge: %1").arg(m_num_qfutures_added_since_last_purge);
 
-	retval << tr("Watched QFuture<void>s: %1").arg(num_futures);
+
 
 	return retval;
 }
 
 bool PerfectDeleter::waitForAMLMJobsFinished(bool spin)
 {
+M_TODO("This is livelocking on exit.  Need to keep an event loop running.");
 	long remaining_amlmjobs = 0;
 
 	do

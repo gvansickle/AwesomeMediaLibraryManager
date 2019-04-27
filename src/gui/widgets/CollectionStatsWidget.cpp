@@ -19,8 +19,10 @@
 
 #include "CollectionStatsWidget.h"
 
+// Std C++
 #include <type_traits>
 
+// Qt5
 #include <QLabel>
 #include <QVBoxLayout>
 
@@ -30,6 +32,10 @@
 #include <QTextCursor>
 #include <QTextFrame>
 #endif
+
+// Ours
+#include <logic/PerfectDeleter.h>
+
 
 CollectionStatsWidget::CollectionStatsWidget(QWidget *parent) : QWidget(parent)
 {
@@ -49,6 +55,10 @@ CollectionStatsWidget::CollectionStatsWidget(QWidget *parent) : QWidget(parent)
 	setLayout(layout);
 
     connect(m_sources_model_watcher, &ModelChangeWatcher::modelHasRows, this, &std::decay_t<decltype(*this)>::SLOT_modelChanged);
+
+	QTimer* timer = new QTimer(this);
+	connect_or_die(timer, &QTimer::timeout, this, &std::decay_t<decltype(*this)>::SLOT_modelChanged);
+	timer->start(1234);
 }
 
 // Static
@@ -67,17 +77,23 @@ void CollectionStatsWidget::setModel(QPointer<LibraryModel> model)
     m_sources_model = model;
     m_sources_model_watcher->setModelToWatch(m_sources_model);
     m_summary_model->setSourceModel(model);
+	QTimer::singleShot(0, this, &std::decay_t<decltype(*this)>::SLOT_modelChanged);
 }
 
-#define M_DESC_ARG(strlit, value) QString("<h4>" strlit ":</h4> %1").arg(value)
+#define M_DESC_ARG(strlit, value) QString("<li><b>" strlit ":</b> %1</li>").arg(value)
 
 void CollectionStatsWidget::SLOT_modelChanged()
 {
-	// Model changed, update stats.
-	auto num_files = m_sources_model->rowCount();
-	auto num_tracks = m_sources_model->rowCount();
+	// Model changed (@todo Or we got a periodic timer expiration), update stats.
 
-#if 1 // Giving QTextDocument a whirl.
+	QString new_txt = "<h3>Collection Stats</h3><hr>";
+
+	if(m_sources_model != nullptr)
+	{
+		auto num_files = m_sources_model->rowCount();
+		auto num_tracks = m_sources_model->rowCount();
+
+#if 0 // Giving QTextDocument a whirl.
 	QTextDocument doc(this);
 
 	Q_ASSERT(doc.rootFrame());
@@ -94,9 +110,13 @@ void CollectionStatsWidget::SLOT_modelChanged()
 	m_widget_text->setText(doc.toHtml());
 
 #else
-    QString new_txt = "<h3>Collection Stats</h3>";
-    new_txt += QString("Number of tracks: %1").arg(num_tracks);
+	new_txt += QString("Number of tracks: %1").arg(num_tracks);
 	new_txt += M_DESC_ARG("Number of files", num_files);
-    m_widget_text->setText(new_txt);
 #endif
+	}
+
+	QStringList strlist = PerfectDeleter::instance().stats();
+	new_txt += "\n" "<h3>Resource Usage</h3><hr>" "<li>" + strlist.join("</li>\n<li>") + "</li>";
+
+	m_widget_text->setText(new_txt);
 }

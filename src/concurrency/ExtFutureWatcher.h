@@ -39,6 +39,7 @@
 
 // Ours
 #include "utils/DebugHelpers.h"
+#include <logic/PerfectDeleter.h>
 
 template <class T>
 class ExtFuture;
@@ -96,6 +97,7 @@ public:
 		m_utility_thread->setObjectName("UtilityThread");
         // Connect the QThread's finished signal to the deleteLater() slot.
         connect_or_die(m_utility_thread, &QThread::finished, &QThread::deleteLater);
+		PerfectDeleter::instance().addQThread(m_utility_thread);
 		m_utility_thread->start();
 	}
 
