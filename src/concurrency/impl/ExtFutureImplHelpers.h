@@ -376,128 +376,185 @@ static inline void spinWaitForFinishedOrCanceled(QThreadPool* tp, const ExtFutur
 namespace ExtFuture_detail
 {
 
-/**
- * Part of the system by which we get an exception from one ExtFuture<> into the state of another.
- * This rethrows @a eptr, catches it, and finally reports it to @a future.
- * @test Has test coverage, does work as expected.
- * @param eptr
- * @param future
- */
-template <class R>
-void propagate_eptr_to_future(std::exception_ptr eptr, ExtFuture<R> future)
-{
-	if(eptr)
+	/**
+	 * Part of the system by which we get an exception from one ExtFuture<> into the state of another.
+	 * This rethrows @a eptr, catches it, and finally reports it to @a future.
+	 * @test Has test coverage, does work as expected.
+	 * @param eptr
+	 * @param future
+	 */
+	template <class R>
+	void propagate_eptr_to_future(std::exception_ptr eptr, ExtFuture<R> future)
 	{
-		// We did catch an exception.  Propagate it to the downstream_future.
+		if(eptr)
+		{
+			// We did catch an exception.  Propagate it to the downstream_future.
+			try
+			{
+				std::rethrow_exception(eptr);
+			}
+			catch(QException& e)
+			{
+				future.reportException(e);
+			}
+			catch(...)
+			{
+				future.reportException(QUnhandledException());
+			}
+			// future state here is (Started|Canceled|Running)/has_exception == true.
+			// We need to finish it or any waits will block forever.
+			future.reportFinished();
+		}
+		else
+		{
+			// eptr == null, there was no exception.
+			Q_ASSERT(0);
+		}
+	}
+
+	/**
+	 * The other part of the exception propagation mechanism.
+	 *
+	 * @test Has test coverage, does work as expected.
+	 */
+	/// @note Only use this if you know upstream has an exception to throw to downstream.
+	template <class T, class R>
+	void trigger_exception_and_propagate(ExtFuture<T> upstream_future, ExtFuture<R> downstream_future)
+	{
+		std::exception_ptr eptr;
 		try
 		{
-			std::rethrow_exception(eptr);
-		}
-		catch(QException& e)
-		{
-			future.reportException(e);
+			// Trigger the throw.
+			upstream_future.wait();
 		}
 		catch(...)
 		{
-			future.reportException(QUnhandledException());
+			// Capture the exception.
+			eptr = std::current_exception();
 		}
-		// future state here is (Started|Canceled|Running)/has_exception == true.
-		// We need to finish it or any waits will block forever.
-		future.reportFinished();
+		propagate_eptr_to_future(eptr, downstream_future);
 	}
-	else
+
+	/// Returns the pointer to the QThread which is to be used for running QFutureWatchers which
+	/// implement inter-future status propagation (cancellation and exceptions).
+	/// @note Impl is in ExtFuture.cpp.
+	QThread* get_backprop_qthread();
+
+	template <class T>
+	class WatcherDeleter
 	{
-		// eptr == null, there was no exception.
-		Q_ASSERT(0);
-	}
-}
 
-/// @note Only use this if you know upstream has an exception to throw to downstream.
-template <class T, class R>
-void trigger_exception_and_propagate(ExtFuture<T> upstream_future, ExtFuture<R> downstream_future)
-{
-	std::exception_ptr eptr;
-	try
-	{
-		// Trigger the throw.
-		upstream_future.wait();
-	}
-	catch(...)
-	{
-		// Capture the exception.
-		eptr = std::current_exception();
-	}
-	propagate_eptr_to_future(eptr, downstream_future);
-}
+	public:
+		WatcherDeleter() = default;
+		explicit WatcherDeleter(QFutureWatcher<T>* f) : m_watcher(f) {};
+		~WatcherDeleter() = default;
 
-/// Returns the pointer to the QThread which is to be used for running QFutureWatchers which
-/// implement inter-future status propagation (cancellation and exceptions).
-QThread* get_backprop_qthread();
-
-template <class T, class R, class ResultsReadyAtCallbackType>
-void SetBackpropWatcher(ExtFuture<T> upstream_future, ExtFuture<R> downstream_future,
-						QObject* upstream_context, QObject* downstream_context,
-						ResultsReadyAtCallbackType&& results_ready_callback)
-{
-	QThread* bp_thread = ExtFuture_detail::get_backprop_qthread();
-
-	using FutureWatcherTypeR = QFutureWatcher<R>;
-	using FutureWatcherTypeT = QFutureWatcher<T>;
-
-	FutureWatcherTypeR* downstream_watcher = new FutureWatcherTypeR();
-	FutureWatcherTypeT* upstream_watcher = new FutureWatcherTypeT();
-
-	// Watchers will live in the backprop thread.
-	downstream_watcher->moveToThread(bp_thread);
-	upstream_watcher->moveToThread(bp_thread);
-	auto context = bp_thread;
-
-	// R->T ("upstream") cancel signal.
-	connect_or_die(downstream_watcher, &FutureWatcherTypeR::canceled, context, [=,
-				   upstream_future_copy=DECAY_COPY(std::forward<ExtFuture<T>>(upstream_future))]() mutable {
-		// Note we directly call cancel() (but from context's thread) because upstream_future may not have an event loop.
-		upstream_future_copy.cancel();
-	});
-	// R->T ("upstream") finished signal.
-	/// @note Should only ever get this due to an exception thrown into R, and then we should probably have gotten a cancel instead.
-	connect_or_die(downstream_watcher, &FutureWatcherTypeR::finished, context, [=,
-				   upstream_future_copy=DECAY_COPY(std::forward<ExtFuture<T>>(upstream_future))]() mutable {
-		// Note we directly call cancel() (but from context's thread) because upstream_future may not have an event loop.
-		upstream_future_copy.reportFinished();
-	});
-
-	// T->R ("downstream") signals.
-	// The resultsReadyAt signal.
-	connect_or_die(upstream_watcher, &FutureWatcherTypeR::resultsReadyAt, context,
-				   [=,
-				   upstream_future_copy=DECAY_COPY(/*std::forward<ExtFuture<T>>*/(upstream_future)),
-				   callback_cp=DECAY_COPY(std::forward<ResultsReadyAtCallbackType>(results_ready_callback))](int begin, int end) mutable {
-		std::invoke(callback_cp, upstream_future, begin, end);
-		/// @note We're temporarily copying to the output future here, we should change that to use a separate thread.
-		///       Or maybe we can just return the upstream_future here....
-		for(int i = begin; i < end; ++i)
+		void make_delete_connections()
 		{
-			downstream_future.reportResult(upstream_future_copy, i);
+			connect_or_die(m_watcher, &QFutureWatcher<T>::finished, [=]() mutable { this->delete_later_if_canceled_and_finished(); });
+			connect_or_die(m_watcher, &QFutureWatcher<T>::canceled, [=]() mutable { this->delete_later_if_canceled_and_finished(); });
 		}
-	});
-	// Canceled.
-	connect_or_die(upstream_watcher, &FutureWatcherTypeT::canceled, context,
-			[=, downstream_future_copy=DECAY_COPY(downstream_future)]() mutable {
-		if(upstream_future.has_exception())
+	public:
+		void delete_later_if_canceled_and_finished()
 		{
-			// Throw exception to downstream future.  Takes a bit of shenanigans.
-			trigger_exception_and_propagate(upstream_future, downstream_future_copy);
+			if(/*m_watcher->isCanceled() &&*/ m_watcher->isFinished())
+			{
+				qDb() << "QFutureWatcher<> is canceled/finished, deleting:" << m_watcher;
+				m_watcher->deleteLater();
+			}
 		}
-		downstream_future_copy.reportCanceled();
-	});
-	// Finished.
-	connect_or_die(upstream_watcher, &FutureWatcherTypeT::finished, context,
-				   [=]() mutable { downstream_future.reportFinished(); });
 
-	downstream_watcher->setFuture(downstream_future);
-	upstream_watcher->setFuture(upstream_future);
+		QPointer<QFutureWatcher<T>> m_watcher {nullptr};
+	};
 
-}
+	/**
+	 * Factory function for creating managed QFutureWatcher<>s.
+	 * @returns A pointer to the new watcher.  This is a raw pointer, and the watcher has no parent.
+	 */
+	template <class T>
+	QFutureWatcher<T>* get_managed_qfuture_watcher()
+	{
+		QThread* bp_thread = ExtFuture_detail::get_backprop_qthread();
+		// Create the new watcher, unparented so we can move it to the backprop thread.
+		QFutureWatcher<T>* watcher = new QFutureWatcher<T>();
+
+		// Move the watcher to the backprop thread.
+		/// @note Per Qt5: "The object cannot be moved if it has a parent."
+		watcher->moveToThread(bp_thread);
+
+		return watcher;
+	}
+
+	template <class T, class R, class ResultsReadyAtCallbackType>
+	void SetBackpropWatcher(ExtFuture<T> upstream_future, ExtFuture<R> downstream_future,
+							QObject* upstream_context, QObject* downstream_context,
+							ResultsReadyAtCallbackType&& results_ready_callback)
+	{
+		QThread* bp_thread = ExtFuture_detail::get_backprop_qthread();
+
+		using FutureWatcherTypeR = QFutureWatcher<R>;
+		using FutureWatcherTypeT = QFutureWatcher<T>;
+
+		// Watchers will live in the backprop thread.
+		QPointer<FutureWatcherTypeR> downstream_watcher = get_managed_qfuture_watcher<R>();
+		QPointer<FutureWatcherTypeT> upstream_watcher = get_managed_qfuture_watcher<T>();
+
+		/// @todo Deleters, this should be encapsulated better.
+		/// @todo Also this is going to leak.
+		WatcherDeleter<R>* downstream_watcher_deleter = new WatcherDeleter<R>(downstream_watcher);
+		WatcherDeleter<T>* upstream_watcher_deleter = new WatcherDeleter<T>(upstream_watcher);
+
+		auto context = bp_thread;
+
+		// R->T ("upstream") cancel signal.
+		connect_or_die(downstream_watcher, &FutureWatcherTypeR::canceled, context, [=,
+					   upstream_future_copy=DECAY_COPY(std::forward<ExtFuture<T>>(upstream_future))]() mutable {
+			// Note we directly call cancel() (but from context's thread) because upstream_future may not have an event loop.
+			upstream_future_copy.cancel();
+		});
+		// R->T ("upstream") finished signal.
+		/// @note Should only ever get this due to an exception thrown into R, and then we should probably have gotten a cancel instead.
+		connect_or_die(downstream_watcher, &FutureWatcherTypeR::finished, context, [=,
+					   upstream_future_copy=DECAY_COPY(std::forward<ExtFuture<T>>(upstream_future))]() mutable {
+			// Note we directly call cancel() (but from context's thread) because upstream_future may not have an event loop.
+			upstream_future_copy.reportFinished();
+		});
+
+		// T->R ("downstream") signals.
+		// The resultsReadyAt signal.
+		connect_or_die(upstream_watcher, &FutureWatcherTypeR::resultsReadyAt, context,
+					   [=,
+					   upstream_future_copy=DECAY_COPY(/*std::forward<ExtFuture<T>>*/(upstream_future)),
+					   callback_cp=DECAY_COPY(std::forward<ResultsReadyAtCallbackType>(results_ready_callback))](int begin, int end) mutable {
+			std::invoke(callback_cp, upstream_future, begin, end);
+			/// @note We're temporarily copying to the output future here, we should change that to use a separate thread.
+			///       Or maybe we can just return the upstream_future here....
+			for(int i = begin; i < end; ++i)
+			{
+				downstream_future.reportResult(upstream_future_copy, i);
+			}
+		});
+		// Canceled.
+		connect_or_die(upstream_watcher, &FutureWatcherTypeT::canceled, context,
+				[=, downstream_future_copy=DECAY_COPY(downstream_future)]() mutable {
+			if(upstream_future.has_exception())
+			{
+				// Throw exception to downstream future.  Takes a bit of shenanigans.
+				trigger_exception_and_propagate(upstream_future, downstream_future_copy);
+			}
+			downstream_future_copy.reportCanceled();
+		});
+		// Finished.
+		connect_or_die(upstream_watcher, &FutureWatcherTypeT::finished, context,
+					   [=]() mutable { downstream_future.reportFinished(); });
+
+		downstream_watcher_deleter->make_delete_connections();
+		upstream_watcher_deleter->make_delete_connections();
+
+		downstream_watcher->setFuture(downstream_future);
+		upstream_watcher->setFuture(upstream_future);
+
+	}
 
 } // END ns ExtFuture_detail
 

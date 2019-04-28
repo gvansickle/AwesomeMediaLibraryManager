@@ -34,6 +34,32 @@
 #include <utils/DebugHelpers.h>
 #include <concurrency/AMLMJob.h>
 
+/**
+ * Some notes on resource management in the bizzaro-world of Qt5:
+ *
+ * - QObject: What happens if it's deleted while it has outgoing signals pending?
+ * @link https://stackoverflow.com/questions/4888189/how-delete-and-deletelater-works-with-regards-to-signals-and-slots-in-qt?rq=1
+ * @link https://doc.qt.io/qt-5/qobject.html#deleteLater
+ * ... Not clear.  Rumors indicate that the signals will be delivered.
+ *
+ * - Waiting on futures to complete (ctx: QtConcurrent::run()).
+ * @link https://forum.qt.io/topic/53481/how-to-release-the-memory-in-qtconcurrent-the-new-thread-func/2
+ * "So the steps are:
+
+    1. Set QGuiApplication::setQuitOnLastWindowClosed( false ) so that to prevent the application from quitting
+        immediately after the last of its windows is closed.
+    2. Connect a slot to the QGuiApplication::lastWindowClosed() signal.
+    3. Create a QFutureWatcher< void >* (using new) for every QFuture< void > you create using QtConcurrent::run and
+        keep the instances of the future watchers in the object which receives the last window closed notification.
+    4. Hook to the finished() signal of the QFutureWatcher< void > in the object which also tracks whether application
+        quit has been requested. Remove the kept instance of the QFutureWatcher
+    5. Upon receiving the last window closed notification set a flag in the same object that an application quit has
+        been requested - the last window has been closed.
+    6. On each QFutureWatcher< void >::finished() and on QGuiApplication::lastWindowClosed() check if there are no
+        cached QFutureWatcher's e.g. no futures are running.
+ *	"
+ *
+ */
 
 PerfectDeleter::PerfectDeleter(QObject* parent) : QObject(parent)
 {

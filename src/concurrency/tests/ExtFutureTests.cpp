@@ -968,6 +968,51 @@ TEST_F(ExtFutureTest, InternalExceptionProp)
 	TC_EXIT();
 }
 
+TEST_F(ExtFutureTest, InternalTriggerExceptionAndProp)
+{
+	TC_ENTER();
+
+	ExtFuture<int> upstream_f = ExtAsync::make_exceptional_future<int>(QException());
+	ExtFuture<int> downstream_f = ExtAsync::make_started_only_future<int>();
+
+
+	std::exception_ptr eptr;
+
+	/// @note State here is coming back:
+	/// BEFORE f0: ExtFuture<T>( id= 33 "[unknown]" state: QFlags<ExtFutureState::State>(Running|Started) hasException(): false , resultCount(): 0 )
+	qIn() << "BEFORE futures:" << M_ID_VAL(upstream_f) << M_ID_VAL(downstream_f);
+
+	ExtFuture_detail::trigger_exception_and_propagate(upstream_f, downstream_f);
+
+	TC_Wait(1000);
+
+	/// @note We're getting the following state here:
+	/// ExtFuture<T>( id= 51 "[unknown]" state: QFlags<ExtFutureState::State>(Running|Started|Canceled) hasException(): true , resultCount(): 0 )
+	/// Note the "Running".  Adding a TC_Wait() doesn't seem to make a difference.
+	qIn() << "AFTER futures:" << M_ID_VAL(upstream_f) << M_ID_VAL(downstream_f);
+
+	EXPECT_TRUE(downstream_f.has_exception());
+	EXPECT_TRUE(downstream_f.isStarted());
+	EXPECT_TRUE(downstream_f.isFinished());
+	EXPECT_TRUE(downstream_f.isCanceled());
+
+	// Trip it and see if it's the exception we threw.
+	try
+	{
+		downstream_f.get_first();
+	}
+	catch(QException& e)
+	{
+		SUCCEED();
+	}
+	catch(...)
+	{
+		ADD_FAILURE() << "Unexpected exception type";
+	}
+
+	TC_EXIT();
+}
+
 /**
  * Test basic cancel properties.
  */
