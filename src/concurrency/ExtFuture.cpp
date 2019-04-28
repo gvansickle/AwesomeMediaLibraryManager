@@ -168,8 +168,9 @@ QThread* get_backprop_qthread()
 		PerfectDeleter::instance().addQThread(new_thread, [](QThread* the_qthread){
 			// Call exit(0) on the QThread.  We use Qt's invokeMethod() here.
 			run_in_event_loop(the_qthread, [the_qthread](){
+				qDb() << "Calling exit() on ExtFuture watcher QThread";
 				the_qthread->exit();
-				the_qthread->deleteLater();
+//				the_qthread->deleteLater();
 			});
 
 		});

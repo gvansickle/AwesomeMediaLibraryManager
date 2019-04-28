@@ -1594,41 +1594,7 @@ public:
 /// @name Free functions
 /// @{
 
-namespace ExtAsync
-{
 
-template < class Sequence >
-struct when_any_result
-{
-	std::size_t index;
-	Sequence futures;
-};
-
-template <class InputIt>
-auto when_any(InputIt first, InputIt last)
--> ExtFuture<when_any_result<std::vector<typename std::iterator_traits<InputIt>::value_type>>>;
-
-template < class... Futures >
-auto when_any(Futures&&... futures)
--> ExtFuture<when_any_result<std::tuple<std::decay_t<Futures>...>>>;
-
-/**
- * C++2x/concurrency TS when_all() implementation for ExtFuture<T>s.
- * @link https://en.cppreference.com/w/cpp/experimental/when_all
- * @tparam InputIterator
- * @param first
- * @param last
- * @return
- */
-template <class InputIterator>
-ExtFuture<std::vector<typename std::iterator_traits<InputIterator>::value_type>>
-when_all(InputIterator first, InputIterator last);
-
-template <class... Futures>
-ExtFuture<std::tuple<std::decay_t<Futures>...>> when_all(Futures&&... futures);
-
-
-} /// END namespace ExtAsync
 
 /// @}
 

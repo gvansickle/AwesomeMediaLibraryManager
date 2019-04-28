@@ -229,6 +229,12 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
     /// @todo Should this really be done here, or somewhere else?
     tree_model->setBaseDirectory(dir_url);
 
+//	/// @todo Looks like there's no way around these wretched signals/slots.
+//	/// @add delete on finished.
+//	connect_or_die(this, &LibraryRescanner::SIGNAL_StapToTreeModel, tree_model, [=](std::vector<std::unique_ptr<AbstractTreeModelItem>> new_items){
+//		tree_model->appendItems(std::move(new_items));
+//	});
+
 	// Create a future so we can attach a watcher to get the QUrl results to the main thread.
 	/// @todo Obsoleting.
 	ExtFuture<QString> qurl_future = ExtAsync::make_started_only_future<QString>();
@@ -391,7 +397,11 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 				}
 
 				// Finally, move the new model items to their new home.
+#if 1 // signal
 				tree_model_ptr->appendItems(std::move(*new_items_vector_ptr));
+#else
+				Q_EMIT SIGNAL_StapToTreeModel(std::move(*new_items_vector_ptr));
+#endif
 	//			qDb() << "TREEMODELPTR:" << M_ID_VAL(tree_model_ptr->rowCount());
 			}
 		}

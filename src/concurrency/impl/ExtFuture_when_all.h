@@ -32,6 +32,9 @@
 template <class T>
 class ExtFuture;
 
+namespace ExtAsync
+{
+
 /**
  * C++2x/concurrency TS when_all() implementation for ExtFuture<T>s.
  * @link https://en.cppreference.com/w/cpp/experimental/when_all
@@ -55,5 +58,7 @@ ExtFuture<std::tuple<std::decay_t<Futures>...>> when_all(Futures&&... futures)
 {
 
 }
+
+} // END namespace ExtAsync
 
 #endif /* SRC_CONCURRENCY_IMPL_EXTFUTURE_WHEN_ALL_H_ */

@@ -72,7 +72,7 @@ namespace detail
 				else
 				{
 					CBReturnType retval = std::invoke(std::move(fd_callback), args...);
-					static_assert(!is_ExtFuture_v<R>, "Callback return value cannot be a future type.");
+					static_assert(!is_ExtFuture_v<CBReturnType>, "Callback return value cannot be a future type.");
 					retfuture_cp.reportResult(retval);
 				}
 			}

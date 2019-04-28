@@ -440,6 +440,79 @@ TEST_P(ExtAsyncTestsParameterized, ExtAsyncQthreadAsyncMultiThenCancelExceptionF
 	TC_EXIT();
 }
 
+TEST_P(ExtAsyncTestsParameterized, DISABLED_ExtAsyncGUIStapCancelExceptionFromTopOrBottom)
+{
+	TC_ENTER();
+
+	std::atomic_bool chk1 = false;
+	std::atomic_bool chk2 = false;
+
+	bool cancel_from_top = false;//GetParam();
+
+
+	ExtFuture<int> f1 = ExtAsync::qthread_async([=]() -> int {
+		TC_Sleep(1000);
+		if(cancel_from_top)
+		{
+			/*TCOUT*/qDebug() << "THROWING CANCEL FROM TOP";
+			throw ExtAsyncCancelException();
+			ADD_FAILURE() << "Didn't throw out of thread to future.";
+		}
+
+		TCOUT << "ABOUT TO LEAVE THREAD AND RETURN 5";
+		return 5;
+	});
+	auto fend = f1
+			/// @todo This locks up the event loop.
+	.stap(qApp, [=](ExtFuture<int> f0, int begin, int end){
+		qDb() << "In stap(), f0:" << f0;
+
+	})
+	.then_qthread_async([=](ExtFuture<int> f2){
+		qDb() << "Waiting in then() for cancel exception, f2:" << f2;
+		f2.wait();
+		ADD_FAILURE() << "f2.wait() didn't throw:" << f2;
+
+		return 1;
+	});
+	f1.setName("f1");
+	fend.setName("fend");
+
+	TC_Wait(500);
+
+	if(!cancel_from_top)
+	{
+		/*TCOUT*/qDebug() << "THROWING CANCEL FROM BOTTOM THEN";
+		fend.cancel();
+	}
+
+	TCOUT << "ABOUT TO TRY";
+
+	try
+	{
+		f1.wait();
+		ADD_FAILURE() << ".wait() Didn't throw:" << M_ID_VAL(f1);
+	}
+	catch(ExtAsyncCancelException& e)
+	{
+		TCOUT << "CAUGHT CANCEL EXCEPTION";
+		SUCCEED();
+		EXPECT_TRUE(f1.isCanceled());
+	}
+	catch(QException& e)
+	{
+		ADD_FAILURE() << "CAUGHT NON-CANCEL EXCEPTION";
+	}
+	catch(...)
+	{
+		ADD_FAILURE() << "Threw unexpected exception.";
+	}
+
+	TCOUT << "ABOUT TO LEAVE TEST";
+
+	TC_EXIT();
+}
+
 constexpr auto c_started_running = QFutureInterfaceBase::State(QFutureInterfaceBase::Started
 		| QFutureInterfaceBase::Running);
 
@@ -1409,7 +1482,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureExtAsyncRunMultiResultTest)
 			return 1;
 		;});
 		then_future.wait();
-//M_WARNING("THE ABOVE .wait() doesn't wait");
+//M_WARNING("THE ABOVE .wait() never is finished.");
 #if 0
 		.finally([&]() -> void {
 			AMLMTEST_SCOPED_TRACE("In finally");
