@@ -376,6 +376,13 @@ static inline void spinWaitForFinishedOrCanceled(QThreadPool* tp, const ExtFutur
 namespace ExtFuture_detail
 {
 
+/**
+ * Part of the system by which we get an exception from one ExtFuture<> into the state of another.
+ * This rethrows @a eptr, catches it, and finally reports it to @a future.
+ * @test Has test coverage, does work as expected.
+ * @param eptr
+ * @param future
+ */
 template <class R>
 void propagate_eptr_to_future(std::exception_ptr eptr, ExtFuture<R> future)
 {
@@ -394,6 +401,9 @@ void propagate_eptr_to_future(std::exception_ptr eptr, ExtFuture<R> future)
 		{
 			future.reportException(QUnhandledException());
 		}
+		// future state here is (Started|Canceled|Running)/has_exception == true.
+		// We need to finish it or any waits will block forever.
+		future.reportFinished();
 	}
 	else
 	{
