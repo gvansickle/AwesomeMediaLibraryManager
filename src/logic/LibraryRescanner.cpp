@@ -350,10 +350,10 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 #if 1
 	/// @stap
 	/// Append TreeModelItems to the tree_model.
-	tree_model_item_future.stap(this,
+	tree_model_item_future.stap(//this,
 								[=, tree_model_ptr=tree_model](ExtFuture<SharedItemContType> new_items_future, int begin_index, int end_index) mutable {
 
-		AMLM_ASSERT_IN_GUITHREAD();
+//		AMLM_ASSERT_IN_GUITHREAD();
 
 		qDb() << "START: tree_model_item_future.then(), new_items_future count:" << new_items_future.resultCount();
 
@@ -550,23 +550,13 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 		}
 	});
 
-#if 0
-	// Metadata refresh results to this (the main) thread, via a slot for further processing.
-	connect_or_die(&m_extfuture_watcher_metadata, &QFutureWatcher<MetadataReturnVal>::resultReadyAt,
-			this, [=](int index){
-		MetadataReturnVal ready_result = lib_rescan_job->get_extfuture().resultAt(index);
-//		Q_ASSERT(ready_result.m_new_libentries.size() != 0);
-		this->SLOT_processReadyResults(ready_result);
-	});
-	m_extfuture_watcher_metadata.setFuture(lib_rescan_job->get_extfuture());
-#else
+
 	lib_rescan_job->get_extfuture().stap(this, [=](ExtFuture<MetadataReturnVal> ef, int begin, int end){
 		for(int i = begin; i<end; ++i)
 		{
 			this->SLOT_processReadyResults(ef.resultAt(i));
 		}
 	});
-#endif
 
 	// Make sure the above job gets canceled and deleted.
 	AMLMApp::IPerfectDeleter().addQFuture(tail_future);

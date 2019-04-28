@@ -158,6 +158,7 @@ static QThreadPool s_cancel_threadpool = QThreadPool();
 
 namespace ExtFuture_detail
 {
+
 QThread* get_backprop_qthread()
 {
 	static QThread* backprop_thread = []{
@@ -176,7 +177,8 @@ QThread* get_backprop_qthread()
 	}();
 	return backprop_thread;
 }
-}
+
+} // END ExtFuture_detail
 
 /// @name Explicit instantiations to try to get compile times down.
 template class ExtFuture<Unit>;
