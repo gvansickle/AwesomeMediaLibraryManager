@@ -63,8 +63,8 @@ void PerfectDeleter::cancel_and_wait_for_all()
 
 	// First print some stats.
 	qIno() << "END OF PROGRAM SUMMARY OF OPEN RESOURCES";
-	auto stats_text_doc = stats();
-	for(const auto& line : qAsConst(stats_text_doc))
+	auto stats_text = stats_internal();
+	for(const auto& line : qAsConst(stats_text))
 	{
 		qIno() << line;
 	}
@@ -112,21 +112,13 @@ void PerfectDeleter::addQFuture(QFuture<void> f)
 
 	m_future_synchronizer.addFuture(f);
 
-	if(m_total_num_added_qfutures % 16 == 0)
-	{
-		qIno() << "Total added QFutures:" << m_total_num_added_qfutures;
-		qIno() << "Total unfinished QFutures:" << m_future_synchronizer.futures().size();
-		qIno() << "Number of QFutures added since last purge:" << m_num_qfutures_added_since_last_purge;
-	}
-
 	// Periodically purge completed futures.
-	/// @todo This is the most wrong part, this will cancel futures which may still have consumers.
-//	if(m_num_qfutures_added_since_last_purge > m_purge_futures_count)
-//	{
-//		qIno() << "Purging QFutures...";
-//		scan_and_purge_futures();
-//		m_num_qfutures_added_since_last_purge = 0;
-//	}
+	if(m_num_qfutures_added_since_last_purge > m_purge_futures_count)
+	{
+		qIno() << "Purging QFutures...";
+		scan_and_purge_futures();
+		m_num_qfutures_added_since_last_purge = 0;
+	}
 }
 
 void PerfectDeleter::addKJob(KJob* kjob)
@@ -201,8 +193,14 @@ void PerfectDeleter::addQThread(QThread* qthread)
 QStringList PerfectDeleter::stats() const
 {
 	/// @todo This should really be a Threadsafe Interface pattern.
-//	std::lock_guard lock(m_mutex);
+	std::lock_guard lock(m_mutex);
 
+	return stats_internal();
+}
+
+QStringList PerfectDeleter::stats_internal() const
+{
+	/// @note Acquires no mutex, see Threadsafe Interface stats().
 	// Generate and return a stats object.
 	QStringList retval;
 
@@ -217,14 +215,12 @@ QStringList PerfectDeleter::stats() const
 	retval << tr("Total added QFutures: %1").arg(m_total_num_added_qfutures);
 	retval << tr("Number of QFutures added since last purge: %1").arg(m_num_qfutures_added_since_last_purge);
 
-
-
 	return retval;
 }
 
 bool PerfectDeleter::waitForAMLMJobsFinished(bool spin)
 {
-M_TODO("This is livelocking on exit.  Need to keep an event loop running.");
+M_TODO("This doesn't look like it's livelocking on exit, but it seems like we need to keep an event loop running.");
 	long remaining_amlmjobs = 0;
 
 	do
@@ -250,18 +246,20 @@ M_TODO("This is livelocking on exit.  Need to keep an event loop running.");
 	} while(spin);
 }
 
-#if 0
+
 void PerfectDeleter::scan_and_purge_futures()
 {
 	/// @note Requires m_mutex to already be held.
 
+	// Get a list of all futures we're currently watching.
 	QList<QFuture<void>> futures = m_future_synchronizer.futures();
 	auto num_starting_qfutures = futures.size();
 
+	// Filter out the futures which report both canceled and finished.
 	QList<QFuture<void>> unfinished_futures =
 			QtConcurrent::blockingFiltered(futures, [](const QFuture<void>& f) -> bool {
 		// Keep by returning true.
-				return (!(f.isCanceled() || f.isFinished()));
+				return (!f.isCanceled() && !f.isFinished());
 			});
 
 	qDb() << "Clearing futures:" << m_future_synchronizer.futures().size();
@@ -281,4 +279,3 @@ void PerfectDeleter::scan_and_purge_futures()
 		   << num_remaining_futures << "==" << m_future_synchronizer.futures().size() << "remaining";
 
 }
-#endif

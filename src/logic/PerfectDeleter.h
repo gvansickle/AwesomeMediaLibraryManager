@@ -102,7 +102,12 @@ public:
 
 	void addQThread(QThread* qthread);
 
+	/// The Threadsafe Interface for stats_internal().
 	QStringList stats() const;
+
+protected:
+	/// No mutex.
+	QStringList stats_internal() const;
 
 private:
 
@@ -125,7 +130,8 @@ private:
 
 	bool waitForAMLMJobsFinished(bool spin);
 
-//	void scan_and_purge_futures();
+	/// Private helper for clearing out completed futures.
+	void scan_and_purge_futures();
 };
 
 #endif // PERFECTDELETER_H

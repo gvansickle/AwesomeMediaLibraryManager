@@ -147,6 +147,7 @@
 
 // Ours
 //#include "ExtFuturePropagationHandler.h"
+#include <logic/PerfectDeleter.h>
 
 
 /**
@@ -155,6 +156,20 @@
 static QThreadPool s_cancel_threadpool = QThreadPool();
 
 
+namespace ExtFuture_detail
+{
+QThread* get_backprop_qthread()
+{
+	static QThread* backprop_thread = []{
+		auto new_thread = new QThread;
+		new_thread->setObjectName("ExtFutureBackpropThread");
+		new_thread->start();
+		PerfectDeleter::instance().addQThread(new_thread);
+		return new_thread;
+	}();
+	return backprop_thread;
+}
+}
 
 /// @name Explicit instantiations to try to get compile times down.
 template class ExtFuture<Unit>;

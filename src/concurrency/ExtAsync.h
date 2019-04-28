@@ -116,7 +116,8 @@ namespace ExtAsync
 		private:
 			// add your variables here
 		};
-	};
+
+	}; // END namespace detail
 
 	template <class CallbackType>
 	struct detail_struct
@@ -359,7 +360,7 @@ namespace ExtAsync
 
 			QThread* thread = new QThread;
 			WorkerQObject* worker = new WorkerQObject();
-			// Move the worked QObject to the new thread.
+			// Move this worker QObject to the new thread.
 			worker->moveToThread(thread);
 
 			// Connect to the worker's error signal.

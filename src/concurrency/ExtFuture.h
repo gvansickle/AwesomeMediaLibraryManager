@@ -311,12 +311,6 @@ public:
 
 	/// @}
 
-	/**
-	 * @name Static members for the global state needed by ExtFuture.
-	 */
-	/// @{
-//	static void InitStaticExtFutureState();
-	/// @}
 
 	/// @name Extra informational accessors.
 	/// @{
@@ -389,8 +383,16 @@ public:
 		return this->d.exceptionStore().hasException();
 	}
 
+	/**
+	 * Per Boost's extension of std::shared_future.
+	 * @return true if this contains an exception, otherwise false.
+	 */
 	bool has_exception() const noexcept { return this->hasException(); }
 
+	/**
+	 * Per Boost's extension of std::shared_future.
+	 * @return true if this contains a result, otherwise false.
+	 */
 	bool has_value() const noexcept { return this->resultCount() > 0; }
 
 	/// @} // END  Extra informational accessors.
