@@ -359,7 +359,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	tree_model_item_future.stap(//this,
 								[=, tree_model_ptr=tree_model](ExtFuture<SharedItemContType> new_items_future, int begin_index, int end_index) mutable {
 
-//		AMLM_ASSERT_IN_GUITHREAD();
+		AMLM_ASSERT_NOT_IN_GUITHREAD();
 
 		qDb() << "START: tree_model_item_future.then(), new_items_future count:" << new_items_future.resultCount();
 
