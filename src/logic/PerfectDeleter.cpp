@@ -69,6 +69,13 @@ void PerfectDeleter::cancel_and_wait_for_all()
 		qIno() << line;
 	}
 
+	// Cancel all "deletables".
+	qIno() << "Canceling" << m_watched_deletables.size() << "Deletables";
+	for(auto& d : m_watched_deletables)
+	{
+		d->cancel();
+	}
+
 	// Cancel all registered AMLMJobs.
 	qIno() << "Killing" << m_watched_AMLMJobs.size() << "AMLMJobs";
 	for(AMLMJob* i : m_watched_AMLMJobs)
@@ -206,6 +213,7 @@ QStringList PerfectDeleter::stats_internal() const
 
 	int num_futures = m_future_synchronizer.futures().size();
 
+	retval << tr("Watched Deletables: %1").arg(m_watched_deletables.size());
 	retval << tr("Watched QThreads: %1").arg(m_watched_QThreads.size());
 	retval << tr("Watched QFuture<void>s: %1").arg(num_futures);
 	retval << tr("Watched KJobs: %1").arg(m_watched_KJobs.size());

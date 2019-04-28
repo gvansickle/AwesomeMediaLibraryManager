@@ -164,7 +164,14 @@ QThread* get_backprop_qthread()
 		auto new_thread = new QThread;
 		new_thread->setObjectName("ExtFutureBackpropThread");
 		new_thread->start();
-		PerfectDeleter::instance().addQThread(new_thread);
+		PerfectDeleter::instance().addQThread(new_thread, [](QThread* the_qthread){
+			// Call exit(0) on the QThread.  We use Qt's invokeMethod() here.
+			run_in_event_loop(the_qthread, [the_qthread](){
+				the_qthread->exit();
+				the_qthread->deleteLater();
+			});
+
+		});
 		return new_thread;
 	}();
 	return backprop_thread;

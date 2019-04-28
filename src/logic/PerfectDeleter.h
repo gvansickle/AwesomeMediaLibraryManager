@@ -24,6 +24,7 @@
 #include <deque>
 #include <mutex>
 #include <memory>
+#include <functional>
 
 // Qt5
 #include <QObject>
@@ -36,29 +37,43 @@
 class AMLMJob;
 
 // Ours
-//#include <src/concurrency/AMLMJob.h>
-//#include <QtGui/QTextDocument>
 
-struct Deletable
-{
-//	template <class T, class Canceler, class Waiter>
-	QVariant m_to_be_deleted;
-};
 
-class PDStatEntry
+class DeletableBase
 {
 public:
-	explicit PDStatEntry(const QString& str) : m_stat_text(str) { }
-	QString m_stat_text;
-	std::shared_ptr<PDStatEntry> m_substat_ptr;
-	static constexpr int mc_indent = 4;
+	virtual ~DeletableBase() {};
+
+	virtual void cancel() = 0;
+	virtual void wait() = 0;
 };
 
-template <class StreamType>
-StreamType& operator<<(StreamType& os, const PDStatEntry& obj)
+template <class T, class CancelerType, class WaiterType>
+class Deletable : public DeletableBase
 {
-	return os << obj.m_stat_text;
+	static_assert(std::is_invocable_v<CancelerType, T>);
+	static_assert(std::is_invocable_v<WaiterType, T>);
+
+public:
+	Deletable(T to_be_deleted, CancelerType canceler, WaiterType waiter) :
+		m_to_be_deleted(to_be_deleted), m_canceler(canceler), m_waiter(waiter) {};
+	~Deletable() override {};
+
+	void cancel() override { std::invoke(m_canceler, m_to_be_deleted); };
+	void wait() override { std::invoke(m_waiter, m_to_be_deleted); };
+
+	T m_to_be_deleted;
+	CancelerType m_canceler;
+	WaiterType m_waiter;
+};
+
+template <class T, class CancelerType, class WaiterType>
+static inline std::shared_ptr<DeletableBase> make_shared_Deletable(T to_be_deleted, CancelerType canceler, WaiterType waiter)
+{
+	auto deletable = std::make_shared<Deletable<T, CancelerType, WaiterType>>(to_be_deleted, canceler, waiter);
+	return deletable;
 }
+
 
 /**
  * Class for managing the lifecycle of various deferred-delete or self-deleting objects.
@@ -102,6 +117,15 @@ public:
 
 	void addQThread(QThread* qthread);
 
+	template <class DestroyerCallbackType>
+	void addQThread(QThread* qthread, DestroyerCallbackType&& destroyer_cb)
+	{
+		/*std::shared_ptr<Deletable>*/
+//		auto deletable = std::make_shared<Deletable<QThread*,DestroyerCallbackType,void(*)(QThread*)>>(qthread, destroyer_cb, [](QThread*){});
+		auto deletable = make_shared_Deletable(qthread, destroyer_cb, [](QThread*){});
+		m_watched_deletables.push_back(deletable);
+	}
+
 	/// The Threadsafe Interface for stats_internal().
 	QStringList stats() const;
 
@@ -125,6 +149,7 @@ private:
     std::deque<QPointer<KJob>> m_watched_KJobs;
     std::deque<QPointer<AMLMJob>> m_watched_AMLMJobs;
 	std::deque<QPointer<QThread>> m_watched_QThreads;
+	std::deque<std::shared_ptr<DeletableBase>> m_watched_deletables;
 
     /// Private member functions.
 
