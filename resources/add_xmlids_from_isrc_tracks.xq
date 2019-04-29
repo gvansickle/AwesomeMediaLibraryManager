@@ -1,3 +1,5 @@
+xquery version "1.0";
+
 (: declare variable $where as xs:string := doc($fileTree)/@filePath; :)
 (: declare variable $where as xs:string := string(doc($fileTree)/@filePath); :)
 (: declare variable $x as xs:integer := 0; :)

@@ -7,7 +7,7 @@ declare variable $input_file_path as xs:anyURI external;
 (: Regex to filter hrefs.  Intended for extensions, but not enforced. :)
 declare variable $extension_regex external;
 
-<list>
+<ul>
 {
 (: Return URLs (as strings) to all media files in the database :)
 for $x in fn:doc($input_file_path)//href
@@ -21,4 +21,4 @@ return
 	}
 </href>
 }
-</list>
+</ul>
