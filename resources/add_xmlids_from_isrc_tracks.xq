@@ -6,6 +6,7 @@ xquery version "1.0";
 (: http://www.w3.org/2005/xpath-functions :)
 (: The XSPF namespace. :)
 declare default element namespace "http://xspf.org/ns/0/";
+(: QXmlQuery as of Qt 5.12 still doesn't support module imports. :)
 (:import module namespace functx = "http://www.functx.com" at "functx-1.0-doc-2007-01.xq";:)
 declare namespace functx = "http://www.functx.com";
 declare function functx:add-attributes
