@@ -19,4 +19,5 @@ let $artist_name := $summary_tags/entry/key[data(.)="ARTIST"]/../values/value/te
 (:for $album_names in $summary_tags/entry/key[data(.)="ALBUM"]/../values/value:)
 (:return $summary_tags/entry/key[data(.)="ALBUM"]/../values/value/text():)
 return
-	<li>"ALBUM: {$album_name} , ARTIST: {$artist_name}"</li>
+	$libentry
+(:	<li>"ALBUM: {$album_name} , ARTIST: {$artist_name}"</li>:)
