@@ -59,8 +59,8 @@ public:
         qDbo() << "Constructor, m_ext_future:" << m_ext_future.state();
         // Watcher creation is here vs. in start() to mitigate against cancel-before-start races and segfaults.  Seems to work.
 	    // We could get a doKill() call at any time after we leave this constructor.
-//		m_ext_watcher = std::make_unique<ExtFutureWatcherT>();
-		m_ext_watcher = new ExtFutureWatcherT();
+//		m_ext_watcher = QSharedPointer<ExtFutureWatcherT>::create();
+		m_ext_watcher = new ExtFutureWatcherT(this);
 
 		// Create a new 1 sec speed update QTimer.
 		m_speed_timer = QSharedPointer<QTimer>::create(this);
@@ -98,8 +98,8 @@ public:
 
 		// Watcher creation is here vs. in start() to mitigate against cancel-before-start races and segfaults.  Seems to work.
 		// We could get a doKill() call at any time after we leave this constructor.
-//		m_ext_watcher = std::make_unique<ExtFutureWatcherT>();
-		m_ext_watcher = new ExtFutureWatcherT();
+//		m_ext_watcher = QSharedPointer<ExtFutureWatcherT>::create();
+		m_ext_watcher = new ExtFutureWatcherT(this);
 
 		// Create a new 1 sec speed update QTimer.
 		m_speed_timer = QSharedPointer<QTimer>::create(this);
@@ -279,7 +279,7 @@ protected:
 	void pre_start()
 	{
 		// Hook up signals and such to the ExtFutureWatcher<T>.
-		HookUpExtFutureSignals(m_ext_watcher);
+		this->HookUpExtFutureSignals(m_ext_watcher);
 
 		// Start the speed calculation timer.
 		m_speed_timer->setTimerType(Qt::TimerType::PreciseTimer);
@@ -494,10 +494,12 @@ protected:
         return true;
     }
 
-    template <class WatcherType>
-    void HookUpExtFutureSignals(WatcherType* watcher)
+//    template <class WatcherType>
+//	void HookUpExtFutureSignals(QSharedPointer<ExtFutureWatcherT> watcher_sp)
+	void HookUpExtFutureSignals(ExtFutureWatcherT* watcher)
 	{
 		using ThisType = std::remove_reference_t<decltype(*this)>;
+//		auto watcher = watcher_sp.data();
 
         // FutureWatcher signals to this->SLOT* connections.
         // Regarding canceled QFuture<>s: "Any QFutureWatcher object that is watching this future will not deliver progress
@@ -516,7 +518,7 @@ protected:
 
         // Signal-to-signal connections.
         // forward resultsReadyAt() signal.
-        connect_or_die(watcher, &WatcherType::resultsReadyAt, this, &ThisType::SIGNAL_resultsReadyAt);
+		connect_or_die(watcher, &ExtFutureWatcherT::resultsReadyAt, this, &ThisType::SIGNAL_resultsReadyAt);
         // KJob signal forwarders.
         /// @todo Don't need/want these as long as we don't override the base class versions of the signals.
 //        connect_or_die(this, &KJob::finished, this, &ThisType::finished);
@@ -585,6 +587,7 @@ protected:
 	/// The watcher for the ExtFuture.
 	/// @note Would like to use a std::unique_ptr here, but it screws with the QObject parent/child delete mechanism
 	///       (we get double deletes).
+//	QSharedPointer<ExtFutureWatcherT> m_ext_watcher {};
 	ExtFutureWatcherT* m_ext_watcher {};
 
 	/// KJob::emitSpeed() support, which we apparently have to maintain ourselves.

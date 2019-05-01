@@ -158,7 +158,13 @@ void AMLMApp::SLOT_onAboutToQuit()
         perform_controlled_shutdown();
     }
 
-    qDbo() << "App shutdown complete.";
+	qDbo() << "#### App shutdown complete.";
+
+	if(!AMLMApp::IPerfectDeleter().empty())
+	{
+		qWro() << "PerfectDeleter still has undeleted objects:";
+		qWro() << AMLMApp::IPerfectDeleter().stats();
+	}
 }
 
 void AMLMApp::perform_controlled_shutdown()

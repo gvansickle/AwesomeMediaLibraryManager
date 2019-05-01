@@ -95,13 +95,6 @@ void PerfectDeleter::cancel_and_wait_for_all()
 		qIno() << line;
 	}
 
-	// Cancel all "deletables".
-	qIno() << "Canceling" << m_watched_deletables.size() << "Deletables";
-	for(auto& d : m_watched_deletables)
-	{
-		d->cancel();
-	}
-
 	// Cancel all registered AMLMJobs.
 	qIno() << "Killing" << m_watched_AMLMJobs.size() << "AMLMJobs";
 	for(AMLMJob* i : m_watched_AMLMJobs)
@@ -129,11 +122,32 @@ void PerfectDeleter::cancel_and_wait_for_all()
 //	scan_and_purge_futures();
 	qIno() << "Canceling" << m_future_synchronizer.futures().size() << "QFuture<void>'s and waiting for them to finish...";
 	m_future_synchronizer.waitForFinished();
+	m_future_synchronizer.clearFutures();
 	qIno() << "QFuture<void> wait complete.";
 
 	// Wait for the AMLMJobs to finish.
 	/// @todo Probably need to keep event loop running here.
 	waitForAMLMJobsFinished(true);
+
+	// Cancel all "deletables".
+	qIno() << "Canceling" << m_watched_deletables.size() << "Deletables";
+	for(auto& d : m_watched_deletables)
+	{
+		d->cancel();
+	}
+}
+
+bool PerfectDeleter::empty() const
+{
+	return (size() == 0);
+}
+
+size_t PerfectDeleter::size() const
+{
+	std::scoped_lock sl(m_mutex);
+	auto total_deletables = m_watched_KJobs.size() + m_watched_AMLMJobs.size()
+			+ m_watched_QThreads.size() + m_watched_deletables.size();
+	return total_deletables;
 }
 
 void PerfectDeleter::addQFuture(QFuture<void> f)

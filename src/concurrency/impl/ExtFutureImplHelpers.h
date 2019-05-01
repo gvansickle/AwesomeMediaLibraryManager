@@ -487,10 +487,18 @@ namespace ExtFuture_detail
 
 	template <class T, class R, class ResultsReadyAtCallbackType>
 	void SetBackpropWatcher(ExtFuture<T> upstream_future, ExtFuture<R> downstream_future,
-							QObject* upstream_context, QObject* downstream_context,
+							QObject* upstream_context, QObject* downstream_context, bool results,
 							ResultsReadyAtCallbackType&& results_ready_callback)
 	{
 		QThread* bp_thread = ExtFuture_detail::get_backprop_qthread();
+		if(upstream_context == nullptr)
+		{
+			upstream_context = bp_thread;
+		}
+		if(downstream_context == nullptr)
+		{
+			downstream_context = bp_thread;
+		}
 
 		using FutureWatcherTypeR = QFutureWatcher<R>;
 		using FutureWatcherTypeT = QFutureWatcher<T>;
@@ -504,38 +512,40 @@ namespace ExtFuture_detail
 		WatcherDeleter<R>* downstream_watcher_deleter = new WatcherDeleter<R>(downstream_watcher);
 		WatcherDeleter<T>* upstream_watcher_deleter = new WatcherDeleter<T>(upstream_watcher);
 
-		auto context = bp_thread;
-
-		// R->T ("upstream") cancel signal.
-		connect_or_die(downstream_watcher, &FutureWatcherTypeR::canceled, context, [=,
+		// R->T ("upstream")
+		// cancel signal.
+		connect_or_die(downstream_watcher, &FutureWatcherTypeR::canceled, upstream_context, [=,
 					   upstream_future_copy=DECAY_COPY(std::forward<ExtFuture<T>>(upstream_future))]() mutable {
 			// Note we directly call cancel() (but from context's thread) because upstream_future may not have an event loop.
 			upstream_future_copy.cancel();
 		});
-		// R->T ("upstream") finished signal.
+		// finished signal.
 		/// @note Should only ever get this due to an exception thrown into R, and then we should probably have gotten a cancel instead.
-		connect_or_die(downstream_watcher, &FutureWatcherTypeR::finished, context, [=,
+		connect_or_die(downstream_watcher, &FutureWatcherTypeR::finished, upstream_context, [=,
 					   upstream_future_copy=DECAY_COPY(std::forward<ExtFuture<T>>(upstream_future))]() mutable {
 			// Note we directly call cancel() (but from context's thread) because upstream_future may not have an event loop.
 			upstream_future_copy.reportFinished();
 		});
 
 		// T->R ("downstream") signals.
-		// The resultsReadyAt signal.
-		connect_or_die(upstream_watcher, &FutureWatcherTypeR::resultsReadyAt, context,
-					   [=,
-					   upstream_future_copy=DECAY_COPY(/*std::forward<ExtFuture<T>>*/(upstream_future)),
-					   callback_cp=DECAY_COPY(std::forward<ResultsReadyAtCallbackType>(results_ready_callback))](int begin, int end) mutable {
-			std::invoke(callback_cp, upstream_future, begin, end);
-			/// @note We're temporarily copying to the output future here, we should change that to use a separate thread.
-			///       Or maybe we can just return the upstream_future here....
-			for(int i = begin; i < end; ++i)
-			{
-				downstream_future.reportResult(upstream_future_copy, i);
-			}
-		});
+		if(results)
+		{
+			// The resultsReadyAt signal.
+			connect_or_die(upstream_watcher, &FutureWatcherTypeR::resultsReadyAt, downstream_context,
+						   [=,
+						   upstream_future_copy=DECAY_COPY(/*std::forward<ExtFuture<T>>*/(upstream_future)),
+						   callback_cp=DECAY_COPY(std::forward<ResultsReadyAtCallbackType>(results_ready_callback))](int begin, int end) mutable {
+				std::invoke(callback_cp, upstream_future, begin, end);
+				/// @note We're temporarily copying to the output future here, we should change that to use a separate thread.
+				///       Or maybe we can just return the upstream_future here....
+				for(int i = begin; i < end; ++i)
+				{
+					downstream_future.reportResult(upstream_future_copy, i);
+				}
+			});
+		}
 		// Canceled.
-		connect_or_die(upstream_watcher, &FutureWatcherTypeT::canceled, context,
+		connect_or_die(upstream_watcher, &FutureWatcherTypeT::canceled, downstream_context,
 				[=, downstream_future_copy=DECAY_COPY(downstream_future)]() mutable {
 			if(upstream_future.has_exception())
 			{
@@ -545,7 +555,7 @@ namespace ExtFuture_detail
 			downstream_future_copy.reportCanceled();
 		});
 		// Finished.
-		connect_or_die(upstream_watcher, &FutureWatcherTypeT::finished, context,
+		connect_or_die(upstream_watcher, &FutureWatcherTypeT::finished, downstream_context,
 					   [=]() mutable { downstream_future.reportFinished(); });
 
 		downstream_watcher_deleter->make_delete_connections();
@@ -576,7 +586,7 @@ void streaming_tap_helper_watcher(QObject* context, ExtFuture<T> this_future_cop
 	static_assert(std::is_void_v<std::invoke_result_t<CallbackType, ExtFuture<T>, int, int/*, Args...*/>>, "Callback must return void.");
 
 	ExtFuture_detail::SetBackpropWatcher(this_future_copy, ret_future_copy,
-										 context, context,
+										 context, context, true,
 										 DECAY_COPY(std::forward<CallbackType>(callback)));
 
 }

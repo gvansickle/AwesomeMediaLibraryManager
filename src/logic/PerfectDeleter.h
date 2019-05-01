@@ -102,6 +102,10 @@ public:
 
 	void cancel_and_wait_for_all();
 
+	bool empty() const;
+	size_t size() const;
+
+
 	/**
 	 * For adding QFuture<void>'s to be canceled/waited on.
 	 * @warning This is kind of wrong.  Ext/QFutures are ~std::shared_future<>'s, so while we can tell the promise-side
