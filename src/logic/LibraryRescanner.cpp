@@ -356,10 +356,10 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 #if 1
 	/// @stap
 	/// Append TreeModelItems to the tree_model.
-	tree_model_item_future.stap(//this,
+	tree_model_item_future.stap(this,
 								[=, tree_model_ptr=tree_model](ExtFuture<SharedItemContType> new_items_future, int begin_index, int end_index) mutable {
 
-		AMLM_ASSERT_NOT_IN_GUITHREAD();
+		AMLM_ASSERT_IN_GUITHREAD();
 
 		qDb() << "START: tree_model_item_future.then(), new_items_future count:" << new_items_future.resultCount();
 
@@ -528,12 +528,18 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 
             qDb() << "rescan_items:" << rescan_items.size();
             /// @todo TEMP FOR DEBUGGING, CHANGE FROM ASSERT TO ERROR.
-			Q_ASSERT(!rescan_items.empty());
+//			Q_ASSERT(!rescan_items.empty());
+			if(rescan_items.empty())
+			{
+				qDb() << "Model has no items to rescan:" << m_current_libmodel;
+			}
+			else
+			{
+				lib_rescan_job->setDataToMap(rescan_items, m_current_libmodel);
 
-            lib_rescan_job->setDataToMap(rescan_items, m_current_libmodel);
-
-            // Start the metadata scan.
-            qDb() << "STARTING RESCAN";
+				// Start the metadata scan.
+				qDb() << "STARTING RESCAN";
+			}
             lib_rescan_job->start();
 #endif
         }

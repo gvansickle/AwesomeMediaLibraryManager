@@ -60,7 +60,7 @@ public:
         // Watcher creation is here vs. in start() to mitigate against cancel-before-start races and segfaults.  Seems to work.
 	    // We could get a doKill() call at any time after we leave this constructor.
 //		m_ext_watcher = QSharedPointer<ExtFutureWatcherT>::create();
-		m_ext_watcher = new ExtFutureWatcherT(this);
+		m_ext_watcher = new ExtFutureWatcherT();
 
 		// Create a new 1 sec speed update QTimer.
 		m_speed_timer = QSharedPointer<QTimer>::create(this);
@@ -99,7 +99,7 @@ public:
 		// Watcher creation is here vs. in start() to mitigate against cancel-before-start races and segfaults.  Seems to work.
 		// We could get a doKill() call at any time after we leave this constructor.
 //		m_ext_watcher = QSharedPointer<ExtFutureWatcherT>::create();
-		m_ext_watcher = new ExtFutureWatcherT(this);
+		m_ext_watcher = new ExtFutureWatcherT();
 
 		// Create a new 1 sec speed update QTimer.
 		m_speed_timer = QSharedPointer<QTimer>::create(this);

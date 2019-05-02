@@ -1193,7 +1193,7 @@ public:
 						   }
 					   });
 		// The up->down finish signal.  This is where we'll call the then_callback.
-#error This needs to return the callbcak's return value to the returned future.
+//		M_TODO("This needs to return the callbcak's return value to the returned future.");
 		connect_or_die(upw, &QFutureWatcher<T>::finished, context,
 					   [=,
 					   then_callback_c2=DECAY_COPY(std::forward<ThenCallbackType>(then_callback)),
@@ -1312,8 +1312,8 @@ public:
 		{
 			// context is not a QThreadPool, but it is a QObject, hopefully with an event loop.
 			// Run the callback in @a context's thread via its event loop.
-//			return then_run_in_event_loop(context, std::forward<ThenCallbackType>(then_callback));
-return then_qobject_with_event_loop(context, std::forward<ThenCallbackType>(then_callback));
+			return then_run_in_event_loop(context, std::forward<ThenCallbackType>(then_callback));
+//			return then_qobject_with_event_loop(context, std::forward<ThenCallbackType>(then_callback));
 		}
 		else
 		{
@@ -1527,7 +1527,7 @@ protected:
 					 && !std::is_convertible_v<ContextType, QThreadPool*>
 					 && !std::is_null_pointer_v<std::decay_t<ContextType>>)
 		{
-			// ContextType == QObject* but not QThreadPool* underload.
+			// ContextType == QObject* but not QThreadPool* or nullptr underload.
 			streaming_tap_helper_watcher(context, *this, returned_future, std::move(streaming_tap_callback));
 		}
 		else

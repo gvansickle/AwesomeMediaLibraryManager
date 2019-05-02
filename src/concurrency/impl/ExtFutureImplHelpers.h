@@ -553,33 +553,33 @@ namespace ExtFuture_detail
 		});
 
 		// T->R ("downstream") signals.
-		// The resultsReadyAt signal.
-		if constexpr(std::is_invocable_r_v<void, ResultsReadyAtCallbackType, int, int>)
-		{
+		// The resultsReadyAt() signal -> results_ready_callback.
+//		if constexpr(std::is_invocable_r_v<void, ResultsReadyAtCallbackType, int, int>)
+//		{
 			connect_or_die(upstream_watcher, &FutureWatcherTypeR::resultsReadyAt, downstream_context,
 						   [=,
 						   upstream_future_copy=DECAY_COPY(/*std::forward<ExtFuture<T>>*/(upstream_future)),
 						   callback_cp=DECAY_COPY(std::forward<ResultsReadyAtCallbackType>(results_ready_callback))](int begin, int end) mutable {
 				std::invoke(callback_cp, upstream_future, begin, end);
-//				/// @note We're temporarily copying to the output future here, we should change that to use a separate thread.
-//				///       Or maybe we can just return the upstream_future here....
-//				for(int i = begin; i < end; ++i)
-//				{
-//					downstream_future.reportResult(upstream_future_copy, i);
-//				}
+				/// @note We're temporarily copying to the output future here, we should change that to use a separate thread.
+				///       Or maybe we can just return the upstream_future here....
+				for(int i = begin; i < end; ++i)
+				{
+					downstream_future.reportResult(upstream_future_copy, i);
+				}
 			});
-		}
-		// The up->down data copy.
-		connect_or_die(upstream_watcher, &FutureWatcherTypeR::resultsReadyAt, downstream_context,
-		               [=,upstream_future_copy=DECAY_COPY(/*std::forward<ExtFuture<T>>*/(upstream_future)),
-				          callback_cp=DECAY_COPY(std::forward<ResultsReadyAtCallbackType>(results_ready_callback))](int begin, int end) mutable {
-			               /// @note We're temporarily copying to the output future here, we should change that to use a separate thread.
-			               ///       Or maybe we can just return the upstream_future here....
-			               for(int i = begin; i < end; ++i)
-			               {
-				               downstream_future.reportResult(upstream_future_copy, i);
-			               }
-		               });
+//		}
+//		// The T->R data xfer.
+//		connect_or_die(upstream_watcher, &FutureWatcherTypeR::resultsReadyAt, downstream_context,
+//		               [=,upstream_future_copy=DECAY_COPY(/*std::forward<ExtFuture<T>>*/(upstream_future)),
+//				          callback_cp=DECAY_COPY(std::forward<ResultsReadyAtCallbackType>(results_ready_callback))](int begin, int end) mutable {
+//			               /// @note We're temporarily copying to the output future here, we should change that to use a separate thread.
+//			               ///       Or maybe we can just return the upstream_future here....
+//			               for(int i = begin; i < end; ++i)
+//			               {
+//				               downstream_future.reportResult(upstream_future_copy, i);
+//			               }
+//		               });
 		// Canceled.
 		connect_or_die(upstream_watcher, &FutureWatcherTypeT::canceled, downstream_context,
 				[=, downstream_future_copy=DECAY_COPY(downstream_future)]() mutable {
@@ -628,7 +628,7 @@ void streaming_tap_helper_watcher(QObject* context, ExtFuture<T> this_future_cop
 	static_assert(std::is_void_v<std::invoke_result_t<CallbackType, ExtFuture<T>, int, int/*, Args...*/>>, "Callback must return void.");
 
 	ExtFuture_detail::SetBackpropWatcher(this_future_copy, ret_future_copy,
-										 context, context, true,
+										 context, context,
 										 DECAY_COPY(std::forward<CallbackType>(callback)));
 
 }
