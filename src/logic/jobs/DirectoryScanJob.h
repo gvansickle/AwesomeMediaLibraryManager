@@ -87,12 +87,6 @@ protected:
 
 protected Q_SLOT:
 
-//     void SLOT_onResultsReadyAt(const ExtFutureType& ef, int begin, int end) override
-//	 {
-//		 qDbo() << "GOT RESULTS:" << begin << end;
-
-//         Q_EMIT SIGNAL_resultsReadyAt(ef, begin, end);
-//	 }
 
 private:
 

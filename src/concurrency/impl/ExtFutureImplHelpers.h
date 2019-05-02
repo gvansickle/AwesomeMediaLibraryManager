@@ -485,10 +485,35 @@ namespace ExtFuture_detail
 		return watcher;
 	}
 
-	template <class T, class R, class ResultsReadyAtCallbackType>
+//	template<class T, class R>
+//	void connect_or_die_up2down(QPointer<QFutureWatcher<T>> upstream_watcher, QPointer<QFutureWatcher<R>> downstream_watcher)
+//	{
+//		// Canceled.
+//		connect_or_die(upstream_watcher, &FutureWatcherTypeT::canceled, downstream_context,
+//				[=, downstream_future_copy=DECAY_COPY(downstream_future)]() mutable {
+//			if(upstream_future.has_exception())
+//			{
+//				// Throw exception to downstream future.  Takes a bit of shenanigans.
+//				trigger_exception_and_propagate(upstream_future, downstream_future_copy);
+//			}
+//			downstream_future_copy.reportCanceled();
+//		});
+//		// Finished.
+//		connect_or_die(upstream_watcher, &FutureWatcherTypeT::finished, downstream_context,
+//					   [=]() mutable { downstream_future.reportFinished(); });
+//	}
+
+//	template<class R, class T>
+//	void connect_or_die_down2up(QPointer<QFutureWatcher<R>> downstream, QPointer<QFutureWatcher<T>> upstream)
+//	{
+
+//	}
+
+	template <class T, class R, class ResultsReadyAtCallbackType = std::nullptr_t, class WatcherConnectionCallback = std::nullptr_t>
 	void SetBackpropWatcher(ExtFuture<T> upstream_future, ExtFuture<R> downstream_future,
-							QObject* upstream_context, QObject* downstream_context, bool results,
-							ResultsReadyAtCallbackType&& results_ready_callback)
+							QObject* upstream_context, QObject* downstream_context,
+							ResultsReadyAtCallbackType&& results_ready_callback = nullptr,
+							WatcherConnectionCallback&& wc_callback = nullptr)
 	{
 		QThread* bp_thread = ExtFuture_detail::get_backprop_qthread();
 		if(upstream_context == nullptr)
@@ -528,22 +553,33 @@ namespace ExtFuture_detail
 		});
 
 		// T->R ("downstream") signals.
-		if(results)
+		// The resultsReadyAt signal.
+		if constexpr(std::is_invocable_r_v<void, ResultsReadyAtCallbackType, int, int>)
 		{
-			// The resultsReadyAt signal.
 			connect_or_die(upstream_watcher, &FutureWatcherTypeR::resultsReadyAt, downstream_context,
 						   [=,
 						   upstream_future_copy=DECAY_COPY(/*std::forward<ExtFuture<T>>*/(upstream_future)),
 						   callback_cp=DECAY_COPY(std::forward<ResultsReadyAtCallbackType>(results_ready_callback))](int begin, int end) mutable {
 				std::invoke(callback_cp, upstream_future, begin, end);
-				/// @note We're temporarily copying to the output future here, we should change that to use a separate thread.
-				///       Or maybe we can just return the upstream_future here....
-				for(int i = begin; i < end; ++i)
-				{
-					downstream_future.reportResult(upstream_future_copy, i);
-				}
+//				/// @note We're temporarily copying to the output future here, we should change that to use a separate thread.
+//				///       Or maybe we can just return the upstream_future here....
+//				for(int i = begin; i < end; ++i)
+//				{
+//					downstream_future.reportResult(upstream_future_copy, i);
+//				}
 			});
 		}
+		// The up->down data copy.
+		connect_or_die(upstream_watcher, &FutureWatcherTypeR::resultsReadyAt, downstream_context,
+		               [=,upstream_future_copy=DECAY_COPY(/*std::forward<ExtFuture<T>>*/(upstream_future)),
+				          callback_cp=DECAY_COPY(std::forward<ResultsReadyAtCallbackType>(results_ready_callback))](int begin, int end) mutable {
+			               /// @note We're temporarily copying to the output future here, we should change that to use a separate thread.
+			               ///       Or maybe we can just return the upstream_future here....
+			               for(int i = begin; i < end; ++i)
+			               {
+				               downstream_future.reportResult(upstream_future_copy, i);
+			               }
+		               });
 		// Canceled.
 		connect_or_die(upstream_watcher, &FutureWatcherTypeT::canceled, downstream_context,
 				[=, downstream_future_copy=DECAY_COPY(downstream_future)]() mutable {
@@ -557,6 +593,12 @@ namespace ExtFuture_detail
 		// Finished.
 		connect_or_die(upstream_watcher, &FutureWatcherTypeT::finished, downstream_context,
 					   [=]() mutable { downstream_future.reportFinished(); });
+
+		if constexpr(std::is_invocable_r_v<void, WatcherConnectionCallback, QPointer<QFutureWatcher<T>>, QPointer<QFutureWatcher<R>>>)
+		{
+			// Let the caller do any last-minute connections to the watchers.
+			std::invoke(wc_callback, upstream_watcher, downstream_watcher);
+		}
 
 		downstream_watcher_deleter->make_delete_connections();
 		upstream_watcher_deleter->make_delete_connections();

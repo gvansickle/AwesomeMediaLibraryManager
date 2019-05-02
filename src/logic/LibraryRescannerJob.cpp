@@ -168,6 +168,7 @@ void library_metadata_rescan_task(ExtFuture<MetadataReturnVal> ext_future, Libra
 	for(QVector<VecLibRescannerMapItems>::const_iterator i = items_to_rescan.cbegin(); i != items_to_rescan.cend(); ++i)
 	{
 		qDb() << "Item number:" << num_items;
+
 		/// @todo eliminate the_job ptr.
 		MetadataReturnVal a = the_job->refresher_callback(*i);
 

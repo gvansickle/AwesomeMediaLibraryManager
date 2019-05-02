@@ -1163,6 +1163,46 @@ public:
 		return retfuture;
 	}
 
+	/**
+	 * This version is intended to go from an arbitrary ExtFuture<> to a then_callback which needs to run in the
+	 * thread of the given QObject.  We'll use a QFutureWatcher<> parented to the context and signals/slots.
+	 */
+	template <class ThenCallbackType, class R = Unit::LiftT< std::invoke_result_t<ThenCallbackType, ExtFuture<T>> >,
+	        class ThenReturnType = ExtFuture<R>,
+	        REQUIRES(!is_ExtFuture_v<R> && !is_ExtFuture_v<T>
+	          && std::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, ExtFuture<T>>)
+	        >
+	ThenReturnType then_qobject_with_event_loop(QObject* context, ThenCallbackType&& then_callback) const
+	{
+		ThenReturnType retfuture = ExtAsync::make_started_only_future<R>();
+
+		// Create a new up->downstream watcher parented to the context object.
+
+		ExtFuture_detail::SetBackpropWatcher(*this, retfuture,
+											 /**Is this right?*/context, context,
+											 nullptr,
+		[=, then_callback_c1=DECAY_COPY(std::forward<ThenCallbackType>(then_callback))](QPointer<QFutureWatcher<T>> upw, QPointer<QFutureWatcher<R>> downw){
+			connect_or_die(upw, &QFutureWatcher<T>::finished, downw,
+						   [=, then_callback_c2=DECAY_COPY(/*std::forward<ThenCallbackType>*/(then_callback_c1))](){
+				std::invoke(std::move(then_callback_c2), ExtFuture<T>(upw->future()));
+				;});
+		});
+
+//				[=](QPointer<QFutureWatcher<T>> upwatcher, QPointer<QFutureWatcher<T>> downwatcher){
+//			// The upwatcher->resultsReadyAt signal.
+//			connect_or_die(upwatcher, &QFutureWatcher<T>::resultsReadyAt, context,
+//						   [=,retfuture_cp=DECAY_COPY(retfuture)](int begin, int end){
+////				auto downfuture = downwatcher->future();
+////				for(int i = begin; i < end; ++i)
+////				{
+////					retfuture_cp.reportResult(upwatcher->resultAt(i));
+////				}
+//			});
+//		});
+
+		return retfuture;
+	}
+
 
 	/**
 	 * std::experimental::future-like .then() which takes a continuation function @a then_callback
@@ -1247,9 +1287,10 @@ public:
 		else if constexpr (!std::is_convertible_v<ContextType, QThreadPool*>
 		        && std::is_convertible_v<ContextType, QObject*>)
 		{
-			// context is not a QThreadPool, but it is a QObject with an event loop.
+			// context is not a QThreadPool, but it is a QObject, hopefully with an event loop.
 			// Run the callback in @a context's thread via its event loop.
-			return then_run_in_event_loop(context, std::forward<ThenCallbackType>(then_callback));
+//			return then_run_in_event_loop(context, std::forward<ThenCallbackType>(then_callback));
+return then_qobject_with_event_loop(context, std::forward<ThenCallbackType>(then_callback));
 		}
 		else
 		{
@@ -1265,8 +1306,9 @@ public:
 	 * "the continuation INVOKE(std::move(fd), *this) is called on an unspecified thread of execution".
 	 */
 	template <class ThenCallbackType>
-	auto then(ThenCallbackType&& then_callback ) const -> then_return_type_from_callback_and_future_t<ThenCallbackType, ExtFuture<T>>
+	auto then(ThenCallbackType&& then_callback) const -> then_return_type_from_callback_and_future_t<ThenCallbackType, ExtFuture<T>>
 	{
+	    static_assert(!is_ExtFuture_v<T>, "Nested futures not supported.");
 		return then_qthread_async(std::forward<ThenCallbackType>(then_callback));
 	};
 
