@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -45,6 +45,9 @@
 #include <QThread>
 #include <QPair>
 #include <QStringList> // For template shenanigans.
+
+// Boost
+#include <boost/thread.hpp>
 
 // Ours
 #include <utils/QtHelpers.h>
@@ -1286,6 +1289,22 @@ public:
 			exception_propagation_helper_then(in_future, returned_future_copy, std::move(fd_then_callback));
 
 			}, *this, retfuture);
+
+		return retfuture;
+	}
+
+	template <class ThenCallbackType, class R = Unit::LiftT< std::invoke_result_t<ThenCallbackType, boost::shared_future<T>> >,
+				class ThenReturnType = boost::shared_future<R>,
+				REQUIRES(!is_ExtFuture_v<R> && !is_ExtFuture_v<T>
+				  && std::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, boost::shared_future<T>>)
+				>
+	ThenReturnType then_boost(ThenCallbackType&& then_callback) const
+	{
+		ThenReturnType retfuture = ExtAsync::make_started_only_future<R>();
+
+		boost::packaged_task pt([=](boost::shared_future<T> upfut){
+			return std::invoke(std::move(then_callback), upfut);
+			});
 
 		return retfuture;
 	}

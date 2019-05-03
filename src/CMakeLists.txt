@@ -180,7 +180,14 @@ list(APPEND amlm_SRCS ${SOURCE_FILES} ${HEADER_FILES}
 # See:
 # @link https://api.kde.org/ecm/module/ECMAddAppIcon.html
 # @link http://kfunk.org/2017/12/20/tips-streamlining-kde-application-for-deployment-microsoft-windows/
-target_link_libraries(src PUBLIC resources)
+target_link_libraries(src
+	PUBLIC 
+		resources
+		# Boost
+		Boost::boost					# Target for header-only dependencies
+		Boost::diagnostic_definitions # For information about Boost's automatic linking
+                                      # during compilation (adds BOOST_LIB_DIAGNOSTIC)
+	)
 #if(NOT DEFINED amlm_APP_ICONS)
 #	message(FATAL_ERROR "NOT DEFINED: amlm_APP_ICONS: '${amlm_APP_ICONS}'")
 #endif()

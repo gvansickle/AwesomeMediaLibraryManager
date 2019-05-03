@@ -32,50 +32,9 @@
 
 // Ours
 #include <src/logic/serialization/ExtEnum.h>
-#include <src/logic/serialization/XmlTagBase.h>
+#include <serialization/ISerializable.h>
 
-/**
- * ExtUrl tags.
- * These are the XML tags which you'll find in an ExtUrl element.
- */
-class ExtUrlTag : public XmlTagBase<ExtUrlTag>
-{
-	Q_GADGET
 
-public:
-	/// The tags in X-macro form.  First is text usable as a C++ identifier,
-	/// and second here is the text to use for the tag in an XML document.
-	#define M_ExtUrlTags(X) \
-		X(HREF, "href") \
-		X(TS_LAST_REFRESH, "ts_last_refresh") \
-		X(SIZE_FILE, "size_file") \
-		X(TS_CREATION,"ts_creation") \
-		X(TS_LAST_MODIFIED, "ts_last_modified") \
-		X(TS_LAST_MODIFIED_METADATA, "ts_last_modified_metadata")
-
-	enum TagEnum
-	{
-#define X(id, tag_str) id,
-		M_ExtUrlTags(X)
-#undef X
-	};
-	Q_ENUM(TagEnum)
-
-#define X(id, tag_str) { id, tag_str },
-/// @todo Not currently used.
-	static constexpr std::tuple<TagEnum, std::string_view> m_testmap[] = { M_ExtUrlTags(X) };
-#undef X
-
-};
-Q_DECLARE_METATYPE(ExtUrlTag);
-
-static const auto ExtUrlTagToXMLTagMap = ExtUrlTag::make_map<ExtUrlTag::TagEnum, QString>(
-{
-			// This expands to an init list with entries which look like: {ExtUrlTag::HREF, "href"},
-#define X(s, tag_str) { ExtUrlTag::s, tag_str },
-			M_ExtUrlTags(X)
-#undef X
-});
 
 
 

@@ -30,29 +30,21 @@
 template <class ScopeTypeEnumType>
 using ExtEnumToStringMap = ExtEnumMapBase<ScopeTypeEnumType, QString>;
 
-/**
- * CRTP Base class for XML tags.
- */
-template <class DerivedType>
-class XmlTagBase : public ExtEnum<DerivedType>, crtp<DerivedType, XmlTagBase>
-{
-public:
-	XmlTagBase() {};
-//	XmlTagBase(const std::string& tag_string) : m_tag_string(tag_string) {};
-	virtual ~XmlTagBase() {};
+///**
+// * CRTP Base class for XML tags.
+// */
+//template <class DerivedType>
+//class XmlTagBase : public ExtEnum<DerivedType>, crtp<DerivedType, XmlTagBase>
+//{
+//public:
+//	XmlTagBase() {};
+////	XmlTagBase(const std::string& tag_string) : m_tag_string(tag_string) {};
+//	virtual ~XmlTagBase() {};
 
-//	const std::string toXmlTagString(int enumerator) const { return this->m_tag_string; };
+////	const std::string toXmlTagString(int enumerator) const { return this->m_tag_string; };
 
-	/// The tag in string form.  Does not contain the "<>"'s or the end slash.
-//	std::string m_tag_string { "ERROR" };
-};
-
-/**
- * X-Macro support for mappings.
- * @rant Seriously.  It's the 21st century and we still have to resort to this.
- */
-
-#define M_ID_COMMA(ident) ident,
-#define M_ID_COMMA_STR_COMMA(ident) ident, #ident
+//	/// The tag in string form.  Does not contain the "<>"'s or the end slash.
+////	std::string m_tag_string { "ERROR" };
+//};
 
 #endif /* SRC_LOGIC_SERIALIZATION_XMLTAGBASE_H_ */

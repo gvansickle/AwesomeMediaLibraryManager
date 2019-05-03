@@ -431,14 +431,13 @@ endif(UNIX)
 
 
 #
-# And Boost.  Sorry.  But just CallableTraits, has no other deps.
-#
-# See https://cmake.org/cmake/help/v3.10/module/FindBoost.html
+# And Boost.  Sorry.
+# @link https://cmake.org/cmake/help/v3.14/module/FindBoost.html?highlight=boost#findboost
 if(FALSE)
 ### CallableTraits only in 1.66+.
 set(Boost_USE_MULTITHREADED      ON)
-find_package(Boost REQUIRED #1.60.0
-  COMPONENTS CallableTraits
+find_package(Boost REQUIRED 1.66.0
+  COMPONENTS CallableTraits 
   )
 else()
 if(FALSE)
@@ -454,26 +453,27 @@ endif()
 
 # Boost
 # See @link https://cmake.org/cmake/help/latest/module/FindBoost.html
-#set(BOOST_THREAD_VERSION          4) # Latest in 1.66 as of this writing.
-#set(BOOST_THREAD_PROVIDES_FUTURE ON)
-#set(BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION ON)
-#set(BOOST_THREAD_FUTURE_USES_OPTIONAL ON)
-#set(Boost_USE_STATIC_LIBS        ON) # Only find static libs.
-#set(Boost_USE_STATIC_RUNTIME     ON) # Want static runtime.
-#set(Boost_USE_MULTITHREADED      ON) # Need multithreaded.
-#set(Boost_USE_DEBUG_LIBS         ON)
-#set(Boost_USE_RELEASE_LIBS       OFF)
-##set(BOOST_ALL_DYN_LINK           OFF)
-#set(Boost_USE_DEBUG_RUNTIME      ON)
-#set(Boost_DEBUG    				OFF) # enable debug output from FindBoost.
-#set(Boost_DETAILED_FAILURE_MSG ON) # add detailed information to the failure message 
+set(BOOST_THREAD_VERSION          4) # Latest in 1.66 as of this writing.
+set(BOOST_THREAD_PROVIDES_FUTURE ON)
+set(BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION ON)
+set(BOOST_THREAD_FUTURE_USES_OPTIONAL ON)
+set(Boost_USE_STATIC_LIBS        ON) # Only find static libs.
+set(Boost_USE_STATIC_RUNTIME     ON) # Want static runtime.
+set(Boost_USE_MULTITHREADED      ON) # Need multithreaded.
+set(Boost_USE_DEBUG_LIBS         ON)
+set(Boost_USE_RELEASE_LIBS       OFF)
+set(BOOST_ALL_DYN_LINK           OFF)
+set(Boost_USE_DEBUG_RUNTIME      ON)
+set(Boost_DEBUG    				 ON) # enable debug output from FindBoost.
+set(Boost_DETAILED_FAILURE_MSG   ON) # add detailed information to the failure message 
 #								   # even when the REQUIRED option is not given to the find_package call.
-#find_package(Boost 1.66.0 REQUIRED
-#	COMPONENTS
-#		thread
-#		system)
+find_package(Boost 1.66.0 REQUIRED
+	COMPONENTS
+		thread
+		system)
 #include_directories( ${Boost_INCLUDE_DIR} )
 #link_directories( ${Boost_LIBRARY_DIRS} )
+add_definitions(${Boost_LIB_DIAGNOSTIC_DEFINITIONS})
 
 # Qt logging categories.
 # @link https://api.kde.org/ecm/module/ECMQtDeclareLoggingCategory.html
