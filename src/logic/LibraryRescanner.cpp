@@ -232,12 +232,6 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
     /// @todo Should this really be done here, or somewhere else?
     tree_model->setBaseDirectory(dir_url);
 
-//	/// @todo Looks like there's no way around these wretched signals/slots.
-//	/// @add delete on finished.
-//	connect_or_die(this, &LibraryRescanner::SIGNAL_StapToTreeModel, tree_model, [=](std::vector<std::unique_ptr<AbstractTreeModelItem>> new_items){
-//		tree_model->appendItems(std::move(new_items));
-//	});
-
 	// Create a future so we can attach a watcher to get the QUrl results to the main thread.
 	/// @todo Obsoleting.
 	ExtFuture<QString> qurl_future = ExtAsync::make_started_only_future<QString>();

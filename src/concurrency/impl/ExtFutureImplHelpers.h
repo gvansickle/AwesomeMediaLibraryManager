@@ -699,8 +699,8 @@ namespace ExtFuture_detail
 		}
 
 		// Connect these up last, they signal the watchers to deleteLater() themselves.
-		connect_or_die_deleteLater_on_finished(downstream_watcher);
-		connect_or_die_deleteLater_on_finished(upstream_watcher);
+//		connect_or_die_deleteLater_on_finished(downstream_watcher);
+//		connect_or_die_deleteLater_on_finished(upstream_watcher);
 
 		// And set the futures.  It's just that easy.
 		downstream_watcher->setFuture(downstream_future);
