@@ -25,11 +25,14 @@
 // Std C++
 
 #include <type_traits>
+/// @todo We have this now...
 //#if __has_include(<experimental/type_traits>)
 //#include <experimental/type_traits>
-//using namespace ns_detection = namespace std::experimental::fundamentals_v2;
+//#if __cpp_lib_experimental_detect >= 201505
+////using namespace ns_detection = namespace std::experimental::fundamentals_v2;
+//#endif
 //#else
-//using ns_detection = namespace std;
+////using ns_detection = namespace std;
 //#endif
 #include <tuple>
 #include <functional> // For std::invoke<>().
@@ -267,6 +270,13 @@ std::decay_t<T> DECAY_COPY(T&& v)
 {
     return std::forward<T>(v);
 }
+
+/**
+ * A macro for implementing the even-more-mysterious "copy fd of func constructed as if by DECAY_COPY(std::forward<F>(func))
+ * evaluated in the thread calling then".
+ * @link https://en.cppreference.com/w/cpp/experimental/shared_future/then
+ */
+#define FWD_DECAY_COPY(Ftype, callback) DECAY_COPY(std::forward< Ftype >( callback ))
 
 
 /**

@@ -26,7 +26,6 @@ set(HEADER_FILES_SRC_FUTURE
 	future_algorithms.h
 	cpp14_concepts.hpp
 	cloneable.h
-	static_if.hpp
 	grvs_functional.hpp
 	guideline_helpers.h
 	InsertionOrderedMap.h

@@ -450,7 +450,7 @@ TEST_F(AMLMJobTests, DISABLED_ThenTest) // NOLINT
 #endif
 
 
-TEST_P(AMLMJobTestsParameterized, DirScanCancelTestPAutodelete) // NOLINT
+TEST_P(AMLMJobTestsParameterized, DISABLED_DirScanCancelTestPAutodelete) // NOLINT
 {
     TC_ENTER();
 

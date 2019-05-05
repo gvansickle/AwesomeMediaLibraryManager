@@ -12,8 +12,8 @@ class SettingsPageGeneral : public QWidget
 	Q_OBJECT
 
 public:
-	explicit SettingsPageGeneral(QWidget *parent = 0);
-	~SettingsPageGeneral();
+	explicit SettingsPageGeneral(QWidget *parent = nullptr);
+	~SettingsPageGeneral() override;
 
 private:
 	Ui::SettingsPageGeneral *ui;

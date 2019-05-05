@@ -102,6 +102,7 @@ M_WARNING("If we do this here, we need to wait for all jobs to stop.");
 //#error "Yeah this asserts"
     AMLM_ASSERT_EQ(m_amlmjob_to_widget_map.size(), 0);
 #endif
+
     m_expanding_frame_widget->deleteLater();
 }
 

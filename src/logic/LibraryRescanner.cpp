@@ -410,7 +410,9 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 		m_model_ready_to_save_to_db = true;
 		return unit;
 	})
-	.then(qApp, [=, tree_model_ptr=tree_model, kjob = dirtrav_job](ExtFuture<Unit> future_unit) {
+	.then(qApp, [=,
+				 tree_model_ptr=tree_model,
+				 kjob=FWD_DECAY_COPY(QPointer<AMLMJobT<ExtFuture<DirScanResult>>>, dirtrav_job)](ExtFuture<Unit> future_unit) {
 
 			AMLM_ASSERT_IN_GUITHREAD();
 
@@ -418,6 +420,10 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 
 
 			qDb() << "DIRTRAV COMPLETE, NOW IN GUI THREAD";
+			if(kjob.isNull())
+			{
+				Q_ASSERT_X(0, __func__, "Dir scan job was deleted");
+			}
 	        if(kjob->error())
 	        {
 	            qWr() << "DIRTRAV FAILED:" << kjob->error() << ":" << kjob->errorText() << ":" << kjob->errorString();
