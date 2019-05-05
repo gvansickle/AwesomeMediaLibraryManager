@@ -450,7 +450,7 @@ TEST_F(AMLMJobTests, DISABLED_ThenTest) // NOLINT
 #endif
 
 
-TEST_P(AMLMJobTestsParameterized, DISABLED_DirScanCancelTestPAutodelete) // NOLINT
+TEST_P(AMLMJobTestsParameterized, DirScanCancelTestPAutodelete) // NOLINT
 {
     TC_ENTER();
 
@@ -473,7 +473,7 @@ TEST_P(AMLMJobTestsParameterized, DISABLED_DirScanCancelTestPAutodelete) // NOLI
 																									   QDir::AllDirs |
 																									   QDir::NoDotAndDotDot),
 																						 QDirIterator::Subdirectories);
-	auto dsj = make_async_AMLMJobT(dirresults_future);
+	auto dsj = make_async_AMLMJobT(dirresults_future, "TestDirResultsJob");
 
     M_QSIGNALSPIES_SET(dsj);
 
@@ -483,6 +483,7 @@ TEST_P(AMLMJobTestsParameterized, DISABLED_DirScanCancelTestPAutodelete) // NOLI
 	AMLMTEST_COUT << "Setting Autodelete to:" << autodelete;
     dsj->setAutoDelete(autodelete);
 
+#if 0 /// DirectoryScannerAMLMJob is gone
     // Connect signals and slots.
     connect_or_die(dsj, &DirectoryScannerAMLMJob::finished, qApp, [=](KJob* kjob){
 		AMLMTEST_COUT << "GOT FINISHED";
@@ -494,7 +495,7 @@ TEST_P(AMLMJobTestsParameterized, DISABLED_DirScanCancelTestPAutodelete) // NOLI
         EXPECT_EQ(kjob, dsj);
         EXPECT_EQ(kjob->error(), KJob::KilledJobError);
         ;});
-
+#endif
     // Dump some info.
     dsj->dumpObjectInfo();
 

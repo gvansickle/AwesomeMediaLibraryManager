@@ -36,72 +36,8 @@
 #include <concurrency/ExtFuture.h>
 #include "utils/UniqueIDMixin.h"
 
-class DirectoryScannerAMLMJob;
-using DirectoryScannerAMLMJobPtr = QPointer<DirectoryScannerAMLMJob>;
-
-
 /**
- *
- */
-class DirectoryScannerAMLMJob : public AMLMJobT<ExtFuture<DirScanResult>>, public virtual UniqueIDMixin<DirectoryScannerAMLMJob>
-{
-	Q_OBJECT
-
-	using BASE_CLASS = AMLMJobT<ExtFuture<DirScanResult>>;
-
-	/**
-	 * @note CRTP: Still need this to avoid ambiguous name resolution.
-	 * @see https://stackoverflow.com/a/46916924
-	 */
-	using UniqueIDMixin<DirectoryScannerAMLMJob>::uniqueQObjectName;
-
-Q_SIGNALS:
-
-	/**
-	 * Signal used to send the discovered directory entries to
-	 * whoever may be listening.
-	 */
-//    void SIGNAL_resultsReadyAt(const ExtFuture<DirScanResult>& ef, int begin, int end);
-//	void SIGNAL_resultsReadyAt(int begin, int end) override;
-
-protected:
-	explicit DirectoryScannerAMLMJob(QObject* parent, const QUrl& dir_url,
-			const QStringList &nameFilters,
-			const QDir::Filters filters = QDir::NoFilter,
-			const QDirIterator::IteratorFlags flags = QDirIterator::NoIteratorFlags);
-
-public:
-
-	/// @name Public types
-	/// @{
-	using ExtFutureType = ExtFuture<DirScanResult>;
-	/// @}
-
-	~DirectoryScannerAMLMJob() override;
-
-protected:
-
-	/// @todo Temp while converting over to AMLMJobT<>.
-	void run() override;
-	void runFunctor() override;
-
-protected Q_SLOT:
-
-
-private:
-
-	/// The URL we'll start the traversal from.
-	QUrl m_dir_url;
-	QStringList m_name_filters;
-	QDir::Filters m_dir_filters;
-	QDirIterator::IteratorFlags m_iterator_flags;
-
-};
-
-Q_DECLARE_METATYPE(DirectoryScannerAMLMJobPtr);
-
-/**
- * Function which does the actual directory scanning.
+ * Function which scans a directory for files.
  *
  * @param ext_future  The in/out/control ExtFuture.
  * @param amlmJob     The associated AMLMJob, if any.
