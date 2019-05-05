@@ -532,35 +532,6 @@ namespace ExtFuture_detail
 	}
 
 
-	template <class T>
-	class WatcherDeleter
-	{
-
-	public:
-		WatcherDeleter() = default;
-		explicit WatcherDeleter(QFutureWatcher<T>* f) : m_watcher(f) {};
-		~WatcherDeleter() = default;
-
-		void make_delete_connections()
-		{
-			connect_or_die(m_watcher, &QFutureWatcher<T>::finished, [=]() mutable { this->delete_later_if_canceled_and_finished(); });
-			connect_or_die(m_watcher, &QFutureWatcher<T>::canceled, [=]() mutable { this->delete_later_if_canceled_and_finished(); });
-		}
-	public:
-		void delete_later_if_canceled_and_finished()
-		{
-			if(/*m_watcher->isCanceled() &&*/ m_watcher->isFinished())
-			{
-				qDb() << "QFutureWatcher<> is canceled/finished, deleting:" << m_watcher;
-				m_watcher->deleteLater();
-			}
-		}
-
-		QPointer<QFutureWatcher<T>> m_watcher {nullptr};
-	};
-
-
-
 	/**
 	 * Factory function for creating managed QFutureWatcher<>s.
 	 * @returns A pointer to the new watcher.  This is a raw pointer, and the watcher has no parent.
@@ -589,7 +560,12 @@ namespace ExtFuture_detail
 	{
 		// If down is canceled, cancel upstream.
 		// If it was upstream that did the canceling, this effectively is a no-op.
-		connect_or_die(downstream, &QFutureWatcher<R>::canceled, context, [upstream_future=upstream_future](){
+		connect_or_die(downstream, &QFutureWatcher<R>::canceled, context, [=,upstream_future=upstream_future](){
+			if(downstream->has_exception())
+			{
+				// Throw exception to upstream future.  Takes a bit of shenanigans.
+				trigger_exception_and_propagate(downstream, upstream_future);
+			}
 			upstream_future.cancel();
 		});
 	}
@@ -599,7 +575,17 @@ namespace ExtFuture_detail
 	{
 		// If down is canceled, cancel upstream.
 		// If it was upstream that did the canceling, this effectively is a no-op.
-		connect_or_die(downstream, &QFutureWatcher<R>::canceled, upstream_future_watcher, &QFutureWatcher<T>::cancel);
+		connect_or_die(downstream, &QFutureWatcher<R>::canceled, upstream_future_watcher,
+				[=](){
+			ExtFuture<R> downf = downstream->future();
+			ExtFuture<T> upf = upstream_future_watcher->future();
+			if(downf.has_exception())
+			{
+				// Throw exception to upstream future.  Takes a bit of shenanigans.
+				trigger_exception_and_propagate(downf, upf);
+			}
+			upstream_future_watcher->cancel();
+		});
 	}
 
 	template <class T>
@@ -644,11 +630,6 @@ namespace ExtFuture_detail
 		// Watchers will live in the backprop thread.
 		QPointer<FutureWatcherTypeR> downstream_watcher = get_managed_qfuture_watcher<R>();
 		QPointer<FutureWatcherTypeT> upstream_watcher = get_managed_qfuture_watcher<T>();
-
-//		/// @todo Deleters, this should be encapsulated better.
-//		/// @todo Also this is going to leak.
-//		WatcherDeleter<R>* downstream_watcher_deleter = new WatcherDeleter<R>(downstream_watcher);
-//		WatcherDeleter<T>* upstream_watcher_deleter = new WatcherDeleter<T>(upstream_watcher);
 
 		// R->T ("upstream")
 		// cancel signal.
@@ -702,7 +683,10 @@ namespace ExtFuture_detail
 				// Throw exception to downstream future.  Takes a bit of shenanigans.
 				trigger_exception_and_propagate(upstream_future, downstream_future_copy);
 			}
+			// This probably gets ignored.
+			qDb() << "########## IGNORING?";
 			downstream_future_copy.reportCanceled();
+			qDb() << "########## IGNORING.";
 		});
 		// Finished.
 		connect_or_die(upstream_watcher, &FutureWatcherTypeT::finished, downstream_context,

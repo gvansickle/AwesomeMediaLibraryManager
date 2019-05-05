@@ -433,6 +433,7 @@ public:
 		{
 			// The job should be canceled.
 			// The calling Functor should break out of its while() loop.
+			/// @todo We should probably reportFinished() in here.
 			return true;
 		}
 		else

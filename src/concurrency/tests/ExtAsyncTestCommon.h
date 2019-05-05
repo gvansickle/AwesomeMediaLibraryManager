@@ -518,13 +518,19 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTes
 
     };
 
-    ReturnFutureT retval;
+	ReturnFutureT retval;// = make_default_future<ReturnFutureT, typename ReturnFutureT::value_type>();
     if constexpr (std::is_same_v<ReturnFutureT, QFuture<int>>)
     {
         // QFuture() creates an empty, cancelled future (Start|Canceled|Finished).
 		TCOUT << "QFuture<>, clearing state";
         retval = make_startedNotCanceled_QFuture<int>();
     }
+	else if constexpr (std::is_same_v<ReturnFutureT, ExtFuture<int>>)
+	{
+		// ExtFuture() creates an empty, cancelled future (Start|Canceled|Finished).
+		TCOUT << "QFuture<>, clearing state";
+		retval = ExtAsync::make_started_only_future<int>();
+	}
 
 	TCOUT << "ReturnFuture initial state:" << ExtFutureState::state(retval);
 

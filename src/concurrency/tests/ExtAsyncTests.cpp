@@ -440,7 +440,7 @@ TEST_P(ExtAsyncTestsParameterized, ExtAsyncQthreadAsyncMultiThenCancelExceptionF
 	TC_EXIT();
 }
 
-TEST_P(ExtAsyncTestsParameterized, DISABLED_ExtAsyncGUIStapCancelExceptionFromTopOrBottom)
+TEST_P(ExtAsyncTestsParameterized, /*DISABLED_*/ExtAsyncGUIStapCancelExceptionFromTopOrBottom)
 {
 	TC_ENTER();
 
@@ -491,7 +491,7 @@ TEST_P(ExtAsyncTestsParameterized, DISABLED_ExtAsyncGUIStapCancelExceptionFromTo
 	try
 	{
 		f1.wait();
-		ADD_FAILURE() << ".wait() Didn't throw:" << M_ID_VAL(f1);
+		ADD_FAILURE() << ".wait() Didn't throw: " << M_ID_VAL(f1);
 	}
 	catch(ExtAsyncCancelException& e)
 	{
