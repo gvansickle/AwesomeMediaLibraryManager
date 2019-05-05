@@ -95,6 +95,7 @@ public:
 
 		// Set our capabilities.
 		setCapabilities(capabilities);
+		setAutoDelete(false);
 
 		// Watcher creation is here vs. in start() to mitigate against cancel-before-start races and segfaults.  Seems to work.
 		// We could get a doKill() call at any time after we leave this constructor.
@@ -494,8 +495,6 @@ protected:
         return true;
     }
 
-//    template <class WatcherType>
-//	void HookUpExtFutureSignals(QSharedPointer<ExtFutureWatcherT> watcher_sp)
 	void HookUpExtFutureSignals(ExtFutureWatcherT* watcher)
 	{
 		using ThisType = std::remove_reference_t<decltype(*this)>;
@@ -600,6 +599,7 @@ protected:
 
 /**
  * Create a new AMLMJobT wrapped around an ExtFuture<T>.
+ * Does not autodelete by default.
  * @todo Does this really need a parent?  AMLMJob[T] takes one, but....
  */
 template<class ExtFutureT>

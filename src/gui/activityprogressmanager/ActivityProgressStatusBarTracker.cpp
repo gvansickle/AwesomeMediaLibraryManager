@@ -493,7 +493,7 @@ void ActivityProgressStatusBarTracker::make_internal_connections()
     connect_or_die(this, &ActivityProgressStatusBarTracker::INTERNAL_SIGNAL_slotStop,
                    this, &ActivityProgressStatusBarTracker::slotStop);
 
-    connect_or_die(AMLMApp::instance(), &AMLMApp::aboutToShutdown, this, &ActivityProgressStatusBarTracker::SLOT_onAboutToShutdown);
+	connect_or_die(AMLMApp::instance(), &AMLMApp::SIGNAL_aboutToShutdown, this, &ActivityProgressStatusBarTracker::SLOT_onAboutToShutdown);
 }
 
 void ActivityProgressStatusBarTracker::make_connections_with_newly_registered_job(KJob *kjob, QWidget *wdgt)

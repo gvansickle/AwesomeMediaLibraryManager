@@ -63,7 +63,7 @@ AMLMJob::AMLMJob(QObject *parent) : KJob(parent)
 
     // Master app shutdown signal connection.
     /// @note KDevelop/ImportProjectJob() does exactly this, but instead of the app it's ICore::self().
-	connect_or_die(AMLMApp::instance(), &AMLMApp::aboutToShutdown, this, &AMLMJob::SLOT_onAboutToShutdown);
+	connect_or_die(AMLMApp::instance(), &AMLMApp::SIGNAL_aboutToShutdown, this, &AMLMJob::SLOT_onAboutToShutdown);
 }
 
 AMLMJob::~AMLMJob()

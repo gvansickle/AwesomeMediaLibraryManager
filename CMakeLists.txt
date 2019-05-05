@@ -94,9 +94,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Min versions of Qt5, KF5, KF5/ECM.
-set(QT_MIN_VERSION "5.12.0")
-set(KF5_MIN_VERSION "5.51.0")
-set(ECM_MIN_VERSION "5.51.0")
+set(QT_MIN_VERSION "5.12.1")
+set(KF5_MIN_VERSION "5.55.0")
+set(ECM_MIN_VERSION "5.55.0")
 
 ###
 ### ECM Setup ====================================================================================================

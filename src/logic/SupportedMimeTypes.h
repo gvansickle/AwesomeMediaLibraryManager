@@ -48,7 +48,7 @@ protected:
 
 private:
 
-
 };
+
 
 #endif /* SRC_LOGIC_SUPPORTEDMIMETYPES_H_ */

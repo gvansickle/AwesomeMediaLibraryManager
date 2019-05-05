@@ -139,7 +139,7 @@ ImportProjectJob::ImportProjectJob(ProjectFolderItem *folder, IProjectFileManage
     d->m_watcher = new QFutureWatcher<void>();
 
     setObjectName(QString("ImportProjectJob"));
-    connect(AMLMApp::instance(), &AMLMApp::aboutToShutdown,
+    connect(AMLMApp::instance(), &AMLMApp::SIGNAL_aboutToShutdown,
             this, &ImportProjectJob::aboutToShutdown);
 }
 

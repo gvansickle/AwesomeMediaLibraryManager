@@ -83,7 +83,7 @@ void AMLMApp::Init(bool gtest_only)
 //    qIn() << "QNetworkAccessManager Supported Schemes:" << nam->supportedSchemes();
 
 	// Create the singletons we'll need for any app invocation.
-	SupportedMimeTypes::instance(this);
+	m_the_supported_mime_types = &SupportedMimeTypes::instance(this);
 
 	/// @todo Experiments
 //	m_cdb_model = new CollectionDatabaseModel(this);
@@ -183,11 +183,13 @@ void AMLMApp::perform_controlled_shutdown()
 	// "Emitted when the application is about to quit the main event loop."
 	// "Note that no user interaction is possible in this state"
 	/// @todo ... should we even be emitting it here?
-    Q_EMIT aboutToShutdown();
+	Q_EMIT SIGNAL_aboutToShutdown();
 
     if(!m_controlled_shutdown_complete)
     {
 		// Do whatever shutdown tasks we need to in here.
+
+		m_the_supported_mime_types->deleteLater();
 
 		// Cancel all asynchronous activities and wait for them to complete.
 		AMLMApp::IPerfectDeleter().cancel_and_wait_for_all();

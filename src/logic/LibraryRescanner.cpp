@@ -221,7 +221,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	                                                                                                   QDir::NoDotAndDotDot),
 	                                                                                     QDirIterator::Subdirectories);
 	// Create/Attach an AMLMJobT to the dirscan future.
-	QPointer<AMLMJobT<ExtFuture<DirScanResult>>> dirtrav_job = make_async_AMLMJobT(dirresults_future, "DirResultsAMLMJob");
+	QPointer<AMLMJobT<ExtFuture<DirScanResult>>> dirtrav_job = make_async_AMLMJobT(dirresults_future, "DirResultsAMLMJob", AMLMApp::instance());
 
     // Makes a new AMLMJobT.
 	LibraryRescannerJobPtr lib_rescan_job = LibraryRescannerJob::make_job(this);
@@ -412,7 +412,7 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 	})
 	.then(qApp, [=,
 				 tree_model_ptr=tree_model,
-				 kjob=FWD_DECAY_COPY(QPointer<AMLMJobT<ExtFuture<DirScanResult>>>, dirtrav_job)](ExtFuture<Unit> future_unit) {
+				 kjob=/*FWD_DECAY_COPY(QPointer<AMLMJobT<ExtFuture<DirScanResult>>>,*/ dirtrav_job/*)*/](ExtFuture<Unit> future_unit) {
 
 			AMLM_ASSERT_IN_GUITHREAD();
 
@@ -548,12 +548,17 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
         }
 	});
 
-    master_job_tracker->registerJob(dirtrav_job);
-	master_job_tracker->setAutoDelete(dirtrav_job, false);
-    master_job_tracker->setStopOnClose(dirtrav_job, true);
-	master_job_tracker->registerJob(lib_rescan_job);
-	master_job_tracker->setAutoDelete(lib_rescan_job, false);
-	master_job_tracker->setStopOnClose(lib_rescan_job, true);
+	if(dirtrav_job.isNull())
+	{
+		Q_ASSERT_X(0, __func__, "dirtrav is null");
+	}
+
+//    master_job_tracker->registerJob(dirtrav_job);
+//	master_job_tracker->setAutoDelete(dirtrav_job, false);
+//    master_job_tracker->setStopOnClose(dirtrav_job, true);
+//	master_job_tracker->registerJob(lib_rescan_job);
+//	master_job_tracker->setAutoDelete(lib_rescan_job, false);
+//	master_job_tracker->setStopOnClose(lib_rescan_job, true);
 
 
 	//
