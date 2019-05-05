@@ -173,16 +173,33 @@ void PerfectDeleter::addKJob(KJob* kjob)
 {
 	std::lock_guard lock(m_mutex);
 
-	auto remover_lambda = [=](QObject* obj) {
-			qDb() << "KJob destroyed";
+	QPointer<KJob> qpkjob = kjob;
+
+	auto remover_lambda = [=, qpkjob=qpkjob]() {
 			std::lock_guard lock(m_mutex);
-			m_watched_KJobs.erase(std::remove(m_watched_KJobs.begin(), m_watched_KJobs.end(), obj),
-					m_watched_KJobs.end());
+			qIn() << "Destroying KJob:" << qpkjob;
+			if(qpkjob.isNull())
+			{
+				qWr() << "KJob was null";
+			}
+			else
+			{
+				std::experimental::erase(m_watched_KJobs, qpkjob.data());
+            }
 		};
+
+	auto deletable = make_shared_Deletable(kjob,
+							// Canceler
+								[qpkjob=qpkjob](KJob* kjob){},
+							// Waiter
+								[qpkjob=qpkjob](KJob* kjob){},
+							// External remover.
+								[qpkjob=qpkjob](KJob* kjob){}
+							);
 
 	// Connect a signal/slot to remove the Kjob* if it gets deleted.
 	connect_or_die(kjob, &QObject::destroyed, this, remover_lambda);
-	connect_or_die(kjob, &KJob::finished, this, remover_lambda);
+//	connect_or_die(kjob, &KJob::finished, this, remover_lambda);
 
 	m_watched_KJobs.push_back(kjob);
 }
@@ -191,20 +208,38 @@ void PerfectDeleter::addAMLMJob(AMLMJob* amlmjob)
 {
 	std::lock_guard lock(m_mutex);
 
+	QPointer<KJob> qpamlmjob = amlmjob;
+
 	// Remover lambda and connections, for when the AMLMJob is deleted out from under us.
 	// This is a bit of a mess due to this whole "let's delete ourself" thing that permeates Qt5/KF5.
 	// Need to hook into two signals which don't really give us the info we need to un-crashably remove the
 	// registered pointers from the storage here.
 
-	auto remover_lambda = [=](QObject* obj) {
-		qIn() << "AMLMJob destroyed:" << obj->objectName();
+	auto remover_lambda = [=, qpamlmjob=qpamlmjob]() {
 		std::lock_guard lock(m_mutex);
-		std::experimental::erase(m_watched_AMLMJobs, obj);
+		qIn() << "Destroying AMLMJob:" << qpamlmjob->objectName();
+		if(qpamlmjob.isNull())
+		{
+			qWr() << "AMLMJob was null";
+		}
+		else
+		{
+			std::experimental::erase(m_watched_AMLMJobs, qpamlmjob.data());
+		}
 	};
+
+	auto deletable = make_shared_Deletable(amlmjob,
+							// Canceler
+								[qpamlmjob=qpamlmjob](AMLMJob* amlmjob){},
+							// Waiter
+								[qpamlmjob=qpamlmjob](AMLMJob* amlmjob){},
+							// External remover.
+								[qpamlmjob=qpamlmjob](AMLMJob* amlmjob){}
+							);
 
 M_WARNING("These both want to remove the same amlmjob, maybe ok?");
 	connect_or_die(amlmjob, &QObject::destroyed, this, remover_lambda);
-	connect_or_die(amlmjob, &AMLMJob::finished, this, remover_lambda);
+//	connect_or_die(amlmjob, &AMLMJob::finished, this, remover_lambda);
 
 	m_watched_AMLMJobs.push_back(amlmjob);
 }

@@ -194,6 +194,10 @@ void AMLMApp::perform_controlled_shutdown()
 		// Cancel all asynchronous activities and wait for them to complete.
 		AMLMApp::IPerfectDeleter().cancel_and_wait_for_all();
     }
+	else
+	{
+		qWr() << "REENTRY OF perform_controlled_shutdown";
+	}
 
     m_controlled_shutdown_complete = true;
 

@@ -46,31 +46,47 @@ public:
 
 	virtual void cancel() = 0;
 	virtual void wait() = 0;
+	virtual void deleted_externally() = 0;
 };
 
-template <class T, class CancelerType, class WaiterType>
+template <class T, class CancelerType, class WaiterType, class DeletedExternallyCBType>
 class Deletable : public DeletableBase
 {
 	static_assert(std::is_invocable_v<CancelerType, T>);
 	static_assert(std::is_invocable_v<WaiterType, T>);
 
 public:
-	Deletable(T to_be_deleted, CancelerType canceler, WaiterType waiter) :
-		m_to_be_deleted(to_be_deleted), m_canceler(canceler), m_waiter(waiter) {};
+	Deletable(T to_be_deleted, CancelerType canceler, WaiterType waiter, DeletedExternallyCBType deleted_externally_callback)
+		: m_to_be_deleted(to_be_deleted), m_canceler(canceler), m_waiter(waiter), m_deleted_externally_callback(deleted_externally_callback) {};
 	~Deletable() override {};
 
 	void cancel() override { std::invoke(m_canceler, m_to_be_deleted); };
 	void wait() override { std::invoke(m_waiter, m_to_be_deleted); };
+	void deleted_externally() override
+	{
+		if constexpr(!std::is_null_pointer_v<DeletedExternallyCBType>)
+		{
+			std::invoke(m_deleted_externally_callback, m_to_be_deleted);
+		}
+	};
 
 	T m_to_be_deleted;
 	CancelerType m_canceler;
 	WaiterType m_waiter;
+	DeletedExternallyCBType m_deleted_externally_callback;
 };
 
-template <class T, class CancelerType, class WaiterType>
-static inline std::shared_ptr<DeletableBase> make_shared_Deletable(T to_be_deleted, CancelerType canceler, WaiterType waiter)
+template <class T, class CancelerType, class WaiterType, class DeletedExternallyCBType = std::nullptr_t>
+static inline std::shared_ptr<DeletableBase> make_shared_Deletable(T to_be_deleted,
+																   CancelerType canceler,
+																   WaiterType waiter,
+																   DeletedExternallyCBType deleted_externally = nullptr)
 {
-	auto deletable = std::make_shared<Deletable<T, CancelerType, WaiterType>>(to_be_deleted, canceler, waiter);
+	auto deletable = std::make_shared<Deletable<T, CancelerType, WaiterType, DeletedExternallyCBType>>(to_be_deleted,
+																									   canceler,
+																									   waiter,
+																									   deleted_externally);
+
 	return deletable;
 }
 
