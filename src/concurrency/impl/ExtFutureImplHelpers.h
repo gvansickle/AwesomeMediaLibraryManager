@@ -377,6 +377,9 @@ static inline void spinWaitForFinishedOrCanceled(QThreadPool* tp, const ExtFutur
 namespace ExtFuture_detail
 {
 
+	/**
+	 * Mostly just a stub QObject-derived class at the moment for use as a parent in the future watcher thread.
+	 */
 	class FutureWatcherParent : public QObject
 	{
 		Q_OBJECT
@@ -397,57 +400,49 @@ namespace ExtFuture_detail
 		void resultReady(int result);
 	};
 
-	class FutureWatcherLifecycleController : public QObject
-	{
-		Q_OBJECT
-
-	public:
-		explicit FutureWatcherLifecycleController(QObject* parent = nullptr) : QObject(parent)
-		{
-			m_fwthread.setObjectName("FutureWatcherLifecycleThread");
-			FutureWatcherParent* fwp = new FutureWatcherParent;
-			fwp->moveToThread(&m_fwthread);
-			connect_or_die(&m_fwthread, &QThread::finished, fwp, &QObject::deleteLater);
-			connect_or_die(this, &FutureWatcherLifecycleController::operate, fwp, &FutureWatcherParent::doWork);
-			connect_or_die(fwp, &FutureWatcherParent::resultReady, this, &FutureWatcherLifecycleController::handleResults);
-			m_fwthread.start();
-		}
-		~FutureWatcherLifecycleController() override
-		{
-			m_fwthread.quit();
-			m_fwthread.wait();
-		}
-
-
-
-	public Q_SLOTS:
-		void handleResults(int result)
-		{
-			/// @todo
-		}
-
-	Q_SIGNALS:
-		void operate(int param);
-
-	private:
-
-		QThread m_fwthread;
-	};
-
-//	template <class T>
-//	QPointer<QFutureWatcher<T>> get_managed_future_watcher()
+	/// @todo DELETE THIS
+//	class FutureWatcherLifecycleController : public QObject
 //	{
-//		static FutureWatcherLifecycleController* fwlc = new FutureWatcherLifecycleController(AMLMApp::instance());
+//		Q_OBJECT
 //
-//		// No parent yet, still in this thread.
-//		QPointer<QFutureWatcher<T>> retval = new QFutureWatcher<T>;
+//	public:
+//		explicit FutureWatcherLifecycleController(QObject* parent = nullptr) : QObject(parent)
+//		{
+//			m_fwthread.setObjectName("FutureWatcherLifecycleThread");
+//			FutureWatcherParent* fwp = new FutureWatcherParent;
+//			fwp->moveToThread(&m_fwthread);
+//			connect_or_die(&m_fwthread, &QThread::finished, fwp, &QObject::deleteLater);
+//			connect_or_die(this, &FutureWatcherLifecycleController::operate, fwp, &FutureWatcherParent::doWork);
+//			connect_or_die(fwp, &FutureWatcherParent::resultReady, this, &FutureWatcherLifecycleController::handleResults);
+//			m_fwthread.start();
+//		}
+//		~FutureWatcherLifecycleController() override
+//		{
+//			m_fwthread.quit();
+//			m_fwthread.wait();
+//		}
 //
-//		fwlc->manage_watcher(retval);
-//	}
+//
+//
+//	public Q_SLOTS:
+//		void handleResults(int result)
+//		{
+//			/// @todo
+//		}
+//
+//	Q_SIGNALS:
+//		void operate(int param);
+//
+//	private:
+//
+//		QThread m_fwthread;
+//	};
 
 	/// This is semi-gross, it's the QObject which will be the parent of all managed future watchers.
-	static inline QObject* f_the_managed_fw_parent = nullptr;
+	static inline FutureWatcherParent* f_the_managed_fw_parent = nullptr;
 
+	/// Returns the pointer to the QThread which is to be used for running QFutureWatchers which
+	/// implement inter-future status propagation (cancellation and exceptions).
 	static inline QThread* get_backprop_qthread()
 	{
 		static QThread* backprop_thread = []{
@@ -463,16 +458,12 @@ namespace ExtFuture_detail
 			});
 
 			// No parent, this will be deleted by the signal below.
-			f_the_managed_fw_parent = new QObject();
+			f_the_managed_fw_parent = new FutureWatcherParent();
 			// Create an push the future watcher parent object into the new thread.
 			f_the_managed_fw_parent->moveToThread(new_thread);
 			connect_or_die(new_thread, &QThread::finished, f_the_managed_fw_parent, &QObject::deleteLater);
-			qDb() << "FutureWatcherParent has parent:" << f_the_managed_fw_parent->parent();
 
-//			auto fwp = new FutureWatcherParent();
-//			fwp->moveToThread(new_thread);
-//			qDb() << "FutureWatcherParent has parent:" << fwp->parent();
-
+			// Start the thread.
 			new_thread->start();
 			return new_thread;
 		}();
@@ -540,10 +531,6 @@ namespace ExtFuture_detail
 		propagate_eptr_to_future(eptr, downstream_future);
 	}
 
-	/// Returns the pointer to the QThread which is to be used for running QFutureWatchers which
-	/// implement inter-future status propagation (cancellation and exceptions).
-	/// @note Impl is in ExtFuture.cpp.
-//	QThread* get_backprop_qthread();
 
 	template <class T>
 	class WatcherDeleter
@@ -572,6 +559,8 @@ namespace ExtFuture_detail
 		QPointer<QFutureWatcher<T>> m_watcher {nullptr};
 	};
 
+
+
 	/**
 	 * Factory function for creating managed QFutureWatcher<>s.
 	 * @returns A pointer to the new watcher.  This is a raw pointer, and the watcher has no parent.
@@ -588,31 +577,15 @@ namespace ExtFuture_detail
 		watcher->moveToThread(bp_thread);
 
 		// Ok, now it's in the other thread but has no parent.
+		// We'll give it one.
 		watcher->setParent(f_the_managed_fw_parent);
+		qDb() << "FutureWatcher" << watcher << "has parent:" << watcher->parent();
 
 		return watcher;
 	}
 
-//	template<class T, class R>
-//	void connect_or_die_up2down(QPointer<QFutureWatcher<T>> upstream_watcher, QPointer<QFutureWatcher<R>> downstream_watcher)
-//	{
-//		// Canceled.
-//		connect_or_die(upstream_watcher, &FutureWatcherTypeT::canceled, downstream_context,
-//				[=, downstream_future_copy=DECAY_COPY(downstream_future)]() mutable {
-//			if(upstream_future.has_exception())
-//			{
-//				// Throw exception to downstream future.  Takes a bit of shenanigans.
-//				trigger_exception_and_propagate(upstream_future, downstream_future_copy);
-//			}
-//			downstream_future_copy.reportCanceled();
-//		});
-//		// Finished.
-//		connect_or_die(upstream_watcher, &FutureWatcherTypeT::finished, downstream_context,
-//					   [=]() mutable { downstream_future.reportFinished(); });
-//	}
-
 	template<class R, class T>
-	void connect_or_die_down2up(QPointer<QFutureWatcher<R>> downstream, QObject* context, ExtFuture<T> upstream_future)
+	void connect_or_die_down2up_cancel(QPointer<QFutureWatcher<R>> downstream, QObject* context, ExtFuture<T> upstream_future)
 	{
 		// If down is canceled, cancel upstream.
 		// If it was upstream that did the canceling, this effectively is a no-op.
@@ -622,13 +595,32 @@ namespace ExtFuture_detail
 	}
 
 	template<class R, class T>
-	void connect_or_die_down2up(QPointer<QFutureWatcher<R>> downstream, QPointer<QFutureWatcher<T>> upstream_future)
+	void connect_or_die_down2up_cancel(QPointer<QFutureWatcher<R>> downstream, QPointer<QFutureWatcher<T>> upstream_future_watcher)
 	{
 		// If down is canceled, cancel upstream.
 		// If it was upstream that did the canceling, this effectively is a no-op.
-		connect_or_die(downstream, &QFutureWatcher<R>::canceled, upstream_future, &QFutureWatcher<T>::cancel);
+		connect_or_die(downstream, &QFutureWatcher<R>::canceled, upstream_future_watcher, &QFutureWatcher<T>::cancel);
 	}
 
+	template <class T>
+	void connect_or_die_deleteLater_on_finished(QPointer<QFutureWatcher<T>> fw)
+	{
+		auto delete_later_if_canceled_and_finished = [](QPointer<QFutureWatcher<T>> fw)
+		{
+			if(/*m_watcher->isCanceled() &&*/ fw->isFinished())
+			{
+				qDb() << "QFutureWatcher<> is finished (maybe canceled), deleting:" << fw;
+				fw->deleteLater();
+			}
+		};
+
+		connect_or_die(fw, &QFutureWatcher<T>::finished,
+					   [=,
+					   delete_later_if_canceled_and_finished=DECAY_COPY(delete_later_if_canceled_and_finished)]() mutable {
+			delete_later_if_canceled_and_finished(fw);
+		});
+		connect_or_die(fw, &QFutureWatcher<T>::canceled, [=]() mutable { delete_later_if_canceled_and_finished(fw); });
+	}
 
 	template <class T, class R, class ResultsReadyAtCallbackType = std::nullptr_t, class WatcherConnectionCallback = std::nullptr_t>
 	void SetBackpropWatcher(ExtFuture<T> upstream_future, ExtFuture<R> downstream_future,
@@ -639,11 +631,11 @@ namespace ExtFuture_detail
 		QThread* bp_thread = ExtFuture_detail::get_backprop_qthread();
 		if(upstream_context == nullptr)
 		{
-			upstream_context = bp_thread;
+			upstream_context = f_the_managed_fw_parent;
 		}
 		if(downstream_context == nullptr)
 		{
-			downstream_context = bp_thread;
+			downstream_context = f_the_managed_fw_parent;
 		}
 
 		using FutureWatcherTypeR = QFutureWatcher<R>;
@@ -653,18 +645,19 @@ namespace ExtFuture_detail
 		QPointer<FutureWatcherTypeR> downstream_watcher = get_managed_qfuture_watcher<R>();
 		QPointer<FutureWatcherTypeT> upstream_watcher = get_managed_qfuture_watcher<T>();
 
-		/// @todo Deleters, this should be encapsulated better.
-		/// @todo Also this is going to leak.
-		WatcherDeleter<R>* downstream_watcher_deleter = new WatcherDeleter<R>(downstream_watcher);
-		WatcherDeleter<T>* upstream_watcher_deleter = new WatcherDeleter<T>(upstream_watcher);
+//		/// @todo Deleters, this should be encapsulated better.
+//		/// @todo Also this is going to leak.
+//		WatcherDeleter<R>* downstream_watcher_deleter = new WatcherDeleter<R>(downstream_watcher);
+//		WatcherDeleter<T>* upstream_watcher_deleter = new WatcherDeleter<T>(upstream_watcher);
 
 		// R->T ("upstream")
 		// cancel signal.
-		connect_or_die(downstream_watcher, &FutureWatcherTypeR::canceled, upstream_context, [=,
-					   upstream_future_copy=DECAY_COPY(std::forward<ExtFuture<T>>(upstream_future))]() mutable {
-			// Note we directly call cancel() (but from context's thread) because upstream_future may not have an event loop.
-			upstream_future_copy.cancel();
-		});
+		connect_or_die_down2up_cancel(downstream_watcher, upstream_watcher);
+//		connect_or_die(downstream_watcher, &FutureWatcherTypeR::canceled, upstream_context, [=,
+//					   upstream_future_copy=DECAY_COPY(std::forward<ExtFuture<T>>(upstream_future))]() mutable {
+//			// Note we directly call cancel() (but from context's thread) because upstream_future may not have an event loop.
+//			upstream_future_copy.cancel();
+//		});
 		// finished signal.
 		/// @note Should only ever get this due to an exception thrown into R, and then we should probably have gotten a cancel instead.
 		connect_or_die(downstream_watcher, &FutureWatcherTypeR::finished, upstream_context, [=,
@@ -721,9 +714,11 @@ namespace ExtFuture_detail
 			std::invoke(wc_callback, upstream_watcher, downstream_watcher);
 		}
 
-		downstream_watcher_deleter->make_delete_connections();
-		upstream_watcher_deleter->make_delete_connections();
+		// Connect these up last, they signal the watchers to deleteLater() themselves.
+		connect_or_die_deleteLater_on_finished(downstream_watcher);
+		connect_or_die_deleteLater_on_finished(upstream_watcher);
 
+		// And set the futures.  It's just that easy.
 		downstream_watcher->setFuture(downstream_future);
 		upstream_watcher->setFuture(upstream_future);
 
