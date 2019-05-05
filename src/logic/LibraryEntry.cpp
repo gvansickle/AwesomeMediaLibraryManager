@@ -37,7 +37,6 @@
 #include <utils/StringHelpers.h>
 #include <utils/QtHelpers.h>
 #include <utils/RegisterQtMetatypes.h>
-#include <logic/models/ScanResultsTreeModelXMLTags.h>
 #include <utils/Fraction.h>
 #include <src/future/InsertionOrderedMap.h>
 #include "utils/MapConverter.h"

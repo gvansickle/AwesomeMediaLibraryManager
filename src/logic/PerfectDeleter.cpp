@@ -135,6 +135,7 @@ void PerfectDeleter::cancel_and_wait_for_all()
 	{
 		d->cancel();
 	}
+	// Wait for them to be canceled and deleted.
 }
 
 bool PerfectDeleter::empty() const

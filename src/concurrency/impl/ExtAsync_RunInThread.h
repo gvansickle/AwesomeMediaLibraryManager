@@ -106,7 +106,7 @@ namespace detail
 			/// @todo Not sure if this also applies if we're already finished or canceled.
 			if(retfuture_cp.hasException())
 			{
-				qDb() << "Future has exception, finishing:" << retfuture_cp;
+				qDb() << "Future has exception:" << retfuture_cp;
 				Q_ASSERT(retfuture_cp.isCanceled());
 			}
 			// We always have to report finished, regardless of exception or cancel status.

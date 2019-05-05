@@ -909,7 +909,7 @@ public:
 				{
 					qCWarning(EXTFUTURE) << "START SPINWAIT";
 					// Blocks (busy-wait with yield) until one of the futures is canceled or finished.
-					::spinWaitForFinishedOrCanceled(QThreadPool::globalInstance(), this_future_copy, returned_future_copy);
+					spinWaitForFinishedOrCanceled(QThreadPool::globalInstance(), this_future_copy, returned_future_copy);
 //					spinWaitForFinishedOrCanceled(this_future_copy);
 					qWr() << "END SPINWAIT";
 				}
@@ -1146,7 +1146,7 @@ public:
 			/// @note run_in_event_loop() may (different threads) or may not (same threads) return immediately to the caller.
 			///       This is the second reason to be inside this intermediate thread.  Completion is handled via
 			///       the ExtFuture<> retfuture_cp we pass in here.
-			run_in_event_loop(context, [=, retfuture_cp = retfuture,
+			ExtAsync::detail::run_in_event_loop(context, [=, retfuture_cp = retfuture,
 			                  then_callback=DECAY_COPY(std::forward<ThenCallbackType>(then_callback))]() mutable {
 				if constexpr(std::is_void_v<Unit::DropT<R>>)
 				{

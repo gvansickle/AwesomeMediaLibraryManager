@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -34,6 +34,7 @@
 #include <future/Unit.hpp>
 #include <concurrency/ExtAsyncExceptions.h>
 //#include "ExtAsync_RunInThread.h"
+#include <concurrency/ExtAsync.h>
 #include <concurrency/ExtFutureWatcher.h>
 
 // Generated
@@ -376,6 +377,110 @@ static inline void spinWaitForFinishedOrCanceled(QThreadPool* tp, const ExtFutur
 namespace ExtFuture_detail
 {
 
+	class FutureWatcherParent : public QObject
+	{
+		Q_OBJECT
+
+	public:
+		explicit FutureWatcherParent(QObject* parent = nullptr) : QObject(parent) {};
+
+	public Q_SLOTS:
+		void doWork(int param)
+		{
+			/// @todo Do something in the other thread...
+
+			// Emit the result as a signal.
+//			Q_EMIT resultReady(fw);
+		};
+
+	Q_SIGNALS:
+		void resultReady(int result);
+	};
+
+	class FutureWatcherLifecycleController : public QObject
+	{
+		Q_OBJECT
+
+	public:
+		explicit FutureWatcherLifecycleController(QObject* parent = nullptr) : QObject(parent)
+		{
+			m_fwthread.setObjectName("FutureWatcherLifecycleThread");
+			FutureWatcherParent* fwp = new FutureWatcherParent;
+			fwp->moveToThread(&m_fwthread);
+			connect_or_die(&m_fwthread, &QThread::finished, fwp, &QObject::deleteLater);
+			connect_or_die(this, &FutureWatcherLifecycleController::operate, fwp, &FutureWatcherParent::doWork);
+			connect_or_die(fwp, &FutureWatcherParent::resultReady, this, &FutureWatcherLifecycleController::handleResults);
+			m_fwthread.start();
+		}
+		~FutureWatcherLifecycleController() override
+		{
+			m_fwthread.quit();
+			m_fwthread.wait();
+		}
+
+
+
+	public Q_SLOTS:
+		void handleResults(int result)
+		{
+			/// @todo
+		}
+
+	Q_SIGNALS:
+		void operate(int param);
+
+	private:
+
+		QThread m_fwthread;
+	};
+
+//	template <class T>
+//	QPointer<QFutureWatcher<T>> get_managed_future_watcher()
+//	{
+//		static FutureWatcherLifecycleController* fwlc = new FutureWatcherLifecycleController(AMLMApp::instance());
+//
+//		// No parent yet, still in this thread.
+//		QPointer<QFutureWatcher<T>> retval = new QFutureWatcher<T>;
+//
+//		fwlc->manage_watcher(retval);
+//	}
+
+	/// This is semi-gross, it's the QObject which will be the parent of all managed future watchers.
+	static inline QObject* f_the_managed_fw_parent = nullptr;
+
+	static inline QThread* get_backprop_qthread()
+	{
+		static QThread* backprop_thread = []{
+			QThread* new_thread = new QThread;
+			new_thread->setObjectName("ExtFutureBackpropThread");
+			PerfectDeleter::instance().addQThread(new_thread, [](QThread* the_qthread){
+				// Call exit(0) on the QThread.  We use Qt's invokeMethod() here.
+				ExtAsync::detail::run_in_event_loop(the_qthread, [the_qthread](){
+					qDb() << "Calling quit()+wait() on managed FutureWatcher QThread";
+					the_qthread->quit();
+					the_qthread->wait();
+				});
+			});
+
+			// No parent, this will be deleted by the signal below.
+			f_the_managed_fw_parent = new QObject();
+			// Create an push the future watcher parent object into the new thread.
+			f_the_managed_fw_parent->moveToThread(new_thread);
+			connect_or_die(new_thread, &QThread::finished, f_the_managed_fw_parent, &QObject::deleteLater);
+			qDb() << "FutureWatcherParent has parent:" << f_the_managed_fw_parent->parent();
+
+//			auto fwp = new FutureWatcherParent();
+//			fwp->moveToThread(new_thread);
+//			qDb() << "FutureWatcherParent has parent:" << fwp->parent();
+
+			new_thread->start();
+			return new_thread;
+		}();
+		return backprop_thread;
+	}
+
+
+
 	/**
 	 * Part of the system by which we get an exception from one ExtFuture<> into the state of another.
 	 * This rethrows @a eptr, catches it, and finally reports it to @a future.
@@ -438,7 +543,7 @@ namespace ExtFuture_detail
 	/// Returns the pointer to the QThread which is to be used for running QFutureWatchers which
 	/// implement inter-future status propagation (cancellation and exceptions).
 	/// @note Impl is in ExtFuture.cpp.
-	QThread* get_backprop_qthread();
+//	QThread* get_backprop_qthread();
 
 	template <class T>
 	class WatcherDeleter
@@ -482,6 +587,9 @@ namespace ExtFuture_detail
 		/// @note Per Qt5: "The object cannot be moved if it has a parent."
 		watcher->moveToThread(bp_thread);
 
+		// Ok, now it's in the other thread but has no parent.
+		watcher->setParent(f_the_managed_fw_parent);
+
 		return watcher;
 	}
 
@@ -503,11 +611,24 @@ namespace ExtFuture_detail
 //					   [=]() mutable { downstream_future.reportFinished(); });
 //	}
 
-//	template<class R, class T>
-//	void connect_or_die_down2up(QPointer<QFutureWatcher<R>> downstream, QPointer<QFutureWatcher<T>> upstream)
-//	{
+	template<class R, class T>
+	void connect_or_die_down2up(QPointer<QFutureWatcher<R>> downstream, QObject* context, ExtFuture<T> upstream_future)
+	{
+		// If down is canceled, cancel upstream.
+		// If it was upstream that did the canceling, this effectively is a no-op.
+		connect_or_die(downstream, &QFutureWatcher<R>::canceled, context, [upstream_future=upstream_future](){
+			upstream_future.cancel();
+		});
+	}
 
-//	}
+	template<class R, class T>
+	void connect_or_die_down2up(QPointer<QFutureWatcher<R>> downstream, QPointer<QFutureWatcher<T>> upstream_future)
+	{
+		// If down is canceled, cancel upstream.
+		// If it was upstream that did the canceling, this effectively is a no-op.
+		connect_or_die(downstream, &QFutureWatcher<R>::canceled, upstream_future, &QFutureWatcher<T>::cancel);
+	}
+
 
 	template <class T, class R, class ResultsReadyAtCallbackType = std::nullptr_t, class WatcherConnectionCallback = std::nullptr_t>
 	void SetBackpropWatcher(ExtFuture<T> upstream_future, ExtFuture<R> downstream_future,

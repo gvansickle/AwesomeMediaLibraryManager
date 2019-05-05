@@ -317,7 +317,7 @@ namespace ExtAsync
 //			QtConcurrent::run(lambda);
 //M_WARNING("TODO: This won't block, seems like it should.  But maybe we're OK, neither does ::run()");
 //M_WARNING("TODO: We do need to finish the returned future though.");
-			run_in_event_loop(executor, lambda);
+			ExtAsync::detail::run_in_event_loop(executor, lambda);
 
 			return retfuture;
 		}
@@ -1041,21 +1041,21 @@ static void runInObjectEventLoop(T * obj, R(T::* method)()) {
 
 /// Above is pre-Qt5.10.  The below should be used from Qt5.10+.
 
-/**
- * Run the @a callable in the event loop of @a context.
- * For callables with the signature "void Callback(void)".  Cannot pass parameters directly because invokeMethod()
- * doesn't support it.
- * @note This may (different threads) or may not (same threads) return immediately to the caller.
- * @note Callback can't return a value because it's invoked asynchronously in @a context's thread/event loop.
- */
-template <class CallableType,
-		  REQUIRES(std::is_invocable_r_v<void, CallableType>)>
-static void run_in_event_loop(QObject* context, CallableType&& callable)
-{
-	bool retval = QMetaObject::invokeMethod(context, DECAY_COPY(std::forward<CallableType>(callable)));
-	// Die if the function couldn't be invoked.
-	Q_ASSERT(retval == true);
-}
+///**
+// * Run the @a callable in the event loop of @a context.
+// * For callables with the signature "void Callback(void)".  Cannot pass parameters directly because invokeMethod()
+// * doesn't support it.
+// * @note This may (different threads) or may not (same threads) return immediately to the caller.
+// * @note Callback can't return a value because it's invoked asynchronously in @a context's thread/event loop.
+// */
+//template <class CallableType,
+//		  REQUIRES(std::is_invocable_r_v<void, CallableType>)>
+//void run_in_event_loop(QObject* context, CallableType&& callable)
+//{
+//	bool retval = QMetaObject::invokeMethod(context, DECAY_COPY(std::forward<CallableType>(callable)));
+//	// Die if the function couldn't be invoked.
+//	Q_ASSERT(retval == true);
+//}
 
 
 #endif /* CONCURRENCY_EXTASYNC_H_ */

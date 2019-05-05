@@ -30,7 +30,6 @@
 #include <utils/RegisterQtMetatypes.h>
 
 // Ours
-#include <logic/models/ScanResultsTreeModelXMLTags.h>
 #include <utils/DebugHelpers.h>
 
 

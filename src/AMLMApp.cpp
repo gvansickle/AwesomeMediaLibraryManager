@@ -102,8 +102,11 @@ M_TODO("Needs to be ColumnSpecs");
 
 	/// @end Experiments
 
-	/// @note This is a self-connection, not sure this will work as intended.
-	connect_or_die(AMLMApp::instance(), &QCoreApplication::aboutToQuit, this, &AMLMApp::SLOT_onAboutToQuit);
+	// Connect to aboutToQuit() signal to perform app-end cleanup.
+	// Per @link https://doc.qt.io/qt-5/qapplication.html#exec
+	// "We recommend that you connect clean-up code to the aboutToQuit() signal, instead of putting it in your
+	// application's main() function. This is because, on some platforms [Windows on user logoff] the QApplication::exec() call may not return."
+	connect_or_die(AMLMApp::instance(), &QApplication::aboutToQuit, this, &AMLMApp::SLOT_onAboutToQuit);
 }
 
 void AMLMApp::MAIN_ONLY_setMainWindow(MainWindow* the_main_window)
