@@ -78,15 +78,14 @@ public:
 
 template <class T, class CancelerType, class WaiterType, class DeletedExternallyCBType = std::nullptr_t>
 static inline std::shared_ptr<DeletableBase> make_shared_Deletable(T to_be_deleted,
-																   CancelerType canceler,
-																   WaiterType waiter,
-																   DeletedExternallyCBType deleted_externally = nullptr)
+                                                                   CancelerType canceler,
+                                                                   WaiterType waiter,
+                                                                   DeletedExternallyCBType deleted_externally = nullptr)
 {
 	auto deletable = std::make_shared<Deletable<T, CancelerType, WaiterType, DeletedExternallyCBType>>(to_be_deleted,
-																									   canceler,
-																									   waiter,
-																									   deleted_externally);
-
+                                                                                                           canceler,
+                                                                                                           waiter,
+                                                                                                           deleted_externally);
 	return deletable;
 }
 

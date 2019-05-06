@@ -461,6 +461,24 @@ public:
 		this->d.reportResults(results, beginIndex, count);
 	}
 
+	template <template <typename> class VectorLikeType>
+	inline void reportResults(const VectorLikeType<T>& results, int beginIndex = -1, int count = -1)
+	{
+		static_assert(!std::is_convertible_v<VectorLikeType<T>, QVector<T>>, "Deduction failed, should use QVector overload.");
+		if(beginIndex == -1)
+		{
+			beginIndex = 0;
+		}
+		if(count == -1)
+		{
+			count = results.size() - beginIndex;
+		}
+		for(int i = beginIndex; i < beginIndex+count; ++i)
+		{
+			this->d.reportResult(results[i], i);
+		}
+	}
+
 	inline void reportResults(const ExtFuture<T> &ef, int begin_index, int end_index)
 	{
 		QVector<T> results;

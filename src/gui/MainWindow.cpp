@@ -1042,18 +1042,18 @@ void MainWindow::initRootModels()
 void MainWindow::createConnections()
 {
 	/// @todo
-	connect(amlmApp, &QApplication::focusChanged, this, &MainWindow::onFocusChanged);
+	connect_or_die(amlmApp, &QApplication::focusChanged, this, &MainWindow::onFocusChanged);
 
     // Connect player controls up to player.
 	connectPlayerAndControls(m_player, m_controls);
 
     // Connect with the CollectionDockWidget.
-	connect(m_collection_dock_widget, &CollectionDockWidget::showLibraryModelSignal, this, &MainWindow::onShowLibrary);
-	connect(m_collection_dock_widget, &CollectionDockWidget::removeLibModelFromLibSignal, this, &MainWindow::onRemoveDirFromLibrary);
-	connect(m_collection_dock_widget, &CollectionDockWidget::activateSubwindow, this, &MainWindow::setActiveSubWindow);
+	connect_or_die(m_collection_dock_widget, &CollectionDockWidget::showLibraryModelSignal, this, &MainWindow::onShowLibrary);
+	connect_or_die(m_collection_dock_widget, &CollectionDockWidget::removeLibModelFromLibSignal, this, &MainWindow::onRemoveDirFromLibrary);
+	connect_or_die(m_collection_dock_widget, &CollectionDockWidget::activateSubwindow, this, &MainWindow::setActiveSubWindow);
 
 	// Connect FilterWidget signals
-	connect(m_filterToolbar->findChild<FilterWidget*>(), &FilterWidget::filterChanged, this, &MainWindow::onTextFilterChanged);
+	connect_or_die(m_filterToolbar->findChild<FilterWidget*>(), &FilterWidget::filterChanged, this, &MainWindow::onTextFilterChanged);
 
 	updateConnections();
 }
@@ -1431,48 +1431,59 @@ void MainWindow::readLibSettings(QSettings& settings)
 
 	QString database_filename = QDir::homePath() + "/AMLMDatabaseSerDes.xml";
 
-	qIn() << "###### READING XML DB:" << database_filename;
-	SerializableQVariantList list("library_list", "library_list_item");
-	{
-		Stopwatch(tostdstr(QString("############## READ OF ") + database_filename));
-		XmlSerializer xmlser;
-		xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
+	auto extfuture_initial_lib_load = ExtAsync::qthread_async_with_cnr_future([=](ExtFuture<SerializableQVariantList> ef) {
 
-		xmlser.load(list, QUrl::fromLocalFile(database_filename));
-	}
-
-	qIn() << "###### READ" << list.size() << " libraries from XML DB:" << database_filename;
-
-	for(const auto& list_entry : list)
-	{
-		QVariant qv = list_entry;
-		Q_ASSERT(qv.isValid());
-		Q_ASSERT(!qv.isNull());
-
-
-		LibraryModel* lmp = new LibraryModel(this);
+		qIn() << "###### READING XML DB:" << database_filename;
+		SerializableQVariantList list("library_list", "library_list_item");
 		{
-			Stopwatch sw("lmp-from-variant");
-			lmp->fromVariant(qv);
+			Stopwatch library_list_read(tostdstr(QString("############## READ OF ") + database_filename));
+			XmlSerializer xmlser;
+			xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
+			/// @todo This takes ~10 secs at the moment with a 300MB XML file.
+			xmlser.load(list, QUrl::fromLocalFile(database_filename));
 		}
+		ef.reportResult(list);
+		ef.reportFinished();
+	})
+	.then(this, [=](ExtFuture<SerializableQVariantList> ef){
 
-		Q_ASSERT(lmp->getLibRootDir().isValid());
+		SerializableQVariantList list = ef.get_first();
 
-		if(!lmp)
+		qIn() << "###### READ" << list.size() << " libraries from XML DB:" << database_filename;
+
+		for(const auto& list_entry : list)
 		{
-			QMessageBox::critical(this, qApp->applicationDisplayName(), "Failed to open library",
-								  QMessageBox::Ok);
-		}
-		else
-		{
-			MDIModelViewPair mvpair;
-			mvpair.m_model = lmp;
-			mvpair.m_model_was_existing = false;
+			QVariant qv = list_entry;
+			Q_ASSERT(qv.isValid());
+			Q_ASSERT(!qv.isNull());
 
-			addChildMDIModelViewPair_Library(mvpair);
+
+			LibraryModel* lmp = new LibraryModel(this);
+			{
+				Stopwatch sw("lmp-from-variant");
+				lmp->fromVariant(qv);
+			}
+
+			Q_ASSERT(lmp->getLibRootDir().isValid());
+
+			if(!lmp)
+			{
+				QMessageBox::critical(this, qApp->applicationDisplayName(), "Failed to open library",
+									  QMessageBox::Ok);
+			}
+			else
+			{
+				MDIModelViewPair mvpair;
+				mvpair.m_model = lmp;
+				mvpair.m_model_was_existing = false;
+
+				addChildMDIModelViewPair_Library(mvpair);
+			}
 		}
-	}
-	qIn() << "###### READ AND CONVERTED XML DB:" << database_filename;
+		qIn() << "###### READ AND CONVERTED XML DB:" << database_filename;
+	});
+
+	/// @todo Set extfuture_initial_lib_load to some manager.
 }
 
 void MainWindow::writeSettings()
