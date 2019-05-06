@@ -568,7 +568,10 @@ namespace ExtFuture_detail
 					   delete_later_if_canceled_and_finished=DECAY_COPY(delete_later_if_canceled_and_finished)]() mutable {
 			delete_later_if_canceled_and_finished(fw);
 		});
-		connect_or_die(fw, &QFutureWatcher<T>::canceled, [=]() mutable { delete_later_if_canceled_and_finished(fw); });
+		connect_or_die(fw, &QFutureWatcher<T>::canceled,
+				[=]() mutable {
+			delete_later_if_canceled_and_finished(fw);
+		});
 	}
 
 	template <class T, class R, class ResultsReadyAtCallbackType = std::nullptr_t, class WatcherConnectionCallback = std::nullptr_t>
@@ -605,7 +608,7 @@ namespace ExtFuture_detail
 		// finished signal.
 		/// @note Should only ever get this due to an exception thrown into R, and then we should probably have gotten a cancel instead.
 		connect_or_die(downstream_watcher, &FutureWatcherTypeR::finished, upstream_context, [=,
-					   upstream_future_copy=DECAY_COPY(std::forward<ExtFuture<T>>(upstream_future))]() mutable {
+					   upstream_future_copy=FWD_DECAY_COPY(ExtFuture<T>, upstream_future)]() mutable {
 			// Note we directly call cancel() (but from context's thread) because upstream_future may not have an event loop.
 			upstream_future_copy.reportFinished();
 		});

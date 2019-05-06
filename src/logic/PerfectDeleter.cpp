@@ -208,7 +208,7 @@ void PerfectDeleter::addAMLMJob(AMLMJob* amlmjob)
 {
 	std::lock_guard lock(m_mutex);
 
-	QPointer<KJob> qpamlmjob = amlmjob;
+	QPointer<AMLMJob> qpamlmjob = amlmjob;
 
 	// Remover lambda and connections, for when the AMLMJob is deleted out from under us.
 	// This is a bit of a mess due to this whole "let's delete ourself" thing that permeates Qt5/KF5.
@@ -217,13 +217,13 @@ void PerfectDeleter::addAMLMJob(AMLMJob* amlmjob)
 
 	auto remover_lambda = [=, qpamlmjob=qpamlmjob]() {
 		std::lock_guard lock(m_mutex);
-		qIn() << "Destroying AMLMJob:" << qpamlmjob->objectName();
 		if(qpamlmjob.isNull())
 		{
 			qWr() << "AMLMJob was null";
 		}
 		else
 		{
+			qIn() << "Destroying AMLMJob:" << qpamlmjob->objectName();
 			std::experimental::erase(m_watched_AMLMJobs, qpamlmjob.data());
 		}
 	};
