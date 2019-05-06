@@ -400,44 +400,6 @@ namespace ExtFuture_detail
 		void resultReady(int result);
 	};
 
-	/// @todo DELETE THIS
-//	class FutureWatcherLifecycleController : public QObject
-//	{
-//		Q_OBJECT
-//
-//	public:
-//		explicit FutureWatcherLifecycleController(QObject* parent = nullptr) : QObject(parent)
-//		{
-//			m_fwthread.setObjectName("FutureWatcherLifecycleThread");
-//			FutureWatcherParent* fwp = new FutureWatcherParent;
-//			fwp->moveToThread(&m_fwthread);
-//			connect_or_die(&m_fwthread, &QThread::finished, fwp, &QObject::deleteLater);
-//			connect_or_die(this, &FutureWatcherLifecycleController::operate, fwp, &FutureWatcherParent::doWork);
-//			connect_or_die(fwp, &FutureWatcherParent::resultReady, this, &FutureWatcherLifecycleController::handleResults);
-//			m_fwthread.start();
-//		}
-//		~FutureWatcherLifecycleController() override
-//		{
-//			m_fwthread.quit();
-//			m_fwthread.wait();
-//		}
-//
-//
-//
-//	public Q_SLOTS:
-//		void handleResults(int result)
-//		{
-//			/// @todo
-//		}
-//
-//	Q_SIGNALS:
-//		void operate(int param);
-//
-//	private:
-//
-//		QThread m_fwthread;
-//	};
-
 	/// This is semi-gross, it's the QObject which will be the parent of all managed future watchers.
 	static inline FutureWatcherParent* f_the_managed_fw_parent = nullptr;
 
@@ -451,9 +413,10 @@ namespace ExtFuture_detail
 			PerfectDeleter::instance().addQThread(new_thread, [](QThread* the_qthread){
 				// Call exit(0) on the QThread.  We use Qt's invokeMethod() here.
 				ExtAsync::detail::run_in_event_loop(the_qthread, [the_qthread](){
-					qDb() << "Calling quit()+wait() on managed FutureWatcher QThread";
+					qDb() << "Calling quit()+wait() on managed FutureWatcher QThread, FWParent has num children:" << f_the_managed_fw_parent->children().size();
 					the_qthread->quit();
 					the_qthread->wait();
+					qDb() << "Finished quit()+wait() on managed FutureWatcher QThread";
 				});
 			});
 

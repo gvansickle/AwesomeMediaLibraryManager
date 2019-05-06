@@ -31,6 +31,7 @@
 #include <QStringList>
 #include <QFuture>
 #include <QFutureSynchronizer>
+#include <QObjectCleanupHandler>
 
 // KF5
 #include <KJob>
@@ -154,6 +155,16 @@ protected:
 
 private:
 
+	/// Private member functions.
+
+	bool waitForAMLMJobsFinished(bool spin);
+
+	/// Private helper for clearing out completed futures.
+	void scan_and_purge_futures();
+
+	/// @name Private data members
+	/// @{
+
 	// Mutex for synchronizing state, e.g. watch lists below.
 	mutable std::mutex m_mutex;
 
@@ -169,13 +180,10 @@ private:
     std::deque<QPointer<AMLMJob>> m_watched_AMLMJobs;
 	std::deque<QPointer<QThread>> m_watched_QThreads;
 	std::deque<std::shared_ptr<DeletableBase>> m_watched_deletables;
+	QObjectCleanupHandler m_qobj_cleanup_handler;
 
-    /// Private member functions.
+	/// @}
 
-	bool waitForAMLMJobsFinished(bool spin);
-
-	/// Private helper for clearing out completed futures.
-	void scan_and_purge_futures();
 };
 
 #endif // PERFECTDELETER_H
