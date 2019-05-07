@@ -36,6 +36,7 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	impl/ExtFuture_when_any.h
 	impl/ExtFutureImplHelpers.h
 	impl/ExtAsync_RunInThread.h
+	impl/ManagedExtFutureWatcher_impl.h
 	ExtAsync.h
 	ExtAsyncExceptions.h
 	AMLMJob.h
