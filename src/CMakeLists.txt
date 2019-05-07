@@ -238,6 +238,9 @@ add_executable(${PROJECT_NAME} ${WIN32_OR_MACOS_BUNDLE}
 #target_compile_features(${PROJECT_NAME} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
 target_compile_definitions(${PROJECT_NAME}
 	PUBLIC
+		# libstdc++ defs: @link https://gcc.gnu.org/onlinedocs/gcc-9.1.0/libstdc++/manual/
+		# Enable the libstdc++ debug mode.
+		#_GLIBCXX_DEBUG
 		"QT_SHAREDPOINTER_TRACK_POINTERS=1"
 		"KXMLGUI_NO_DEPRECATED=1"
 		"QT_DEPRECATED_WARNINGS=1"
@@ -355,7 +358,12 @@ target_sources(${TEST_EXE_TARGET}
 		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
 	)
 #target_compile_features(${TEST_EXE_TARGET} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
-target_compile_definitions(${TEST_EXE_TARGET} PRIVATE
+target_compile_definitions(${TEST_EXE_TARGET}
+	PUBLIC
+		# libstdc++ defs: @link https://gcc.gnu.org/onlinedocs/gcc-9.1.0/libstdc++/manual/
+		# Enable the libstdc++ debug mode.
+		#_GLIBCXX_DEBUG 
+	PRIVATE
 	"QT_SHAREDPOINTER_TRACK_POINTERS=1"
 	"QT_DEPRECATED_WARNINGS"
 	"QT_NO_KEYWORDS"

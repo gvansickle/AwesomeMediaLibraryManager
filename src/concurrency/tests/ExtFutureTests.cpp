@@ -1543,7 +1543,9 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 	LogThreadPoolInfo(tp);
 
 	// The async generator task.  Spins forever, reporting "5" to generator_task_future until canceled.
-	ExtFuture<int> generator_task_future = ExtAsync::run(
+	ExtFuture<int> generator_task_future =
+//			ExtAsync::run(
+			ExtAsync::qthread_async_with_cnr_future(
 				[=, &ran_generator_task_callback, &ran_then1_callback, &ran_then2_callback, &rsm, &generator_task_future]
 					  (ExtFuture<int> generator_task_future_copy) -> void {
 		// Check the atomics.
@@ -1580,9 +1582,7 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 		AMLMTEST_EXPECT_TRUE(generator_task_future_copy.isFinished());
 		rsm.ReportResult(J1ENDCB);
 		generator_task_future_copy.reportFinished();
-//		return 1;
-	}
-	);
+	});
 
 	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(generator_task_future);
 	AMLMTEST_EXPECT_FALSE(generator_task_future.isCanceled()) << generator_task_future;
@@ -1647,8 +1647,8 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 
 	// Cancel the downstream future.
 	TCOUT << "CANCELING TAIL downstream_then2:" << downstream_then2;
-//	downstream_then2.cancel();
-	downstream_then2.reportException(ExtAsyncCancelException());
+	downstream_then2.cancel();
+//	downstream_then2.reportException(ExtAsyncCancelException());
 	TCOUT << "CANCELED TAIL downstream_then2:" << downstream_then2;
 
 	TCOUT << "WAITING FOR CANCEL TO PROPAGATE";

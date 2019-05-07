@@ -40,7 +40,7 @@
 #include "serialization/ISerializable.h"
 
 
-class LibraryEntry : public std::enable_shared_from_this<LibraryEntry>, public virtual ISerializable
+class LibraryEntry : public std::enable_shared_from_this<LibraryEntry>, public ISerializable
 {
 public:
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(LibraryEntry);

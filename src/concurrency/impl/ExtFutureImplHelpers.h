@@ -43,6 +43,9 @@
 template <class T>
 class ExtFuture;
 
+namespace ExtFuture_detail
+{
+
 template <class T, class CallbackType, class R,  class... Args>
 void exception_propagation_helper_spinwait(ExtFuture<T> this_future_copy, ExtFuture<R> ret_future_copy,
 		CallbackType&& callback, Args&&... args)
@@ -153,7 +156,32 @@ void exception_propagation_helper_spinwait(ExtFuture<T> this_future_copy, ExtFut
 
 }
 
+/**
+ * Connect a watcher between @a up and @a down which will propagate a cancel and any
+ * exception held by down to up, then deleteLater() itself.
+ */
+template <class T, class R>
+void connect_or_die_backprop_cancel_watcher(ExtFuture<T> up, ExtFuture<R> down)
+{
+  auto* fw = get_managed_qfuture_watcher<R>();
 
+  connect_or_die(fw, &QFutureWatcher<R>::canceled, [upc=DECAY_COPY(up), down, fw]() mutable {
+    // Propagate the cancel upstream, possibly with an exception.
+    // Not a race here, since we'll be canceled with an exception when we get here.
+    if(down.has_exception())
+    {
+      trigger_exception_and_propagate(upc, down);
+    }
+    else
+    {
+      upc.cancel();
+    }
+    // Delete this watcher.
+    fw->deleteLater();
+  });
+
+  fw->setFuture(down);
+}
 
 /**
  * Template to try to get a common handle on exception and cancel handling.
@@ -170,6 +198,8 @@ void exception_propagation_helper_then(ExtFuture<T> this_future_copy, ExtFuture<
 	Q_ASSERT(this_future_copy.isStarted());
 	Q_ASSERT(ret_future_copy.isStarted());
 
+	// Propagate cancel and exceptions from dowstream to upstream.
+	ExtFuture_detail::connect_or_die_backprop_cancel_watcher(this_future_copy, ret_future_copy);
 
 	try
 	{
@@ -374,6 +404,8 @@ static inline void spinWaitForFinishedOrCanceled(QThreadPool* tp, const ExtFutur
 	}
 }
 
+}; // END namespace ExtFuture_detail
+
 namespace ExtFuture_detail
 {
 
@@ -574,6 +606,8 @@ namespace ExtFuture_detail
 		});
 	}
 
+
+
 	template <class T, class R, class ResultsReadyAtCallbackType = std::nullptr_t, class WatcherConnectionCallback = std::nullptr_t>
 	void SetBackpropWatcher(ExtFuture<T> upstream_future, ExtFuture<R> downstream_future,
 							QObject* upstream_context, QObject* downstream_context,
@@ -674,7 +708,7 @@ namespace ExtFuture_detail
 
 	}
 
-} // END ns ExtFuture_detail
+}; // END ns ExtFuture_detail
 
 /**
  * @todo doc fixes:

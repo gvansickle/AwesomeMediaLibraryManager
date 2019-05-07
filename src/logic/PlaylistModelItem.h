@@ -22,6 +22,8 @@
 
 #include "LibraryEntry.h"
 
+#include <memory>
+
 class PlaylistModelItem: public LibraryEntry
 {
 public:

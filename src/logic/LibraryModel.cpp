@@ -22,6 +22,8 @@
 #include "LibraryModel.h"
 
 // Stc C++
+#include <vector>
+#include <memory>
 
 // Qt5
 #include <QtConcurrent>
@@ -885,7 +887,7 @@ void LibraryModel::SLOT_onIncomingPopulateRowWithItems_Single(QPersistentModelIn
 	finishIncoming();
 }
 
-void LibraryModel::SLOT_onIncomingPopulateRowWithItems_Multiple(QPersistentModelIndex pindex, VecOfLEs items)
+void LibraryModel::SLOT_onIncomingPopulateRowWithItems_Multiple(QPersistentModelIndex pindex, std::vector<std::shared_ptr<LibraryEntry> > items)
 {
 	if(!pindex.isValid())
 	{

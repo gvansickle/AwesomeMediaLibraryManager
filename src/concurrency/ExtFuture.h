@@ -80,6 +80,12 @@ std::atomic_uint64_t get_next_id();
 #include "impl/ExtAsync_RunInThread.h"
 #include "impl/ExtFuture_make_xxx_future.h"
 
+namespace ExtFuture_detail
+{
+template <class T, class R>
+void connect_or_die_backprop_cancel_watcher(ExtFuture<T> up, ExtFuture<R> down);
+};
+
 /**
  * A C++2x-ish std::shared_future<>-like class implemented on top of Qt5's QFuture<T> and QFutureInterface<T> classes and other facilities.
  *
@@ -1304,8 +1310,9 @@ public:
 			//				QFuture::resultAt()
 			//				QFuture::results()"
 
+//			ExtFuture_detail::connect_or_die_backprop_cancel_watcher(in_future, returned_future_copy);
 
-			exception_propagation_helper_then(in_future, returned_future_copy, std::move(fd_then_callback));
+			ExtFuture_detail::exception_propagation_helper_then(in_future, returned_future_copy, std::move(fd_then_callback));
 
 			}, *this, retfuture);
 

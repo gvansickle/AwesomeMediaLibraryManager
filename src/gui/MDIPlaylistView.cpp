@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -17,9 +17,13 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <gui/delegates/ItemDelegateLength.h>
 #include "MDIPlaylistView.h"
 
+// Srd C++
+#include <vector>
+#include <memory>
+
+#include <gui/delegates/ItemDelegateLength.h>
 
 #include <gui/menus/DropMenu.h>
 
