@@ -126,7 +126,7 @@ static inline void spinWaitForFinishedOrCanceled(QThreadPool* tp, const ExtFutur
 		///
 		/// ...and we haven't even gotten to the actual callback yet.
 
-
+#ifdef USING_WATCHERS
 		if(ret_future_copy.hasException())
 		{
 			// Downstream threw, which .cancels() (doesn't have to be a cancel exception).
@@ -163,7 +163,7 @@ static inline void spinWaitForFinishedOrCanceled(QThreadPool* tp, const ExtFutur
 			qWr() << "returned_future_copy FINISHED?:" << ret_future_copy;
 			Q_ASSERT_X(0, __func__, "Future returned by then() is finished first, shouldn't be possible.");
 		}
-
+#endif //USING_WATCHERS
 		if(this_future_copy.hasException())
 		{
 			// This threw, which cancels (doesn't have to be a cancel exception).

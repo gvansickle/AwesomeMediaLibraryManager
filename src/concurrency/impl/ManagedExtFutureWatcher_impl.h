@@ -189,6 +189,8 @@ void connect_or_die_backprop_cancel_watcher(ExtFuture<T> up, ExtFuture<R> down)
 {
   auto* fw = get_managed_qfuture_watcher<R>();
 
+  /// @todo Still need to delete on R-finished, ...? T finished?
+
   connect_or_die(fw, &QFutureWatcher<R>::canceled, [upc=DECAY_COPY(up), down, fw]() mutable {
     // Propagate the cancel upstream, possibly with an exception.
     // Not a race here, since we'll be canceled with an exception when we get here.
