@@ -193,6 +193,24 @@ namespace ExtFutureWatcher_impl
 		auto* fw_up = get_managed_qfuture_watcher<T>("[up->down]");
 
 		/// @todo Still need to delete on R-finished, ...? T finished?
+
+		/// @todo resultsReadyAt() watcher.
+		constexpr bool has_stap_callback = !std::is_null_pointer_v<StapCallback>;
+		if constexpr(!std::is_null_pointer_v<StapCallback>)
+		{
+			connect_or_die(fw_up, &QFutureWatcher<T>::resultsReadyAt,
+					[upc=up, downc=down, fw_up, stap_callback_cp=FWD_DECAY_COPY(StapCallback, stap_callback)](int begin, int end) mutable {
+				std::invoke(std::move(stap_callback_cp), upc, begin, end);
+				/// @note We're temporarily copying to the output future here, we should change that to use a separate thread.
+				///       Or maybe we can just return the upstream_future here....
+				for(int i = begin; i < end; ++i)
+				{
+					downc.reportResult(fw_up->resultAt(i), i);
+				}
+			});
+		}
+		/// @todo resultsReadyAt() watcher.
+
 		// down->up canceled.
 		connect_or_die(fw, &QFutureWatcher<R>::canceled, [upc=DECAY_COPY(up), downc=down, fw]() mutable {
 			// Propagate the cancel upstream, possibly with an exception.
@@ -227,25 +245,6 @@ namespace ExtFutureWatcher_impl
 			// Delete this watcher, it's done all it can.
 			fw_up->deleteLater();
 		});
-
-
-		/// @todo resultsReadyAt() watcher.
-
-		if constexpr(!std::is_null_pointer_v<StapCallback>)
-		{
-			connect_or_die(fw_up, &QFutureWatcher<T>::resultsReadyAt,
-					[upc=up, downc=down, fw_up, stap_callback_cp=FWD_DECAY_COPY(StapCallback, stap_callback)](int begin, int end) mutable {
-				std::invoke(std::move(stap_callback_cp), upc, begin, end);
-				/// @note We're temporarily copying to the output future here, we should change that to use a separate thread.
-				///       Or maybe we can just return the upstream_future here....
-				for(int i = begin; i < end; ++i)
-				{
-					downc.reportResult(fw_up->resultAt(i), i);
-				}
-			});
-		}
-
-		/// @todo resultsReadyAt() watcher.
 
 		fw->setFuture(down);
 		fw_up->setFuture(up);
