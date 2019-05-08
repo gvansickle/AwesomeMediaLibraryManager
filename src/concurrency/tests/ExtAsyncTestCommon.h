@@ -500,10 +500,10 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTes
             AMLMTEST_EXPECT_FALSE(ExtFutureState::state(future) & ExtFutureState::Canceled);
 
             // Sleep for a second.
-	    TCOUT << "SLEEPING FOR 1 SEC";
+		qDb() << "SLEEPING FOR 1 SEC";
 
             TC_Sleep(1000);
-	    TCOUT << "SLEEP COMPLETE, sending value to future:" << current_val;
+		qDb() << "SLEEP COMPLETE, sending value to future:" << current_val;
 
             reportResult(&future, current_val);
             current_val++;
@@ -531,6 +531,10 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTes
         TCOUT << "ExtFuture<>, clearing state";
         retval = ExtAsync::make_started_only_future<int>();
     }
+	else
+	{
+		static_assert(dependent_false_v<ReturnFutureT>, "Bad future type");
+	}
 
     TCOUT << "ReturnFuture initial state:" << ExtFutureState::state(retval);
 

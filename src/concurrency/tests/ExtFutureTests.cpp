@@ -2148,7 +2148,7 @@ TEST_F(ExtFutureTest, ExtFutureStreamingTap)
 	AMLMTEST_EXPECT_FALSE(f2.isFinished());
 
 	TCOUT << "BEFORE WAITING FOR GET()" << f2;
-TC_Wait(4000);
+
 	async_results_from_get = f2.results();
 
 	TCOUT << "AFTER WAITING FOR GET()" << f2;
