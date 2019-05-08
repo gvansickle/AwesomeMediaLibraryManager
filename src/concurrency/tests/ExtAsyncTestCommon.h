@@ -486,7 +486,7 @@ void reportResult(FutureT* f, ResultType t)
 template<class ReturnFutureT>
 ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTestsSuiteFixtureBase *fixture)
 {
-	AMLMTEST_SCOPED_TRACE("In async_int_generator");
+    AMLMTEST_SCOPED_TRACE("In async_int_generator");
 
     auto tgb = new trackable_generator_base(fixture);
     fixture->register_generator(tgb);
@@ -496,60 +496,60 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTes
         AMLMTEST_SCOPED_TRACE("In async_int_generator callback");
         for(int i=0; i<num_iterations; i++)
         {
-			/// @todo Not sure if we want this to work or not.
-        	AMLMTEST_EXPECT_FALSE(ExtFutureState::state(future) & ExtFutureState::Canceled);
+            /// @todo Not sure if we want this to work or not.
+            AMLMTEST_EXPECT_FALSE(ExtFutureState::state(future) & ExtFutureState::Canceled);
 
             // Sleep for a second.
-			TCOUT << "SLEEPING FOR 1 SEC";
+	    TCOUT << "SLEEPING FOR 1 SEC";
 
             TC_Sleep(1000);
-			TCOUT << "SLEEP COMPLETE, sending value to future:" << current_val;
+	    TCOUT << "SLEEP COMPLETE, sending value to future:" << current_val;
 
-			reportResult(&future, current_val);
+            reportResult(&future, current_val);
             current_val++;
         }
 
         // We're done.
-		TCOUT << "REPORTING FINISHED";
-		reportFinished(&future);
+        TCOUT << "REPORTING FINISHED";
+        reportFinished(&future);
 
         fixture->unregister_generator(tgb);
         delete tgb;
-
     };
 
-	ReturnFutureT retval;// = make_default_future<ReturnFutureT, typename ReturnFutureT::value_type>();
+    ReturnFutureT retval;// = make_default_future<ReturnFutureT, typename ReturnFutureT::value_type>();
+
     if constexpr (std::is_same_v<ReturnFutureT, QFuture<int>>)
     {
         // QFuture() creates an empty, cancelled future (Start|Canceled|Finished).
-		TCOUT << "QFuture<>, clearing state";
+        TCOUT << "QFuture<>, clearing state";
         retval = make_startedNotCanceled_QFuture<int>();
     }
-	else if constexpr (std::is_same_v<ReturnFutureT, ExtFuture<int>>)
-	{
-		// ExtFuture() creates an empty, cancelled future (Start|Canceled|Finished).
-		TCOUT << "QFuture<>, clearing state";
-		retval = ExtAsync::make_started_only_future<int>();
-	}
+    else if constexpr (std::is_same_v<ReturnFutureT, ExtFuture<int>>)
+    {
+        // ExtFuture() creates an empty, cancelled future (Start|Canceled|Finished).
+        TCOUT << "ExtFuture<>, clearing state";
+        retval = ExtAsync::make_started_only_future<int>();
+    }
 
-	TCOUT << "ReturnFuture initial state:" << ExtFutureState::state(retval);
+    TCOUT << "ReturnFuture initial state:" << ExtFutureState::state(retval);
 
 //    AMLMTEST_EXPECT_TRUE(retval.isStarted());
 //	AMLMTEST_EXPECT_FALSE(retval.isCanceled());
 //    AMLMTEST_EXPECT_FALSE(retval.isFinished());
 
-	if constexpr (std::is_same_v<ReturnFutureT, QFuture<int>>)
+    if constexpr (std::is_same_v<ReturnFutureT, QFuture<int>>)
     {
-		TCOUT << "QtConcurrent::run()";
+        TCOUT << "QtConcurrent::run()";
         auto qrunfuture = QtConcurrent::run(lambda, retval);
     }
     else
     {
-		TCOUT << "ExtAsync::run()";
-		retval = ExtAsync::run(lambda);
+        TCOUT << "ExtAsync::qthread_async_with_cnr_future()";
+		retval = ExtAsync::qthread_async_with_cnr_future(lambda);
     }
 
-	TCOUT << "RETURNING future:" << ExtFutureState::state(retval);
+    TCOUT << "RETURNING future:" << ExtFutureState::state(retval);
 
 //	AMLMTEST_EXPECT_TRUE(retval.isStarted());
 //    if constexpr (std::is_same_v<ReturnFutureT, QFuture<int>>)

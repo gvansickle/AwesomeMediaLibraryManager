@@ -2131,11 +2131,9 @@ TEST_F(ExtFutureTest, ExtFutureStreamingTap)
     ASSERT_FALSE(ef.isCanceled());
     ASSERT_FALSE(ef.isFinished());
 
-	TCOUT << "Attaching tap and get()";
+	TCOUT << "Attaching stap to ef:" << ef;
 
-//    async_results_from_get =
-M_WARNING("TODO: This is still spinning when the test exits.");
-	auto f2 = ef.stap(qApp, [=, &async_results_from_tap, &num_tap_completions](eftype ef, int begin, int end) -> void  {
+	auto f2 = ef.stap(/*qApp,*/ [=, &async_results_from_tap, &num_tap_completions](eftype ef, int begin, int end) -> void  {
 			TCOUT << "IN TAP, begin:" << begin << ", end:" << end;
         for(int i = begin; i<end; i++)
         {
@@ -2150,7 +2148,7 @@ M_WARNING("TODO: This is still spinning when the test exits.");
 	AMLMTEST_EXPECT_FALSE(f2.isFinished());
 
 	TCOUT << "BEFORE WAITING FOR GET()" << f2;
-
+TC_Wait(4000);
 	async_results_from_get = f2.results();
 
 	TCOUT << "AFTER WAITING FOR GET()" << f2;
