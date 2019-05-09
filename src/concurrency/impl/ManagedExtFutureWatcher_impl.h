@@ -261,24 +261,7 @@ namespace ExtFutureWatcher_impl
 		auto* fw = get_managed_qfuture_watcher<R>("[then down->up]");
 		auto* fw_up = get_managed_qfuture_watcher<T>("[then up->down]");
 
-		/// @todo Still need to delete on R-finished, ...? T finished?
-
-		/// @todo resultsReadyAt() watcher.
-//		constexpr bool has_then_callback = !std::is_null_pointer_v<ThenCallback>;
-//		if constexpr(!std::is_null_pointer_v<ThenCallback>)
-//		{
-//			connect_or_die(fw_up, &QFutureWatcher<T>::resultsReadyAt,
-//					[upc=up, downc=down, fw_up, stap_callback_cp=FWD_DECAY_COPY(ThenCallback, then_callback)](int begin, int end) mutable {
-//				std::invoke(std::move(stap_callback_cp), upc, begin, end);
-//				/// @note We're temporarily copying to the output future here, we should change that to use a separate thread.
-//				///       Or maybe we can just return the upstream_future here....
-//				for(int i = begin; i < end; ++i)
-//				{
-//					downc.reportResult(fw_up->resultAt(i), i);
-//				}
-//			});
-//		}
-		/// @todo resultsReadyAt() watcher.
+		/// @todo Still need to delete on R-finished, ...? T canceled?
 
 		// down->up canceled.
 		connect_or_die(fw, &QFutureWatcher<R>::canceled, [upc=DECAY_COPY(up), downc=down, fw]() mutable {
@@ -323,9 +306,10 @@ namespace ExtFutureWatcher_impl
 				}
 				else
 				{
-					CallbackRetType retval = std::invoke(std::move(then_callback_cp), upc);
-					downc.reportResults(retval);
+					retval = std::invoke(std::move(then_callback_cp), upc);
 				}
+				/// @todo Do we really want this for Unit retval?
+				downc.reportResults(retval);
 				downc.reportFinished();
 			}
 			// Delete this watcher, it's done all it can.
