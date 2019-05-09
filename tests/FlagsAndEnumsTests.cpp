@@ -513,7 +513,7 @@ TEST_F(FlagsAndEnumsTests, QEnumMapping) // NOLINT
 
 	auto mapitem_1 = the_map[TestEnumHolder::Enum1];
 	auto mapitem_2 = the_map[TestEnumHolder::Enum2];
-	TCOUT << mapitem_1;
+	TCOUT << toqstr(mapitem_1);
 
 	EXPECT_EQ(mapitem_1, "one");
 	EXPECT_EQ(mapitem_2, "two");

@@ -72,7 +72,7 @@ std::atomic_uint64_t get_next_id();
 // Stuff that ExtFuture.h needs to have declared/defined prior to the ExtFuture<> declaration.
 #include "ExtFuture_traits.h"
 #include "impl/ExtAsync_impl.h"
-
+#include "impl/ManagedExtFutureWatcher_impl.h"
 
 #if defined(TEMPL_ONLY_NEED_DECLARATION) || !defined(TEMPL_ONLY_NEED_DEF)
 
@@ -87,6 +87,8 @@ void connect_or_die_backprop_cancel_watcher(ExtFuture<T> up, ExtFuture<R> down);
 template <class T, class CallbackType, class R,  class... Args>
 void exception_propagation_helper_then(ExtFuture<T> this_future_copy, ExtFuture<R> ret_future_copy, CallbackType&& callback, Args&&... args);
 };
+
+namespace ExtFutureWatcher_impl {};
 
 /**
  * A C++2x-ish std::shared_future<>-like class implemented on top of Qt5's QFuture<T> and QFutureInterface<T> classes and other facilities.
@@ -487,8 +489,16 @@ public:
 		}
 	}
 
-	inline void reportResults(const ExtFuture<T> &ef, int begin_index, int end_index)
+	inline void reportResults(const ExtFuture<T> &ef, int begin_index = -1, int end_index = -1)
 	{
+		if(begin_index == -1)
+		{
+			begin_index = 0;
+		}
+		if(end_index == -1)
+		{
+			end_index = ef.resultCount();
+		}
 		QVector<T> results;
 		for(int i = begin_index; i<end_index; ++i)
 		{
@@ -1312,7 +1322,7 @@ public:
 			//				QFuture::resultAt()
 			//				QFuture::results()"
 
-//			ExtFuture_detail::connect_or_die_backprop_cancel_watcher(in_future, returned_future_copy);
+//			ExtFutureWatcher_impl::connect_or_die_then_watchers(in_future, returned_future_copy, std::move(fd_then_callback));
 
 			ExtFuture_detail::exception_propagation_helper_then(in_future, returned_future_copy, std::move(fd_then_callback));
 

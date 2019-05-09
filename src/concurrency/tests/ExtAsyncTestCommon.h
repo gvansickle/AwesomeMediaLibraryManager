@@ -103,7 +103,7 @@ public:
 		TCOUT << "InterState singleton constructed";
 		Q_ASSERT_X(m_current_test_handle.empty(), "constructor", m_current_test_handle.m_test_id_string.c_str());
 	};
-	virtual ~InterState() { TCOUT << "InterState singleton destructed"; };
+	virtual ~InterState() { /*TCOUT*/std::cout << "InterState singleton destructed"; };
 
 	/// Get a reference to the singleton.
 	static InterState& ref();
@@ -500,10 +500,10 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTes
             AMLMTEST_EXPECT_FALSE(ExtFutureState::state(future) & ExtFutureState::Canceled);
 
             // Sleep for a second.
-		qDb() << "SLEEPING FOR 1 SEC";
+			qDb() << "SLEEPING FOR 1 SEC";
 
             TC_Sleep(1000);
-		qDb() << "SLEEP COMPLETE, sending value to future:" << current_val;
+			qDb() << "SLEEP COMPLETE, sending value to future:" << current_val;
 
             reportResult(&future, current_val);
             current_val++;

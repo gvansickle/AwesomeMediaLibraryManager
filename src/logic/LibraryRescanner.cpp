@@ -329,9 +329,10 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 
 		qDb() << "END OF DSR TAP:" << M_ID_VAL(tree_model_item_future);
 	}) // returns ExtFuture<DirScanResult> tail_future.
-	.then([=](ExtFuture<DirScanResult> fut_ignored) -> void {
+	.then([=](ExtFuture<DirScanResult> fut_ignored) -> Unit {
 		// The dirscan is complete.
 		qDb() << "DIRSCAN COMPLETE .then()";
+		return unit;
 	})
 	/// @then Finish the two output futures.
 	.then([=, tree_model_item_future=tree_model_item_future](ExtFuture<Unit> future) mutable -> void {

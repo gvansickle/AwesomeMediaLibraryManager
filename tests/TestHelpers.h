@@ -169,8 +169,8 @@ public:
 /// @code
 ///     TCOUT << "This is a test";
 /// @endcode
-#define TCOUT  TestCout().getQDebugRef()
-//#define TCOUT  qDebug()
+//#define TCOUT  TestCout().getQDebugRef()
+#define TCOUT  qDb()
 
 /// @}
 

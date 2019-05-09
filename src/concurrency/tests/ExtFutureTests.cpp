@@ -1055,8 +1055,8 @@ TEST_F(ExtFutureTest, CancelBasic)
 
 	// ~immediately cancel the future.
 	TCOUT << "CANCELING FUTURE";
-//    f0.cancel();
-	f0.reportException(ExtAsyncCancelException());
+	f0.cancel();
+//	f0.reportException(ExtAsyncCancelException());
 	TCOUT << "CANCELED FUTURE";
 
 	/**
@@ -1994,23 +1994,26 @@ TEST_F(ExtFutureTest, ExtFutureSingleThen)
 
 	QList<int> expected_results {1,2,3,4,5,6};
 	eftype root_future = async_int_generator<eftype>(1, 6, this);
+	root_future.setName("root_future");
 
 	TCOUT << "Starting ef state:" << root_future.state();
-	ASSERT_TRUE(root_future.isStarted());
-	ASSERT_FALSE(root_future.isCanceled());
-	ASSERT_FALSE(root_future.isFinished());
+	EXPECT_TRUE(root_future.isStarted());
+	EXPECT_FALSE(root_future.isCanceled());
+	EXPECT_FALSE(root_future.isFinished());
 
-	TCOUT << "Attaching then()";
+	TCOUT << "Attaching then() to root_future:" << root_future;
 
-	auto f2 = root_future.then([=, &async_results_from_then, &num_then_completions](eftype root_future_copy) -> int  {
+	ExtFuture<int> f2 = root_future.then([=, &async_results_from_then, &num_then_completions](eftype root_future_copy) -> int  {
 			TCOUT << "IN THEN, future:" << root_future_copy.state() << root_future_copy.resultCount();
 			AMLMTEST_EXPECT_TRUE(root_future_copy.isFinished());
 			async_results_from_then = root_future_copy.get();
 			num_then_completions++;
 			return 5;
 	});
+	f2.setName("f2");
 
 	AMLMTEST_EXPECT_TRUE(f2.isStarted());
+	EXPECT_TRUE(f2.isRunning());
 	AMLMTEST_EXPECT_FALSE(f2.isCanceled());
 	AMLMTEST_EXPECT_FALSE(f2.isFinished());
 
@@ -2141,7 +2144,7 @@ TEST_F(ExtFutureTest, ExtFutureStreamingTap)
             async_results_from_tap.push_back(ef.resultAt(i));
             num_tap_completions++;
         }
-	});
+	}); // Will block on f2 below.
 
 	AMLMTEST_EXPECT_TRUE(f2.isStarted());
 	AMLMTEST_EXPECT_FALSE(f2.isCanceled());
