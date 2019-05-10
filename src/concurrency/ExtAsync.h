@@ -64,7 +64,7 @@
 #include "impl/ExtFuture_make_xxx_future.h"
 
 #include "impl/ExtAsync_impl.h"
-//#include "impl/ExtAsync_RunInThread.h"
+#include "impl/ExtAsync_RunInThread.h"
 
 
 // Generated
@@ -701,6 +701,11 @@ namespace ExtAsync
 			  && ct::is_invocable_r_v<void, F, This*, Args...>) //(arity_v<F> == 2))
 			  >
 	ExtFutureR run(This* thiz, F&& function, Args&&... args)
+#if 0
+	{
+		return ExtAsync::qthread_async_with_cnr_future(function, args...);
+	}
+#else
 	{
         /// @todo TEMP this currently limits the callback to look like C::F(ExtFuture<>&).
         static_assert(sizeof...(Args) <= 1, "Too many extra args given to run() call");
@@ -731,6 +736,7 @@ namespace ExtAsync
 
 		return report_and_control;
 	}
+#endif
 
 	template <class CallbackType,
 	        class ExtFutureT = argtype_t<CallbackType, 0>,

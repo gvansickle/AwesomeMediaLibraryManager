@@ -17,6 +17,8 @@
 # along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+# @file ./CMakeLists.txt
+
 # References:
 # Too many to list.  Some of the critical ones:
 # https://gist.github.com/mbinna/c61dbb39bca0e4fb7d1f73b0d66a4fd1  ("Effective Modern CMake")
@@ -95,8 +97,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Min versions of Qt5, KF5, KF5/ECM.
 set(QT_MIN_VERSION "5.12.1")
-set(KF5_MIN_VERSION "5.55.0")
-set(ECM_MIN_VERSION "5.55.0")
+set(KF5_MIN_VERSION "5.57.0")
+set(ECM_MIN_VERSION "5.57.0")
+
+###
+### IDE helper setup
+###
+source_group(TREE ${CMAKE_SOURCE_DIR})
+set(AUTOGEN_SOURCE_GROUP autogen)
+set(AUTOMOC_SOURCE_GROUP automoc)
+set(AUTORCC_SOURCE_GROUP autorcc)
 
 ###
 ### ECM Setup ====================================================================================================
@@ -235,7 +245,9 @@ include(DownloadProject)
 
 # Right now we need all the verbosity we can get.
 set(CMAKE_VERBOSE_MAKEFILE  YES)
-#set_property(GLOBAL PROPERTY GLOBAL_DEPENDS_DEBUG_MODE 1)
+# "CMake automatically analyzes the global inter-target dependency graph at the beginning of native build system generation.
+#  This property causes it to display details of its analysis to stderr."
+set_property(GLOBAL PROPERTY GLOBAL_DEPENDS_DEBUG_MODE 1)
 set(CPACK_IFW_VERBOSE YES)
 #set(CMAKE_DEBUG_TARGET_PROPERTIES
 #	    INCLUDE_DIRECTORIES

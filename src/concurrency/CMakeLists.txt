@@ -17,7 +17,7 @@
 # along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-# @file concurrency/CMakeLists.txt
+# @file src/concurrency/CMakeLists.txt
 
 # Concurrency files.
 set(HEADER_FILES_UTILS_CONCURRENCY
@@ -29,6 +29,7 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	ExtFutureWatcher.h
 	ExtFuture_traits.h
 	IExtFutureWatcher.h
+	impl/IExecutor.h
 	impl/ExtAsync_impl.h
 	impl/ExtFuture_impl.hpp
 	impl/ExtFuture_make_xxx_future.h

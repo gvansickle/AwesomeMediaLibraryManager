@@ -38,7 +38,7 @@
 template <class T>
 class ExtFuture;
 
-namespace ExtFutureWatcher_impl
+namespace ManagedExtFutureWatcher_detail
 {
 
 	/**
@@ -258,13 +258,13 @@ namespace ExtFutureWatcher_impl
 	template <class T, class R, class ThenCallback, class... Args>
 	void connect_or_die_then_watchers(ExtFuture<T> up, ExtFuture<R> down, ThenCallback&& then_callback, Args&&... args)
 	{
-		auto* fw = get_managed_qfuture_watcher<R>("[then down->up]");
+		auto* fw_down = get_managed_qfuture_watcher<R>("[then down->up]");
 		auto* fw_up = get_managed_qfuture_watcher<T>("[then up->down]");
 
 		/// @todo Still need to delete on R-finished, ...? T canceled?
 
 		// down->up canceled.
-		connect_or_die(fw, &QFutureWatcher<R>::canceled, [upc=DECAY_COPY(up), downc=down, fw]() mutable {
+		connect_or_die(fw_down, &QFutureWatcher<R>::canceled, [upc=DECAY_COPY(up), downc=down, fw_down]() mutable {
 			// Propagate the cancel upstream, possibly with an exception.
 			// Not a race here, since we'll have been canceled by the exception when we get here.
 			qDb() << "down->up canceled";
@@ -279,7 +279,7 @@ namespace ExtFutureWatcher_impl
 				upc.reportFinished();
 			}
 			// Delete this watcher, it's done all it can.
-			fw->deleteLater();
+			fw_down->deleteLater();
 		});
 		// up->down finished.
 		/// @todo Probably need a context here.
@@ -328,7 +328,7 @@ namespace ExtFutureWatcher_impl
 			fw_up->deleteLater();
 		});
 
-		fw->setFuture(down);
+		fw_down->setFuture(down);
 		fw_up->setFuture(up);
 	}
 

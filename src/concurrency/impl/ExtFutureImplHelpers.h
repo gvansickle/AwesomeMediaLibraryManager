@@ -220,7 +220,7 @@ static inline void spinWaitForFinishedOrCanceled(QThreadPool* tp, const ExtFutur
 		Q_ASSERT(ret_future_copy.isStarted());
 
 		// Propagate cancel and exceptions from dowstream to upstream.
-		ExtFutureWatcher_impl::connect_or_die_backprop_cancel_watcher(this_future_copy, ret_future_copy);
+		ManagedExtFutureWatcher_detail::connect_or_die_backprop_cancel_watcher(this_future_copy, ret_future_copy);
 
 		try
 		{
@@ -357,7 +357,6 @@ static inline void spinWaitForFinishedOrCanceled(QThreadPool* tp, const ExtFutur
 				ret_future_copy.cancel();
 				qDb() << "CANCELED, THROWING TO UPSTREAM (THIS) FUTURE";
 				this_future_copy.reportException(ExtAsyncCancelException());
-	//					return;
 			}
 		}
 		else if (call_on_cancel || !(this_future_copy.isFinished() || this_future_copy.isCanceled()))
@@ -401,7 +400,7 @@ void streaming_tap_helper_watcher(QObject* context, ExtFuture<T> this_future_cop
 {
 	static_assert(std::is_void_v<std::invoke_result_t<CallbackType, ExtFuture<T>, int, int/*, Args...*/>>, "Callback must return void.");
 
-	ExtFutureWatcher_impl::connect_or_die_backprop_cancel_watcher(this_future_copy, ret_future_copy);
+	ManagedExtFutureWatcher_detail::connect_or_die_backprop_cancel_watcher(this_future_copy, ret_future_copy);
 
 //	ExtFutureWatcher_impl::SetBackpropWatcher(this_future_copy, ret_future_copy,
 //										 context, context,

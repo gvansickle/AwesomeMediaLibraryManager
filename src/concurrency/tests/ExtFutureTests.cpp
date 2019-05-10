@@ -940,7 +940,7 @@ TEST_F(ExtFutureTest, InternalExceptionProp)
 		eptr = std::current_exception();
 	}
 
-	ExtFutureWatcher_impl::propagate_eptr_to_future(eptr, f0);
+	ManagedExtFutureWatcher_detail::propagate_eptr_to_future(eptr, f0);
 
 	TC_Wait(1000);
 
@@ -985,7 +985,7 @@ TEST_F(ExtFutureTest, InternalTriggerExceptionAndProp)
 	/// BEFORE f0: ExtFuture<T>( id= 33 "[unknown]" state: QFlags<ExtFutureState::State>(Running|Started) hasException(): false , resultCount(): 0 )
 	qIn() << "BEFORE futures:" << M_ID_VAL(upstream_f) << M_ID_VAL(downstream_f);
 
-	ExtFutureWatcher_impl::trigger_exception_and_propagate(upstream_f, downstream_f);
+	ManagedExtFutureWatcher_detail::trigger_exception_and_propagate(upstream_f, downstream_f);
 
 	TC_Wait(1000);
 

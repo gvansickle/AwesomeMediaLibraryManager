@@ -43,6 +43,14 @@ namespace ExtAsync
 {
 namespace detail
 {
+	/**
+	 * Common QThread-based async() executor.
+	 * @param retfuture  The future which will be both passed to the inner callback as the first parameter,
+	 *                   and immediately returned to the caller.
+	 * @param callback
+	 * @param args
+	 * @return
+	 */
 	template <class CallbackType, class... Args,
 			  class CBReturnType = Unit::LiftT<std::invoke_result_t<CallbackType, Args...>>,
 			  class R = Unit::LiftT<std::invoke_result_t<CallbackType, Args...>>,

@@ -88,7 +88,7 @@ template <class T, class CallbackType, class R,  class... Args>
 void exception_propagation_helper_then(ExtFuture<T> this_future_copy, ExtFuture<R> ret_future_copy, CallbackType&& callback, Args&&... args);
 };
 
-namespace ExtFutureWatcher_impl {};
+namespace ManagedExtFutureWatcher_detail {};
 
 /**
  * A C++2x-ish std::shared_future<>-like class implemented on top of Qt5's QFuture<T> and QFutureInterface<T> classes and other facilities.
@@ -1322,7 +1322,7 @@ public:
 			//				QFuture::resultAt()
 			//				QFuture::results()"
 
-			ExtFutureWatcher_impl::connect_or_die_then_watchers(in_future, returned_future_copy, std::move(fd_then_callback));
+			ManagedExtFutureWatcher_detail::connect_or_die_then_watchers(in_future, returned_future_copy, std::move(fd_then_callback));
 
 //			ExtFuture_detail::exception_propagation_helper_then(in_future, returned_future_copy, std::move(fd_then_callback));
 
