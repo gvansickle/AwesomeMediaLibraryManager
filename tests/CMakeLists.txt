@@ -27,19 +27,25 @@ add_library(amlm_tests STATIC
 #	FlagsAndEnumsTests.cpp
 #	FlagsAndEnumsTests.h
 	# Support code
-	IResultsSequenceMock.cpp
-	IResultsSequenceMock.h
-	TestLifecycleManager.cpp
-	TestLifecycleManager.h
-	TestHelpers.h
+# 	IResultsSequenceMock.cpp
+# 	IResultsSequenceMock.h
+# 	TestLifecycleManager.cpp
+# 	TestLifecycleManager.h
+# 	TestHelpers.h
 	)
-
+target_sources_local(amlm_tests
+	PRIVATE
+		IResultsSequenceMock.cpp
+		IResultsSequenceMock.h
+		TestLifecycleManager.cpp
+		TestLifecycleManager.h
+		TestHelpers.h
+	)
 target_link_libraries(amlm_tests
 	PUBLIC
 		gtest
 		gmock
 )
-
 
 target_include_directories(amlm_tests
 	PRIVATE

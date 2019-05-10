@@ -407,9 +407,9 @@ print_varlist(BREEZEICONS_PATH)
 ###
 set(GTK_LINK_LIB_TARGETS "")
 if(UNIX)
-	pkg_check_modules(GTKMM REQUIRED IMPORTED_TARGET gtkmm-3.0)
-	list(APPEND GTK_LINK_LIB_TARGETS PkgConfig::GTKMM)
-	set(HAVE_GTKMM01 ${GTKMM_FOUND})
+# 	pkg_check_modules(GTKMM REQUIRED IMPORTED_TARGET gtkmm-3.0)
+# 	list(APPEND GTK_LINK_LIB_TARGETS PkgConfig::GTKMM)
+# 	set(HAVE_GTKMM01 ${GTKMM_FOUND})
 endif(UNIX)
 
 ###

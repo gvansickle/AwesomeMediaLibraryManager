@@ -21,15 +21,14 @@
 #define ITEMDELEGATELENGTH_H
 
 #include <QStyledItemDelegate>
-
-
+#include <QString>
 
 class ItemDelegateLength : public QStyledItemDelegate
 {
 	Q_OBJECT
 
 public:
-	ItemDelegateLength(QObject *parent = Q_NULLPTR);
+	explicit ItemDelegateLength(QObject *parent = Q_NULLPTR);
 
     QString displayText(const QVariant &value, const QLocale &) const override;
 

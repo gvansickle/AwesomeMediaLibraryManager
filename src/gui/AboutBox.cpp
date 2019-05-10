@@ -19,7 +19,7 @@
 
 #include "AboutBox.h"
 
-#include <nomocimpl.h>
+//#include <nomocimpl.h>
 
 #include <QApplication>
 #include <QHBoxLayout>
@@ -30,7 +30,7 @@
 #include <utils/StringHelpers.h>
 #include <resources/VersionInfo.h>
 
-W_OBJECT_IMPL(AboutBox)
+//W_OBJECT_IMPL(AboutBox)
 
 AboutBox::AboutBox(QWidget *parent, const Qt::WindowFlags &flags) : QDialog(parent, flags)
 {
