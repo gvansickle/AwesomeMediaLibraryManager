@@ -45,4 +45,5 @@ target_include_directories(amlm_tests
 	PRIVATE
 	    # For config.h
 		${PROJECT_BINARY_DIR}/src
+		${Qt5Gui_PRIVATE_INCLUDE_DIRS}
 	)

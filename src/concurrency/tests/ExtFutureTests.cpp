@@ -35,7 +35,7 @@
 #include <QString>
 #include <QTest>
 #include <QFutureInterfaceBase> // shhh, we're not supposed to use this.  For calling .reportFinished() on QFuture<>s inside a run().
-#include <private/qfutureinterface_p.h>  // For test purposes only.
+//#include <QtCore/private/qfutureinterface_p.h>  // For test purposes only.
 
 // Google Test
 #include <gtest/gtest.h>

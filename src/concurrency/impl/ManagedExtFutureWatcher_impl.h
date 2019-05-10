@@ -295,21 +295,32 @@ namespace ExtFutureWatcher_impl
 			else
 			{
 				// Normal finish.  Send the results to the .then() callback.
-				R retval;
+				try
+				{
+					// Call the callback with the results- or canceled/exception-laden this_future_copy.
+					// Could throw, hence we're in a try.
+					qDb() << "then_watchers: Calling then_callback_copy(this_future_copy).";
+					R retval;
 
-				using CallbackRetType = then_return_type_from_callback_and_future_t<ThenCallback, ExtFuture<T>>;
-					//std::invoke_result_t<ThenCallback, ExtFuture<T>>;
-				if constexpr(std::is_same_v<R, Unit>)
-				{
-					std::invoke(std::move(then_callback_cp), upc);
-					retval = unit;
+					if constexpr(std::is_same_v<R, Unit>)
+					{
+						// then_callback_copy returns void, return a Unit separately.
+						std::invoke(std::move(then_callback_cp), upc);
+						retval = unit;
+					}
+					else
+					{
+						// then_callback_copy returns non-void, return the callback's return value.
+						retval = std::invoke(std::move(then_callback_cp), upc);
+					}
+					// Didn't throw, report the result.
+					downc.reportResults(retval);
 				}
-				else
+				catch(...)
 				{
-					retval = std::invoke(std::move(then_callback_cp), upc);
+					std::exception_ptr eptr = std::current_exception();
+					propagate_eptr_to_future(eptr, downc);
 				}
-				/// @todo Do we really want this for Unit retval?
-				downc.reportResults(retval);
 				downc.reportFinished();
 			}
 			// Delete this watcher, it's done all it can.

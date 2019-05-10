@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+#if 0
 #include <config.h>
 
 #include "Gtk3DialogHelper.h"
@@ -26,6 +26,8 @@
 // We don't want any of this on Windows, or if we don't have GTK.
 #if HAVE_GTKMM01 == 1
 
+/// @todo OBSOLETE THIS, IT MOVES AROUND.
+//#include "/home/gary/Qt/5.12.1/gcc_64/include/QtGui/5.12.1/QtGui/private/qguiapplication_p.h"
 #include <QtGui/private/qguiapplication_p.h>
 
 #include <gtk/gtk.h>
@@ -142,3 +144,4 @@ void Gtk3DialogHelper::onParentWindowDestroyed()
 
 #endif // HAVE_GTKMM01 == 1
 
+#endif

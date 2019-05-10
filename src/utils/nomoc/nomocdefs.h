@@ -28,7 +28,6 @@
  * @link https://code.woboq.org/woboq/verdigris/tutorial/tutorial.cpp.html
  * @link https://code.woboq.org/woboq/verdigris/src/wobjectdefs.h.html
  */
-
 #ifdef USE_BUNDLED_VERDIGRIS
 #include <wobjectdefs.h>
 #else

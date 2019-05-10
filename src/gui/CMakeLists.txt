@@ -112,9 +112,9 @@ add_subdir_lib(widgets STATIC EXCLUDE_FROM_ALL)
 target_sources_local(gui
 	PUBLIC
 		${gui_HEADER_FILES}
-#	PRIVATE
-		${gui_SOURCE_FILES}
 		${gui_settings_SOURCE_FILES}
+	PRIVATE
+		${gui_SOURCE_FILES}
 		${HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER}
 		${SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER}
 		${UI_FILES_GUI_ACTIVITYPROGRESSMANAGER}
@@ -139,4 +139,5 @@ target_include_directories(gui
 	PUBLIC
 		# For anything in <root>/src: utils, logic, future, gui.
 		${PROJECT_SOURCE_DIR}/src
+#		${Qt5Gui_PRIVATE_INCLUDE_DIRS} ### @todo OBSOLETE THIS
 		)
