@@ -312,9 +312,10 @@ namespace ExtFutureWatcher_impl
 					{
 						// then_callback_copy returns non-void, return the callback's return value.
 						retval = std::invoke(std::move(then_callback_cp), upc);
+						// Didn't throw, report the result.
+						downc.reportResult(retval);
 					}
-					// Didn't throw, report the result.
-					downc.reportResults(retval);
+
 				}
 				catch(...)
 				{

@@ -1322,9 +1322,9 @@ public:
 			//				QFuture::resultAt()
 			//				QFuture::results()"
 
-//			ExtFutureWatcher_impl::connect_or_die_then_watchers(in_future, returned_future_copy, std::move(fd_then_callback));
+			ExtFutureWatcher_impl::connect_or_die_then_watchers(in_future, returned_future_copy, std::move(fd_then_callback));
 
-			ExtFuture_detail::exception_propagation_helper_then(in_future, returned_future_copy, std::move(fd_then_callback));
+//			ExtFuture_detail::exception_propagation_helper_then(in_future, returned_future_copy, std::move(fd_then_callback));
 
 			}, *this, retfuture);
 

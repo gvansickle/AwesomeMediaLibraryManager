@@ -1494,7 +1494,7 @@ inline static void LogThreadPoolInfo(QThreadPool* tp)
 	TCOUT << "Free thread count:" << tp->maxThreadCount() - tp->activeThreadCount();
 }
 
-TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
+TEST_F(ExtFutureTest, DISABLED_ExtFutureThenCancelCascade)
 {
 	TC_ENTER();
 
@@ -2007,7 +2007,7 @@ TEST_F(ExtFutureTest, ExtFutureSingleThen)
 	TCOUT << "Attaching then() to root_future:" << root_future;
 
 	ExtFuture<int> f2 = root_future.then([=, &async_results_from_then, &num_then_completions](eftype root_future_copy) -> int  {
-			TCOUT << "IN THEN, future:" << root_future_copy.state() << root_future_copy.resultCount();
+			TCOUT << "IN THEN, future:" << root_future_copy;
 			AMLMTEST_EXPECT_TRUE(root_future_copy.isFinished());
 			async_results_from_then = root_future_copy.get();
 			num_then_completions++;
@@ -2025,7 +2025,7 @@ TEST_F(ExtFutureTest, ExtFutureSingleThen)
 	// Block waiting on the results.
 	async_results_from_get = f2.results();
 
-	TCOUT << "AFTER WAITING FOR THEN()" << f2;
+	TCOUT << "AFTER WAITING FOR THEN()" << f2; /// @todo Getting here before the .then() starts.
 
 	EXPECT_TRUE(root_future.isFinished());
 	EXPECT_EQ(num_then_completions, 1);
@@ -2062,7 +2062,7 @@ TEST_F(ExtFutureTest, ThenChain)
 	using FutureType = ExtFuture<QString>;
 
 	TCOUT << "STARTING FUTURE";
-	ExtFuture<QString> future = ExtAsync::run(delayed_string_func_1, this);
+	ExtFuture<QString> future = ExtAsync::qthread_async(delayed_string_func_1, this);
 
 	ASSERT_TRUE(future.isStarted());
 //	ASSERT_FALSE(future.isFinished());
