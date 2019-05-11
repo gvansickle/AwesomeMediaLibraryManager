@@ -1600,7 +1600,7 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 		AMLMTEST_EXPECT_TRUE(ran_generator_task_callback) << "FAIL: Generator task never ran";
 		AMLMTEST_EXPECT_FALSE(ran_then1_callback);
 		/// @todo This is coming back as true on a cancel. ???
-		AMLMTEST_EXPECT_TRUE(ran_then2_callback);
+		AMLMTEST_EXPECT_FALSE(ran_then2_callback);
 		ran_then1_callback = true;
 
 		// Should always be finished if we get in here.
@@ -1673,7 +1673,7 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 	AMLMTEST_EXPECT_TRUE(ran_generator_task_callback);
 	/// @todo Unclear why these are coming back true here.
 	AMLMTEST_EXPECT_TRUE(ran_then1_callback);
-	AMLMTEST_EXPECT_TRUE(ran_then2_callback);
+	AMLMTEST_EXPECT_FALSE(ran_then2_callback);
 
 	rsm.ReportResult(MEND);
 
@@ -2018,6 +2018,7 @@ TEST_F(ExtFutureTest, ExtFutureSingleThen)
 	ExtFuture<int> f2 = root_future.then([=, &async_results_from_then, &num_then_completions](eftype root_future_copy) -> int  {
 			TCOUT << "IN THEN, future:" << root_future_copy;
 			AMLMTEST_EXPECT_TRUE(root_future_copy.isFinished());
+			TCOUT << "CALLING GET ON ROOT_FUTURE:" << root_future_copy;
 			async_results_from_then = root_future_copy.get();
 			num_then_completions++;
 			return 5;
@@ -2045,10 +2046,10 @@ TEST_F(ExtFutureTest, ExtFutureSingleThen)
 	// This shouldn't do anything, should already be finished.
 	root_future.waitForFinished();
 
-	TCOUT << "Post .tap().get(), extfuture:" << root_future.state();
+	TCOUT << "Post .tap().get(), extfuture:" << root_future;
 
 	EXPECT_TRUE(root_future.isStarted());
-	EXPECT_FALSE(root_future.isCanceled()) << root_future.state();
+	EXPECT_FALSE(root_future.isCanceled()) << root_future;
 	EXPECT_TRUE(root_future.isFinished());
 
 	EXPECT_EQ(async_results_from_get.size(), 1);

@@ -94,7 +94,7 @@ static inline void spinWaitForFinishedOrCanceled(QThreadPool* tp, const ExtFutur
 	}
 }
 
-#if 0
+#if 1
 	template <class T, class CallbackType, class R,  class... Args>
 	void exception_propagation_helper_spinwait(ExtFuture<T> this_future_copy, ExtFuture<R> ret_future_copy,
 			CallbackType&& callback, Args&&... args)
@@ -206,7 +206,7 @@ static inline void spinWaitForFinishedOrCanceled(QThreadPool* tp, const ExtFutur
 	}
 #endif
 
-#if 0
+#if 1
 	/**
 	 * Template to try to get a common handle on exception and cancel handling.
 	 * CallbackType == ExtFuture<R> callback(ExtFuture<T> this_future, args...)

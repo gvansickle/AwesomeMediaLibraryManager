@@ -231,7 +231,7 @@ namespace ManagedExtFutureWatcher_detail
 			else
 			{
 				// Normal finish.  Send the results or exception to the .pif() callback.
-				std::invoke(pif_callback_cp, upc, downc/*, args...*/);
+				std::invoke(pif_callback_cp/*, args...*/);
 //				try
 //				{
 //					// Call the callback with the results- or canceled/exception-laden this_future_copy.
@@ -335,15 +335,22 @@ namespace ManagedExtFutureWatcher_detail
 		fw_up->setFuture(up);
 	}
 
+	template <class T>
+	struct ExecutorBase
+	{
+//		virtual ExtFuture<T> execute();
+	};
+
 	/**
 	 * Set up watchers and signals between @a up and @a down for a .then() pair.
 	 */
-	template <class T, class R, class ThenCallback, class... Args>
-	void connect_or_die_then_watchers(ExtFuture<T> up, ExtFuture<R> down, ThenCallback&& then_callback, Args&&... args)
+	template <class T, class R, class Executor, class ThenCallback, class... Args>
+	void connect_or_die_then_watchers(ExtFuture<T> up, ExtFuture<R> down, Executor&& ex, ThenCallback&& then_callback, Args&&... args)
 #if 1
 	{
-		connect_or_die_watchers_and_callback(up, down, [=, then_callback_cp=FWD_DECAY_COPY(ThenCallback, then_callback)](auto upc, auto downc) mutable {
-			// Normal upstream finish.  Send the results or exception to the .then() callback.
+		connect_or_die_watchers_and_callback(up, down, [=, then_callback_cp=FWD_DECAY_COPY(ThenCallback, then_callback),
+											 upc=up, downc=down]() mutable {
+			// Normal upstream finished().  Send the results or exception to the .then() callback.
 			try
 			{
 				// Call the callback with the results- or canceled/exception-laden this_future_copy.

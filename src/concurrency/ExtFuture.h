@@ -1280,8 +1280,12 @@ public:
 	 *
 	 * If then_callback() throws an exception, it will be stored in the ExtFuture<> returned by .then().
 	 *
-	 * @tparam R a non-ExtFuture<> type.
-	 * @tparam T a non-ExtFuture<> type.
+	 * @tparam R  The non-ExtFuture<> type returned by the continuation.
+	 * @tparam T  The non-ExtFuture<> type of *this.
+	 * @tparam ThenCallbackType  The .then() callback which will be run in an arbitrary context.  Signature:
+	 *     @code
+	 *         R then_callback(ExtFuture<T>)
+	 *     @endcode
 	 *
 	 * @param then_callback
 	 * @returns ExtFuture<R>  A future which will be made ready with the return value of then_callback.
@@ -1295,8 +1299,11 @@ public:
 	{
 		ThenReturnType retfuture = ExtAsync::make_started_only_future<R>();
 
+//		ThenReturnType retfuture = ExtAsync::qthread_async(FWD_DECAY_COPY(ThenCallbackType, then_callback), *this);
+
+#if 1
 		ExtAsync::qthread_async(
-					[=, fd_then_callback=DECAY_COPY(std::forward<ThenCallbackType>(then_callback))](ExtFuture<T> in_future, ThenReturnType returned_future_copy) mutable {
+					[=, fd_then_callback=FWD_DECAY_COPY(ThenCallbackType, then_callback)](ExtFuture<T> in_future, ThenReturnType returned_future_copy) mutable {
 
 			// Block in this spawned thread for in_future to become ready.
 			// Intention is that everything is handled in exception_propagation_helper_then(), and that behavior matches
@@ -1322,12 +1329,11 @@ public:
 			//				QFuture::resultAt()
 			//				QFuture::results()"
 
-			ManagedExtFutureWatcher_detail::connect_or_die_then_watchers(in_future, returned_future_copy, std::move(fd_then_callback));
 
-//			ExtFuture_detail::exception_propagation_helper_then(in_future, returned_future_copy, std::move(fd_then_callback));
+			ExtFuture_detail::exception_propagation_helper_then(in_future, returned_future_copy, std::move(fd_then_callback));
 
 			}, *this, retfuture);
-
+#endif
 		return retfuture;
 	}
 
