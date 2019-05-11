@@ -102,7 +102,7 @@ static inline void spinWaitForFinishedOrCanceled(QThreadPool* tp, const ExtFutur
  * @param downstream_future
  */
 template <class T, class U>
-static inline void spinWaitForFinishedOrCanceled(const ExtFuture<T>& this_future, const ExtFuture<U>& downstream_future)
+static inline void spinWaitForFinishedOrCanceled(ExtFuture<T> this_future, ExtFuture<U> downstream_future)
 {
 	/// queryState() does this:
 	/// bool QFutureInterfaceBase::queryState(State state) const
@@ -121,16 +121,16 @@ static inline void spinWaitForFinishedOrCanceled(const ExtFuture<T>& this_future
 	auto* fw_down = ManagedExtFutureWatcher_detail::get_managed_qfuture_watcher<U>("[then down->up]");
 	auto* fw_up = ManagedExtFutureWatcher_detail::get_managed_qfuture_watcher<T>("[then up->down]");
 
-	connect_or_die(fw_down, &QFutureWatcher<U>::canceled, fw_up, [&](){
+	connect_or_die(fw_down, &QFutureWatcher<U>::canceled, /*fw_up,*/ [&done_flag](){
 		done_flag = 1;
 	});
-	connect_or_die(fw_down, &QFutureWatcher<U>::finished, fw_up, [&](){
+	connect_or_die(fw_down, &QFutureWatcher<U>::finished, /*fw_up,*/ [&](){
 		done_flag = 2;
 	});
-	connect_or_die(fw_up, &QFutureWatcher<T>::canceled, fw_down, [&](){
+	connect_or_die(fw_up, &QFutureWatcher<T>::canceled, /*fw_down,*/ [&](){
 		done_flag = 4;
 	});
-	connect_or_die(fw_up, &QFutureWatcher<T>::finished, fw_down, [&](){
+	connect_or_die(fw_up, &QFutureWatcher<T>::finished, /*fw_down,*/ [&](){
 		done_flag = 8;
 	});
 
@@ -171,7 +171,7 @@ static inline void spinWaitForFinishedOrCanceled(const ExtFuture<T>& this_future
 		{
 	//		qCDebug(EXTFUTURE) << "START SPINWAIT";
 			// Blocks (busy-wait with yield) until one of the futures is canceled or finished.
-			spinWaitForFinishedOrCanceled(QThreadPool::globalInstance(), this_future_copy, ret_future_copy);
+			spinWaitForFinishedOrCanceled(/*QThreadPool::globalInstance(),*/ this_future_copy, ret_future_copy);
 
 	//		qCDebug(EXTFUTURE) << "END SPINWAIT";
 		}

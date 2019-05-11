@@ -1029,7 +1029,7 @@ TEST_F(ExtFutureTest, CancelBasic)
 	 * A default construced QFuture is (Started|Canceled|Finished)
 	 * I assume "Running" might not always be the case, depending on available threads.
 	 */
-	ExtFuture<int> f0 = ExtAsync::run([=](ExtFuture<int> rc_future) -> void {
+	ExtFuture<int> f0 = ExtAsync::qthread_async_with_cnr_future([=](ExtFuture<int> rc_future) -> void {
 
 		for(int i = 0; i<5; ++i)
 		{

@@ -66,13 +66,10 @@ namespace detail
 												  retfuture_cp=/*std::forward<ExtFutureR>*/(retfuture)
 										  ]() mutable {
 			Q_ASSERT(retfuture == retfuture_cp);
-
+			Q_ASSERT(retfuture_cp.isStarted());
 			// Catch any exceptions from the callback and propagate them to the returned future.
 			try
 			{
-				Q_ASSERT(retfuture_cp == retfuture);
-				Q_ASSERT(retfuture_cp.isStarted());
-
 				if constexpr(std::is_convertible_v<Unit, CBReturnType>)
 				{
 					std::invoke(std::move(fd_callback), args...);
@@ -84,6 +81,12 @@ namespace detail
 					retfuture_cp.reportResult(retval);
 				}
 			}
+			catch(...)
+			{
+				std::exception_ptr eptr = std::current_exception();
+				ManagedExtFutureWatcher_detail::propagate_eptr_to_future(eptr, retfuture_cp);
+			}
+#if 0
 			catch(ExtAsyncCancelException& e)
 			{
 				/**
@@ -107,6 +110,7 @@ namespace detail
 				qWr() << "CAUGHT UNKNOWN EXCEPTION";
 				retfuture_cp.reportException(QUnhandledException());
 			}
+#endif
 
 			qDb() << "Leaving Thread:" << M_ID_VAL(retfuture_cp) << M_ID_VAL(retfuture);
 			// Even in the case of exception, we need to reportFinished() or we just hang.
