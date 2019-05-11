@@ -223,7 +223,7 @@ static inline void spinWaitForFinishedOrCanceled(QThreadPool* tp, const ExtFutur
 		Q_ASSERT(ret_future_copy.isStarted());
 
 		// Propagate cancel and exceptions from dowstream to upstream.
-		ManagedExtFutureWatcher_detail::connect_or_die_backprop_cancel_watcher(this_future_copy, ret_future_copy);
+//		ManagedExtFutureWatcher_detail::connect_or_die_backprop_cancel_watcher(this_future_copy, ret_future_copy);
 
 		try
 		{
