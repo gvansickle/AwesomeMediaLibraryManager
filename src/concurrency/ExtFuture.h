@@ -1331,22 +1331,6 @@ public:
 		return retfuture;
 	}
 
-	template <class ThenCallbackType, class R = Unit::LiftT< std::invoke_result_t<ThenCallbackType, boost::shared_future<T>> >,
-				class ThenReturnType = boost::shared_future<R>,
-				REQUIRES(!is_ExtFuture_v<R> && !is_ExtFuture_v<T>
-				  && std::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, boost::shared_future<T>>)
-				>
-	ThenReturnType then_boost(ThenCallbackType&& then_callback) const
-	{
-		ThenReturnType retfuture = ExtAsync::make_started_only_future<R>();
-
-		boost::packaged_task pt([=](boost::shared_future<T> upfut){
-			return std::invoke(std::move(then_callback), upfut);
-			});
-
-		return retfuture;
-	}
-
 	/**
 	 * Attempt at a One True Top-Level .then() template.
 	 * @todo Exception handling, cancelation.

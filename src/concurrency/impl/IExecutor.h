@@ -26,6 +26,8 @@
 // Std C++.
 #include <functional>
 
+namespace ExtAsync
+{
 
 class IWorktype
 {
@@ -46,14 +48,26 @@ public:
 	using work = T;
 
 	IExecutor() = default;
+	// Non-copyable.
+	IExecutor(IExecutor const &) = delete;
+	IExecutor& operator=(IExecutor const&) = delete;
 	virtual ~IExecutor() = default;
 
 	/**
-	 * Submit work to be scheduled
+	 * Submit work to be scheduled for execution at some later time.
 	 */
-	virtual void submit() = 0;
+	virtual void submit(work& closure) = 0;
+	virtual void submit(work&& closure) = 0;
+	template <class Closure>
+	void submit(Closure&& closure);
+
+	virtual void close() = 0;
+	virtual bool closed() = 0;
+
+    virtual bool try_executing_one() = 0;
+
 };
 
-
+}; // END ns ExtAsync
 
 #endif /* SRC_CONCURRENCY_IMPL_IEXECUTOR_H_ */
