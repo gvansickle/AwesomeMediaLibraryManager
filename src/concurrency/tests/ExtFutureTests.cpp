@@ -1367,17 +1367,20 @@ TEST_F(ExtFutureTest, ParallelThens)  // NOLINT
 
 	std::atomic_bool then1, then2;
 
-	ExtFuture<int> f0 = ExtAsync::run([&](ExtFuture<int> cmdresp_future) {
+	ExtFuture<int> f0 = ExtAsync::qthread_async_with_cnr_future([&](ExtFuture<int> cmdresp_future) {
 			TC_Sleep(1000);
 			cmdresp_future.reportResult(25);
 	});
+	f0.setName("f0");
 
 	auto f1 = f0.then([&](ExtFuture<int> dummy){
 		then1 = true;
 	});
+	f1.setName("f1");
 	auto f2 = f0.then([&](ExtFuture<int> dummy){
 		then2 = true;
 	});
+	f2.setName("f2");
 
 	// Wait for the thens to finish.
 	f1.waitForFinished();
@@ -1425,7 +1428,7 @@ TEST_F(ExtFutureTest, ExtFutureThenCancel)
 
 	rsm.ReportResult(MSTART);
 
-	ExtFuture<int> main_future = ExtAsync::run([=, &rsm, &main_future](ExtFuture<int> main_future_copy) {
+	ExtFuture<int> main_future = ExtAsync::qthread_async_with_cnr_future([=, &rsm, &main_future](ExtFuture<int> main_future_copy) {
 		TCOUT << "IN RUN CALLBACK, main_future_copy:" << main_future_copy;
 		AMLMTEST_EXPECT_EQ(main_future, main_future_copy);
 
@@ -2008,7 +2011,7 @@ TEST_F(ExtFutureTest, ExtFutureSingleThen)
 	eftype root_future = async_int_generator<eftype>(1, 6, this);
 	root_future.setName("root_future");
 
-	TCOUT << "Starting ef state:" << root_future.state();
+	TCOUT << "Starting root_future state:" << root_future;
 	EXPECT_TRUE(root_future.isStarted());
 	EXPECT_FALSE(root_future.isCanceled());
 	EXPECT_FALSE(root_future.isFinished());

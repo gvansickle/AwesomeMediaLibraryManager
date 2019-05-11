@@ -23,6 +23,8 @@
 // Std C++
 #include <type_traits>
 #include <functional>
+#include <thread>
+#include <future>
 
 // Qt5
 #include <QFutureWatcher>
@@ -94,10 +96,65 @@ static inline void spinWaitForFinishedOrCanceled(QThreadPool* tp, const ExtFutur
 	}
 }
 
+/**
+ * Same idea, but without a threadpool, and with FutureWatchers and std::future mechanics.
+ * @param this_future
+ * @param downstream_future
+ */
+template <class T, class U>
+static inline void spinWaitForFinishedOrCanceled(const ExtFuture<T>& this_future, const ExtFuture<U>& downstream_future)
+{
+	/// queryState() does this:
+	/// bool QFutureInterfaceBase::queryState(State state) const
+	/// {
+	///    return d->state.load() & state;
+	/// }
+	/// So this:
+	///     this_future.d.queryState(QFutureInterfaceBase::Canceled | QFutureInterfaceBase::Finished)
+	/// Should return true if either bit is set.
+	constexpr auto canceled_or_finished = QFutureInterfaceBase::State(QFutureInterfaceBase::Canceled | QFutureInterfaceBase::Finished);
+
+	std::atomic_int done_flag = 0;
+	std::mutex m;
+	std::condition_variable cv;
+
+	auto* fw_down = ManagedExtFutureWatcher_detail::get_managed_qfuture_watcher<U>("[then down->up]");
+	auto* fw_up = ManagedExtFutureWatcher_detail::get_managed_qfuture_watcher<T>("[then up->down]");
+
+	connect_or_die(fw_down, &QFutureWatcher<U>::canceled, fw_up, [&](){
+		done_flag = 1;
+	});
+	connect_or_die(fw_down, &QFutureWatcher<U>::finished, fw_up, [&](){
+		done_flag = 2;
+	});
+	connect_or_die(fw_up, &QFutureWatcher<T>::canceled, fw_down, [&](){
+		done_flag = 4;
+	});
+	connect_or_die(fw_up, &QFutureWatcher<T>::finished, fw_down, [&](){
+		done_flag = 8;
+	});
+
+	// Set the watcher's futures.
+	fw_down->setFuture(downstream_future);
+	fw_up->setFuture(this_future);
+
+	// Block until one of the futures is done.
+	qDb() << "ABOUT TO BLOCK FOR ANY FINISHED";
+	{
+		std::unique_lock<std::mutex> lk(m);
+		cv.wait(lk, [&]{
+			return done_flag != 0;
+		});
+	}
+
+	qDb() << "Wait over, result was:" << done_flag;
+
+}
+
 #if 1
-	template <class T, class CallbackType, class R,  class... Args>
-	void exception_propagation_helper_spinwait(ExtFuture<T> this_future_copy, ExtFuture<R> ret_future_copy,
-			CallbackType&& callback, Args&&... args)
+	template <class T, class R/*, class CallbackType, class... Args*/>
+	void exception_propagation_helper_spinwait(ExtFuture<T> this_future_copy, ExtFuture<R> ret_future_copy/*,
+			CallbackType&& callback, Args&&... args*/)
 	{
 		// Have to be at least started prior to getting in here.
 		Q_ASSERT(this_future_copy.isStarted());
@@ -227,7 +284,7 @@ static inline void spinWaitForFinishedOrCanceled(QThreadPool* tp, const ExtFutur
 
 		try
 		{
-			exception_propagation_helper_spinwait(this_future_copy, ret_future_copy, callback, args...);
+			exception_propagation_helper_spinwait(this_future_copy, ret_future_copy/*, callback, args...*/);
 		}
 		// Handle exceptions and cancellation.
 		// Exceptions propagate upwards, cancellation propagates downwards.
