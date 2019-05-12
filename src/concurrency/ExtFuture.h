@@ -84,7 +84,7 @@ namespace ExtFuture_detail
 {
 template <class T, class R>
 void connect_or_die_backprop_cancel_watcher(ExtFuture<T> up, ExtFuture<R> down);
-template <class T, class CallbackType, class R,  class... Args>
+template <class T, class R, class CallbackType,  class... Args>
 void exception_propagation_helper_then(ExtFuture<T> this_future_copy, ExtFuture<R> ret_future_copy, CallbackType&& callback, Args&&... args);
 };
 

@@ -22,6 +22,7 @@
 
 // Std C++
 #include <type_traits>
+#include <functional>
 
 // Std C++ helpers.
 #include <future/function_traits.hpp>
@@ -45,7 +46,11 @@ namespace detail
 {
 	/**
 	 * Common QThread-based async() executor.
-	 * @param retfuture  The future which will be both passed to the inner callback as the first parameter,
+	 *
+	 * Runs @a callback(args...) in a new QThread.  If return type is not void, it will be reported to
+	 * the returned future as a result.
+	 *
+	 * @param retfuture  The future which will be both copied to the first-level callback as the first parameter,
 	 *                   and immediately returned to the caller.
 	 * @param callback
 	 * @param args
@@ -59,10 +64,13 @@ namespace detail
 			  >
 	ExtFutureR qthread_async(ExtFutureR retfuture, CallbackType&& callback, Args&&... args)
 	{
+//		static_assert(std::is_void_v<std::invoke_result_t<CallbackType, Args...>>
+//				|| (std::is_same_v<R, CBReturnType> && !std::is_void_v<R>));
+
 		Q_ASSERT(retfuture.isStarted());
 
 		QThread* new_thread = QThread::create
-						([=, fd_callback=DECAY_COPY(std::forward<CallbackType>(callback)),
+						([=, fd_callback=FWD_DECAY_COPY(CallbackType, callback),
 												  retfuture_cp=/*std::forward<ExtFutureR>*/(retfuture)
 										  ]() mutable {
 			Q_ASSERT(retfuture == retfuture_cp);
@@ -70,22 +78,34 @@ namespace detail
 			// Catch any exceptions from the callback and propagate them to the returned future.
 			try
 			{
+				static_assert(!is_ExtFuture_v<CBReturnType>, "Callback return value cannot be a future type.");
+				CBReturnType retval;
 				if constexpr(std::is_convertible_v<Unit, CBReturnType>)
 				{
+					// Callback returns void, caller has to arrange for retfuture results/finished reporting.
 					std::invoke(std::move(fd_callback), args...);
+				}
+				else if constexpr(!is_ExtFuture_v<CBReturnType>)
+				{
+					// Callback returns a value.  Report it to the future.
+					retval = std::invoke(std::move(fd_callback), args...);
+					qDb() << "Reporting results:" << retval;
+					retfuture_cp.reportResult(retval);
 				}
 				else
 				{
-					CBReturnType retval = std::invoke(std::move(fd_callback), args...);
-					static_assert(!is_ExtFuture_v<CBReturnType>, "Callback return value cannot be a future type.");
-					retfuture_cp.reportResult(retval);
+					static_assert(dependent_false_v<CBReturnType>, "Callback return type not void or non-ExtFuture.");
 				}
 			}
 			catch(...)
 			{
+				// Catch any exceptions and throw them to the returned future.
 				std::exception_ptr eptr = std::current_exception();
 				ManagedExtFutureWatcher_detail::propagate_eptr_to_future(eptr, retfuture_cp);
 			}
+
+			retfuture_cp.reportFinished();
+
 #if 0
 			catch(ExtAsyncCancelException& e)
 			{
@@ -110,7 +130,6 @@ namespace detail
 				qWr() << "CAUGHT UNKNOWN EXCEPTION";
 				retfuture_cp.reportException(QUnhandledException());
 			}
-#endif
 
 			qDb() << "Leaving Thread:" << M_ID_VAL(retfuture_cp) << M_ID_VAL(retfuture);
 			// Even in the case of exception, we need to reportFinished() or we just hang.
@@ -125,6 +144,7 @@ namespace detail
 			retfuture_cp.reportFinished();
 			qDb() << "Reported finished:" << retfuture_cp;
 			return;
+#endif
 		});
 
 		// Make a self-delete connection for the QThread.
@@ -145,7 +165,7 @@ namespace detail
 
 		return retfuture;
 	}
-}; // END ExtAsync::detail
+} // namespace detail
 
 	/**
 	 * Run a callback in a QThread.
@@ -168,19 +188,24 @@ namespace detail
 		ExtFuture<R> retfuture = make_started_only_future<R>();
 		retfuture.setName("qthread_asyncRetFuture");
 
-		return detail::qthread_async(retfuture, callback, args...);
+		return detail::qthread_async(retfuture, FWD_DECAY_COPY(CallbackType, callback), args...);
 	}
 
 
 	/**
 	 * Run a Controllable and Reporting (CnR) callback in a new QThread.
-	 * Callback is passed an ExtFuture<T>, which it should use for all control and reporting.
-	 * @returns A copy of the ExtFuture<T> passed to the callback.
+	 * Callback is passed an ExtFuture<T> as the first parameter, which it should use for all control and reporting.
+	 * @param callback   Callback function which will be run asynchronously in a new thread.  Signature:
+	 *       @code
+	 *       void callback(ExtFuture<T>, Args...)
+	 *       @endcode
+	 * @returns A copy of the same ExtFuture<T> passed to the callback.
 	 */
 	template<class CallbackType, class ExtFutureT = argtype_t<CallbackType, 0>, class... Args,
 		REQUIRES(is_ExtFuture_v<ExtFutureT>
 			 && !is_nested_ExtFuture_v<ExtFutureT>
-			 && std::is_invocable_r_v<void, CallbackType, ExtFutureT, Args...>)>
+			 && std::is_invocable_r_v<void, CallbackType, ExtFutureT, Args...>
+			 && std::is_same_v<void, std::invoke_result_t<CallbackType, ExtFutureT, Args...>>)>
 	ExtFutureT qthread_async_with_cnr_future(CallbackType&& callback, Args&& ... args)
 	{
 		ExtFutureT retfuture = make_started_only_future<typename ExtFutureT::value_type>();

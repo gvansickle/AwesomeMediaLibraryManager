@@ -147,52 +147,13 @@
 
 // Ours
 //#include "ExtFuturePropagationHandler.h"
-#include <logic/PerfectDeleter.h>
+//#include <logic/PerfectDeleter.h>
 
 
 /**
  *
  */
-static QThreadPool s_cancel_threadpool = QThreadPool();
-
-
-//namespace ExtFuture_detail
-//{
-//
-//class FutureWatcherParent : public QObject
-//{
-//	Q_OBJECT
-//
-//public:
-//	explicit FutureWatcherParent(QObject* parent = nullptr) : QObject(parent) {};
-//};
-//
-//QThread* get_backprop_qthread()
-//{
-//	static QThread* backprop_thread = []{
-//		auto new_thread = new QThread;
-//		new_thread->setObjectName("ExtFutureBackpropThread");
-//		PerfectDeleter::instance().addQThread(new_thread, [](QThread* the_qthread){
-//			// Call exit(0) on the QThread.  We use Qt's invokeMethod() here.
-//			run_in_event_loop(the_qthread, [the_qthread](){
-//				qDb() << "Calling exit() on ExtFuture watcher QThread";
-//				the_qthread->exit();
-////				the_qthread->deleteLater();
-//			});
-//
-//		});
-//
-//		// Create an push the future watcher parent object into the new thread.
-////		auto fwp = new FutureWatcherParent();
-////		new_thread->moveToThread(fwp);
-//
-//		new_thread->start();
-//		return new_thread;
-//	}();
-//	return backprop_thread;
-//}
-//
-//} // END ExtFuture_detail
+//static QThreadPool s_cancel_threadpool = QThreadPool();
 
 
 /// @name Explicit instantiations to try to get compile times down.

@@ -1221,12 +1221,12 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 	ExtFuture<int> root_async_operation_future =
 //			ExtAsync::run_again(
 			ExtAsync::qthread_async_with_cnr_future(
-				[=](ExtFuture<int> root_async_operation_future_copy) -> int {
+				[=](ExtFuture<int> root_async_operation_future_copy) /*-> int*/ {
 
 		SCOPED_TRACE("In ExtAsync::run()");
 
 		TCOUT << "STARTING ASYNC LOOP, root_async_operation_future_copy:" << root_async_operation_future_copy;
-
+		// Loop for 10 secs.
 			for(int i = 0; i < 10; i++)
 			{
 				TCOUT << "LOOP" << i << "root_future_copy:" << root_async_operation_future_copy;
@@ -1241,7 +1241,7 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 			}
 			TCOUT << "LEAVING ASYNC LOOP";
 			root_async_operation_future_copy.reportFinished();
-			return 1;
+//			return 1;
 	});
 	TCOUT << "INITIAL root_async_op STATE:" << root_async_operation_future;
 	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(root_async_operation_future);
@@ -1267,8 +1267,8 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 	TC_Sleep(5000);
 	TCOUT << "CANCELING THEN(), root/final:" << root_async_operation_future << final_downstream_future;
 	AMLMTEST_EXPECT_FALSE(final_downstream_future.isFinished() || final_downstream_future.isCanceled()) << final_downstream_future.state();
-//	final_downstream_future.reportException(ExtAsyncCancelException());
-	final_downstream_future.cancel();
+	final_downstream_future.reportException(ExtAsyncCancelException());
+//	final_downstream_future.cancel();
 	TCOUT << "CANCELED THEN(), root/final" << root_async_operation_future << final_downstream_future;
 
 	try
@@ -1288,7 +1288,7 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 
 	TC_Sleep(2000);
 
-	EXPECT_TRUE(final_downstream_future.isCanceled());
+	EXPECT_TRUE(final_downstream_future.isCanceled()) << final_downstream_future;
 	EXPECT_TRUE(root_async_operation_future.isCanceled()) << root_async_operation_future;
 
 	TC_EXIT();
@@ -1999,6 +1999,8 @@ TYPED_TEST(ExtFutureTypedTestFixture, PFutureStreamingTap)
 
 TEST_F(ExtFutureTest, ExtFutureSingleThen)
 {
+	qDb() << "ENTERING TEST";
+
 	TC_ENTER();
 
 	using eftype = ExtFuture<int>;
@@ -2060,7 +2062,9 @@ TEST_F(ExtFutureTest, ExtFutureSingleThen)
 	EXPECT_EQ(async_results_from_then.size(), 6);
 	EXPECT_EQ(async_results_from_then, expected_results);
 
-	ASSERT_TRUE(root_future.isFinished());
+	EXPECT_TRUE(root_future.isFinished());
+
+	qDb() << "EXITING TEST";
 
 	TC_EXIT();
 }
@@ -2075,7 +2079,11 @@ TEST_F(ExtFutureTest, ThenChain)
 	using FutureType = ExtFuture<QString>;
 
 	TCOUT << "STARTING FUTURE";
-	ExtFuture<QString> future = ExtAsync::qthread_async(delayed_string_func_1, this);
+	ExtFuture<QString> future = ExtAsync::qthread_async_with_cnr_future([=](ExtFuture<QString> retf){
+		auto retval = delayed_string_func_1(this);
+			retf.reportResult(retval);
+			retf.reportFinished();
+	});
 
 	ASSERT_TRUE(future.isStarted());
 //	ASSERT_FALSE(future.isFinished());

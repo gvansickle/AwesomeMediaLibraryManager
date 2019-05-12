@@ -566,7 +566,10 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExceptionsWhatDoesQtCRunDo)
 	ExtFuture<int> exf0 = ExtAsync::qthread_async_with_cnr_future([](ExtFuture<int> exf0){
 		EXPECT_EQ(ExtFutureState::state(exf0), c_started_running);
 		qDb() << "EXTFUTURE:" << ExtFutureState::state(exf0);
-		throw QException(); return 1; });
+		throw QException();
+		exf0.reportResult(1);
+			exf0.reportFinished();
+});
 
 	while(!exf0.isCanceled() && !exf0.isFinished())
 	{
@@ -599,7 +602,10 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExceptionsWhatDoesQtCRunDo)
 	ExtFuture<int> cnrf0 = ExtAsync::qthread_async_with_cnr_future([](ExtFuture<int> cnr_future){
 		EXPECT_EQ(ExtFutureState::state(cnr_future), c_started_running);
 		qDb() << "EXTFUTURE:" << ExtFutureState::state(cnr_future);
-		throw QException(); return 1; });
+		throw QException();
+		cnr_future.reportResult(1);
+			cnr_future.reportFinished();
+});
 
 	while(!cnrf0.isCanceled() && !cnrf0.isFinished())
 	{
@@ -641,7 +647,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtAsyncQthreadAsyncThenCancelExceptionFromBot
 {
 	TC_ENTER();
 
-	ExtFuture<int> f1 = ExtAsync::qthread_async_with_cnr_future([=](ExtFuture<int> in_fut) -> int {
+	ExtFuture<int> f1 = ExtAsync::qthread_async_with_cnr_future([=](ExtFuture<int> in_fut) /*-> int*/ {
 		for(int i = 0; i<10; i++)
 		{
 			TCOUT << "qthread_async_with_cnr_future() iteration:" << i;
@@ -661,13 +667,15 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtAsyncQthreadAsyncThenCancelExceptionFromBot
 				}
 				qDb() << "LEAVING TOP LOOP DUE TO CANCEL";
 				in_fut.reportException(ExtAsyncCancelException());
+				in_fut.reportResult(0);
 				in_fut.reportFinished();
-				return 0;
+				return;
 			}
 		}
 
 		ADD_FAILURE() << "Finished thread function not due to cancel.";
-		return 5;
+		in_fut.reportResult(5);
+		in_fut.reportFinished();
 		})
 		.then_qthread_async([=](ExtFuture<int> f0){
 		qDb() << "Waiting in then() for cancel exception.";

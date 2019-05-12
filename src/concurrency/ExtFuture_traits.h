@@ -136,7 +136,11 @@ using then_return_future_type_t = std::conditional_t<is_ExtFuture_v<U>, // == U:
         /* false */
         ExtFuture<U> // Non-nested case, no unwrapping.
         >;
-
+/**
+ * .then() helper, returns the ExtFuture type which should be returned by a .then() call,
+ * based on the return type of the .then() callback.
+ * @note If callback returns void, it will be lifted to Unit here.
+ */
 template <class ThenCallbackType, class ExtFutureType>
 using then_return_type_from_callback_and_future_t = then_return_future_type_t<Unit::LiftT<
         std::invoke_result_t<ThenCallbackType, ExtFutureType>
