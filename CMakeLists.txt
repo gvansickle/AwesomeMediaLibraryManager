@@ -466,10 +466,15 @@ endif()
 
 # Boost
 # See @link https://cmake.org/cmake/help/latest/module/FindBoost.html
-set(BOOST_THREAD_VERSION          4) # Latest in 1.66 as of this writing.
-set(BOOST_THREAD_PROVIDES_FUTURE ON)
-set(BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION ON)
-set(BOOST_THREAD_FUTURE_USES_OPTIONAL ON)
+#set(BOOST_THREAD_VERSION          5) # Latest in 1.69 as of this writing, defaults to "2".
+#set(BOOST_THREAD_PROVIDES_FUTURE ON)
+#set(BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION ON)
+#set(BOOST_THREAD_FUTURE_USES_OPTIONAL ON)
+add_compile_definitions(BOOST_THREAD_VERSION=5
+	BOOST_THREAD_PROVIDES_FUTURE=1
+	BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION=1
+	BOOST_THREAD_FUTURE_USES_OPTIONAL=1
+	)
 set(Boost_USE_STATIC_LIBS        ON) # Only find static libs.
 set(Boost_USE_STATIC_RUNTIME     ON) # Want static runtime.
 set(Boost_USE_MULTITHREADED      ON) # Need multithreaded.
@@ -480,13 +485,20 @@ set(Boost_USE_DEBUG_RUNTIME      ON)
 set(Boost_DEBUG    				 ON) # enable debug output from FindBoost.
 set(Boost_DETAILED_FAILURE_MSG   ON) # add detailed information to the failure message 
 #								   # even when the REQUIRED option is not given to the find_package call.
-find_package(Boost 1.66.0 REQUIRED
+find_package(Boost 1.69.0 REQUIRED
 	COMPONENTS
+		date_time
 		thread
-		system)
-#include_directories( ${Boost_INCLUDE_DIR} )
-#link_directories( ${Boost_LIBRARY_DIRS} )
-add_definitions(${Boost_LIB_DIAGNOSTIC_DEFINITIONS})
+		system
+	)
+if(Boost_FOUND)
+	add_library(amlm_boost_settings_target INTERFACE)
+	target_link_libraries(amlm_boost_settings_target INTERFACE ${Boost_LIBRARIES})
+	target_compile_definitions(amlm_boost_settings_target
+		INTERFACE 
+			BOOST_THREAD_VERSION=5)
+	add_definitions(${Boost_LIB_DIAGNOSTIC_DEFINITIONS})
+endif()
 
 # Qt logging categories.
 # @link https://api.kde.org/ecm/module/ECMQtDeclareLoggingCategory.html

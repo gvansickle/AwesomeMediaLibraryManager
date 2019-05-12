@@ -51,6 +51,7 @@ namespace ManagedExtFutureWatcher_detail
 	public:
 		explicit FutureWatcherParent(QObject* parent = nullptr) : QObject(parent) {};
 
+
 	public Q_SLOTS:
 		void doWork(int param)
 		{
@@ -59,6 +60,16 @@ namespace ManagedExtFutureWatcher_detail
 			// Emit the result as a signal.
 	//			Q_EMIT resultReady(fw);
 		};
+/// @todo Doesn't work.
+//		QObject* get_temp_context_object()
+//		{
+//		    QObject* retval = nullptr;
+//
+//					bool success = QMetaObject::invokeMethod(this, [=](){ return new QObject(this); }, &retval);
+//                    Q_ASSERT(success);
+//
+//                    return retval;
+//		};
 
 	Q_SIGNALS:
 		void resultReady(int result);
@@ -276,7 +287,7 @@ namespace ManagedExtFutureWatcher_detail
 	template <class T, class R, class StapCallback = std::nullptr_t>
 	void connect_or_die_backprop_cancel_watcher(ExtFuture<T> up, ExtFuture<R> down, StapCallback&& stap_callback = nullptr)
 	{
-		auto* fw = get_managed_qfuture_watcher<R>("[down->up]");
+		auto* fw_down = get_managed_qfuture_watcher<R>("[down->up]");
 		auto* fw_up = get_managed_qfuture_watcher<T>("[up->down]");
 
 		/// @todo Still need to delete on R-finished, ...? T finished?
@@ -299,7 +310,7 @@ namespace ManagedExtFutureWatcher_detail
 		/// @todo resultsReadyAt() watcher.
 
 		// down->up canceled.
-		connect_or_die(fw, &QFutureWatcher<R>::canceled, [upc=DECAY_COPY(up), downc=down, fw]() mutable {
+		connect_or_die(fw_down, &QFutureWatcher<R>::canceled, [upc=DECAY_COPY(up), downc=down, fw_down]() mutable {
 			// Propagate the cancel upstream, possibly with an exception.
 			// Not a race here, since we'll have been canceled by the exception when we get here.
 			qDb() << "down->up canceled";
@@ -314,16 +325,20 @@ namespace ManagedExtFutureWatcher_detail
 			}
 			upc.reportFinished();
 			// Delete this watcher, it's done all it can.
-			fw->deleteLater();
+			fw_down->deleteLater();
 		});
 		// up->down finished.
 		connect_or_die(fw_up, &QFutureWatcher<T>::finished, [upc=up, downc=down, fw_up]() mutable {
 			// Propagate the finish downstream, possibly with an exception.
 			// Not a race here, since we'll have been canceled by the exception when we get here.
 			qDb() << "up->down finished";
-			if(upc.has_exception())
+			if(upc.isCanceled())
 			{
-				trigger_exception_and_propagate(upc, downc);
+				if(upc.has_exception())
+				{
+					trigger_exception_and_propagate(upc, downc);
+				}
+				downc.reportCanceled();
 			}
 			downc.reportFinished();
 
@@ -331,7 +346,7 @@ namespace ManagedExtFutureWatcher_detail
 			fw_up->deleteLater();
 		});
 
-		fw->setFuture(down);
+		fw_down->setFuture(down);
 		fw_up->setFuture(up);
 	}
 

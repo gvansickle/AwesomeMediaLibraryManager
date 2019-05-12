@@ -111,6 +111,7 @@ set(PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS
 #		callable_traits
 		verdigris_target
 #		Boost::thread
+		${Boost_LIBRARIES}
 		)
 
 

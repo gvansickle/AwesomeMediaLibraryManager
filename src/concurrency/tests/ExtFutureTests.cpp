@@ -1267,8 +1267,8 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 	TC_Sleep(5000);
 	TCOUT << "CANCELING THEN(), root/final:" << root_async_operation_future << final_downstream_future;
 	AMLMTEST_EXPECT_FALSE(final_downstream_future.isFinished() || final_downstream_future.isCanceled()) << final_downstream_future.state();
-	final_downstream_future.reportException(ExtAsyncCancelException());
-//	final_downstream_future.cancel();
+//	final_downstream_future.reportException(ExtAsyncCancelException());
+	final_downstream_future.cancel();
 	TCOUT << "CANCELED THEN(), root/final" << root_async_operation_future << final_downstream_future;
 
 	try
@@ -1448,6 +1448,7 @@ TEST_F(ExtFutureTest, ExtFutureThenCancel)
 		}
 		rsm.ReportResult(T1ENDCB);
 		main_future_copy.reportFinished();
+		TCOUT << "LEAVING MAING THREAD, MAIN_FUTURE_COPY:" << main_future_copy;
 	});
 
 	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(main_future);
@@ -1457,8 +1458,15 @@ TEST_F(ExtFutureTest, ExtFutureThenCancel)
 
 		AMLMTEST_EXPECT_EQ(upstream_copy, main_future);
 
-		// Should never block, might throw.
-		auto incoming = upstream_copy.get();
+		try
+		{
+			// Should never block, might throw.
+			auto incoming = upstream_copy.get();
+		}
+		catch(...)
+		{
+			Q_ASSERT(0);
+		}
 
 		AMLMTEST_EXPECT_TRUE(upstream_copy.isFinished() || upstream_copy.isCanceled());
 		// Immediately return.
@@ -1475,10 +1483,12 @@ TEST_F(ExtFutureTest, ExtFutureThenCancel)
 	TCOUT << "CANCELING DOWNSTREAM" << down;
 //	down.reportException(ExtAsyncCancelException());
 	down.cancel();
+	down.reportFinished();
 	TCOUT << "CANCELED DOWNSTREAM" << down;
 
 	TCOUT << "WAITING TO PROPAGATE";
-	TC_Sleep(2000);
+	TC_Wait(2000);
+//	TC_Sleep(2000);
 
 	EXPECT_TRUE(down.isCanceled());
 	EXPECT_TRUE(main_future.isCanceled()) << main_future;

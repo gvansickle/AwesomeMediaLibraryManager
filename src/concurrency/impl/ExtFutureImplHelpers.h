@@ -33,6 +33,9 @@
 #include <QList>
 #include <QThreadPool>
 
+// Boost
+#include <boost/thread.hpp>
+
 // Ours
 #include <utils/DebugHelpers.h>
 #include <future/Unit.hpp>
@@ -117,6 +120,8 @@ static inline void spinWaitForFinishedOrCanceled(ExtFuture<T> this_future, ExtFu
 	/// Should return true if either bit is set.
 	constexpr auto canceled_or_finished = QFutureInterfaceBase::State(QFutureInterfaceBase::Canceled | QFutureInterfaceBase::Finished);
 
+//	boost::shared_future<bool> f1, f2, f4, f8;
+//	boost::promise<bool> p0;
 	std::atomic_int done_flag = 0;
 	std::mutex m;
 	std::condition_variable cv;
@@ -124,32 +129,44 @@ static inline void spinWaitForFinishedOrCanceled(ExtFuture<T> this_future, ExtFu
 	auto* fw_down = ManagedExtFutureWatcher_detail::get_managed_qfuture_watcher<U>("[then down->up]");
 	auto* fw_up = ManagedExtFutureWatcher_detail::get_managed_qfuture_watcher<T>("[then up->down]");
 
-	connect_or_die(fw_down, &QFutureWatcher<U>::canceled, /*fw_up,*/ [&](){
-		done_flag = 1;
-		cv.notify_all();
-	});
-	connect_or_die(fw_down, &QFutureWatcher<U>::finished, /*fw_up,*/ [&](){
-		done_flag = 2;
-		cv.notify_all();
-	});
-	connect_or_die(fw_up, &QFutureWatcher<T>::canceled, /*fw_down,*/ [&](){
-		done_flag = 4;
-		cv.notify_all();
-	});
-	connect_or_die(fw_up, &QFutureWatcher<T>::finished, /*fw_down,*/ [&](){
-		done_flag = 8;
-		cv.notify_all();
-	});
+//	f1 = p0.get_future();
+//	f2 = p0.get_future();
+//	f4 = p0.get_future();
+//	f8 = p0.get_future();
 
-	// Set the watcher's futures.
-	fw_down->setFuture(downstream_future);
-	fw_up->setFuture(this_future);
+	QObject* temp_parent = new QObject(); //dynamic_cast<ManagedExtFutureWatcher_detail::FutureWatcherParent*>(fw_down->parent())->get_temp_context_object();
+
+	connect_or_die(fw_down, &QFutureWatcher<U>::canceled, temp_parent/*fw_up,*/, [&](){
+		done_flag = 1;
+//		p0.set_value(true);
+		cv.notify_all();
+	});
+	connect_or_die(fw_down, &QFutureWatcher<U>::finished, temp_parent/*fw_up,*/, [&](){
+		done_flag = 2;
+//		p0.set_value(true);
+		cv.notify_all();
+	});
+	connect_or_die(fw_up, &QFutureWatcher<T>::canceled, temp_parent/*fw_down,*/, [&](){
+		done_flag = 4;
+//		p0.set_value(true);
+		cv.notify_all();
+	});
+	connect_or_die(fw_up, &QFutureWatcher<T>::finished, temp_parent/*fw_down,*/, [&](){
+		done_flag = 8;
+//		p0.set_value(true);
+		cv.notify_all();
+	});
 
 	// Block until one of the futures is done.
 	qDb() << "ABOUT TO BLOCK FOR ANY FINISHED";
 	{
 		using namespace std::chrono_literals;
 		std::unique_lock<std::mutex> lk(m);
+
+		// Set the watchers' futures.
+		fw_down->setFuture(downstream_future);
+		fw_up->setFuture(this_future);
+
 //		std::cv_status cvs = std::cv_status::no_timeout;
 		bool retval = false;
 		do
@@ -158,8 +175,12 @@ static inline void spinWaitForFinishedOrCanceled(ExtFuture<T> this_future, ExtFu
 				return done_flag != 0;
 			});
 		} while(retval == false);
+//		boost::wait_for_any(f1, f2, f4, f8);
 	}
 	qDb() << "Wait over, result was:" << done_flag;
+
+	temp_parent->disconnect();
+	temp_parent->deleteLater();
 
 	/// @todo Destroy fw's here?
 
@@ -173,7 +194,7 @@ static inline void spinWaitForFinishedOrCanceled(ExtFuture<T> this_future, ExtFu
 		Q_ASSERT(downstream.isStarted());
 
 		// Blocks (busy-wait with yield) until one of the futures is canceled or finished.
-		spinWaitForFinishedOrCanceled( upstream, downstream);
+		spinWaitForFinishedOrCanceled(upstream, downstream);
 
 		/// Spinwait is over, now we have ??? combinations to dispatch on along at least 4 dimensions:
 		/// - this_future_copy / ret_future_copy (/both???)
@@ -182,82 +203,6 @@ static inline void spinWaitForFinishedOrCanceled(ExtFuture<T> this_future, ExtFu
 		/// - isFinished() vs. not finished.
 		///
 		/// ...and we haven't even gotten to the actual callback yet.
-
-#ifdef USING_WATCHERS
-		if(downstream.hasException())
-		{
-			// Downstream threw, which .cancels() (doesn't have to be a cancel exception).
-			// We need to propagate the exception to this_future_copy.
-			/// @todo Assuming anything attached to ret_future_copy will worry about it's throwing.
-			// Trigger an immediate rethrow.  @todo Is this really correct?
-			// This will be caught below.
-			Q_ASSERT(downstream.isCanceled());
-			/// @todo We're losing the original exception here, and it's not clear if there's any way to get it other than trigger
-			/// a throw; that will change some state to "has thrown", which I don't know what that effects.
-			/// Not sure what we can do about this atm.
-			upstream.reportException(ExtAsyncCancelException());
-			upstream.reportFinished();
-			upstream.waitForFinished();
-			Q_ASSERT_X(0, __func__, "Attempt to rethrow exception from returned future failed.");
-		}
-		// Was downstream canceled without an exception?
-		else if(downstream.isCanceled())
-		{
-			// Downstream was canceled without an exception.
-			/// @todo Assuming anything attached to ret_future_copy will worry about it's throwing.
-			qDb() << "returned_future_copy CANCELED WITHOUT EXCEPTION:" << downstream;
-			// Propagate cancel to this_future_copy.  Since ret_future_copy is already canceled, we can't get an exception through
-			// it here.
-			upstream.reportException(ExtAsyncCancelException());
-			upstream.reportFinished();
-			upstream.waitForFinished();
-			Q_ASSERT_X(0, __func__, "Attempt to rethrow exception from returned future failed.");
-		}
-		else if(downstream.isFinished())
-		{
-			// Downstream is already Finished, but not canceled.
-			// Not clear that this is a valid, or even possible, state here.
-			qWr() << "returned_future_copy FINISHED?:" << downstream;
-			Q_ASSERT_X(0, __func__, "Future returned by then() is finished first, shouldn't be possible.");
-		}
-		if(upstream.hasException())
-		{
-			// This threw, which cancels (doesn't have to be a cancel exception).
-			// Trigger an immediate rethrow.  This will be caught below.
-			Q_ASSERT(upstream.isCanceled());
-			upstream.reportFinished();
-			upstream.waitForFinished();
-			Q_ASSERT_X(0, __func__, "Attempt to rethrow exception from this future failed.");
-		}
-			// Was this_future_copy canceled without an exception?
-		else if(upstream.isCanceled())
-		{
-			// This was canceled without an exception, i.e. with a direct call to .cancel().
-			// We can't add a cancel exception to this_future_copy now, it'll be ignored.
-			// But we do have to try to propagate this downstream.
-			qWr() << "this_future_copy CANCELED WITHOUT EXCEPTION:" << upstream.state();
-			downstream.reportException(ExtAsyncCancelException());
-			downstream.reportFinished();
-		}
-			// Did this_future_copy Finish first?
-		else if(upstream.isFinished())
-		{
-			// Normal finish of this_future_copy, no cancel or exception to propagate.
-	//			qDb() << "THIS_FUTURE FINISHED NORMALLY";
-		}
-
-		// Now we're either Finished or Canceled, so we can call waitForFinished().  We now know
-		// the state of isRunning() does reflect if we're done or not.
-		// This call will block, or throw if an exception is reported to this_future_copy.
-		upstream.reportFinished();
-		upstream.waitForFinished();
-
-		// Ok, so now we're definitely finished and/or canceled.
-
-		Q_ASSERT(upstream.isFinished() || upstream.isCanceled());
-
-		// Got here, so we didn't throw.  We might still be canceled.
-#endif //USING_WATCHERS
 	}
 
 #if 1

@@ -1293,7 +1293,7 @@ public:
 	template <class ThenCallbackType, class R = Unit::LiftT< std::invoke_result_t<ThenCallbackType, ExtFuture<T>> >,
 			class ThenReturnType = ExtFuture<R>,
 			REQUIRES(!is_ExtFuture_v<R> && !is_ExtFuture_v<T>
-			  && std::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, ExtFuture<T>>)
+			  /*&& std::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, ExtFuture<T>>*/)
 			>
 	ThenReturnType then_qthread_async( ThenCallbackType&& then_callback ) const
 	{
@@ -1333,6 +1333,42 @@ public:
 			ExtFuture_detail::exception_propagation_helper_then(in_future, returned_future_copy, std::move(fd_then_callback));
 
 			}, *this, retfuture);
+#else
+		ExtAsync::qthread_async([fd_then_callback=FWD_DECAY_COPY(ThenCallbackType, then_callback)](ExtFuture<T> up, ExtFuture<R> down){
+			ManagedExtFutureWatcher_detail::connect_or_die_backprop_cancel_watcher(up, down);
+
+			up.wait();
+
+			try
+			{
+				// Call the callback with the results- or canceled/exception-laden this_future_copy.
+				// Could throw, hence we're in a try.
+				qDb() << "then_watchers: Calling then_callback_copy(this_future_copy).";
+				R retval;
+
+				if constexpr(std::is_same_v<R, Unit>)
+				{
+					// then_callback_copy returns void, return a Unit separately.
+					std::invoke(std::move(fd_then_callback), up);
+					retval = unit;
+				}
+				else if constexpr(!std::is_void_v<R>)
+				{
+					// then_callback_copy returns non-void, return the callback's return value.
+					retval = std::invoke(std::move(fd_then_callback), up);
+					// Didn't throw, report the result.
+					down.reportResult(retval);
+				}
+			}
+			catch(...)
+			{
+				std::exception_ptr eptr = std::current_exception();
+				ManagedExtFutureWatcher_detail::propagate_eptr_to_future(eptr, down);
+			}
+
+			down.reportFinished();
+
+		}, *this, retfuture);
 #endif
 		return retfuture;
 	}

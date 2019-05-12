@@ -335,7 +335,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 		return unit;
 	})
 	/// @then Finish the two output futures.
-	.then([=, tree_model_item_future=tree_model_item_future](ExtFuture<Unit> future) mutable -> void {
+	.then([=, tree_model_item_future=tree_model_item_future](ExtFuture<Unit> future) mutable {
 		// Finish a couple futures we started in this, and since this is done, there should be no more
 		// results coming for them.
 

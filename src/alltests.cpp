@@ -41,6 +41,7 @@
 #if !defined(GTEST_IS_THREADSAFE) || (GTEST_IS_THREADSAFE != 1)
 #error "Google Test wasn't compiled for a multithreaded environment."
 #endif
+static_assert(BOOST_THREAD_VERSION >= 5);
 
 /**
  * Override of Environment for global setup and teardown.

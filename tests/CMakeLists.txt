@@ -45,6 +45,9 @@ target_link_libraries(amlm_tests
 	PUBLIC
 		gtest
 		gmock
+	PRIVATE
+		amlm_boost_settings_target
+		#${Boost_LIBRARIES}
 )
 
 target_include_directories(amlm_tests
@@ -52,4 +55,5 @@ target_include_directories(amlm_tests
 	    # For config.h
 		${PROJECT_BINARY_DIR}/src
 		${Qt5Gui_PRIVATE_INCLUDE_DIRS}
+		${Boost_INCLUDE_DIRS}
 	)

@@ -488,8 +488,8 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTes
 {
     AMLMTEST_SCOPED_TRACE("In async_int_generator");
 
-    auto tgb = new trackable_generator_base(fixture);
-    fixture->register_generator(tgb);
+//    auto tgb = new trackable_generator_base(fixture);
+//    fixture->register_generator(tgb);
 
     auto lambda = [=](ReturnFutureT future) {
         int current_val = start_val;
@@ -513,8 +513,8 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTes
         TCOUT << "REPORTING FINISHED";
         reportFinished(&future);
 
-        fixture->unregister_generator(tgb);
-        delete tgb;
+//        fixture->unregister_generator(tgb);
+//        delete tgb;
     };
 
     ReturnFutureT retval;// = make_default_future<ReturnFutureT, typename ReturnFutureT::value_type>();
