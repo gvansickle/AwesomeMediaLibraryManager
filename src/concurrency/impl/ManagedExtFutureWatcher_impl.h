@@ -60,16 +60,6 @@ namespace ManagedExtFutureWatcher_detail
 			// Emit the result as a signal.
 	//			Q_EMIT resultReady(fw);
 		};
-/// @todo Doesn't work.
-//		QObject* get_temp_context_object()
-//		{
-//		    QObject* retval = nullptr;
-//
-//					bool success = QMetaObject::invokeMethod(this, [=](){ return new QObject(this); }, &retval);
-//                    Q_ASSERT(success);
-//
-//                    return retval;
-//		};
 
 	Q_SIGNALS:
 		void resultReady(int result);
@@ -310,6 +300,7 @@ namespace ManagedExtFutureWatcher_detail
 		/// @todo resultsReadyAt() watcher.
 
 		// down->up canceled.
+		qDb() << "Connecting down->up canceled";
 		connect_or_die(fw_down, &QFutureWatcher<R>::canceled, [upc=DECAY_COPY(up), downc=down, fw_down]() mutable {
 			// Propagate the cancel upstream, possibly with an exception.
 			// Not a race here, since we'll have been canceled by the exception when we get here.
@@ -327,7 +318,9 @@ namespace ManagedExtFutureWatcher_detail
 			// Delete this watcher, it's done all it can.
 			fw_down->deleteLater();
 		});
+#if 0
 		// up->down finished.
+		qDb() << "Connecting up->down finished";
 		connect_or_die(fw_up, &QFutureWatcher<T>::finished, [upc=up, downc=down, fw_up]() mutable {
 			// Propagate the finish downstream, possibly with an exception.
 			// Not a race here, since we'll have been canceled by the exception when we get here.
@@ -345,7 +338,7 @@ namespace ManagedExtFutureWatcher_detail
 			// Delete this watcher, it's done all it can.
 			fw_up->deleteLater();
 		});
-
+#endif
 		fw_down->setFuture(down);
 		fw_up->setFuture(up);
 	}

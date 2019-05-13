@@ -1225,7 +1225,7 @@ TEST_F(ExtFutureTest, MultiThenCancelBasic2)
 
 	EXPECT_TRUE(main_future.isStarted()) << main_future;
 	EXPECT_TRUE(main_future.isCanceled()) << main_future;
-	// Not finished yet.
+	// Should be finished by now.
 	EXPECT_TRUE(main_future.isFinished()) << main_future;
 	EXPECT_FALSE(main_future.isRunning()) << main_future;
 
@@ -1236,17 +1236,21 @@ TEST_F(ExtFutureTest, MultiThenCancelBasic2)
 
 	try
 	{
-		// This will throw.
+		// This may or may not throw, depending on how we've implemented cancelation propagation.
+		/// @note Currently this doesn't throw.
 		main_future.waitForFinished();
+		EXPECT_TRUE(main_future.isCanceled());
+		EXPECT_TRUE(main_future.isFinished());
 	}
 	catch(...)
 	{
 		TCOUT << "CAUGHT EXCEPTION FROM WAITFORFINISHED";
+		ADD_FAILURE() << "SHOULDNT HAVE THROWN";
 	}
 
 	EXPECT_TRUE(main_future.isFinished());
 
-	TCOUT << "Cancelled and finished extfuture:" << state(main_future);
+	TCOUT << "Cancelled and finished extfuture:" << main_future;
 
 	TC_EXIT();
 }
@@ -1677,8 +1681,8 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 		}
 
 		// We've been canceled, which should also mean we're finished.
-		AMLMTEST_EXPECT_TRUE(generator_task_future_copy.isCanceled());
-		AMLMTEST_EXPECT_TRUE(generator_task_future_copy.isFinished());
+		AMLMTEST_EXPECT_TRUE(generator_task_future_copy.isCanceled()) << generator_task_future_copy;
+		AMLMTEST_EXPECT_TRUE(generator_task_future_copy.isFinished()) << generator_task_future_copy;
 		rsm.ReportResult(J1ENDCB);
 		// Report that this callback is finished.
 		generator_task_future_copy.reportFinished();
@@ -1755,6 +1759,7 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 	// Cancel the downstream future.
 	TCOUT << "CANCELING TAIL downstream_then2:" << downstream_then2;
 	downstream_then2.cancel();
+	downstream_then2.reportFinished();
 //	downstream_then2.reportException(ExtAsyncCancelException());
 	TCOUT << "CANCELED TAIL downstream_then2:" << downstream_then2;
 
