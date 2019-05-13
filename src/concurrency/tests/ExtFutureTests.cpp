@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -1075,7 +1075,7 @@ TEST_F(ExtFutureTest, CancelBasic)
 
     // Canceling alone won't finish the extfuture.
 	/// @todo This is not coming back canceled.
-	EXPECT_FALSE(f0.isFinished()) << state(f0);
+	EXPECT_FALSE(f0.isFinished()) << f0;
 
 	try
 	{
@@ -1150,6 +1150,89 @@ TEST_F(ExtFutureTest, MultiThenCancelBasic)
 	// Canceling alone won't finish the extfuture.
 	/// @todo This is not coming back canceled.
 	EXPECT_FALSE(main_future.isFinished()) << state(main_future);
+
+	try
+	{
+		// This will throw.
+		main_future.waitForFinished();
+	}
+	catch(...)
+	{
+		TCOUT << "CAUGHT EXCEPTION FROM WAITFORFINISHED";
+	}
+
+	EXPECT_TRUE(main_future.isFinished());
+
+	TCOUT << "Cancelled and finished extfuture:" << state(main_future);
+
+	TC_EXIT();
+}
+
+TEST_F(ExtFutureTest, MultiThenCancelBasic2)
+{
+	TC_ENTER();
+
+	bool caught_exception = false;
+
+	ExtFuture<int> main_future = ExtAsync::qthread_async_with_cnr_future([=](ExtFuture<int> rc_future) -> void {
+
+		for(int i = 0; i<5; ++i)
+		{
+			// Do nothing for 1000 ms.
+			TC_Sleep(1000);
+
+			rc_future.reportResult(i);
+
+			if(rc_future.HandlePauseResumeShouldICancel())
+			{
+				rc_future.reportCanceled();
+				break;
+			}
+		}
+		rc_future.reportFinished();
+	})
+	.then([](ExtFuture<int> up){
+		TCOUT << "RAN THEN1, up:" << up;
+	})
+	.then([](ExtFuture<Unit> up){
+		TCOUT << "RAN THEN2, up:" << up;
+	})
+	.then([](ExtFuture<Unit> up){
+		TCOUT << "RAN THEN3, up:" << up;
+		return 25;
+	});
+
+	TCOUT << "Initial future state:" << main_future;
+
+	EXPECT_TRUE(main_future.isStarted());
+	EXPECT_TRUE(main_future.isRunning());
+	EXPECT_FALSE(main_future.isCanceled());
+	EXPECT_FALSE(main_future.isFinished());
+
+	// ~immediately cancel the returned future.
+	main_future.cancel();
+
+	// Wait for it to propagate.
+	TC_Wait(1000);
+
+	/**
+	 * @note QFuture<> behavior.
+	 * The QFuture after this cancel() is (Running|Started|Canceled).
+	 * A default construced QFuture is (Started|Canceled|Finished)
+	 * I assume "Running" might not always be the case, depending on cancel-before-start or cancel-after-completion.
+	 */
+	TCOUT << "Cancelled future state:" << main_future;
+
+	EXPECT_TRUE(main_future.isStarted()) << main_future;
+	EXPECT_TRUE(main_future.isCanceled()) << main_future;
+	// Not finished yet.
+	EXPECT_TRUE(main_future.isFinished()) << main_future;
+	EXPECT_FALSE(main_future.isRunning()) << main_future;
+
+	// Canceling alone won't finish the extfuture.
+	/// @note That depends on how good our implementation is.
+	/// @todo This is not coming back canceled.
+	EXPECT_TRUE(main_future.isFinished()) << main_future;
 
 	try
 	{

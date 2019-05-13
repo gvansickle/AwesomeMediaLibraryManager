@@ -1266,7 +1266,6 @@ public:
 		return retfuture;
 	}
 
-
 	/**
 	 * std::experimental::future-like .then() which takes a continuation function @a then_callback
 	 * with the signature:
@@ -1297,11 +1296,13 @@ public:
 			>
 	ThenReturnType then_qthread_async( ThenCallbackType&& then_callback ) const
 	{
+//		static_assert(std::is_invocable_r_v<R, ThenCallbackType, ExtFuture<T>>);
+
 		ThenReturnType retfuture = ExtAsync::make_started_only_future<R>();
 
 //		ThenReturnType retfuture = ExtAsync::qthread_async(FWD_DECAY_COPY(ThenCallbackType, then_callback), *this);
 
-#if 1
+#if 0
 		ExtAsync::qthread_async(
 					[=, fd_then_callback=FWD_DECAY_COPY(ThenCallbackType, then_callback)](ExtFuture<T> in_future, ThenReturnType returned_future_copy) mutable {
 
@@ -1334,8 +1335,9 @@ public:
 
 			}, *this, retfuture);
 #else
-		ExtAsync::qthread_async([fd_then_callback=FWD_DECAY_COPY(ThenCallbackType, then_callback)](ExtFuture<T> up, ExtFuture<R> down){
-			ManagedExtFutureWatcher_detail::connect_or_die_backprop_cancel_watcher(up, down);
+		ManagedExtFutureWatcher_detail::connect_or_die_backprop_cancel_watcher(*this, retfuture);
+
+		ExtAsync::qthread_async([=, fd_then_callback=FWD_DECAY_COPY(ThenCallbackType, then_callback)](ExtFuture<T> up, ThenReturnType down) mutable {
 
 			up.wait();
 
@@ -1344,21 +1346,22 @@ public:
 				// Call the callback with the results- or canceled/exception-laden this_future_copy.
 				// Could throw, hence we're in a try.
 				qDb() << "then_watchers: Calling then_callback_copy(this_future_copy).";
-				R retval;
 
-				if constexpr(std::is_same_v<R, Unit>)
-				{
-					// then_callback_copy returns void, return a Unit separately.
-					std::invoke(std::move(fd_then_callback), up);
-					retval = unit;
-				}
-				else if constexpr(!std::is_void_v<R>)
-				{
-					// then_callback_copy returns non-void, return the callback's return value.
-					retval = std::invoke(std::move(fd_then_callback), up);
-					// Didn't throw, report the result.
-					down.reportResult(retval);
-				}
+				R retval = std_invoke_and_lift(fd_then_callback, up);
+
+//				if constexpr(std::is_convertible_v<R, Unit>)
+//				{
+//					// then_callback_copy returns void, return a Unit separately.
+//					std::invoke(std::move(fd_then_callback), up);
+//					retval = unit;
+//				}
+//				else if constexpr(!std::is_void_v<R>)
+//				{
+//					// then_callback_copy returns non-void, return the callback's return value.
+//					retval = std::invoke(std::move(fd_then_callback), up);
+//					// Didn't throw, report the result.
+//					down.reportResult(retval);
+//				}
 			}
 			catch(...)
 			{
