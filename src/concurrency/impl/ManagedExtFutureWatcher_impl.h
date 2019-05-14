@@ -102,7 +102,8 @@ namespace ManagedExtFutureWatcher_detail
 
 	/**
 	 * Part of the system by which we get an exception from one ExtFuture<> into the state of another.
-	 * This rethrows @a eptr, catches it, and finally reports it to @a future.
+	 * This rethrows @a eptr, catches it, reports it to @a future, and then reportFinish()'s @a future.
+	 *
 	 * @test Has test coverage, does work as expected.
 	 * @param eptr
 	 * @param future
@@ -139,9 +140,12 @@ namespace ManagedExtFutureWatcher_detail
 	/**
 	 * The other part of the exception propagation mechanism.
 	 *
+	 * @note Only use this if you know @a upstream_future has an exception to throw to downstream.
+	 *       Calls .wait() on upstream_future, which may block.
+	 * @post downstream_future  State: (Started|Finished|Canceled), has_exception() == true.
+	 *
 	 * @test Has test coverage, does work as expected.
 	 */
-	/// @note Only use this if you know upstream has an exception to throw to downstream.  Calls .wait() on upstream_future.
 	template <class T, class R>
 	void trigger_exception_and_propagate(ExtFuture<T> upstream_future, ExtFuture<R> downstream_future)
 	{
@@ -271,11 +275,12 @@ namespace ManagedExtFutureWatcher_detail
 	}
 
 	/**
+	 * NOTE: Copy of connect_or_die_backprop_cancel_watcher() prior to changing it back to its original form.
 	 * Connect a watcher between @a up and @a down which will propagate a cancel and any
-	 * exception held by down to up, then deleteLater() itself.
+	 * exception held by @a down to @a up, then deleteLater() itself.
 	 */
 	template <class T, class R, class StapCallback = std::nullptr_t>
-	void connect_or_die_backprop_cancel_watcher(ExtFuture<T> up, ExtFuture<R> down, StapCallback&& stap_callback = nullptr)
+	void MAYBE_UNNEEDED_connect_or_die_backprop_cancel_watcher(ExtFuture<T> up, ExtFuture<R> down, StapCallback&& stap_callback = nullptr)
 	{
 		auto* fw_down = get_managed_qfuture_watcher<R>("[down->up]");
 		auto* fw_up = get_managed_qfuture_watcher<T>("[up->down]");
@@ -341,6 +346,43 @@ namespace ManagedExtFutureWatcher_detail
 #endif
 		fw_down->setFuture(down);
 		fw_up->setFuture(up);
+	}
+
+	/**
+	 * Connect a watcher between @a up and @a down which will propagate a cancel and any
+	 * exception held by @a down to @a up, then deleteLater() itself.
+	 */
+	template <class T, class R>
+	void connect_or_die_backprop_cancel_watcher(ExtFuture<T> up, ExtFuture<R> down)
+	{
+		auto* fw_down = get_managed_qfuture_watcher<R>("[down->up]");
+
+		// down->up canceled w/ exception.
+		qDb() << "Connecting down->up canceled";
+		connect_or_die(fw_down, &QFutureWatcher<R>::canceled, [upc=DECAY_COPY(up), downc=DECAY_COPY(down), fw_down]() mutable {
+			// Propagate the cancel upstream, possibly with an exception.
+			// Not a race here, since we'll have been canceled by the exception when we get here.
+			qDb() << "down->up canceled";
+			if(downc.has_exception())
+			{
+				// canceled and also have an exception to throw.
+				/// @todo Should we also always be canceled in here?  Not sure.
+				Q_ASSERT(downc.isFinished());
+				qDb() << "down->up canceled with exception";
+				// Note: Order flipped here, function propagates exception from param1 to param2.
+			    trigger_exception_and_propagate(downc, upc);
+			}
+			else
+			{
+				upc.cancel();
+			}
+			upc.reportFinished();
+			// Delete this watcher, it's done all it can.
+			fw_down->deleteLater();
+		});
+
+		// Note that this may fire immediately upon this setFuture().
+		fw_down->setFuture(down);
 	}
 
 	template <class T>

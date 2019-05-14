@@ -1300,52 +1300,44 @@ public:
 
 		ThenReturnType retfuture = ExtAsync::make_started_only_future<R>();
 
-//		ThenReturnType retfuture = ExtAsync::qthread_async(FWD_DECAY_COPY(ThenCallbackType, then_callback), *this);
+		// Block in this spawned thread for in_future to become ready.
+		// Intention is that everything is handled in exception_propagation_helper_then(), and that behavior matches
+		/// @link https://en.cppreference.com/w/cpp/experimental/shared_future/then
+		// "When the shared state currently associated with *this is ready, the continuation
+		// INVOKE(std::move(fd), *this) is called on an unspecified thread of execution. [...]
+		// Any value returned from the continuation is stored as the result in the shared state of the returned
+		// future object. Any exception propagated from the execution of the continuation is stored as the
+		// exceptional result in the shared state of the returned future object."
 
-#if 0
-		ExtAsync::qthread_async(
-					[=, fd_then_callback=FWD_DECAY_COPY(ThenCallbackType, then_callback)](ExtFuture<T> in_future, ThenReturnType returned_future_copy) mutable {
+		/// @todo Consider an overload which behaves like this:
+		//  @link http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0701r1.html#passing-futures-to-then-continuations-is-unwieldy
+		// "When .then is invoked with a continuation that is only invocable with T and the future that the continuation
+		// is being attached to contains an exception, .then does not invoke the continuation and returns a future containing
+		// the exception. We call this exception propagation."
+		// If in_future becomes exceptional or is canceled, the .wait() will throw, and never call then_callback.
+		// qthread_async() handles the exception propagation.
 
-			// Block in this spawned thread for in_future to become ready.
-			// Intention is that everything is handled in exception_propagation_helper_then(), and that behavior matches
-			/// @link https://en.cppreference.com/w/cpp/experimental/shared_future/then
-			// "When the shared state currently associated with *this is ready, the continuation
-			// INVOKE(std::move(fd), *this) is called on an unspecified thread of execution. [...]
-			// Any value returned from the continuation is stored as the result in the shared state of the returned
-			// future object. Any exception propagated from the execution of the continuation is stored as the
-			// exceptional result in the shared state of the returned future object."
+		// From @link https://doc.qt.io/qt-5/qexception.html
+		// "When using QFuture, transferred exceptions will be thrown when calling the following functions:
+		//				QFuture::waitForFinished()
+		//				QFuture::result()
+		//				QFuture::resultAt()
+		//				QFuture::results()"
 
-			/// @todo Check that this is true:
-			// Exception behavior somewhat similar to @link http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0701r1.html#passing-futures-to-then-continuations-is-unwieldy
-			// "When .then is invoked with a continuation that is only invocable with T and the future that the continuation
-			// is being attached to contains an exception, .then does not invoke the continuation and returns a future containing
-			// the exception. We call this exception propagation."
-			// If in_future becomes exceptional or is canceled, the .wait() will throw, and never call then_callback.
-			// qthread_async() handles the exception propagation.
-
-			// From @link https://doc.qt.io/qt-5/qexception.html
-			// "When using QFuture, transferred exceptions will be thrown when calling the following functions:
-			//				QFuture::waitForFinished()
-			//				QFuture::result()
-			//				QFuture::resultAt()
-			//				QFuture::results()"
-
-
-			ExtFuture_detail::exception_propagation_helper_then(in_future, returned_future_copy, std::move(fd_then_callback));
-
-			}, *this, retfuture);
-#else
+		// This will trip immediately, if downstream is canceled.  That will cancel *this, and we'll catch it below.
 		ManagedExtFutureWatcher_detail::connect_or_die_backprop_cancel_watcher(*this, retfuture);
 
 		ExtAsync::qthread_async([=, fd_then_callback=FWD_DECAY_COPY(ThenCallbackType, then_callback)](ExtFuture<T> up, ThenReturnType down) mutable {
-
-			up.wait();
 
 			try
 			{
 				// Call the callback with the results- or canceled/exception-laden this_future_copy.
 				// Could throw, hence we're in a try.
 				qDb() << "then_watchers: Calling then_callback_copy(this_future_copy).";
+
+				// We have to never call the callback with a non-ready future, so we do that by calling .waitForFinished() here,
+				// inside the callback's new thread.
+				up.wait();
 
 				R retval = std_invoke_and_lift(std::move(fd_then_callback), up);
 				down.reportResult(retval);
@@ -1359,7 +1351,7 @@ public:
 			down.reportFinished();
 
 		}, *this, retfuture);
-#endif
+
 		return retfuture;
 	}
 
