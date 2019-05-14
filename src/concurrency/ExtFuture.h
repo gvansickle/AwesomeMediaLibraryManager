@@ -1347,21 +1347,8 @@ public:
 				// Could throw, hence we're in a try.
 				qDb() << "then_watchers: Calling then_callback_copy(this_future_copy).";
 
-				R retval = std_invoke_and_lift(fd_then_callback, up);
-
-//				if constexpr(std::is_convertible_v<R, Unit>)
-//				{
-//					// then_callback_copy returns void, return a Unit separately.
-//					std::invoke(std::move(fd_then_callback), up);
-//					retval = unit;
-//				}
-//				else if constexpr(!std::is_void_v<R>)
-//				{
-//					// then_callback_copy returns non-void, return the callback's return value.
-//					retval = std::invoke(std::move(fd_then_callback), up);
-//					// Didn't throw, report the result.
-//					down.reportResult(retval);
-//				}
+				R retval = std_invoke_and_lift(std::move(fd_then_callback), up);
+				down.reportResult(retval);
 			}
 			catch(...)
 			{
