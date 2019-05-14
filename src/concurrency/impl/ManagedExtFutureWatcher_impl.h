@@ -366,8 +366,8 @@ namespace ManagedExtFutureWatcher_detail
 			if(downc.has_exception())
 			{
 				// canceled and also have an exception to throw.
-				/// @todo Should we also always be canceled in here?  Not sure.
-				Q_ASSERT(downc.isFinished());
+				// downc may not be finished at this point, but trigger_exception_and_propagate() will finish it.
+//				Q_ASSERT(downc.isFinished());
 				qDb() << "down->up canceled with exception";
 				// Note: Order flipped here, function propagates exception from param1 to param2.
 			    trigger_exception_and_propagate(downc, upc);
@@ -377,6 +377,7 @@ namespace ManagedExtFutureWatcher_detail
 				upc.cancel();
 			}
 			upc.reportFinished();
+			downc.reportFinished();
 			// Delete this watcher, it's done all it can.
 			fw_down->deleteLater();
 		});

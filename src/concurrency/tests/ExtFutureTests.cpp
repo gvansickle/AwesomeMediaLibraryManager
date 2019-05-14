@@ -1696,11 +1696,19 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 	ExtFuture<int> downstream_then1 = generator_task_future.then([=, &ran_generator_task_callback, &ran_then1_callback, &ran_then2_callback, &rsm, &generator_task_future]
 										(ExtFuture<int> upstream_future_copy) -> int {
 		AMLMTEST_EXPECT_EQ(upstream_future_copy, generator_task_future);
+		// Should never be not ready.
+		EXPECT_TRUE(upstream_future_copy.is_ready());
+
 		// Check the atomics.
 		AMLMTEST_EXPECT_TRUE(ran_generator_task_callback) << "FAIL: Generator task never ran";
 		AMLMTEST_EXPECT_FALSE(ran_then1_callback);
 		/// @todo This is coming back as true on a cancel. ???
 		AMLMTEST_EXPECT_FALSE(ran_then2_callback);
+
+		// Do a normal .get().
+		TCOUT << "CALLING GET()";
+		upstream_future_copy.get();
+
 		ran_then1_callback = true;
 
 		// Should always be finished if we get in here.
@@ -1725,6 +1733,10 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 	ExtFuture<int> downstream_then2 = downstream_then1.then([=, &ran_generator_task_callback, &ran_then1_callback, &ran_then2_callback, &rsm, &downstream_then1]
 									 (ExtFuture<int> upstream_future_copy) -> int {
 		AMLMTEST_EXPECT_EQ(upstream_future_copy, downstream_then1);
+
+		// Should never be not ready.
+		EXPECT_TRUE(upstream_future_copy.is_ready());
+
 		// Check the atomics.
 		AMLMTEST_EXPECT_TRUE(ran_generator_task_callback);
 		// On a cancel, we may have never run the upstream callback.
@@ -1737,6 +1749,11 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 		AMLMTEST_EXPECT_TRUE(upstream_future_copy.isFinished());
 		// For this test, we should also be canceled.
 		AMLMTEST_EXPECT_TRUE(upstream_future_copy.isCanceled());
+
+		// Do a normal .get().
+		TCOUT << "CALLING GET()";
+		upstream_future_copy.get();
+
 		ran_then2_callback = true;
 
 		TCOUT << "THEN2 GETTING, future state:" << upstream_future_copy;
@@ -1758,9 +1775,9 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 
 	// Cancel the downstream future.
 	TCOUT << "CANCELING TAIL downstream_then2:" << downstream_then2;
-	downstream_then2.cancel();
+//	downstream_then2.cancel();
+	downstream_then2.reportException(ExtAsyncCancelException());
 	downstream_then2.reportFinished();
-//	downstream_then2.reportException(ExtAsyncCancelException());
 	TCOUT << "CANCELED TAIL downstream_then2:" << downstream_then2;
 
 	TCOUT << "WAITING FOR CANCEL TO PROPAGATE";
@@ -1772,8 +1789,7 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 	AMLMTEST_EXPECT_TRUE(generator_task_future.isCanceled()) << generator_task_future;
 
 	AMLMTEST_EXPECT_TRUE(ran_generator_task_callback);
-	/// @todo Unclear why these are coming back true here.
-	AMLMTEST_EXPECT_TRUE(ran_then1_callback);
+	AMLMTEST_EXPECT_FALSE(ran_then1_callback);
 	AMLMTEST_EXPECT_FALSE(ran_then2_callback);
 
 	rsm.ReportResult(MEND);
