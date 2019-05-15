@@ -374,7 +374,16 @@ namespace ManagedExtFutureWatcher_detail
 			}
 			else
 			{
-				upc.cancel();
+				// down was canceled by a call to .cancel().  Qt5's mysterious operations now require us to
+				// do at least two things to propagate the cancel from down to up:
+				// - Throw an exception to up via reportException().  This will cause any waiters on up to throw, which
+				//   we need them to do so the cancel can subsequently be propagated by the next "up".  This will
+				//   also cancel the up future.
+				// - reportFinished() on up.  Needed for unknown reasons, but waits will block otherwise.
+				/// @todo ???
+//				upc.cancel();
+				upc.reportException(ExtAsyncCancelException());
+//				upc.reportFinished();
 			}
 			upc.reportFinished();
 			downc.reportFinished();

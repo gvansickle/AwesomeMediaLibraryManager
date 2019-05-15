@@ -211,6 +211,9 @@ namespace detail
 		ExtFutureT retfuture = make_started_only_future<typename ExtFutureT::value_type>();
 		retfuture.setName("CNRRetfuture");
 
+		// This will trip immediately, if downstream is already canceled.  That will cancel *this, and we'll catch it below.
+//		ManagedExtFutureWatcher_detail::connect_or_die_backprop_cancel_watcher(*this, retfuture);
+
 		return detail::qthread_async(retfuture, FWD_DECAY_COPY(CallbackType, callback), retfuture, args...);
 	};
 

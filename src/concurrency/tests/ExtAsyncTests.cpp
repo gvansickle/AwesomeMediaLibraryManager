@@ -1007,20 +1007,20 @@ void QtConcurrentMappedFutureStateOnCancel(bool dont_let_jobs_complete)
 	// The lambda which does the mapping.
 	std::function<int(const int&)> lambda = [&](const int& the_passed_value) -> int {
 
-//		AMLMTEST_SCOPED_TRACE("IN LAMBDA");
+		AMLMTEST_SCOPED_TRACE("IN LAMBDA");
 
-//		TCOUT << "Entered callback, passed value:" << the_passed_value;
+		TCOUT << "Entered callback, passed value:" << the_passed_value;
 
 		if(dont_let_jobs_complete)
 		{
 			// None of the jobs should complete before the future is canceled.
-//			TCOUT << "SLEEPING FOR 2 secs";
+			TCOUT << "SLEEPING FOR 2 secs";
 			TC_Sleep(2000);
 		}
 		else
 		{
 			// Let them all complete.
-//			TCOUT << "SLEEPING FOR 0.5 secs";
+			TCOUT << "SLEEPING FOR 0.5 secs";
 			TC_Sleep(500);
 		}
 
@@ -1074,19 +1074,22 @@ void QtConcurrentMappedFutureStateOnCancel(bool dont_let_jobs_complete)
 	}
 
 	// Cancel the async mapping operation.
+	TCOUT << "CANCELING mapped_results_future:" << mapped_results_future;
 	mapped_results_future.cancel();
+	TCOUT << "CANCELED mapped_results_future:" << mapped_results_future;
 
 	// mapped_results_future state: QFuture == Just adds the Cancel flag.  cancel() code brings it out of Paused if it was paused.
 	//                                         dont_let...: (Running|Started|Canceled)
 	//                                         else:        (Started|Finished|Canceled)
 	/// @note Expect Running to sometimes be cleared.
 	/// @note CANCELED QFUTURES ARE NOT NECESSARILY FINISHED.
-	TCOUT << "CANCELED:" << ExtFutureState::state(mapped_results_future);
-	if(dont_let_jobs_complete)
-	{
-		AMLMTEST_EXPECT_TRUE(mapped_results_future.isRunning() && mapped_results_future.isStarted() && mapped_results_future.isCanceled()) << ExtFutureState::state(mapped_results_future);
-	}
-	else
+	/// @note I think I fixed that and now they always will be.
+	TCOUT << "CANCELED:" << mapped_results_future;
+//	if(dont_let_jobs_complete)
+//	{
+//		AMLMTEST_EXPECT_TRUE(mapped_results_future.isRunning() && mapped_results_future.isStarted() && mapped_results_future.isCanceled()) << ExtFutureState::state(mapped_results_future);
+//	}
+//	else
 	{
 		AMLMTEST_EXPECT_TRUE(mapped_results_future.isFinished() && mapped_results_future.isStarted() && mapped_results_future.isCanceled()) << ExtFutureState::state(mapped_results_future);
 	}

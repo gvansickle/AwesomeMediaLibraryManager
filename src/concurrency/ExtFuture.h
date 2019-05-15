@@ -1332,7 +1332,7 @@ public:
 		//				QFuture::resultAt()
 		//				QFuture::results()"
 
-		// This will trip immediately, if downstream is canceled.  That will cancel *this, and we'll catch it below.
+		// This will trip immediately, if downstream is already canceled.  That will cancel *this, and we'll catch it below.
 		ManagedExtFutureWatcher_detail::connect_or_die_backprop_cancel_watcher(*this, retfuture);
 
 		ExtAsync::qthread_async([=, fd_then_callback=FWD_DECAY_COPY(ThenCallbackType, then_callback)](ExtFuture<T> up, ThenReturnType down) mutable {
