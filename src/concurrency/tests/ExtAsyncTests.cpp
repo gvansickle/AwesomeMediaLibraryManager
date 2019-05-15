@@ -647,7 +647,12 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtAsyncQthreadAsyncThenCancelExceptionFromBot
 {
 	TC_ENTER();
 
-	ExtFuture<int> f1 = ExtAsync::qthread_async_with_cnr_future([=](ExtFuture<int> in_fut) /*-> int*/ {
+	ExtFuture<int> f1 = ExtAsync::qthread_async_with_cnr_future([=](ExtFuture<int> in_fut) -> void {
+
+		EXPECT_TRUE(in_fut.isStarted());
+		EXPECT_FALSE(in_fut.isFinished());
+		EXPECT_FALSE(in_fut.isCanceled());
+
 		for(int i = 0; i<10; i++)
 		{
 			TCOUT << "qthread_async_with_cnr_future() iteration:" << i;
@@ -657,6 +662,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtAsyncQthreadAsyncThenCancelExceptionFromBot
 			if(in_fut.HandlePauseResumeShouldICancel())
 			{
 				// We're being canceled.
+				TCOUT << "BEING CANCELED: " << in_fut;
 				if(in_fut.isCanceled())
 				{
 					qDb() << "IN_FUT is already canceled";
@@ -673,7 +679,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtAsyncQthreadAsyncThenCancelExceptionFromBot
 			}
 		}
 
-		ADD_FAILURE() << "Finished thread function not due to cancel.";
+		ADD_FAILURE() << "Finished thread function not due to cancel. f: " << in_fut;
 		in_fut.reportResult(5);
 		in_fut.reportFinished();
 		})
@@ -684,7 +690,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtAsyncQthreadAsyncThenCancelExceptionFromBot
 			QList<int> result;
 
 			result = f0.get();
-			ADD_FAILURE() << "get() DIDN'T THROW";
+			ADD_FAILURE() << "get() DIDN'T THROW: " << f0;
 
 			EXPECT_TRUE(f0.isCanceled());
 //			EXPECT_TRUE(f0.hasException());
@@ -728,11 +734,11 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtAsyncQthreadAsyncThenCancelExceptionFromBot
 		qDb() << "ABOUT TO CANCEL";
 		EXPECT_FALSE(f1.isFinished());
 		EXPECT_FALSE(f1.isCanceled());
-//		f1.cancel();
-		f1.reportException(ExtAsyncCancelException());
+		f1.cancel();
+//		f1.reportException(ExtAsyncCancelException());
 		f1.wait();
 
-		ADD_FAILURE() << "Wait after cancel didn't throw";
+		ADD_FAILURE() << "Wait after cancel didn't throw: f1 " << f1;
 	}
 	catch(ExtAsyncCancelException& e)
 	{
@@ -1351,7 +1357,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureThenChainingTestMixedTypes)
 	bool ran2 = false;
 	bool ran3 = false;
 
-	ExtFuture<QString> future = ExtAsync::run(delayed_string_func_1, this);
+	ExtFuture<QString> future = ExtAsync::qthread_async(delayed_string_func_1, this);
 
 	ASSERT_TRUE(future.isStarted());
 	ASSERT_FALSE(future.isFinished());

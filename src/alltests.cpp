@@ -83,6 +83,9 @@ int google_test_main(int argc, char *argv[])
 	// Add the exception listener as the last listener.
 	testing::UnitTest::GetInstance()->listeners().Append(new ThrowListener);
 
+	// No death tests yet, but for when we do:
+	testing::FLAGS_gtest_death_test_style="threadsafe";
+
 	auto retval = RUN_ALL_TESTS();
 	return retval;
 }

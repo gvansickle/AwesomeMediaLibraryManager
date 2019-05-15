@@ -1030,7 +1030,7 @@ TEST_F(ExtFutureTest, CancelBasic)
 	 * I assume "Running" might not always be the case, depending on available threads.
 	 */
 	ExtFuture<int> f0 = ExtAsync::qthread_async_with_cnr_future([=](ExtFuture<int> rc_future) -> void {
-
+		// This will spin for 5000 ticks.
 		for(int i = 0; i<5; ++i)
 		{
 			// Do nothing for 1000 ms.
@@ -1045,9 +1045,8 @@ TEST_F(ExtFutureTest, CancelBasic)
 			}
 		}
 		rc_future.reportFinished();
-
-//		return 1;
 	});
+	f0.setName("f0");
 
 	TCOUT << "Initial future f0 state:" << f0;
 
@@ -1057,10 +1056,9 @@ TEST_F(ExtFutureTest, CancelBasic)
 	EXPECT_FALSE(f0.isFinished());
 
 	// ~immediately cancel the future.
-	TCOUT << "CANCELING FUTURE";
+	TCOUT << "CANCELING FUTURE: " << f0;
 	f0.cancel();
-//	f0.reportException(ExtAsyncCancelException());
-	TCOUT << "CANCELED FUTURE";
+	TCOUT << "CANCELED FUTURE: " << f0;
 
 	/**
 	 * @note QFuture<> behavior.
@@ -1068,14 +1066,14 @@ TEST_F(ExtFutureTest, CancelBasic)
 	 * A default construced QFuture is (Started|Canceled|Finished)
 	 * I assume "Running" might not always be the case, depending on cancel-before-start or cancel-after-completion.
 	 */
-	TCOUT << "Cancelled future state:" << state(f0);
+	TCOUT << "Cancelled future state:" << f0;
 
 	EXPECT_TRUE(f0.isStarted());
 	EXPECT_TRUE(f0.isCanceled());
 
-    // Canceling alone won't finish the extfuture.
-	/// @todo This is not coming back canceled.
-	EXPECT_FALSE(f0.isFinished()) << f0;
+	// .cancel() alone doesn't seem to finish a QFuture<>, or at least our ExtFuture<>.
+	// So ef.cancel() actually .reportsFinished() as well.
+	EXPECT_TRUE(f0.isFinished()) << f0;
 
 	try
 	{
@@ -1095,7 +1093,7 @@ TEST_F(ExtFutureTest, CancelBasic)
 
 	EXPECT_TRUE(f0.isFinished());
 
-	TCOUT << "Cancelled and finished extfuture:" << state(f0);
+	TCOUT << "Cancelled and finished extfuture: " << f0;
 
     TC_EXIT();
 }
@@ -1108,22 +1106,22 @@ TEST_F(ExtFutureTest, MultiThenCancelBasic)
 
 	bool caught_exception = false;
 
-	TypeParam main_future = ExtAsync::run([=](TypeParam rc_future) -> void {
+	TypeParam main_future = ExtAsync::qthread_async_with_cnr_future([=](TypeParam rc_future) -> void {
 
 		for(int i = 0; i<5; ++i)
 		{
 			// Do nothing for 1000 ms.
 			TC_Sleep(1000);
 
-			qfiface(rc_future).reportResult(i);
+			rc_future.reportResult(i);
 
 			if(rc_future.HandlePauseResumeShouldICancel())
 			{
-				qfiface(rc_future).reportCanceled();
+				rc_future.reportCanceled();
 				break;
 			}
 		}
-		qfiface(rc_future).reportFinished();
+		rc_future.reportFinished();
 	});
 
 	TCOUT << "Initial future state:" << state(main_future);
@@ -1142,14 +1140,13 @@ TEST_F(ExtFutureTest, MultiThenCancelBasic)
 	 * A default construced QFuture is (Started|Canceled|Finished)
 	 * I assume "Running" might not always be the case, depending on cancel-before-start or cancel-after-completion.
 	 */
-	TCOUT << "Cancelled future state:" << main_future;
+	TCOUT << "Canceled future state:" << main_future;
 
 	EXPECT_TRUE(main_future.isStarted());
 	EXPECT_TRUE(main_future.isCanceled());
 
-	// Canceling alone won't finish the extfuture.
-	/// @todo This is not coming back canceled.
-	EXPECT_FALSE(main_future.isFinished()) << state(main_future);
+	// Canceling alone won't finish a QFuture<>, it will an ExtFuture<>.
+	EXPECT_TRUE(main_future.isFinished()) << main_future;
 
 	try
 	{
@@ -1843,17 +1840,21 @@ TEST_F(ExtFutureTest, ExtFutureCancelFuture)
 	ExtFuture<Unit> promise_side = ExtAsync::make_started_only_future<Unit>();
 	ExtFuture<Unit> future_side = ExtAsync::make_started_only_future<Unit>();
 
-    ASSERT_TRUE(future_side.isStarted());
+	EXPECT_TRUE(future_side.isStarted());
 
     promise_side.reportStarted();
     future_side = promise_side;
 
-    ASSERT_TRUE(future_side.isStarted());
+	EXPECT_TRUE(future_side.isStarted());
 
-    ASSERT_FALSE(promise_side.isCanceled());
-    future_side.cancel();
+	EXPECT_FALSE(promise_side.isCanceled());
 
-    ASSERT_TRUE(promise_side.isCanceled());
+	// Cancel future.
+	TCOUT << "CANCELING FUTURE: " << future_side;
+	future_side.cancel();
+	future_side.wait();
+
+	EXPECT_TRUE(promise_side.isCanceled());
 
     promise_side.reportFinished();
 

@@ -551,11 +551,19 @@ public:
 	 * - else switch state out of Paused and into Canceled.
 	 * - Send QFutureCallOutEvent::Canceled.
 	 * @note This is shadowing the same non-virtual function in QFuture<T>.
+	 * "Cancels the asynchronous computation represented by this future. Note
+	 * that the cancelation is asynchronous. Use waitForFinished() after calling cancel() when you need
+	 * synchronous cancelation.
+	 * Results currently available may still be accessed on a canceled future, but new results will not
+	 * become available after calling this function. Any QFutureWatcher object that is watching this
+	 * future will not deliver progress and result ready signals on a canceled future."
 	 */
 	void cancel()
 	{
 		// Same as what QFuture<>::cancel does.
 		this->d.cancel();
+		// ...except for some reason we need to also .reportFinished() or a subsequent .wait() will block forever.
+		this->reportFinished();
 	}
 
 	/**
@@ -1342,6 +1350,12 @@ public:
 				R retval = std_invoke_and_lift(std::move(fd_then_callback), up);
 				down.reportResult(retval);
 			}
+			catch(ExtAsyncCancelException& e)
+			{
+				// It was the cancel exception, throw it up.
+				qWr() << "THROWING ExtAsyncCancelException() UP";
+				up.reportException(e);
+			}
 			catch(...)
 			{
 				std::exception_ptr eptr = std::current_exception();
@@ -1349,6 +1363,8 @@ public:
 			}
 
 			down.reportFinished();
+
+			Q_ASSERT(down.isFinished());
 
 		}, *this, retfuture);
 

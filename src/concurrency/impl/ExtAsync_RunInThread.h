@@ -211,7 +211,7 @@ namespace detail
 		ExtFutureT retfuture = make_started_only_future<typename ExtFutureT::value_type>();
 		retfuture.setName("CNRRetfuture");
 
-		return detail::qthread_async(retfuture, callback, retfuture, args...);
+		return detail::qthread_async(retfuture, FWD_DECAY_COPY(CallbackType, callback), retfuture, args...);
 	};
 
 //
