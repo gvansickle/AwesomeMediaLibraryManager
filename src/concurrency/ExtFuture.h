@@ -1415,7 +1415,7 @@ public:
 	auto then(ThenCallbackType&& then_callback) const -> then_return_type_from_callback_and_future_t<ThenCallbackType, ExtFuture<T>>
 	{
 	    static_assert(!is_ExtFuture_v<T>, "Nested futures not supported.");
-		return then_qthread_async(std::forward<ThenCallbackType>(then_callback));
+		return then_qthread_async(FWD_DECAY_COPY(ThenCallbackType, then_callback));
 	};
 
 
@@ -1542,7 +1542,7 @@ public:
 			 REQUIRES(std::is_invocable_r_v<void, StreamingTapCallbackType, ExtFuture<T>, int, int>)>
 	ExtFuture<T> stap(ContextType&& context, StreamingTapCallbackType&& tap_callback)
 	{
-		return this->StreamingTapHelper(context, std::forward<StreamingTapCallbackType>(tap_callback));
+		return this->StreamingTapHelper(context, FWD_DECAY_COPY(StreamingTapCallbackType, tap_callback));
 	}
 
 	/**
@@ -1553,7 +1553,6 @@ public:
 			 REQUIRES(std::is_invocable_r_v<void, StreamingTapCallbackType, ExtFuture<T>, int, int>)>
 	ExtFuture<T> stap(StreamingTapCallbackType&& tap_callback)
 	{
-//		return this->stap(nullptr, std::forward<StreamingTapCallbackType>(tap_callback));
 		return this->stap_qthread_async(FWD_DECAY_COPY(StreamingTapCallbackType, tap_callback));
 	}
 
