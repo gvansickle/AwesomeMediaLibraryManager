@@ -2269,9 +2269,9 @@ TEST_F(ExtFutureTest, ExtFutureStreamingTap)
     eftype ef = async_int_generator<eftype>(1, 6, this);
 
 	TCOUT << "Starting ef state:" << ef;
-    ASSERT_TRUE(ef.isStarted());
-    ASSERT_FALSE(ef.isCanceled());
-    ASSERT_FALSE(ef.isFinished());
+	EXPECT_TRUE(ef.isStarted());
+	EXPECT_FALSE(ef.isCanceled());
+	EXPECT_FALSE(ef.isFinished());
 
 	TCOUT << "Attaching stap to ef:" << ef;
 
@@ -2284,16 +2284,17 @@ TEST_F(ExtFutureTest, ExtFutureStreamingTap)
             num_tap_completions++;
         }
 	}); // Will block on f2 below.
+	f2.setName("f2");
 
 	AMLMTEST_EXPECT_TRUE(f2.isStarted());
 	AMLMTEST_EXPECT_FALSE(f2.isCanceled());
 	AMLMTEST_EXPECT_FALSE(f2.isFinished());
 
-	TCOUT << "BEFORE WAITING FOR GET()" << f2;
+	TCOUT << "BEFORE WAITING FOR GET():" << f2;
 
 	async_results_from_get = f2.results();
 
-	TCOUT << "AFTER WAITING FOR GET()" << f2;
+	TCOUT << "AFTER WAITING FOR GET():" << f2;
 
     EXPECT_TRUE(ef.isFinished());
     EXPECT_EQ(num_tap_completions, 6);

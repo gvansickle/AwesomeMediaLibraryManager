@@ -508,7 +508,7 @@ public:
 	}
 
 	/**
-	 * Call this from your promise-side code to indicate successful completion.
+	 * Call this from your promise-side code to indicate completion, successful or not.
 	 * If result is != nullptr, calls reportResult() and adds a copy of the result.
 	 * Unconditionally reports finished.
 	 * @param result  If result is != nullptr, calls reportResult() and adds a copy of the result.
@@ -1341,11 +1341,12 @@ public:
 			{
 				// Call the callback with the results- or canceled/exception-laden this_future_copy.
 				// Could throw, hence we're in a try.
-				qDb() << "then_watchers: Calling then_callback_copy(this_future_copy).";
 
 				// We have to never call the callback with a non-ready future, so we do that by calling .waitForFinished() here,
 				// inside the callback's new thread.
 				up.wait();
+
+				qDb() << __func__ << " Calling then_callback_copy(this_future_copy).";
 
 				R retval = std_invoke_and_lift(std::move(fd_then_callback), up);
 				down.reportResult(retval);
@@ -1358,6 +1359,7 @@ public:
 			}
 			catch(...)
 			{
+				// up or the callback threw some non-cancel exception, throw it down.
 				std::exception_ptr eptr = std::current_exception();
 				ManagedExtFutureWatcher_detail::propagate_eptr_to_future(eptr, down);
 			}
@@ -1459,6 +1461,74 @@ public:
 		return retval;
 	}
 
+	template <class R = T, class StreamingTapCallbackType,
+		REQUIRES(std::is_invocable_r_v<void, StreamingTapCallbackType, ExtFuture<T>, int, int>)>
+	ExtFuture<R> stap_qthread_async(StreamingTapCallbackType&& stap_callback) const
+	{
+		ExtFuture<R> retfuture = ExtAsync::make_started_only_future<R>();
+
+		// This will trip immediately, if downstream is already canceled.  That will cancel *this, and we'll catch it below.
+		ManagedExtFutureWatcher_detail::connect_or_die_backprop_cancel_watcher(*this, retfuture);
+
+		ExtAsync::qthread_async([=,
+								 fd_stap_callback=FWD_DECAY_COPY(StreamingTapCallbackType, stap_callback)]
+								 (ExtFuture<T> up, ExtFuture<R> down) mutable {
+
+			try
+			{
+				// Call the callback with the results- or canceled/exception-laden this_future_copy.
+				// Could throw, hence we're in a try.
+
+//				// We have to never call the callback with a non-ready future, so we do that by calling .waitForFinished() here,
+//				// inside the callback's new thread.
+//				up.wait();
+
+				/// @todo resultsReadyAt() watcher.
+				auto* fw_up_for_results = ManagedExtFutureWatcher_detail::get_managed_qfuture_watcher<T>("[up->stap]");
+
+		//		constexpr bool has_stap_callback = !std::is_null_pointer_v<StreamingTapCallbackType>;
+		//		if constexpr(!std::is_null_pointer_v<StreamingTapCallbackType>)
+		//		{
+					connect_or_die(fw_up_for_results, &QFutureWatcher<T>::resultsReadyAt,
+							[upc=up, downc=down, fw_up_for_results,
+							 stap_callback_cp=FWD_DECAY_COPY(StreamingTapCallbackType, stap_callback)](int begin, int end) mutable {
+						qDb() << __func__ << " Calling fd_stap_callback(up, begin, end).";
+						std::invoke(std::move(stap_callback_cp), upc, begin, end);
+						/// @note We're temporarily copying to the output future here, we should change that to use a separate thread.
+						///       Or maybe we can just return the upstream_future here....
+						for(int i = begin; i < end; ++i)
+						{
+							downc.reportResult(fw_up_for_results->resultAt(i), i);
+						}
+					});
+					connect_or_die(fw_up_for_results, &QFutureWatcher<T>::finished, fw_up_for_results,
+							[fw_up_for_results, downc=down]() mutable {
+						// up is finished.  finish down, delete the watcher.
+						downc.reportFinished();
+						Q_ASSERT(downc.isFinished());
+						fw_up_for_results->deleteLater();
+					});
+		//		}
+				fw_up_for_results->setFuture(up);
+				/// @todo resultsReadyAt() watcher.
+			}
+			catch(ExtAsyncCancelException& e)
+			{
+				// It was the cancel exception, throw it up.
+				qWr() << "THROWING ExtAsyncCancelException() UP";
+				up.reportException(e);
+			}
+			catch(...)
+			{
+				// up or the callback threw some non-cancel exception, throw it down.
+				std::exception_ptr eptr = std::current_exception();
+				ManagedExtFutureWatcher_detail::propagate_eptr_to_future(eptr, down);
+			}
+		}, *this, retfuture);
+
+		return retfuture;
+	}
+
 	/**
 	 * Root .tap() overload for streaming taps.
 	 * Callback takes a reference to this, a begin index, and an end index:
@@ -1483,7 +1553,8 @@ public:
 			 REQUIRES(std::is_invocable_r_v<void, StreamingTapCallbackType, ExtFuture<T>, int, int>)>
 	ExtFuture<T> stap(StreamingTapCallbackType&& tap_callback)
 	{
-		return this->stap(nullptr, std::forward<StreamingTapCallbackType>(tap_callback));
+//		return this->stap(nullptr, std::forward<StreamingTapCallbackType>(tap_callback));
+		return this->stap_qthread_async(FWD_DECAY_COPY(StreamingTapCallbackType, tap_callback));
 	}
 
 	/**
