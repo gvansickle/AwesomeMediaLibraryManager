@@ -1228,25 +1228,25 @@ public:
 		auto* upw = new QFutureWatcher<T>(context);
 
 		// The up->down data copy.
-		connect_or_die(upw, &QFutureWatcher<T>::resultsReadyAt, context,
-					   [=,
-					   upstream_future_copy=DECAY_COPY(/*std::forward<ExtFuture<T>>*/(*this)),
-					   downstream_future=DECAY_COPY(retfuture)
-						  /*callback_cp=DECAY_COPY(std::forward<ResultsReadyAtCallbackType>(results_ready_callback))*/](int begin, int end) mutable {
-						   /// @note We're temporarily copying to the output future here, we should change that to use a separate thread.
-						   ///       Or maybe we can just return the upstream_future here....
-						   for(int i = begin; i < end; ++i)
-						   {
-							   downstream_future.reportResult(upstream_future_copy, i);
-						   }
-					   });
+//		connect_or_die(upw, &QFutureWatcher<T>::resultsReadyAt, context,
+//					   [=,
+//					   upstream_future_copy=DECAY_COPY(*this),
+//					   downstream_future=DECAY_COPY(retfuture)
+//						  ](int begin, int end) mutable {
+//						   /// @note We're temporarily copying to the output future here, we should change that to use a separate thread.
+//						   ///       Or maybe we can just return the upstream_future here....
+//						   for(int i = begin; i < end; ++i)
+//						   {
+//							   downstream_future.reportResult(upstream_future_copy, i);
+//						   }
+//					   });
 		// The up->down finish signal.  This is where we'll call the then_callback.
 //		M_TODO("This needs to return the callback's return value to the returned future.");
 		connect_or_die(upw, &QFutureWatcher<T>::finished, context,
 					   [=,
-					   then_callback_c2=DECAY_COPY(std::forward<ThenCallbackType>(then_callback)),
+					   then_callback_c2=FWD_DECAY_COPY(ThenCallbackType, then_callback),
 					   downstream_future=DECAY_COPY(retfuture),
-					   upw_c2=upw](){
+					   upw_c2=upw]() mutable {
 			std::invoke(std::move(then_callback_c2), ExtFuture<T>(upw_c2->future()));
 			downstream_future.reportFinished();
 			;});
@@ -1459,26 +1459,28 @@ public:
 	 * @param this_future_copy  The upstream future.  May or may not live in the same thread as ret_future_copy, may not have an event loop.
 	 * @param ret_future_copy   The downstream future.  Must live in the same thread as @a context.
 	 */
-	template <class StapCallbackType//, /*class R = Unit::LiftT< std::invoke_result_t<StapCallbackType, ExtFuture<T>> >,*/
-	        /*REQUIRES(!is_ExtFuture_v<R> && !is_ExtFuture_v<T>
-	          && std::is_invocable_r_v<void, StapCallbackType, ExtFuture<T>>)*/
+	template <class StapCallbackType, /*class R = Unit::LiftT< std::invoke_result_t<StapCallbackType, ExtFuture<T>> >,*/
+	        REQUIRES(/*!is_ExtFuture_v<R> && !is_ExtFuture_v<T>*/
+	          std::is_invocable_r_v<void, StapCallbackType, ExtFuture<T>, int, int>)
 	        >
-	ExtFuture<T> stap_qobject_with_event_loop(QObject* context, StapCallbackType&& then_callback) const
+	ExtFuture<T> stap_qobject_with_event_loop(QObject* context, StapCallbackType&& stap_callback) const
 	{
 		ExtFuture<T> retfuture = ExtAsync::make_started_only_future<T>();
 
+		// The down->up cancel.
 		// This will trip immediately, if downstream is already canceled.  That will cancel *this, and we'll catch it below.
 		ManagedExtFutureWatcher_detail::connect_or_die_backprop_cancel_watcher(*this, retfuture);
 
 		// Create a new up->downstream watcher parented to the context object.
 		auto* upw = new QFutureWatcher<T>(context);
 
-		// The up->down data copy.
+		// The up->stap and up->down data copy.
 		connect_or_die(upw, &QFutureWatcher<T>::resultsReadyAt, context,
 					   [=,
-					   upstream_future_copy=DECAY_COPY(/*std::forward<ExtFuture<T>>*/(*this)),
-					   downstream_future=DECAY_COPY(retfuture)
-						  /*callback_cp=DECAY_COPY(std::forward<ResultsReadyAtCallbackType>(results_ready_callback))*/](int begin, int end) mutable {
+					   upstream_future_copy=DECAY_COPY(*this),
+					   downstream_future=DECAY_COPY(retfuture),
+					   stap_callback_cp2=FWD_DECAY_COPY(StapCallbackType, stap_callback)](int begin, int end) mutable {
+							std::invoke(std::move(stap_callback_cp2), upstream_future_copy, begin, end);
 						   /// @note We're temporarily copying to the output future here, we should change that to use a separate thread.
 						   ///       Or maybe we can just return the upstream_future here....
 						   for(int i = begin; i < end; ++i)
@@ -1490,10 +1492,10 @@ public:
 //		M_TODO("This needs to return the callback's return value to the returned future.");
 		connect_or_die(upw, &QFutureWatcher<T>::finished, context,
 					   [=,
-					   then_callback_c2=DECAY_COPY(std::forward<StapCallbackType>(then_callback)),
+					   stap_callback_cp2=FWD_DECAY_COPY(StapCallbackType, stap_callback),
 					   downstream_future=DECAY_COPY(retfuture),
 					   upw_c2=upw]() mutable {
-			std::invoke(std::move(then_callback_c2), ExtFuture<T>(upw_c2->future()));
+//			std::invoke(std::move(stap_callback_cp2), ExtFuture<T>(upw_c2->future()));
 			downstream_future.reportFinished();
 			;});
 
@@ -1505,18 +1507,18 @@ public:
 	 * @param stap_callback
 	 * @return
 	 */
-	template <class R = T, class StreamingTapCallbackType,
+	template <class StreamingTapCallbackType,
 		REQUIRES(std::is_invocable_r_v<void, StreamingTapCallbackType, ExtFuture<T>, int, int>)>
-	ExtFuture<R> stap_qthread_async(StreamingTapCallbackType&& stap_callback) const
+	ExtFuture<T> stap_qthread_async(StreamingTapCallbackType&& stap_callback) const
 	{
-		ExtFuture<R> retfuture = ExtAsync::make_started_only_future<R>();
+		ExtFuture<T> retfuture = ExtAsync::make_started_only_future<T>();
 
 		// This will trip immediately, if downstream is already canceled.  That will cancel *this, and we'll catch it below.
 		ManagedExtFutureWatcher_detail::connect_or_die_backprop_cancel_watcher(*this, retfuture);
 
 		ExtAsync::qthread_async([=,
 								 fd_stap_callback=FWD_DECAY_COPY(StreamingTapCallbackType, stap_callback)]
-								 (ExtFuture<T> up, ExtFuture<R> down) mutable {
+								 (ExtFuture<T> up, ExtFuture<T> down) mutable {
 
 			try
 			{
@@ -1528,7 +1530,7 @@ public:
 //				up.wait();
 
 				/// @todo resultsReadyAt() watcher.
-				auto* fw_up_for_results = ManagedExtFutureWatcher_detail::get_managed_qfuture_watcher<T>("[up->stap]");
+				auto* fw_up_for_results = ManagedExtFutureWatcher_detail::get_managed_qfuture_watcher<T>("[res up->stap]");
 
 		//		constexpr bool has_stap_callback = !std::is_null_pointer_v<StreamingTapCallbackType>;
 		//		if constexpr(!std::is_null_pointer_v<StreamingTapCallbackType>)
