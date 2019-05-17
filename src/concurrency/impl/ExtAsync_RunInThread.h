@@ -71,15 +71,16 @@ namespace detail
 
 		QThread* new_thread = QThread::create
 						([=, fd_callback=FWD_DECAY_COPY(CallbackType, callback),
-												  retfuture_cp=/*std::forward<ExtFutureR>*/(retfuture)
+												  retfuture_cp=DECAY_COPY(retfuture)
 										  ]() mutable {
 			Q_ASSERT(retfuture == retfuture_cp);
 			Q_ASSERT(retfuture_cp.isStarted());
+
 			// Catch any exceptions from the callback and propagate them to the returned future.
 			try
 			{
 				static_assert(!is_ExtFuture_v<CBReturnType>, "Callback return value cannot be a future type.");
-				CBReturnType retval;
+				CBReturnType retval; // = std_invoke_and_lift(std::move(fd_callback), args...);
 				if constexpr(std::is_convertible_v<Unit, CBReturnType>)
 				{
 					// Callback returns void, caller has to arrange for retfuture results/finished reporting.
@@ -96,6 +97,8 @@ namespace detail
 				{
 					static_assert(dependent_false_v<CBReturnType>, "Callback return type not void or non-ExtFuture.");
 				}
+//				retfuture_cp.reportResult(retval);
+
 			}
 			catch(...)
 			{
@@ -104,47 +107,8 @@ namespace detail
 				ManagedExtFutureWatcher_detail::propagate_eptr_to_future(eptr, retfuture_cp);
 			}
 
+			// Always reportFinished(), to catch any callbacks which don't do it.
 			retfuture_cp.reportFinished();
-
-#if 0
-			catch(ExtAsyncCancelException& e)
-			{
-				/**
-				 * Per std::experimental::shared_future::then() at @link https://en.cppreference.com/w/cpp/experimental/shared_future/then
-				 * "Any value returned from the continuation is stored as the result in the shared state of the returned future object.
-				 *  Any exception propagated from the execution of the continuation is stored as the exceptional result in the shared
-				 *  state of the returned future object."
-				 */
-				qDb() << "CAUGHT CANCEL EXCEPTION";
-				retfuture_cp.reportException(e);
-				Q_ASSERT(retfuture_cp.isCanceled());
-			}
-			catch(QException& e)
-			{
-				qDb() << "CAUGHT QEXCEPTION";
-				retfuture_cp.reportException(e);
-			}
-			catch (...)
-			{
-				/// @todo Need to report the actual exception here.
-				qWr() << "CAUGHT UNKNOWN EXCEPTION";
-				retfuture_cp.reportException(QUnhandledException());
-			}
-
-			qDb() << "Leaving Thread:" << M_ID_VAL(retfuture_cp) << M_ID_VAL(retfuture);
-			// Even in the case of exception, we need to reportFinished() or we just hang.
-			/// @note Not clear what is happening here.  reportException() sets canceled, so why finished?
-			/// @todo Not sure if this also applies if we're already finished or canceled.
-			if(retfuture_cp.hasException())
-			{
-				qDb() << "Future has exception:" << retfuture_cp;
-				Q_ASSERT(retfuture_cp.isCanceled());
-			}
-			// We always have to report finished, regardless of exception or cancel status.
-			retfuture_cp.reportFinished();
-			qDb() << "Reported finished:" << retfuture_cp;
-			return;
-#endif
 		});
 
 		// Make a self-delete connection for the QThread.

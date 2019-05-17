@@ -372,13 +372,17 @@ TEST_P(ExtAsyncTestsParameterized, ExtAsyncQthreadAsyncMultiThenCancelExceptionF
 {
 	TC_ENTER();
 
-	bool cancel_from_top = GetParam();
+	QFutureSynchronizer<void> synchronizer;
+	synchronizer.setCancelOnWait(false);
+
+	bool cancel_from_top = true;//GetParam();
 
 	ExtFuture<int> f1 = ExtAsync::qthread_async([=]() -> int {
+		// Wait for one sec
 		TC_Sleep(1000);
 		if(cancel_from_top)
 		{
-			/*TCOUT*/qDebug() << "THROWING CANCEL FROM TOP";
+			TCOUT << "THROWING CANCEL FROM TOP";
 			throw ExtAsyncCancelException();
 			ADD_FAILURE() << "Didn't throw out of thread to future.";
 		}
@@ -386,9 +390,12 @@ TEST_P(ExtAsyncTestsParameterized, ExtAsyncQthreadAsyncMultiThenCancelExceptionF
 		TCOUT << "ABOUT TO LEAVE THREAD AND RETURN 5";
 		return 5;
 	});
-	auto fend = f1
+	f1.setName("f1");
+	synchronizer.addFuture(f1);
+	ExtFuture<int> fend = f1
 	.then_qthread_async([=](ExtFuture<int> f0){
-		qDb() << "Waiting in then() for cancel exception, f0:" << f0;
+		f0.setName("f0");
+		qDb() << "Waiting in .then() for cancel exception, f0:" << f0;
 		f0.wait();
 
 		ADD_FAILURE() << "f0.wait() didn't throw:" << f0;
@@ -396,27 +403,29 @@ TEST_P(ExtAsyncTestsParameterized, ExtAsyncQthreadAsyncMultiThenCancelExceptionF
 		return 1;
 	})
 	.then_qthread_async([=](ExtFuture<int> f2){
-		qDb() << "Waiting in then() for cancel exception, f2:" << f2;
+		f2.setName("f2");
+		qDb() << "Waiting in .then() for cancel exception, f2:" << f2;
 		f2.wait();
 		ADD_FAILURE() << "f2.wait() didn't throw:" << f2;
 
 		return 1;
 	});
-	f1.setName("f1");
 	fend.setName("fend");
-
-	TC_Wait(500);
+	synchronizer.addFuture(fend);
+//	TC_Wait(500);
 
 	if(!cancel_from_top)
 	{
-		/*TCOUT*/qDebug() << "THROWING CANCEL FROM BOTTOM THEN";
+		TCOUT << "THROWING CANCEL FROM BOTTOM THEN fend:" << fend;
 		fend.cancel();
+		fend.wait();
 	}
 
 	TCOUT << "ABOUT TO TRY";
 
 	try
 	{
+		TCOUT << "ABOUT TO WAIT ON f1:" << f1;
 		f1.wait();
 		ADD_FAILURE() << ".wait() Didn't throw";
 	}
@@ -435,7 +444,11 @@ TEST_P(ExtAsyncTestsParameterized, ExtAsyncQthreadAsyncMultiThenCancelExceptionF
 		ADD_FAILURE() << "Threw unexpected exception.";
 	}
 
+	EXPECT_TRUE(fend.isCanceled());
+	EXPECT_TRUE(f1.isCanceled());
+
 	TCOUT << "ABOUT TO LEAVE TEST";
+	synchronizer.waitForFinished();
 
 	TC_EXIT();
 }

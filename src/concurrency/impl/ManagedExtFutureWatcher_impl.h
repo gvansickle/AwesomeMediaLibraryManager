@@ -362,15 +362,16 @@ namespace ManagedExtFutureWatcher_detail
 		connect_or_die(fw_down, &QFutureWatcher<R>::canceled, [upc=DECAY_COPY(up), downc=DECAY_COPY(down), fw_down]() mutable {
 			// Propagate the cancel upstream, possibly with an exception.
 			// Not a race here, since we'll have been canceled by the exception when we get here.
-			qDb() << "down->up canceled";
+			qDb() << "down->up canceled, down:" << downc << ", up:" << upc;
 			if(downc.has_exception())
 			{
 				// canceled and also have an exception to throw.
 				// downc may not be finished at this point, but trigger_exception_and_propagate() will finish it.
 //				Q_ASSERT(downc.isFinished());
-				qDb() << "down->up canceled with exception";
+				qDb() << "QFutureWatcher<R>::canceled(): down->up canceled with exception, up:" << upc << "down:" << downc;
 				// Note: Order flipped here, function propagates exception from param1 to param2.
 			    trigger_exception_and_propagate(downc, upc);
+				qDb() << "QFutureWatcher<R>::canceled(): post down->up canceled with exception, up:" << upc << "down:" << downc;
 			}
 			else
 			{
@@ -381,9 +382,7 @@ namespace ManagedExtFutureWatcher_detail
 				//   also cancel the up future.
 				// - reportFinished() on up.  Needed for unknown reasons, but waits will block otherwise.
 				/// @todo ???
-//				upc.cancel();
 				upc.reportException(ExtAsyncCancelException());
-//				upc.reportFinished();
 			}
 			upc.reportFinished();
 			downc.reportFinished();

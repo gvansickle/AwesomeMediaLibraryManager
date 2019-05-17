@@ -1260,7 +1260,7 @@ TYPED_TEST(ExtFutureTypedTestFixture, PExceptionBasic)
 
 	TypeParam main_future;
 
-	main_future = ExtAsync::run([=](int) -> int {
+	main_future = ExtAsync::qthread_async([=](int) -> int {
 		TC_Sleep(1000);
 		TCOUT << "Throwing exception from other thread";
 		throw QException();

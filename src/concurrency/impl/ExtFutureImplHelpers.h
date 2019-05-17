@@ -421,30 +421,48 @@ static inline void spinWaitForFinishedOrCanceled(ExtFuture<T> this_future, ExtFu
 
 }; // END ns ExtFuture_detail
 
-/**
- * @todo doc fixes:
- * Template to try to get a common handle on exception and cancel handling.
- * CallbackType == void callback(ExtFuture<T> this_future, int begin, int end, args...)
- *
- * For an ExtFuture<T>::stap(), the futures should be *this and the returned_future, resp.
- *
- * @param context  The QObject*, and hence the thread, within which @a ret_future_copy lives.
- * @param this_future_copy  The upstream future.  May or may not live in the same thread as ret_future_copy, may not have an event loop.
- * @param ret_future_copy   The downstream future.  Must live in the same thread as @a context.
- */
-template <class T, class CallbackType, class R,  class... Args>
-void streaming_tap_helper_watcher(QObject* context, ExtFuture<T> this_future_copy, ExtFuture<R> ret_future_copy,
-								  CallbackType&& callback, Args&&... args)
+#if 0 // MOVED INTO EXTFUTURE
+template <class T, class R, class CallbackType, class... Args>
+void streaming_tap_helper_watcher(QObject* context, ExtFuture<T> up, ExtFuture<R> down,
+								  CallbackType&& stap_callback, Args&&... args)
 {
+	// The future we'll immediately return.  We copy this into the streaming_tap_callback's ::run() context.
+	ExtFuture<R> returned_future = ExtAsync::make_started_only_future<R>();
+
 	static_assert(std::is_void_v<std::invoke_result_t<CallbackType, ExtFuture<T>, int, int/*, Args...*/>>, "Callback must return void.");
 
-	ManagedExtFutureWatcher_detail::connect_or_die_backprop_cancel_watcher(this_future_copy, ret_future_copy);
-M_TODO("");
-//	ExtFutureWatcher_impl::SetBackpropWatcher(this_future_copy, ret_future_copy,
-//										 context, context,
-//										 DECAY_COPY(std::forward<CallbackType>(callback)));
+	// This will trip immediately, if downstream is already canceled.  That will cancel *this, and we'll catch it below.
+	ManagedExtFutureWatcher_detail::connect_or_die_backprop_cancel_watcher(up, down);
 
+	// Run the callback in the context's event loop.
+	// Note the std::invoke details.  Per @link https://en.cppreference.com/w/cpp/experimental/shared_future/then:
+	// "When the shared state currently associated with *this is ready, the continuation INVOKE(std::move(fd), *this)
+	// is called on an unspecified thread of execution [...]. If that expression is invalid, the behavior is undefined."
+	/// @note run_in_event_loop() may (different threads) or may not (same threads) return immediately to the caller.
+	///       This is the second reason to be inside this intermediate thread.  Completion is handled via
+	///       the ExtFuture<> retfuture_cp we pass in here.
+	ExtAsync::detail::run_in_event_loop(context, [=, retfuture_cp = down,
+					  stap_callback_cp=FWD_DECAY_COPY(CallbackType, stap_callback)]() mutable {
+
+		// Wait inside the context's thread for the incoming future (this_future) to be ready.
+		up.wait();
+
+
+		if constexpr(std::is_void_v<Unit::DropT<R>>)
+		{
+			// Continuation returns void.
+			std::invoke(std::move(stap_callback_cp), up);
+			retfuture_cp.reportFinished();
+		}
+		else
+		{
+			// Continuation returns a value type.
+			R retval = std::invoke(std::move(stap_callback_cp), up);
+			retfuture_cp.reportFinished(&retval);
+		}
+	}, up, down);
 };
+#endif
 
 #if 0
 template <class T, class U>
