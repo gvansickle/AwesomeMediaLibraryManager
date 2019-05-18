@@ -1314,13 +1314,14 @@ public:
 		//				QFuture::resultAt()
 		//				QFuture::results()"
 
-		// This will trip immediately, if downstream is already canceled.  That will cancel *this, and we'll catch it below.
-		ManagedExtFutureWatcher_detail::connect_or_die_backprop_cancel_watcher(*this, retfuture);
 
 		ExtAsync::qthread_async([=, fd_then_callback=FWD_DECAY_COPY(ThenCallbackType, then_callback)](ExtFuture<T> up, ThenReturnType down) mutable {
 
 			try
 			{
+				// This will trip immediately, if downstream is already canceled.  That will cancel *this, and we'll catch it below.
+				ManagedExtFutureWatcher_detail::connect_or_die_backprop_cancel_watcher(up, down);
+
 				// Call the callback with the results- or canceled/exception-laden this_future_copy.
 				// Could throw, hence we're in a try.
 
@@ -1328,7 +1329,17 @@ public:
 				// inside the callback's new thread.
 				up.wait();
 
-				qDb() << __func__ << " Calling then_callback_copy(this_future_copy).";
+				// up is either finished or canceled, and did not throw.
+				// For cancels, we want to never call the callback.
+				/// @todo Revisit this decision at some point?
+				if(up.isCanceled())
+				{
+					// up is now locked out, so all we can really do here is return, which is probably what we want.
+					qDb() << "up canceled, returning without calling callback.";
+					return;
+				}
+
+				qDb() << __func__ << " Calling fd_then_callback(up).";
 
 				R retval = std_invoke_and_lift(std::move(fd_then_callback), up);
 				down.reportResult(retval);

@@ -391,7 +391,7 @@ namespace ManagedExtFutureWatcher_detail
 			fw_down->deleteLater();
 		});
 
-		// Note that this may fire immediately upon this setFuture().
+		// Note that the signals above may fire immediately upon the setFuture().
 		if(down.has_exception())
 		{
 			qWr() << "ABOUT TO SET EXCEPTION FUTURE:" << down;

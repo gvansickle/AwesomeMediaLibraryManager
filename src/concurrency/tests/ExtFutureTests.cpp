@@ -1172,7 +1172,7 @@ TEST_F(ExtFutureTest, MultiThenCancelBasic2)
 	bool caught_exception = false;
 
 	ExtFuture<int> main_future = ExtAsync::qthread_async_with_cnr_future([=](ExtFuture<int> rc_future) -> void {
-
+		// Spin for 5 secs.
 		for(int i = 0; i<5; ++i)
 		{
 			// Do nothing for 1000 ms.
