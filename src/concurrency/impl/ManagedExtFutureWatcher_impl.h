@@ -382,7 +382,8 @@ namespace ManagedExtFutureWatcher_detail
 				//   also cancel the up future.
 				// - reportFinished() on up.  Needed for unknown reasons, but waits will block otherwise.
 				/// @todo ???
-				upc.reportException(ExtAsyncCancelException());
+//				upc.reportException(ExtAsyncCancelException());
+				upc.reportCanceled();
 			}
 			upc.reportFinished();
 			downc.reportFinished();
