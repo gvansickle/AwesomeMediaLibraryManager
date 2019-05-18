@@ -184,13 +184,6 @@ namespace detail
 		return detail::qthread_async(retfuture, FWD_DECAY_COPY(CallbackType, callback), retfuture, args...);
 	};
 
-//
-//	template <class Fut, class Work>
-//	auto then_in_qthread(Fut&& f, Work&& w) -> ExtFuture<decltype(w(f.get()))>
-//	{
-//		return ExtAsync::qthread_async([=]{ w(f.get());});
-//	}
-
 }; // END namespace ExtAsync.
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_EXTASYNC_RUNINTHREAD_H

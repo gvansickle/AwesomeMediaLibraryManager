@@ -237,32 +237,6 @@ namespace ManagedExtFutureWatcher_detail
 			{
 				// Normal finish.  Send the results or exception to the .pif() callback.
 				std::invoke(pif_callback_cp/*, args...*/);
-//				try
-//				{
-//					// Call the callback with the results- or canceled/exception-laden this_future_copy.
-//					// Could throw, hence we're in a try.
-//					qDb() << "then_watchers: Calling then_callback_copy(this_future_copy).";
-//					R retval;
-
-//					if constexpr(std::is_same_v<R, Unit>)
-//					{
-//						// then_callback_copy returns void, return a Unit separately.
-//						std::invoke(std::move(pif_callback_cp), upc);
-//						retval = unit;
-//					}
-//					else
-//					{
-//						// then_callback_copy returns non-void, return the callback's return value.
-//						retval = std::invoke(std::move(pif_callback_cp), upc);
-//						// Didn't throw, report the result.
-//						downc.reportResult(retval);
-//					}
-//				}
-//				catch(...)
-//				{
-//					std::exception_ptr eptr = std::current_exception();
-//					propagate_eptr_to_future(eptr, downc);
-//				}
 			}
 			downc.reportFinished();
 
@@ -270,80 +244,6 @@ namespace ManagedExtFutureWatcher_detail
 			fw_up->deleteLater();
 		});
 
-		fw_down->setFuture(down);
-		fw_up->setFuture(up);
-	}
-
-	/**
-	 * NOTE: Copy of connect_or_die_backprop_cancel_watcher() prior to changing it back to its original form.
-	 * Connect a watcher between @a up and @a down which will propagate a cancel and any
-	 * exception held by @a down to @a up, then deleteLater() itself.
-	 */
-	template <class T, class R, class StapCallback = std::nullptr_t>
-	void MAYBE_UNNEEDED_connect_or_die_backprop_cancel_watcher(ExtFuture<T> up, ExtFuture<R> down, StapCallback&& stap_callback = nullptr)
-	{
-		auto* fw_down = get_managed_qfuture_watcher<R>("[down->up]");
-		auto* fw_up = get_managed_qfuture_watcher<T>("[up->down]");
-
-		/// @todo Still need to delete on R-finished, ...? T finished?
-
-		/// @todo resultsReadyAt() watcher.
-		constexpr bool has_stap_callback = !std::is_null_pointer_v<StapCallback>;
-		if constexpr(!std::is_null_pointer_v<StapCallback>)
-		{
-			connect_or_die(fw_up, &QFutureWatcher<T>::resultsReadyAt,
-					[upc=up, downc=down, fw_up, stap_callback_cp=FWD_DECAY_COPY(StapCallback, stap_callback)](int begin, int end) mutable {
-				std::invoke(std::move(stap_callback_cp), upc, begin, end);
-				/// @note We're temporarily copying to the output future here, we should change that to use a separate thread.
-				///       Or maybe we can just return the upstream_future here....
-				for(int i = begin; i < end; ++i)
-				{
-					downc.reportResult(fw_up->resultAt(i), i);
-				}
-			});
-		}
-		/// @todo resultsReadyAt() watcher.
-
-		// down->up canceled.
-		qDb() << "Connecting down->up canceled";
-		connect_or_die(fw_down, &QFutureWatcher<R>::canceled, [upc=DECAY_COPY(up), downc=down, fw_down]() mutable {
-			// Propagate the cancel upstream, possibly with an exception.
-			// Not a race here, since we'll have been canceled by the exception when we get here.
-			qDb() << "down->up canceled";
-			if(downc.has_exception())
-			{
-				// Note: Order flipped here, function propagates exception from param1 to param2.
-			    trigger_exception_and_propagate(downc, upc);
-			}
-			else
-			{
-				upc.cancel();
-			}
-			upc.reportFinished();
-			// Delete this watcher, it's done all it can.
-			fw_down->deleteLater();
-		});
-#if 0
-		// up->down finished.
-		qDb() << "Connecting up->down finished";
-		connect_or_die(fw_up, &QFutureWatcher<T>::finished, [upc=up, downc=down, fw_up]() mutable {
-			// Propagate the finish downstream, possibly with an exception.
-			// Not a race here, since we'll have been canceled by the exception when we get here.
-			qDb() << "up->down finished";
-			if(upc.isCanceled())
-			{
-				if(upc.has_exception())
-				{
-					trigger_exception_and_propagate(upc, downc);
-				}
-				downc.reportCanceled();
-			}
-			downc.reportFinished();
-
-			// Delete this watcher, it's done all it can.
-			fw_up->deleteLater();
-		});
-#endif
 		fw_down->setFuture(down);
 		fw_up->setFuture(up);
 	}
