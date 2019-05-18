@@ -1485,10 +1485,14 @@ public:
 	        >
 	ExtFuture<T> stap_qobject_with_event_loop(QObject* context, StapCallbackType&& stap_callback) const
 	{
+#if 0
 		ExtFuture<T> retfuture = ExtAsync::make_started_only_future<T>();
+
+		ExtAsync::qthread_async
 
 		// The down->up cancel.
 		// This will trip immediately, if downstream is already canceled.  That will cancel *this, and we'll catch it below.
+		/// @todo Probably need a try/catch here.
 		ManagedExtFutureWatcher_detail::connect_or_die_backprop_cancel_watcher(*this, retfuture);
 
 		// Create a new up->downstream watcher parented to the context object.
@@ -1519,7 +1523,30 @@ public:
 			downstream_future.reportFinished();
 			;});
 
+		// Attach to the future.
+		upw->setFuture(*this);
+
 		return retfuture;
+#else
+		// Ok, we're going to try to implement .stap(QObject*, callback) in terms of
+		// .stap(<arbitrary thread>, callback) (stap_qthread_async()).
+
+		/// @todo Prob need some exception handling here.
+
+		Q_ASSERT(ExtAsync::detail::context_has_event_loop(context));
+
+		return this->stap_qthread_async([context_ptr=context,
+						   fd_stap_callback=FWD_DECAY_COPY(StapCallbackType, stap_callback)](ExtFuture<T> ef, int begin, int end) mutable {
+			// There are probably several million ways to do this better.
+			ExtAsync::detail::run_in_event_loop(context_ptr, [fd_stap_callback=FWD_DECAY_COPY(StapCallbackType, fd_stap_callback),
+															  ef_cp=ef,
+															  begin=begin,
+															  end=end]() mutable {
+				// Finally.
+				std::invoke(fd_stap_callback, ef_cp, begin, end);
+			});
+		});
+#endif
 	}
 
 	/**
@@ -1533,50 +1560,47 @@ public:
 	{
 		ExtFuture<T> retfuture = ExtAsync::make_started_only_future<T>();
 
-		// This will trip immediately, if downstream is already canceled.  That will cancel *this, and we'll catch it below.
-		ManagedExtFutureWatcher_detail::connect_or_die_backprop_cancel_watcher(*this, retfuture);
-
 		ExtAsync::qthread_async([=,
 								 fd_stap_callback=FWD_DECAY_COPY(StreamingTapCallbackType, stap_callback)]
 								 (ExtFuture<T> up, ExtFuture<T> down) mutable {
 
 			try
 			{
+				// Hook up the down->up cancel watcher.
+				// This will trip immediately, if downstream is already canceled.  That will cancel *this, and we'll catch it below.
+				ManagedExtFutureWatcher_detail::connect_or_die_backprop_cancel_watcher(up, down);
+
 				// Call the callback with the results- or canceled/exception-laden this_future_copy.
 				// Could throw, hence we're in a try.
 
-//				// We have to never call the callback with a non-ready future, so we do that by calling .waitForFinished() here,
-//				// inside the callback's new thread.
-//				up.wait();
+				// We have to never call the callback with a non-ready future, but we also can't block here with a .wait().
+				// Luckily, we at least have the QFutureWatchers.
 
-				/// @todo resultsReadyAt() watcher.
+				// up->down resultsReadyAt() watcher.
 				auto* fw_up_for_results = ManagedExtFutureWatcher_detail::get_managed_qfuture_watcher<T>("[res up->stap]");
 
-		//		constexpr bool has_stap_callback = !std::is_null_pointer_v<StreamingTapCallbackType>;
-		//		if constexpr(!std::is_null_pointer_v<StreamingTapCallbackType>)
-		//		{
-					connect_or_die(fw_up_for_results, &QFutureWatcher<T>::resultsReadyAt,
-							[upc=up, downc=down, fw_up_for_results,
-							 stap_callback_cp=FWD_DECAY_COPY(StreamingTapCallbackType, stap_callback)](int begin, int end) mutable {
-						qDb() << __func__ << " Calling fd_stap_callback(up, begin, end).";
-						std::invoke(std::move(stap_callback_cp), upc, begin, end);
-						/// @note We're temporarily copying to the output future here, we should change that to use a separate thread.
-						///       Or maybe we can just return the upstream_future here....
-						for(int i = begin; i < end; ++i)
-						{
-							downc.reportResult(fw_up_for_results->resultAt(i), i);
-						}
-					});
-					connect_or_die(fw_up_for_results, &QFutureWatcher<T>::finished, fw_up_for_results,
-							[fw_up_for_results, downc=down]() mutable {
-						// up is finished.  finish down, delete the watcher.
-						downc.reportFinished();
-						Q_ASSERT(downc.isFinished());
-						fw_up_for_results->deleteLater();
-					});
-		//		}
+				connect_or_die(fw_up_for_results, &QFutureWatcher<T>::resultsReadyAt,
+						[upc=up, downc=down, fw_up_for_results,
+						 stap_callback_cp=FWD_DECAY_COPY(StreamingTapCallbackType, stap_callback)](int begin, int end) mutable {
+					qDb() << __func__ << " Calling fd_stap_callback(up, begin, end).";
+					std::invoke(std::move(stap_callback_cp), upc, begin, end);
+					/// @note We're temporarily copying to the output future here, we should change that to use a separate thread.
+					///       Or maybe we can just return the upstream_future here....
+					for(int i = begin; i < end; ++i)
+					{
+						downc.reportResult(fw_up_for_results->resultAt(i), i);
+					}
+				});
+				connect_or_die(fw_up_for_results, &QFutureWatcher<T>::finished, fw_up_for_results,
+						[fw_up_for_results, downc=down]() mutable {
+					// up is finished.  finish down, delete the watcher.
+					downc.reportFinished();
+					Q_ASSERT(downc.isFinished());
+					fw_up_for_results->deleteLater();
+				});
+
+				// Connect the watcher to the future.
 				fw_up_for_results->setFuture(up);
-				/// @todo resultsReadyAt() watcher.
 			}
 			catch(ExtAsyncCancelException& e)
 			{

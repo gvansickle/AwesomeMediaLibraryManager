@@ -524,9 +524,12 @@ TEST_P(ExtAsyncTestsParameterized, ExtAsyncQthreadAsyncMultiThenCancelExceptionF
 	TCOUT << "ABOUT TO LEAVE TEST, fend:" << fend << ", f1:" << f1;
 
 	///
-	try {
+	try
+	{
 		f1.wait();
-	} catch (...) {
+	}
+	catch (...)
+	{
 		qDb() << "CAUGHT SOMETHING";
 	}
 
@@ -542,69 +545,72 @@ TEST_P(ExtAsyncTestsParameterized, ExtAsyncQthreadAsyncMultiThenCancelExceptionF
 	TC_EXIT();
 }
 
-TEST_P(ExtAsyncTestsParameterized, /*DISABLED_*/ExtAsyncGUIStapCancelExceptionFromTopOrBottom)
+TEST_F(ExtAsyncTestsSuiteFixture, /*DISABLED_*/ExtAsyncGUIStapNoCancel)
 {
 	TC_ENTER();
 
 	std::atomic_bool chk1 = false;
 	std::atomic_bool chk2 = false;
 
-	bool cancel_from_top = false;//GetParam();
-
-
-	ExtFuture<int> f1 = ExtAsync::qthread_async([=]() -> int {
-		TC_Sleep(1000);
-		if(cancel_from_top)
+	ExtFuture<int> f1 = ExtAsync::qthread_async_with_cnr_future([=](ExtFuture<int> cnrf0) {
+		// 10 sec loop.
+		for(int i = 0; i < 10; ++i)
 		{
-			/*TCOUT*/qDebug() << "THROWING CANCEL FROM TOP";
-			throw ExtAsyncCancelException();
-			ADD_FAILURE() << "Didn't throw out of thread to future.";
+			TCOUT << "ITERATION:" << i;
+
+			TC_Sleep(1000);
+
+			cnrf0.reportResult(i);
+
+			if(cnrf0.HandlePauseResumeShouldICancel())
+			{
+//				TCOUT << "THROWING CANCEL FROM TOP";
+//				throw ExtAsyncCancelException();
+//				ADD_FAILURE() << "Didn't throw out of thread to future.";
+				break;
+			}
 		}
 
-		TCOUT << "ABOUT TO LEAVE THREAD AND RETURN 5";
-		return 5;
+		cnrf0.reportFinished();
+		TCOUT << "LEAVING THREAD";
 	});
 	auto fend = f1
 			/// @todo This locks up the event loop.
 	.stap(qApp, [=](ExtFuture<int> f0, int begin, int end){
-		qDb() << "In stap(), f0:" << f0;
+		qDb() << "In stap(), f0:" << f0 << "begin:" << begin << "end:" << end;
 
 	})
 	.then_qthread_async([=](ExtFuture<int> f2){
-		qDb() << "Waiting in then() for cancel exception, f2:" << f2;
+		qDb() << "In then(), f2:" << f2;
+		EXPECT_TRUE(f2.isFinished());
 		f2.wait();
-		ADD_FAILURE() << "f2.wait() didn't throw:" << f2;
+//		ADD_FAILURE() << "f2.wait() didn't throw:" << f2;
 
 		return 1;
 	});
 	f1.setName("f1");
 	fend.setName("fend");
 
-	TC_Wait(500);
+	// Wait for a while without blocking the GUI thread.
+	TC_Wait(5000);
 
-	if(!cancel_from_top)
-	{
-		/*TCOUT*/qDebug() << "THROWING CANCEL FROM BOTTOM THEN";
-		fend.cancel();
-	}
-
-	TCOUT << "ABOUT TO TRY";
+	TCOUT << "ABOUT TO WAIT ON fend:" << fend;
 
 	try
 	{
-		f1.wait();
-		ADD_FAILURE() << ".wait() Didn't throw: " << M_ID_VAL(f1);
+		fend.wait();
+//		ADD_FAILURE() << ".wait() Didn't throw: " << M_ID_VAL(f1);
 	}
-	catch(ExtAsyncCancelException& e)
-	{
-		TCOUT << "CAUGHT CANCEL EXCEPTION";
-		SUCCEED();
-		EXPECT_TRUE(f1.isCanceled());
-	}
-	catch(QException& e)
-	{
-		ADD_FAILURE() << "CAUGHT NON-CANCEL EXCEPTION";
-	}
+//	catch(ExtAsyncCancelException& e)
+//	{
+//		TCOUT << "CAUGHT CANCEL EXCEPTION";
+//		SUCCEED();
+//		EXPECT_TRUE(f1.isCanceled());
+//	}
+//	catch(QException& e)
+//	{
+//		ADD_FAILURE() << "CAUGHT NON-CANCEL EXCEPTION";
+//	}
 	catch(...)
 	{
 		ADD_FAILURE() << "Threw unexpected exception.";
@@ -1869,7 +1875,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtAsyncRunFreefunc)
     TC_EXIT();
 }
 
-TEST_F(ExtAsyncTestsSuiteFixture, RunInQThreadTest)
+TEST_F(ExtAsyncTestsSuiteFixture, QThreadAsyncStapThenNoContextTest)
 {
 	TC_ENTER();
 
