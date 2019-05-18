@@ -391,6 +391,10 @@ namespace ManagedExtFutureWatcher_detail
 		});
 
 		// Note that this may fire immediately upon this setFuture().
+		if(down.has_exception())
+		{
+			qWr() << "ABOUT TO SET EXCEPTION FUTURE:" << down;
+		}
 		fw_down->setFuture(down);
 	}
 

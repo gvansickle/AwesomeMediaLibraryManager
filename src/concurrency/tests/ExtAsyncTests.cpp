@@ -377,18 +377,26 @@ TEST_P(ExtAsyncTestsParameterized, ExtAsyncQthreadAsyncMultiThenCancelExceptionF
 
 	bool cancel_from_top = true;//GetParam();
 
-	ExtFuture<int> f1 = ExtAsync::qthread_async([=]() -> int {
+	ExtFuture<int> f1 = ExtAsync::qthread_async_with_cnr_future([=](ExtFuture<int> f1c) {
 		// Wait for one sec
 		TC_Sleep(1000);
 		if(cancel_from_top)
 		{
-			TCOUT << "THROWING CANCEL FROM TOP";
-			throw ExtAsyncCancelException();
-			ADD_FAILURE() << "Didn't throw out of thread to future.";
+			while(1)
+			{
+//			throw ExtAsyncCancelException();
+//			ADD_FAILURE() << "Didn't throw out of thread to future.";
+				if(f1c.HandlePauseResumeShouldICancel())
+				{
+					TCOUT << "THROWING CANCEL FROM TOP";
+					f1c.reportCanceled();
+					break;
+				}
+			}
 		}
-
-		TCOUT << "ABOUT TO LEAVE THREAD AND RETURN 5";
-		return 5;
+		f1c.reportFinished();
+//		TCOUT << "ABOUT TO LEAVE THREAD AND RETURN 5";
+//		return 5;
 	});
 	f1.setName("f1");
 	synchronizer.addFuture(f1);
@@ -412,13 +420,22 @@ TEST_P(ExtAsyncTestsParameterized, ExtAsyncQthreadAsyncMultiThenCancelExceptionF
 	});
 	fend.setName("fend");
 	synchronizer.addFuture(fend);
-//	TC_Wait(500);
 
-	if(!cancel_from_top)
+	if(cancel_from_top)
 	{
-		TCOUT << "THROWING CANCEL FROM BOTTOM THEN fend:" << fend;
+		f1.cancel();
+		f1.wait();
+		TCOUT << "Waiting for top cancel exception to fire..." << f1;
+		TC_Sleep(2000);
+	}
+	else
+	{
+		TCOUT << "CALLING CANCEL/WAIT FROM BOTTOM THEN fend:" << fend;
 		fend.cancel();
 		fend.wait();
+
+		TCOUT << "Sleep for a bit to let the cancel propagate.";
+		TC_Sleep(2000);
 	}
 
 	TCOUT << "ABOUT TO TRY";
@@ -427,28 +444,36 @@ TEST_P(ExtAsyncTestsParameterized, ExtAsyncQthreadAsyncMultiThenCancelExceptionF
 	{
 		TCOUT << "ABOUT TO WAIT ON f1:" << f1;
 		f1.wait();
-		ADD_FAILURE() << ".wait() Didn't throw";
+		ADD_FAILURE() << "f1.wait() Didn't throw:" << f1;
 	}
 	catch(ExtAsyncCancelException& e)
 	{
 		TCOUT << "CAUGHT CANCEL EXCEPTION";
 		SUCCEED();
-		EXPECT_TRUE(f1.isCanceled());
+		EXPECT_TRUE(f1.isCanceled()) << f1;
 	}
 	catch(QException& e)
 	{
-		ADD_FAILURE() << "CAUGHT NON-CANCEL EXCEPTION";
+		ADD_FAILURE() << "CAUGHT NON-CANCEL EXCEPTION" << f1;
 	}
 	catch(...)
 	{
-		ADD_FAILURE() << "Threw unexpected exception.";
+		ADD_FAILURE() << "Threw unexpected exception." << f1;
 	}
 
-	EXPECT_TRUE(fend.isCanceled());
-	EXPECT_TRUE(f1.isCanceled());
+	EXPECT_TRUE(fend.isCanceled()) << fend;
+	EXPECT_TRUE(f1.isCanceled()) << f1;
 
-	TCOUT << "ABOUT TO LEAVE TEST";
-	synchronizer.waitForFinished();
+	TCOUT << "ABOUT TO LEAVE TEST, fend:" << fend << ", f1:" << f1;
+
+	try
+	{
+		synchronizer.waitForFinished();
+	}
+	catch(...)
+	{
+		TCOUT << "Final waitForFinished() threw.";
+	}
 
 	TC_EXIT();
 }
@@ -1471,11 +1496,8 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureExtAsyncRunMultiResultTest)
 	EXPECT_FALSE(future.isFinished());
 
 	// Separated .then() connect.
-	auto then_future = future.tap([&](int future_value) {
+	auto then_future = future.tap([&](int future_value) mutable {
 		AMLMTEST_SCOPED_TRACE("In first tap");
-		TC_EXPECT_NOT_EXIT();
-		TC_EXPECT_STACK();
-        TC_EXPECT_THIS_TC();
 
 		TCOUT << "testname: " << static_test_id_string;
 		TCOUT << "num_tap_calls:" << num_tap_calls;

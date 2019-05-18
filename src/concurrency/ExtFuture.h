@@ -1284,7 +1284,7 @@ public:
 			REQUIRES(!is_ExtFuture_v<R> && !is_ExtFuture_v<T>
 			  /*&& std::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, ExtFuture<T>>*/)
 			>
-	ThenReturnType then_qthread_async( ThenCallbackType&& then_callback ) const
+	ThenReturnType then_qthread_async(ThenCallbackType&& then_callback) const
 	{
 //		static_assert(std::is_invocable_r_v<R, ThenCallbackType, ExtFuture<T>>);
 
@@ -1336,12 +1336,13 @@ public:
 			catch(ExtAsyncCancelException& e)
 			{
 				// It was the cancel exception, throw it up.
-				qWr() << "THROWING ExtAsyncCancelException() UP";
+				qWr() << "THROWING ExtAsyncCancelException() UP:" << up;
 				up.reportException(e);
 			}
 			catch(...)
 			{
 				// up or the callback threw some non-cancel exception, throw it down.
+				qWr() << "THROWING UNKNOWN EXCEPTION DOWN:" << up;
 				std::exception_ptr eptr = std::current_exception();
 				ManagedExtFutureWatcher_detail::propagate_eptr_to_future(eptr, down);
 			}
@@ -1432,6 +1433,11 @@ public:
 	 *
 	 * The callback passed to tap() is invoked with individual results from this, of type T, as they become available.
 	 *
+	 * @note This is a bit of a mix of a .stap() and the .then(T) overload detailed in
+	 *       @link http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0701r1.html#passing-futures-to-then-continuations-is-unwieldy
+	 *       "When .then is invoked with a continuation that is only invocable with T and the future that the continuation is
+	 *       being attached to contains an exception, .then does not invoke the continuation and returns a future containing
+	 *       the exception. We call this exception propagation."
 	 * @param tap_callback  Callback with the signature void()(T).
 	 *
 	 * @return ExtFuture<T>
@@ -1440,9 +1446,12 @@ public:
 			  REQUIRES(std::is_invocable_r_v<void, TapCallbackType, T>)>
 	ExtFuture<T> tap(TapCallbackType&& tap_callback)
 	{
-		auto retval = this->tap(QApplication::instance(), std::forward<TapCallbackType>(tap_callback));
-
-		return retval;
+		return this->stap([tap_callback_cp=FWD_DECAY_COPY(TapCallbackType, tap_callback)](ExtFuture<T> future, int begin, int end) mutable {
+			for(int i=begin; i < end; ++i)
+			{
+				std::invoke(std::move(tap_callback_cp), future.resultAt(i));
+			}
+		});
 	}
 
 	/**

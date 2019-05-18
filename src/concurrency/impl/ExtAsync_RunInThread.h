@@ -103,12 +103,15 @@ namespace detail
 			catch(...)
 			{
 				// Catch any exceptions and throw them to the returned future.
+				qDb() << "THROWING EXCEPTION TO RETURNED FUTURE:" << retfuture_cp;
 				std::exception_ptr eptr = std::current_exception();
 				ManagedExtFutureWatcher_detail::propagate_eptr_to_future(eptr, retfuture_cp);
+				qDb() << "THROW COMPLETE:" << retfuture_cp;
 			}
 
 			// Always reportFinished(), to catch any callbacks which don't do it.
 			retfuture_cp.reportFinished();
+			qDb() << "qthread_async() finished, retfuture_cp:" << retfuture_cp;
 		});
 
 		// Make a self-delete connection for the QThread.
