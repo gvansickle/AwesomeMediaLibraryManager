@@ -299,6 +299,8 @@ public:
 		m_name = name;
 	}
 
+	std::string name() const { return m_name; };
+
 	/// @name Comparison operators.
 	/// @{
 
@@ -1227,19 +1229,6 @@ public:
 		// Create a new up->downstream watcher parented to the context object.
 		auto* upw = new QFutureWatcher<T>(context);
 
-		// The up->down data copy.
-//		connect_or_die(upw, &QFutureWatcher<T>::resultsReadyAt, context,
-//					   [=,
-//					   upstream_future_copy=DECAY_COPY(*this),
-//					   downstream_future=DECAY_COPY(retfuture)
-//						  ](int begin, int end) mutable {
-//						   /// @note We're temporarily copying to the output future here, we should change that to use a separate thread.
-//						   ///       Or maybe we can just return the upstream_future here....
-//						   for(int i = begin; i < end; ++i)
-//						   {
-//							   downstream_future.reportResult(upstream_future_copy, i);
-//						   }
-//					   });
 		// The up->down finish signal.  This is where we'll call the then_callback.
 //		M_TODO("This needs to return the callback's return value to the returned future.");
 		connect_or_die(upw, &QFutureWatcher<T>::finished, context,
@@ -1436,7 +1425,13 @@ public:
 			  REQUIRES(std::is_invocable_r_v<void, TapCallbackType, T>)>
 	ExtFuture<T> tap(QObject* context, TapCallbackType&& tap_callback)
 	{
-		return this->TapHelper(context, std::forward<TapCallbackType>(tap_callback));
+		return this->stap(context, [tap_callback_cp=FWD_DECAY_COPY(TapCallbackType, tap_callback)](ExtFuture<T> future, int begin, int end){
+			// We should be getting called from context's thread here.
+			for(int i = begin; i < end; ++i)
+			{
+				std::invoke(std::move(tap_callback_cp), future.resultAt(i));
+			}
+		});
 	}
 
 	/**

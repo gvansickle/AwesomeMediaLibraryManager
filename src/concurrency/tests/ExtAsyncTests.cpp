@@ -545,7 +545,7 @@ TEST_P(ExtAsyncTestsParameterized, ExtAsyncQthreadAsyncMultiThenCancelExceptionF
 	TC_EXIT();
 }
 
-TEST_F(ExtAsyncTestsSuiteFixture, /*DISABLED_*/ExtAsyncGUIStapNoCancel)
+TEST_F(ExtAsyncTestsSuiteFixture, ExtAsyncGUIStapNoCancel)
 {
 	TC_ENTER();
 
@@ -575,7 +575,6 @@ TEST_F(ExtAsyncTestsSuiteFixture, /*DISABLED_*/ExtAsyncGUIStapNoCancel)
 		TCOUT << "LEAVING THREAD";
 	});
 	auto fend = f1
-			/// @todo This locks up the event loop.
 	.stap(qApp, [=](ExtFuture<int> f0, int begin, int end){
 		qDb() << "In stap(), f0:" << f0 << "begin:" << begin << "end:" << end;
 
@@ -596,25 +595,13 @@ TEST_F(ExtAsyncTestsSuiteFixture, /*DISABLED_*/ExtAsyncGUIStapNoCancel)
 
 	TCOUT << "ABOUT TO WAIT ON fend:" << fend;
 
-	try
-	{
-		fend.wait();
-//		ADD_FAILURE() << ".wait() Didn't throw: " << M_ID_VAL(f1);
-	}
-//	catch(ExtAsyncCancelException& e)
-//	{
-//		TCOUT << "CAUGHT CANCEL EXCEPTION";
-//		SUCCEED();
-//		EXPECT_TRUE(f1.isCanceled());
-//	}
-//	catch(QException& e)
-//	{
-//		ADD_FAILURE() << "CAUGHT NON-CANCEL EXCEPTION";
-//	}
-	catch(...)
-	{
-		ADD_FAILURE() << "Threw unexpected exception.";
-	}
+	EXPECT_NO_THROW({
+						fend.wait();
+					});
+
+	EXPECT_NO_THROW({
+						f1.wait();
+					});
 
 	TCOUT << "ABOUT TO LEAVE TEST";
 
@@ -1286,9 +1273,9 @@ TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentMappedQFutureStateOnCancelNoComple
 {
     TC_ENTER();
 
-	EXPECT_NO_FATAL_FAILURE(
-    QtConcurrentMappedFutureStateOnCancel<QFuture<int>>(true);
-									 );
+	EXPECT_NO_FATAL_FAILURE({
+		                        QtConcurrentMappedFutureStateOnCancel<QFuture<int>>(true);
+	                        });
 	if(HasFailure())
 	{
 		FAIL();
@@ -1301,9 +1288,9 @@ TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentMappedExtFutureStateOnCancelNoComp
 {
 	TC_ENTER();
 
-//	AMLMTEST_ASSERT_NO_FATAL_FAILURE(
-    QtConcurrentMappedFutureStateOnCancel<ExtFuture<int>>(true);
-//									 );
+	EXPECT_NO_FATAL_FAILURE({
+		                        QtConcurrentMappedFutureStateOnCancel<ExtFuture<int>>(true);
+	                        });
 	if(HasFailure())
 	{
 		FAIL();
@@ -1316,9 +1303,9 @@ TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentMappedQFutureStateOnCancelAllCompl
 {
     TC_ENTER();
 
-//	AMLMTEST_ASSERT_NO_FATAL_FAILURE(
-    QtConcurrentMappedFutureStateOnCancel<QFuture<int>>(false);
-//									 );
+	EXPECT_NO_FATAL_FAILURE({
+		                        QtConcurrentMappedFutureStateOnCancel<QFuture<int>>(false);
+	                        });
 	if(HasFailure())
 	{
 		FAIL();
@@ -1331,9 +1318,9 @@ TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentMappedExtFutureStateOnCancelAllCom
 {
     TC_ENTER();
 
-//	AMLMTEST_ASSERT_NO_FATAL_FAILURE(
-    QtConcurrentMappedFutureStateOnCancel<ExtFuture<int>>(false);
-//									 );
+	EXPECT_NO_FATAL_FAILURE({
+                                 QtConcurrentMappedFutureStateOnCancel<ExtFuture<int>>(false);
+                             });
 	if(HasFailure())
 	{
 		FAIL();
@@ -1344,7 +1331,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentMappedExtFutureStateOnCancelAllCom
 
 int mapper(const int &i)
 {
-	QTest::qWait(1);
+	TC_Wait(1);
 	return i;
 }
 
@@ -1727,7 +1714,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenOneResult)
 
 	TCOUT << "STARTING FUTURE";
 
-	ExtFuture<QString> future = ExtAsync::run(delayed_string_func_1, this);
+	ExtFuture<QString> future = ExtAsync::qthread_async(delayed_string_func_1, this);
 
 	rsm.ReportResult(1);
 

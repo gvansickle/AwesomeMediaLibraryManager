@@ -2157,6 +2157,9 @@ TEST_F(ExtFutureTest, ExtFutureSingleThen)
 
 	TCOUT << "AFTER WAITING FOR THEN()" << f2; /// @todo Getting here before the .then() starts.
 
+	EXPECT_EQ(async_results_from_get.size(), 1);
+	EXPECT_EQ(async_results_from_get[0], 5);
+
 	EXPECT_TRUE(root_future.isFinished());
 	EXPECT_EQ(num_then_completions, 1);
 
@@ -2172,8 +2175,6 @@ TEST_F(ExtFutureTest, ExtFutureSingleThen)
 	EXPECT_FALSE(root_future.isCanceled()) << root_future;
 	EXPECT_TRUE(root_future.isFinished());
 
-	EXPECT_EQ(async_results_from_get.size(), 1);
-	EXPECT_EQ(async_results_from_get[0], 5);
 	EXPECT_EQ(async_results_from_then.size(), 6);
 	EXPECT_EQ(async_results_from_then, expected_results);
 

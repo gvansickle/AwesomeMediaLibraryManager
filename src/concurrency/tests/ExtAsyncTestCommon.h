@@ -266,6 +266,29 @@ private Q_SLOTS:
 	AMLMTEST_EXPECT_FALSE(future.isCanceled());\
 	AMLMTEST_EXPECT_FALSE(future.isFinished());
 
+#ifdef TEST_FWK_IS_GTEST
+//using AssertionResult = ::testing::AssertionResult;
+//#else
+//using AssertionResult = ::testing::AssertionResult;
+//#endif
+
+/**
+ * Predicate for testing ExtFuture<>s are in the default started-and-maybe-running-only state.
+ * @param n
+ * @return
+ */
+template <class T>
+::testing::AssertionResult AMLM_IsStartedRunningOnly(ExtFuture<T> f) {
+	if(f.state() == (ExtFutureState::Started & !(ExtFutureState::Canceled | ExtFutureState::Finished)))
+	{
+		return ::testing::AssertionSuccess() << f << " is in started-maybe-running-only state";
+	}
+	else
+	{
+		return ::testing::AssertionFailure() << f << " is in wrong state: " << f.state();
+	}
+}
+#endif
 
 /// Future state is (Started|Finished)
 #define AMLMTEST_EXPECT_FUTURE_FINISHED(future) \
