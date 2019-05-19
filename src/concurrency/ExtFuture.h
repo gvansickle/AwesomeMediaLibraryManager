@@ -854,6 +854,7 @@ public:
 	/// .then() overloads for Qt5.
 	/// @{
 
+#if 0
 	/**
 	 * std::experimental::future-like .then() which attaches a continuation function @a then_callback to @a this,
 	 * where then_callback's signature is:
@@ -1152,6 +1153,7 @@ public:
 
 		return returned_future;
 	}
+#endif
 
 	template <class ThenCallbackType,
 				  class R = Unit::LiftT<std::invoke_result_t<ThenCallbackType, ExtFuture<T>>>,

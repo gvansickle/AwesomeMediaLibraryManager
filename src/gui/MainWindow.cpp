@@ -56,6 +56,7 @@
 #include <QWhatsThis>
 #include <QMimeData>
 #include <QTableView>
+#include <QProgressDialog>
 
 // KF5
 #include <KMainWindow>
@@ -1429,6 +1430,13 @@ void MainWindow::readLibSettings(QSettings& settings)
 {
 	int num_libs;
 
+	auto* prog = new QProgressDialog("Opening database...", "Abort open", 0, 0, this);
+
+//	prog.setWindowModality(Qt::WindowModal);
+	prog->setValue(1);
+	prog->setValue(2);
+	prog->show();
+
 	QString database_filename = QDir::homePath() + "/AMLMDatabaseSerDes.xml";
 
 	auto extfuture_initial_lib_load = ExtAsync::qthread_async_with_cnr_future([=](ExtFuture<SerializableQVariantList> ef) {
@@ -1481,6 +1489,9 @@ void MainWindow::readLibSettings(QSettings& settings)
 			}
 		}
 		qIn() << "###### READ AND CONVERTED XML DB:" << database_filename;
+
+		prog->hide();
+		prog->deleteLater();
 	});
 
 	/// @todo Set extfuture_initial_lib_load to some manager.
