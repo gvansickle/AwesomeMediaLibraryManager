@@ -56,7 +56,8 @@ public:
 
 	virtual void cancel() = 0;
 	virtual bool poll_wait() = 0;
-	virtual void deleted_externally(DeletableBase*) = 0;
+	virtual void remove() {};
+	virtual void deleted_externally(DeletableBase* db = nullptr) = 0;
 
 	bool operator==(const DeletableBase& other) const
 	{
@@ -93,7 +94,7 @@ public:
 
 	void cancel() override { std::invoke(m_canceler, m_to_be_deleted); };
 	bool poll_wait() override { return std::invoke(m_waiter, m_to_be_deleted); };
-	void deleted_externally(DeletableBase*) override
+	void deleted_externally(DeletableBase* db = nullptr) override
 	{
 		//std::invoke(m_deleted_externally_callback, m_to_be_deleted);
 	};
@@ -120,9 +121,10 @@ public:
 };
 
 class DeletableQObject;
+class DeletableAMLMJob;
 
 inline static auto passthrough = [](AMLMJob*){ return true; };
-using DeletableAMLMJob = Deletable<AMLMJob*, decltype(passthrough), decltype(passthrough), decltype(passthrough)>;
+//using DeletableAMLMJob = Deletable<AMLMJob*, decltype(passthrough), decltype(passthrough), decltype(passthrough)>;
 
 template <class T, class CancelerType, class WaiterType, class DeletedExternallyCBType = std::nullptr_t>
 static inline std::shared_ptr</*DeletableBase*/Deletable<T, CancelerType, WaiterType, DeletedExternallyCBType>>
@@ -232,7 +234,7 @@ private:
     std::deque<QPointer<KJob>> m_watched_KJobs;
 //    std::deque<QPointer<AMLMJob>> m_watched_AMLMJobs;
 //	std::deque<std::shared_ptr<DeletableAMLMJob>> m_watched_AMLMJobs;
-	std::deque<std::shared_ptr<DeletableBase>> m_watched_AMLMJobs;
+	std::deque<std::shared_ptr<DeletableAMLMJob>> m_watched_AMLMJobs;
 	std::deque<QPointer<QThread>> m_watched_QThreads;
 	std::deque<std::shared_ptr<DeletableBase>> m_watched_deletables;
 	QObjectCleanupHandler m_qobj_cleanup_handler;
