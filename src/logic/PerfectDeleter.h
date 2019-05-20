@@ -26,28 +26,55 @@
 #include <memory>
 #include <functional>
 
+// Future Std C++
+#include <future/future_algorithms.h> ///< For Uniform Container Erasure.
+
 // Qt5
 #include <QObject>
 #include <QStringList>
 #include <QFuture>
 #include <QFutureSynchronizer>
 #include <QObjectCleanupHandler>
+#include <QUuid>
 
 // KF5
 #include <KJob>
 class AMLMJob;
 
 // Ours
+#include <utils/DebugHelpers.h>
 
+
+class PerfectDeleter;
 
 class DeletableBase
 {
 public:
-	virtual ~DeletableBase() {};
+	DeletableBase() = default;
+	explicit DeletableBase(PerfectDeleter* pd) : m_uuid(QUuid::createUuid()), m_pd(pd) {};
+	virtual ~DeletableBase() = default;
 
 	virtual void cancel() = 0;
-	virtual void wait() = 0;
-	virtual void deleted_externally() = 0;
+	virtual bool poll_wait() = 0;
+	virtual void deleted_externally(DeletableBase*) = 0;
+
+	bool operator==(const DeletableBase& other) const
+	{
+		return (m_uuid == other.m_uuid) && this->equality_op(other);
+	}
+
+protected:
+	/// The bottom half of derived classes' equality comparison operator.
+	/// Override and call this in derived classes.
+	virtual bool equality_op(const DeletableBase& other) const = 0;
+
+	// The owning PerfectDeleter.
+	PerfectDeleter* m_pd {nullptr};
+
+private:
+	/// A UUID representing the instance of this Deletable, so we can avoid the ABA problem
+	/// of deleting the wrong object if we relied solely on the pointer value.
+	QUuid m_uuid;
 };
 
 template <class T, class CancelerType, class WaiterType, class DeletedExternallyCBType>
@@ -56,32 +83,53 @@ class Deletable : public DeletableBase
 	static_assert(std::is_invocable_v<CancelerType, T>);
 	static_assert(std::is_invocable_v<WaiterType, T>);
 
+	using BASE_CLASS = DeletableBase;
+	using THIS_CLASS = Deletable<T,CancelerType,WaiterType,DeletedExternallyCBType>;
+
 public:
 	Deletable(T to_be_deleted, CancelerType canceler, WaiterType waiter, DeletedExternallyCBType deleted_externally_callback)
 		: m_to_be_deleted(to_be_deleted), m_canceler(canceler), m_waiter(waiter), m_deleted_externally_callback(deleted_externally_callback) {};
 	~Deletable() override {};
 
 	void cancel() override { std::invoke(m_canceler, m_to_be_deleted); };
-	void wait() override { std::invoke(m_waiter, m_to_be_deleted); };
-	void deleted_externally() override
+	bool poll_wait() override { return std::invoke(m_waiter, m_to_be_deleted); };
+	void deleted_externally(DeletableBase*) override
 	{
-		if constexpr(!std::is_null_pointer_v<DeletedExternallyCBType>)
-		{
-			std::invoke(m_deleted_externally_callback, m_to_be_deleted);
-		}
+		//std::invoke(m_deleted_externally_callback, m_to_be_deleted);
 	};
 
+	bool holds_object(const T object) { return m_to_be_deleted == object; }
+
+protected:
+
+	bool equality_op(const DeletableBase& other) const override
+	{
+		THIS_CLASS const * other_p = dynamic_cast<const THIS_CLASS*>(&other);
+		if(other_p == nullptr)
+		{
+			// Not a comparable type.
+			return false;
+		}
+		return m_to_be_deleted == other_p->m_to_be_deleted;
+	}
+public:
 	T m_to_be_deleted;
 	CancelerType m_canceler;
 	WaiterType m_waiter;
 	DeletedExternallyCBType m_deleted_externally_callback;
 };
 
+class DeletableQObject;
+
+inline static auto passthrough = [](AMLMJob*){ return true; };
+using DeletableAMLMJob = Deletable<AMLMJob*, decltype(passthrough), decltype(passthrough), decltype(passthrough)>;
+
 template <class T, class CancelerType, class WaiterType, class DeletedExternallyCBType = std::nullptr_t>
-static inline std::shared_ptr<DeletableBase> make_shared_Deletable(T to_be_deleted,
-                                                                   CancelerType canceler,
-                                                                   WaiterType waiter,
-                                                                   DeletedExternallyCBType deleted_externally = nullptr)
+static inline std::shared_ptr</*DeletableBase*/Deletable<T, CancelerType, WaiterType, DeletedExternallyCBType>>
+make_shared_DeletableBase(T to_be_deleted,
+                           CancelerType canceler,
+                           WaiterType waiter,
+                           DeletedExternallyCBType deleted_externally)
 {
 	auto deletable = std::make_shared<Deletable<T, CancelerType, WaiterType, DeletedExternallyCBType>>(to_be_deleted,
                                                                                                            canceler,
@@ -121,6 +169,7 @@ public:
 	bool empty() const;
 	size_t size() const;
 
+	void addQObject(QObject* object);
 
 	/**
 	 * For adding QFuture<void>'s to be canceled/waited on.
@@ -142,12 +191,15 @@ public:
 	{
 		/*std::shared_ptr<Deletable>*/
 //		auto deletable = std::make_shared<Deletable<QThread*,DestroyerCallbackType,void(*)(QThread*)>>(qthread, destroyer_cb, [](QThread*){});
-		auto deletable = make_shared_Deletable(qthread, destroyer_cb, [](QThread*){});
+		auto deletable = make_shared_DeletableBase(qthread, destroyer_cb, [](QThread*) {/** @todo */ return true;}, [](QThread*){  });
 		m_watched_deletables.push_back(deletable);
 	}
 
 	/// The Threadsafe Interface for stats_internal().
 	QStringList stats() const;
+
+public Q_SLOTS:
+	void SLOT_DeletableBaseWasDestroyed(std::shared_ptr<DeletableBase> deletable_base);
 
 protected:
 	/// No mutex.
@@ -176,8 +228,11 @@ private:
 	/// run a GC sweep and remove any canceled/finished futures.
 	const long m_purge_futures_count {64};
 
+	std::deque<std::shared_ptr<DeletableQObject>> m_watched_QObjects;
     std::deque<QPointer<KJob>> m_watched_KJobs;
-    std::deque<QPointer<AMLMJob>> m_watched_AMLMJobs;
+//    std::deque<QPointer<AMLMJob>> m_watched_AMLMJobs;
+//	std::deque<std::shared_ptr<DeletableAMLMJob>> m_watched_AMLMJobs;
+	std::deque<std::shared_ptr<DeletableBase>> m_watched_AMLMJobs;
 	std::deque<QPointer<QThread>> m_watched_QThreads;
 	std::deque<std::shared_ptr<DeletableBase>> m_watched_deletables;
 	QObjectCleanupHandler m_qobj_cleanup_handler;

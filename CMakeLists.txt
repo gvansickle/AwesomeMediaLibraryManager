@@ -196,6 +196,8 @@ include(ECMEnableSanitizers)
 # cmake and/or Qt Creator.
 # https://github.com/onqtam/ucm#ucm_add_flags
 include(ucm)
+# Target-focused compile settings.
+add_library(cxx_settings INTERFACE)
 if(UNIX)
 	ucm_add_flags(-fmessage-length=0 -pthread -Werror=return-type -fno-omit-frame-pointer)
 	ucm_add_flags(-Og -ggdb3)
@@ -211,7 +213,12 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	ucm_add_flags(-grecord-gcc-switches -gas-loc-support -gstatement-frontiers -ginline-points -femit-struct-debug-detailed=any)
 	ucm_add_flags(-fno-eliminate-unused-debug-types -fno-inline)
 	ucm_add_flags(-Wmaybe-uninitialized -Werror=maybe-uninitialized -fdiagnostics-show-template-tree -fdiagnostics-show-option)
-	#ucm_add_flags(-fuse-ld=gold) # Let's try the gold linker.
+	ucm_add_flags(-fuse-ld=gold) # Let's try the gold linker.
+	# GCC 9.x suggestions.
+	add_library(cxx_suggestions INTERFACE)
+	target_compile_options(cxx_suggestions INTERFACE
+		-Wsuggest-attribute=const)
+	target_link_libraries(cxx_settings INTERFACE cxx_suggestions)
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	message(STATUS "C++ Compiler is Clang")
 	ucm_add_flags(-Wthread-safety -fdebug-macro -fdiagnostics-show-template-tree)

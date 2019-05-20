@@ -264,7 +264,12 @@ set_target_properties(${PROJECT_NAME}
         AUTOUIC ON
         #CXX_CLANG_TIDY "clang-tidy;-checks=-*,readability-*"
         )
-target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_COMMON_LINK_LIBS})
+target_link_libraries(${PROJECT_NAME}
+	PUBLIC
+		# Targetized C++ compile settings.
+		cxx_settings 
+	PRIVATE 
+		${PROJECT_COMMON_LINK_LIBS})
 ### @todo breeze
 #add_dependencies(${PROJECT_NAME} icons_oxygen)
 
@@ -388,8 +393,16 @@ set_property(TARGET gtest PROPERTY SKIP_AUTOGEN ON)
 set_property(TARGET gmock PROPERTY SKIP_AUTOGEN ON)
 set_property(TARGET gtest_main PROPERTY SKIP_AUTOGEN ON)
 set_property(TARGET gmock_main PROPERTY SKIP_AUTOGEN ON)
-target_link_libraries(${TEST_EXE_TARGET} Threads::Threads gtest gmock amlm_tests)
-target_link_libraries(${TEST_EXE_TARGET} Qt5::Test ${PROJECT_COMMON_LINK_LIBS})
+target_link_libraries(${TEST_EXE_TARGET}
+	PRIVATE
+		Threads::Threads gtest gmock amlm_tests)
+target_link_libraries(${TEST_EXE_TARGET}
+	PRIVATE
+        Qt5::Test ${PROJECT_COMMON_LINK_LIBS}
+	PUBLIC
+		# Targetized C++ compile settings.
+		cxx_settings
+	)
 add_test(NAME ${TEST_EXE_TARGET} COMMAND $<TARGET_FILE:${TEST_EXE_TARGET}>)
 ecm_mark_as_test(${TEST_EXE_TARGET})
 

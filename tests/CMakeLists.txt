@@ -42,7 +42,7 @@ target_sources_local(amlm_tests
 		TestHelpers.h
 	)
 target_link_libraries(amlm_tests
-	PUBLIC
+	PRIVATE
 		gtest
 		gmock
 	PRIVATE

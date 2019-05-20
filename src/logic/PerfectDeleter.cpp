@@ -61,6 +61,52 @@
  *
  */
 
+
+class DeletableQObject : public DeletableBase
+{
+	using BASE_CLASS = DeletableBase;
+
+public:
+	DeletableQObject(PerfectDeleter* pd, std::deque<std::shared_ptr<DeletableQObject>>* list, QObject* to_be_deleted)
+		: DeletableBase(pd), m_list(list), m_to_be_deleted(to_be_deleted) {};
+	~DeletableQObject() override {};
+
+	void cancel() override {  };
+	bool poll_wait() override { return true /** @todo */; };
+
+	void deleted_externally(DeletableBase* deletable_base) override
+	{
+//		[pd, list, object](DeletableBase* deletable_base) {
+		// Is object in the list?
+		auto it = std::find_if(m_list->begin(), m_list->end(), [&](std::shared_ptr<DeletableBase> p){ return *p == *deletable_base; });
+		if(it != m_list->end())
+		{
+			// Remove the entry.
+			std::experimental::erase(*m_list, *it);
+			m_to_be_deleted->disconnect(m_pd);
+		}
+	};
+
+	bool holds_object(const QObject* object) { return m_to_be_deleted == object; }
+
+protected:
+
+	bool equality_op(const DeletableBase& other) const override
+	{
+		DeletableQObject const * other_p = dynamic_cast<DeletableQObject const *>(&other);
+		if(other_p == nullptr)
+		{
+			// Not a comparable type.
+			return false;
+		}
+		return m_to_be_deleted == other_p->m_to_be_deleted;
+	}
+public:
+	QObject* m_to_be_deleted;
+	std::deque<std::shared_ptr<DeletableQObject>>* m_list;
+};
+
+
 PerfectDeleter::PerfectDeleter(QObject* parent) : QObject(parent)
 {
 	setObjectName("ThePerfectDeleter");
@@ -97,8 +143,14 @@ void PerfectDeleter::cancel_and_wait_for_all()
 
 	// Cancel all registered AMLMJobs.
 	qIno() << "Killing" << m_watched_AMLMJobs.size() << "AMLMJobs";
-	for(AMLMJob* i : m_watched_AMLMJobs)
+	for(std::shared_ptr<DeletableBase> it : m_watched_AMLMJobs)
 	{
+		auto it2 = std::dynamic_pointer_cast<DeletableAMLMJob>(it);
+		if(!it2)
+		{
+			continue;
+		}
+		AMLMJob* i = it2->m_to_be_deleted;
 		if(i != nullptr)
 		{			
 			// Killing them softly is probably the right way to go here.
@@ -151,6 +203,132 @@ size_t PerfectDeleter::size() const
 	return total_deletables;
 }
 
+
+template <class QObjectDerivedType, class ListType>
+void addQObjectDerivedType(PerfectDeleter* pd, QObjectDerivedType* object, ListType* list, std::mutex& the_mutex)
+{
+	if(object == nullptr)
+	{
+		// Shouldn't have been called, warn.
+		qWr() << "addQObject() called with nullptr, ignoring";
+		return;
+	}
+
+	auto deletable_qobject = make_shared_DeletableBase(object,
+			// Canceler
+			                                           [](QObjectDerivedType* kjob) {},
+			// Waiter
+			                                           [](QObjectDerivedType* kjob) { /** @todo */ return true; },
+			// External remover.
+													   [pd, list, object](DeletableBase* deletable_base) {
+			                                        	   // Is object in the list?
+														   auto it = std::find_if(list->begin(), list->end(), [&](std::shared_ptr<DeletableBase> p){ return *p == *deletable_base; });
+			                                        	   if(it != list->end())
+			                                        	   {
+			                                        		   // Remove the entry.
+			                                        		   std::experimental::erase(*list, *it);
+															   object->disconnect(pd);
+			                                        	   }
+			                                           });
+
+	// Connect up the QObject's destroyed signal.
+	connect_or_die(object, &QObject::destroyed, pd, [=, &the_mutex](QObject* object) mutable {
+		std::scoped_lock lock(the_mutex);
+		// Let's make sure deletable_qobject really contains object.
+		auto typed_object_p = dynamic_cast<QObjectDerivedType*>(object);
+		Q_ASSERT(deletable_qobject->holds_object(typed_object_p));
+		// Remove this Deletable QObject's entry.
+		auto before_size = list->size();
+		qIn() << "Destroying QObject:" << object->objectName();
+		std::experimental::erase_if(*list,
+		                            [deletable_qobject](const auto& stored_deleter){ return stored_deleter == deletable_qobject; });
+		auto after_size = list->size();
+		if(before_size != after_size)
+		{
+			// We must have erased an entry in the deque.
+			// Disconnect the signal that got us here.
+			object->disconnect(pd);
+			//			disconnect(object, &QObject::destroyed, this, objectDestroyed(QObject*)));
+		}
+	});
+
+	// Add it to the watch list.
+	list->emplace_back(deletable_qobject);
+}
+
+#if 0
+void PerfectDeleter::addQObject(QObject* object)
+{
+	std::scoped_lock lock(m_mutex);
+
+	addQObjectDerivedType(this, object, &m_watched_QObjects, m_mutex);
+}
+
+#else
+void PerfectDeleter::addQObject(QObject* object)
+{
+	std::scoped_lock lock(m_mutex);
+
+	// QObjectCleanupHandler does this on add:
+//	if (!object)
+//	        return 0;
+//
+//	    connect(object, SIGNAL(destroyed(QObject*)), this, SLOT(objectDestroyed(QObject*)));
+//	    cleanupObjects.insert(0, object);
+
+
+	// remove() does this, but doesn't delete the object:
+//	int index;
+//	    if ((index = cleanupObjects.indexOf(object)) != -1) {
+//	        cleanupObjects.removeAt(index);
+//	        disconnect(object, SIGNAL(destroyed(QObject*)), this, SLOT(objectDestroyed(QObject*)));
+//	    }
+	// The objectDestroyed() slot just calls remove().
+
+	// Clear actually deletes the object.
+
+	if(object == nullptr)
+	{
+		// Shouldn't have been called, warn.
+		qWr() << "addQObject() called with nullptr, ignoring";
+		return;
+	}
+
+	std::shared_ptr<DeletableQObject> deletable_qobject = std::make_shared<DeletableQObject>(this, &m_watched_QObjects, object);
+
+//	auto deletable_qobject = make_shared_DeletableBase(object,
+//			// Canceler
+//			                                           [](QObject* kjob) {},
+//			// Waiter
+//			                                           [](QObject* kjob) {},
+//			// External remover.
+//			                                           [](QObject* kjob) {});
+
+//	// Connect the destroyed signal.
+//	connect_or_die(object, &QObject::destroyed, this, [=](QObject* object) mutable {
+//		std::scoped_lock lock(m_mutex);
+//		// Let's make sure deletable_qobject really contains object.
+//		Q_ASSERT(deletable_qobject->holds_object(object));
+//		// Remove this Deletable QObject's entry.
+//		auto before_size = this->m_watched_QObjects.size();
+//		qIn() << "Destroying QObject:" << object->objectName();
+//		std::experimental::erase_if(this->m_watched_QObjects,
+//									[deletable_qobject](const auto& stored_deleter){ return stored_deleter == deletable_qobject; });
+//		auto after_size = this->m_watched_QObjects.size();
+//		if(before_size != after_size)
+//		{
+//			// We must have erased an entry in the deque.
+//			// Disconnect the signal that got us here.
+//			object->disconnect(this);
+////			disconnect(object, &QObject::destroyed, this, objectDestroyed(QObject*)));
+//		}
+//	});
+
+	// Add it to the watch list.
+	m_watched_QObjects.emplace_back(deletable_qobject);
+}
+#endif
+
 void PerfectDeleter::addQFuture(QFuture<void> f)
 {
 	std::lock_guard lock(m_mutex);
@@ -188,14 +366,14 @@ void PerfectDeleter::addKJob(KJob* kjob)
             }
 		};
 
-	auto deletable = make_shared_Deletable(kjob,
-							// Canceler
-								[qpkjob=qpkjob](KJob* kjob){},
-							// Waiter
-								[qpkjob=qpkjob](KJob* kjob){},
-							// External remover.
-								[qpkjob=qpkjob](KJob* kjob){}
-							);
+	auto deletable = make_shared_DeletableBase(kjob,
+			// Canceler
+			                                   [qpkjob = qpkjob](KJob* kjob) {},
+			// Waiter
+			                                   [qpkjob = qpkjob](KJob* kjob) { return true; /** @todo */},
+			// External remover.
+			                                   [qpkjob = qpkjob](KJob* kjob) {}
+	);
 
 	// Connect a signal/slot to remove the Kjob* if it gets deleted.
 	connect_or_die(kjob, &QObject::destroyed, this, remover_lambda);
@@ -206,6 +384,13 @@ void PerfectDeleter::addKJob(KJob* kjob)
 
 void PerfectDeleter::addAMLMJob(AMLMJob* amlmjob)
 {
+#if 1 // NEW
+	std::lock_guard lock(m_mutex);
+
+	addQObjectDerivedType(this, amlmjob, &m_watched_AMLMJobs, m_mutex);
+
+
+#else
 	std::lock_guard lock(m_mutex);
 
 	QPointer<AMLMJob> qpamlmjob = amlmjob;
@@ -228,20 +413,21 @@ void PerfectDeleter::addAMLMJob(AMLMJob* amlmjob)
 		}
 	};
 
-	auto deletable = make_shared_Deletable(amlmjob,
-							// Canceler
-								[qpamlmjob=qpamlmjob](AMLMJob* amlmjob){},
-							// Waiter
-								[qpamlmjob=qpamlmjob](AMLMJob* amlmjob){},
-							// External remover.
-								[qpamlmjob=qpamlmjob](AMLMJob* amlmjob){}
-							);
+	auto deletable = make_shared_DeletableBase(amlmjob,
+			// Canceler
+			                                   [qpamlmjob = qpamlmjob](AMLMJob* amlmjob) {},
+			// Waiter
+			                                   [qpamlmjob = qpamlmjob](AMLMJob* amlmjob) {},
+			// External remover.
+			                                   [qpamlmjob = qpamlmjob](AMLMJob* amlmjob) {}
+	);
 
 M_WARNING("These both want to remove the same amlmjob, maybe ok?");
 	connect_or_die(amlmjob, &QObject::destroyed, this, remover_lambda);
 //	connect_or_die(amlmjob, &AMLMJob::finished, this, remover_lambda);
 
 	m_watched_AMLMJobs.push_back(amlmjob);
+#endif
 }
 
 void PerfectDeleter::addQThread(QThread* qthread)
@@ -281,6 +467,12 @@ QStringList PerfectDeleter::stats() const
 	return stats_internal();
 }
 
+void PerfectDeleter::SLOT_DeletableBaseWasDestroyed(std::shared_ptr<DeletableBase> deletable_base)
+{
+	// This slot is invoked by a QObject deleted() signal.  All we have to do is remove the right one from the right list.
+	deletable_base->deleted_externally(deletable_base.get());
+}
+
 QStringList PerfectDeleter::stats_internal() const
 {
 	/// @note Acquires no mutex, see Threadsafe Interface stats().
@@ -310,7 +502,7 @@ M_TODO("This doesn't look like it's livelocking on exit, but it seems like we ne
 	do
 	{
 		// One pass through the AMLMJob list.
-		for(AMLMJob* i : m_watched_AMLMJobs)
+		for(const std::shared_ptr<DeletableBase> i : m_watched_AMLMJobs)
 		{
 			// Do nothing, the connections should take care of the deletion.
 			remaining_amlmjobs++;
