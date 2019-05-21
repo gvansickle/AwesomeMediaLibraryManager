@@ -98,19 +98,8 @@ public:
 		if(it != m_list->end())
 		{
 			// Remove the entry.
-			qIn() << "Removing QObject:" << (*it)->object()->objectName();
-			std::experimental::erase(*m_list, *it);
-			m_to_be_deleted->disconnect(m_pd);
-		}
-	};
-	void deleted_externally(DeletableBase* deletable_base = nullptr) override
-	{
-		// Is object in the list?
-		auto it = std::find_if(m_list->begin(), m_list->end(), [&](std::shared_ptr<DeletableQObject> p){ return *p == *this; });
-		if(it != m_list->end())
-		{
-			// Remove the entry.
-			qIn() << "Removing QObject:" << (*it)->object()->objectName();
+			// Can't stream name out, it's been deleted.
+//			qIn() << "Removing QObject:" << (*it)->object()->objectName();
 			std::experimental::erase(*m_list, *it);
 			m_to_be_deleted->disconnect(m_pd);
 		}
@@ -326,7 +315,7 @@ void PerfectDeleter::addQObject(QObject* object)
 		// Is this the same QObject that we put in?
 		Q_ASSERT(deletable_qobject->holds_object(deleted_object) == true);
 		// Erase the Deletable from the list.
-		deletable_qobject->deleted_externally();
+		deletable_qobject->remove();
 	});
 
 	// Add it to the watch list.
@@ -395,7 +384,10 @@ void PerfectDeleter::addAMLMJob(AMLMJob* amlmjob)
 	std::shared_ptr<DeletableAMLMJob> deletable_amlmjob = std::make_shared<DeletableAMLMJob>(this, &m_watched_AMLMJobs, amlmjob);
 
 	M_WARNING("These both want to remove the same amlmjob, maybe ok?");
-//	connect_or_die(amlmjob, &QObject::destroyed, this, remover_lambda);
+	connect_or_die(amlmjob, &QObject::destroyed, this, [=](){
+		std::scoped_lock lock(m_mutex);
+		deletable_amlmjob->remove();
+	});
 /// @todo Should we hook up finished here?
 //	connect_or_die(amlmjob, &AMLMJob::finished, this, remover_lambda);
 
@@ -482,7 +474,7 @@ QStringList PerfectDeleter::stats() const
 void PerfectDeleter::SLOT_DeletableBaseWasDestroyed(std::shared_ptr<DeletableBase> deletable_base)
 {
 	// This slot is invoked by a QObject deleted() signal.  All we have to do is remove the right one from the right list.
-	deletable_base->deleted_externally(deletable_base.get());
+	deletable_base->remove(/*deletable_base.get()*/);
 }
 
 QStringList PerfectDeleter::stats_internal() const
@@ -494,6 +486,7 @@ QStringList PerfectDeleter::stats_internal() const
 	int num_futures = m_future_synchronizer.futures().size();
 
 	retval << tr("Watched Deletables: %1").arg(m_watched_deletables.size());
+	retval << tr("Watched QObjects: %1").arg(m_watched_QObjects.size());
 	retval << tr("Watched QThreads: %1").arg(m_watched_QThreads.size());
 	retval << tr("Watched QFuture<void>s: %1").arg(num_futures);
 	retval << tr("Watched KJobs: %1").arg(m_watched_KJobs.size());

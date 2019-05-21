@@ -57,7 +57,7 @@ public:
 	virtual void cancel() = 0;
 	virtual bool poll_wait() = 0;
 	virtual void remove() = 0;
-	virtual void deleted_externally(DeletableBase*) = 0;
+//	virtual void deleted_externally(DeletableBase*) = 0;
 
 	bool operator==(const DeletableBase& other) const
 	{
@@ -95,9 +95,9 @@ public:
 	void cancel() override { std::invoke(m_canceler, m_to_be_deleted); };
 	bool poll_wait() override { return std::invoke(m_waiter, m_to_be_deleted); };
 	void remove() override {};
-	void deleted_externally(DeletableBase*) override
-	{
-	};
+//	void deleted_externally(DeletableBase*) override
+//	{
+//	};
 
 	bool holds_object(const T object) { return m_to_be_deleted == object; }
 
