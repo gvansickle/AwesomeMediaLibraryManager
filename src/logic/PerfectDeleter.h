@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -56,7 +56,7 @@ public:
 
 	virtual void cancel() = 0;
 	virtual bool poll_wait() = 0;
-	virtual void remove() {};
+	virtual void remove() = 0;
 	virtual void deleted_externally(DeletableBase*) = 0;
 
 	bool operator==(const DeletableBase& other) const
@@ -94,6 +94,7 @@ public:
 
 	void cancel() override { std::invoke(m_canceler, m_to_be_deleted); };
 	bool poll_wait() override { return std::invoke(m_waiter, m_to_be_deleted); };
+	void remove() override {};
 	void deleted_externally(DeletableBase*) override
 	{
 	};
@@ -122,8 +123,6 @@ public:
 class DeletableQObject;
 class DeletableAMLMJob;
 
-inline static auto passthrough = [](AMLMJob*){ return true; };
-//using DeletableAMLMJob = Deletable<AMLMJob*, decltype(passthrough), decltype(passthrough), decltype(passthrough)>;
 
 template <class T, class CancelerType, class WaiterType, class DeletedExternallyCBType = std::nullptr_t>
 static inline std::shared_ptr</*DeletableBase*/Deletable<T, CancelerType, WaiterType, DeletedExternallyCBType>>

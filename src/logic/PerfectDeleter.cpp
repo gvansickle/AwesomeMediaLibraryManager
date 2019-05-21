@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -26,8 +26,6 @@
 #include <future/future_algorithms.h> ///< For Uniform Container Erasure.
 
 // Qt5
-//#include <QTextCursor>
-//#include <QTextList>
 
 
 // Ours
@@ -93,7 +91,18 @@ public:
 
 	void cancel() override {  };
 	bool poll_wait() override { return true /** @todo */; };
-
+	void remove() override
+	{
+		// Is object in the list?
+		auto it = std::find_if(m_list->begin(), m_list->end(), [&](std::shared_ptr<DeletableQObject> p){ return *p == *this; });
+		if(it != m_list->end())
+		{
+			// Remove the entry.
+			qIn() << "Removing QObject:" << (*it)->object()->objectName();
+			std::experimental::erase(*m_list, *it);
+			m_to_be_deleted->disconnect(m_pd);
+		}
+	};
 	void deleted_externally(DeletableBase* deletable_base = nullptr) override
 	{
 		// Is object in the list?
@@ -385,10 +394,9 @@ void PerfectDeleter::addAMLMJob(AMLMJob* amlmjob)
 
 	std::shared_ptr<DeletableAMLMJob> deletable_amlmjob = std::make_shared<DeletableAMLMJob>(this, &m_watched_AMLMJobs, amlmjob);
 
-//	addQObjectDerivedType(this, amlmjob, &m_watched_AMLMJobs, m_mutex);
-
 	M_WARNING("These both want to remove the same amlmjob, maybe ok?");
 //	connect_or_die(amlmjob, &QObject::destroyed, this, remover_lambda);
+/// @todo Should we hook up finished here?
 //	connect_or_die(amlmjob, &AMLMJob::finished, this, remover_lambda);
 
 	m_watched_AMLMJobs.emplace_back(deletable_amlmjob);
