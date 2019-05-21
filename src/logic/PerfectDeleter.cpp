@@ -97,11 +97,11 @@ public:
 	void deleted_externally(DeletableBase* deletable_base = nullptr) override
 	{
 		// Is object in the list?
-		auto it = std::find_if(m_list->begin(), m_list->end(), [&](std::shared_ptr<DeletableBase> p){ return *p == *this; });
+		auto it = std::find_if(m_list->begin(), m_list->end(), [&](std::shared_ptr<DeletableQObject> p){ return *p == *this; });
 		if(it != m_list->end())
 		{
 			// Remove the entry.
-			qIn() << "Removing QObject:" << it->object()->objectName();
+			qIn() << "Removing QObject:" << (*it)->object()->objectName();
 			std::experimental::erase(*m_list, *it);
 			m_to_be_deleted->disconnect(m_pd);
 		}
@@ -109,7 +109,7 @@ public:
 
 	bool holds_object(const QObject* object) { return m_to_be_deleted == object; }
 
-	const QObject* object() const { return m_to_be_deleted; };
+	virtual QObject* object() const { return m_to_be_deleted; };
 
 protected:
 
@@ -134,11 +134,18 @@ class DeletableAMLMJob : public DeletableQObject
 	using BASE_CLASS = DeletableQObject;
 
 public:
-	DeletableAMLMJob(PerfectDeleter* pd, std::deque<std::shared_ptr<DeletableQObject>>* list, AMLMJob* to_be_deleted);
+	DeletableAMLMJob(PerfectDeleter* pd, std::deque<std::shared_ptr<DeletableQObject>>* list, AMLMJob* to_be_deleted)
+		: DeletableQObject(pd, list, to_be_deleted) {};
 	~DeletableAMLMJob() override {};
 
-	void cancel() override {  };
+	void cancel() override
+	{
+		// Killing them softly is probably the right way to go here.
+		object()->kill(KJob::KillVerbosity::Quietly);
+	};
 	bool poll_wait() override { return true /** @todo */; };
+
+	AMLMJob* object() const override { return dynamic_cast<AMLMJob*>(m_to_be_deleted); };
 };
 
 PerfectDeleter::PerfectDeleter(QObject* parent) : QObject(parent)
@@ -179,17 +186,18 @@ void PerfectDeleter::cancel_and_wait_for_all()
 	qIno() << "Killing" << m_watched_AMLMJobs.size() << "AMLMJobs";
 	for(std::shared_ptr<DeletableBase> it : m_watched_AMLMJobs)
 	{
-		auto it2 = std::dynamic_pointer_cast<DeletableAMLMJob>(it);
-		if(!it2)
-		{
-			continue;
-		}
-		AMLMJob* i = it2->m_to_be_deleted;
-		if(i != nullptr)
-		{			
-			// Killing them softly is probably the right way to go here.
-			i->kill(KJob::KillVerbosity::Quietly);
-		}
+		it->cancel();
+//		auto it2 = std::dynamic_pointer_cast<DeletableAMLMJob>(it);
+//		if(!it2)
+//		{
+//			continue;
+//		}
+//		AMLMJob* i = it2->object();//m_to_be_deleted;
+//		if(i != nullptr)
+//		{
+//			// Killing them softly is probably the right way to go here.
+//			i->kill(KJob::KillVerbosity::Quietly);
+//		}
 	}
 
 	// Cancel all registered KJobs.
@@ -383,7 +391,7 @@ void PerfectDeleter::addAMLMJob(AMLMJob* amlmjob)
 //	connect_or_die(amlmjob, &QObject::destroyed, this, remover_lambda);
 //	connect_or_die(amlmjob, &AMLMJob::finished, this, remover_lambda);
 
-	m_watched_AMLMJobs.push_back(amlmjob);
+	m_watched_AMLMJobs.emplace_back(deletable_amlmjob);
 
 
 #else

@@ -57,7 +57,7 @@ public:
 	virtual void cancel() = 0;
 	virtual bool poll_wait() = 0;
 	virtual void remove() {};
-	virtual void deleted_externally(DeletableBase* db = nullptr) = 0;
+	virtual void deleted_externally(DeletableBase*) = 0;
 
 	bool operator==(const DeletableBase& other) const
 	{
@@ -94,9 +94,8 @@ public:
 
 	void cancel() override { std::invoke(m_canceler, m_to_be_deleted); };
 	bool poll_wait() override { return std::invoke(m_waiter, m_to_be_deleted); };
-	void deleted_externally(DeletableBase* db = nullptr) override
+	void deleted_externally(DeletableBase*) override
 	{
-		//std::invoke(m_deleted_externally_callback, m_to_be_deleted);
 	};
 
 	bool holds_object(const T object) { return m_to_be_deleted == object; }
@@ -129,14 +128,14 @@ inline static auto passthrough = [](AMLMJob*){ return true; };
 template <class T, class CancelerType, class WaiterType, class DeletedExternallyCBType = std::nullptr_t>
 static inline std::shared_ptr</*DeletableBase*/Deletable<T, CancelerType, WaiterType, DeletedExternallyCBType>>
 make_shared_DeletableBase(T to_be_deleted,
-                           CancelerType canceler,
-                           WaiterType waiter,
-                           DeletedExternallyCBType deleted_externally)
+						   CancelerType canceler,
+						   WaiterType waiter,
+						   DeletedExternallyCBType deleted_externally)
 {
 	auto deletable = std::make_shared<Deletable<T, CancelerType, WaiterType, DeletedExternallyCBType>>(to_be_deleted,
-                                                                                                           canceler,
-                                                                                                           waiter,
-                                                                                                           deleted_externally);
+																										   canceler,
+																										   waiter,
+																										   deleted_externally);
 	return deletable;
 }
 
@@ -149,14 +148,14 @@ class PerfectDeleter : public QObject
 	Q_OBJECT
 
 public:
-    /**
-     * Default constructor
-     */
+	/**
+	 * Default constructor
+	 */
 	explicit PerfectDeleter(QObject* parent);
 
-    /**
-     * Destructor
-     */
+	/**
+	 * Destructor
+	 */
 	~PerfectDeleter() override;
 
 	/**
@@ -182,9 +181,9 @@ public:
 	 */
 	void addQFuture(QFuture<void> f);
 
-    void addKJob(KJob* kjob);
+	void addKJob(KJob* kjob);
 
-    void addAMLMJob(AMLMJob* amlmjob);
+	void addAMLMJob(AMLMJob* amlmjob);
 
 	void addQThread(QThread* qthread);
 
@@ -231,10 +230,10 @@ private:
 	const long m_purge_futures_count {64};
 
 	std::deque<std::shared_ptr<DeletableQObject>> m_watched_QObjects;
-    std::deque<QPointer<KJob>> m_watched_KJobs;
+	std::deque<QPointer<KJob>> m_watched_KJobs;
 //    std::deque<QPointer<AMLMJob>> m_watched_AMLMJobs;
 //	std::deque<std::shared_ptr<DeletableAMLMJob>> m_watched_AMLMJobs;
-	std::deque<std::shared_ptr<DeletableAMLMJob>> m_watched_AMLMJobs;
+	std::deque<std::shared_ptr<DeletableQObject>> m_watched_AMLMJobs;
 	std::deque<QPointer<QThread>> m_watched_QThreads;
 	std::deque<std::shared_ptr<DeletableBase>> m_watched_deletables;
 	QObjectCleanupHandler m_qobj_cleanup_handler;
