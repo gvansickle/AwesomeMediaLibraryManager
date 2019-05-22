@@ -49,7 +49,8 @@ LibraryRescannerJob::LibraryRescannerJob(QObject* parent) : AMLMJobT(parent)
 
 LibraryRescannerJob::~LibraryRescannerJob()
 {
-    qDb() << "LibraryRescannerJob DELETED:" << this << objectName();
+	// Can't access objectName() in destructor.
+	qDb() << "LibraryRescannerJob DELETED";// << this << objectName();
 }
 
 LibraryRescannerJobPtr LibraryRescannerJob::make_job(QObject *parent)
@@ -189,14 +190,6 @@ void library_metadata_rescan_task(ExtFuture<MetadataReturnVal> ext_future, Libra
 			break;
 		}
 	}
-
-	// We've either completed our work or been cancelled.
-	// Either way, defaultEnd() will handle setting the cancellation status as long as
-	// we set success/fail appropriately.
-//    if(!wasCancelRequested())
-//    {
-//    	setSuccessFlag(true);
-//    }
 
 	/// @todo push down
 	ext_future.reportFinished();

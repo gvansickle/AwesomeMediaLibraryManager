@@ -51,13 +51,13 @@ class DeletableBase
 {
 public:
 	DeletableBase() = default;
-	explicit DeletableBase(PerfectDeleter* pd) : m_uuid(QUuid::createUuid()), m_pd(pd) {};
+	explicit DeletableBase(PerfectDeleter* pd, const std::string& object_name = "[unknown]")
+		: m_uuid(QUuid::createUuid()), m_pd(pd), m_object_name(object_name) {};
 	virtual ~DeletableBase() = default;
 
 	virtual void cancel() = 0;
 	virtual bool poll_wait() = 0;
 	virtual void remove() = 0;
-//	virtual void deleted_externally(DeletableBase*) = 0;
 
 	bool operator==(const DeletableBase& other) const
 	{
@@ -76,6 +76,8 @@ private:
 	/// A UUID representing the instance of this Deletable, so we can avoid the ABA problem
 	/// of deleting the wrong object if we relied solely on the pointer value.
 	QUuid m_uuid;
+
+	std::string m_object_name;
 };
 
 template <class T, class CancelerType, class WaiterType, class DeletedExternallyCBType>
@@ -95,9 +97,6 @@ public:
 	void cancel() override { std::invoke(m_canceler, m_to_be_deleted); };
 	bool poll_wait() override { return std::invoke(m_waiter, m_to_be_deleted); };
 	void remove() override {};
-//	void deleted_externally(DeletableBase*) override
-//	{
-//	};
 
 	bool holds_object(const T object) { return m_to_be_deleted == object; }
 

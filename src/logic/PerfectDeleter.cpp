@@ -30,6 +30,7 @@
 
 // Ours
 #include <utils/DebugHelpers.h>
+#include <utils/StringHelpers.h>
 #include <concurrency/AMLMJob.h>
 
 /**
@@ -86,7 +87,7 @@ class DeletableQObject : public DeletableBase
 
 public:
 	DeletableQObject(PerfectDeleter* pd, std::deque<std::shared_ptr<DeletableQObject>>* list, QObject* to_be_deleted)
-		: DeletableBase(pd), m_list(list), m_to_be_deleted(to_be_deleted) {};
+		: DeletableBase(pd, tostdstr(to_be_deleted->objectName())), m_list(list), m_to_be_deleted(to_be_deleted) {};
 	~DeletableQObject() override {};
 
 	void cancel() override {  };
@@ -141,7 +142,7 @@ public:
 		// Killing them softly is probably the right way to go here.
 		object()->kill(KJob::KillVerbosity::Quietly);
 	};
-	bool poll_wait() override { return true /** @todo */; };
+	bool poll_wait() override { return true; /** @todo */ };
 
 	AMLMJob* object() const override { return dynamic_cast<AMLMJob*>(m_to_be_deleted); };
 };
@@ -155,13 +156,14 @@ PerfectDeleter::PerfectDeleter(QObject* parent) : QObject(parent)
 
 PerfectDeleter::~PerfectDeleter()
 {
-	qDb() << objectName() << "destroyed.";
+	qDb() << "PerfectDeleter destroyed.";
 }
 
 PerfectDeleter& PerfectDeleter::instance(QObject* parent)
 {
 	// First caller must specify a parent, or we'll assert here.
-	static PerfectDeleter* m_the_instance = (Q_ASSERT(parent != nullptr), new PerfectDeleter(parent));
+	static PerfectDeleter* m_the_instance = (Q_ASSERT(parent != nullptr),
+			new PerfectDeleter(parent));
 
 	return *m_the_instance;
 }
@@ -182,20 +184,9 @@ void PerfectDeleter::cancel_and_wait_for_all()
 
 	// Cancel all registered AMLMJobs.
 	qIno() << "Killing" << m_watched_AMLMJobs.size() << "AMLMJobs";
-	for(std::shared_ptr<DeletableBase> it : m_watched_AMLMJobs)
+	for(auto& it : m_watched_AMLMJobs)
 	{
 		it->cancel();
-//		auto it2 = std::dynamic_pointer_cast<DeletableAMLMJob>(it);
-//		if(!it2)
-//		{
-//			continue;
-//		}
-//		AMLMJob* i = it2->object();//m_to_be_deleted;
-//		if(i != nullptr)
-//		{
-//			// Killing them softly is probably the right way to go here.
-//			i->kill(KJob::KillVerbosity::Quietly);
-//		}
 	}
 
 	// Cancel all registered KJobs.
@@ -373,7 +364,7 @@ void PerfectDeleter::addKJob(KJob* kjob)
 	connect_or_die(kjob, &QObject::destroyed, this, remover_lambda);
 //	connect_or_die(kjob, &KJob::finished, this, remover_lambda);
 
-	m_watched_KJobs.push_back(kjob);
+	m_watched_KJobs.emplace_back(kjob);
 }
 
 void PerfectDeleter::addAMLMJob(AMLMJob* amlmjob)
@@ -383,13 +374,14 @@ void PerfectDeleter::addAMLMJob(AMLMJob* amlmjob)
 
 	std::shared_ptr<DeletableAMLMJob> deletable_amlmjob = std::make_shared<DeletableAMLMJob>(this, &m_watched_AMLMJobs, amlmjob);
 
-	M_WARNING("These both want to remove the same amlmjob, maybe ok?");
-	connect_or_die(amlmjob, &QObject::destroyed, this, [=](){
+	auto remover_lambda = [=](){
 		std::scoped_lock lock(m_mutex);
 		deletable_amlmjob->remove();
-	});
-/// @todo Should we hook up finished here?
-//	connect_or_die(amlmjob, &AMLMJob::finished, this, remover_lambda);
+	};
+
+	/// @todo Should we hook up finished here?
+	connect_or_die(amlmjob, &AMLMJob::finished, this, remover_lambda);
+	connect_or_die(amlmjob, &QObject::destroyed, this, remover_lambda);
 
 	m_watched_AMLMJobs.emplace_back(deletable_amlmjob);
 
@@ -458,7 +450,7 @@ void PerfectDeleter::addQThread(QThread* qthread)
 			std::experimental::erase(m_watched_QThreads, qthread);
 			qthread->deleteLater();
 			});
-		m_watched_QThreads.push_back(qthread);
+		m_watched_QThreads.emplace_back(qthread);
 	}
 }
 
