@@ -649,6 +649,7 @@ namespace ExtAsync
         >
 	ExtFuture<R> run(CallbackType&& function, Args&&... args)
     {
+M_WARNING("OBSOLETE");
 		ExtFuture<R> retfuture = ExtAsync::make_started_only_future<R>();
 
 		/**
