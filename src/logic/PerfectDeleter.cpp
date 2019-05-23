@@ -336,7 +336,8 @@ void PerfectDeleter::addQObject(QObject* object)
 	std::shared_ptr<DeletableQObject> deletable_qobject = std::make_shared<DeletableQObject>(this, &m_watched_QObjects, object);
 
 	// This connection is a bit odd.  We need to accept the QObject*, turn that into a DeletableQObject*, and remove that.
-	connect_or_die(object, &QObject::destroyed, this, [deletable_qobject](QObject* deleted_object){
+	connect_or_die(object, &QObject::destroyed, this, [=](QObject* deleted_object){
+		std::scoped_lock lock(m_mutex);
 		// Is this the same QObject that we put in?
 		Q_ASSERT(deletable_qobject->holds_object(deleted_object) == true);
 		// Erase the Deletable from the list.

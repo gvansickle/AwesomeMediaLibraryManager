@@ -392,6 +392,7 @@ namespace ExtAsync
 		};
 	}; // END struct detail_struct
 
+#if 0
 	/**
 	 * Modified run forwarder for use by ExtFuture<>.then().
 	 */
@@ -410,6 +411,7 @@ namespace ExtAsync
 				std::forward<ExtFutureR>(retfuture),
 				std::forward<Args>(args)...);
 	}
+#endif
 
 	static std::atomic_int64_t s_qthread_id {0};
 
@@ -526,12 +528,16 @@ namespace ExtAsync
              >
 	ExtFuture<T> run(CallbackType&& callback, Args&&... args)
     {
+#if 1
+		return ExtAsync::qthread_async_with_cnr_future(FWD_DECAY_COPY(CallbackType, callback), std::forward<Args>(args)...);
+#else
 		using argst = ct::args_t<CallbackType>;
 		using arg0t = std::tuple_element_t<0, argst>;
 		using ExtFutureR = std::remove_reference_t<arg0t>;
 		static_assert(std::is_same_v<ExtFutureT, ExtFutureR>);
 
 		return ExtAsync::detail_struct<CallbackType>::run_param_expander(std::forward<CallbackType>(callback), std::forward<Args>(args)...);
+#endif
     }
 
 	/**
