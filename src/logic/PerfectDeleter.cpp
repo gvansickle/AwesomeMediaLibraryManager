@@ -62,7 +62,8 @@
 
 
 
-	// QObjectCleanupHandler does this on add:
+	// QObjectCleanupHandler does this on add(QObject*):
+/// connect(destroyed...,objectDestroyed), then insert.
 //	if (!object)
 //	        return 0;
 //
@@ -70,7 +71,10 @@
 //	    cleanupObjects.insert(0, object);
 
 
-	// remove() does this, but doesn't delete the object:
+	// remove(QObject*) does this, but doesn't delete the object:
+/// if(obj is in array)
+/// 	remove_entry()
+///     disconnect(destroyed, this, objDestroyed);
 //	int index;
 //	    if ((index = cleanupObjects.indexOf(object)) != -1) {
 //	        cleanupObjects.removeAt(index);
@@ -92,15 +96,18 @@ public:
 
 	void cancel() override {  };
 	bool poll_wait() override { return true /** @todo */; };
-	void remove() override
+	/**
+	 * Remove this from the container it's in.
+	 */
+	void remove() override // REQUIRES(mutex)
 	{
-		// Is object in the list?
+		// Is this Deletable in the list?
 		auto it = std::find_if(m_list->begin(), m_list->end(), [&](std::shared_ptr<DeletableQObject> p){ return *p == *this; });
 		if(it != m_list->end())
 		{
-			// Remove the entry.
-			// Can't stream name out, it's been deleted.
-//			qIn() << "Removing QObject:" << (*it)->object()->objectName();
+			// Remove this entry from the watch list.
+
+			qIn() << "Removing QObject:" << (*it)->name();
 			std::experimental::erase(*m_list, *it);
 			m_to_be_deleted->disconnect(m_pd);
 		}
@@ -145,6 +152,29 @@ public:
 	bool poll_wait() override { return true; /** @todo */ };
 
 	AMLMJob* object() const override { return dynamic_cast<AMLMJob*>(m_to_be_deleted); };
+};
+
+class DeletableQThread : public DeletableQObject
+{
+	using BASE_CLASS = DeletableQObject;
+
+public:
+	DeletableQThread(PerfectDeleter* pd, std::deque<std::shared_ptr<DeletableQObject>>* list, QThread* to_be_deleted)
+		: DeletableQObject(pd, list, to_be_deleted) {};
+	~DeletableQThread() override {};
+
+	void cancel() override
+	{
+		// A raw QThread, try to interrupt it.
+		object()->quit();
+	};
+	bool poll_wait() override
+	{
+		// Block and wait until the QThread completes (or hasn't started).
+		return object()->wait();
+	};
+
+	QThread* object() const override { return dynamic_cast<QThread*>(m_to_be_deleted); };
 };
 
 PerfectDeleter::PerfectDeleter(QObject* parent) : QObject(parent)
@@ -229,8 +259,12 @@ bool PerfectDeleter::empty() const
 size_t PerfectDeleter::size() const
 {
 	std::scoped_lock sl(m_mutex);
-	auto total_deletables = m_watched_KJobs.size() + m_watched_AMLMJobs.size()
-			+ m_watched_QThreads.size() + m_watched_deletables.size();
+	auto total_deletables =
+			m_watched_QObjects.size()
+			+ m_watched_KJobs.size()
+			+ m_watched_AMLMJobs.size()
+			+ m_watched_QThreads.size()
+			+ m_watched_deletables.size();
 	return total_deletables;
 }
 
@@ -369,8 +403,7 @@ void PerfectDeleter::addKJob(KJob* kjob)
 
 void PerfectDeleter::addAMLMJob(AMLMJob* amlmjob)
 {
-#if 1 // NEW
-	std::lock_guard lock(m_mutex);
+	std::scoped_lock lock(m_mutex);
 
 	std::shared_ptr<DeletableAMLMJob> deletable_amlmjob = std::make_shared<DeletableAMLMJob>(this, &m_watched_AMLMJobs, amlmjob);
 
@@ -384,51 +417,11 @@ void PerfectDeleter::addAMLMJob(AMLMJob* amlmjob)
 	connect_or_die(amlmjob, &QObject::destroyed, this, remover_lambda);
 
 	m_watched_AMLMJobs.emplace_back(deletable_amlmjob);
-
-
-#else
-	std::lock_guard lock(m_mutex);
-
-	QPointer<AMLMJob> qpamlmjob = amlmjob;
-
-	// Remover lambda and connections, for when the AMLMJob is deleted out from under us.
-	// This is a bit of a mess due to this whole "let's delete ourself" thing that permeates Qt5/KF5.
-	// Need to hook into two signals which don't really give us the info we need to un-crashably remove the
-	// registered pointers from the storage here.
-
-	auto remover_lambda = [=, qpamlmjob=qpamlmjob]() {
-		std::lock_guard lock(m_mutex);
-		if(qpamlmjob.isNull())
-		{
-			qWr() << "AMLMJob was null";
-		}
-		else
-		{
-			qIn() << "Destroying AMLMJob:" << qpamlmjob->objectName();
-			std::experimental::erase(m_watched_AMLMJobs, qpamlmjob.data());
-		}
-	};
-
-	auto deletable = make_shared_DeletableBase(amlmjob,
-			// Canceler
-			                                   [qpamlmjob = qpamlmjob](AMLMJob* amlmjob) {},
-			// Waiter
-			                                   [qpamlmjob = qpamlmjob](AMLMJob* amlmjob) {},
-			// External remover.
-			                                   [qpamlmjob = qpamlmjob](AMLMJob* amlmjob) {}
-	);
-
-M_WARNING("These both want to remove the same amlmjob, maybe ok?");
-	connect_or_die(amlmjob, &QObject::destroyed, this, remover_lambda);
-//	connect_or_die(amlmjob, &AMLMJob::finished, this, remover_lambda);
-
-	m_watched_AMLMJobs.push_back(amlmjob);
-#endif
 }
 
 void PerfectDeleter::addQThread(QThread* qthread)
 {
-	std::lock_guard lock(m_mutex);
+	std::scoped_lock lock(m_mutex);
 
 	// QThread is a QObject which will ordinarily have a parent.  However, per the docs, QThread::create() is
 	// somewhat different: the caller is suppose to take ownership.  So that's why this exists.
@@ -440,25 +433,25 @@ void PerfectDeleter::addQThread(QThread* qthread)
 	}
 	else
 	{
+		std::shared_ptr<DeletableQThread> deletable_qthread = std::make_shared<DeletableQThread>(this, &m_watched_QThreads, qthread);
+
 		// From Qt docs:
 		// "When this signal is emitted, the event loop has already stopped running. No more events will be processed in the thread,
 		// except for deferred deletion events. This signal can be connected to QObject::deleteLater(), to free objects in that thread."
 		connect_or_die(qthread, &QThread::finished, this, [=](){
+			std::scoped_lock lock(m_mutex);
 			qIn() << "Deleting QThread:" << qthread;
-			std::lock_guard lock(m_mutex);
-			/// @todo Uniquify, don't rely on pointer.
-			std::experimental::erase(m_watched_QThreads, qthread);
+			std::experimental::erase(m_watched_QThreads, deletable_qthread);
 			qthread->deleteLater();
 			});
-		m_watched_QThreads.emplace_back(qthread);
+		m_watched_QThreads.emplace_back(deletable_qthread);
 	}
 }
 
 
 QStringList PerfectDeleter::stats() const
 {
-	/// @todo This should really be a Threadsafe Interface pattern.
-	std::lock_guard lock(m_mutex);
+	std::scoped_lock lock(m_mutex);
 
 	return stats_internal();
 }

@@ -55,14 +55,26 @@ public:
 		: m_uuid(QUuid::createUuid()), m_pd(pd), m_object_name(object_name) {};
 	virtual ~DeletableBase() = default;
 
+	/**
+	 * Tell the watched object to cancel any operations.  Should not block.
+	 */
 	virtual void cancel() = 0;
+	/**
+	 * Returns true if the object has canceled and can be destroyed.
+	 */
 	virtual bool poll_wait() = 0;
+	/**
+	 * Remove this from the container it's in.
+	 * Should disconnect contained_obj->destroyed signal.
+	 */
 	virtual void remove() = 0;
 
 	bool operator==(const DeletableBase& other) const
 	{
 		return (m_uuid == other.m_uuid) && this->equality_op(other);
 	}
+
+	std::string name() const { return m_object_name; };
 
 protected:
 	/// The bottom half of derived classes' equality comparison operator.
@@ -191,7 +203,14 @@ public:
 		/*std::shared_ptr<Deletable>*/
 //		auto deletable = std::make_shared<Deletable<QThread*,DestroyerCallbackType,void(*)(QThread*)>>(qthread, destroyer_cb, [](QThread*){});
 		auto deletable = make_shared_DeletableBase(qthread, destroyer_cb, [](QThread*) {/** @todo */ return true;}, [](QThread*){  });
-		m_watched_deletables.push_back(deletable);
+		connect_or_die(qthread, &QObject::destroyed, this, [=](){
+			std::lock_guard lock(m_mutex);
+			qIn() << "Deleting QThread:" << qthread;
+			/// @todo Uniquify, don't rely on pointer.
+			std::experimental::erase(m_watched_QThreads, qthread);
+			qthread->deleteLater();
+			});
+		m_watched_deletables.emplace_back(deletable);
 	}
 
 	/// The Threadsafe Interface for stats_internal().
@@ -203,6 +222,9 @@ public Q_SLOTS:
 protected:
 	/// No mutex.
 	QStringList stats_internal() const;
+
+	void
+	addDeletableBase(std::shared_ptr<DeletableBase> deletable, std::deque<std::shared_ptr<DeletableBase>> container);
 
 private:
 
@@ -232,7 +254,7 @@ private:
 //    std::deque<QPointer<AMLMJob>> m_watched_AMLMJobs;
 //	std::deque<std::shared_ptr<DeletableAMLMJob>> m_watched_AMLMJobs;
 	std::deque<std::shared_ptr<DeletableQObject>> m_watched_AMLMJobs;
-	std::deque<QPointer<QThread>> m_watched_QThreads;
+	std::deque<std::shared_ptr<DeletableQObject>> m_watched_QThreads;
 	std::deque<std::shared_ptr<DeletableBase>> m_watched_deletables;
 	QObjectCleanupHandler m_qobj_cleanup_handler;
 

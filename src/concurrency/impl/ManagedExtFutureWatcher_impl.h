@@ -32,6 +32,7 @@
 
 // Ours
 #include <utils/DebugHelpers.h>
+#include <utils/QtHelpers.h>
 #include <logic/PerfectDeleter.h>
 #include "../ExtFuture_traits.h"
 
@@ -72,10 +73,12 @@ namespace ManagedExtFutureWatcher_detail
 	/// implement inter-future status propagation (cancellation and exceptions).
 	static inline QThread* get_backprop_qthread()
 	{
-		static QThread* backprop_thread = []{
+		static QThread* backprop_thread = [=]{
 			QThread* new_thread = new QThread;
 			new_thread->setObjectName("ExtFutureBackpropThread");
-			PerfectDeleter::instance().addQThread(new_thread, [](QThread* the_qthread){
+			PerfectDeleter::instance().addQThread(new_thread);
+#if 0
+					, [](QThread* the_qthread){
 				// Call exit(0) on the QThread.  We use Qt's invokeMethod() here.
 				ExtAsync::detail::run_in_event_loop(the_qthread, [the_qthread](){
 					qDb() << "Calling quit()+wait() on managed FutureWatcher QThread, FWParent has num children:" << f_the_managed_fw_parent->children().size();
@@ -84,10 +87,10 @@ namespace ManagedExtFutureWatcher_detail
 					qDb() << "Finished quit()+wait() on managed FutureWatcher QThread";
 				});
 			});
-
+#endif
 			// No parent, this will be deleted by the signal below.
 			f_the_managed_fw_parent = new FutureWatcherParent();
-			// Create an push the future watcher parent object into the new thread.
+			// Create and push the future watcher parent object into the new thread.
 			f_the_managed_fw_parent->moveToThread(new_thread);
 			connect_or_die(new_thread, &QThread::finished, f_the_managed_fw_parent, &QObject::deleteLater);
 
