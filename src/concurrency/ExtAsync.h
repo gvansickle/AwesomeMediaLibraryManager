@@ -392,27 +392,6 @@ namespace ExtAsync
 		};
 	}; // END struct detail_struct
 
-#if 0
-	/**
-	 * Modified run forwarder for use by ExtFuture<>.then().
-	 */
-	template<class CallbackType, class... Args,
-			 class ExtFutureT = argtype_t<CallbackType, 0>,
-			 class ExtFutureR = argtype_t<CallbackType, 1>,
-			 class LiftedR = Unit::LiftT<std::invoke_result_t<CallbackType, ExtFutureT, ExtFutureR, Args...>>,
-			 REQUIRES(NonNestedExtFuture<ExtFutureT> && NonNestedExtFuture<ExtFutureR>
-			 && std::is_invocable_r_v<LiftedR, CallbackType, ExtFutureT, ExtFutureR, Args...>)
-			 >
-	ExtFutureR run_for_then(CallbackType&& callback, ExtFutureT&& thisfuture, ExtFutureR&& retfuture, Args&&... args)
-	{
-		return ExtAsync::detail_struct<CallbackType>::run_for_then(
-				std::forward<CallbackType>(callback),
-				std::forward<ExtFutureT>(thisfuture),
-				std::forward<ExtFutureR>(retfuture),
-				std::forward<Args>(args)...);
-	}
-#endif
-
 	static std::atomic_int64_t s_qthread_id {0};
 
 	static inline void name_qthread()

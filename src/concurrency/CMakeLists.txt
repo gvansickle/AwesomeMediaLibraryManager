@@ -64,12 +64,6 @@ set(SOURCE_FILES_UTILS_CONCURRENCY
 	ThreadsafeMap.cpp
 	DebugSequence.cpp
 	WorkerThreadBase.cpp
-	FunctionWrapper.cpp
-	FunctionWrapper.h
-	WorkStealingQueue.cpp
-	WorkStealingQueue.h
-	ThreadPool2.cpp
-	ThreadPool2.h
 	)
 
 target_sources_local(concurrency
@@ -83,7 +77,7 @@ target_link_libraries(concurrency
 		#${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS} ### @todo "logic_subdir links to itself".
 		${QT5_LINK_LIB_TARGETS}
 		${KF5_LINK_LIB_TARGETS}
-		${GTK_LINK_LIB_TARGETS} # == Some utils/*Helpers.h.
+		#${GTK_LINK_LIB_TARGETS} # == Some utils/*Helpers.h.
 		)
 target_include_directories(concurrency
 	PUBLIC
