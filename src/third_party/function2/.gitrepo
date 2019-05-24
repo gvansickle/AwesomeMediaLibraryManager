@@ -6,6 +6,7 @@
 [subrepo]
 	remote = https://github.com/Naios/function2.git
 	branch = master
-	commit = 1dd435d8d026673ccbb78eefb63531d8b8e5532e
+	commit = e3695b4b4fa3c672e25c6462d7900f8d2417a417
 	parent = 1fba7df741db163a3e785291d9045e318de09f0a
-	cmdver = 0.3.1
+	cmdver = 0.4.0
+	method = merge
