@@ -630,6 +630,7 @@ namespace ExtAsync
 	    return retfuture;
 	}
 
+#if 1 // OBSOLETE
     /**
      * Asynchronously run a free function taking no params we care about here, arbitrary params otherwise,
      * and returning non-void/non-ExtFuture<>.
@@ -717,7 +718,7 @@ M_WARNING("OBSOLETE");
 		return retfuture;
     }
 };
-
+#endif
 
 /**
  * Run a functor on another thread.

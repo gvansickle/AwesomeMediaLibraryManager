@@ -36,6 +36,7 @@
 //#include "../ExtAsync_traits.h"
 #include "ExtFuture_make_xxx_future.h"
 #include "ExtFutureImplHelpers.h"
+#include "ManagedExtFutureWatcher_impl.h"
 #include "../ExtFuture.h"
 #include <logic/PerfectDeleter.h>
 

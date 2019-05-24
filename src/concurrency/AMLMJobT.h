@@ -500,6 +500,9 @@ protected:
 		using ThisType = std::remove_reference_t<decltype(*this)>;
 //		auto watcher = watcher_sp.data();
 
+		// If AMLMJobT is destroyed, ... do we need to do anything?
+//		connect_or_die(this, &QObject::destroyed, );
+
         // FutureWatcher signals to this->SLOT* connections.
         // Regarding canceled QFuture<>s: "Any QFutureWatcher object that is watching this future will not deliver progress
         // and result ready signals on a canceled future."
@@ -603,7 +606,7 @@ protected:
  * @todo Does this really need a parent?  AMLMJob[T] takes one, but....
  */
 template<class ExtFutureT>
-QPointer<AMLMJobT<ExtFutureT>>
+AMLMJobT<ExtFutureT>*
 make_async_AMLMJobT(ExtFutureT ef, const char* jobname = nullptr, QObject* parent = nullptr)
 {
 	/// @todo I think we don't care if the future has already started/canceled here,

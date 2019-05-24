@@ -264,6 +264,8 @@ set(CPACK_IFW_VERBOSE YES)
 #		LIB_VERSION
 #		)
 
+
+
 message("******************************************************************")
 message("* ${PROJECT_NAME} version ${PROJECT_VERSION}-${GVI_VERSION_COMMITS}-g${GVI_VERSION_HASH}${GVI_VERSION_DIRTY_POSTFIX} (${CMAKE_BUILD_TYPE})")
 message("* ${FULL_COPYRIGHT_STRING}")
@@ -281,6 +283,8 @@ message("*   Version (alt): ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${
 message("*   Discovered tools:")
 message("*        CMAKE_MAKE_PROGRAM: ${CMAKE_MAKE_PROGRAM}")
 message("*        GIT_EXECUTABLE: ${GIT_EXECUTABLE}")
+# Per @link https://stackoverflow.com/a/24470998
+message("* Generated with config types: ${CMAKE_CONFIGURATION_TYPES}")
 
 print_compilers_and_params()
 
@@ -395,6 +399,7 @@ else()
 	)
 endif()
 if(WITH_BUNDLED_BREEZE_ICONS)
+	### @todo SOMETHING IS WRONG HERE, FIX THIS 
 	set(AMLM_INSTALL_BUNDLED_ICON_THEME_DIR "${KDE_INSTALL_FULL_DATAROOTDIR}/gvansickle/AwesomeMediaLibraryManager")
 	find_file(BREEZEICONS_PATH breeze-icons.rcc 
 		HINTS
@@ -405,7 +410,7 @@ if(WITH_BUNDLED_BREEZE_ICONS)
 			"Full path to the breeze-icons.rcc file"	
 			)
     if (NOT EXISTS ${BREEZEICONS_PATH})
-        message(FATAL_ERROR "Breeze-icons is missing")
+        message(FATAL_ERROR "Cannot find breeze-icons.rcc")
     else()
     	message(STATUS "Found source default icon theme: ${BREEZEICONS_PATH}")
     	message(STATUS "Default icon theme will be installed in: ${AMLM_INSTALL_BUNDLED_ICON_THEME_DIR}")
@@ -505,6 +510,67 @@ if(Boost_FOUND)
 		INTERFACE 
 			BOOST_THREAD_VERSION=5)
 	add_definitions(${Boost_LIB_DIAGNOSTIC_DEFINITIONS})
+endif()
+
+if(FALSE)
+# Ok, we're going to try to pull in just Wt::Dbo.
+# Following instructions here: @link https://www.webtoolkit.eu/wt/doc/tutorial/dbo.html#_installation :
+# "Starting from a Wt source package (and on a UNIX-like environment), 
+# you would do the following to build and install only Wt::Dbo:
+# $ cd wt-xxx
+# $ mkdir build
+# $ cd build
+# $ cmake ../ # extra options may be needed, see instructions
+# $ cd src/Wt/Dbo
+# $ make
+# $ sudo make install"
+#
+# Also @link https://www.webtoolkit.eu/wt/doc/reference/html/InstallationUnix.html for the "see instructions" above.
+#
+#download_project
+include(ExternalProject)
+ExternalProject_Add(
+	wt_dbo # Creates variables wt_dbo_{SOURCE,BINARY}_DIR
+	GIT_REPOSITORY https://github.com/emweb/wt.git
+	GIT_TAG        master
+	GIT_PROGRESS  true
+	${UPDATE_DISCONNECTED_IF_AVAILABLE}
+	# Configuration
+	CMAKE_ARGS
+		${CMAKE_ARGS}
+		"-DCMAKE_BUILD_TYPE=$<CONFIG>"
+		"-DCMAKE_CONFIGURATION_TYPES=$<CONFIG>"
+		"-DBUILD_EXAMPLES=OFF"
+		"-DINSTALL_RESOURCES=OFF"
+		"-DENABLE_SSL=OFF"
+		"-DENABLE_HARU=OFF"
+		"-DENABLE_PANGO=OFF"
+		"-DENABLE_SQLITE=ON"
+		"-DENABLE_POSTGRES=OFF"
+		"-DENABLE_FIREBIRD=OFF"
+		"-DENABLE_MYSQL=OFF"
+		"-DENABLE_MSSQLSERVER=OFF"
+		"-DENABLE_QT4=OFF"
+		"-DENABLE_LIBWTTEST=OFF"
+		"-DENABLE_LIBWTDBO=ON"
+		"-DENABLE_OPENGL=OFF"
+		"-DBUILD_TESTS=OFF"
+		"-DCONNECTOR_ISAPI=OFF"
+		"-DCONNECTOR_HTTP=OFF"
+		"-DCONNECTOR_FCGI=OFF"
+	# Build step options
+	BUILD_COMMAND "" #${CMAKE_COMMAND} -E echo "Starting $<CONFIG> build of Wt::Dbo in binary dir: <BINARY_DIR>"
+  	#COMMAND       ${CMAKE_COMMAND} --build <BINARY_DIR> --config $<CONFIG> --target wt-target-dbo # wtdbo
+  	#COMMAND       ${CMAKE_COMMAND} -E echo "$<CONFIG> build of Wt::Dbo complete"
+	
+	# Install
+	# This target is exported: wt-target-dbo, target is wtdbo
+	INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "Starting $<CONFIG> install of Wt::Dbo to install dir: <INSTALL_DIR>"
+	COMMAND			${CMAKE_COMMAND} --build <BINARY_DIR> --config $<CONFIG> --target install
+ 	COMMAND			${CMAKE_COMMAND} -E echo "$<CONFIG> install of Wt::Dbo complete"
+	)
+#add_subdirectory(${wt_dbo_SOURCE_DIR} ${wt_dbo_BINARY_DIR} EXCLUDE_FROM_ALL)
+#print_varlist(wt_dbo_SOURCE_DIR wt_dbo_BINARY_DIR)
 endif()
 
 # Qt logging categories.

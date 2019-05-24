@@ -267,9 +267,11 @@ set_target_properties(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
 	PUBLIC
 		# Targetized C++ compile settings.
-		cxx_settings 
-	PRIVATE 
+		cxx_settings
+		#wt-target-dbo
+	PRIVATE
 		${PROJECT_COMMON_LINK_LIBS})
+
 ### @todo breeze
 #add_dependencies(${PROJECT_NAME} icons_oxygen)
 
