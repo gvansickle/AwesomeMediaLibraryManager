@@ -313,7 +313,6 @@ namespace ManagedExtFutureWatcher_detail
 	 */
 	template <class T, class R, class Executor, class ThenCallback, class... Args>
 	void connect_or_die_then_watchers(ExtFuture<T> up, ExtFuture<R> down, Executor&& ex, ThenCallback&& then_callback, Args&&... args)
-#if 1
 	{
 		connect_or_die_watchers_and_callback(up, down, [=, then_callback_cp=FWD_DECAY_COPY(ThenCallback, then_callback),
 											 upc=up, downc=down]() mutable {
@@ -346,82 +345,7 @@ namespace ManagedExtFutureWatcher_detail
 			};
 		});
 	}
-#else
-	{
-		auto* fw_down = get_managed_qfuture_watcher<R>("[then down->up]");
-		auto* fw_up = get_managed_qfuture_watcher<T>("[then up->down]");
 
-		/// @todo Still need to delete on R-finished, ...? T canceled?
-
-		// down->up canceled.
-		connect_or_die(fw_down, &QFutureWatcher<R>::canceled, [upc=DECAY_COPY(up), downc=down, fw_down]() mutable {
-			// Propagate the cancel upstream, possibly with an exception.
-			// Not a race here, since we'll have been canceled by the exception when we get here.
-			qDb() << "down->up canceled";
-			if(downc.has_exception())
-			{
-				// Note: Order flipped here, function propagates exception from param1 to param2.
-			    trigger_exception_and_propagate(downc, upc);
-			}
-			else
-			{
-			    upc.cancel();
-			}
-			upc.reportFinished();
-            // Delete this watcher, it's done all it can.
-			fw_down->deleteLater();
-		});
-		// up->down finished.
-		/// @todo Probably need a context here.
-		connect_or_die(fw_up, &QFutureWatcher<T>::finished,
-					   [upc=up, downc=down, fw_up, then_callback_cp=FWD_DECAY_COPY(ThenCallback, then_callback)]() mutable {
-			// Propagate the finish downstream, possibly with an exception.
-			// Not a race here, since we'll have been canceled by the exception when we get here.
-			qDb() << "up->down finished";
-			if(upc.has_exception())
-			{
-				trigger_exception_and_propagate(upc, downc);
-			}
-			else
-			{
-				// Normal finish.  Send the results or exception to the .then() callback.
-				try
-				{
-					// Call the callback with the results- or canceled/exception-laden this_future_copy.
-					// Could throw, hence we're in a try.
-					qDb() << "then_watchers: Calling then_callback_copy(this_future_copy).";
-					R retval;
-
-					if constexpr(std::is_same_v<R, Unit>)
-					{
-						// then_callback_copy returns void, return a Unit separately.
-						std::invoke(std::move(then_callback_cp), upc);
-						retval = unit;
-					}
-					else
-					{
-						// then_callback_copy returns non-void, return the callback's return value.
-						retval = std::invoke(std::move(then_callback_cp), upc);
-						// Didn't throw, report the result.
-						downc.reportResult(retval);
-					}
-				}
-				catch(...)
-				{
-					std::exception_ptr eptr = std::current_exception();
-					propagate_eptr_to_future(eptr, downc);
-				}
-			}
-			downc.reportFinished();
-
-			// Delete this watcher, it's done all it can.
-			fw_up->deleteLater();
-		});
-
-		fw_down->setFuture(down);
-		fw_up->setFuture(up);
-	}
-#endif
 
 	template<class R, class T>
 	void connect_or_die_down2up_cancel(QPointer<QFutureWatcher<R>> downstream, QObject* context, ExtFuture<T> upstream_future)
@@ -477,106 +401,6 @@ namespace ManagedExtFutureWatcher_detail
 				[=]() mutable {
 			delete_later_if_canceled_and_finished(fw);
 		});
-	}
-
-	template <class T, class R, class ResultsReadyAtCallbackType = std::nullptr_t, class WatcherConnectionCallback = std::nullptr_t>
-	void SetBackpropWatcher(ExtFuture<T> upstream_future, ExtFuture<R> downstream_future,
-							QObject* upstream_context, QObject* downstream_context,
-							ResultsReadyAtCallbackType&& results_ready_callback = nullptr,
-							WatcherConnectionCallback&& wc_callback = nullptr)
-	{
-		QThread* bp_thread = get_backprop_qthread();
-		if(upstream_context == nullptr)
-		{
-			upstream_context = f_the_managed_fw_parent;
-		}
-		if(downstream_context == nullptr)
-		{
-			downstream_context = f_the_managed_fw_parent;
-		}
-
-		using FutureWatcherTypeR = QFutureWatcher<R>;
-		using FutureWatcherTypeT = QFutureWatcher<T>;
-
-		// Watchers will live in the backprop thread.
-		QPointer<FutureWatcherTypeR> downstream_watcher = get_managed_qfuture_watcher<R>();
-		QPointer<FutureWatcherTypeT> upstream_watcher = get_managed_qfuture_watcher<T>();
-
-		// R->T ("upstream")
-		// cancel signal.
-		connect_or_die_down2up_cancel(downstream_watcher, upstream_watcher);
-	//		connect_or_die(downstream_watcher, &FutureWatcherTypeR::canceled, upstream_context, [=,
-	//					   upstream_future_copy=DECAY_COPY(std::forward<ExtFuture<T>>(upstream_future))]() mutable {
-	//			// Note we directly call cancel() (but from context's thread) because upstream_future may not have an event loop.
-	//			upstream_future_copy.cancel();
-	//		});
-		// finished signal.
-		/// @note Should only ever get this due to an exception thrown into R, and then we should probably have gotten a cancel instead.
-		connect_or_die(downstream_watcher, &FutureWatcherTypeR::finished, upstream_context, [=,
-					   upstream_future_copy=FWD_DECAY_COPY(ExtFuture<T>, upstream_future)]() mutable {
-			// Note we directly call cancel() (but from context's thread) because upstream_future may not have an event loop.
-			upstream_future_copy.reportFinished();
-		});
-
-		// T->R ("downstream") signals.
-		// The resultsReadyAt() signal -> results_ready_callback.
-	//		if constexpr(std::is_invocable_r_v<void, ResultsReadyAtCallbackType, int, int>)
-	//		{
-			connect_or_die(upstream_watcher, &FutureWatcherTypeR::resultsReadyAt, downstream_context,
-						   [=,
-						   upstream_future_copy=DECAY_COPY(/*std::forward<ExtFuture<T>>*/(upstream_future)),
-						   callback_cp=DECAY_COPY(std::forward<ResultsReadyAtCallbackType>(results_ready_callback))](int begin, int end) mutable {
-				std::invoke(callback_cp, upstream_future, begin, end);
-				/// @note We're temporarily copying to the output future here, we should change that to use a separate thread.
-				///       Or maybe we can just return the upstream_future here....
-				for(int i = begin; i < end; ++i)
-				{
-					downstream_future.reportResult(upstream_future_copy, i);
-				}
-			});
-	//		}
-	//		// The T->R data xfer.
-	//		connect_or_die(upstream_watcher, &FutureWatcherTypeR::resultsReadyAt, downstream_context,
-	//		               [=,upstream_future_copy=DECAY_COPY(/*std::forward<ExtFuture<T>>*/(upstream_future)),
-	//				          callback_cp=DECAY_COPY(std::forward<ResultsReadyAtCallbackType>(results_ready_callback))](int begin, int end) mutable {
-	//			               /// @note We're temporarily copying to the output future here, we should change that to use a separate thread.
-	//			               ///       Or maybe we can just return the upstream_future here....
-	//			               for(int i = begin; i < end; ++i)
-	//			               {
-	//				               downstream_future.reportResult(upstream_future_copy, i);
-	//			               }
-	//		               });
-		// Canceled.
-		connect_or_die(upstream_watcher, &FutureWatcherTypeT::canceled, downstream_context,
-				[=, downstream_future_copy=DECAY_COPY(downstream_future)]() mutable {
-			if(upstream_future.has_exception())
-			{
-				// Throw exception to downstream future.  Takes a bit of shenanigans.
-				trigger_exception_and_propagate(upstream_future, downstream_future_copy);
-			}
-			// This probably gets ignored.
-			qDb() << "########## IGNORING?";
-			downstream_future_copy.reportCanceled();
-			qDb() << "########## IGNORING.";
-		});
-		// Finished.
-		connect_or_die(upstream_watcher, &FutureWatcherTypeT::finished, downstream_context,
-					   [=]() mutable { downstream_future.reportFinished(); });
-
-		if constexpr(std::is_invocable_r_v<void, WatcherConnectionCallback, QPointer<QFutureWatcher<T>>, QPointer<QFutureWatcher<R>>>)
-		{
-			// Let the caller do any last-minute connections to the watchers.
-			std::invoke(wc_callback, upstream_watcher, downstream_watcher);
-		}
-
-		// Connect these up last, they signal the watchers to deleteLater() themselves.
-	//		connect_or_die_deleteLater_on_finished(downstream_watcher);
-	//		connect_or_die_deleteLater_on_finished(upstream_watcher);
-
-		// And set the futures.  It's just that easy.
-		downstream_watcher->setFuture(downstream_future);
-		upstream_watcher->setFuture(upstream_future);
-
 	}
 
 } // END ns ManangedExtFutureWatcher_detail
