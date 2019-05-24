@@ -68,3 +68,11 @@ QThread* ManagedExtFutureWatcher_detail::BackpropThreadManager::priv_instance()
 
 	return backprop_thread;
 }
+
+/// Returns the pointer to the QThread which is to be used for running QFutureWatchers which
+/// implement inter-future status propagation (cancellation and exceptions).
+QThread* ManagedExtFutureWatcher_detail::get_backprop_qthread()
+{
+	static BackpropThreadManager* btm = new BackpropThreadManager();
+	return btm->get_backprop_qthread();
+}

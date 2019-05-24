@@ -88,41 +88,7 @@ namespace ManagedExtFutureWatcher_detail
 
 	/// Returns the pointer to the QThread which is to be used for running QFutureWatchers which
 	/// implement inter-future status propagation (cancellation and exceptions).
-	static inline QThread* get_backprop_qthread()
-	{
-		static BackpropThreadManager* btm = new BackpropThreadManager();
-		return btm->get_backprop_qthread();
-#if 0
-		static QThread* backprop_thread = [=]{
-			QThread* new_thread = new QThread;
-			new_thread->setObjectName("ExtFutureBackpropThread");
-			PerfectDeleter::instance().addQThread(new_thread);
-#if 0
-					, [](QThread* the_qthread){
-				// Call exit(0) on the QThread.  We use Qt's invokeMethod() here.
-				ExtAsync::detail::run_in_event_loop(the_qthread, [the_qthread](){
-					qDb() << "Calling quit()+wait() on managed FutureWatcher QThread, FWParent has num children:" << f_the_managed_fw_parent->children().size();
-					the_qthread->quit();
-					the_qthread->wait();
-					qDb() << "Finished quit()+wait() on managed FutureWatcher QThread";
-				});
-			});
-#endif
-			// No parent, this will be eventually deleted by the signal below.
-			f_the_managed_fw_parent = new FutureWatcherParent();
-			// Create and push the future watcher parent object into the new thread.
-			f_the_managed_fw_parent->moveToThread(new_thread);
-			connect_or_die(new_thread, &QThread::finished, f_the_managed_fw_parent, &QObject::deleteLater);
-
-			// Start the thread.
-			new_thread->start();
-			return new_thread;
-		}();
-		return backprop_thread;
-#endif
-	}
-
-
+	QThread* get_backprop_qthread();
 
 	/**
 	 * Part of the system by which we get an exception from one ExtFuture<> into the state of another.
