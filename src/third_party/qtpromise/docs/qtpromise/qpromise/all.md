@@ -31,4 +31,4 @@ output.then([](const QVector<QByteArray>& res) {
 });
 ```
 
-See also: [`qPromiseAll`](../helpers/qpromiseall.md)
+See also: [`QtPromise::all`](../helpers/all.md)

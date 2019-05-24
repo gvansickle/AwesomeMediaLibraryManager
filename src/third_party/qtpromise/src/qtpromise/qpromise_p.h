@@ -1,7 +1,6 @@
 #ifndef QTPROMISE_QPROMISE_P_H
 #define QTPROMISE_QPROMISE_P_H
 
-// QtPromise
 #include "qpromiseglobal.h"
 
 // Qt
@@ -111,8 +110,23 @@ private:
 template <typename T>
 struct PromiseDeduce
 {
-    using Type = QtPromise::QPromise<Unqualified<T>>;
+    using Type = QtPromise::QPromise<T>;
 };
+
+template <typename T>
+struct PromiseDeduce<T&>
+    : public PromiseDeduce<T>
+{ };
+
+template <typename T>
+struct PromiseDeduce<const T>
+    : public PromiseDeduce<T>
+{ };
+
+template <typename T>
+struct PromiseDeduce<const volatile T>
+    : public PromiseDeduce<T>
+{ };
 
 template <typename T>
 struct PromiseDeduce<QtPromise::QPromise<T>>
@@ -129,22 +143,21 @@ struct PromiseFunctor
 template <typename T>
 struct PromiseFulfill
 {
-    static void call(
-        T&& value,
-        const QtPromise::QPromiseResolve<T>& resolve,
-        const QtPromise::QPromiseReject<T>&)
+    template <typename V, typename TResolve, typename TReject>
+    static void call(V&& value, const TResolve& resolve, const TReject&)
     {
-        resolve(std::move(value));
+        resolve(std::forward<V>(value));
     }
 };
 
 template <typename T>
 struct PromiseFulfill<QtPromise::QPromise<T>>
 {
+    template <typename TResolve, typename TReject>
     static void call(
         const QtPromise::QPromise<T>& promise,
-        const QtPromise::QPromiseResolve<T>& resolve,
-        const QtPromise::QPromiseReject<T>& reject)
+        const TResolve& resolve,
+        const TReject& reject)
     {
         if (promise.isFulfilled()) {
             resolve(promise.m_d->value());
@@ -545,6 +558,15 @@ protected:
     }
 };
 
-} // namespace QtPromise
+struct PromiseInspect
+{
+    template <typename T>
+    static inline PromiseData<T>* get(const QtPromise::QPromise<T>& p)
+    {
+        return p.m_d.data();
+    }
+};
 
-#endif // ifndef QTPROMISE_QPROMISE_H
+} // namespace QtPromisePrivate
+
+#endif // QTPROMISE_QPROMISE_H

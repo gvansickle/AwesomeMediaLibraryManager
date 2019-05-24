@@ -17,6 +17,7 @@ module.exports = {
         sidebar: [
             'qtpromise/getting-started',
             'qtpromise/qtconcurrent',
+            'qtpromise/qtsignals',
             'qtpromise/thread-safety',
             'qtpromise/api-reference',
             {
@@ -32,12 +33,12 @@ module.exports = {
                     'qtpromise/qpromise/ispending',
                     'qtpromise/qpromise/isrejected',
                     'qtpromise/qpromise/map',
+                    'qtpromise/qpromise/reduce',
                     'qtpromise/qpromise/tap',
                     'qtpromise/qpromise/tapfail',
                     'qtpromise/qpromise/then',
                     'qtpromise/qpromise/timeout',
                     'qtpromise/qpromise/wait',
-                    'qtpromise/qpromise/all.md',
                     'qtpromise/qpromise/reject.md',
                     'qtpromise/qpromise/resolve.md'
                 ]
@@ -45,12 +46,23 @@ module.exports = {
             {
                 title: 'Helpers',
                 children: [
+                    'qtpromise/helpers/all',
                     'qtpromise/helpers/attempt',
+                    'qtpromise/helpers/connect',
                     'qtpromise/helpers/each',
                     'qtpromise/helpers/filter',
                     'qtpromise/helpers/map',
-                    'qtpromise/helpers/qpromise',
-                    'qtpromise/helpers/qpromiseall'
+                    'qtpromise/helpers/reduce',
+                    'qtpromise/helpers/resolve'
+                ]
+            },
+            {
+                title: 'Exceptions',
+                children: [
+                    'qtpromise/exceptions/canceled',
+                    'qtpromise/exceptions/context',
+                    'qtpromise/exceptions/timeout',
+                    'qtpromise/exceptions/undefined'
                 ]
             }
         ]

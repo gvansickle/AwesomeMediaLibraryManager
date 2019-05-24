@@ -1,9 +1,8 @@
 #ifndef QTPROMISE_QPROMISE_H
 #define QTPROMISE_QPROMISE_H
 
-// QtPromise
 #include "qpromise_p.h"
-#include "qpromiseerror.h"
+#include "qpromiseexceptions.h"
 #include "qpromiseglobal.h"
 #include "qpromiseresolver.h"
 
@@ -77,6 +76,7 @@ public: // STATIC
 protected:
     friend struct QtPromisePrivate::PromiseFulfill<QPromise<T>>;
     friend class QtPromisePrivate::PromiseResolver<T>;
+    friend struct QtPromisePrivate::PromiseInspect;
 
     QExplicitlySharedDataPointer<QtPromisePrivate::PromiseData<T>> m_d;
 };
@@ -89,18 +89,31 @@ public:
     QPromise(F&& resolver): QPromiseBase<T>(std::forward<F>(resolver)) { }
 
     template <typename Functor>
-    inline QPromise<T> each(Functor fn);
+    inline QPromise<T>
+    each(Functor fn);
 
     template <typename Functor>
-    inline QPromise<T> filter(Functor fn);
+    inline QPromise<T>
+    filter(Functor fn);
 
     template <typename Functor>
     inline typename QtPromisePrivate::PromiseMapper<T, Functor>::PromiseType
     map(Functor fn);
 
+    template <typename Functor, typename Input>
+    inline typename QtPromisePrivate::PromiseDeduce<Input>::Type
+    reduce(Functor fn, Input initial);
+
+    template <typename Functor, typename U = T>
+    inline typename QtPromisePrivate::PromiseDeduce<typename U::value_type>::Type
+    reduce(Functor fn);
+
 public: // STATIC
+
+    // DEPRECATED (remove at version 1)
     template <template <typename, typename...> class Sequence = QVector, typename ...Args>
-    inline static QPromise<QVector<T>> all(const Sequence<QPromise<T>, Args...>& promises);
+    Q_DECL_DEPRECATED_X("Use QtPromise::all instead") static inline QPromise<QVector<T>>
+    all(const Sequence<QPromise<T>, Args...>& promises);
 
     inline static QPromise<T> resolve(const T& value);
     inline static QPromise<T> resolve(T&& value);
@@ -117,8 +130,11 @@ public:
     QPromise(F&& resolver): QPromiseBase<void>(std::forward<F>(resolver)) { }
 
 public: // STATIC
+
+    // DEPRECATED (remove at version 1)
     template <template <typename, typename...> class Sequence = QVector, typename ...Args>
-    inline static QPromise<void> all(const Sequence<QPromise<void>, Args...>& promises);
+    Q_DECL_DEPRECATED_X("Use QtPromise::all instead") static inline QPromise<void>
+    all(const Sequence<QPromise<void>, Args...>& promises);
 
     inline static QPromise<void> resolve();
 
@@ -130,4 +146,4 @@ private:
 
 #include "qpromise.inl"
 
-#endif // ifndef QTPROMISE_QPROMISE_H
+#endif // QTPROMISE_QPROMISE_H
