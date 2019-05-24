@@ -51,6 +51,7 @@ set(SOURCE_FILES_UTILS_CONCURRENCY
 	impl/ExtFuture_when_all.cpp
 	impl/ExtFuture_when_any.cpp
 	impl/ExtFutureImplHelpers.cpp
+	impl/ManagedExtFutureWatcher_impl.cpp
 	ExtAsync.cpp
 	ExtAsyncExceptions.cpp
 	ExtFuture.cpp

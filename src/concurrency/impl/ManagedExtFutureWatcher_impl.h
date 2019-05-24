@@ -69,10 +69,30 @@ namespace ManagedExtFutureWatcher_detail
 	/// This is semi-gross, it's the QObject which will be the parent of all managed future watchers.
 	static inline FutureWatcherParent* f_the_managed_fw_parent = nullptr;
 
+	/**
+	 * The BackpropThreadManager class.
+	 * Uses the Construct Members On First Use Idiom to ensure there's only one Backprop QThread.
+	 */
+	class BackpropThreadManager
+	{
+	public:
+
+		/**
+		 * Returns a QThread* to the thread managing QFutureWatcher<>s for the ExtAsync library.
+		 */
+		QThread* get_backprop_qthread();
+
+	private:
+		static QThread* priv_instance();
+	};
+
 	/// Returns the pointer to the QThread which is to be used for running QFutureWatchers which
 	/// implement inter-future status propagation (cancellation and exceptions).
 	static inline QThread* get_backprop_qthread()
 	{
+		static BackpropThreadManager* btm = new BackpropThreadManager();
+		return btm->get_backprop_qthread();
+#if 0
 		static QThread* backprop_thread = [=]{
 			QThread* new_thread = new QThread;
 			new_thread->setObjectName("ExtFutureBackpropThread");
@@ -88,7 +108,7 @@ namespace ManagedExtFutureWatcher_detail
 				});
 			});
 #endif
-			// No parent, this will be deleted by the signal below.
+			// No parent, this will be eventually deleted by the signal below.
 			f_the_managed_fw_parent = new FutureWatcherParent();
 			// Create and push the future watcher parent object into the new thread.
 			f_the_managed_fw_parent->moveToThread(new_thread);
@@ -99,6 +119,7 @@ namespace ManagedExtFutureWatcher_detail
 			return new_thread;
 		}();
 		return backprop_thread;
+#endif
 	}
 
 
