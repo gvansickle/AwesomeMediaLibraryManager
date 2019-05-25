@@ -22,7 +22,7 @@
 
 /**
  * @file
- * Qt5 analogs to std::async().
+ * Some Qt5-based analogs to std::async().
  */
 
 
@@ -444,7 +444,7 @@ namespace ExtAsync
 
 		// ExtFuture<> will default to (STARTED | RUNNING).  This is so that any calls of waitForFinished()
 		// against the ExFuture<> (and/or the underlying QFutureInterface<>) will block.
-		ExtFutureR report_and_control;
+		ExtFutureR report_and_control = make_started_only_future<ExtFutureR::value_type_t>();
 
 		QtConcurrent::run(std::forward<This*>(thiz), std::forward<F>(std::decay_t<F>(function)),
 						  report_and_control, std::forward<Args>(args)...);

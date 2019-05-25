@@ -882,10 +882,21 @@ public:
 	{
 		ExtFuture<R> retfuture = ExtAsync::make_started_only_future<R>();
 
-		retfuture = ExtAsync::qthread_async([=](ExtFuture<T> this_future) mutable  {
+		retfuture = ExtAsync::qthread_async([=](ExtFuture<T> this_future, ExtFuture<R> down) mutable  {
+
+			ManagedExtFutureWatcher_detail::connect_or_die_backprop_cancel_watcher(this_future, down);
 
 			// Wait inside this intermediate thread for the incoming future (this_future) to be ready.
+			// The ExtAsync::qthread_async() above runs this in a try/catch, so if this throws it'll propagate
+			// the exception/cancel there.
+			// We do have to check for a straight .cancel() w/o exception though.
 			this_future.wait();
+
+			if(this_future.isCanceled())
+			{
+				down.cancel();
+				return;
+			}
 
 			// Run the callback in the context's event loop.
 			// Note the std::invoke details.  Per @link https://en.cppreference.com/w/cpp/experimental/shared_future/then:
@@ -894,7 +905,7 @@ public:
 			/// @note run_in_event_loop() may (different threads) or may not (same threads) return immediately to the caller.
 			///       This is the second reason to be inside this intermediate thread.  Completion is handled via
 			///       the ExtFuture<> retfuture_cp we pass in here.
-			ExtAsync::detail::run_in_event_loop(context, [=, retfuture_cp = retfuture,
+			ExtAsync::detail::run_in_event_loop(context, [=, retfuture_cp = down,
 							  then_callback=FWD_DECAY_COPY(ThenCallbackType, then_callback)]() mutable {
 				if constexpr(std::is_void_v<Unit::DropT<R>>)
 				{
@@ -909,7 +920,7 @@ public:
 					retfuture_cp.reportFinished(&retval);
 				}
 				});
-			}, DECAY_COPY(*this));
+			}, DECAY_COPY(*this), retfuture);
 
 		return retfuture;
 	}
