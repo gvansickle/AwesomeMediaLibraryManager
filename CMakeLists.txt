@@ -199,6 +199,8 @@ include(ucm)
 # Target-focused compile settings.
 add_library(cxx_settings INTERFACE)
 target_compile_features(cxx_settings INTERFACE cxx_std_17)
+add_library(cxx_definitions_qt INTERFACE)
+target_compile_definitions(cxx_definitions_qt INTERFACE)
 if(UNIX)
 	ucm_add_flags(-fmessage-length=0 -pthread -Werror=return-type -fno-omit-frame-pointer)
 	ucm_add_flags(-Og -ggdb3)
@@ -589,18 +591,21 @@ ecm_qt_declare_logging_category(QT5_LOGGING_CATEGORY_SOURCE_FILES
                                 DEFAULT_SEVERITY Debug ### <Debug|Info|Warning|Critical|Fatal>
                                 )
 
-add_definitions(
-	-DQT_DEPRECATED_WARNINGS
-    #-DQT_DISABLE_DEPRECATED_BEFORE=0x051000
-    -DQT_NO_KEYWORDS
-    -DQT_NO_SIGNALS_SLOTS_KEYWORDS
-    #-DQT_NO_URL_CAST_FROM_STRING
-    #-DQT_NO_CAST_FROM_ASCII
-    #-DQT_NO_CAST_TO_ASCII
-    #-DQT_NO_CAST_FROM_BYTEARRAY
-    -DQT_STRICT_ITERATORS
-    -DQT_USE_QSTRINGBUILDER
-    -DQT_NO_NARROWING_CONVERSIONS_IN_CONNECT)
+# Qt-specific compiler definitions.                               
+target_compile_definitions(cxx_definitions_qt 
+	INTERFACE
+		-DQT_DEPRECATED_WARNINGS
+    	#-DQT_DISABLE_DEPRECATED_BEFORE=0x051000
+    	-DQT_NO_KEYWORDS
+    	-DQT_NO_SIGNALS_SLOTS_KEYWORDS
+	    #-DQT_NO_URL_CAST_FROM_STRING
+	    #-DQT_NO_CAST_FROM_ASCII
+	    #-DQT_NO_CAST_TO_ASCII
+	    #-DQT_NO_CAST_FROM_BYTEARRAY
+	    -DQT_STRICT_ITERATORS
+	    -DQT_USE_QSTRINGBUILDER
+	    -DQT_NO_NARROWING_CONVERSIONS_IN_CONNECT
+	   )
 
 
 # Set PROJECT_VERSION_PATCH and PROJECT_VERSION_TWEAK to 0 if not present, needed by add_project_meta
@@ -617,20 +622,8 @@ set(RC_LEGALCOPYRIGHT "${FULL_COPYRIGHT_STRING}")
 # Reverse of app.setOrganizationDomain()?
 set(IDENTIFIER "io.github.gvansickle")
 
-# So the source in src can find the "resources/" dir.
-# include_directories(${CMAKE_CURRENT_SOURCE_DIR}
-# 	${CMAKE_CURRENT_BINARY_DIR}
-# 	${boost_callable_traits_SOURCE_DIR}/include
-# 	${CMAKE_CURRENT_SOURCE_DIR}/src/third_party/continuable/include
-# 	${CMAKE_CURRENT_SOURCE_DIR}/src/third_party/function2/include
-# 	### @todo REMOVE, still needed for NetAwareFileDialogGtk3 (<QtGui/qpa/qplatformdialoghelper.h>)
-# 	${Qt5Gui_PRIVATE_INCLUDE_DIRS}
-# 	)
-
 ### Generate configured headers.
-# Generate the version info file.
-#configure_file(${PROJECT_SOURCE_DIR}/resources/VersionInfo.cpp.in
-#		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp)
+# @note The version info file is generated in the "resources" dir/target.
 # Generate the amlm-configure.h file.
 configure_file(${PROJECT_SOURCE_DIR}/src/config.h.in
 	${PROJECT_BINARY_DIR}/src/config.h
@@ -644,11 +637,11 @@ configure_file(${PROJECT_SOURCE_DIR}/src/config.h.in
 add_subdir_lib(resources STATIC EXCLUDE_FROM_ALL)
 message(AUTHOR_WARNING "amlm_APP_ICONS: ${amlm_APP_ICONS}")
 add_subdir_lib(src STATIC EXCLUDE_FROM_ALL)
+
 ### @todo Google Test creates a target named "tests" as well, and I can't seem to disable/work around it other than
 ###    by using add_subdirectory() vs. add_subdir_lib().  Maybe this is better anyway.
-
-#add_subdir_lib(tests EXCLUDE_FROM_ALL)
-add_subdirectory(tests EXCLUDE_FROM_ALL)
+add_subdir_lib(tests EXCLUDE_FROM_ALL)
+#add_subdirectory(tests EXCLUDE_FROM_ALL)
 
 #include(resources/CMakeLists.txt)
 #print_varlist(amlm_ICONS amlm_SRCS)

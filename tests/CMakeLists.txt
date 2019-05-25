@@ -21,19 +21,10 @@
 
 ### @todo This needs work.  Not sure atm how best to partition this.
 
-add_library(amlm_tests STATIC
-	EXCLUDE_FROM_ALL
-	# Actual tests
-#	FlagsAndEnumsTests.cpp
-#	FlagsAndEnumsTests.h
-	# Support code
-# 	IResultsSequenceMock.cpp
-# 	IResultsSequenceMock.h
-# 	TestLifecycleManager.cpp
-# 	TestLifecycleManager.h
-# 	TestHelpers.h
-	)
-target_sources_local(amlm_tests
+# add_library(amlm_tests STATIC
+# 	EXCLUDE_FROM_ALL
+# 	)
+target_sources_local(tests
 	PRIVATE
 		IResultsSequenceMock.cpp
 		IResultsSequenceMock.h
@@ -41,7 +32,7 @@ target_sources_local(amlm_tests
 		TestLifecycleManager.h
 		TestHelpers.h
 	)
-target_link_libraries(amlm_tests
+target_link_libraries(tests
 	PRIVATE
 		gtest
 		gmock
@@ -50,7 +41,7 @@ target_link_libraries(amlm_tests
 		#${Boost_LIBRARIES}
 )
 
-target_include_directories(amlm_tests
+target_include_directories(tests
 	PRIVATE
 	    # For config.h
 		${PROJECT_BINARY_DIR}/src

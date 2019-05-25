@@ -247,6 +247,8 @@ target_compile_definitions(${PROJECT_NAME}
 		"QT_DEPRECATED_WARNINGS=1"
 		"QT_NO_KEYWORDS=1"
 		"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
+		# Qt-specific -D's.
+		cxx_definitions_qt
 	)
 target_include_directories(${PROJECT_NAME}
 	PUBLIC 
@@ -395,13 +397,15 @@ set_property(TARGET gtest_main PROPERTY SKIP_AUTOGEN ON)
 set_property(TARGET gmock_main PROPERTY SKIP_AUTOGEN ON)
 target_link_libraries(${TEST_EXE_TARGET}
 	PRIVATE
-		Threads::Threads gtest gmock amlm_tests)
+		Threads::Threads gtest gmock tests)
 target_link_libraries(${TEST_EXE_TARGET}
 	PRIVATE
         Qt5::Test ${PROJECT_COMMON_LINK_LIBS}
 	PUBLIC
 		# Targetized C++ compile settings.
 		cxx_settings
+		# Qt-specific -D's.
+		cxx_definitions_qt
 	)
 add_test(NAME ${TEST_EXE_TARGET} COMMAND $<TARGET_FILE:${TEST_EXE_TARGET}>)
 ecm_mark_as_test(${TEST_EXE_TARGET})
@@ -430,7 +434,9 @@ target_compile_definitions(test_qtestamlmjobtests PRIVATE
 	"TEST_FWK_IS_QTEST=1"
 	)
 target_include_directories(test_qtestamlmjobtests PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
-target_link_libraries(test_qtestamlmjobtests Qt5::Test ${PROJECT_COMMON_LINK_LIBS})
+target_link_libraries(test_qtestamlmjobtests Qt5::Test ${PROJECT_COMMON_LINK_LIBS}
+	# Qt-specific -D's.
+	cxx_definitions_qt)
 set_target_properties(test_qtestamlmjobtests PROPERTIES
 	AUTOMOC ON
 	AUTOUIC ON)

@@ -1108,7 +1108,7 @@ void QtConcurrentMappedFutureStateOnCancel(bool dont_let_jobs_complete)
 	}
 
 	// Cancel the async mapping operation.
-	TCOUT << "CANCELING mapped_results_future:" << mapped_results_future;
+	TCOUT << "CANCELING mapped_results_future:" << state(mapped_results_future);
 	mapped_results_future.cancel();
 	TCOUT << "CANCELED mapped_results_future:" << mapped_results_future;
 
@@ -1119,11 +1119,11 @@ void QtConcurrentMappedFutureStateOnCancel(bool dont_let_jobs_complete)
 	/// @note CANCELED QFUTURES ARE NOT NECESSARILY FINISHED.
 	/// @note I think I fixed that and now they always will be.
 	TCOUT << "CANCELED:" << mapped_results_future;
-//	if(dont_let_jobs_complete)
-//	{
-//		AMLMTEST_EXPECT_TRUE(mapped_results_future.isRunning() && mapped_results_future.isStarted() && mapped_results_future.isCanceled()) << ExtFutureState::state(mapped_results_future);
-//	}
-//	else
+	if(dont_let_jobs_complete)
+	{
+		AMLMTEST_EXPECT_TRUE(mapped_results_future.isRunning() && mapped_results_future.isStarted() && mapped_results_future.isCanceled()) << ExtFutureState::state(mapped_results_future);
+	}
+	else
 	{
 		AMLMTEST_EXPECT_TRUE(mapped_results_future.isFinished() && mapped_results_future.isStarted() && mapped_results_future.isCanceled()) << ExtFutureState::state(mapped_results_future);
 	}
