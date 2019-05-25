@@ -36,7 +36,7 @@
 #include <QFileIconProvider>
 
 // Ours
-#include <src/AMLMApp.h>
+#include <AMLMApp.h>
 #include <utils/RegisterQtMetatypes.h>
 #include "LibraryRescanner.h"
 #include "LibraryRescannerJob.h"

@@ -618,14 +618,14 @@ set(RC_LEGALCOPYRIGHT "${FULL_COPYRIGHT_STRING}")
 set(IDENTIFIER "io.github.gvansickle")
 
 # So the source in src can find the "resources/" dir.
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}
-	${CMAKE_CURRENT_BINARY_DIR}
-	${boost_callable_traits_SOURCE_DIR}/include
-	${CMAKE_CURRENT_SOURCE_DIR}/src/third_party/continuable/include
-	${CMAKE_CURRENT_SOURCE_DIR}/src/third_party/function2/include
-	### @todo REMOVE, still needed for NetAwareFileDialogGtk3 (<QtGui/qpa/qplatformdialoghelper.h>)
-	${Qt5Gui_PRIVATE_INCLUDE_DIRS}
-	)
+# include_directories(${CMAKE_CURRENT_SOURCE_DIR}
+# 	${CMAKE_CURRENT_BINARY_DIR}
+# 	${boost_callable_traits_SOURCE_DIR}/include
+# 	${CMAKE_CURRENT_SOURCE_DIR}/src/third_party/continuable/include
+# 	${CMAKE_CURRENT_SOURCE_DIR}/src/third_party/function2/include
+# 	### @todo REMOVE, still needed for NetAwareFileDialogGtk3 (<QtGui/qpa/qplatformdialoghelper.h>)
+# 	${Qt5Gui_PRIVATE_INCLUDE_DIRS}
+# 	)
 
 ### Generate configured headers.
 # Generate the version info file.

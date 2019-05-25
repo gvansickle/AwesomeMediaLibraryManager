@@ -105,6 +105,7 @@ set(gui_settings_SOURCE_FILES
 	)
 PREPEND_TO_EACH(gui_settings_SOURCE_FILES "settings/" ${gui_settings_SOURCE_FILES})
 
+message(WARN "TODO")
 add_subdirectory(activityprogressmanager)
 
 add_subdir_lib(widgets STATIC EXCLUDE_FROM_ALL)
@@ -131,6 +132,8 @@ target_link_libraries(gui
 		${KF5_LINK_LIB_TARGETS}
 		${GTK_LINK_LIB_TARGETS}
 		widgets
+	PRIVATE
+		resources
 		)
 target_include_directories(gui
 	PUBLIC

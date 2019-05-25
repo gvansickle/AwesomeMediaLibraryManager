@@ -61,7 +61,7 @@
 #include "ExtAsyncExceptions.h"
 
 // Generated
-#include "logging_cat_ExtFuture.h"
+//#include "logging_cat_ExtFuture.h"
 
 // ExtAsync
 #include "ExtAsync.h"
@@ -850,10 +850,11 @@ public:
 	/// @} // END std::promise-like functionality.
 
 	/// @name .then() overloads.
-	/// Various C++2x/"C++ Extensions for Concurrency" TS (ISO/IEC TS 19571:2016) std::experimental::future-like
+	/// Various C++2x/"C++ Extensions for Concurrency" TS (ISO/IEC TS 19571:2016) std::experimental::shared_future-like
 	/// .then() overloads for Qt5.
 	/// @{
 
+#ifdef CURRENTLY_UNNEEDED
 	template <class ThenCallbackType,
 				  class R = Unit::LiftT<std::invoke_result_t<ThenCallbackType, ExtFuture<T>>>,
 	              class ThenReturnType = R,// then_return_future_type_t<R>,
@@ -864,6 +865,7 @@ public:
 		// Forward to the master callback, don't call the then_callback on a cancel.
 		return this->then(context, /*call_on_cancel==*/ false, std::forward<ThenCallbackType>(then_callback));
 	}
+#endif
 
 	/**
 	 * .then() overload: Run @a then_callback in @a context's event loop, passing a finished *this as the first parameter.

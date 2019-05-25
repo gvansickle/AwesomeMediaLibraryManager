@@ -22,7 +22,7 @@
  */
 #include "AbstractHeaderSection.h"
 
-#include <src/utils/DebugHelpers.h>
+#include <utils/DebugHelpers.h>
 
 AbstractHeaderSection::AbstractHeaderSection()
 {

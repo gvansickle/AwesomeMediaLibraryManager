@@ -35,9 +35,9 @@
 #include <QVector>
 
 /// Ours
-#include <src/concurrency/ExtAsync.h>
+#include <concurrency/ExtAsync.h>
 #include "LibraryRescannerMapItem.h"
-#include <src/logic/models/AbstractTreeModelItem.h>
+#include <logic/models/AbstractTreeModelItem.h>
 
 class LibraryModel;
 class LibraryEntry;

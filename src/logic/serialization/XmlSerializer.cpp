@@ -38,7 +38,7 @@
 #include <QRegularExpression>
 
 // Ours
-#include <src/utils/DebugHelpers.h>
+#include <utils/DebugHelpers.h>
 #include <utils/Stopwatch.h>
 #include "ISerializable.h"
 

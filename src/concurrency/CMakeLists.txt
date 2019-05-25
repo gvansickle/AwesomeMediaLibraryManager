@@ -29,15 +29,6 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	ExtFutureWatcher.h
 	ExtFuture_traits.h
 	IExtFutureWatcher.h
-	impl/IExecutor.h
-	impl/ExtAsync_impl.h
-	impl/ExtFuture_impl.hpp
-	impl/ExtFuture_make_xxx_future.h
-	impl/ExtFuture_when_all.h
-	impl/ExtFuture_when_any.h
-	impl/ExtFutureImplHelpers.h
-	impl/ExtAsync_RunInThread.h
-	impl/ManagedExtFutureWatcher_impl.h
 	ExtAsync.h
 	ExtAsyncExceptions.h
 	AMLMJob.h
@@ -47,6 +38,18 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	DebugSequence.h
 	WorkerThreadBase.h
 	)
+set(PRIVATE_HEADER_FILES_UTILS_CONCURRENCY
+	impl/IExecutor.h
+	impl/ExtAsync_impl.h
+	impl/ExtFuture_impl.hpp
+	impl/ExtFuture_make_xxx_future.h
+	impl/ExtFuture_when_all.h
+	impl/ExtFuture_when_any.h
+	impl/ExtFutureImplHelpers.h
+	impl/ExtAsync_RunInThread.h
+	impl/ManagedExtFutureWatcher_impl.h
+	)
+
 set(SOURCE_FILES_UTILS_CONCURRENCY
 	impl/ExtFuture_when_all.cpp
 	impl/ExtFuture_when_any.cpp
@@ -69,6 +72,7 @@ set(SOURCE_FILES_UTILS_CONCURRENCY
 target_sources_local(concurrency
 	PUBLIC
 		${HEADER_FILES_UTILS_CONCURRENCY}
+		${PRIVATE_HEADER_FILES_UTILS_CONCURRENCY}
 	PRIVATE
 		${SOURCE_FILES_UTILS_CONCURRENCY}
 		)

@@ -36,7 +36,7 @@
 #include <QUrl>
 
 // Ours
-#include <src/utils/DebugHelpers.h>
+#include <utils/DebugHelpers.h>
 
 /// @name run_query() overloads taking a QUrl pointing to an XQuery file.
 /// @{

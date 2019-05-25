@@ -40,8 +40,8 @@
 #include <KJobUiDelegate>
 
 // Ours
-#include <src/future/function_traits.hpp>
-#include <src/utils/UniqueIDMixin.h>
+#include <future/function_traits.hpp>
+#include <utils/UniqueIDMixin.h>
 #include "utils/ConnectHelpers.h"
 #include "IExtFutureWatcher.h"
 #include "ExtAsync.h"

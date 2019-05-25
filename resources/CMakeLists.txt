@@ -1,5 +1,5 @@
 #
-# Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -42,6 +42,8 @@ configure_file(VersionInfo.cpp.in VersionInfo.cpp)
 
 target_sources_local(resources
 	PUBLIC
+		VersionInfo.h
+	PRIVATE
 		VersionInfo.cpp
 		${amlm_APP_ICONS}
 		${amlm_ICONS}

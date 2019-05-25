@@ -68,7 +68,7 @@
 #include "AbstractTreeModelItem.h"
 #include "AbstractTreeModelHeaderItem.h"
 #include <utils/DebugHelpers.h>
-#include <src/logic/serialization/XmlSerializer.h>
+#include <logic/serialization/XmlSerializer.h>
 #include "ScanResultsTreeModel.h"
 
 

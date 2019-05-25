@@ -30,7 +30,7 @@
 #include <QVariant>
 
 #include "EnhancedAbstractTableModel.h"
-#include <src/logic/DirScanResult.h>
+#include <logic/DirScanResult.h>
 
 
 class ScanResultsTableModel : public EnhancedAbstractTableModel

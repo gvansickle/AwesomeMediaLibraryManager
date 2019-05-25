@@ -30,13 +30,13 @@
 #include <QUrl>
 
 // Qt5 Helpers
-#include <src/utils/QtHelpers.h>
+#include <utils/QtHelpers.h>
 
 // Ours
 #include <future/guideline_helpers.h>
 #include "ExtMimeType.h"
 #include "Metadata.h"
-#include "src/utils/Fraction.h"
+#include <utils/Fraction.h>
 #include "serialization/ISerializable.h"
 
 

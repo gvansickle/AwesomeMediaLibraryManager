@@ -84,11 +84,11 @@
 #include <QVector>
 
 // Ours
-#include <src/utils/QtHelpers.h>
-#include <src/utils/StaticAnalysis.h>
-#include <src/future/guideline_helpers.h>
-#include <src/future/cloneable.h>
-#include <src/logic/serialization/ISerializable.h>
+#include <utils/QtHelpers.h>
+#include <utils/StaticAnalysis.h>
+#include <future/guideline_helpers.h>
+#include <future/cloneable.h>
+#include <logic/serialization/ISerializable.h>
 
 /**
  * Base class for AbstractItemTreeModel items.
