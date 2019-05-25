@@ -180,66 +180,7 @@ namespace ManagedExtFutureWatcher_detail
 	}
 
 	/**
-	 * Set up watchers and signals between @a up and @a down for a .then() pair.
-	 * Signals:
-	 * canceled() down->up
-	 * finished() up->down
-	 */
-	template <class T, class R, class PackagedInterfutureCallback, class... Args>
-	void connect_or_die_watchers_and_callback(ExtFuture<T> up, ExtFuture<R> down,
-			PackagedInterfutureCallback&& pif_callback, Args&&... args)
-	{
-		auto* fw_down = get_managed_qfuture_watcher<R>("[then down->up]");
-		auto* fw_up = get_managed_qfuture_watcher<T>("[then up->down]");
-
-		/// @todo Still need to delete on R-finished, ...? T canceled?
-
-		// down->up canceled.
-		connect_or_die(fw_down, &QFutureWatcher<R>::canceled, [upc=up, downc=down, fw_down]() mutable {
-			// Propagate the cancel upstream, possibly with an exception.
-			// Not a race here, since we'll have been canceled by the exception when we get here.
-			qDb() << "down->up canceled";
-			if(downc.has_exception())
-			{
-				// Note: Order flipped here, function propagates exception from param1 to param2.
-				trigger_exception_and_propagate(downc, upc);
-			}
-			else
-			{
-				upc.cancel();
-			}
-			upc.reportFinished();
-			// Delete this watcher, it's done all it can.
-			fw_down->deleteLater();
-		});
-		// up->down finished.
-		/// @todo Probably need a context here.
-		connect_or_die(fw_up, &QFutureWatcher<T>::finished,
-					   [upc=up, downc=down, fw_up, pif_callback_cp=FWD_DECAY_COPY(PackagedInterfutureCallback, pif_callback)]() mutable {
-			// Propagate the finish downstream, possibly with an exception.
-			// Not a race here, since we'll have been canceled by the exception when we get here.
-			qDb() << "up->down finished";
-			if(upc.has_exception())
-			{
-				trigger_exception_and_propagate(upc, downc);
-			}
-			else
-			{
-				// Normal finish.  Send the results or exception to the .pif() callback.
-				std::invoke(pif_callback_cp/*, args...*/);
-			}
-			downc.reportFinished();
-
-			// Delete this watcher, it's done all it can.
-			fw_up->deleteLater();
-		});
-
-		fw_down->setFuture(down);
-		fw_up->setFuture(up);
-	}
-
-	/**
-	 * Connect a watcher between @a up and @a down which will propagate a cancel and any
+	 * Connect a watcher to @a down which will propagate a cancel and any
 	 * exception held by @a down to @a up, then deleteLater() itself.
 	 */
 	template <class T, class R>
@@ -281,6 +222,7 @@ namespace ManagedExtFutureWatcher_detail
 			fw_down->deleteLater();
 		});
 
+		// Set The Future(tm).
 		// Note that the signals above may fire immediately upon the setFuture().
 		if(down.has_exception())
 		{
