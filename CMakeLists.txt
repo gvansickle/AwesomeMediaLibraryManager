@@ -198,6 +198,7 @@ include(ECMEnableSanitizers)
 include(ucm)
 # Target-focused compile settings.
 add_library(cxx_settings INTERFACE)
+target_compile_features(cxx_settings INTERFACE cxx_std_17)
 if(UNIX)
 	ucm_add_flags(-fmessage-length=0 -pthread -Werror=return-type -fno-omit-frame-pointer)
 	ucm_add_flags(-Og -ggdb3)

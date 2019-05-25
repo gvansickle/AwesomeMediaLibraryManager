@@ -150,12 +150,6 @@
 //#include <logic/PerfectDeleter.h>
 
 
-/**
- *
- */
-//static QThreadPool s_cancel_threadpool = QThreadPool();
-
-
 /// @name Explicit instantiations to try to get compile times down.
 template class ExtFuture<Unit>;
 template class ExtFuture<bool>;
