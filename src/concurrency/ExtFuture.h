@@ -1677,7 +1677,7 @@ public:
 
 protected:
 
-
+#if 0
 	/**
 	 * TapHelper which calls tap_callback whenever there's a new result ready.
 	 * @param guard_qobject
@@ -1698,7 +1698,7 @@ protected:
 			}
 		});
 	}
-
+#endif
 	/// @name Additional member variables on top of what QFuture<T> has.
 	/// These will cause us to need to worry about slicing, additional copy construction/assignment work
 	/// which needs to be synchronized somehow, etc etc.
