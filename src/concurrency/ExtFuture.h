@@ -1083,7 +1083,7 @@ public:
 		{
 			// context is either a QThreadPool* or nullptr.
 			/// @todo For the moment, spawn both cases in a new thread.
-			return then_qthread_async(std::forward<ThenCallbackType>(then_callback));
+			return then_qthread_async(FWD_DECAY_COPY(ThenCallbackType, then_callback));
 		}
 		else if constexpr (!std::is_convertible_v<ContextType, QThreadPool*>
 		        && std::is_convertible_v<ContextType, QObject*>)
