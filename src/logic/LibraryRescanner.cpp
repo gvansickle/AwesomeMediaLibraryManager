@@ -353,6 +353,10 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 
 #if 1
 	/// @stap
+	/// Load the LibraryEntry's.
+//	tree_model_item_future.stap([=, tree_model_ptr=tree_model](ExtFuture<SharedItemContType> new_items_future, int begin_index, int end_index){
+
+//	})
 	/// Append TreeModelItems to the tree_model.
 	tree_model_item_future.stap(this,
 								[=, tree_model_ptr=tree_model](ExtFuture<SharedItemContType> new_items_future, int begin_index, int end_index) mutable {
@@ -412,8 +416,9 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 		return unit;
 	})
 	.then(qApp, [=,
-				 tree_model_ptr=tree_model,
-				 kjob=/*FWD_DECAY_COPY(QPointer<AMLMJobT<ExtFuture<DirScanResult>>>,*/ dirtrav_job/*)*/](ExtFuture<Unit> future_unit) {
+				 tree_model_ptr=tree_model//,
+				 //kjob=/*FWD_DECAY_COPY(QPointer<AMLMJobT<ExtFuture<DirScanResult>>>,*/ dirtrav_job/*)*/
+		  ](ExtFuture<Unit> future_unit) {
 
 			AMLM_ASSERT_IN_GUITHREAD();
 
@@ -421,18 +426,18 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 
 
 			qDb() << "DIRTRAV COMPLETE, NOW IN GUI THREAD";
-			if(kjob.isNull())
-			{
-				Q_ASSERT_X(0, __func__, "Dir scan job was deleted");
-			}
-	        if(kjob->error())
-	        {
-	            qWr() << "DIRTRAV FAILED:" << kjob->error() << ":" << kjob->errorText() << ":" << kjob->errorString();
-	            auto uidelegate = kjob->uiDelegate();
-	            Q_CHECK_PTR(uidelegate);
-	            uidelegate->showErrorMessage();
-	        }
-	        else
+//			if(kjob.isNull())
+//			{
+//				Q_ASSERT_X(0, __func__, "Dir scan job was deleted");
+//			}
+//	        if(kjob->error())
+//	        {
+//	            qWr() << "DIRTRAV FAILED:" << kjob->error() << ":" << kjob->errorText() << ":" << kjob->errorString();
+//	            auto uidelegate = kjob->uiDelegate();
+//	            Q_CHECK_PTR(uidelegate);
+//	            uidelegate->showErrorMessage();
+//	        }
+//	        else
 	        {
 	            // Succeeded, but we may still have outgoing filenames in flight.
 	            qIn() << "DIRTRAV SUCCEEDED";

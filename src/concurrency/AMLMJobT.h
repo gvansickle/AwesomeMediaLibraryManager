@@ -59,11 +59,10 @@ public:
         qDbo() << "Constructor, m_ext_future:" << m_ext_future.state();
         // Watcher creation is here vs. in start() to mitigate against cancel-before-start races and segfaults.  Seems to work.
 	    // We could get a doKill() call at any time after we leave this constructor.
-//		m_ext_watcher = QSharedPointer<ExtFutureWatcherT>::create();
-		m_ext_watcher = new ExtFutureWatcherT();
+		m_ext_watcher = new ExtFutureWatcherT(this);
 
 		// Create a new 1 sec speed update QTimer.
-		m_speed_timer = QSharedPointer<QTimer>::create(this);
+		m_speed_timer = new QTimer(this);
 	}
 
 	/**
@@ -99,11 +98,10 @@ public:
 
 		// Watcher creation is here vs. in start() to mitigate against cancel-before-start races and segfaults.  Seems to work.
 		// We could get a doKill() call at any time after we leave this constructor.
-//		m_ext_watcher = QSharedPointer<ExtFutureWatcherT>::create();
 		m_ext_watcher = new ExtFutureWatcherT(this);
 
 		// Create a new 1 sec speed update QTimer.
-		m_speed_timer = QSharedPointer<QTimer>::create(this);
+		m_speed_timer = new QTimer(this);
 
 		// Hook up watcher->{other} signal/slots, start speed timer.
 		pre_start();
@@ -112,7 +110,10 @@ public:
 		m_ext_watcher->setFuture(m_ext_future);
 	}
 
-	~AMLMJobT() override {};
+	~AMLMJobT() override
+	{
+		qDb() << "DELETING AMLMJobT";
+	};
 
     /**
      * Return a copy of the future.
@@ -177,8 +178,8 @@ protected: //Q_SLOTS:
     {
         // The ExtFuture<T> and hence the Job is finished.  Delete the watcher and emit the KJob result.
         // The emitResult() call will send out a KJob::finished() signal.
-		qDbo() << "GOT EXTFUTURE FINISHED, calling deleteLater() on the watcher.";
-        m_ext_watcher->deleteLater();
+		qDbo() << "GOT EXTFUTURE FINISHED, calling emitResult()";
+//        m_ext_watcher->deleteLater();
 		this->emitResult();
     }
 
@@ -508,10 +509,11 @@ protected:
         // and result ready signals on a canceled future."
         // This group corresponds ~1:1 with KJob functionality.
 		connect_or_die(watcher, &ExtFutureWatcherT::started, this, &ThisType::SLOT_extfuture_started);
-		connect_or_die(watcher, &ExtFutureWatcherT::finished, this, &ThisType::SLOT_extfuture_finished);
 		connect_or_die(watcher, &ExtFutureWatcherT::canceled, this, &ThisType::SLOT_extfuture_canceled);
 		connect_or_die(watcher, &ExtFutureWatcherT::paused, this, &ThisType::SLOT_extfuture_paused);
 		connect_or_die(watcher, &ExtFutureWatcherT::resumed, this, &ThisType::SLOT_extfuture_resumed);
+		connect_or_die(watcher, &ExtFutureWatcherT::finished, this, &ThisType::SLOT_extfuture_finished);
+
 
 		// FutureWatcher progress signals -> this slots.
 		connect_or_die(watcher, &ExtFutureWatcherT::progressRangeChanged, this, &ThisType::SLOT_extfuture_progressRangeChanged);
@@ -527,7 +529,7 @@ protected:
 //        connect_or_die(this, &KJob::result, this, &ThisType::result);
 
 		// Speed update timer.
-		connect_or_die(m_speed_timer.data(), &QTimer::timeout, this, &ThisType::SLOT_UpdateSpeed);
+		connect_or_die(m_speed_timer, &QTimer::timeout, this, &ThisType::SLOT_UpdateSpeed);
 
 		/// @todo EXP: Throttling.
 //		m_ext_watcher.setPendingResultsLimit(2);
@@ -589,13 +591,13 @@ protected:
 	/// The watcher for the ExtFuture.
 	/// @note Would like to use a std::unique_ptr here, but it screws with the QObject parent/child delete mechanism
 	///       (we get double deletes).
-//	QSharedPointer<ExtFutureWatcherT> m_ext_watcher {};
-	ExtFutureWatcherT* m_ext_watcher {};
+	ExtFutureWatcherT* m_ext_watcher { nullptr };
 
 	/// KJob::emitSpeed() support, which we apparently have to maintain ourselves.
 	/// KJob::emitSpeed() takes an unsigned long.
+	/// QTimer inherits QObject.
+	QTimer* m_speed_timer { nullptr };
 	unsigned long m_speed {0};
-	QSharedPointer<QTimer> m_speed_timer { nullptr };
 	qulonglong m_speed_last_processed_size {0};
 	std::deque<int64_t> m_speed_history;
 };

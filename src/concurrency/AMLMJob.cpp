@@ -48,7 +48,7 @@ AMLM_QREG_CALLBACK([](){
 
 AMLMJob::AMLMJob(QObject *parent) : KJob(parent)
 {
-    setObjectName(uniqueQObjectName());
+//    setObjectName(uniqueQObjectName());
 
     qDbo() << M_NAME_VAL(this);
 

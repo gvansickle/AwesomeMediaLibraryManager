@@ -1278,12 +1278,6 @@ public:
 				// Connect the results watcher to the future.
 				fw_up_for_results->setFuture(up);
 			}
-//			catch(ExtAsyncCancelException& e)
-//			{
-//				// It was the cancel exception, throw it up.
-//				qWr() << "THROWING ExtAsyncCancelException() UP";
-//				up.reportException(e);
-//			}
 			catch(...)
 			{
 				// up or the callback threw some non-cancel exception, throw it down.
