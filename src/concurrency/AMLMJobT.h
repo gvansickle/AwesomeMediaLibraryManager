@@ -113,7 +113,8 @@ public:
 	~AMLMJobT() override
 	{
 		qDb() << "DELETING AMLMJobT";
-	};
+	}
+
 
     /**
      * Return a copy of the future.

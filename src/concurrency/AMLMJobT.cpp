@@ -18,6 +18,3 @@
  */
 
 #include "AMLMJobT.h"
-
-
-

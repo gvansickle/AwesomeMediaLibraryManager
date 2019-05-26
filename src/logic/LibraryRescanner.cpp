@@ -384,16 +384,10 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 					qDb() << "ADDING TO NEW MODEL:" << M_ID_VAL(&entry) << M_ID_VAL(entry->data(1).toString());
 					lib_entry->populate(true);
 
+					// Here we're only dealing with the per-file LibraryEntry's.
 					std::vector<std::shared_ptr<LibraryEntry>> lib_entries;
-					/// @note Here we only care about the LibraryEntry corresponding to each file.
-	//				if(!lib_entry->isSubtrack())
-	//				{
-	//					lib_entries = lib_entry->split_to_tracks();
-	//				}
-	//				else
-					{
-						lib_entries.push_back(lib_entry);
-					}
+					lib_entries.push_back(lib_entry);
+
 					new_child->setLibraryEntry(lib_entries.at(0));
 					entry->appendChild(std::move(new_child));
 				}

@@ -944,14 +944,18 @@ public:
 		auto* upw = new QFutureWatcher<T>(context);
 
 		// The up->down finish signal.  This is where we'll call the then_callback.
-//		M_TODO("This needs to return the callback's return value to the returned future.");
 		connect_or_die(upw, &QFutureWatcher<T>::finished, context,
 					   [=,
 					   then_callback_c2=FWD_DECAY_COPY(ThenCallbackType, then_callback),
 					   downstream_future=DECAY_COPY(retfuture),
 					   upw_c2=upw]() mutable {
-			std::invoke(std::move(then_callback_c2), ExtFuture<T>(upw_c2->future()));
+//		M_TODO("This needs to return the callback's return value to the returned future.");
+//			std::invoke(std::move(then_callback_c2), ExtFuture<T>(upw_c2->future()));
+			R retval = std_invoke_and_lift(std::move(then_callback_c2), ExtFuture<T>(upw_c2->future()));
+			downstream_future.reportResult(retval);
 			downstream_future.reportFinished();
+			// The watcher has done everything it needed to, deleteLater() it.
+			upw_c2->deleteLater();
 			;});
 
 		upw->setFuture(*this);
