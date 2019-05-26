@@ -95,7 +95,7 @@ public:
 
 		// Set our capabilities.
 		this->setCapabilities(capabilities);
-		this->setAutoDelete(false);
+		this->setAutoDelete(true);
 
 		// Watcher creation is here vs. in start() to mitigate against cancel-before-start races and segfaults.  Seems to work.
 		// We could get a doKill() call at any time after we leave this constructor.

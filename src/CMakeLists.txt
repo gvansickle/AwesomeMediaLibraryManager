@@ -242,13 +242,8 @@ target_compile_definitions(${PROJECT_NAME}
 		# libstdc++ defs: @link https://gcc.gnu.org/onlinedocs/gcc-9.1.0/libstdc++/manual/
 		# Enable the libstdc++ debug mode.
 		#_GLIBCXX_DEBUG
-		"QT_SHAREDPOINTER_TRACK_POINTERS=1"
 		"KXMLGUI_NO_DEPRECATED=1"
-		"QT_DEPRECATED_WARNINGS=1"
-		"QT_NO_KEYWORDS=1"
 		"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
-		# Qt-specific -D's.
-		cxx_definitions_qt
 	)
 target_include_directories(${PROJECT_NAME}
 	PUBLIC 
@@ -270,6 +265,7 @@ target_link_libraries(${PROJECT_NAME}
 	PUBLIC
 		# Targetized C++ compile settings.
 		cxx_settings
+		cxx_definitions_qt
 		#wt-target-dbo
 	PRIVATE
 		${PROJECT_COMMON_LINK_LIBS})
@@ -372,11 +368,8 @@ target_compile_definitions(${TEST_EXE_TARGET}
 		# Enable the libstdc++ debug mode.
 		#_GLIBCXX_DEBUG 
 	PRIVATE
-	"QT_SHAREDPOINTER_TRACK_POINTERS=1"
-	"QT_DEPRECATED_WARNINGS"
-	"QT_NO_KEYWORDS"
-	"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
-	"TEST_FWK_IS_GTEST=1"
+		"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
+		"TEST_FWK_IS_GTEST=1"
 	)
 target_include_directories(${TEST_EXE_TARGET} PRIVATE
 	"utils/nomoc"

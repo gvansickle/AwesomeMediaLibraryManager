@@ -182,6 +182,25 @@ namespace detail
 		return detail::qthread_async(retfuture, FWD_DECAY_COPY(CallbackType, callback), retfuture, args...);
 	};
 
+	/**
+	 * Run the callback in a new QThread with its own event loop.
+	 *
+	 * @note Replacing ExtAsync::run_in_qthread_with_event_loop().
+	 *
+	 * @tparam CallbackType  Callback of type:
+	 *     @code
+	 *     void callback(ExtFutureT [, ...])
+	 *     @endcode
+	 * @param callback  The callback to run in the new thread.
+	 */
+//	template <class ExtFutureT = argtype_t<CallbackType, 0>,
+//			class... Args,
+//			REQUIRES(is_ExtFuture_v<ExtFutureT> && !is_nested_ExtFuture_v<ExtFutureT>)>
+//	ExtFutureT async_qthread_with_event_loop(CallbackType&& callback, Args&&... args)
+//	{
+
+//	}
+
 }; // END namespace ExtAsync.
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_EXTASYNC_RUNINTHREAD_H

@@ -117,6 +117,66 @@ namespace ExtAsync
 			// add your variables here
 		};
 
+#if 0 // TODO
+		/**
+		 * Run @a callback in @a context's event loop.
+		 */
+		template <class CallbackType, class QObjectType,
+					class ExtFutureT = argtype_t<CallbackType, 0>,
+					class... Args,
+				  class R = Unit::LiftT< std::invoke_result_t<CallbackType, ExtFutureT, Args...> >,
+			REQUIRES(!is_ExtFuture_v<R>
+					&& !std::is_convertible_v<QObjectType, QThreadPool>
+					&& std::is_invocable_r_v<Unit::DropT<R>, CallbackType, ExtFutureT, Args...>
+			  )>
+		ExtFuture<R> async_qthread_run_in_event_loop(QObjectType* context, CallbackType&& callback, Args&&... args) const
+		{
+			ExtFuture<R> retfuture = ExtAsync::make_started_only_future<R>();
+
+			retfuture = ExtAsync::qthread_async([=](ExtFuture<R> down) mutable  {
+#if 0
+				ManagedExtFutureWatcher_detail::connect_or_die_backprop_cancel_watcher(this_future, down);
+
+				// Wait inside this intermediate thread for the incoming future (this_future) to be ready.
+				// The ExtAsync::qthread_async() above runs this in a try/catch, so if this throws it'll propagate
+				// the exception/cancel there.
+				// We do have to check for a straight .cancel() w/o exception though.
+				this_future.wait();
+
+				if(this_future.isCanceled())
+				{
+					down.cancel();
+					return;
+				}
+#endif
+				// Run the callback in the context's event loop.
+				// Note the std::invoke details.  Per @link https://en.cppreference.com/w/cpp/experimental/shared_future/then:
+				// "When the shared state currently associated with *this is ready, the continuation INVOKE(std::move(fd), *this)
+				// is called on an unspecified thread of execution [...]. If that expression is invalid, the behavior is undefined."
+				/// @note run_in_event_loop() may (different threads) or may not (same threads) return immediately to the caller.
+				///       This is the second reason to be inside this intermediate thread.  Completion is handled via
+				///       the ExtFuture<> retfuture_cp we pass in here.
+				ExtAsync::detail::run_in_event_loop(context, [=, retfuture_cp = down,
+								  then_callback=FWD_DECAY_COPY(CallbackType, callback)]() mutable {
+					if constexpr(std::is_void_v<Unit::DropT<R>>)
+					{
+						// Continuation returns void.
+						std::invoke(std::move(then_callback), callback);
+						retfuture_cp.reportFinished();
+					}
+					else
+					{
+						// Continuation returns a value type.
+						R retval = std::invoke(std::move(then_callback), callback);
+						retfuture_cp.reportFinished(&retval);
+					}
+					});
+				}, retfuture);
+
+			return retfuture;
+		}
+#endif
+
 	}; // END namespace detail
 
 	template <class CallbackType>
@@ -343,6 +403,7 @@ namespace ExtAsync
 
 		/**
 		 * Run the callback in a new QThread with its own event loop.
+		 *
 		 * @tparam CallbackType  Callback of type:
 		 *     @code
 		 *     void callback(ExtFutureT [, ...])
@@ -352,8 +413,11 @@ namespace ExtAsync
 		template <class ExtFutureT = argtype_t<CallbackType, 0>,
 				class... Args,
 				REQUIRES(is_ExtFuture_v<ExtFutureT> && !is_nested_ExtFuture_v<ExtFutureT>)>
+				/// @todo rename to async_qthread_with_event_loop().
 		static ExtFutureT run_in_qthread_with_event_loop(CallbackType&& callback, Args&&... args)
 		{
+			/// All we do here is create a new QThread with an almost-dummy QObject in it,
+			/// then call ExtAsync::detail::run_in_event_loop() on it.
 			using ExtAsync::detail::WorkerQObject;
 
 			ExtFutureT retfuture = make_started_only_future<typename ExtFutureT::inner_t>();
@@ -369,9 +433,10 @@ namespace ExtAsync
 			});
 			// Connection from thread start to actual WorkerQObject process() function start
 			connect_or_die(thread, &QThread::started, worker, [=,
-						   callback_copy = DECAY_COPY(std::forward<CallbackType>(callback)),
+						   callback_copy = FWD_DECAY_COPY(CallbackType, callback),
 						   retfuture_copy = retfuture,
-						   argtuple = std::make_tuple(worker, std::forward<decltype(callback)>(callback), std::forward<ExtFutureT>(retfuture), std::forward<Args>(args)...)
+						   argtuple = std::make_tuple(worker, FWD_DECAY_COPY(CallbackType, callback),
+						   		std::forward<ExtFutureT>(retfuture), std::forward<Args>(args)...)
 							]() mutable {
 				/// @todo Exceptions/cancellation.
 				worker->process(callback_copy, retfuture_copy, args...);
@@ -385,6 +450,7 @@ namespace ExtAsync
 			// Connect the QThread's finished signal to the deleteLater() slot so that it gets scheduled for deletion.
 			/// @note I think this connection allows us to ignore the thread once we've started it, and it won't leak.
 			connect_or_die(thread, &QThread::finished, thread, &QThread::deleteLater);
+
 			// Start the new thread.
 			thread->start();
 
@@ -460,9 +526,11 @@ namespace ExtAsync
 	static ExtFutureT run_in_qthread_with_event_loop(CallbackType&& callback, Args&&... args)
 	{
 		return ExtAsync::detail_struct<CallbackType>::run_in_qthread_with_event_loop(
-				std::forward<CallbackType>(callback), std::forward<Args>(args)...
+				FWD_DECAY_COPY(CallbackType, callback), std::forward<Args>(args)...
 				);
 	}
+
+
 
 #if 1 /// @todo obsolete this?  Used by AMLMJobT::start().
     /**
@@ -699,6 +767,9 @@ M_WARNING("OBSOLETE");
 };
 #endif
 
+
+/// The below is for pre-Qt5.10.  ExtAsync::detail::run_in_event_loop() should be used from Qt5.10+.
+#if 0 // OBSOLETE
 /**
  * Run a functor on another thread.
  * Works by posting a message to @a obj's thread's event loop, and running the functor in the event's destructor.
@@ -746,9 +817,6 @@ static void runInObjectEventLoop(T * obj, R(T::* method)()) {
    };
    QCoreApplication::postEvent(obj, new Event(obj, method));
 }
-
-/// Above is pre-Qt5.10.  ExtAsync::detail::run_in_event_loop() should be used from Qt5.10+.
-
-
+#endif // OBSOLETE
 
 #endif /* CONCURRENCY_EXTASYNC_H_ */

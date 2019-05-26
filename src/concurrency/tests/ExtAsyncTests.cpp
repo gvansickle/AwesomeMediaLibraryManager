@@ -1108,36 +1108,24 @@ void QtConcurrentMappedFutureStateOnCancel(bool dont_let_jobs_complete)
 	}
 
 	// Cancel the async mapping operation.
-	TCOUT << "CANCELING mapped_results_future:" << state(mapped_results_future);
+	TCOUT << "CANCELING mapped_results_future:" << ExtFutureState::state(mapped_results_future);
 	mapped_results_future.cancel();
-	TCOUT << "CANCELED mapped_results_future:" << mapped_results_future;
+
+	TCOUT << "CANCELED mapped_results_future:" << ExtFutureState::state(mapped_results_future);
 
 	// mapped_results_future state: QFuture == Just adds the Cancel flag.  cancel() code brings it out of Paused if it was paused.
 	//                                         dont_let...: (Running|Started|Canceled)
 	//                                         else:        (Started|Finished|Canceled)
 	/// @note Expect Running to sometimes be cleared.
-	/// @note CANCELED QFUTURES ARE NOT NECESSARILY FINISHED.
-	/// @note I think I fixed that and now they always will be.
-	TCOUT << "CANCELED:" << mapped_results_future;
-	if(dont_let_jobs_complete)
-	{
-		AMLMTEST_EXPECT_TRUE(mapped_results_future.isRunning() && mapped_results_future.isStarted() && mapped_results_future.isCanceled()) << ExtFutureState::state(mapped_results_future);
-	}
-	else
-	{
-		AMLMTEST_EXPECT_TRUE(mapped_results_future.isFinished() && mapped_results_future.isStarted() && mapped_results_future.isCanceled()) << ExtFutureState::state(mapped_results_future);
-	}
+	/// @note CANCELED QFUTURES ARE NOT NECESSARILY FINISHED, .cancel() is asynchronous, need to .wait().
+	TCOUT << "Immediate POST-CANCELED STATE:" << ExtFutureState::state(mapped_results_future);
 
 	TCOUT << "START SLEEP FOR 1000";
 	TC_Sleep(1000);
 	TCOUT << "END FOR 1000 COMPLETE";
 
-	///
-	/// @wth Google test is completing here with an "OK" result.  ???
-	///
-
 	/// @note CANCELED QFUTURES ARE NOT IMMEDIATELY FINISHED, but if you wait a while they will be?
-//	TCOUT << "STATE AFTER TC_WAIT:" << ExtFutureState::state(mapped_results_future);
+	TCOUT << "STATE AFTER TC_Sleep:" << ExtFutureState::state(mapped_results_future);
 
 
 	if(dont_let_jobs_complete)
@@ -1171,7 +1159,7 @@ void QtConcurrentMappedFutureStateOnCancel(bool dont_let_jobs_complete)
 	}
 	catch(...)
 	{
-		FAIL() << "wait threw an exception.";
+		ADD_FAILURE() << "wait threw an exception.";
 	}
 
 

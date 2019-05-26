@@ -1256,8 +1256,10 @@ public:
 				connect_or_die(fw_up_for_results, &QFutureWatcher<T>::resultsReadyAt,
 						[upc=up, downc=down, fw_up_for_results,
 						 stap_callback_cp=FWD_DECAY_COPY(StreamingTapCallbackType, stap_callback)](int begin, int end) mutable {
-					qDb() << __func__ << " Calling fd_stap_callback(up, begin, end).";
+
+					// Call the callback.
 					std::invoke(std::move(stap_callback_cp), upc, begin, end);
+
 					/// @note We're temporarily copying to the output future here, we should change that to use a separate thread.
 					///       Or maybe we can just return the upstream_future here....
 					for(int i = begin; i < end; ++i)
@@ -1273,15 +1275,15 @@ public:
 					fw_up_for_results->deleteLater();
 				});
 
-				// Connect the watcher to the future.
+				// Connect the results watcher to the future.
 				fw_up_for_results->setFuture(up);
 			}
-			catch(ExtAsyncCancelException& e)
-			{
-				// It was the cancel exception, throw it up.
-				qWr() << "THROWING ExtAsyncCancelException() UP";
-				up.reportException(e);
-			}
+//			catch(ExtAsyncCancelException& e)
+//			{
+//				// It was the cancel exception, throw it up.
+//				qWr() << "THROWING ExtAsyncCancelException() UP";
+//				up.reportException(e);
+//			}
 			catch(...)
 			{
 				// up or the callback threw some non-cancel exception, throw it down.

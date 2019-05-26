@@ -257,7 +257,7 @@ include(DownloadProject)
 set(CMAKE_VERBOSE_MAKEFILE  YES)
 # "CMake automatically analyzes the global inter-target dependency graph at the beginning of native build system generation.
 #  This property causes it to display details of its analysis to stderr."
-set_property(GLOBAL PROPERTY GLOBAL_DEPENDS_DEBUG_MODE 1)
+# set_property(GLOBAL PROPERTY GLOBAL_DEPENDS_DEBUG_MODE 1)
 set(CPACK_IFW_VERBOSE YES)
 #set(CMAKE_DEBUG_TARGET_PROPERTIES
 #	    INCLUDE_DIRECTORIES
@@ -595,7 +595,7 @@ ecm_qt_declare_logging_category(QT5_LOGGING_CATEGORY_SOURCE_FILES
 target_compile_definitions(cxx_definitions_qt 
 	INTERFACE
 		-DQT_DEPRECATED_WARNINGS
-    	#-DQT_DISABLE_DEPRECATED_BEFORE=0x051000
+		-DQT_SHAREDPOINTER_TRACK_POINTERS=1
     	-DQT_NO_KEYWORDS
     	-DQT_NO_SIGNALS_SLOTS_KEYWORDS
 	    #-DQT_NO_URL_CAST_FROM_STRING
