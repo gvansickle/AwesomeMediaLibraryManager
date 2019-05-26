@@ -559,12 +559,12 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 		Q_ASSERT_X(0, __func__, "dirtrav is null");
 	}
 
-    master_job_tracker->registerJob(dirtrav_job);
-	master_job_tracker->setAutoDelete(dirtrav_job, false);
-    master_job_tracker->setStopOnClose(dirtrav_job, true);
-	master_job_tracker->registerJob(lib_rescan_job);
-	master_job_tracker->setAutoDelete(lib_rescan_job, false);
-	master_job_tracker->setStopOnClose(lib_rescan_job, true);
+//    master_job_tracker->registerJob(dirtrav_job);
+//	master_job_tracker->setAutoDelete(dirtrav_job, false);
+//    master_job_tracker->setStopOnClose(dirtrav_job, true);
+//	master_job_tracker->registerJob(lib_rescan_job);
+//	master_job_tracker->setAutoDelete(lib_rescan_job, false);
+//	master_job_tracker->setStopOnClose(lib_rescan_job, true);
 
 
 	//
