@@ -949,8 +949,7 @@ public:
 					   then_callback_c2=FWD_DECAY_COPY(ThenCallbackType, then_callback),
 					   downstream_future=DECAY_COPY(retfuture),
 					   upw_c2=upw]() mutable {
-//		M_TODO("This needs to return the callback's return value to the returned future.");
-//			std::invoke(std::move(then_callback_c2), ExtFuture<T>(upw_c2->future()));
+			// Invoke the callback and return its return value to the returned future.
 			R retval = std_invoke_and_lift(std::move(then_callback_c2), ExtFuture<T>(upw_c2->future()));
 			downstream_future.reportResult(retval);
 			downstream_future.reportFinished();
@@ -1036,17 +1035,16 @@ public:
 				// inside the callback's new thread.
 				up.wait();
 
+				// Should now be at least (Started|Finished) here, unless we threw above and never get here.
+				Q_ASSERT(up.isStarted() && up.isFinished());
+
 				// up is either finished or canceled, and did not throw.
 				// For cancels, we want to never call the callback.
 				/// @todo Revisit this decision at some point?
 				if(up.isCanceled())
 				{
-#if 0
-					// up is now locked out, so all we can really do here is return, which is probably what we want.
-					qDb() << "up canceled, returning without calling callback.";
-					return;
-#endif
-					/// @note I think the above is subtly(?) wrong.  We need to also communicate the cancel to down.
+					// up is canceled.  It's now locked out to any further inputs.
+					// We need to communicate the cancel to down and then return.
 					/// It's possible that up could be directly canceled, e.g. if it's the first in the chain and
 					/// gets canceled by a CnR future.  In that scenario, we can't just return and ignore down.
 					qDb() << "up canceled without an exception, canceling down and returning.";
@@ -1055,27 +1053,21 @@ public:
 					return;
 				}
 
-				qDb() << __func__ << " Calling fd_then_callback(up).";
+//				qDb() << __func__ << " Calling fd_then_callback(up).";
 
 				R retval = std_invoke_and_lift(std::move(fd_then_callback), up);
 				down.reportResult(retval);
 			}
-//			catch(ExtAsyncCancelException& e)
-//			{
-//				// It was the cancel exception, throw it up.
-//				qWr() << "THROWING ExtAsyncCancelException() UP:" << up;
-//				up.reportException(e);
-//			}
 			catch(...)
 			{
 				// up or the callback threw an exception, possibly cancel, throw it down.
-				qWr() << "THROWING UNKNOWN EXCEPTION DOWN:" << up;
+				qWr() << "THROWING EXCEPTION DOWN:" << up;
 				std::exception_ptr eptr = std::current_exception();
 				ManagedExtFutureWatcher_detail::propagate_eptr_to_future(eptr, down);
 			}
 
-			// Callback is finished, report it.
-			/// @note Or can/should we push this into qthread_async()?
+			// Either callback is finished, or up or the callback threw.
+			// Report that we're finished.
 			down.reportFinished();
 
 			Q_ASSERT(down.isFinished());
