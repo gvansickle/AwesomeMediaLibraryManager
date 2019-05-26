@@ -184,7 +184,7 @@ public:
 //    virtual void setStopOnClose(KJob* kjob, bool stopOnClose);
 //    virtual bool stopOnClose(KJob *job) const;
     virtual void setAutoDelete(KJob *kjob, bool autoDelete);
-    virtual bool autoDelete(KJob *kjob) const;
+	virtual bool autoDelete(KJob *kjob) const;
 
     /**
      * @return The number of jobs currently being tracked by this tracker.

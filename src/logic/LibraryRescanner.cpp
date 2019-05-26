@@ -410,8 +410,8 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 		return unit;
 	})
 	.then(qApp, [=,
-				 tree_model_ptr=tree_model//,
-				 //kjob=/*FWD_DECAY_COPY(QPointer<AMLMJobT<ExtFuture<DirScanResult>>>,*/ dirtrav_job/*)*/
+				 tree_model_ptr=tree_model,
+				 kjob=/*FWD_DECAY_COPY(QPointer<AMLMJobT<ExtFuture<DirScanResult>>>,*/ dirtrav_job/*)*/
 		  ](ExtFuture<Unit> future_unit) {
 
 			AMLM_ASSERT_IN_GUITHREAD();
@@ -420,18 +420,18 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 
 
 			qDb() << "DIRTRAV COMPLETE, NOW IN GUI THREAD";
-//			if(kjob.isNull())
-//			{
-//				Q_ASSERT_X(0, __func__, "Dir scan job was deleted");
-//			}
-//	        if(kjob->error())
-//	        {
-//	            qWr() << "DIRTRAV FAILED:" << kjob->error() << ":" << kjob->errorText() << ":" << kjob->errorString();
-//	            auto uidelegate = kjob->uiDelegate();
-//	            Q_CHECK_PTR(uidelegate);
-//	            uidelegate->showErrorMessage();
-//	        }
-//	        else
+			if(kjob.isNull())
+			{
+				Q_ASSERT_X(0, __func__, "Dir scan job was deleted");
+			}
+			if(kjob->error())
+			{
+				qWr() << "DIRTRAV FAILED:" << kjob->error() << ":" << kjob->errorText() << ":" << kjob->errorString();
+				auto uidelegate = kjob->uiDelegate();
+				Q_CHECK_PTR(uidelegate);
+				uidelegate->showErrorMessage();
+			}
+			else
 	        {
 	            // Succeeded, but we may still have outgoing filenames in flight.
 	            qIn() << "DIRTRAV SUCCEEDED";
@@ -553,10 +553,10 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 		Q_ASSERT_X(0, __func__, "dirtrav is null");
 	}
 
-//    master_job_tracker->registerJob(dirtrav_job);
+    master_job_tracker->registerJob(dirtrav_job);
 //	master_job_tracker->setAutoDelete(dirtrav_job, false);
 //    master_job_tracker->setStopOnClose(dirtrav_job, true);
-//	master_job_tracker->registerJob(lib_rescan_job);
+	master_job_tracker->registerJob(lib_rescan_job);
 //	master_job_tracker->setAutoDelete(lib_rescan_job, false);
 //	master_job_tracker->setStopOnClose(lib_rescan_job, true);
 

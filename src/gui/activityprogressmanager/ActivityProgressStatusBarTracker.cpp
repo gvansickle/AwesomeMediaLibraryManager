@@ -676,9 +676,9 @@ M_MESSAGE("This function makes no sense, the KJob has the interface and we're go
 
 bool ActivityProgressStatusBarTracker::autoDelete(KJob *kjob) const
 {
-    Q_CHECK_PTR(kjob);
-    // The KJob knows if it's autoDelete or not.
-    return kjob->isAutoDelete();
+	Q_CHECK_PTR(kjob);
+	// The KJob knows if it's autoDelete or not.
+	return kjob->isAutoDelete();
 }
 
 int ActivityProgressStatusBarTracker::getNumTrackedJobs() const

@@ -173,7 +173,7 @@ Q_SIGNALS:
     /// "Emitted when the job is finished, in any case. It is used to notify
     /// observers that the job is terminated and that progress can be hidden."
     /// Call emitResult(job) to emit.
-	void finished(KJob *job) /*override*/;
+//	void finished(KJob *job) /*override*/;
     /// "Emitted when the job is suspended."
     /// No direct way to emit this?
 //    void suspended(KJob *job);
@@ -183,7 +183,7 @@ Q_SIGNALS:
     /// "Emitted when the job is finished (except when killed with KJob::Quietly).
     /// Use error to know if the job was finished with error."
     /// Call emitResult(job) to emit.
-	void result(KJob *job) /*override*/;
+//	void result(KJob *job) /*override*/;
 
     // QObject signals.
 //	void destroyed(QObject* obj) override;
