@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -25,14 +25,14 @@
 // Std C++
 
 #include <type_traits>
-/// @todo We have this now...
+/// @todo GCC's libstdc++ has this now...
 //#if __has_include(<experimental/type_traits>)
 //#include <experimental/type_traits>
 //#if __cpp_lib_experimental_detect >= 201505
-////using namespace ns_detection = namespace std::experimental::fundamentals_v2;
+//////using namespace ns_detection = namespace std::experimental::fundamentals_v2;
 //#endif
 //#else
-////using ns_detection = namespace std;
+//////using ns_detection = namespace std;
 //#endif
 #include <tuple>
 #include <functional> // For std::invoke<>().
@@ -101,8 +101,11 @@ namespace std // Yeah, this is bad.
 
 
 
-/// Backfill for C++17 detection idiom (std::is_detected, etc.)
+/// Backfill for C++17 Library Fundamentals v2 detection idiom (std::is_detected, etc.)
 /// These would be defined in <experimental/type_traits>.
+/// @link https://en.cppreference.com/w/cpp/experimental/is_detected
+/// @link https://en.cppreference.com/w/User:D41D8CD98F/feature_testing_macros
+/// @link https://github.com/gcc-mirror/gcc/blob/master/libstdc%2B%2B-v3/include/experimental/type_traits
 #if !defined(__cpp_lib_experimental_detect) || (__cpp_lib_experimental_detect < 201505)
 namespace std // I know, I know.
 {

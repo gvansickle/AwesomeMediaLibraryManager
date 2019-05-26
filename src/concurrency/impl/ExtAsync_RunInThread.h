@@ -72,10 +72,10 @@ namespace detail
 
 		QThread* new_thread = QThread::create
 						([=, fd_callback=FWD_DECAY_COPY(CallbackType, callback),
-												  retfuture_cp=DECAY_COPY(retfuture)
+												  down=DECAY_COPY(retfuture)
 										  ]() mutable {
-			Q_ASSERT(retfuture == retfuture_cp);
-			Q_ASSERT(retfuture_cp.isStarted());
+			Q_ASSERT(retfuture == down);
+			Q_ASSERT(down.isStarted());
 
 			// Catch any exceptions from the callback and propagate them to the returned future.
 			try
@@ -91,28 +91,26 @@ namespace detail
 				{
 					// Callback returns a value.  Report it to the future.
 					retval = std::invoke(std::move(fd_callback), args...);
-					qDb() << "Reporting results:" << retval;
-					retfuture_cp.reportResult(retval);
+//					qDb() << "Reporting results:" << retval;
+					down.reportResult(retval);
 				}
 				else
 				{
 					static_assert(dependent_false_v<CBReturnType>, "Callback return type not void or non-ExtFuture.");
 				}
-//				retfuture_cp.reportResult(retval);
-
 			}
 			catch(...)
 			{
 				// Catch any exceptions and throw them to the returned future.
-				qDb() << "THROWING EXCEPTION TO RETURNED FUTURE:" << retfuture_cp;
+				qDb() << "THROWING EXCEPTION TO RETURNED FUTURE:" << down;
 				std::exception_ptr eptr = std::current_exception();
-				ManagedExtFutureWatcher_detail::propagate_eptr_to_future(eptr, retfuture_cp);
-				qDb() << "THROW COMPLETE:" << retfuture_cp;
+				ManagedExtFutureWatcher_detail::propagate_eptr_to_future(eptr, down);
+				qDb() << "THROW COMPLETE:" << down;
 			}
 
 			// Always reportFinished(), to catch any callbacks which don't do it.
-			retfuture_cp.reportFinished();
-			qDb() << "qthread_async() finished, retfuture_cp:" << retfuture_cp;
+			down.reportFinished();
+			qDb() << "qthread_async() finished, down:" << down;
 		});
 
 		// Make a self-delete connection for the QThread.
@@ -136,8 +134,8 @@ namespace detail
 } // namespace detail
 
 	/**
-	 * Run a callback in a QThread.
-	 * The returned ExtFuture<R> will be reported as Finished when the callback returns, or as Exception on either cancel or error.
+	 * Run a callback in a new QThread.
+	 * The returned ExtFuture<R> will be reported as Finished when the callback returns.
 	 * Exceptions thrown by @a callback will be propagated to the returned ExtFuture<R>.
 	 *
 	 * @note On the correct usage of std::invoke_result_t<> in this situation:

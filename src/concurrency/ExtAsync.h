@@ -105,7 +105,7 @@ namespace ExtAsync
 			template <class CallbackType, class ExtFutureT, class... Args>
 			void process(CallbackType&& callback, ExtFutureT future, Args&&... args)
 			{
-				std::invoke(callback, future, args...);
+				std::invoke(std::move(callback), future, args...);
 			};
 
 		Q_SIGNALS:
@@ -438,9 +438,10 @@ namespace ExtAsync
 						   argtuple = std::make_tuple(worker, FWD_DECAY_COPY(CallbackType, callback),
 						   		std::forward<ExtFutureT>(retfuture), std::forward<Args>(args)...)
 							]() mutable {
+
 				/// @todo Exceptions/cancellation.
 				worker->process(callback_copy, retfuture_copy, args...);
-//				std::apply(&WorkerQObject::process<CallbackType, ExtFutureT, decltype(args)...>, argtuple);
+
 				/// @note Unconditional finish here.
 				retfuture_copy.reportFinished();
 			});
