@@ -941,6 +941,7 @@ public:
 		ThenReturnType retfuture = ExtAsync::make_started_only_future<R>();
 
 		// Create a new up->downstream watcher parented to the context object.
+		/// @todo Does this work if context is in a different thread?
 		auto* upw = new QFutureWatcher<T>(context);
 
 		// The up->down finish signal.  This is where we'll call the then_callback.
@@ -1052,8 +1053,6 @@ public:
 					/// @todo wait()?  I don't think so, down is or will be waiting.
 					return;
 				}
-
-//				qDb() << __func__ << " Calling fd_then_callback(up).";
 
 				R retval = std_invoke_and_lift(std::move(fd_then_callback), up);
 				down.reportResult(retval);
@@ -1302,7 +1301,7 @@ public:
 	}
 
 	/**
-	 * .tap() overload for streaming taps.
+	 * .stap() overload for regular streaming taps.
 	 * Callback will run in an arbitrary thread context.
 	 */
 	template<class StreamingTapCallbackType,

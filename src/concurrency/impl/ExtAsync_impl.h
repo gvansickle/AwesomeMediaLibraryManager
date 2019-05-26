@@ -87,7 +87,7 @@ namespace ExtAsync
 				  REQUIRES(std::is_invocable_r_v<void, CallableType>)>
 		void run_in_event_loop(QObject* context, CallableType&& callable)
 		{
-			bool retval = QMetaObject::invokeMethod(context, DECAY_COPY(std::forward<CallableType>(callable)));
+			bool retval = QMetaObject::invokeMethod(context, FWD_DECAY_COPY(CallableType, callable));
 			// Die if the function couldn't be invoked.
 			Q_ASSERT(retval == true);
 		}

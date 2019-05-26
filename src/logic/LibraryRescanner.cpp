@@ -363,7 +363,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 
 		AMLM_ASSERT_IN_GUITHREAD();
 
-		qDb() << "START: tree_model_item_future.then(), new_items_future count:" << new_items_future.resultCount();
+//		qDb() << "START: tree_model_item_future.stap(), new_items_future count:" << new_items_future.resultCount();
 
 		// For each QList<SharedItemContType> entry.
 		for(int index = begin_index; index < end_index; ++index)
