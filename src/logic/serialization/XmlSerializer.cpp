@@ -62,6 +62,7 @@ void XmlSerializer::save(const ISerializable &serializable, const QUrl &file_url
 	QXmlStreamWriter xmlstream(&savefile);
 
 	xmlstream.setAutoFormatting(true);
+	xmlstream.setAutoFormattingIndent(-1);
 
 	// Start document.
 	xmlstream.writeStartDocument();
