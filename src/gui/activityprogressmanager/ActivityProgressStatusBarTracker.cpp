@@ -51,7 +51,9 @@ ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *pare
 
     // Create the summary widget
     /// @todo Should this have its own separate tracker?
-    m_cumulative_status_widget = new CumulativeStatusWidget(m_cumulative_status_job, this, parent);
+//    m_cumulative_status_widget = new CumulativeStatusWidget(m_cumulative_status_job, this, parent);
+	m_cumulative_status_widget = CumulativeStatusWidget::construct(m_cumulative_status_job, this, parent);
+	Q_ASSERT(!m_cumulative_status_widget.isNull());
 
     // Make cumulative status widget connections.
     /// @todo
@@ -159,7 +161,7 @@ void ActivityProgressStatusBarTracker::registerJob(KJob* kjob)
     Q_ASSERT(!is_cumulative_status_job(kjob));
 
     // Create the widget for this new job.
-    QPointer<BaseActivityProgressStatusBarWidget> wdgt = new BaseActivityProgressStatusBarWidget(kjob, this, m_expanding_frame_widget);
+	QPointer<BaseActivityProgressStatusBarWidget> wdgt = BaseActivityProgressStatusBarWidget::construct(kjob, this, m_expanding_frame_widget);
     /// @todo Watch this, deleting the widget on close here has caused us to crash in the past.
     wdgt->setAttribute(Qt::WA_DeleteOnClose);
 

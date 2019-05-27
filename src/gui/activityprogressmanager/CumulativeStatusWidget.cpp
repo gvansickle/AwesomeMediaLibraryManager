@@ -28,22 +28,34 @@
 #include <gui/Theme.h>
 
 
-CumulativeStatusWidget::CumulativeStatusWidget(KJob* job, ActivityProgressStatusBarTracker* tracker, QWidget *parent)
-    : BASE_CLASS(nullptr, tracker, parent)
+QPointer<CumulativeStatusWidget> CumulativeStatusWidget::construct(KJob* job, ActivityProgressStatusBarTracker* tracker, QWidget *parent)
 {
-    /// @note Requires base class init() to have been called so that sub-widgets are set up.
+	QPointer<CumulativeStatusWidget> retval = new CumulativeStatusWidget(job, tracker, parent);
 
-    // Add an "Expand jobs" button.
-    m_button_show_all_jobs = new QToolButton(this);
-    Theme::QToolButtonArrowIconFromTheme(m_button_show_all_jobs, "go-up", Qt::UpArrow);
-    m_button_show_all_jobs->setCheckable(true);
+	// We now have a vtable to the new object.
+	BASE_CLASS_finish_construction(retval);
 
-    addButton(m_button_show_all_jobs);
+	/// @note Requires base class init() to have been called so that sub-widgets are set up.
+
+	// Add an "Expand jobs" button.
+	retval->m_button_show_all_jobs = new QToolButton(retval);
+	Theme::QToolButtonArrowIconFromTheme(retval->m_button_show_all_jobs, "go-up", Qt::UpArrow);
+	retval->m_button_show_all_jobs->setCheckable(true);
+
+	retval->addButton(retval->m_button_show_all_jobs);
 
 M_WARNING("TODO: This should depend on contained jobs count/state");
-    m_cancel_button->setEnabled(true);
+	retval->m_cancel_button->setEnabled(true);
 
-    connect(m_button_show_all_jobs, &QToolButton::toggled, this, &CumulativeStatusWidget::SIGNAL_show_hide_subjob_display);
+	connect_or_die(retval->m_button_show_all_jobs, &QToolButton::toggled, retval, &CumulativeStatusWidget::SIGNAL_show_hide_subjob_display);
+
+	return retval;
+}
+
+CumulativeStatusWidget::CumulativeStatusWidget(KJob* job, ActivityProgressStatusBarTracker* tracker, QWidget *parent)
+	: BASE_CLASS(job, tracker, parent)
+{
+
 }
 
 CumulativeStatusWidget::~CumulativeStatusWidget()
