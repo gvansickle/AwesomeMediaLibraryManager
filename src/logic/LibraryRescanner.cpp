@@ -255,7 +255,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 		}
 //		qDb() << "IN TAP:" << M_ID_VAL(tap_future.resultCount()) << M_ID_VAL(begin) << M_ID_VAL(end);
 
-		// Creat a new container instance we'll use to pass the incoming values to the GUI thread below.
+		// Create a new container instance we'll use to pass the incoming values to the GUI thread below.
 		/// @todo We should find a better way to do this sort of thing.
 		/// Maybe a multi-output .tap()?
 		SharedItemContType new_items = std::make_shared<ItemContType>();

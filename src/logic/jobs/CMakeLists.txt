@@ -29,7 +29,7 @@ set(jobs_HEADER_FILES
 target_sources_local(jobs
 	PUBLIC
 		${jobs_HEADER_FILES}
-#	PRIVATE
+	PRIVATE
 		${jobs_SOURCE_FILES}
 	)
 
