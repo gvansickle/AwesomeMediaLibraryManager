@@ -39,7 +39,6 @@
 #include <AMLMApp.h>
 #include <utils/RegisterQtMetatypes.h>
 #include "LibraryRescanner.h"
-#include "LibraryRescannerJob.h"
 #include "LibraryRescannerMapItem.h"
 #include "LibraryEntryMimeData.h"
 #include "utils/StringHelpers.h"
@@ -52,6 +51,7 @@
 
 #include <gui/Theme.h>
 #include <jobs/LibraryEntryLoaderJob.h>
+#include <jobs/LibraryRescannerJob.h>
 
 AMLM_QREG_CALLBACK([](){
     qIn() << "Registering LibraryModel types";

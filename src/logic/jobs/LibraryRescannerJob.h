@@ -17,8 +17,8 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SRC_LOGIC_LIBRARYRESCANNERJOB_H_
-#define SRC_LOGIC_LIBRARYRESCANNERJOB_H_
+#ifndef SRC_LOGIC_JOBS_LIBRARYRESCANNERJOB_H_
+#define SRC_LOGIC_JOBS_LIBRARYRESCANNERJOB_H_
 
 
 /// Qt5
@@ -97,4 +97,4 @@ void library_metadata_rescan_task(ExtFuture<MetadataReturnVal> ext_future, Libra
 
 Q_DECLARE_METATYPE(LibraryRescannerJobPtr);
 
-#endif /* SRC_LOGIC_LIBRARYRESCANNERJOB_H_ */
+#endif /* SRC_LOGIC_JOBS_LIBRARYRESCANNERJOB_H_ */

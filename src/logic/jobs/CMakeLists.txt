@@ -22,10 +22,12 @@
 set(jobs_SOURCE_FILES
 		DirectoryScanJob.cpp
 		LibraryEntryLoaderJob.cpp
+		LibraryRescannerJob.cpp
 	)
 set(jobs_HEADER_FILES
 		DirectoryScanJob.h
 		LibraryEntryLoaderJob.h
+		LibraryRescannerJob.h
 	)
 
 target_sources_local(jobs

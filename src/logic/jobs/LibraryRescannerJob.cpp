@@ -18,9 +18,6 @@
  */
 
 #include "LibraryEntry.h"
-#include "LibraryRescannerJob.h"
-
-// Std C++
 #include <memory>
 #include <functional>
 
@@ -31,6 +28,7 @@
 // Ours
 #include <utils/DebugHelpers.h>
 #include <concurrency/ExtAsync.h>
+#include <jobs/LibraryRescannerJob.h>
 #include <utils/TheSimplestThings.h>
 #include "LibraryModel.h"
 
