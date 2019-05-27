@@ -102,14 +102,13 @@ target_link_libraries(logic
 		${QT5_LINK_LIB_TARGETS}
 		${KF5_LINK_LIB_TARGETS}
 		${GTK_LINK_LIB_TARGETS}
-		jobs
 		${AMLM_TAGLIB_TARGET}
 		${AMLM_LIBCUE_TARGET}
 		dbmodels
+		jobs
 		models
 		proxymodels
 		serialization
-		jobs
 	)
 target_include_directories(logic
 	PUBLIC
