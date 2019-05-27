@@ -55,8 +55,12 @@
 
 #include "utils/Logging.h"
 
+// Compile-time info/sanity checks.
 M_MESSAGE("BUILDING WITH CMAKE_C_COMPILER_ID: " CMAKE_C_COMPILER_ID " = " CMAKE_C_COMPILER);
 M_MESSAGE("BUILDING WITH CMAKE_CXX_COMPILER_ID: " CMAKE_CXX_COMPILER_ID " = " CMAKE_CXX_COMPILER);
+M_MESSAGE("BOOST_THREAD_VERSION: " STRINGISE(BOOST_THREAD_VERSION));
+static_assert(BOOST_THREAD_VERSION >= 5);
+
 
 /**
  * Here's where the magic happens.

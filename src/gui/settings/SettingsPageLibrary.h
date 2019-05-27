@@ -12,7 +12,7 @@ class SettingsPageLibrary : public QWidget
 	Q_OBJECT
 
 public:
-	explicit SettingsPageLibrary(QWidget *parent = 0);
+	explicit SettingsPageLibrary(QWidget *parent = nullptr);
 	~SettingsPageLibrary() override;
 
 private:

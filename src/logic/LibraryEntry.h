@@ -30,17 +30,17 @@
 #include <QUrl>
 
 // Qt5 Helpers
-#include <src/utils/QtHelpers.h>
+#include <utils/QtHelpers.h>
 
 // Ours
 #include <future/guideline_helpers.h>
 #include "ExtMimeType.h"
 #include "Metadata.h"
-#include "src/utils/Fraction.h"
+#include <utils/Fraction.h>
 #include "serialization/ISerializable.h"
 
 
-class LibraryEntry : public std::enable_shared_from_this<LibraryEntry>, public virtual ISerializable
+class LibraryEntry : public std::enable_shared_from_this<LibraryEntry>, public ISerializable
 {
 public:
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(LibraryEntry);

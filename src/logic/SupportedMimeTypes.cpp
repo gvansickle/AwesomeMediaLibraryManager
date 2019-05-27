@@ -32,6 +32,8 @@ SupportedMimeTypes& SupportedMimeTypes::instance(QObject* parent)
 {
 	static SupportedMimeTypes* m_the_instance = (Q_ASSERT(parent != nullptr), new SupportedMimeTypes(parent));
 
+	Q_ASSERT(parent == nullptr || parent == m_the_instance->parent() );
+
     return *m_the_instance;
 }
 

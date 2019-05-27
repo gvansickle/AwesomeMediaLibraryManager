@@ -25,12 +25,15 @@
 
 #if HAVE_GTKMM01
 
+#if 0
+
 #include <QWindow>
 #include <QEventLoop>
 
-/// @todo
+/// @todo OBSOLETE THIS
 ///#include <private/qguiapplication_p.h>
 #include <QtGui/private/qguiapplication_p.h>
+//#include "/home/gary/Qt/5.12.1/gcc_64/include/QtGui/5.12.1/QtGui/private/qguiapplication_p.h"
 #include <QtGui/qpa/qplatformdialoghelper.h>
 
 #include <gtk/gtk.h>
@@ -353,6 +356,8 @@ void NetAwareFileDialogGtk3::setFileChooserAction()
 }
 
 // m_dlgHelper = static_cast<QPlatformFileDialogHelper*>(QGuiApplicationPrivate::platformTheme()->createPlatformDialogHelper(QPlatformTheme::FileDialog));
+
+#endif
 
 #endif // HAVE_GTKMM01
 

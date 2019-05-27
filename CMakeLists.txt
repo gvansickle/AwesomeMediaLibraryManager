@@ -17,7 +17,11 @@
 # along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+# @file ./CMakeLists.txt
+
 # References:
+# Too many to list.  Some of the critical ones:
+# https://gist.github.com/mbinna/c61dbb39bca0e4fb7d1f73b0d66a4fd1  ("Effective Modern CMake")
 # https://github.com/euler0/mini-cmake-qt (QtCommon et al, Public Domain, https://github.com/euler0/mini-cmake-qt/blob/master/LICENSE)
 # https://cmake.org/cmake/help/v3.0/manual/cmake-qt.7.html
 # Installer refs:
@@ -92,9 +96,17 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Min versions of Qt5, KF5, KF5/ECM.
-set(QT_MIN_VERSION "5.11.0")
-set(KF5_MIN_VERSION "5.51.0")
-set(ECM_MIN_VERSION "5.51.0")
+set(QT_MIN_VERSION "5.12.1")
+set(KF5_MIN_VERSION "5.57.0")
+set(ECM_MIN_VERSION "5.57.0")
+
+###
+### IDE helper setup
+###
+source_group(TREE ${CMAKE_SOURCE_DIR})
+set(AUTOGEN_SOURCE_GROUP autogen)
+set(AUTOMOC_SOURCE_GROUP automoc)
+set(AUTORCC_SOURCE_GROUP autorcc)
 
 ###
 ### ECM Setup ====================================================================================================
@@ -184,8 +196,14 @@ include(ECMEnableSanitizers)
 # cmake and/or Qt Creator.
 # https://github.com/onqtam/ucm#ucm_add_flags
 include(ucm)
+# Target-focused compile settings.
+add_library(cxx_settings INTERFACE)
+target_compile_features(cxx_settings INTERFACE cxx_std_17)
+add_library(cxx_definitions_qt INTERFACE)
+target_compile_definitions(cxx_definitions_qt INTERFACE)
 if(UNIX)
-ucm_add_flags(-fmessage-length=0 -pthread -Werror=return-type -fno-omit-frame-pointer)
+	ucm_add_flags(-fmessage-length=0 -pthread -Werror=return-type -fno-omit-frame-pointer)
+	ucm_add_flags(-Og -ggdb3)
 # Flags for GNU libstdc++
 ### @todo Detect that we're actually using GNU libstdc++
 # "compiles user code using the debug mode. When defined, _GLIBCXX_ASSERTIONS is defined automatically"
@@ -194,14 +212,19 @@ ucm_add_flags(-fmessage-length=0 -pthread -Werror=return-type -fno-omit-frame-po
 endif(UNIX)
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	message(STATUS "C++ Compiler is GCC")
-	ucm_add_flags(-Og -ggdb3 -fvar-tracking -fvar-tracking-assignments -gpubnames -ggnu-pubnames)
+	ucm_add_flags(-fvar-tracking -fvar-tracking-assignments -gpubnames -ggnu-pubnames)
 	ucm_add_flags(-grecord-gcc-switches -gas-loc-support -gstatement-frontiers -ginline-points -femit-struct-debug-detailed=any)
 	ucm_add_flags(-fno-eliminate-unused-debug-types -fno-inline)
-	ucm_add_flags(-Wmaybe-uninitialized -Werror=maybe-uninitialized -fdiagnostics-show-template-tree)
+	ucm_add_flags(-Wmaybe-uninitialized -Werror=maybe-uninitialized -fdiagnostics-show-template-tree -fdiagnostics-show-option)
 	ucm_add_flags(-fuse-ld=gold) # Let's try the gold linker.
+	# GCC 9.x suggestions.
+	add_library(cxx_suggestions INTERFACE)
+	target_compile_options(cxx_suggestions INTERFACE
+		-Wsuggest-attribute=const)
+	target_link_libraries(cxx_settings INTERFACE cxx_suggestions)
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	message(STATUS "C++ Compiler is Clang")
-	#ucm_add_flags(-Og -ggdb3 -Wthread-safety -fdebug-macro -fdiagnostics-show-template-tree)
+	ucm_add_flags(-Wthread-safety -fdebug-macro -fdiagnostics-show-template-tree)
 	#ucm_add_flags(-fdelayed-template-parsing -frelaxed-template-template-args)
 endif()
 if(WIN32)
@@ -232,7 +255,9 @@ include(DownloadProject)
 
 # Right now we need all the verbosity we can get.
 set(CMAKE_VERBOSE_MAKEFILE  YES)
-#set_property(GLOBAL PROPERTY GLOBAL_DEPENDS_DEBUG_MODE 1)
+# "CMake automatically analyzes the global inter-target dependency graph at the beginning of native build system generation.
+#  This property causes it to display details of its analysis to stderr."
+# set_property(GLOBAL PROPERTY GLOBAL_DEPENDS_DEBUG_MODE 1)
 set(CPACK_IFW_VERBOSE YES)
 #set(CMAKE_DEBUG_TARGET_PROPERTIES
 #	    INCLUDE_DIRECTORIES
@@ -241,6 +266,8 @@ set(CPACK_IFW_VERBOSE YES)
 #		CONTAINER_SIZE_REQUIRED
 #		LIB_VERSION
 #		)
+
+
 
 message("******************************************************************")
 message("* ${PROJECT_NAME} version ${PROJECT_VERSION}-${GVI_VERSION_COMMITS}-g${GVI_VERSION_HASH}${GVI_VERSION_DIRTY_POSTFIX} (${CMAKE_BUILD_TYPE})")
@@ -259,6 +286,8 @@ message("*   Version (alt): ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${
 message("*   Discovered tools:")
 message("*        CMAKE_MAKE_PROGRAM: ${CMAKE_MAKE_PROGRAM}")
 message("*        GIT_EXECUTABLE: ${GIT_EXECUTABLE}")
+# Per @link https://stackoverflow.com/a/24470998
+message("* Generated with config types: ${CMAKE_CONFIGURATION_TYPES}")
 
 print_compilers_and_params()
 
@@ -271,7 +300,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # The.  Simplest.  Things.
 # Set default install location to "install" folder in build dir.
-# we do not want to install to /usr by default.add_compile_options.
+# we do not want to install to /usr by default.
 # "CMake sets this variable to a TRUE value when the CMAKE_INSTALL_PREFIX has just been initialized to its default value,
 # typically on the first run of CMake within a new build tree. This can be used by project code to change the default 
 # without overriding a user-provided value"
@@ -307,6 +336,8 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 ###
 ### The Qt5 packages we require.
+### @note CONFIG|MODULE: "If no module is found the command falls back to Config mode, described below.
+###       This fall back is disabled if the MODULE option is given."
 ###
 find_package(Qt5 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
 	Core
@@ -371,6 +402,7 @@ else()
 	)
 endif()
 if(WITH_BUNDLED_BREEZE_ICONS)
+	### @todo SOMETHING IS WRONG HERE, FIX THIS 
 	set(AMLM_INSTALL_BUNDLED_ICON_THEME_DIR "${KDE_INSTALL_FULL_DATAROOTDIR}/gvansickle/AwesomeMediaLibraryManager")
 	find_file(BREEZEICONS_PATH breeze-icons.rcc 
 		HINTS
@@ -381,7 +413,7 @@ if(WITH_BUNDLED_BREEZE_ICONS)
 			"Full path to the breeze-icons.rcc file"	
 			)
     if (NOT EXISTS ${BREEZEICONS_PATH})
-        message(FATAL_ERROR "Breeze-icons is missing")
+        message(FATAL_ERROR "Cannot find breeze-icons.rcc")
     else()
     	message(STATUS "Found source default icon theme: ${BREEZEICONS_PATH}")
     	message(STATUS "Default icon theme will be installed in: ${AMLM_INSTALL_BUNDLED_ICON_THEME_DIR}")
@@ -402,9 +434,9 @@ print_varlist(BREEZEICONS_PATH)
 ###
 set(GTK_LINK_LIB_TARGETS "")
 if(UNIX)
-pkg_check_modules(GTKMM REQUIRED IMPORTED_TARGET gtkmm-3.0)
-list(APPEND GTK_LINK_LIB_TARGETS PkgConfig::GTKMM)
-set(HAVE_GTKMM01 ${GTKMM_FOUND})
+# 	pkg_check_modules(GTKMM REQUIRED IMPORTED_TARGET gtkmm-3.0)
+# 	list(APPEND GTK_LINK_LIB_TARGETS PkgConfig::GTKMM)
+# 	set(HAVE_GTKMM01 ${GTKMM_FOUND})
 endif(UNIX)
 
 ###
@@ -427,14 +459,13 @@ endif(UNIX)
 
 
 #
-# And Boost.  Sorry.  But just CallableTraits, has no other deps.
-#
-# See https://cmake.org/cmake/help/v3.10/module/FindBoost.html
+# And Boost.  Sorry.
+# @link https://cmake.org/cmake/help/v3.14/module/FindBoost.html?highlight=boost#findboost
 if(FALSE)
 ### CallableTraits only in 1.66+.
 set(Boost_USE_MULTITHREADED      ON)
-find_package(Boost REQUIRED #1.60.0
-  COMPONENTS CallableTraits
+find_package(Boost REQUIRED 1.66.0
+  COMPONENTS CallableTraits 
   )
 else()
 if(FALSE)
@@ -450,26 +481,100 @@ endif()
 
 # Boost
 # See @link https://cmake.org/cmake/help/latest/module/FindBoost.html
-#set(BOOST_THREAD_VERSION          4) # Latest in 1.66 as of this writing.
+#set(BOOST_THREAD_VERSION          5) # Latest in 1.69 as of this writing, defaults to "2".
 #set(BOOST_THREAD_PROVIDES_FUTURE ON)
 #set(BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION ON)
 #set(BOOST_THREAD_FUTURE_USES_OPTIONAL ON)
-#set(Boost_USE_STATIC_LIBS        ON) # Only find static libs.
-#set(Boost_USE_STATIC_RUNTIME     ON) # Want static runtime.
-#set(Boost_USE_MULTITHREADED      ON) # Need multithreaded.
-#set(Boost_USE_DEBUG_LIBS         ON)
-#set(Boost_USE_RELEASE_LIBS       OFF)
-##set(BOOST_ALL_DYN_LINK           OFF)
-#set(Boost_USE_DEBUG_RUNTIME      ON)
-#set(Boost_DEBUG    				OFF) # enable debug output from FindBoost.
-#set(Boost_DETAILED_FAILURE_MSG ON) # add detailed information to the failure message 
+add_compile_definitions(BOOST_THREAD_VERSION=5
+	BOOST_THREAD_PROVIDES_FUTURE=1
+	BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION=1
+	BOOST_THREAD_FUTURE_USES_OPTIONAL=1
+	)
+set(Boost_USE_STATIC_LIBS        ON) # Only find static libs.
+set(Boost_USE_STATIC_RUNTIME     ON) # Want static runtime.
+set(Boost_USE_MULTITHREADED      ON) # Need multithreaded.
+set(Boost_USE_DEBUG_LIBS         ON)
+set(Boost_USE_RELEASE_LIBS       OFF)
+set(BOOST_ALL_DYN_LINK           OFF)
+set(Boost_USE_DEBUG_RUNTIME      ON)
+set(Boost_DEBUG    				 ON) # enable debug output from FindBoost.
+set(Boost_DETAILED_FAILURE_MSG   ON) # add detailed information to the failure message 
 #								   # even when the REQUIRED option is not given to the find_package call.
-#find_package(Boost 1.66.0 REQUIRED
-#	COMPONENTS
-#		thread
-#		system)
-#include_directories( ${Boost_INCLUDE_DIR} )
-#link_directories( ${Boost_LIBRARY_DIRS} )
+find_package(Boost 1.69.0 REQUIRED
+	COMPONENTS
+		date_time
+		thread
+		system
+	)
+if(Boost_FOUND)
+	add_library(amlm_boost_settings_target INTERFACE)
+	target_link_libraries(amlm_boost_settings_target INTERFACE ${Boost_LIBRARIES})
+	target_compile_definitions(amlm_boost_settings_target
+		INTERFACE 
+			BOOST_THREAD_VERSION=5)
+	add_definitions(${Boost_LIB_DIAGNOSTIC_DEFINITIONS})
+endif()
+
+if(FALSE)
+# Ok, we're going to try to pull in just Wt::Dbo.
+# Following instructions here: @link https://www.webtoolkit.eu/wt/doc/tutorial/dbo.html#_installation :
+# "Starting from a Wt source package (and on a UNIX-like environment), 
+# you would do the following to build and install only Wt::Dbo:
+# $ cd wt-xxx
+# $ mkdir build
+# $ cd build
+# $ cmake ../ # extra options may be needed, see instructions
+# $ cd src/Wt/Dbo
+# $ make
+# $ sudo make install"
+#
+# Also @link https://www.webtoolkit.eu/wt/doc/reference/html/InstallationUnix.html for the "see instructions" above.
+#
+#download_project
+include(ExternalProject)
+ExternalProject_Add(
+	wt_dbo # Creates variables wt_dbo_{SOURCE,BINARY}_DIR
+	GIT_REPOSITORY https://github.com/emweb/wt.git
+	GIT_TAG        master
+	GIT_PROGRESS  true
+	${UPDATE_DISCONNECTED_IF_AVAILABLE}
+	# Configuration
+	CMAKE_ARGS
+		${CMAKE_ARGS}
+		"-DCMAKE_BUILD_TYPE=$<CONFIG>"
+		"-DCMAKE_CONFIGURATION_TYPES=$<CONFIG>"
+		"-DBUILD_EXAMPLES=OFF"
+		"-DINSTALL_RESOURCES=OFF"
+		"-DENABLE_SSL=OFF"
+		"-DENABLE_HARU=OFF"
+		"-DENABLE_PANGO=OFF"
+		"-DENABLE_SQLITE=ON"
+		"-DENABLE_POSTGRES=OFF"
+		"-DENABLE_FIREBIRD=OFF"
+		"-DENABLE_MYSQL=OFF"
+		"-DENABLE_MSSQLSERVER=OFF"
+		"-DENABLE_QT4=OFF"
+		"-DENABLE_LIBWTTEST=OFF"
+		"-DENABLE_LIBWTDBO=ON"
+		"-DENABLE_OPENGL=OFF"
+		"-DBUILD_TESTS=OFF"
+		"-DCONNECTOR_ISAPI=OFF"
+		"-DCONNECTOR_HTTP=OFF"
+		"-DCONNECTOR_FCGI=OFF"
+	# Build step options
+	BUILD_COMMAND "" #${CMAKE_COMMAND} -E echo "Starting $<CONFIG> build of Wt::Dbo in binary dir: <BINARY_DIR>"
+  	#COMMAND       ${CMAKE_COMMAND} --build <BINARY_DIR> --config $<CONFIG> --target wt-target-dbo # wtdbo
+  	#COMMAND       ${CMAKE_COMMAND} -E echo "$<CONFIG> build of Wt::Dbo complete"
+	
+	# Install
+	# This target is exported: wt-target-dbo, target is wtdbo
+	INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "Starting $<CONFIG> install of Wt::Dbo to install dir: <INSTALL_DIR>"
+	COMMAND			${CMAKE_COMMAND} --build <BINARY_DIR> --config $<CONFIG> --target install
+ 	COMMAND			${CMAKE_COMMAND} -E echo "$<CONFIG> install of Wt::Dbo complete"
+	)
+#add_subdirectory(${wt_dbo_SOURCE_DIR} ${wt_dbo_BINARY_DIR} EXCLUDE_FROM_ALL)
+#print_varlist(wt_dbo_SOURCE_DIR wt_dbo_BINARY_DIR)
+endif()
 
 # Qt logging categories.
 # @link https://api.kde.org/ecm/module/ECMQtDeclareLoggingCategory.html
@@ -486,18 +591,21 @@ ecm_qt_declare_logging_category(QT5_LOGGING_CATEGORY_SOURCE_FILES
                                 DEFAULT_SEVERITY Debug ### <Debug|Info|Warning|Critical|Fatal>
                                 )
 
-add_definitions(
-	-DQT_DEPRECATED_WARNINGS
-    #-DQT_DISABLE_DEPRECATED_BEFORE=0x051000
-    -DQT_NO_KEYWORDS
-    -DQT_NO_SIGNALS_SLOTS_KEYWORDS
-    #-DQT_NO_URL_CAST_FROM_STRING
-    #-DQT_NO_CAST_FROM_ASCII
-    #-DQT_NO_CAST_TO_ASCII
-    #-DQT_NO_CAST_FROM_BYTEARRAY
-    -DQT_STRICT_ITERATORS
-    -DQT_USE_QSTRINGBUILDER
-    -DQT_NO_NARROWING_CONVERSIONS_IN_CONNECT)
+# Qt-specific compiler definitions.                               
+target_compile_definitions(cxx_definitions_qt 
+	INTERFACE
+		-DQT_DEPRECATED_WARNINGS
+		-DQT_SHAREDPOINTER_TRACK_POINTERS=1
+    	-DQT_NO_KEYWORDS
+    	-DQT_NO_SIGNALS_SLOTS_KEYWORDS
+	    #-DQT_NO_URL_CAST_FROM_STRING
+	    #-DQT_NO_CAST_FROM_ASCII
+	    #-DQT_NO_CAST_TO_ASCII
+	    #-DQT_NO_CAST_FROM_BYTEARRAY
+	    -DQT_STRICT_ITERATORS
+	    -DQT_USE_QSTRINGBUILDER
+	    -DQT_NO_NARROWING_CONVERSIONS_IN_CONNECT
+	   )
 
 
 # Set PROJECT_VERSION_PATCH and PROJECT_VERSION_TWEAK to 0 if not present, needed by add_project_meta
@@ -514,21 +622,8 @@ set(RC_LEGALCOPYRIGHT "${FULL_COPYRIGHT_STRING}")
 # Reverse of app.setOrganizationDomain()?
 set(IDENTIFIER "io.github.gvansickle")
 
-# So the source in src can find the "resources/" dir.
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}
-	${CMAKE_CURRENT_BINARY_DIR}
-	${boost_callable_traits_SOURCE_DIR}/include
-	${CMAKE_CURRENT_SOURCE_DIR}/src/third_party/continuable/include
-	${CMAKE_CURRENT_SOURCE_DIR}/src/third_party/function2/include
-	### @todo REMOVE
-	${Qt5Core_PRIVATE_INCLUDE_DIRS}
-	${Qt5Gui_PRIVATE_INCLUDE_DIRS}
-	)
-
 ### Generate configured headers.
-# Generate the version info file.
-#configure_file(${PROJECT_SOURCE_DIR}/resources/VersionInfo.cpp.in
-#		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp)
+# @note The version info file is generated in the "resources" dir/target.
 # Generate the amlm-configure.h file.
 configure_file(${PROJECT_SOURCE_DIR}/src/config.h.in
 	${PROJECT_BINARY_DIR}/src/config.h
@@ -542,11 +637,11 @@ configure_file(${PROJECT_SOURCE_DIR}/src/config.h.in
 add_subdir_lib(resources STATIC EXCLUDE_FROM_ALL)
 message(AUTHOR_WARNING "amlm_APP_ICONS: ${amlm_APP_ICONS}")
 add_subdir_lib(src STATIC EXCLUDE_FROM_ALL)
+
 ### @todo Google Test creates a target named "tests" as well, and I can't seem to disable/work around it other than
 ###    by using add_subdirectory() vs. add_subdir_lib().  Maybe this is better anyway.
-
-#add_subdir_lib(tests EXCLUDE_FROM_ALL)
-add_subdirectory(tests EXCLUDE_FROM_ALL)
+add_subdir_lib(tests EXCLUDE_FROM_ALL)
+#add_subdirectory(tests EXCLUDE_FROM_ALL)
 
 #include(resources/CMakeLists.txt)
 #print_varlist(amlm_ICONS amlm_SRCS)

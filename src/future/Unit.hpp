@@ -21,6 +21,8 @@
 #define AWESOMEMEDIALIBRARYMANAGER_UNIT_H
 
 #include <type_traits>
+#include <functional>
+
 
 /**
  * "Unit" vs. "void" concept from Facebook's "folly" library (Apache 2.0).
@@ -87,6 +89,21 @@ struct Unit
 };
 
 constexpr Unit unit {};
+
+template <class F, class... Args>
+auto std_invoke_and_lift(F&& f, Args&&... args) -> Unit::LiftT< std::invoke_result_t<F, Args...> >
+{
+	using R = Unit::LiftT< std::invoke_result_t<F, Args...> >;
+	if constexpr(std::is_convertible_v<R, Unit>)
+	{
+		std::invoke(std::move(DECAY_COPY(f)), args...);
+		return unit;
+	}
+	else
+	{
+		return std::invoke(std::move(DECAY_COPY(f)), args...);
+	}
+};
 
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_UNIT_H

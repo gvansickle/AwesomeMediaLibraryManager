@@ -1,6 +1,6 @@
 
 /*
-  Copyright(c) 2015 - 2018 Denis Blank <denis.blank at outlook dot com>
+  Copyright(c) 2015 - 2019 Denis Blank <denis.blank at outlook dot com>
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files(the "Software"), to deal
@@ -14,7 +14,7 @@
 
   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
@@ -34,7 +34,7 @@
 #include <continuable/continuable-testing.hpp>
 #include <continuable/continuable.hpp>
 
-using cti::detail::traits::identity;
+using cti::detail::identity;
 using cti::detail::util::unused;
 
 inline auto to_hint(identity<> /*hint*/) {
@@ -49,6 +49,7 @@ template <typename... Args>
 auto supplier_of(Args&&... args) {
   return [values = std::make_tuple(std::forward<Args>(args)...)](
       auto&& promise) mutable {
+    EXPECT_TRUE(promise);
     cti::detail::traits::unpack(
         [&](auto&&... passed) {
           promise.set_value(std::forward<decltype(passed)>(passed)...);
@@ -71,25 +72,27 @@ public:
   auto invoke(T&& type) {
     return this->make(identity<>{}, identity<void>{},
                       [type = std::forward<T>(type)](auto&& promise) mutable {
+                        EXPECT_TRUE(promise);
                         promise.set_value();
                       });
   }
 
   template <typename... Args>
   auto supply(Args&&... args) {
+#ifdef UNIT_TEST_READY_CONTINUABLES
+    return cti::make_ready_continuable(std::forward<Args>(args)...);
+#else
     identity<std::decay_t<Args>...> arg_types;
     auto hint_types = to_hint(arg_types);
 
     return this->make(arg_types, hint_types,
                       supplier_of(std::forward<Args>(args)...));
+#endif // UNIT_TEST_READY_CONTINUABLES
   }
 
-  template <typename Arg>
-  auto supply_exception(Arg&& arg) {
-    identity<> arg_types;
-    auto hint_types = to_hint(arg_types);
-
-    return this->make(arg_types, hint_types,
+  template <typename Arg, typename Hint = identity<>>
+  auto supply_exception(Arg&& arg, Hint hint = {}) {
+    return this->make(hint, to_hint(hint),
                       exception_supplier_of(std::forward<Arg>(arg)));
   }
 };
@@ -267,7 +270,7 @@ struct test_exception : std::exception {
 
 test_exception get_test_exception_proto();
 
-inline auto supply_test_exception() {
+inline std::exception_ptr supply_test_exception() {
   try {
     throw get_test_exception_proto();
   } catch (...) {

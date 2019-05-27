@@ -28,8 +28,8 @@
 #include <QMessageBox>
 
 // Ours
-#include <src/AMLMApp.h>
-#include <src/gui/MainWindow.h>
+#include <AMLMApp.h>
+#include <gui/MainWindow.h>
 
 
 IfExistsAskForOverwrite::IfExistsAskForOverwrite()

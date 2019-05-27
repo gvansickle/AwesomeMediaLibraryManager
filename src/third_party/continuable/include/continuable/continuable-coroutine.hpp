@@ -4,9 +4,9 @@
                         \_,(_)| | | || ||_|(_||_)|(/_
 
                     https://github.com/Naios/continuable
-                                   v3.0.0
+                                   v4.0.0
 
-  Copyright(c) 2015 - 2018 Denis Blank <denis.blank at outlook dot com>
+  Copyright(c) 2015 - 2019 Denis Blank <denis.blank at outlook dot com>
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files(the "Software"), to deal
@@ -20,7 +20,7 @@
 
   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
@@ -51,12 +51,12 @@ namespace std {
 namespace experimental {
 template <typename Data, typename... Args, typename... FunctionArgs>
 struct coroutine_traits<
-    cti::continuable_base<Data,
-                          cti::detail::hints::signature_hint_tag<Args...>>,
+    cti::continuable_base<Data, cti::detail::identity<Args...>>,
     FunctionArgs...> {
 
   using promise_type =
-      cti::detail::awaiting::promise_type<cti::promise<Args...>, Args...>;
+      cti::detail::awaiting::promise_type<cti::continuable<Args...>,
+                                          cti::promise<Args...>, Args...>;
 };
 } // namespace experimental
 } // namespace std

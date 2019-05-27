@@ -5,9 +5,9 @@
                         \_,(_)| | | || ||_|(_||_)|(/_
 
                     https://github.com/Naios/continuable
-                                   v3.0.0
+                                   v4.0.0
 
-  Copyright(c) 2015 - 2018 Denis Blank <denis.blank at outlook dot com>
+  Copyright(c) 2015 - 2019 Denis Blank <denis.blank at outlook dot com>
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files(the "Software"), to deal
@@ -21,7 +21,7 @@
 
   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
@@ -40,8 +40,8 @@
 #include <continuable/continuable-primitives.hpp>
 #include <continuable/detail/connection/connection-aggregated.hpp>
 #include <continuable/detail/connection/connection.hpp>
+#include <continuable/detail/core/annotation.hpp>
 #include <continuable/detail/core/base.hpp>
-#include <continuable/detail/core/hints.hpp>
 #include <continuable/detail/core/types.hpp>
 #include <continuable/detail/utility/traits.hpp>
 
@@ -99,11 +99,11 @@ class result_submitter
     }
 
     template <typename... PartialArgs>
-    void operator()(exception_arg_t tag, exception_t error) && {
+    void operator()(exception_arg_t tag, exception_t exception) && {
       // We never complete the connection, but we forward the first error
       // which was raised.
       std::call_once(me->flag_, std::move(me->callback_), tag,
-                     std::move(error));
+                     std::move(exception));
     }
   };
 
@@ -162,15 +162,14 @@ struct connection_finalizer<connection_strategy_all_tag> {
 
     auto signature = aggregated::hint_of_data<decltype(result)>();
 
-    return base::attorney::create(
+    return base::attorney::create_from(
         [result = std::move(result)](auto&& callback) mutable {
-
           using submitter_t =
               all::result_submitter<std::decay_t<decltype(callback)>,
                                     std::decay_t<decltype(result)>>;
 
-          // Create the shared state which holds the result and the final
-          // callback
+          // Create the shared state which holds the result
+          // and the final callback
           auto state = std::make_shared<submitter_t>(
               std::forward<decltype(callback)>(callback), std::move(result));
 
@@ -186,6 +185,13 @@ struct connection_finalizer<connection_strategy_all_tag> {
   }
 };
 } // namespace connection
+
+/// Specialization for a connection annotation
+template <>
+struct annotation_trait<connection::connection_strategy_all_tag>
+    : connection::connection_annotation_trait<
+          connection::connection_strategy_all_tag> {};
+
 } // namespace detail
 } // namespace cti
 

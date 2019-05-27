@@ -34,7 +34,7 @@
 class Stopwatch
 {
 public:
-	Stopwatch(const std::string& being_timed_msg);
+	explicit Stopwatch(const std::string& being_timed_msg);
 	virtual ~Stopwatch();
 
 	void lap(const std::string& lap_marker_str);

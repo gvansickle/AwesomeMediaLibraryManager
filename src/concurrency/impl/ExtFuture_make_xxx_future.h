@@ -110,16 +110,17 @@ auto make_exceptional_future(const E & exception) -> ExtFuture<std::decay_t<T>>
 
 /**
  * Helper which returns a (Started) ExtFuture<T>.
+ * @note Except the returned future seems to always be (Started|Running).
  */
 template <typename T>
 auto make_started_only_future() -> ExtFuture<std::decay_t<T>>
 {
 	static_assert(!is_ExtFuture_v<T>, "ExtFuture<T>: T cannot be a nested ExtFuture");
 	// QFutureInterface<T> starts out with a state of NoState.
-	QFutureInterface<T> fi;
-	fi.reportStarted();
+	QFutureInterface<T> qfi;
+	qfi.reportStarted();
 //	Q_ASSERT(ExtFutureState::state(fi) == ExtFutureState::Started) << state(fi);
-	return ExtFuture<T>(&fi, detail::get_next_id());
+	return ExtFuture<T>(&qfi, detail::get_next_id());
 }
 
 } // END ExtAsync

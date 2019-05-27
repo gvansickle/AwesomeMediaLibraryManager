@@ -25,7 +25,7 @@
 #include <QUrl>
 #include <QMimeType>
 
-#include <src/logic/DirScanResult.h>
+#include <logic/DirScanResult.h>
 
 
 namespace AMLM

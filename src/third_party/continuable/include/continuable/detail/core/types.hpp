@@ -5,9 +5,9 @@
                         \_,(_)| | | || ||_|(_||_)|(/_
 
                     https://github.com/Naios/continuable
-                                   v3.0.0
+                                   v4.0.0
 
-  Copyright(c) 2015 - 2018 Denis Blank <denis.blank at outlook dot com>
+  Copyright(c) 2015 - 2019 Denis Blank <denis.blank at outlook dot com>
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files(the "Software"), to deal
@@ -21,7 +21,7 @@
 
   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
@@ -31,8 +31,10 @@
 #ifndef CONTINUABLE_DETAIL_TYPES_HPP_INCLUDED
 #define CONTINUABLE_DETAIL_TYPES_HPP_INCLUDED
 
+#include <type_traits>
 #include <utility>
 #include <continuable/detail/features.hpp>
+#include <continuable/detail/utility/identity.hpp>
 
 #ifndef CONTINUABLE_WITH_CUSTOM_ERROR_TYPE
 #ifndef CONTINUABLE_WITH_NO_EXCEPTIONS
@@ -74,8 +76,23 @@ public:
   using T::operator();
 };
 
-/// Tag for constructing an empty promise_base .
-struct promise_no_init_tag {};
+/// Marks a given callable object as transformation
+template <typename T>
+class plain_tag {
+  T value_;
+
+public:
+  template <typename O, std::enable_if_t<std::is_constructible<
+                            T, std::decay_t<O>>::value>* = nullptr>
+  /* implicit */ plain_tag(O&& value) : value_(std::forward<O>(value)) {
+  }
+  explicit plain_tag(T value) : value_(std::move(value)) {
+  }
+
+  T&& consume() && {
+    return std::move(value_);
+  }
+};
 } // namespace types
 } // namespace detail
 } // namespace cti

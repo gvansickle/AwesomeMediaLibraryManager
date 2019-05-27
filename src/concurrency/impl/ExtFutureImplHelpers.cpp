@@ -17,6 +17,6 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-//#include "ExtFutureImplHelpers.h"
+#include "ExtFutureImplHelpers.h"
 
 

@@ -26,8 +26,8 @@
 #include <QAbstractProxyModel>
 #include <QDebug>
 
-#include "src/utils/DebugHelpers.h"
-#include "src/logic/proxymodels/QPersistentModelIndexVec.h"
+#include <utils/DebugHelpers.h>
+#include <logic/proxymodels/QPersistentModelIndexVec.h>
 
 /**
  * Map a QItemSelection to a top-level source selection via QAbstractProxyModel::mapSelectionToSource().

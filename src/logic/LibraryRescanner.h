@@ -35,9 +35,9 @@
 #include <QVector>
 
 /// Ours
-#include <src/concurrency/ExtAsync.h>
+#include <concurrency/ExtAsync.h>
 #include "LibraryRescannerMapItem.h"
-#include <src/logic/models/AbstractTreeModelItem.h>
+#include <logic/models/AbstractTreeModelItem.h>
 
 class LibraryModel;
 class LibraryEntry;
@@ -83,6 +83,8 @@ class LibraryRescanner : public QObject
 	Q_OBJECT
 
 Q_SIGNALS:
+
+//	void SIGNAL_StapToTreeModel(std::vector<std::unique_ptr<AbstractTreeModelItem>> new_items);
 
 public:
 	explicit LibraryRescanner(LibraryModel* parent);
@@ -131,8 +133,8 @@ private:
 	/// @todo
 	using ItemContType = std::vector<std::unique_ptr<AbstractTreeModelItem>>;
 	using SharedItemContType = std::shared_ptr<ItemContType>;
-	QFutureWatcher<SharedItemContType> m_efwatcher_tree_model_append;
-	QFutureWatcher<MetadataReturnVal> m_extfuture_watcher_metadata;
+//	QFutureWatcher<SharedItemContType> m_efwatcher_tree_model_append;
+//	QFutureWatcher<MetadataReturnVal> m_extfuture_watcher_metadata;
 };
 
 

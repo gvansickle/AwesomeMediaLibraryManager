@@ -30,7 +30,6 @@
 #include <utils/RegisterQtMetatypes.h>
 
 // Ours
-#include <logic/models/ScanResultsTreeModelXMLTags.h>
 #include <utils/DebugHelpers.h>
 
 
@@ -61,7 +60,7 @@ QVariant ExtUrl::toVariant() const
 	QVariantInsertionOrderedMap map;
 
 	// Add all the fields to the map.
-#define X(field_enum_name, field)   map_insert_or_die(map, ExtUrlTagToXMLTagMap[ ExtUrlTag :: field_enum_name ], field );
+#define X(field_enum_name, field)   map_insert_or_die(map, # field_enum_name, field );
 	M_DATASTREAM_FIELDS(X)
 #undef X
 
@@ -73,7 +72,7 @@ void ExtUrl::fromVariant(const QVariant& variant)
 	QVariantInsertionOrderedMap map(variant);
 
 	// Extract all the fields from the map, cast them to their type.
-#define X(field_enum_name, field)    map_read_field_or_warn(map, ExtUrlTagToXMLTagMap[ ExtUrlTag :: field_enum_name ], &(field));
+#define X(field_enum_name, field)    map_read_field_or_warn(map, # field_enum_name, &(field));
 	M_DATASTREAM_FIELDS(X)
 #undef X
 }

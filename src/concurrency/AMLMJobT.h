@@ -59,11 +59,10 @@ public:
         qDbo() << "Constructor, m_ext_future:" << m_ext_future.state();
         // Watcher creation is here vs. in start() to mitigate against cancel-before-start races and segfaults.  Seems to work.
 	    // We could get a doKill() call at any time after we leave this constructor.
-//		m_ext_watcher = std::make_unique<ExtFutureWatcherT>();
-		m_ext_watcher = new ExtFutureWatcherT();
+		m_ext_watcher = new ExtFutureWatcherT(this);
 
 		// Create a new 1 sec speed update QTimer.
-		m_speed_timer = QSharedPointer<QTimer>::create(this);
+		m_speed_timer = new QTimer(this);
 	}
 
 	/**
@@ -72,6 +71,7 @@ public:
 	 * @param parent
 	 */
 	explicit AMLMJobT(ExtFutureType extfuture, QObject* parent = nullptr,
+					  const char* jobname = nullptr,
 					  KJob::Unit units = KJob::Unit::Files,
 					  KJob::Capabilities capabilities = KJob::Capability::Killable | KJob::Capability::Suspendable)
 			: BASE_CLASS(parent), m_ext_future(extfuture), m_hacky_way_to_ignore_start(true)
@@ -83,19 +83,25 @@ public:
 
 		// Set our object name.
 		/// @todo Again better through ExtFuture.
-		const char* jobname = "UNKNOWN_JOB";
-		this->setObjectName(jobname);
+		if(jobname != nullptr)
+		{
+			this->setObjectName(jobname);
+		}
+		else
+		{
+			this->setObjectName("UNKNOWN_JOB");
+		}
 
 		// Set our capabilities.
-		setCapabilities(capabilities);
+		this->setCapabilities(capabilities);
+		this->setAutoDelete(true);
 
 		// Watcher creation is here vs. in start() to mitigate against cancel-before-start races and segfaults.  Seems to work.
 		// We could get a doKill() call at any time after we leave this constructor.
-//		m_ext_watcher = std::make_unique<ExtFutureWatcherT>();
-		m_ext_watcher = new ExtFutureWatcherT();
+		m_ext_watcher = new ExtFutureWatcherT(this);
 
 		// Create a new 1 sec speed update QTimer.
-		m_speed_timer = QSharedPointer<QTimer>::create(this);
+		m_speed_timer = new QTimer(this);
 
 		// Hook up watcher->{other} signal/slots, start speed timer.
 		pre_start();
@@ -104,7 +110,11 @@ public:
 		m_ext_watcher->setFuture(m_ext_future);
 	}
 
-	~AMLMJobT() override {};
+	~AMLMJobT() override
+	{
+		qDb() << "DELETING AMLMJobT";
+	}
+
 
     /**
      * Return a copy of the future.
@@ -167,15 +177,19 @@ protected: //Q_SLOTS:
 
     virtual void SLOT_extfuture_finished()
     {
+		/// @note KDevelop's ImportProjectJob::importDone() which is connected to wtcher::finished
+		///       does the watcher delete and the emit.
         // The ExtFuture<T> and hence the Job is finished.  Delete the watcher and emit the KJob result.
         // The emitResult() call will send out a KJob::finished() signal.
-		qDbo() << "GOT EXTFUTURE FINISHED, calling deleteLater() on the watcher.";
-        m_ext_watcher->deleteLater();
+		qDbo() << "GOT EXTFUTURE FINISHED, calling emitResult()";
+//        m_ext_watcher->deleteLater();
 		this->emitResult();
     }
 
     virtual void SLOT_extfuture_canceled()
     {
+		/// @note KDevelop's ImportProjectJob::importCanceled() (watcher->canceled) does just this deleteLater().
+		/// I can't say I actually follow why they're bothering, don't see a destroyed() connection.
     	// The ExtFuture<T> was cancelled (hopefully through the AMLMJobT interface).
 		qDbo() << "GOT EXTFUTURE CANCELED, calling deleteLater() on the watcher.";
         m_ext_watcher->deleteLater();
@@ -272,7 +286,7 @@ protected:
 	void pre_start()
 	{
 		// Hook up signals and such to the ExtFutureWatcher<T>.
-		HookUpExtFutureSignals(m_ext_watcher);
+		this->HookUpExtFutureSignals(m_ext_watcher);
 
 		// Start the speed calculation timer.
 		m_speed_timer->setTimerType(Qt::TimerType::PreciseTimer);
@@ -441,7 +455,7 @@ protected:
 
         // Tell the Future and hence job to Cancel.
 		/// @todo Valgrind says that when we get an aboutToShutdown(), this is an 'invalid read of size 8'.
-//        m_ext_watcher->cancel();
+//		m_ext_watcher->cancel();
 		m_ext_future.cancel();
 
 
@@ -487,20 +501,24 @@ protected:
         return true;
     }
 
-    template <class WatcherType>
-    void HookUpExtFutureSignals(WatcherType* watcher)
+	void HookUpExtFutureSignals(ExtFutureWatcherT* watcher)
 	{
 		using ThisType = std::remove_reference_t<decltype(*this)>;
+//		auto watcher = watcher_sp.data();
+
+		// If AMLMJobT is destroyed, ... do we need to do anything?
+//		connect_or_die(this, &QObject::destroyed, );
 
         // FutureWatcher signals to this->SLOT* connections.
         // Regarding canceled QFuture<>s: "Any QFutureWatcher object that is watching this future will not deliver progress
         // and result ready signals on a canceled future."
         // This group corresponds ~1:1 with KJob functionality.
 		connect_or_die(watcher, &ExtFutureWatcherT::started, this, &ThisType::SLOT_extfuture_started);
-		connect_or_die(watcher, &ExtFutureWatcherT::finished, this, &ThisType::SLOT_extfuture_finished);
 		connect_or_die(watcher, &ExtFutureWatcherT::canceled, this, &ThisType::SLOT_extfuture_canceled);
 		connect_or_die(watcher, &ExtFutureWatcherT::paused, this, &ThisType::SLOT_extfuture_paused);
 		connect_or_die(watcher, &ExtFutureWatcherT::resumed, this, &ThisType::SLOT_extfuture_resumed);
+		connect_or_die(watcher, &ExtFutureWatcherT::finished, this, &ThisType::SLOT_extfuture_finished);
+
 
 		// FutureWatcher progress signals -> this slots.
 		connect_or_die(watcher, &ExtFutureWatcherT::progressRangeChanged, this, &ThisType::SLOT_extfuture_progressRangeChanged);
@@ -509,18 +527,14 @@ protected:
 
         // Signal-to-signal connections.
         // forward resultsReadyAt() signal.
-        connect_or_die(watcher, &WatcherType::resultsReadyAt, this, &ThisType::SIGNAL_resultsReadyAt);
+		connect_or_die(watcher, &ExtFutureWatcherT::resultsReadyAt, this, &ThisType::SIGNAL_resultsReadyAt);
         // KJob signal forwarders.
         /// @todo Don't need/want these as long as we don't override the base class versions of the signals.
 //        connect_or_die(this, &KJob::finished, this, &ThisType::finished);
 //        connect_or_die(this, &KJob::result, this, &ThisType::result);
 
-        // QObject forwarders.
-		/// @note Does this actually make sense?
-//		connect_queued_or_die(this, &QObject::destroyed, this, &ThisType::destroyed);
-
 		// Speed update timer.
-		connect_or_die(m_speed_timer.data(), &QTimer::timeout, this, &ThisType::SLOT_UpdateSpeed);
+		connect_or_die(m_speed_timer, &QTimer::timeout, this, &ThisType::SLOT_UpdateSpeed);
 
 		/// @todo EXP: Throttling.
 //		m_ext_watcher.setPendingResultsLimit(2);
@@ -582,28 +596,30 @@ protected:
 	/// The watcher for the ExtFuture.
 	/// @note Would like to use a std::unique_ptr here, but it screws with the QObject parent/child delete mechanism
 	///       (we get double deletes).
-	ExtFutureWatcherT* m_ext_watcher {};
+	ExtFutureWatcherT* m_ext_watcher { nullptr };
 
 	/// KJob::emitSpeed() support, which we apparently have to maintain ourselves.
 	/// KJob::emitSpeed() takes an unsigned long.
+	/// QTimer inherits QObject.
+	QTimer* m_speed_timer { nullptr };
 	unsigned long m_speed {0};
-	QSharedPointer<QTimer> m_speed_timer { nullptr };
 	qulonglong m_speed_last_processed_size {0};
 	std::deque<int64_t> m_speed_history;
 };
 
 /**
  * Create a new AMLMJobT wrapped around an ExtFuture<T>.
+ * Does not autodelete by default.
  * @todo Does this really need a parent?  AMLMJob[T] takes one, but....
  */
 template<class ExtFutureT>
-inline static QPointer<AMLMJobT<ExtFutureT>>
-make_async_AMLMJobT(ExtFutureT ef, QObject* parent = nullptr)
+AMLMJobT<ExtFutureT>*
+make_async_AMLMJobT(ExtFutureT ef, const char* jobname = nullptr, QObject* parent = nullptr)
 {
 	/// @todo I think we don't care if the future has already started/canceled here,
 	/// as long as we hook up fut<->job and job<->everything-else signal/slots, we're ok.
 //	Q_ASSERT(!ef.isFinished() && !ef.isCanceled());
-	return new AMLMJobT<ExtFutureT>(ef, parent, KJob::Unit::Files);
+	return new AMLMJobT<ExtFutureT>(ef, parent, jobname, KJob::Unit::Files);
 }
 
 

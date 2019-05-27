@@ -34,6 +34,7 @@
 #include <logic/models/AbstractTreeModel.h>
 #include <logic/models/ScanResultsTreeModel.h>
 #include <logic/PerfectDeleter.h>
+class SupportedMimeTypes;
 class MainWindow;
 
 /**
@@ -68,7 +69,7 @@ Q_SIGNALS:
     /// Per @link http://doc.qt.io/qt-5/qcoreapplication.html#exec:
     /// "We recommend that you connect clean-up code to the aboutToQuit() signal, instead of putting it
     /// in your application's main() function because on some platforms the exec() call may not return."
-	void aboutToShutdown();
+	void SIGNAL_aboutToShutdown();
 
 public:
     /**
@@ -164,6 +165,8 @@ private:
 
     /// The AMLMApp singleton.
     static AMLMApp* m_the_instance;
+
+	SupportedMimeTypes* m_the_supported_mime_types {nullptr};
 
     MainWindow* m_the_main_window {nullptr};
 

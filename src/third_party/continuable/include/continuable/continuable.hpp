@@ -5,9 +5,9 @@
                         \_,(_)| | | || ||_|(_||_)|(/_
 
                     https://github.com/Naios/continuable
-                                   v3.0.0
+                                   v4.0.0
 
-  Copyright(c) 2015 - 2018 Denis Blank <denis.blank at outlook dot com>
+  Copyright(c) 2015 - 2019 Denis Blank <denis.blank at outlook dot com>
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files(the "Software"), to deal
@@ -21,7 +21,7 @@
 
   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
@@ -48,10 +48,11 @@ namespace cti {}
 #include <continuable/continuable-base.hpp>
 #include <continuable/continuable-connections.hpp>
 #include <continuable/continuable-coroutine.hpp>
+#include <continuable/continuable-operations.hpp>
 #include <continuable/continuable-primitives.hpp>
 #include <continuable/continuable-promise-base.hpp>
 #include <continuable/continuable-promisify.hpp>
-#include <continuable/continuable-trait.hpp>
+#include <continuable/continuable-result.hpp>
 #include <continuable/continuable-transforms.hpp>
 #include <continuable/continuable-traverse-async.hpp>
 #include <continuable/continuable-traverse.hpp>

@@ -5,9 +5,9 @@
                         \_,(_)| | | || ||_|(_||_)|(/_
 
                     https://github.com/Naios/continuable
-                                   v3.0.0
+                                   v4.0.0
 
-  Copyright(c) 2015 - 2018 Denis Blank <denis.blank at outlook dot com>
+  Copyright(c) 2015 - 2019 Denis Blank <denis.blank at outlook dot com>
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files(the "Software"), to deal
@@ -21,7 +21,7 @@
 
   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
@@ -33,8 +33,8 @@
 
 #include <future>
 #include <continuable/continuable-primitives.hpp>
+#include <continuable/detail/core/annotation.hpp>
 #include <continuable/detail/core/base.hpp>
-#include <continuable/detail/core/hints.hpp>
 #include <continuable/detail/core/types.hpp>
 #include <continuable/detail/features.hpp>
 #include <continuable/detail/utility/util.hpp>
@@ -77,8 +77,7 @@ template <typename Hint>
 class promise_callback;
 
 template <typename... Args>
-class promise_callback<hints::signature_hint_tag<Args...>>
-    : public future_trait<Args...> {
+class promise_callback<identity<Args...>> : public future_trait<Args...> {
 
   typename future_trait<Args...>::promise_t promise_;
 
@@ -119,7 +118,7 @@ template <typename Data, typename Annotation>
 auto as_future(continuable_base<Data, Annotation>&& continuable) {
   // Create the promise which is able to supply the current arguments
   constexpr auto const hint =
-      hints::hint_of(traits::identify<decltype(continuable)>{});
+      base::annotation_of(identify<decltype(continuable)>{});
 
   promise_callback<std::decay_t<decltype(hint)>> callback;
   (void)hint;

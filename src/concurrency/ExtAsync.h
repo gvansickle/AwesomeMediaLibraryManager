@@ -22,7 +22,7 @@
 
 /**
  * @file
- * Qt5 analogs to std::async().
+ * Some Qt5-based analogs to std::async().
  */
 
 
@@ -64,11 +64,11 @@
 #include "impl/ExtFuture_make_xxx_future.h"
 
 #include "impl/ExtAsync_impl.h"
-//#include "impl/ExtAsync_RunInThread.h"
+#include "impl/ExtAsync_RunInThread.h"
 
 
 // Generated
-#include "logging_cat_ExtAsync.h"
+//#include "logging_cat_ExtAsync.h"
 
 /**
  * A Qt5 analog to "C++ Extensions for Concurrency, ISO/IEC TS 19571:2016" and a million other similar
@@ -90,33 +90,94 @@ namespace ExtAsync
 
 	namespace detail
 	{
+//		/**
+//		 * Wrapper helper object for run_in_qthread_with_event_loop().
+//		 */
+//		class WorkerQObject : public QObject
+//		{
+//			Q_OBJECT
+//
+//		public:
+//			WorkerQObject() = default;
+//			~WorkerQObject() override = default;
+//
+//		public:
+//			template <class CallbackType, class ExtFutureT, class... Args>
+//			void process(CallbackType&& callback, ExtFutureT future, Args&&... args)
+//			{
+//				std::invoke(std::move(callback), future, args...);
+//			};
+//
+//		Q_SIGNALS:
+//			void resultReady();
+//			void finished();
+//			void error(QString err);
+//
+//		private:
+//			// add your variables here
+//		};
+
+#if 0 // TODO
 		/**
-		 * Wrapper helper object for run_in_qthread_with_event_loop().
+		 * Run @a callback in @a context's event loop.
 		 */
-		class WorkerQObject : public QObject
+		template <class CallbackType, class QObjectType,
+					class ExtFutureT = argtype_t<CallbackType, 0>,
+					class... Args,
+				  class R = Unit::LiftT< std::invoke_result_t<CallbackType, ExtFutureT, Args...> >,
+			REQUIRES(!is_ExtFuture_v<R>
+					&& !std::is_convertible_v<QObjectType, QThreadPool>
+					&& std::is_invocable_r_v<Unit::DropT<R>, CallbackType, ExtFutureT, Args...>
+			  )>
+		ExtFuture<R> async_qthread_run_in_event_loop(QObjectType* context, CallbackType&& callback, Args&&... args) const
 		{
-			Q_OBJECT
+			ExtFuture<R> retfuture = ExtAsync::make_started_only_future<R>();
 
-		public:
-			WorkerQObject() = default;
-			~WorkerQObject() override = default;
+			retfuture = ExtAsync::qthread_async([=](ExtFuture<R> down) mutable  {
+#if 0
+				ManagedExtFutureWatcher_detail::connect_or_die_backprop_cancel_watcher(this_future, down);
 
-		public:
-			template <class CallbackType, class ExtFutureT, class... Args>
-			void process(CallbackType&& callback, ExtFutureT future, Args&&... args)
-			{
-				std::invoke(callback, future, args...);
-			};
+				// Wait inside this intermediate thread for the incoming future (this_future) to be ready.
+				// The ExtAsync::qthread_async() above runs this in a try/catch, so if this throws it'll propagate
+				// the exception/cancel there.
+				// We do have to check for a straight .cancel() w/o exception though.
+				this_future.wait();
 
-		Q_SIGNALS:
-			void resultReady();
-			void finished();
-			void error(QString err);
+				if(this_future.isCanceled())
+				{
+					down.cancel();
+					return;
+				}
+#endif
+				// Run the callback in the context's event loop.
+				// Note the std::invoke details.  Per @link https://en.cppreference.com/w/cpp/experimental/shared_future/then:
+				// "When the shared state currently associated with *this is ready, the continuation INVOKE(std::move(fd), *this)
+				// is called on an unspecified thread of execution [...]. If that expression is invalid, the behavior is undefined."
+				/// @note run_in_event_loop() may (different threads) or may not (same threads) return immediately to the caller.
+				///       This is the second reason to be inside this intermediate thread.  Completion is handled via
+				///       the ExtFuture<> retfuture_cp we pass in here.
+				ExtAsync::detail::run_in_event_loop(context, [=, retfuture_cp = down,
+								  then_callback=FWD_DECAY_COPY(CallbackType, callback)]() mutable {
+					if constexpr(std::is_void_v<Unit::DropT<R>>)
+					{
+						// Continuation returns void.
+						std::invoke(std::move(then_callback), callback);
+						retfuture_cp.reportFinished();
+					}
+					else
+					{
+						// Continuation returns a value type.
+						R retval = std::invoke(std::move(then_callback), callback);
+						retfuture_cp.reportFinished(&retval);
+					}
+					});
+				}, retfuture);
 
-		private:
-			// add your variables here
-		};
-	};
+			return retfuture;
+		}
+#endif
+
+	}; // END namespace detail
 
 	template <class CallbackType>
 	struct detail_struct
@@ -316,7 +377,7 @@ namespace ExtAsync
 //			QtConcurrent::run(lambda);
 //M_WARNING("TODO: This won't block, seems like it should.  But maybe we're OK, neither does ::run()");
 //M_WARNING("TODO: We do need to finish the returned future though.");
-			run_in_event_loop(executor, lambda);
+			ExtAsync::detail::run_in_event_loop(executor, lambda);
 
 			return retfuture;
 		}
@@ -340,341 +401,64 @@ namespace ExtAsync
 
 
 
-		/**
-		 * Run the callback in a new QThread with its own event loop.
-		 * @tparam CallbackType  Callback of type:
-		 *     @code
-		 *     void callback(ExtFutureT [, ...])
-		 *     @endcode
-		 * @param callback  The callback to run in the new thread.
-		 */
-		template <class ExtFutureT = argtype_t<CallbackType, 0>,
-				class... Args,
-				REQUIRES(is_ExtFuture_v<ExtFutureT> && !is_nested_ExtFuture_v<ExtFutureT>)>
-		static ExtFutureT run_in_qthread_with_event_loop(CallbackType&& callback, Args&&... args)
-		{
-			using ExtAsync::detail::WorkerQObject;
-
-			ExtFutureT retfuture = make_started_only_future<typename ExtFutureT::inner_t>();
-
-			QThread* thread = new QThread;
-			WorkerQObject* worker = new WorkerQObject();
-			// Move the worked QObject to the new thread.
-			worker->moveToThread(thread);
-
-			// Connect to the worker's error signal.
-			connect_or_die(worker, &WorkerQObject::error, thread, [=](QString errorstr){
-				qCr() << "WorkerQObject reported error:" << errorstr;
-			});
-			// Connection from thread start to actual WorkerQObject process() function start
-			connect_or_die(thread, &QThread::started, worker, [=,
-						   callback_copy = DECAY_COPY(std::forward<CallbackType>(callback)),
-						   retfuture_copy = retfuture,
-						   argtuple = std::make_tuple(worker, std::forward<decltype(callback)>(callback), std::forward<ExtFutureT>(retfuture), std::forward<Args>(args)...)
-							]() mutable {
-				/// @todo Exceptions/cancellation.
-				worker->process(callback_copy, retfuture_copy, args...);
-//				std::apply(&WorkerQObject::process<CallbackType, ExtFutureT, decltype(args)...>, argtuple);
-				/// @note Unconditional finish here.
-				retfuture_copy.reportFinished();
-			});
-			// When the worker QObject is finished, tell the thread to quit, and register the worker to be deleted.
-			connect_or_die(worker, &WorkerQObject::finished, thread, &QThread::quit);
-			connect_or_die(worker, &WorkerQObject::finished, worker, &QObject::deleteLater);
-			// Connect the QThread's finished signal to the deleteLater() slot so that it gets scheduled for deletion.
-			/// @note I think this connection allows us to ignore the thread once we've started it, and it won't leak.
-			connect_or_die(thread, &QThread::finished, thread, &QThread::deleteLater);
-			// Start the new thread.
-			thread->start();
-
-			return retfuture;
-		};
-
-#if 0
-		// This run_again() is confused about return future type vs. passed-in type.
-		/**
-		 * ExtAsync::run() helper.
-		 *
-		 * @param callback  Callback function which will be run in the thread pool.
-		 * 					Must have this form:
-		 * 					@code
-		 * 						R callback(ExtFutureT, args...)
-		 * 					@endcode
-		 * 					Where:
-		 * 						ExtFutureT == the extracted first arg of callback, must be a non-nested ExtFuture.
-		 * 						R == Unit::LiftT<> of return value of callback.  I.e. void == Unit, all other types the same.
-		 * @param args      Optional additional arguments to pass to callback after the ExtFutureT.
-		 * @return
-		 */
-		template<class... Args,
-				 class ExtFutureT = argtype_t<CallbackType, 0>,
-				 class LiftedR = Unit::LiftT<std::invoke_result_t<CallbackType, ExtFutureT, Args...>>,
-				 REQUIRES(is_ExtFuture_v<ExtFutureT>
-					&& NonNestedExtFuture<ExtFutureT>
-				 && ct::is_invocable_r_v<LiftedR, CallbackType, ExtFutureT, Args...>)
-				 >
-		static auto run_again(CallbackType callback, Args... args) -> ExtFuture<LiftedR>
-		{
-			static_assert(!std::is_same_v<LiftedR, void>, "Should never get here with LiftedR == void");
-
-#if 1
-			return run_param_expander(std::forward<CallbackType>(callback), std::forward<Args>(args)...);
-#else
-
-			/**
-			 * @note Exception handling.
-			 * This is the basic pattern used in multiple ::run()-likes in Qt5.  Note the use of
-			 * reportException() on this, which is in these cases the same as the returned future.
-			 * We're doing Qt5 one better here, so we'll have to propagate to the control/return future
-			 * passed to the callback.
-			 * @code
-			 *      try {
-			 * 		this->m_task->run(*this);
-						} catch (QException &e) {
-							QFutureInterface<T>::reportException(e);
-						} catch (...) {
-							QFutureInterface<T>::reportException(QUnhandledException());
-						}
-			 * @endcode
-			 *
-			 * Per QException docs: @link http://doc.qt.io/qt-5/qexception.html
-			 * "When using QFuture, transferred exceptions will be thrown when calling the following functions:
-	    			QFuture::waitForFinished()
-	    			QFuture::result()
-	    			QFuture::resultAt()
-	    			QFuture::results()
-			 * "
-			 */
-
-			using ExtFutureR = ExtFuture<LiftedR>;
-
-			ExtFutureR retfuture;
-
-			/*
-			 * @see SO: https://stackoverflow.com/questions/34815698/c11-passing-function-as-lambda-parameter
-			 *      As usual, C++ language issues need to be worked around, this time when trying to capture @a function
-			 *      in the inner lambda.
-			 *      Bottom line is that the variable "function" can't be captured by a lambda (or apparently stored at all)
-			 *      unless we decay off the reference-ness.
-			 */
-
-
-			auto lambda = [=, callback_copy=std::decay_t<CallbackType>(callback),
-					check_retfuture=retfuture]
-					(ExtFuture<LiftedR> retfuture_copy, auto... copied_args_from_run) mutable -> void
-			{
-				LiftedR retval;
-
-				//			static_assert(sizeof...(copied_args_from_run) != 0);
-				static_assert(!std::is_same_v<LiftedR, void>, "Should never get here with decltype(retval) == void");
-
-
-				try
-				{
-					Q_ASSERT(check_retfuture == retfuture_copy);
-
-					// Call the function the user originally passed in.
-					retval = std::invoke(callback_copy, retfuture_copy, copied_args_from_run...);
-
-					// Report our single result.
-					retfuture_copy.reportResult(retval);
-				}
-				// Send any exceptions down to the returned future.
-				catch(ExtAsyncCancelException& e)
-				{
-					retfuture_copy.reportException(e);
-				}
-				catch(QException& e)
-				{
-					retfuture_copy.reportException(e);
-				}
-				catch (...)
-				{
-					retfuture_copy.reportException(QUnhandledException());
-				}
-
-				/// @todo If exception should we actually be reporting finished?
-				retfuture_copy.reportFinished();
-
-			};
-
-			// Run the callback, wrapped in the lambda above, concurrently.
-			// We're ignoring the QFuture<> returned by ::run() here, since retfuture is
-			// handling that job for us, better.
-			QtConcurrent::run(lambda, retfuture, std::forward<Args>(args)...);
-
-			return retfuture;
-#endif
-		} // END detail_struct::run_again()
-
-#endif // run_again() type confusion.
-
-#if 0
-		/**
-		 * ExtAsync::run() helper for ExtFuture<>::then().
-		 *
-		 * @param callback  Callback function which will be run in the thread pool.
-		 * 					Must have this form:
-		 * 					@code
-		 * 						R callback(ExtFutureThis, ExtFutureReturn, args...)
-		 * 					@endcode
-		 * 					Where:
-		 * 						ExtFutureThis == the extracted first arg of callback, must be a non-nested ExtFuture.
-		 * 						ExtFutureReturn == the extracted second arg of callback, must be a non-nested ExtFuture.
-		 * 						R == Unit::LiftT<> of return value of callback.  I.e. void == Unit, all other types the same.
-		 * @param args      Optional additional arguments to pass to callback after the ExtFutureT.
-		 * @return
-		 */
-		template<class... Args,
-				 class ExtFutureT = argtype_t<CallbackType, 0>,
-				 class ExtFutureR = argtype_t<CallbackType, 1>,
-				 class LiftedR = Unit::LiftT<std::invoke_result_t<CallbackType, ExtFutureT, ExtFutureR, Args...>>,
-				 REQUIRES(NonNestedExtFuture<ExtFutureT> && NonNestedExtFuture<ExtFutureR>
-				 && std::is_invocable_r_v<LiftedR, CallbackType, ExtFutureT, ExtFutureR, Args...>)
-				 >
-		static auto run_for_then(CallbackType callback, ExtFutureT&& thisfuture, ExtFutureR&& retfuture, Args... args) -> ExtFutureR
-		{
-			static_assert(!std::is_same_v<LiftedR, void>, "Should never get here with LiftedR == void");
-
-			/**
-			 * @note Exception handling.
-			 * This is the basic pattern used in multiple ::run()-likes in Qt5.  Note the use of
-			 * reportException() on this, which is in these cases the same as the returned future.
-			 * We're doing Qt5 one better here, so we'll have to propagate to the control/return future
-			 * passed to the callback.
-			 * @code
-			 *      try {
-			 * 		this->m_task->run(*this);
-						} catch (QException &e) {
-							QFutureInterface<T>::reportException(e);
-						} catch (...) {
-							QFutureInterface<T>::reportException(QUnhandledException());
-						}
-			 * @endcode
-			 *
-			 * Per QException docs: @link http://doc.qt.io/qt-5/qexception.html
-			 * "When using QFuture, transferred exceptions will be thrown when calling the following functions:
-					QFuture::waitForFinished()
-					QFuture::result()
-					QFuture::resultAt()
-					QFuture::results()
-			 * "
-			 */
-
-			/*
-			 * @see SO: https://stackoverflow.com/questions/34815698/c11-passing-function-as-lambda-parameter
-			 *      As usual, C++ language issues need to be worked around, this time when trying to capture @a function
-			 *      in the inner lambda.
-			 *      Bottom line is that the variable "function" can't be captured by a lambda (or apparently stored at all)
-			 *      unless we decay off the reference-ness.
-			 */
-
-
-			auto lambda = [=, callback_copy=std::decay_t<CallbackType>(callback),
-					check_retfuture=retfuture]
-					(ExtFuture<LiftedR> retfuture_copy, auto... copied_args_from_run) mutable -> void
-			{
-				LiftedR retval;
-
-				//			static_assert(sizeof...(copied_args_from_run) != 0);
-				static_assert(!std::is_same_v<LiftedR, void>, "Should never get here with decltype(retval) == void");
-
-				Q_ASSERT(check_retfuture == retfuture_copy);
-
-				try
-				{
-					// Call the function the user originally passed in.
-					retval = std::invoke(callback_copy, retfuture_copy, copied_args_from_run...);
-
-					// Report our single result.
-					retfuture_copy.reportResult(retval);
-				}
-				catch(ExtAsyncCancelException& e)
-				{
-					retfuture_copy.reportException(e);
-				}
-				catch(QException& e)
-				{
-					retfuture_copy.reportException(e);
-				}
-				catch (...)
-				{
-					retfuture_copy.reportException(QUnhandledException());
-				}
-
-				/// @todo If exception should we actually be reporting finished?
-				retfuture_copy.reportFinished();
-
-			};
-
-			// Run the callback, wrapped in the lambda above, concurrently.
-			// We're ignoring the QFuture<> returned by ::run() here, since retfuture is
-			// handling that job for us, better.
-			QtConcurrent::run(lambda, thisfuture, retfuture, std::forward<Args>(args)...);
-
-			return retfuture;
-		} // END detail_struct::run_with_only_given_params()
-#endif
+//		/**
+//		 * Run the @a callback in a new QThread with its own event loop.
+//		 * We're using the Qt "worker object" method here.
+//		 *
+//		 * @tparam CallbackType  Callback of type:
+//		 *     @code
+//		 *     void callback(ExtFutureT [, ...])
+//		 *     @endcode
+//		 * @param callback  The callback to run in the new thread.
+//		 */
+//		template <class ExtFutureT = argtype_t<CallbackType, 0>,
+//				class... Args,
+//				REQUIRES(is_ExtFuture_v<ExtFutureT> && !is_nested_ExtFuture_v<ExtFutureT>)>
+//				/// @todo rename to async_qthread_with_event_loop().
+//		static ExtFutureT run_in_qthread_with_event_loop(CallbackType&& callback, Args&&... args)
+//		{
+//			/// All we do here is create a new QThread with an almost-dummy QObject in it,
+//			/// then call ExtAsync::detail::run_in_event_loop() on it.
+//			using ExtAsync::detail::WorkerQObject;
+//
+//			ExtFutureT retfuture = make_started_only_future<typename ExtFutureT::inner_t>();
+//
+//			QThread* thread = new QThread;
+//			WorkerQObject* worker = new WorkerQObject();
+//			// Move this worker QObject to the new thread.
+//			worker->moveToThread(thread);
+//
+//			// Connect to the worker's error signal.
+//			connect_or_die(worker, &WorkerQObject::error, thread, [=](QString errorstr){
+//				qCr() << "WorkerQObject reported error:" << errorstr;
+//			});
+//			// Connection from thread start to actual WorkerQObject process() function start
+//			connect_or_die(thread, &QThread::started, worker, [=,
+//						   callback_copy = FWD_DECAY_COPY(CallbackType, callback),
+//						   retfuture_copy = retfuture,
+//						   argtuple = std::make_tuple(worker, FWD_DECAY_COPY(CallbackType, callback),
+//						   		std::forward<ExtFutureT>(retfuture), std::forward<Args>(args)...)
+//							]() mutable {
+//
+//				/// @todo Exceptions/cancellation.
+//				worker->process(callback_copy, retfuture_copy, args...);
+//
+//				/// @note Unconditional finish here.
+//				retfuture_copy.reportFinished();
+//			});
+//			// When the worker QObject is finished, tell the thread to quit, and register the worker to be deleted.
+//			connect_or_die(worker, &WorkerQObject::finished, thread, &QThread::quit);
+//			connect_or_die(worker, &WorkerQObject::finished, worker, &QObject::deleteLater);
+//			// Connect the QThread's finished signal to the deleteLater() slot so that it gets scheduled for deletion.
+//			/// @note I think this connection allows us to ignore the thread once we've started it, and it won't leak.
+//			connect_or_die(thread, &QThread::finished, thread, &QThread::deleteLater);
+//
+//			// Start the new thread.
+//			thread->start();
+//
+//			return retfuture;
+//		};
 	}; // END struct detail_struct
-
-	/**
-	 * Modified run forwarder for use by ExtFuture<>.then().
-	 */
-	template<class CallbackType, class... Args,
-			 class ExtFutureT = argtype_t<CallbackType, 0>,
-			 class ExtFutureR = argtype_t<CallbackType, 1>,
-			 class LiftedR = Unit::LiftT<std::invoke_result_t<CallbackType, ExtFutureT, ExtFutureR, Args...>>,
-			 REQUIRES(NonNestedExtFuture<ExtFutureT> && NonNestedExtFuture<ExtFutureR>
-			 && std::is_invocable_r_v<LiftedR, CallbackType, ExtFutureT, ExtFutureR, Args...>)
-			 >
-	ExtFutureR run_for_then(CallbackType&& callback, ExtFutureT&& thisfuture, ExtFutureR&& retfuture, Args&&... args)
-	{
-		return ExtAsync::detail_struct<CallbackType>::run_for_then(
-				std::forward<CallbackType>(callback),
-				std::forward<ExtFutureT>(thisfuture),
-				std::forward<ExtFutureR>(retfuture),
-				std::forward<Args>(args)...);
-	}
-
-#if 0
-	namespace detail
-	{
-		template <class T, class = void>
-		struct is_void_takes_param : std::false_type {};
-		template <class T>
-		struct is_void_takes_param<T, std::void_t<ct::has_void_return<T>>>
-			: std::true_type {};
-
-		template <class ExtFutureR>
-		struct run_helper_struct
-		{
-			/// For F == void(ExtFutureR&, args...)
-			template <class F, class... Args, typename std::enable_if_t<ct::has_void_return_v<F>, int> = 0>
-			ExtFutureR run(F&& function, Args&&... args)
-			{
-				/// @note Used
-				qWr() << "EXTASYNC::RUN: IN ExtFutureR run_helper_struct::run(F&& function, Args&&... args):" << __PRETTY_FUNCTION__;
-
-                // ExtFuture<> will default to (STARTED).  This is so that any calls of waitForFinished()
-				// against the ExFuture<> (and/or the underlying QFutureInterface<>) will block.
-				using RetType = std::remove_reference_t<ExtFutureR>;
-				RetType report_and_control;
-				static_assert(ct::has_void_return_v<F>, "Callback must return void");
-				static_assert(!std::is_reference<RetType>::value, "RetType shouldn't be a reference in here");
-
-				QtConcurrent::run([fn=std::decay_t<F>(function)](RetType extfuture, Args... args) mutable {
-					return fn(extfuture, std::move(args)...);
-				}, std::forward<RetType>(report_and_control), std::forward<Args>(args)...);
-
-				qWr() << "Returning ExtFuture:" << &report_and_control << report_and_control;
-				Q_ASSERT(report_and_control.isStarted());
-				Q_ASSERT(!report_and_control.isFinished());
-				return report_and_control;
-			}
-		};
-
-	} // END namespace detail
-#endif
 
 	static std::atomic_int64_t s_qthread_id {0};
 
@@ -700,6 +484,11 @@ namespace ExtAsync
 			  && ct::is_invocable_r_v<void, F, This*, Args...>) //(arity_v<F> == 2))
 			  >
 	ExtFutureR run(This* thiz, F&& function, Args&&... args)
+#if 0
+	{
+		return ExtAsync::qthread_async_with_cnr_future(function, args...);
+	}
+#else
 	{
         /// @todo TEMP this currently limits the callback to look like C::F(ExtFuture<>&).
         static_assert(sizeof...(Args) <= 1, "Too many extra args given to run() call");
@@ -723,24 +512,27 @@ namespace ExtAsync
 
 		// ExtFuture<> will default to (STARTED | RUNNING).  This is so that any calls of waitForFinished()
 		// against the ExFuture<> (and/or the underlying QFutureInterface<>) will block.
-		ExtFutureR report_and_control;
+		ExtFutureR report_and_control = make_started_only_future<ExtFutureR::value_type_t>();
 
 		QtConcurrent::run(std::forward<This*>(thiz), std::forward<F>(std::decay_t<F>(function)),
 						  report_and_control, std::forward<Args>(args)...);
 
 		return report_and_control;
 	}
+#endif
 
 	template <class CallbackType,
 	        class ExtFutureT = argtype_t<CallbackType, 0>,
 			class... Args,
 			REQUIRES(is_ExtFuture_v<ExtFutureT> && !is_nested_ExtFuture_v<ExtFutureT>)>
-	static ExtFutureT run_in_qthread_with_event_loop(CallbackType&& callback, Args&&... args)
+	[[deprecated]] static ExtFutureT run_in_qthread_with_event_loop(CallbackType&& callback, Args&&... args)
 	{
-		return ExtAsync::detail_struct<CallbackType>::run_in_qthread_with_event_loop(
-				std::forward<CallbackType>(callback), std::forward<Args>(args)...
+		return ExtAsync::detail::async_qthread_with_event_loop_cnr(
+				FWD_DECAY_COPY(CallbackType, callback), std::forward<Args>(args)...
 				);
 	}
+
+
 
 #if 1 /// @todo obsolete this?  Used by AMLMJobT::start().
     /**
@@ -785,12 +577,16 @@ namespace ExtAsync
              >
 	ExtFuture<T> run(CallbackType&& callback, Args&&... args)
     {
+#if 1
+		return ExtAsync::qthread_async_with_cnr_future(FWD_DECAY_COPY(CallbackType, callback), std::forward<Args>(args)...);
+#else
 		using argst = ct::args_t<CallbackType>;
 		using arg0t = std::tuple_element_t<0, argst>;
 		using ExtFutureR = std::remove_reference_t<arg0t>;
 		static_assert(std::is_same_v<ExtFutureT, ExtFutureR>);
 
 		return ExtAsync::detail_struct<CallbackType>::run_param_expander(std::forward<CallbackType>(callback), std::forward<Args>(args)...);
+#endif
     }
 
 	/**
@@ -822,26 +618,6 @@ namespace ExtAsync
 		return ExtAsync::detail_struct<CallbackType>::run_param_expander(std::forward<CallbackType>(callback), std::forward<Args>(args)...);
 	}
 
-
-#if 0
-	/**
-	 * Asynchronously run a "dumb" callback, only passing it the params which are explicitly given
-	 * in the run() call.
-	 */
-	template <class CallbackType, class... Args,
-			class LiftedR = Unit::LiftT<ct::return_type_t<CallbackType>>,
-			REQUIRES(std::is_invocable_r_v<Unit::DropT<LiftedR>, CallbackType, Args&&...>)
-			>
-	ExtFuture<LiftedR> run_again(CallbackType&& callback, Args&&... args)
-	{
-		ExtFuture<LiftedR> ret_future = ExtAsync::detail_struct<CallbackType>::run_again(
-					[=, callback_copy=std::decay_t<CallbackType>(callback)](ExtFuture<LiftedR> return_future) {
-					return_future.reportFinished(Unit::LiftT<LiftedR>(std::invoke(callback_copy, std::forward<Args>(args)...)));
-					return return_future;
-					});
-		return ret_future;
-	}
-#endif
 
 	/**
 	 * Asynchronously run a free function taking no params and returning non-void/non-ExtFuture<>.
@@ -903,6 +679,7 @@ namespace ExtAsync
 	    return retfuture;
 	}
 
+#if 1 // OBSOLETE
     /**
      * Asynchronously run a free function taking no params we care about here, arbitrary params otherwise,
      * and returning non-void/non-ExtFuture<>.
@@ -922,6 +699,7 @@ namespace ExtAsync
         >
 	ExtFuture<R> run(CallbackType&& function, Args&&... args)
     {
+M_WARNING("OBSOLETE");
 		ExtFuture<R> retfuture = ExtAsync::make_started_only_future<R>();
 
 		/**
@@ -989,7 +767,11 @@ namespace ExtAsync
 		return retfuture;
     }
 };
+#endif
 
+
+/// The below is for pre-Qt5.10.  ExtAsync::detail::run_in_event_loop() should be used from Qt5.10+.
+#if 0 // OBSOLETE
 /**
  * Run a functor on another thread.
  * Works by posting a message to @a obj's thread's event loop, and running the functor in the event's destructor.
@@ -1037,24 +819,6 @@ static void runInObjectEventLoop(T * obj, R(T::* method)()) {
    };
    QCoreApplication::postEvent(obj, new Event(obj, method));
 }
-
-/// Above is pre-Qt5.10.  The below should be used from Qt5.10+.
-
-/**
- * Run the @a callable in the event loop of @a context.
- * For callables with the signature "void Callback(void)".  Cannot pass parameters directly because invokeMethod()
- * doesn't support it.
- * @note This may (different threads) or may not (same threads) return immediately to the caller.
- * @note Callback can't return a value because it's invoked asynchronously in @a context's thread/event loop.
- */
-template <class CallableType,
-		  REQUIRES(std::is_invocable_r_v<void, CallableType>)>
-static void run_in_event_loop(QObject* context, CallableType&& callable)
-{
-	bool retval = QMetaObject::invokeMethod(context, DECAY_COPY(std::forward<CallableType>(callable)));
-	// Die if the function couldn't be invoked.
-	Q_ASSERT(retval == true);
-}
-
+#endif // OBSOLETE
 
 #endif /* CONCURRENCY_EXTASYNC_H_ */

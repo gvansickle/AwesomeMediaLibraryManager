@@ -30,11 +30,11 @@
 #include <QDebug>
 
 // Ours
-#include <src/utils/QtHelpers.h>
+#include <utils/QtHelpers.h>
 #include "ExtUrl.h"
-#include <src/logic/models/AbstractTreeModelItem.h>
-#include <src/logic/serialization/ISerializable.h>
-#include <src/future/guideline_helpers.h>
+#include <logic/models/AbstractTreeModelItem.h>
+#include <logic/serialization/ISerializable.h>
+#include <future/guideline_helpers.h>
 
 class CollectionMedium;
 class ScanResultsTreeModelItem;

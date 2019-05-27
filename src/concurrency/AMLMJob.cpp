@@ -48,7 +48,7 @@ AMLM_QREG_CALLBACK([](){
 
 AMLMJob::AMLMJob(QObject *parent) : KJob(parent)
 {
-    setObjectName(uniqueQObjectName());
+//    setObjectName(uniqueQObjectName());
 
     qDbo() << M_NAME_VAL(this);
 
@@ -63,7 +63,7 @@ AMLMJob::AMLMJob(QObject *parent) : KJob(parent)
 
     // Master app shutdown signal connection.
     /// @note KDevelop/ImportProjectJob() does exactly this, but instead of the app it's ICore::self().
-	connect_or_die(AMLMApp::instance(), &AMLMApp::aboutToShutdown, this, &AMLMJob::SLOT_onAboutToShutdown);
+	connect_or_die(AMLMApp::instance(), &AMLMApp::SIGNAL_aboutToShutdown, this, &AMLMJob::SLOT_onAboutToShutdown);
 }
 
 AMLMJob::~AMLMJob()
@@ -217,9 +217,9 @@ void AMLMJob::SLOT_onAboutToShutdown()
 M_WARNING("I think we need 'already killed' reentrancy protection here or in kill() itself");
 /// @todo If left to run, loading a library leaves DirectoryScannerAMLMJob_0 laying around for some reason,
 /// which then segfaults here on AboutToShutdown().
-//    qDbo() << "SHUTDOWN, KILLING";
+    qDb() << "SHUTDOWN, KILLING";
 	this->kill();
-//    qDbo() << "SHUTDOWN, KILLED";
+    qDb() << "SHUTDOWN, KILLED";
 }
 
 

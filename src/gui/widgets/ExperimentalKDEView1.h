@@ -25,7 +25,7 @@ class ExperimentalKDEView1 : public QWidget
 
 public:
 	explicit ExperimentalKDEView1(QWidget *parent = nullptr);
-	~ExperimentalKDEView1();
+	~ExperimentalKDEView1() override;
 
 	bool setModel(ScanResultsTreeModel* model);
 

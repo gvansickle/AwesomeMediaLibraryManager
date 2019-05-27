@@ -21,7 +21,6 @@
 // Ours
 #include "ScanResultsTreeModelItem.h"
 #include "AbstractTreeModelHeaderItem.h"
-#include "ScanResultsTreeModelXMLTags.h"
 
 ScanResultsTreeModel::ScanResultsTreeModel(QObject *parent)
     : BASE_CLASS(parent)

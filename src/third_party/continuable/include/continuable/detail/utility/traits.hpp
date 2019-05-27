@@ -5,9 +5,9 @@
                         \_,(_)| | | || ||_|(_||_)|(/_
 
                     https://github.com/Naios/continuable
-                                   v3.0.0
+                                   v4.0.0
 
-  Copyright(c) 2015 - 2018 Denis Blank <denis.blank at outlook dot com>
+  Copyright(c) 2015 - 2019 Denis Blank <denis.blank at outlook dot com>
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files(the "Software"), to deal
@@ -21,7 +21,7 @@
 
   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
@@ -36,6 +36,7 @@
 #include <type_traits>
 #include <utility>
 #include <continuable/detail/features.hpp>
+#include <continuable/detail/utility/identity.hpp>
 
 namespace cti {
 namespace detail {
@@ -69,19 +70,6 @@ auto make_flat_tuple(T&&... args) {
   return std::tuple<T...>{std::forward<T>(args)...};
 }
 
-/// A tagging type for wrapping other types
-template <typename... T>
-struct identity {};
-
-template <typename>
-struct is_identity : std::false_type {};
-template <typename... Args>
-struct is_identity<identity<Args...>> : std::true_type {};
-
-template <typename T>
-using identify = std::conditional_t<is_identity<std::decay_t<T>>::value, T,
-                                    identity<std::decay_t<T>>>;
-
 #if defined(CONTINUABLE_HAS_CXX17_VOID_T)
 using std::void_t;
 #else
@@ -98,18 +86,20 @@ template <typename... T>
 using void_t = typename detail::deduce_to_void<T...>::type;
 #endif // CONTINUABLE_HAS_CXX17_VOID_T
 
-namespace detail {
+namespace detail_unpack {
+using std::get;
+
 /// Calls the given unpacker with the content of the given sequenceable
 template <typename U, typename F, std::size_t... I>
 constexpr auto unpack_impl(U&& unpacker, F&& first_sequenceable,
                            std::integer_sequence<std::size_t, I...>)
     -> decltype(std::forward<U>(unpacker)(
-        std::get<I>(std::forward<F>(first_sequenceable))...)) {
+        get<I>(std::forward<F>(first_sequenceable))...)) {
   (void)first_sequenceable;
   return std::forward<U>(unpacker)(
-      std::get<I>(std::forward<F>(first_sequenceable))...);
+      get<I>(std::forward<F>(first_sequenceable))...);
 }
-} // namespace detail
+} // namespace detail_unpack
 
 /// Calls the given callable object with the content of the given sequenceable
 ///
@@ -119,12 +109,13 @@ template <typename Callable, typename TupleLike,
           typename Sequence = std::make_index_sequence<
               std::tuple_size<std::decay_t<TupleLike>>::value>>
 constexpr auto unpack(Callable&& obj, TupleLike&& tuple_like)
-    -> decltype(detail::unpack_impl(std::forward<Callable>(obj),
-                                    std::forward<TupleLike>(tuple_like),
-                                    Sequence{})) {
+    -> decltype(detail_unpack::unpack_impl(std::forward<Callable>(obj),
+                                           std::forward<TupleLike>(tuple_like),
+                                           Sequence{})) {
 
-  return detail::unpack_impl(std::forward<Callable>(obj),
-                             std::forward<TupleLike>(tuple_like), Sequence{});
+  return detail_unpack::unpack_impl(std::forward<Callable>(obj),
+                                    std::forward<TupleLike>(tuple_like),
+                                    Sequence{});
 }
 
 namespace detail {
@@ -145,16 +136,16 @@ struct is_invokable_impl<
 /// arguments inside lambda closures.
 ///
 /// ```cpp
-/// traits::is_invokable<object, std::tuple<Args...>>
+/// traits::is_invocable<object, std::tuple<Args...>>
 /// ```
 template <typename T, typename Args>
-using is_invokable_from_tuple =
+using is_invocable_from_tuple =
     typename detail::is_invokable_impl<T, Args>::type;
 
 // Checks whether the given callable object is invocable with the given
 // arguments. This doesn't take member functions into account!
 template <typename T, typename... Args>
-using is_invocable = is_invokable_from_tuple<T, std::tuple<Args...>>;
+using is_invocable = is_invocable_from_tuple<T, std::tuple<Args...>>;
 
 /// Deduces to a std::false_type
 template <typename T>

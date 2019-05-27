@@ -1,6 +1,6 @@
 
 /*
-  Copyright(c) 2015 - 2018 Denis Blank <denis.blank at outlook dot com>
+  Copyright(c) 2015 - 2019 Denis Blank <denis.blank at outlook dot com>
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files(the "Software"), to deal
@@ -14,7 +14,7 @@
 
   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
@@ -26,6 +26,8 @@
 #include <continuable/detail/features.hpp>
 
 #include <test-continuable.hpp>
+
+using namespace cti;
 
 TYPED_TEST(single_dimension_tests, are_completing_errors) {
   ASSERT_ASYNC_EXCEPTION_COMPLETION(
@@ -109,4 +111,35 @@ TYPED_TEST(single_dimension_tests, are_flow_error_accepting) {
 
   ASSERT_ASYNC_INCOMPLETION(std::move(continuation));
   ASSERT_TRUE(*handled);
+}
+
+TYPED_TEST(single_dimension_tests, are_exceptions_partial_applyable) {
+  bool handled = false;
+  ASSERT_ASYNC_INCOMPLETION(
+      this->supply_exception(supply_test_exception()).fail([&]() -> void {
+        EXPECT_FALSE(handled);
+        handled = true;
+      }));
+  ASSERT_TRUE(handled);
+
+  handled = false;
+  ASSERT_ASYNC_INCOMPLETION(this->supply_exception(supply_test_exception())
+                                .fail([&]() -> empty_result {
+                                  EXPECT_FALSE(handled);
+                                  handled = true;
+                                  return cancel();
+                                }));
+  ASSERT_TRUE(handled);
+
+  handled = false;
+  ASSERT_ASYNC_INCOMPLETION(
+      this->supply_exception(supply_test_exception(),
+                             detail::identity<int, int>{})
+          .fail([&]() -> result<int, int> {
+            EXPECT_FALSE(handled);
+            handled = true;
+            return cancel();
+          }));
+
+  ASSERT_TRUE(handled);
 }

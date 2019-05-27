@@ -379,6 +379,13 @@ void tst_Basic::testAnotherTU()
 {
     auto mo = &AnotherTU::Gaga::staticMetaObject;
     QCOMPARE(mo->className(), "AnotherTU::Gaga");
+
+#ifdef __cpp_inline_variables
+    auto mo2 = &AnotherTU::InlineGadget::staticMetaObject;
+    QCOMPARE(mo2->className(), "AnotherTU::InlineGadget");
+    auto mo3 = &AnotherTU::InlineObject::staticMetaObject;
+    QCOMPARE(mo3->className(), "AnotherTU::InlineObject");
+#endif
 }
 
 struct TestFinalObject final : public QObject {

@@ -1,7 +1,13 @@
 sudo: true
 dist: trusty
 language: cpp
-cache: apt
+cache:
+  apt: true
+  ccache: true
+  directories:
+    - ${HOME}/install
+    - ${HOME}/deps
+    - dep
 
 git:
   depth: 1
@@ -17,11 +23,11 @@ matrix:
           packages:
             - g++-6
             - valgrind
-            - cmake
-            - cmake-data
             - ninja-build
+            - ccache
       env:
         - COMPILER=g++-6
+        - BUILD_CONFIG=Debug
         - WITH_NO_EXCEPTIONS=OFF
         - WITH_AWAIT=OFF
         - WITH_LIGHT_TESTS=ON
@@ -35,11 +41,11 @@ matrix:
             - llvm-toolchain-trusty-5.0
           packages:
             - clang-5.0
-            - cmake
-            - cmake-data
             - ninja-build
+            - ccache
       env:
         - COMPILER=clang++-5.0
+        - BUILD_CONFIG=Release
         - WITH_NO_EXCEPTIONS=OFF
         - WITH_AWAIT=OFF
         - WITH_LIGHT_TESTS=OFF
@@ -53,11 +59,11 @@ matrix:
             - llvm-toolchain-trusty-5.0
           packages:
             - clang-5.0
-            - cmake
-            - cmake-data
             - ninja-build
+            - ccache
       env:
         - COMPILER=clang++-5.0
+        - BUILD_CONFIG=Debug
         - WITH_NO_EXCEPTIONS=ON
         - WITH_AWAIT=ON
         - WITH_LIGHT_TESTS=ON

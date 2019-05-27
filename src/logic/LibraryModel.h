@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -24,6 +24,7 @@
 
 // Std C++
 #include <vector>
+#include <memory>
 
 // Qt5
 #include <QAbstractItemModel>
@@ -35,9 +36,9 @@ class QFileDevice;
 
 // Ours
 #include <logic/serialization/ISerializable.h>
-#include <src/logic/dbmodels/CollectionDatabaseModel.h>
+#include <logic/dbmodels/CollectionDatabaseModel.h>
 
-#include <src/concurrency/ThreadsafeMap.h>
+#include <concurrency/ThreadsafeMap.h>
 
 #include "ColumnSpec.h"
 #include "Library.h"
@@ -50,7 +51,7 @@ class QFileDevice;
 class LibraryRescanner;
 
 using VecOfUrls = QVector<QUrl>;
-using VecOfLEs = std::vector<std::shared_ptr<LibraryEntry> >;
+//using VecOfLEs = std::vector<std::shared_ptr<LibraryEntry> >;
 using VecOfPMIs = QVector<QPersistentModelIndex>;
 struct LibraryRescannerMapItem;
 
@@ -65,7 +66,7 @@ Q_DECLARE_METATYPE(VecOfPMIs);
 /**
  * The LibraryModel class.
  */
-class LibraryModel : public QAbstractItemModel, public ISerializable
+class LibraryModel : public QAbstractItemModel, public virtual ISerializable
 {
     Q_OBJECT
 
@@ -178,7 +179,7 @@ public Q_SLOTS:
     void SLOT_processReadyResults(MetadataReturnVal lritem_vec);
     void SLOT_processReadyResults(LibraryEntryLoaderJobResult loader_results);
     void SLOT_onIncomingPopulateRowWithItems_Single(QPersistentModelIndex pindex, std::shared_ptr<LibraryEntry> item);
-    void SLOT_onIncomingPopulateRowWithItems_Multiple(QPersistentModelIndex pindex, VecOfLEs items);
+	void SLOT_onIncomingPopulateRowWithItems_Multiple(QPersistentModelIndex pindex, std::vector<std::shared_ptr<LibraryEntry>> items);
 
     virtual QVector<VecLibRescannerMapItems> getLibRescanItems();
 

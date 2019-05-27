@@ -21,7 +21,7 @@
 #define SRC_GUI_ACTIVITYPROGRESSMANAGER_CUMULATIVEAMLMJOB_H_
 
 /// Ours
-#include <src/concurrency/AMLMJob.h>
+#include <concurrency/AMLMJob.h>
 #include <utils/TheSimplestThings.h>
 
 class CumulativeAMLMJob;

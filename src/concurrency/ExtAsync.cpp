@@ -23,13 +23,15 @@
 
 #include "ExtAsync.h"
 
+// Std C++
 #include <type_traits>
+
+// Not-so-Std C++
 #include <future/future_type_traits.hpp>
 
+// Ours
 #include "ExtFuture_traits.h"
 #include <utils/DebugHelpers.h>
-
-
 
 
 /// Attic for experimental stuff that didn't pan out, but is too good to trash.

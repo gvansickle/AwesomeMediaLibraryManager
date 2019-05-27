@@ -5,9 +5,9 @@
                         \_,(_)| | | || ||_|(_||_)|(/_
 
                     https://github.com/Naios/continuable
-                                   v3.0.0
+                                   v4.0.0
 
-  Copyright(c) 2015 - 2018 Denis Blank <denis.blank at outlook dot com>
+  Copyright(c) 2015 - 2019 Denis Blank <denis.blank at outlook dot com>
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files(the "Software"), to deal
@@ -21,7 +21,7 @@
 
   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
@@ -40,8 +40,8 @@
 #include <continuable/continuable-primitives.hpp>
 #include <continuable/continuable-promise-base.hpp>
 #include <continuable/continuable-traverse.hpp>
+#include <continuable/detail/core/annotation.hpp>
 #include <continuable/detail/core/base.hpp>
-#include <continuable/detail/core/hints.hpp>
 #include <continuable/detail/core/types.hpp>
 #include <continuable/detail/traversal/container-category.hpp>
 #include <continuable/detail/utility/traits.hpp>
@@ -88,30 +88,30 @@ private:
 
 struct result_deducer {
   template <typename T>
-  static auto deduce_one(std::false_type, traits::identity<T>) {
+  static auto deduce_one(std::false_type, identity<T>) {
     static_assert(traits::fail<T>::value,
                   "Non continuable types except tuple like and homogeneous "
                   "containers aren't allowed inside an any expression!");
   }
   template <typename T>
-  static auto deduce_one(std::true_type, traits::identity<T> id) {
-    return hints::hint_of(id);
+  static auto deduce_one(std::true_type, identity<T> id) {
+    return base::annotation_of(id);
   }
   template <typename T>
   static auto deduce(traversal::container_category_tag<false, false>,
-                     traits::identity<T> id) {
+                     identity<T> id) {
     return deduce_one<T>(base::is_continuable<T>{}, id);
   }
 
   /// Deduce a homogeneous container
   template <bool IsTupleLike, typename T>
   static auto deduce(traversal::container_category_tag<true, IsTupleLike>,
-                     traits::identity<T>) {
+                     identity<T>) {
 
     // Deduce the containing type
     using element_t = std::decay_t<decltype(*std::declval<T>().begin())>;
     return deduce(traversal::container_category_of_t<element_t>{},
-                  traits::identity<element_t>{});
+                  identity<element_t>{});
   }
 
   template <typename First, typename... T>
@@ -125,19 +125,18 @@ struct result_deducer {
 
   template <std::size_t... I, typename T>
   static auto deduce_tuple_like(std::integer_sequence<std::size_t, I...>,
-                                traits::identity<T>) {
+                                identity<T>) {
 
     return deduce_same_hints(deduce(
         traversal::container_category_of_t<
             std::decay_t<decltype(std::get<I>(std::declval<T>()))>>{},
-        traits::identity<
-            std::decay_t<decltype(std::get<I>(std::declval<T>()))>>{})...);
+        identity<std::decay_t<decltype(std::get<I>(std::declval<T>()))>>{})...);
   }
 
   /// Traverse tuple like container
   template <typename T>
   static auto deduce(traversal::container_category_tag<false, true>,
-                     traits::identity<T> id) {
+                     identity<T> id) {
 
     constexpr auto const size = std::tuple_size<T>::value;
     return deduce_tuple_like(std::make_index_sequence<size>{}, id);
@@ -172,12 +171,11 @@ struct connection_finalizer<connection_strategy_any_tag> {
   static auto finalize(Connection&& connection, util::ownership ownership) {
     constexpr auto const signature = decltype(any::result_deducer::deduce(
         traversal::container_category_of_t<std::decay_t<Connection>>{},
-        traits::identity<std::decay_t<Connection>>{})){};
+        identity<std::decay_t<Connection>>{})){};
 
-    return base::attorney::create(
+    return base::attorney::create_from(
         [connection =
              std::forward<Connection>(connection)](auto&& callback) mutable {
-
           using submitter_t =
               any::any_result_submitter<std::decay_t<decltype(callback)>>;
 
@@ -193,6 +191,13 @@ struct connection_finalizer<connection_strategy_any_tag> {
   }
 };
 } // namespace connection
+
+/// Specialization for a connection annotation
+template <>
+struct annotation_trait<connection::connection_strategy_any_tag>
+    : connection::connection_annotation_trait<
+          connection::connection_strategy_any_tag> {};
+
 } // namespace detail
 } // namespace cti
 

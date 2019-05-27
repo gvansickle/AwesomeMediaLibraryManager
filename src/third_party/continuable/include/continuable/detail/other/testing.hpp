@@ -5,9 +5,9 @@
                         \_,(_)| | | || ||_|(_||_)|(/_
 
                     https://github.com/Naios/continuable
-                                   v3.0.0
+                                   v4.0.0
 
-  Copyright(c) 2015 - 2018 Denis Blank <denis.blank at outlook dot com>
+  Copyright(c) 2015 - 2019 Denis Blank <denis.blank at outlook dot com>
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files(the "Software"), to deal
@@ -21,7 +21,7 @@
 
   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
@@ -179,15 +179,14 @@ template <typename... Expected>
 struct assert_async_types_validator {
   template <typename... Actual>
   void operator()(Actual...) {
-    static_assert(std::is_same<traits::identity<Actual...>,
-                               traits::identity<Expected...>>::value,
-                  "The called arguments don't match with the expected ones!");
+    static_assert(
+        std::is_same<identity<Actual...>, identity<Expected...>>::value,
+        "The called arguments don't match with the expected ones!");
   }
 };
 
 template <typename C, typename... Args>
-void assert_async_types(C&& continuable,
-                        traits::identity<Args...> /*expected*/) {
+void assert_async_types(C&& continuable, identity<Args...> /*expected*/) {
   assert_async_validation(std::forward<C>(continuable),
                           assert_async_types_validator<Args...>{});
 }

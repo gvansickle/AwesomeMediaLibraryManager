@@ -90,7 +90,7 @@ ExtFuture<LibraryEntryLoaderJobResult> LibraryEntryLoaderJob::make_task(QPersist
 
 	return ret_future;
 #else
-	return ExtAsync::run(&LibraryEntryLoaderJob::LoadEntry, nullptr, pmi, libentry);
+	return ExtAsync::qthread_async_with_cnr_future(&LibraryEntryLoaderJob::LoadEntry, nullptr, pmi, libentry);
 #endif
 }
 

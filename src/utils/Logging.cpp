@@ -64,7 +64,7 @@ void printDebugMessagesWhileDebuggingHandler(QtMsgType type, const QMessageLogCo
         auto cur_thread_id = QThread::currentThreadId();
 		thread_name = QString("%1").arg(reinterpret_cast<uintptr_t>(cur_thread_id));
     }
-    // Fit to 15 chars, fixed width.
+    // Fit thread name to 15 chars, fixed width.
     thread_name = thread_name.leftJustified(15, '_', true);
 
     debug_str = qFormatLogMessage(type, context, msg);
@@ -80,7 +80,7 @@ void printDebugMessagesWhileDebuggingHandler(QtMsgType type, const QMessageLogCo
 		retval.remove(QRegularExpression(R"!(^[\s]*(static|void|template|virtual|\*))!"));
 		retval.remove(QRegularExpression(R"!(\w+\s+)!"));
 		retval.remove(QRegularExpression(R"!(^([\s]+))!"));
-		return retval.left(16);
+		return retval.left(32);
 	}());
 
     /// @todo I must be missing a header on Windows, all I get is "OutputDebugString not defined" here.

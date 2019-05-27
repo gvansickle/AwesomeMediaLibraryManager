@@ -17,7 +17,7 @@
 # along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-# @file concurrency/CMakeLists.txt
+# @file src/concurrency/CMakeLists.txt
 
 # Concurrency files.
 set(HEADER_FILES_UTILS_CONCURRENCY
@@ -29,6 +29,17 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	ExtFutureWatcher.h
 	ExtFuture_traits.h
 	IExtFutureWatcher.h
+	ExtAsync.h
+	ExtAsyncExceptions.h
+	AMLMJob.h
+	AMLMJobT.h
+	AMLMCompositeJob.h
+	ThreadsafeMap.h
+	DebugSequence.h
+	WorkerThreadBase.h
+	)
+set(PRIVATE_HEADER_FILES_UTILS_CONCURRENCY
+	impl/IExecutor.h
 	impl/ExtAsync_impl.h
 	impl/ExtFuture_impl.hpp
 	impl/ExtFuture_make_xxx_future.h
@@ -36,20 +47,14 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	impl/ExtFuture_when_any.h
 	impl/ExtFutureImplHelpers.h
 	impl/ExtAsync_RunInThread.h
-	ExtAsync.h
-	ExtAsyncExceptions.h
-	AMLMJob.h
-	AMLMJobT.h
-	AMLMCompositeJob.h
-	../logic/jobs/DirectoryScanJob.h
-	ThreadsafeMap.h
-	DebugSequence.h
-	WorkerThreadBase.h
+	impl/ManagedExtFutureWatcher_impl.h
 	)
+
 set(SOURCE_FILES_UTILS_CONCURRENCY
 	impl/ExtFuture_when_all.cpp
 	impl/ExtFuture_when_any.cpp
 	impl/ExtFutureImplHelpers.cpp
+	impl/ManagedExtFutureWatcher_impl.cpp
 	ExtAsync.cpp
 	ExtAsyncExceptions.cpp
 	ExtFuture.cpp
@@ -59,21 +64,15 @@ set(SOURCE_FILES_UTILS_CONCURRENCY
 	AMLMJob.cpp
 	AMLMJobT.cpp
 	AMLMCompositeJob.cpp
-	../logic/jobs/DirectoryScanJob.cpp
 	ThreadsafeMap.cpp
 	DebugSequence.cpp
 	WorkerThreadBase.cpp
-	FunctionWrapper.cpp
-	FunctionWrapper.h
-	WorkStealingQueue.cpp
-	WorkStealingQueue.h
-	ThreadPool2.cpp
-	ThreadPool2.h
 	)
 
 target_sources_local(concurrency
 	PUBLIC
 		${HEADER_FILES_UTILS_CONCURRENCY}
+		${PRIVATE_HEADER_FILES_UTILS_CONCURRENCY}
 	PRIVATE
 		${SOURCE_FILES_UTILS_CONCURRENCY}
 		)
@@ -82,7 +81,7 @@ target_link_libraries(concurrency
 		#${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS} ### @todo "logic_subdir links to itself".
 		${QT5_LINK_LIB_TARGETS}
 		${KF5_LINK_LIB_TARGETS}
-		${GTK_LINK_LIB_TARGETS}
+		#${GTK_LINK_LIB_TARGETS} # == Some utils/*Helpers.h.
 		)
 target_include_directories(concurrency
 	PUBLIC

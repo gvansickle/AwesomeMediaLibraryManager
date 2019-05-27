@@ -1,5 +1,5 @@
 #
-# Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -21,6 +21,7 @@
 
 set(GRAPHVIZ_GRAPH_NAME "AMLMDeps")
 #set(GRAPHVIZ_GRAPH_HEADER "node [n fontsize = “12”];") # "AMLM Target Dependency Graph"
+set(GRAPHVIZ_GRAPH_TYPE "strict digraph") ## max one line between each node in each direction
 # Regexes
 set(GRAPHVIZ_IGNORE_TARGETS "")
 # Set this to FALSE to exclude per target graphs foo.dot.<target>.

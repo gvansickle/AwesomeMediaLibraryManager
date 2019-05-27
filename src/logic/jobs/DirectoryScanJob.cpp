@@ -29,28 +29,7 @@
 #include <utils/TheSimplestThings.h>
 #include <logic/DirScanResult.h>
 #include <concurrency/ExtAsync.h>
-#include <concurrency/AMLMJob.h>
-
-DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, const QUrl& dir_url,
-								   const QStringList &nameFilters,
-								   const QDir::Filters filters,
-								   const QDirIterator::IteratorFlags flags)
-    : BASE_CLASS(parent), m_dir_url(dir_url), m_name_filters(nameFilters), m_dir_filters(filters), m_iterator_flags(flags)
-{
-    // Set our object name.
-    setObjectName(uniqueQObjectName());
-
-    /// @todo This should be coming through the ExtFuture.
-    setProgressUnit(KJob::Unit::Files);
-
-    // Set our capabilities.
-    setCapabilities(KJob::Capability::Killable | KJob::Capability::Suspendable);
-}
-
-DirectoryScannerAMLMJob::~DirectoryScannerAMLMJob()
-{
-//    qDbo() << "DirectoryScannerAMLMJob DELETED:" << this;
-}
+//#include <concurrency/AMLMJob.h>
 
 
 void DirScanFunction(ExtFuture<DirScanResult> ext_future, AMLMJob* /*amlmJob*/,
@@ -191,17 +170,5 @@ void DirScanFunction(ExtFuture<DirScanResult> ext_future, AMLMJob* /*amlmJob*/,
 
 	qDb() << "RETURNING, ExtFuture:" << ext_future; ///< STARTED only, last output of pool thread
 	return;
-}
-
-void DirectoryScannerAMLMJob::run()
-{
-	// Do nothing.
-}
-
-void DirectoryScannerAMLMJob::runFunctor()
-{
-	Q_ASSERT(0);
-//	DirScanFunction(m_ext_future, this,
-//				m_dir_url, m_name_filters, m_dir_filters, m_iterator_flags);
 }
 

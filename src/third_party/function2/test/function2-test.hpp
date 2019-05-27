@@ -1,5 +1,5 @@
 
-//  Copyright 2015-2018 Denis Blank <denis.blank at outlook dot com>
+//  Copyright 2015-2019 Denis Blank <denis.blank at outlook dot com>
 //     Distributed under the Boost Software License, Version 1.0
 //       (See accompanying file LICENSE_1_0.txt or copy at
 //             http://www.boost.org/LICENSE_1_0.txt)
@@ -26,8 +26,9 @@ constexpr bool returnFalse() noexcept {
 
 template <typename Fn, bool Copyable, std::size_t Capacity, bool Throwing,
           bool Owning, typename... Additional>
-using short_def = fu2::function_base<Owning, Copyable, Capacity, Throwing,
-                                     false, Fn, Additional...>;
+using short_def =
+    fu2::function_base<Owning, Copyable, fu2::capacity_fixed<Capacity>,
+                       Throwing, false, Fn, Additional...>;
 
 /// NonCopyable functions with several SFO capacities
 template <typename Fn, bool Throwing = true, bool Owning = true,

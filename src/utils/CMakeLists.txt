@@ -64,6 +64,9 @@ target_link_libraries(utils
 		${QT5_LINK_LIB_TARGETS}
 		${KF5_LINK_LIB_TARGETS}
 		${GTK_LINK_LIB_TARGETS}
+	PRIVATE
+		future
+		resources	
 		)
 
 target_include_directories(utils

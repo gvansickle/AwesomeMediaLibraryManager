@@ -5,9 +5,9 @@
                         \_,(_)| | | || ||_|(_||_)|(/_
 
                     https://github.com/Naios/continuable
-                                   v3.0.0
+                                   v4.0.0
 
-  Copyright(c) 2015 - 2018 Denis Blank <denis.blank at outlook dot com>
+  Copyright(c) 2015 - 2019 Denis Blank <denis.blank at outlook dot com>
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files(the "Software"), to deal
@@ -21,7 +21,7 @@
 
   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
@@ -83,7 +83,7 @@ auto normalize(Strategy /*strategy*/,
 
   // If the right continuation is a different strategy materialize it
   // in order to keep the precedence in cases where: `c1 && (c2 || c3)`.
-  return std::make_tuple(base::attorney::materialize(std::move(continuation)));
+  return std::make_tuple(std::move(continuation).finish());
 }
 /// - The continuable is inside the current strategy state:
 ///   -> return the data of the tuple
@@ -92,7 +92,7 @@ auto normalize(Strategy /*strategy*/,
                continuable_base<Data, Strategy>&& continuation) {
 
   // If we are in the given strategy we can just use the data of the continuable
-  return base::attorney::consume_data(std::move(continuation));
+  return base::attorney::consume(std::move(continuation));
 }
 
 /// Entry function for connecting two continuables with a given strategy.
@@ -114,7 +114,7 @@ auto connect(Strategy strategy, continuable_base<LData, LAnnotation>&& left,
 
   // Return a new continuable containing the tuple and holding
   // the current strategy as annotation.
-  return base::attorney::create(std::move(data), strategy, ownership_);
+  return base::attorney::create_from_raw(std::move(data), strategy, ownership_);
 }
 
 /// All strategies should specialize this class in order to provide:
@@ -124,32 +124,19 @@ auto connect(Strategy strategy, continuable_base<LData, LAnnotation>&& left,
 template <typename Strategy>
 struct connection_finalizer;
 
-/// Finalizes the connection logic of a given connection
-template <typename Data, typename Strategy>
-auto finalize_connection(continuable_base<Data, Strategy>&& continuation) {
-  using finalizer = connection_finalizer<Strategy>;
+template <typename Strategy>
+struct connection_annotation_trait {
+  /// Finalizes the connection logic of a given connection
+  template <typename Continuable>
+  static auto finish(Continuable&& continuable) {
+    using finalizer = connection_finalizer<Strategy>;
 
-  util::ownership ownership = base::attorney::ownership_of(continuation);
-  auto connection = base::attorney::consume_data(std::move(continuation));
+    util::ownership ownership = base::attorney::ownership_of(continuable);
+    auto connection =
+        base::attorney::consume(std::forward<Continuable>(continuable));
 
-  // Return a new continuable which
-  return finalizer::finalize(std::move(connection), std::move(ownership));
-}
-
-/// A base class from which the continuable may inherit in order to
-/// provide a materializer method which will finalize an oustanding strategy.
-template <typename Continuable, typename = void>
-struct materializer {
-  static constexpr auto&& apply(Continuable&& continuable) {
-    return std::move(continuable);
-  }
-};
-template <typename Data, typename Strategy>
-struct materializer<continuable_base<Data, Strategy>,
-                    std::enable_if_t<is_connection_strategy<Strategy>::value>> {
-
-  static constexpr auto apply(continuable_base<Data, Strategy>&& continuable) {
-    return finalize_connection(std::move(continuable));
+    // Return a new continuable which
+    return finalizer::finalize(std::move(connection), std::move(ownership));
   }
 };
 
@@ -179,7 +166,7 @@ public:
 
     // Materialize every continuable
     // TODO Actually we would just need to consume the data here
-    return base::attorney::materialize(std::forward<Continuable>(continuable));
+    return std::forward<Continuable>(continuable).finish();
   }
 };
 

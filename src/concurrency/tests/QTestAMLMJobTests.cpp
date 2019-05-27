@@ -193,6 +193,7 @@ void tst_QString::DirScanCancelTestPAutodelete()
     AMLMTEST_COUT << "Setting Autodelete to:" << autodelete;
     dsj->setAutoDelete(autodelete);
 
+#if 0 /// DirectoryScannerAMLMJob is gone
     // Connect signals and slots.
     connect_or_die(dsj, &DirectoryScannerAMLMJob::finished, qApp, [=](KJob* kjob){
         qIn() << "GOT FINISHED";
@@ -207,6 +208,7 @@ void tst_QString::DirScanCancelTestPAutodelete()
         AMLMTEST_EXPECT_EQ(kjob->error(), KJob::KilledJobError);
 
         ;});
+#endif
     connect_or_die(dsj, &QObject::destroyed, qApp, [=](QObject* obj){
         AMLMTEST_COUT << "GOT DESTROYED SIGNAL:" << obj;
     });

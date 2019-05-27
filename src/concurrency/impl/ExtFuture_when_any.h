@@ -23,11 +23,31 @@
 #ifndef SRC_CONCURRENCY_IMPL_EXTFUTURE_WHEN_ANY_H_
 #define SRC_CONCURRENCY_IMPL_EXTFUTURE_WHEN_ANY_H_
 
-namespace ExtFuture_detail
+// Std C++
+#include <type_traits>
+#include <vector>
+
+template <class T>
+class ExtFuture;
+
+namespace ExtAsync
 {
 
+template < class Sequence >
+struct when_any_result
+{
+	std::size_t index;
+	Sequence futures;
+};
 
+template <class InputIt>
+auto when_any(InputIt first, InputIt last)
+-> ExtFuture<when_any_result<std::vector<typename std::iterator_traits<InputIt>::value_type>>>;
 
-}
+template < class... Futures >
+auto when_any(Futures&&... futures)
+-> ExtFuture<when_any_result<std::tuple<std::decay_t<Futures>...>>>;
+
+} // END namespace ExtAsync
 
 #endif /* SRC_CONCURRENCY_IMPL_EXTFUTURE_WHEN_ANY_H_ */

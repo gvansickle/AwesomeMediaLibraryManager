@@ -27,6 +27,7 @@ class QMediaPlaylist;
 class LibrarySortFilterProxyModel;
 class ItemDelegateLength;
 
+
 class MDIPlaylistView : public MDITreeViewBase
 {
     Q_OBJECT
@@ -47,13 +48,13 @@ public:
     /**
      * static member function which opens an MDILibraryView on the given model.
      */
-	static MDIModelViewPair openModel(QPointer<PlaylistModel> model, QWidget* parent);
+    static MDIModelViewPair openModel(QPointer<PlaylistModel> model, QWidget* parent);
 
     QMediaPlaylist* getQMediaPlaylist();
 
-	void setModel(QAbstractItemModel* model) override;
+    void setModel(QAbstractItemModel* model) override;
 
-	PlaylistModel* underlyingModel() const override;
+    PlaylistModel* underlyingModel() const override;
 
     /// Playlists are not read-only.
     bool isReadOnly() const override { return false; }
@@ -95,19 +96,19 @@ protected:
     ///
     /// Pure virtual function overrides.
     ///
-	QString getNewFilenameTemplate() const override;
-	QString defaultNameFilter() override;
+    QString getNewFilenameTemplate() const override;
+    QString defaultNameFilter() override;
 
     void setEmptyModel() override;
 
-	void serializeDocument(QFileDevice& file) override;
-	void deserializeDocument(QFileDevice& file) override;
+    void serializeDocument(QFileDevice& file) override;
+    void deserializeDocument(QFileDevice& file) override;
 
-	bool isModified() const override;
+    bool isModified() const override;
 
-	QString getSaveAsDialogKey() const override;
+    QString getSaveAsDialogKey() const override;
 
-	bool onBlankAreaToolTip(QHelpEvent* event) override;
+    bool onBlankAreaToolTip(QHelpEvent* event) override;
 
     /// Drag and Drop
     void dragEnterEvent(QDragEnterEvent *event) override;
@@ -149,13 +150,13 @@ protected Q_SLOTS:
 private:
     Q_DISABLE_COPY(MDIPlaylistView)
 
-	/**
-	 * Tell the player component to start playing the song at @a index.
-	 * @param index
-	 */
-	void startPlaying(const QModelIndex& index);
+    /**
+     * Tell the player component to start playing the song at @a index.
+     * @param index
+     */
+    void startPlaying(const QModelIndex& index);
 
-	QPointer<PlaylistModel> m_underlying_model;
+    QPointer<PlaylistModel> m_underlying_model;
     LibrarySortFilterProxyModel* m_sortfilter_model;
     ItemDelegateLength* m_length_delegate;
 };

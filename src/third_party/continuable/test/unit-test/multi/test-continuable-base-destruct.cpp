@@ -1,6 +1,6 @@
 
 /*
-  Copyright(c) 2015 - 2018 Denis Blank <denis.blank at outlook dot com>
+  Copyright(c) 2015 - 2019 Denis Blank <denis.blank at outlook dot com>
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files(the "Software"), to deal
@@ -14,7 +14,7 @@
 
   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
@@ -45,17 +45,31 @@ TYPED_TEST(single_dimension_tests, are_called_on_destruct) {
   ASSERT_ASYNC_TYPES(this->supply(tag1{}), tag1);
 }
 
-template <typename T> auto create_incomplete(T* me) {
+template <typename T>
+auto create_incomplete(T* me) {
   return me->make(identity<>{}, identity<void>{}, [](auto&& callback) mutable {
+    EXPECT_TRUE(callback);
     // Destruct the callback here
     auto destroy = std::forward<decltype(callback)>(callback);
     (void)destroy;
   });
 }
 
-template <typename T> auto assert_invocation(T* me) {
-  return me->make(identity<>{}, identity<void>{},
-                  [](auto&& /*callback*/) mutable { FAIL(); });
+template <typename T>
+auto create_incomplete_cancelling(T* me) {
+  return me->make(identity<>{}, identity<void>{}, [](auto&& callback) mutable {
+    EXPECT_TRUE(callback);
+    make_cancelling_continuable<void>().next(
+        std::forward<decltype(callback)>(callback));
+  });
+}
+
+template <typename T>
+auto assert_invocation(T* me) {
+  return me->make(identity<>{}, identity<void>{}, [](auto&& callback) mutable {
+    EXPECT_TRUE(callback);
+    FAIL();
+  });
 }
 
 TYPED_TEST(single_dimension_tests, are_incomplete_when_frozen) {
@@ -86,6 +100,18 @@ TYPED_TEST(single_dimension_tests, are_not_finished_when_not_continued) {
 
   {
     auto chain = create_incomplete(this);
+    ASSERT_ASYNC_INCOMPLETION(std::move(chain).then(this->supply()));
+  }
+}
+
+TYPED_TEST(single_dimension_tests, are_not_finished_when_cancelling) {
+  {
+    auto chain = create_incomplete_cancelling(this);
+    ASSERT_ASYNC_INCOMPLETION(std::move(chain));
+  }
+
+  {
+    auto chain = create_incomplete_cancelling(this);
     ASSERT_ASYNC_INCOMPLETION(std::move(chain).then(this->supply()));
   }
 }

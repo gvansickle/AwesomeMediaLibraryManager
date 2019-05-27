@@ -267,7 +267,7 @@ M_TODO("Not getting some field here");
 			/// @note Anything QPixmap needs to be in run the GUI thread.
 			/// @todo I'm not clear on why we need to explicitly capture a copy of future...
 			/// Oh wait, probably lambda isn't mutable.
-			run_in_event_loop(this, [=, future_copy=future](){
+			ExtAsync::detail::run_in_event_loop(this, [=, future_copy=future](){
 
 				AMLM_ASSERT_IN_GUITHREAD();
 

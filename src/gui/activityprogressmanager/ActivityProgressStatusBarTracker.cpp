@@ -102,6 +102,7 @@ M_WARNING("If we do this here, we need to wait for all jobs to stop.");
 //#error "Yeah this asserts"
     AMLM_ASSERT_EQ(m_amlmjob_to_widget_map.size(), 0);
 #endif
+
     m_expanding_frame_widget->deleteLater();
 }
 
@@ -492,7 +493,7 @@ void ActivityProgressStatusBarTracker::make_internal_connections()
     connect_or_die(this, &ActivityProgressStatusBarTracker::INTERNAL_SIGNAL_slotStop,
                    this, &ActivityProgressStatusBarTracker::slotStop);
 
-    connect_or_die(AMLMApp::instance(), &AMLMApp::aboutToShutdown, this, &ActivityProgressStatusBarTracker::SLOT_onAboutToShutdown);
+	connect_or_die(AMLMApp::instance(), &AMLMApp::SIGNAL_aboutToShutdown, this, &ActivityProgressStatusBarTracker::SLOT_onAboutToShutdown);
 }
 
 void ActivityProgressStatusBarTracker::make_connections_with_newly_registered_job(KJob *kjob, QWidget *wdgt)
@@ -675,9 +676,9 @@ M_MESSAGE("This function makes no sense, the KJob has the interface and we're go
 
 bool ActivityProgressStatusBarTracker::autoDelete(KJob *kjob) const
 {
-    Q_CHECK_PTR(kjob);
-    // The KJob knows if it's autoDelete or not.
-    return kjob->isAutoDelete();
+	Q_CHECK_PTR(kjob);
+	// The KJob knows if it's autoDelete or not.
+	return kjob->isAutoDelete();
 }
 
 int ActivityProgressStatusBarTracker::getNumTrackedJobs() const

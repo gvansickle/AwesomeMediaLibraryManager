@@ -1,4 +1,17 @@
 #!/bin/bash -e
+# Install some dependencies manually
+DEPS_DIR="${HOME}/deps"
+mkdir -p ${DEPS_DIR}
+cd ${DEPS_DIR}
+
+INSTALL_DIR="${HOME}/install"
+
+# Recent CMake:
+CMAKE_URL="https://cmake.org/files/v3.11/cmake-3.11.4-Linux-x86_64.tar.gz"
+mkdir cmake && wget --no-check-certificate --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C cmake
+export PATH=${DEPS_DIR}/cmake/bin:${PATH}
+cmake --version
+
 ############################################################################
 # Install libc++ and libc++abi if needed
 # Taken from here: https://github.com/boostorg/hana/blob/master/.travis.yml
@@ -22,14 +35,14 @@ if [[ "${CXX%%+*}" == "clang" ]]; then
     wget -O - ${LLVM_URL} | tar --strip-components=1 -xJ -C llvm
     wget -O - ${LIBCXX_URL} | tar --strip-components=1 -xJ -C llvm/projects/libcxx
     wget -O - ${LIBCXXABI_URL} | tar --strip-components=1 -xJ -C llvm/projects/libcxxabi
-    (cd llvm/build && cmake .. -DCMAKE_INSTALL_PREFIX=${TRAVIS_BUILD_DIR}/llvm/install)
+    (cd llvm/build && cmake .. -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR})
     (cd llvm/build/projects/libcxx && make install -j2)
     (cd llvm/build/projects/libcxxabi && make install -j2)
   fi
 
-  export STD_CXX_FLAGS="-isystem ${TRAVIS_BUILD_DIR}/llvm/install/include/c++/v1 -stdlib=libc++"
-  export STD_LINKER_FLAGS="-L ${TRAVIS_BUILD_DIR}/llvm/install/lib -l c++ -l c++abi"
-  export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${TRAVIS_BUILD_DIR}/llvm/install/lib"
+  export STD_CXX_FLAGS="-isystem ${INSTALL_DIR}/include/c++/v1 -stdlib=libc++"
+  export STD_LINKER_FLAGS="-L ${INSTALL_DIR}/lib -l c++ -l c++abi"
+  export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${INSTALL_DIR}/lib"
 fi
 
 # Function for creating a new 'build' directory
@@ -45,7 +58,7 @@ function renew_build {
   # Configure the project and build it
   cmake -GNinja -DCMAKE_CXX_FLAGS="$STD_CXX_FLAGS $CMAKE_CXX_FLAGS -Werror" -DCMAKE_EXE_LINKER_FLAGS="$STD_LINKER_FLAGS" \
         -DCTI_CONTINUABLE_WITH_NO_EXCEPTIONS=$WITH_NO_EXCEPTIONS -DCTI_CONTINUABLE_WITH_EXPERIMENTAL_COROUTINE=$WITH_AWAIT -DCTI_CONTINUABLE_WITH_LIGHT_TESTS=$WITH_LIGHT_TESTS \
-        -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug ..
+        -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=$BUILD_CONFIG ..
 }
 
 if [[ $CXX == *"clang"* ]]; then

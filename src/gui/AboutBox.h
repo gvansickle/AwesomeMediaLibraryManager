@@ -20,7 +20,7 @@
 #ifndef AWESOMEMEDIALIBRARYMANAGER_ABOUTBOX_H
 #define AWESOMEMEDIALIBRARYMANAGER_ABOUTBOX_H
 
-#include <nomocdefs.h>
+//#include <nomocdefs.h>
 
 #include <QtGlobal>
 #include <QDialog>
@@ -28,7 +28,7 @@
 
 class AboutBox : public QDialog
 {
-	W_OBJECT(AboutBox)
+    Q_OBJECT
 
 public:
     AboutBox(QWidget *parent = nullptr, const Qt::WindowFlags& flags = 0);

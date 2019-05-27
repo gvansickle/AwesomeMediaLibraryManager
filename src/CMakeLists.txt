@@ -111,6 +111,7 @@ set(PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS
 #		callable_traits
 		verdigris_target
 #		Boost::thread
+		${Boost_LIBRARIES}
 		)
 
 
@@ -180,7 +181,14 @@ list(APPEND amlm_SRCS ${SOURCE_FILES} ${HEADER_FILES}
 # See:
 # @link https://api.kde.org/ecm/module/ECMAddAppIcon.html
 # @link http://kfunk.org/2017/12/20/tips-streamlining-kde-application-for-deployment-microsoft-windows/
-target_link_libraries(src PUBLIC resources)
+target_link_libraries(src
+	PUBLIC 
+		resources
+		# Boost
+		Boost::boost					# Target for header-only dependencies
+		Boost::diagnostic_definitions # For information about Boost's automatic linking
+                                      # during compilation (adds BOOST_LIB_DIAGNOSTIC)
+	)
 #if(NOT DEFINED amlm_APP_ICONS)
 #	message(FATAL_ERROR "NOT DEFINED: amlm_APP_ICONS: '${amlm_APP_ICONS}'")
 #endif()
@@ -222,7 +230,7 @@ endif()
 ###
 add_executable(${PROJECT_NAME} ${WIN32_OR_MACOS_BUNDLE}
 		main.cpp
-		${amlm_SRCS} #${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
+		${amlm_SRCS}
 		${amlm_settings_SRCS}
 		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
 	)
@@ -231,13 +239,13 @@ add_executable(${PROJECT_NAME} ${WIN32_OR_MACOS_BUNDLE}
 #target_compile_features(${PROJECT_NAME} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
 target_compile_definitions(${PROJECT_NAME}
 	PUBLIC
-		"QT_SHAREDPOINTER_TRACK_POINTERS=1"
+		# libstdc++ defs: @link https://gcc.gnu.org/onlinedocs/gcc-9.1.0/libstdc++/manual/
+		# Enable the libstdc++ debug mode.
+		#_GLIBCXX_DEBUG
 		"KXMLGUI_NO_DEPRECATED=1"
-		"QT_DEPRECATED_WARNINGS=1"
-		"QT_NO_KEYWORDS=1"
 		"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
 	)
-target_include_directories(${PROJECT_NAME} 
+target_include_directories(${PROJECT_NAME}
 	PUBLIC 
 		"utils/nomoc"
 		${INCLUDE_DIR_VERDIGRIS}
@@ -250,8 +258,18 @@ target_compile_options(${PROJECT_NAME} PUBLIC ${EXTRA_CXX_COMPILE_FLAGS})
 set_target_properties(${PROJECT_NAME}
     PROPERTIES
         AUTOMOC ON
-        AUTOUIC ON)
-target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_COMMON_LINK_LIBS})
+        AUTOUIC ON
+        #CXX_CLANG_TIDY "clang-tidy;-checks=-*,readability-*"
+        )
+target_link_libraries(${PROJECT_NAME}
+	PUBLIC
+		# Targetized C++ compile settings.
+		cxx_settings
+		cxx_definitions_qt
+		#wt-target-dbo
+	PRIVATE
+		${PROJECT_COMMON_LINK_LIBS})
+
 ### @todo breeze
 #add_dependencies(${PROJECT_NAME} icons_oxygen)
 
@@ -324,7 +342,6 @@ list(APPEND AMLM_SOURCE_FILES_TEST
 	concurrency/tests/ExtAsyncTestCommon.cpp
 	concurrency/tests/ExtFutureTests.cpp
 	concurrency/tests/AMLMJobTests.cpp
-	concurrency/tests/QtPromiseTests.cpp
 	)
 list(APPEND AMLM_HEADER_FILES_TEST
 #	${PROJECT_SOURCE_DIR}/tests/TestHelpers.h
@@ -334,7 +351,6 @@ list(APPEND AMLM_HEADER_FILES_TEST
 	concurrency/tests/ExtAsyncTestCommon.h
 	concurrency/tests/ExtFutureTests.h
 	concurrency/tests/AMLMJobTests.h
-	concurrency/tests/QtPromiseTests.cpp
 	)
 
 add_executable(${TEST_EXE_TARGET} ${WIN32_OR_MACOS_BUNDLE} "")
@@ -346,12 +362,14 @@ target_sources(${TEST_EXE_TARGET}
 		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
 	)
 #target_compile_features(${TEST_EXE_TARGET} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
-target_compile_definitions(${TEST_EXE_TARGET} PRIVATE
-	"QT_SHAREDPOINTER_TRACK_POINTERS=1"
-	"QT_DEPRECATED_WARNINGS"
-	"QT_NO_KEYWORDS"
-	"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
-	"TEST_FWK_IS_GTEST=1"
+target_compile_definitions(${TEST_EXE_TARGET}
+	PUBLIC
+		# libstdc++ defs: @link https://gcc.gnu.org/onlinedocs/gcc-9.1.0/libstdc++/manual/
+		# Enable the libstdc++ debug mode.
+		#_GLIBCXX_DEBUG 
+	PRIVATE
+		"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
+		"TEST_FWK_IS_GTEST=1"
 	)
 target_include_directories(${TEST_EXE_TARGET} PRIVATE
 	"utils/nomoc"
@@ -370,8 +388,18 @@ set_property(TARGET gtest PROPERTY SKIP_AUTOGEN ON)
 set_property(TARGET gmock PROPERTY SKIP_AUTOGEN ON)
 set_property(TARGET gtest_main PROPERTY SKIP_AUTOGEN ON)
 set_property(TARGET gmock_main PROPERTY SKIP_AUTOGEN ON)
-target_link_libraries(${TEST_EXE_TARGET} Threads::Threads gtest gmock amlm_tests)
-target_link_libraries(${TEST_EXE_TARGET} Qt5::Test ${PROJECT_COMMON_LINK_LIBS})
+target_link_libraries(${TEST_EXE_TARGET}
+	PRIVATE
+		Threads::Threads gtest gmock tests)
+target_link_libraries(${TEST_EXE_TARGET}
+	PRIVATE
+        Qt5::Test ${PROJECT_COMMON_LINK_LIBS}
+	PUBLIC
+		# Targetized C++ compile settings.
+		cxx_settings
+		# Qt-specific -D's.
+		cxx_definitions_qt
+	)
 add_test(NAME ${TEST_EXE_TARGET} COMMAND $<TARGET_FILE:${TEST_EXE_TARGET}>)
 ecm_mark_as_test(${TEST_EXE_TARGET})
 
@@ -399,7 +427,9 @@ target_compile_definitions(test_qtestamlmjobtests PRIVATE
 	"TEST_FWK_IS_QTEST=1"
 	)
 target_include_directories(test_qtestamlmjobtests PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
-target_link_libraries(test_qtestamlmjobtests Qt5::Test ${PROJECT_COMMON_LINK_LIBS})
+target_link_libraries(test_qtestamlmjobtests Qt5::Test ${PROJECT_COMMON_LINK_LIBS}
+	# Qt-specific -D's.
+	cxx_definitions_qt)
 set_target_properties(test_qtestamlmjobtests PROPERTIES
 	AUTOMOC ON
 	AUTOUIC ON)

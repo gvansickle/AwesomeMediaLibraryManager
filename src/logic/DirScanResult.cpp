@@ -34,7 +34,6 @@
 
 // Ours
 #include "models/ScanResultsTreeModel.h"
-#include "models/ScanResultsTreeModelXMLTags.h"
 #include <utils/EnumFlagHelpers.h>
 
 AMLM_QREG_CALLBACK([](){

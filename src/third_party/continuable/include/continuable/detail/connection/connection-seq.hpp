@@ -5,9 +5,9 @@
                         \_,(_)| | | || ||_|(_||_)|(/_
 
                     https://github.com/Naios/continuable
-                                   v3.0.0
+                                   v4.0.0
 
-  Copyright(c) 2015 - 2018 Denis Blank <denis.blank at outlook dot com>
+  Copyright(c) 2015 - 2019 Denis Blank <denis.blank at outlook dot com>
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files(the "Software"), to deal
@@ -21,7 +21,7 @@
 
   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
@@ -94,8 +94,18 @@ public:
 
   template <typename Box, std::enable_if_t<aggregated::is_continuable_box<
                               std::decay_t<Box>>::value>* = nullptr>
-  bool operator()(async_traverse_visit_tag, Box&& /*box*/) {
-    return false;
+  bool operator()(async_traverse_visit_tag, Box&& box) {
+    if (base::attorney::is_ready(box.peek())) {
+      // The result can be resolved directly
+      traits::unpack(
+          [&](auto&&... args) mutable {
+            box.assign(std::forward<decltype(args)>(args)...);
+          },
+          base::attorney::query(box.fetch()));
+      return true;
+    } else {
+      return false;
+    }
   }
 
   template <typename Box, typename N>
@@ -142,7 +152,7 @@ struct connection_finalizer<connection_strategy_seq_tag> {
 
     auto signature = aggregated::hint_of_data<decltype(result)>();
 
-    return base::attorney::create(
+    return base::attorney::create_from(
         [result = std::move(result)](auto&& callback) mutable {
           // The data from which the visitor is constructed in-place
           using data_t =
@@ -160,6 +170,13 @@ struct connection_finalizer<connection_strategy_seq_tag> {
   }
 };
 } // namespace connection
+
+/// Specialization for a connection annotation
+template <>
+struct annotation_trait<connection::connection_strategy_seq_tag>
+    : connection::connection_annotation_trait<
+          connection::connection_strategy_seq_tag> {};
+
 } // namespace detail
 } // namespace cti
 

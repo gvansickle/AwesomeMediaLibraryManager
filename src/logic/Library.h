@@ -27,7 +27,7 @@
 #include <QUrl>
 
 // Ours.
-#include <src/logic/serialization/ISerializable.h>
+#include <logic/serialization/ISerializable.h>
 
 #include "LibraryEntry.h"
 

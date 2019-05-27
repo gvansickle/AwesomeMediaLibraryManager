@@ -31,8 +31,8 @@
 //#include <QString>
 
 // Ours
-#include <src/utils/crtp.h>
-#include <src/utils/EnumFlagHelpers.h>
+#include <utils/crtp.h>
+#include <utils/EnumFlagHelpers.h>
 #include <future/guideline_helpers.h>
 
 /**

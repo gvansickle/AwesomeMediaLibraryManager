@@ -39,8 +39,8 @@ target_link_libraries(jobs
 		${QT5_LINK_LIB_TARGETS}
 		${KF5_LINK_LIB_TARGETS}
 		${GTK_LINK_LIB_TARGETS}
-		${AMLM_TAGLIB_TARGET}
-		${AMLM_LIBCUE_TARGET}
+# 		${AMLM_TAGLIB_TARGET}
+# 		${AMLM_LIBCUE_TARGET}
 )
 target_include_directories(jobs
 	PUBLIC

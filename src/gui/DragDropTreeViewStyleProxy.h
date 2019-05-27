@@ -20,7 +20,7 @@
 #ifndef DRAGDROPTREEVIEWSTYLEPROXY_H
 #define DRAGDROPTREEVIEWSTYLEPROXY_H
 
-#include <nomocdefs.h>
+//#include <nomocdefs.h>
 
 #include <QStyle>
 #include <QStyleOption>
@@ -38,8 +38,8 @@
  */
 class DragDropTreeViewStyleProxy : public QProxyStyle
 {
-    W_OBJECT(DragDropTreeViewStyleProxy)
-
+//    W_OBJECT(DragDropTreeViewStyleProxy)
+	Q_OBJECT
 public:
 
 	explicit DragDropTreeViewStyleProxy(QStyle* style = Q_NULLPTR) : QProxyStyle(style) {}

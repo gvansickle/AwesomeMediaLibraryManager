@@ -28,7 +28,7 @@
 #include <QtCore/qmetatype.h>
 #include <utility>
 
-#define W_VERSION 0x010100
+#define W_VERSION 0x0101ff
 
 namespace w_internal {
 using std::index_sequence;  // From C++14, make sure to enable the C++14 option in your compiler
@@ -483,22 +483,22 @@ template <typename T, typename = void> struct EnumIsScoped {
 template <typename T> struct EnumIsScoped<QFlags<T>, void> : EnumIsScoped<typename QFlags<T>::enum_type> {};
 
 /** Holds information about an enum */
-template<std::size_t NameLength, std::size_t AliasLenght, typename Values_, typename Names, int Flags>
+template<std::size_t NameLength, std::size_t AliasLength, typename Values_, typename Names, int Flags>
 struct MetaEnumInfo {
     StaticString<NameLength> name;
-    StaticString<AliasLenght> alias;
+    StaticString<AliasLength> alias;
     Names names;
     using Values = Values_;
     static constexpr uint flags = Flags;
     static constexpr auto count = Values::size();
-    static constexpr auto hasAlias = AliasLenght > 1;
+    static constexpr auto hasAlias = AliasLength > 1;
 };
 template<typename Enum, Enum... Value> struct enum_sequence {};
 // called from W_ENUM and W_FLAG
-template<typename Enum, int Flag, std::size_t NameLength, std::size_t AliasLenght, Enum... Values, typename Names>
-constexpr MetaEnumInfo<NameLength, AliasLenght, std::index_sequence<size_t(Values)...> , Names,
+template<typename Enum, int Flag, std::size_t NameLength, std::size_t AliasLength, Enum... Values, typename Names>
+constexpr MetaEnumInfo<NameLength, AliasLength, std::index_sequence<size_t(Values)...> , Names,
                        Flag | EnumIsScoped<Enum>::Value> makeMetaEnumInfo(
-                StaticStringArray<NameLength> &name, StaticString<AliasLenght> alias,
+                StaticStringArray<NameLength> &name, StaticString<AliasLength> alias,
                 enum_sequence<Enum, Values...>, Names names) {
     return { {name}, alias, names };
 }

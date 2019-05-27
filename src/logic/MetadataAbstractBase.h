@@ -31,7 +31,7 @@
 // Ours.
 #include <logic/serialization/ISerializable.h>
 #include <future/guideline_helpers.h>
-#include <src/utils/Fraction.h>
+#include <utils/Fraction.h>
 #include <utils/EnumFlagHelpers.h>
 #include <utils/QtHelpers.h>
 #include <logic/serialization/ExtEnum.h>

@@ -5,9 +5,9 @@
                         \_,(_)| | | || ||_|(_||_)|(/_
 
                     https://github.com/Naios/continuable
-                                   v3.0.0
+                                   v4.0.0
 
-  Copyright(c) 2015 - 2018 Denis Blank <denis.blank at outlook dot com>
+  Copyright(c) 2015 - 2019 Denis Blank <denis.blank at outlook dot com>
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files(the "Software"), to deal
@@ -21,7 +21,7 @@
 
   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
@@ -36,6 +36,7 @@
 #include <type_traits>
 #include <utility>
 #include <continuable/continuable-primitives.hpp>
+#include <continuable/continuable-result.hpp>
 #include <continuable/detail/connection/connection-all.hpp>
 #include <continuable/detail/connection/connection-any.hpp>
 #include <continuable/detail/connection/connection-seq.hpp>
@@ -92,6 +93,10 @@ template <typename Data, typename Annotation>
 class continuable_base {
 
   /// \cond false
+  using ownership = detail::util::ownership;
+
+  using annotation_trait = detail::annotation_trait<Annotation>;
+
   template <typename, typename>
   friend class continuable_base;
   friend struct detail::base::attorney;
@@ -99,11 +104,11 @@ class continuable_base {
   // The continuation type or intermediate result
   Data data_;
   // The transferable state which represents the validity of the object
-  detail::util::ownership ownership_;
+  ownership ownership_;
   /// \endcond
 
   /// Constructor accepting the data object while erasing the annotation
-  explicit continuable_base(Data data, detail::util::ownership ownership)
+  explicit continuable_base(Data data, ownership ownership)
       : data_(std::move(data)), ownership_(std::move(ownership)) {
   }
 
@@ -114,9 +119,26 @@ public:
 
   /// Constructor accepting any object convertible to the data object,
   /// while erasing the annotation
-  template <typename OData, std::enable_if_t<std::is_convertible<
-                                std::decay_t<OData>, Data>::value>* = nullptr>
-  continuable_base(OData&& data) : data_(std::forward<OData>(data)) {
+  template <typename OtherData,
+            std::enable_if_t<detail::base::can_accept_continuation<
+                Data, Annotation,
+                detail::traits::unrefcv_t<OtherData>>::value>* = nullptr>
+  /* implicit */ continuable_base(OtherData&& data)
+      : data_(detail::base::proxy_continuable<
+              Annotation, detail::traits::unrefcv_t<OtherData>>(
+            std::forward<OtherData>(data))) {
+  }
+
+  /// Constructor taking the data of other continuable_base objects
+  /// while erasing the hint.
+  ///
+  /// This constructor makes it possible to replace the internal data object of
+  /// the continuable by any object which is useful for type-erasure.
+  template <typename OData,
+            std::enable_if_t<std::is_convertible<
+                detail::traits::unrefcv_t<OData>, Data>::value>* = nullptr>
+  /* implicit */ continuable_base(continuable_base<OData, Annotation>&& other)
+      : continuable_base(std::move(other).consume()) {
   }
 
   /// Constructor taking the data of other continuable_base objects
@@ -125,8 +147,8 @@ public:
   /// This constructor makes it possible to replace the internal data object of
   /// the continuable by any object which is useful for type-erasure.
   template <typename OData, typename OAnnotation>
-  continuable_base(continuable_base<OData, OAnnotation>&& other)
-      : continuable_base(std::move(other).materialize().consume_data()) {
+  /* implicit */ continuable_base(continuable_base<OData, OAnnotation>&& other)
+      : continuable_base(std::move(other).finish().consume()) {
   }
 
   /// \cond false
@@ -206,12 +228,17 @@ public:
   /// | `Arg`                      | `continuable_base with <Arg>`             |
   /// | `std::pair<First, Second>` | `continuable_base with <First, Second>`   |
   /// | `std::tuple<Args...>`      | `continuable_base with <Args...>`         |
+  /// | `cti::result<Args...>`     | `continuable_base with <Args...>`         |
   /// | `continuable_base<Arg...>` | `continuable_base with <Args...>`         |
   ///          Which means the result type of the continuable_base is equal to
   ///          the plain types the callback returns (`std::tuple` and
   ///          `std::pair` arguments are unwrapped).
   ///          A single continuable_base as argument is resolved and the result
   ///          type is equal to the resolved continuable_base.
+  ///          A cti::result can be used to cancel the continuation or to
+  ///          transition to the exception handler.
+  ///          The special unwrapping of types can be disabled through wrapping
+  ///          such objects through a call to cti::make_plain.
   ///          Consider the following examples:
   /// ```cpp
   /// http_request("github.com")
@@ -233,6 +260,17 @@ public:
   /// http_request("github.com")
   ///   .then([](std::string github) { return http_request("atom.io"); })
   ///   .then([](std::string atom) { }); // <std::string>
+  ///
+  /// http_request("example.com")
+  ///   .then([](std::string content) -> result<std::string> {
+  ///     return rethrow(std::make_exception_ptr(std::exception{}));
+  ///   })
+  ///   .fail([] -> result<std::string> {
+  ///     return recover("Hello World!");
+  ///   })
+  ///   .then([](std::string content) -> result<std::string> {
+  ///     return cancel();
+  ///   })
   /// ```
   ///
   /// \since 1.0.0
@@ -241,7 +279,7 @@ public:
             E&& executor = detail::types::this_thread_executor_tag{}) && {
     return detail::base::chain_continuation<detail::base::handle_results::yes,
                                             detail::base::handle_errors::no>(
-        std::move(*this).materialize(), std::forward<T>(callback),
+        std::move(*this).finish(), std::forward<T>(callback),
         std::forward<E>(executor));
   }
 
@@ -267,7 +305,7 @@ public:
   template <typename OData, typename OAnnotation>
   auto then(continuable_base<OData, OAnnotation>&& continuation) && {
     return std::move(*this).then(
-        detail::base::wrap_continuation(std::move(continuation).materialize()));
+        detail::base::wrap_continuation(std::move(continuation).finish()));
   }
 
   /// Main method of the continuable_base to catch exceptions and error codes
@@ -307,14 +345,14 @@ public:
   /// \returns Returns a continuable_base with an asynchronous return type
   ///          depending on the previous result type.
   ///
-  ///
   /// \since 2.0.0
   template <typename T, typename E = detail::types::this_thread_executor_tag>
   auto fail(T&& callback,
             E&& executor = detail::types::this_thread_executor_tag{}) && {
-    return detail::base::chain_continuation<detail::base::handle_results::no,
-                                            detail::base::handle_errors::plain>(
-        std::move(*this).materialize(), std::forward<T>(callback),
+    return detail::base::chain_continuation<
+        detail::base::handle_results::no, detail::base::handle_errors::forward>(
+        std::move(*this).finish(),
+        detail::base::strip_exception_arg(std::forward<T>(callback)),
         std::forward<E>(executor));
   }
 
@@ -336,11 +374,11 @@ public:
   /// \since 2.0.0
   template <typename OData, typename OAnnotation>
   auto fail(continuable_base<OData, OAnnotation>&& continuation) && {
-    continuation.freeze();
-    return std::move(*this).fail(
-        [continuation = std::move(continuation)](exception_t) mutable {
-          std::move(continuation).done();
-        });
+    return std::move(*this)                                     //
+        .fail([continuation = std::move(continuation).freeze()] //
+              (exception_t) mutable {
+                std::move(continuation).done(); //
+              });
   }
 
   /// A method which allows to use an overloaded callable for the error
@@ -375,9 +413,27 @@ public:
             E&& executor = detail::types::this_thread_executor_tag{}) && {
     return detail::base::chain_continuation<
         detail::base::handle_results::yes,
-        detail::base::handle_errors::forward>(std::move(*this).materialize(),
+        detail::base::handle_errors::forward>(std::move(*this).finish(),
                                               std::forward<T>(callback),
                                               std::forward<E>(executor));
+  }
+
+  /// Returns a continuable_base which will have its signature converted
+  /// to the given Args.
+  ///
+  /// A signature can only be converted if it can be partially applied
+  /// from the previous one as shown below:
+  /// ```cpp
+  /// continuable<long> c = make_ready_continuable(0, 1, 2).as<long>();
+  /// ```
+  ///
+  /// \returns Returns a continuable_base with an asynchronous return type
+  ///          matching the given Args.
+  ///
+  /// \since 4.0.0
+  template <typename... Args>
+  auto as() && {
+    return std::move(*this).then(detail::base::convert_to<Args...>{});
   }
 
   /// A method which allows to apply this continuable to the given callable.
@@ -390,7 +446,7 @@ public:
   /// \since 2.0.0
   template <typename T>
   auto apply(T&& transform) && {
-    return std::forward<T>(transform)(std::move(*this).materialize());
+    return std::forward<T>(transform)(std::move(*this).finish());
   }
 
   /// The pipe operator | is an alias for the continuable::then method.
@@ -540,7 +596,35 @@ public:
   ///
   /// \since 1.0.0
   void done() && {
-    detail::base::finalize_continuation(std::move(*this));
+    detail::base::finalize_continuation(std::move(*this).finish());
+  }
+
+  /// Materializes the continuation expression template and finishes
+  /// the current applied strategy such that the resulting continuable
+  /// will always be a concrete type and Continuable::is_concrete holds.
+  ///
+  /// This can be used in the case where we are chaining continuations lazily
+  /// through a strategy, for instance when applying operators for
+  /// expressing connections and then want to return a materialized
+  /// continuable_base which uses the strategy respectively.
+  /// ```cpp
+  /// auto do_both() {
+  ///   return (wait(10s) || wait_key_pressed(KEY_SPACE)).finish();
+  /// }
+  ///
+  /// // Without a call to finish() this would lead to
+  /// // an unintended evaluation strategy:
+  /// do_both() || wait(5s);
+  /// ```
+  ///
+  /// \note When using a type erased continuable_base such as
+  ///       `continuable<...>` this method doesn't need to be called
+  ///       since the continuable_base is materialized automatically
+  ///       on conversion.
+  ///
+  /// \since 4.0.0
+  auto finish() && {
+    return annotation_trait::finish(std::move(*this));
   }
 
   /// Predicate to check whether the cti::continuable_base is frozen or not.
@@ -612,31 +696,13 @@ public:
   /// ```
   ///
   /// In case the library is configured to use error codes or a custom
-  /// error type the return type of the co_await expression is changed.
-  /// The result is returned through an internal proxy object which may
-  /// be queried for the error object.
+  /// exception type the return type of the co_await expression is changed.
+  /// The result is returned through a cti::result<...>.
   /// |          Continuation type        |          co_await returns          |
   /// | : ------------------------------- | : -------------------------------- |
-  /// | `continuable_base with <>`        | `unspecified<void>`                |
-  /// | `continuable_base with <Arg>`     | `unspecified<Arg>`                 |
-  /// | `continuable_base with <Args...>` | `unspecified<std::tuple<Args...>>` |
-  /// The interface of the proxy object is similar to the one proposed in
-  /// the `std::expected` proposal:
-  /// ```cpp
-  /// if (auto&& result = co_await http_request("github.com")) {
-  ///   auto value = *result;
-  /// } else {
-  ///   cti::exception_t error = result.get_exception();
-  /// }
-  ///
-  /// auto result = co_await http_request("github.com");
-  /// bool(result);
-  /// result.is_value();
-  /// result.is_exception();
-  /// *result; // Same as result.get_value()
-  /// result.get_value();
-  /// result.get_exception();
-  /// ```
+  /// | `continuable_base with <>`        | `result<void>`                     |
+  /// | `continuable_base with <Arg>`     | `result<Arg>`                      |
+  /// | `continuable_base with <Args...>` | `result<Args...>`                  |
   ///
   /// \note  Using continuable_base as return type for coroutines
   ///        is supported. The coroutine is initially stopped and
@@ -667,7 +733,7 @@ public:
   ///
   /// \since     2.0.0
   auto operator co_await() && {
-    return detail::awaiting::create_awaiter(std::move(*this).materialize());
+    return detail::awaiting::create_awaiter(std::move(*this).finish());
   }
   /// \cond false
 #endif // CONTINUABLE_HAS_EXPERIMENTAL_COROUTINE
@@ -678,12 +744,7 @@ private:
     ownership_.release();
   }
 
-  auto materialize() && {
-    return detail::connection::materializer<continuable_base>::apply(
-        std::move(*this));
-  }
-
-  Data&& consume_data() && {
+  Data&& consume() && {
     assert_acquired();
     release();
     return std::move(data_);
@@ -787,9 +848,9 @@ constexpr auto make_continuable(Continuation&& continuation) {
                 "use make_continuable<void>(...). Continuables with an exact "
                 "signature may be created through make_continuable<Args...>.");
 
-  return detail::base::attorney::create(
+  return detail::base::attorney::create_from(
       std::forward<Continuation>(continuation),
-      detail::hints::extract(detail::traits::identity<Args...>{}),
+      typename detail::hints::from_args<Args...>::type{},
       detail::util::ownership{});
 }
 
@@ -804,41 +865,12 @@ constexpr auto make_continuable(Continuation&& continuation) {
 ///
 /// \since     3.0.0
 template <typename... Args>
-constexpr auto make_ready_continuable() {
-  return make_continuable<void>([](auto&& promise) {
-    std::forward<decltype(promise)>(promise).set_value();
-  });
-}
-
-/// Returns a continuable_base with one result value which instantly resolves
-/// the promise with the given value.
-///
-/// \copydetails make_ready_continuable()
-template <typename Result>
-constexpr auto make_ready_continuable(Result&& result) {
-  return make_continuable<std::decay_t<Result>>( // ...
-      [result = std::forward<Result>(result)](auto&& promise) mutable {
-        std::forward<decltype(promise)>(promise).set_value(std::move(result));
-      });
-}
-
-/// Returns a continuable_base with multiple result values which instantly
-/// resolves the promise with the given values.
-///
-/// \copydetails make_ready_continuable()
-template <typename FirstResult, typename SecondResult, typename... Rest>
-constexpr auto make_ready_continuable(FirstResult&& first_result,
-                                      SecondResult&& second_result,
-                                      Rest&&... rest) {
-  return make_continuable<std::decay_t<FirstResult>, std::decay_t<SecondResult>,
-                          std::decay_t<Rest>...>( // ...
-      [result = std::make_tuple(std::forward<FirstResult>(first_result),
-                                std::forward<SecondResult>(second_result),
-                                std::forward<Rest>(rest)...)](
-          auto&& promise) mutable {
-        detail::traits::unpack(std::forward<decltype(promise)>(promise),
-                               std::move(result));
-      });
+auto make_ready_continuable(Args&&... args) {
+  return detail::base::attorney::create_from_raw(
+      detail::base::ready_continuation<detail::traits::unrefcv_t<Args>...>{
+          std::forward<Args>(args)...},
+      detail::identity<detail::traits::unrefcv_t<Args>...>{},
+      detail::util::ownership{});
 }
 
 /// Returns a continuable_base with the parameterized result which instantly
@@ -865,6 +897,181 @@ constexpr auto make_exceptional_continuable(Exception&& exception) {
             std::move(exception));
       });
 }
+
+/// Returns a continuable_base with the parameterized result which never
+/// resolves its promise and thus cancels the asynchronous continuation chain.
+///
+/// This can be used to cancel an asynchronous continuation chain when
+/// returning a continuable_base from a handler where other paths could
+/// possibly continue the asynchronous chain. See an example below:
+/// ```cpp
+/// do_sth().then([weak = this->weak_from_this()]() -> continuable<> {
+///   if (auto me = weak.lock()) {
+///     return do_sth_more();
+///   } else {
+///     // Abort the asynchronous continuation chain since the
+///     // weakly referenced object expired previously.
+///     return make_cancelling_continuable<void>();
+///   }
+/// });
+/// ```
+///
+/// \tparam Signature The fake signature of the returned continuable.
+///
+/// \since            4.0.0
+template <typename... Signature>
+auto make_cancelling_continuable() {
+  static_assert(sizeof...(Signature) > 0,
+                "Requires at least one type for the fake signature!");
+
+  return make_continuable<Signature...>([](auto&&) { /* ... */ });
+}
+
+/// Can be used to disable the special meaning for a returned value in
+/// asynchronous handler functions.
+///
+/// Several types have a special meaning when being returned from a callable
+/// passed to asynchronous handler functions like:
+/// - continuable_base::then
+/// - continuable_base::fail
+/// - continuable_base::next
+///
+/// For instance such types are std::tuple, std::pair and cti::result.
+///
+/// Wrapping such an object through a call to make_plain disables the special
+/// meaning for such objects as shown below:
+/// ```cpp
+/// continuable<result<int, int> c = http_request("example.com")
+///   .then([](std::string content) {
+///     return make_plain(make_result(0, 1));
+///   })
+/// ```
+///
+/// \since 4.0.0
+///
+template <typename T>
+auto make_plain(T&& value) {
+  return plain_t<detail::traits::unrefcv_t<T>>(std::forward<T>(value));
+}
+
+/// Can be used to recover to from a failure handler,
+/// the result handler which comes after will be called with the
+/// corresponding result.
+///
+/// The \ref exceptional_result returned by this function can be returned
+/// from any result or failure handler in order to rethrow the exception.
+/// ```cpp
+/// http_request("example.com")
+///   .then([](std::string content) {
+///     return recover(1, 2);
+///   })
+///   .fail([](cti::exception_t exception) {
+///     return recover(1, 2);
+///   })
+///   .then([](int a, int b) {
+///     // Recovered from the failure
+///   })
+/// ```
+/// A corresponding \ref result is returned by \ref recover
+/// ```cpp
+/// http_request("example.com")
+///   .then([](std::string content) -> cti::result<int, int> {
+///     return recover(1, 2);
+///   })
+///   .fail([](cti::exception_t exception) -> cti::result<int, int> {
+///     return recover(1, 2);
+///   })
+///   .then([](int a, int b) -> cti::result<int, int> {
+///     // Recovered from the failure
+///   })
+/// ```
+///
+/// \since 4.0.0
+///
+template <typename... Args>
+result<detail::traits::unrefcv_t<Args>...> recover(Args&&... args) {
+  return make_result(std::forward<Args>(args)...);
+}
+
+/// Can be used to rethrow an exception to the asynchronous continuation chain,
+/// the failure handler which comes after will be called with the
+/// corresponding exception.
+///
+/// The \ref exceptional_result returned by this function can be returned
+/// from any result or failure handler in order to rethrow the exception.
+/// ```cpp
+/// http_request("example.com")
+///   .then([](std::string content) {
+///     return rethrow(std::make_exception_ptr(std::exception{}));
+///   })
+///   .fail([](cti::exception_t exception) {
+///     return rethrow(std::make_exception_ptr(std::exception{}));
+///   })
+///   .next([](auto&&...) {
+///     return rethrow(std::make_exception_ptr(std::exception{}));
+///   });
+/// ```
+/// The returned \ref exceptional_result is convertible to
+/// any \ref result as shown below:
+/// ```cpp
+/// http_request("example.com")
+///   .then([](std::string content) -> cti::result<> {
+///     return rethrow(std::make_exception_ptr(std::exception{}));
+///   })
+///   .fail([](cti::exception_t exception) -> cti::result<> {
+///     return rethrow(std::make_exception_ptr(std::exception{}));
+///   })
+///   .next([](auto&&...) -> cti::result<> {
+///     return rethrow(std::make_exception_ptr(std::exception{}));
+///   });
+/// ```
+///
+/// \since 4.0.0
+///
+// NOLINTNEXTLINE(performance-unnecessary-value-param)
+inline exceptional_result rethrow(exception_t exception) {
+  // NOLINTNEXTLINE(hicpp-move-const-arg, performance-move-const-arg)
+  return exceptional_result{std::move(exception)};
+}
+
+/// Can be used to cancel an asynchronous continuation chain,
+/// no handler which comes after cancel was received won't be called.
+///
+/// The \ref empty_result returned by this function can be returned from
+/// any result or failure handler in order to cancel the chain.
+/// ```cpp
+/// http_request("example.com")
+///   .then([](std::string content) {
+///     return cancel();
+///   })
+///   .fail([](cti::exception_t exception) {
+///     return cancel();
+///   })
+///   .next([](auto&&...) {
+///     return cancel();
+///   });
+/// ```
+/// The returned \ref empty_result is convertible to
+/// any \ref result as shown below:
+/// ```cpp
+/// http_request("example.com")
+///   .then([](std::string content) -> cti::result<> {
+///     return cancel();
+///   })
+///   .fail([](cti::exception_t exception) -> cti::result<> {
+///     return cancel();
+///   })
+///   .next([](auto&&...) -> cti::result<> {
+///     return cancel();
+///   });
+/// ```
+///
+/// \since 4.0.0
+///
+inline empty_result cancel() {
+  return {};
+}
+
 /// \}
 } // namespace cti
 

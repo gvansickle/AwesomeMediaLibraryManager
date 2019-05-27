@@ -40,8 +40,8 @@
 #include <KJobUiDelegate>
 
 // Ours
-#include <src/future/function_traits.hpp>
-#include <src/utils/UniqueIDMixin.h>
+#include <future/function_traits.hpp>
+#include <utils/UniqueIDMixin.h>
 #include "utils/ConnectHelpers.h"
 #include "IExtFutureWatcher.h"
 #include "ExtAsync.h"
@@ -134,11 +134,11 @@ Q_DECLARE_METATYPE(AMLMJobPtr);
  * @note Multiple inheritance in effect here.  Ok since only KJob inherits from QObject.
  *
  */
-class AMLMJob: public KJob, public IExtFutureWatcher, public UniqueIDMixin<AMLMJob>
+class AMLMJob: public KJob//, public IExtFutureWatcher, public UniqueIDMixin<AMLMJob>
 {
 
     Q_OBJECT
-	Q_INTERFACES(IExtFutureWatcher)
+	//Q_INTERFACES(IExtFutureWatcher)
 
     /// KCoreAddons::KJob
     /// - Subclasses must implement start(), which should trigger the execution of the job (although the work should be done asynchronously).
@@ -150,7 +150,7 @@ class AMLMJob: public KJob, public IExtFutureWatcher, public UniqueIDMixin<AMLMJ
      * @note CRTP: Still need this to avoid ambiguous name resolution.
      * @see https://stackoverflow.com/a/46916924
      */
-    using UniqueIDMixin<AMLMJob>::uniqueQObjectName;
+	//using UniqueIDMixin<AMLMJob>::uniqueQObjectName;
 
 	using BASE_CLASS = KJob;
 
@@ -159,7 +159,7 @@ Q_SIGNALS:
     /// @name IExtFutureWatcher interface signals.
     /// @{
 
-	void SIGNAL_resultsReadyAt(int begin, int end) override;
+	void SIGNAL_resultsReadyAt(int begin, int end) /*override*/;
 
 
     /// @warning Qt5 signals are always public in the C++ sense.  Slots are similarly public when called
@@ -173,7 +173,7 @@ Q_SIGNALS:
     /// "Emitted when the job is finished, in any case. It is used to notify
     /// observers that the job is terminated and that progress can be hidden."
     /// Call emitResult(job) to emit.
-    void finished(KJob *job) override;
+//	void finished(KJob *job) /*override*/;
     /// "Emitted when the job is suspended."
     /// No direct way to emit this?
 //    void suspended(KJob *job);
@@ -183,7 +183,7 @@ Q_SIGNALS:
     /// "Emitted when the job is finished (except when killed with KJob::Quietly).
     /// Use error to know if the job was finished with error."
     /// Call emitResult(job) to emit.
-    void result(KJob *job) override;
+//	void result(KJob *job) /*override*/;
 
     // QObject signals.
 //	void destroyed(QObject* obj) override;

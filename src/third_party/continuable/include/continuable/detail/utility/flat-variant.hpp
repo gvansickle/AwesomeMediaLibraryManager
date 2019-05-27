@@ -5,9 +5,9 @@
                         \_,(_)| | | || ||_|(_||_)|(/_
 
                     https://github.com/Naios/continuable
-                                   v3.0.0
+                                   v4.0.0
 
-  Copyright(c) 2015 - 2018 Denis Blank <denis.blank at outlook dot com>
+  Copyright(c) 2015 - 2019 Denis Blank <denis.blank at outlook dot com>
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files(the "Software"), to deal
@@ -21,7 +21,7 @@
 
   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
@@ -62,7 +62,7 @@ template <typename T>
 using align_of_helper = std::integral_constant<std::size_t, alignof(T)>;
 
 template <typename... T>
-constexpr auto storage_of_impl(traits::identity<T...>) {
+constexpr auto storage_of_impl(identity<T...>) {
   constexpr auto size = max_element_of({(size_of_helper<T>::value)...});
   constexpr auto align = max_element_of({(align_of_helper<T>::value)...});
   return std::aligned_storage_t<size, align>{};
@@ -70,7 +70,7 @@ constexpr auto storage_of_impl(traits::identity<T...>) {
 
 /// Declares the aligned storage union for the given types
 template <typename... T>
-using storage_of_t = decltype(storage_of_impl(traits::identity<T...>{}));
+using storage_of_t = decltype(storage_of_impl(identity<T...>{}));
 
 /// The value fpr the empty slot
 using slot_t = std::uint8_t;
@@ -267,6 +267,11 @@ public:
     return *this;
   }
 
+  void set_empty() {
+    weak_destroy();
+    set_slot(detail::empty_slot::value);
+  }
+
   template <typename V, std::size_t Index =
                             traits::index_of_t<std::decay_t<V>, T...>::value>
   bool is() const noexcept {
@@ -282,15 +287,22 @@ public:
   }
 
   template <typename V>
-  V& cast() noexcept {
+      V& cast() & noexcept {
     assert(is_slot(traits::index_of_t<std::decay_t<V>, T...>::value));
     return *reinterpret_cast<std::decay_t<V>*>(&this->storage_);
   }
 
   template <typename V>
-  V const& cast() const noexcept {
+  V const& cast() const& noexcept {
     assert(is_slot(traits::index_of_t<std::decay_t<V>, T...>::value));
     return *reinterpret_cast<std::decay_t<V> const*>(&this->storage_);
+  }
+
+  template <typename V>
+      V&& cast() && noexcept {
+    assert(is_slot(traits::index_of_t<std::decay_t<V>, T...>::value));
+    auto& value = *reinterpret_cast<std::decay_t<V>*>(&this->storage_);
+    return std::move(value);
   }
 
 private:
@@ -347,6 +359,10 @@ private:
 #endif
   }
   detail::slot_t get_slot() const noexcept {
+    // Check for invalid values especially for memory corruption,
+    // the empty element is included.
+    assert((this->slot_ < sizeof...(T)) ||
+           (this->slot_ == detail::empty_slot::value));
     return this->slot_;
   }
   bool is_slot(detail::slot_t const slot) const noexcept {

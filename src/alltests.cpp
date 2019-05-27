@@ -41,6 +41,7 @@
 #if !defined(GTEST_IS_THREADSAFE) || (GTEST_IS_THREADSAFE != 1)
 #error "Google Test wasn't compiled for a multithreaded environment."
 #endif
+static_assert(BOOST_THREAD_VERSION >= 5);
 
 /**
  * Override of Environment for global setup and teardown.
@@ -81,6 +82,9 @@ int google_test_main(int argc, char *argv[])
 
 	// Add the exception listener as the last listener.
 	testing::UnitTest::GetInstance()->listeners().Append(new ThrowListener);
+
+	// No death tests yet, but for when we do:
+	testing::FLAGS_gtest_death_test_style="threadsafe";
 
 	auto retval = RUN_ALL_TESTS();
 	return retval;

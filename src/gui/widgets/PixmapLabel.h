@@ -36,7 +36,7 @@ public:
 
 	bool hasHeightForWidth() const override;
 
-	virtual int heightForWidth(int) const override;
+	int heightForWidth(int) const override;
 
 protected:
 

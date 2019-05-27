@@ -33,7 +33,6 @@
 #include <utils/DebugHelpers.h>
 #include <logic/DirScanResult.h>
 #include <LibraryEntry.h>
-#include "ScanResultsTreeModelXMLTags.h"
 
 
 ScanResultsTreeModelItem::ScanResultsTreeModelItem(const DirScanResult& dsr, AbstractTreeModelItem* parent)

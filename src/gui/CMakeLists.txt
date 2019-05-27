@@ -105,6 +105,7 @@ set(gui_settings_SOURCE_FILES
 	)
 PREPEND_TO_EACH(gui_settings_SOURCE_FILES "settings/" ${gui_settings_SOURCE_FILES})
 
+message(WARN "TODO")
 add_subdirectory(activityprogressmanager)
 
 add_subdir_lib(widgets STATIC EXCLUDE_FROM_ALL)
@@ -112,9 +113,9 @@ add_subdir_lib(widgets STATIC EXCLUDE_FROM_ALL)
 target_sources_local(gui
 	PUBLIC
 		${gui_HEADER_FILES}
-#	PRIVATE
-		${gui_SOURCE_FILES}
 		${gui_settings_SOURCE_FILES}
+# 	PRIVATE
+		${gui_SOURCE_FILES}
 		${HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER}
 		${SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER}
 		${UI_FILES_GUI_ACTIVITYPROGRESSMANAGER}
@@ -131,6 +132,8 @@ target_link_libraries(gui
 		${KF5_LINK_LIB_TARGETS}
 		${GTK_LINK_LIB_TARGETS}
 		widgets
+	PRIVATE
+		resources
 		)
 target_include_directories(gui
 	PUBLIC
@@ -139,4 +142,5 @@ target_include_directories(gui
 	PUBLIC
 		# For anything in <root>/src: utils, logic, future, gui.
 		${PROJECT_SOURCE_DIR}/src
+		${Qt5Gui_PRIVATE_INCLUDE_DIRS} ### @todo OBSOLETE THIS
 		)

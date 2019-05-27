@@ -62,7 +62,7 @@ BaseActivityProgressStatusBarWidget::BaseActivityProgressStatusBarWidget(KJob *j
 BaseActivityProgressStatusBarWidget::~BaseActivityProgressStatusBarWidget()
 {
     /// @todo KWidgetJobTracker::Private::ProgressWidget deletes "tracker->d->eventLoopLocker" in here.
-    qDb() << "BaseActivityProgressStatusBarWidget DESTRUCTOR:" << this;
+    qDb() << "BaseActivityProgressStatusBarWidget DESTRUCTOR";
 }
 
 void BaseActivityProgressStatusBarWidget::addButton(QToolButton *new_button)

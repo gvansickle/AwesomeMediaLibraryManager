@@ -147,13 +147,7 @@
 
 // Ours
 //#include "ExtFuturePropagationHandler.h"
-
-
-/**
- *
- */
-static QThreadPool s_cancel_threadpool = QThreadPool();
-
+//#include <logic/PerfectDeleter.h>
 
 
 /// @name Explicit instantiations to try to get compile times down.

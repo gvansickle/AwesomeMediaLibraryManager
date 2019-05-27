@@ -49,6 +49,7 @@ macro(add_subdir_lib_internal add_subdir_lib_LIB_TARGET_NAME add_subdir_lib_SUBD
 		add_subdirectory(${add_subdir_lib_LIB_TARGET_NAME} ${ARGN})
 		cmake_policy(POP)
 	else()
+		message(FATAL_ERROR "NEED CMAKE > 3.13")
 		# add_subdirectory() less than 3.13 desn't behave like we need it to.
 		message(STATUS "Creating library ${ARGV0} using 'include(${ARGV0}/CMakeLists.txt)', CMAKE_CURRENT_LIST_DIR: ${CMAKE_CURRENT_LIST_DIR}")
 		include(${ARGV0}/CMakeLists.txt)
@@ -57,6 +58,9 @@ endmacro()
 
 #
 # add_subdir_lib(): The missing CMake add_*().  Adds a subdirectory as a library target in this directory.
+# Currently:
+# - Only supports STATC and EXCLUDE_FROM_ALL options.
+# - Doesn't support adding source files, add them later with target_sources().
 #
 macro(add_subdir_lib add_subdir_lib_LIB_TARGET_NAME)
 	# Option flags we understand.
@@ -124,7 +128,9 @@ function(target_sources_local target)
 	cmake_policy(POP)
 	return()
   endif()
-
+	
+	message(FATAL_ERROR "NEED CMAKE > 3.13")
+	
   # Must be using CMake 3.12 or earlier, so simulate the new behavior
   unset(_srcList)
   get_target_property(_targetSourceDir ${target} SOURCE_DIR)

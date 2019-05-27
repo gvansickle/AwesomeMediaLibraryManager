@@ -20,7 +20,7 @@
 #include "EntityBase.h"
 
 #include <utils/RegisterQtMetatypes.h>
-#include <src/logic/DirScanResult.h>
+#include <logic/DirScanResult.h>
 #include <utils/DebugHelpers.h>
 
 

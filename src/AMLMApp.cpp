@@ -49,9 +49,6 @@ AMLMApp::AMLMApp(int& argc, char** argv) : BASE_CLASS(argc, argv)
     m_the_instance = this;
 
     setObjectName("TheAMLMApp");
-
-	// Get the future cancel propagation infrastructure set up.
-//	ExtAsync::ExtFuturePropagationHandler::InitStaticExtFutureState();
 }
 
 AMLMApp::~AMLMApp()
@@ -83,7 +80,7 @@ void AMLMApp::Init(bool gtest_only)
 //    qIn() << "QNetworkAccessManager Supported Schemes:" << nam->supportedSchemes();
 
 	// Create the singletons we'll need for any app invocation.
-	SupportedMimeTypes::instance(this);
+	m_the_supported_mime_types = &SupportedMimeTypes::instance(this);
 
 	/// @todo Experiments
 //	m_cdb_model = new CollectionDatabaseModel(this);
@@ -102,8 +99,11 @@ M_TODO("Needs to be ColumnSpecs");
 
 	/// @end Experiments
 
-	/// @note This is a self-connection, not sure this will work as intended.
-	connect_or_die(AMLMApp::instance(), &QCoreApplication::aboutToQuit, this, &AMLMApp::SLOT_onAboutToQuit);
+	// Connect to aboutToQuit() signal to perform app-end cleanup.
+	// Per @link https://doc.qt.io/qt-5/qapplication.html#exec
+	// "We recommend that you connect clean-up code to the aboutToQuit() signal, instead of putting it in your
+	// application's main() function. This is because, on some platforms [Windows on user logoff] the QApplication::exec() call may not return."
+	connect_or_die(AMLMApp::instance(), &QApplication::aboutToQuit, this, &AMLMApp::SLOT_onAboutToQuit);
 }
 
 void AMLMApp::MAIN_ONLY_setMainWindow(MainWindow* the_main_window)
@@ -158,7 +158,13 @@ void AMLMApp::SLOT_onAboutToQuit()
         perform_controlled_shutdown();
     }
 
-    qDbo() << "App shutdown complete.";
+	qDbo() << "#### App shutdown complete.";
+
+	if(!AMLMApp::IPerfectDeleter().empty())
+	{
+		qWro() << "PerfectDeleter still has undeleted objects:";
+		qWro() << AMLMApp::IPerfectDeleter().stats();
+	}
 }
 
 void AMLMApp::perform_controlled_shutdown()
@@ -174,15 +180,21 @@ void AMLMApp::perform_controlled_shutdown()
 	// "Emitted when the application is about to quit the main event loop."
 	// "Note that no user interaction is possible in this state"
 	/// @todo ... should we even be emitting it here?
-    Q_EMIT aboutToShutdown();
+	Q_EMIT SIGNAL_aboutToShutdown();
 
     if(!m_controlled_shutdown_complete)
     {
 		// Do whatever shutdown tasks we need to in here.
 
+		m_the_supported_mime_types->deleteLater();
+
 		// Cancel all asynchronous activities and wait for them to complete.
 		AMLMApp::IPerfectDeleter().cancel_and_wait_for_all();
     }
+	else
+	{
+		qWr() << "REENTRY OF perform_controlled_shutdown";
+	}
 
     m_controlled_shutdown_complete = true;
 
