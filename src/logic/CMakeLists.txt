@@ -30,7 +30,6 @@ set(logic_subdir_SOURCES
 	AudioFileType.cpp
 	Library.cpp
 	LibraryEntry.cpp
-	LibraryEntryLoaderJob.cpp
 	LibraryEntryMimeData.cpp
 	LibraryModel.cpp
 	Metadata.cpp
@@ -50,7 +49,6 @@ set(logic_subdir_SOURCES
 	ModelUserRoles.cpp
 	ColumnSpec.cpp
 	LibraryRescannerMapItem.cpp
-	LibraryRescannerJob.cpp
 	DirScanResult.cpp
 	ExtMimeType.cpp
 	LibraryRescanner.cpp
@@ -64,7 +62,6 @@ set(logic_subdir_HEADERS
 	AudioFileType.h
 	Library.h
 	LibraryEntry.h
-	LibraryEntryLoaderJob.h
 	LibraryEntryMimeData.h
 	LibraryModel.h
 	Metadata.h
@@ -86,7 +83,6 @@ set(logic_subdir_HEADERS
 	ModelUserRoles.h
 	ColumnSpec.h
 	LibraryRescannerMapItem.h
-	LibraryRescannerJob.h
 	DirScanResult.h
 	ExtMimeType.h
 	ExtUrl.h
@@ -106,13 +102,14 @@ target_link_libraries(logic
 		${QT5_LINK_LIB_TARGETS}
 		${KF5_LINK_LIB_TARGETS}
 		${GTK_LINK_LIB_TARGETS}
+		jobs
 		${AMLM_TAGLIB_TARGET}
 		${AMLM_LIBCUE_TARGET}
 		dbmodels
-		jobs
 		models
 		proxymodels
 		serialization
+		jobs
 	)
 target_include_directories(logic
 	PUBLIC

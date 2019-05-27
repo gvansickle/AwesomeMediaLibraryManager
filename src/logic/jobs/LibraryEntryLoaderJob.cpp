@@ -19,9 +19,8 @@
 
 #include <config.h>
 
-#include "LibraryEntryLoaderJob.h"
-
 #include <AMLMApp.h>
+#include <jobs/LibraryEntryLoaderJob.h>
 #include "LibraryRescanner.h"
 #include <utils/RegisterQtMetatypes.h>
 #include <utils/DebugHelpers.h>

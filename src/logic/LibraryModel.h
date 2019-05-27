@@ -44,7 +44,7 @@ class QFileDevice;
 #include "Library.h"
 #include "LibraryRescanner.h" ///< For MetadataReturnVal
 #include "LibraryEntry.h"
-#include "LibraryEntryLoaderJob.h"
+#include <jobs/LibraryEntryLoaderJob.h>
 #include "LibraryRescannerMapItem.h"
 
 

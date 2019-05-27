@@ -45,13 +45,13 @@
 #include "utils/StringHelpers.h"
 #include "utils/DebugHelpers.h"
 #include "Library.h"
-#include "LibraryEntryLoaderJob.h"
 #include "LibraryRescanner.h" ///< For MetadataReturnVal
 #include "logic/ModelUserRoles.h"
 #include <logic/dbmodels/CollectionDatabaseModel.h>
 #include <logic/PerfectDeleter.h>
 
 #include <gui/Theme.h>
+#include <jobs/LibraryEntryLoaderJob.h>
 
 AMLM_QREG_CALLBACK([](){
     qIn() << "Registering LibraryModel types";

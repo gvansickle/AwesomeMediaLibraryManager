@@ -56,7 +56,7 @@
 #include <concurrency/AsyncTaskManager.h>
 #include <logic/jobs/DirectoryScanJob.h>
 
-#include "LibraryRescannerJob.h"
+#include <jobs/LibraryRescannerJob.h>
 #include <gui/activityprogressmanager/ActivityProgressStatusBarTracker.h>
 #include <logic/serialization/XmlSerializer.h>
 #include <logic/serialization/SerializationExceptions.h>
