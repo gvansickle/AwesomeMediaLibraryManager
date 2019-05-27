@@ -65,9 +65,6 @@
 #include <QModelIndex>
 #include <QVariant>
 
-class QXmlStreamWriter;
-class QXmlStreamReader;
-
 // Ours
 class AbstractTreeModelItem;
 class AbstractHeaderSection;
