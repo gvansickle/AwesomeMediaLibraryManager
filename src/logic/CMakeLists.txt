@@ -114,6 +114,7 @@ target_include_directories(logic
 	PUBLIC
 	    # For config.h
 		${PROJECT_BINARY_DIR}/src
+	PRIVATE
 		${PROJECT_SOURCE_DIR}/src
 	)
 

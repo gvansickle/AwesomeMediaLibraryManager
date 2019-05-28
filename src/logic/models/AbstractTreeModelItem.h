@@ -98,7 +98,7 @@
  */
 class AbstractTreeModelItem :
 		public virtual ISerializable
-//		public clone_inherit<abstract_method<AbstractTreeModelItem>, virtual_inherit_from<ISerializable>>
+//		public clone_inherit<AbstractTreeModelItem, virtual_inherit_from<cloneable>>
 {
 
 public:

@@ -588,24 +588,27 @@ void XmlSerializer::set_default_namespace(const QString& default_ns, const QStri
 	m_default_ns_version = default_ns_version;
 }
 
-QString XmlSerializer::error_string(QXmlStreamRWRef xmlstream) const
+QString XmlSerializer::error_string(QXmlStreamReader& xmlstream) const
 {
-	QString retval = "";
+	QString retval("");
 
-	retval = std::visit(overloaded {
-				[&](QXmlStreamWriter& xmlstream_w) {
-					return QObject::tr("%1: Line %2, column %3").arg("Unknown error on write").arg("0", "0");
-					},
-				[&](QXmlStreamReader& xmlstream_r) {
-					return QObject::tr("%1: Line %2, column %3")
-							.arg(xmlstream_r.errorString())
-							.arg(xmlstream_r.lineNumber())
-							.arg(xmlstream_r.columnNumber());
-				}
-		}, xmlstream);
+	return QObject::tr("%1: Line %2, column %3")
+			.arg(xmlstream.errorString())
+			.arg(xmlstream.lineNumber())
+			.arg(xmlstream.columnNumber());
 
 	return retval;
 }
+
+QString XmlSerializer::error_string(QXmlStreamWriter& xmlstream) const
+{
+	QString retval("");
+
+	return QObject::tr("%1: Line %2, column %3").arg("Unknown error on write").arg("0", "0");
+
+	return retval;
+}
+
 
 void XmlSerializer::save_extra_start_info(QXmlStreamWriter& xmlstream)
 {

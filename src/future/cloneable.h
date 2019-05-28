@@ -21,13 +21,24 @@
  * @file cloneable.h
  *
  * Support infrastructure for covariant std::unique<> and in particular a covariant clone() interface.
- * Adapted from @link https://www.fluentcpp.com/2017/09/12/how-to-return-a-smart-pointer-and-use-covariance/
+ * Adapted from @link https://www.fluentcpp.com/2017/09/12/how-to-return-a-smart-pointer-and-use-covariance/.
+ * Well, not really adapted since I can't get this to work.  Trying a single template function clone() way instead.
  */
 
 #ifndef AWESOMEMEDIALIBRARYMANAGER_CLONEABLE_H
 #define AWESOMEMEDIALIBRARYMANAGER_CLONEABLE_H
 
 #include <memory>
+
+/**
+ * Clone free function template.
+ * Only requires T to have a publicly accessible copy constructor.
+ */
+template <class T, class BaseType>
+BaseType* clone(T derived_object)
+{
+
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -41,6 +52,7 @@ class abstract_method
 template <typename T>
 class virtual_inherit_from : virtual public T
 {
+	// Bring all the base classes' constructors into the current namespace.
 	using T::T;
 };
 
@@ -50,7 +62,7 @@ template <typename Derived, typename ... Bases>
 class clone_inherit : public Bases...
 {
 public:
-	virtual ~clone_inherit() = default;
+	 ~clone_inherit() override = default;
 
 	std::unique_ptr<Derived> clone() const
 	{
