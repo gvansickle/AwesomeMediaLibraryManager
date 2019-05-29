@@ -115,8 +115,7 @@ private:
 
 	void log_current_node(QXmlStreamReader& xmlstream);
 
-//	using QXmlStreamRWRef = std::variant<std::reference_wrapper<QXmlStreamReader>, std::reference_wrapper<QXmlStreamWriter>>;
-	using QXmlStreamRWRef = std::variant<QXmlStreamReader*, QXmlStreamWriter*>;
+//	using QXmlStreamRWRef = std::variant<QXmlStreamReader*, QXmlStreamWriter*>;
 	/**
 	 * If the given QXmlStreamReader/Writer has an error, returns the error string.
 	 * @return
