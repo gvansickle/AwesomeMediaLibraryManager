@@ -35,10 +35,16 @@
 #include <LibraryEntry.h>
 
 
-ScanResultsTreeModelItem::ScanResultsTreeModelItem(const DirScanResult& dsr, AbstractTreeModelItem* parent)
-	: AbstractTreeModelItem(parent)
+ScanResultsTreeModelItem::ScanResultsTreeModelItem(const DirScanResult& dsr, AbstractTreeModel *parent_model, bool is_root)
+	: AbstractTreeModelItem(std::vector<QVariant>(), parent_model, is_root)
 {
 	m_dsr = dsr;
+}
+
+ScanResultsTreeModelItem::ScanResultsTreeModelItem(AbstractTreeModel* parent_model, bool is_root)
+	: AbstractTreeModelItem(std::vector<QVariant>(), parent_model, is_root)
+{
+
 }
 
 ScanResultsTreeModelItem::~ScanResultsTreeModelItem()
@@ -127,11 +133,11 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 }
 
 AbstractTreeModelItem *
-ScanResultsTreeModelItem::do_create_default_constructed_child_item(AbstractTreeModelItem *parent, int num_columns)
+ScanResultsTreeModelItem::do_create_default_constructed_child_item(AbstractTreeModel* parent_model, int num_columns)
 {
 	SRTMItem_LibEntry* child_item;
 
-	child_item = new SRTMItem_LibEntry(parent);
+	child_item = new SRTMItem_LibEntry(parent_model);
 
 	return child_item;
 }

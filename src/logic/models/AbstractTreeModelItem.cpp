@@ -64,17 +64,30 @@
 // Ours
 #include <utils/DebugHelpers.h>
 #include <utils/VectorHelpers.h>
+#include "AbstractTreeModel.h"
 
-AbstractTreeModelItem::AbstractTreeModelItem(AbstractTreeModelItem* parent_item)
-	: m_parent_item(parent_item)
+AbstractTreeModelItem* AbstractTreeModelItem::make_tree_item(const std::vector<QVariant>& columns, AbstractTreeModel* model, bool is_root, int id)
 {
+	AbstractTreeModelItem* self = new AbstractTreeModelItem(columns, model, is_root, id);
+	base_finish_construction(self);
+	return self;
+}
+
+AbstractTreeModelItem::AbstractTreeModelItem(const std::vector<QVariant>& columns, AbstractTreeModel* model, bool is_root, int id)
+	: m_column_data(columns), m_model(model), m_id(id == -1 ? AbstractTreeModel::get_next_child_id() : id), m_is_root(is_root)
+{
+}
+
+void AbstractTreeModelItem::base_finish_construction(const AbstractTreeModelItem* self)
+{
+	/// @todo
 }
 
 AbstractTreeModelItem::~AbstractTreeModelItem()
 {
 	// Doesn't remove child items, just deletes them.
 //	qDeleteAll(m_child_items);
-#error M_WARNING("FIXME: Both these are virtual calls");
+M_WARNING("FIXME: Both these are virtual calls");
 	if(childCount() > 0)
 	{
 		// Remove and delete all children.
@@ -298,7 +311,7 @@ bool AbstractTreeModelItem::setData(int column, const QVariant &value)
 	return derivedClassSetData(column, value);
 }
 
-bool AbstractTreeModelItem::appendChildren(std::vector<std::unique_ptr<AbstractTreeModelItem>> new_children)
+bool AbstractTreeModelItem::appendChildren(std::vector<std::shared_ptr<AbstractTreeModelItem>> new_children)
 {
     /// @todo Support adding new columns if children have them?
     for(auto& child : new_children)
@@ -310,22 +323,36 @@ bool AbstractTreeModelItem::appendChildren(std::vector<std::unique_ptr<AbstractT
 	return true;
 }
 
-bool AbstractTreeModelItem::appendChild(std::unique_ptr<AbstractTreeModelItem> new_child)
+bool AbstractTreeModelItem::appendChild(std::shared_ptr<AbstractTreeModelItem> new_child)
 {
-	std::vector<std::unique_ptr<AbstractTreeModelItem>> new_children;
+M_WARNING("TODO");
+	std::vector<std::shared_ptr<AbstractTreeModelItem>> new_children;
 
 	new_children.emplace_back(std::move(new_child));
 
 	return appendChildren(std::move(new_children));
 }
 
-void AbstractTreeModelItem::setParentItem(AbstractTreeModelItem *parent_item)
+void AbstractTreeModelItem::setParentItem(AbstractTreeModelItem *new_parent_item)
 {
-//	Q_ASSERT(parent_item != nullptr);
-    AMLM_WARNIF(m_parent_item != nullptr);
+	// Can't reparent root item for now.
+	Q_ASSERT(!m_is_root);
+	Q_ASSERT(m_parent_item != nullptr);
+//    AMLM_WARNIF(m_parent_item != nullptr);
 //	AMLM_WARNIF(m_parent_item->columnCount() != this->columnCount());
 
-	m_parent_item = parent_item;
+	auto* old_parent_item = m_parent_item;
+	if(old_parent_item != nullptr)
+	{
+		/// @todo Should convert over to id or smart ptr here.
+		old_parent_item->removeChildren(childNumber(), 1);
+	}
+
+	if(new_parent_item != nullptr)
+	{
+		new_parent_item->appendChild(shared_from_this());
+		m_parent_item = new_parent_item;
+	}
 }
 
 std::unique_ptr<AbstractTreeModelItem>

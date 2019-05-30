@@ -38,19 +38,15 @@
 class AbstractTreeModel;
 
 /**
- *
+ * Abstract base class for tree model header items.
  */
-class AbstractTreeModelHeaderItem:
-		public AbstractTreeModelItem
-//		public clone_inherit<abstract_method<AbstractTreeModelHeaderItem>, AbstractTreeModelItem>
+class AbstractTreeModelHeaderItem : public AbstractTreeModelItem
 {
 	using BASE_CLASS = AbstractTreeModelItem;
 
 public:
-	explicit AbstractTreeModelHeaderItem(AbstractTreeModelItem *parentItem = nullptr);
-	explicit AbstractTreeModelHeaderItem(AbstractTreeModel *parent_model,
-										 AbstractTreeModelItem *parentItem = nullptr);
-	 ~AbstractTreeModelHeaderItem() override;
+	explicit AbstractTreeModelHeaderItem(AbstractTreeModel* parent_model, bool is_root = false);
+	~AbstractTreeModelHeaderItem() override;
 
 	 /**
 	  * @warning This must be called before any child items are added to the model.
@@ -79,8 +75,8 @@ public:
 
 protected:
 
-	/// @todo
-	ScanResultsTreeModelItem* do_create_default_constructed_child_item(AbstractTreeModelItem *parent, int num_columns) override;
+	/// @todo THESE do_create_'s ARE ALL NOW TAKING A MODEL vs. AN ITEM, SO ARE CERTAINLY BROKEN.
+	ScanResultsTreeModelItem* do_create_default_constructed_child_item(AbstractTreeModel *parent_model, int num_columns) override;
 
 	/// @name Virtual functions called by the base class to complete certain operations.
 	///       The base class will have error-checked function parameters.

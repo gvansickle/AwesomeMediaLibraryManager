@@ -27,18 +27,10 @@
 #include <logic/serialization/XmlObjects.h>
 
 
-AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(AbstractTreeModelItem* parentItem)
-	: AbstractTreeModelItem(parentItem)
+
+AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(AbstractTreeModel *parent_model, bool is_root)
+	: AbstractTreeModelItem(std::vector<QVariant>(), parent_model, is_root)
 {
-	m_parent_model = nullptr;
-}
-
-
-AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(AbstractTreeModel *parent_model,
-														 AbstractTreeModelItem *parentItem)
-	: AbstractTreeModelItem(parentItem)
-{
-
 	// Save the pointer to the parent_model.
 	m_parent_model = parent_model;
 }
@@ -161,7 +153,7 @@ M_WARNING("NEED TO GO THROUGH MODEL HERE?");
 	// 1. We could possibly do step 1 in a non-GUI thread.
 	// 2. We can add the children in a single batch vs. one at a time, avoiding the model/view signaling overhead.
 	// It does however burn more RAM.
-	std::vector<std::unique_ptr<AbstractTreeModelItem>> temp_items;
+	std::vector<std::shared_ptr<AbstractTreeModelItem>> temp_items;
 	for(const QVariant& child : child_list)
 	{
 		qDb() << "READING CHILD ITEM:" << child;
@@ -176,11 +168,11 @@ M_WARNING("NEED TO GO THROUGH MODEL HERE?");
 }
 
 ScanResultsTreeModelItem*
-AbstractTreeModelHeaderItem::do_create_default_constructed_child_item(AbstractTreeModelItem *parent, int num_columns)
+AbstractTreeModelHeaderItem::do_create_default_constructed_child_item(AbstractTreeModel *parent_model, int num_columns)
 {
 	ScanResultsTreeModelItem* child_item;
 
-	child_item = new ScanResultsTreeModelItem(parent);
+	child_item = new ScanResultsTreeModelItem(parent_model);
 
 	return child_item;
 }

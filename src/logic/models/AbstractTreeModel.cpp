@@ -72,11 +72,21 @@
 #include "ScanResultsTreeModel.h"
 
 
+int AbstractTreeModel::m_next_child_id = 0;
+
+AbstractTreeModel* AbstractTreeModel::make_abstract_tree_model(QObject* parent)
+{
+	auto retval = new AbstractTreeModel(parent);
+
+	// Create the root item which is both the invisible root parent and the header.
+	retval->m_root_item = new AbstractTreeModelHeaderItem(retval, true);
+
+	return retval;
+}
+
 AbstractTreeModel::AbstractTreeModel(QObject* parent) : QAbstractItemModel(parent)
 {
-	auto horizontal_header_item = new AbstractTreeModelHeaderItem();
 
-	m_root_item = new AbstractTreeModelHeaderItem(this, horizontal_header_item);
 }
 
 AbstractTreeModel::~AbstractTreeModel()
@@ -151,6 +161,11 @@ AbstractTreeModelItem* AbstractTreeModel::getItem(const QModelIndex &index) cons
     }
 	/// @todo This might want to be an assert() due to invalid index.
 	return m_root_item;
+}
+
+int AbstractTreeModel::get_next_child_id()
+{
+	return m_next_child_id++;
 }
 
 QVariant AbstractTreeModel::headerData(int section, Qt::Orientation orientation,
@@ -276,7 +291,7 @@ bool AbstractTreeModel::moveColumns(const QModelIndex& sourceParent, int sourceC
 }
 
 
-bool AbstractTreeModel::appendItems(std::vector<std::unique_ptr<AbstractTreeModelItem>> new_items, const QModelIndex &parent)
+bool AbstractTreeModel::appendItems(std::vector<std::shared_ptr<AbstractTreeModelItem>> new_items, const QModelIndex &parent)
 {
     auto parent_item = getItem(parent);
     Q_CHECK_PTR(parent_item);
@@ -302,9 +317,9 @@ bool AbstractTreeModel::appendItems(std::vector<std::unique_ptr<AbstractTreeMode
     return true;
 }
 
-bool AbstractTreeModel::appendItem(std::unique_ptr<AbstractTreeModelItem> new_item, const QModelIndex& parent)
+bool AbstractTreeModel::appendItem(std::shared_ptr<AbstractTreeModelItem> new_item, const QModelIndex& parent)
 {
-	std::vector<std::unique_ptr<AbstractTreeModelItem>> new_items;
+	std::vector<std::shared_ptr<AbstractTreeModelItem>> new_items;
 
 	new_items.emplace_back(std::move(new_item));
 	return appendItems(std::move(new_items), parent);

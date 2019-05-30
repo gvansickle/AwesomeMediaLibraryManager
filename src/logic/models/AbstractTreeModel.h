@@ -82,11 +82,16 @@ class AbstractTreeModel : public QAbstractItemModel, public virtual ISerializabl
 	using BASE_CLASS = QAbstractItemModel;
 
 public:
+	static AbstractTreeModel* make_abstract_tree_model(QObject* parent = nullptr);
+
+protected:
 	/**
 	 * Creates a new AbstractTreeModel object.
 	 * This model will have a default constructed AbstractTreeModelHeader with no columns and no children.
 	 */
 	explicit AbstractTreeModel(QObject *parent = nullptr);
+
+public:
 	~AbstractTreeModel() override;
 
 	/**
@@ -190,8 +195,8 @@ public:
 	 * This is effectively the same as insertRows() followed by numerous setData() calls, but the default construction
 	 * of the item objects is skipped since we're passing in the @a new_items.
 	 */
-	virtual bool appendItems(std::vector<std::unique_ptr<AbstractTreeModelItem>> new_items, const QModelIndex &parent = QModelIndex());
-	virtual bool appendItem(std::unique_ptr<AbstractTreeModelItem> new_items, const QModelIndex &parent = QModelIndex());
+	virtual bool appendItems(std::vector<std::shared_ptr<AbstractTreeModelItem>> new_items, const QModelIndex &parent = QModelIndex());
+	virtual bool appendItem(std::shared_ptr<AbstractTreeModelItem> new_item, const QModelIndex &parent = QModelIndex());
 
 	AbstractTreeModelItem* getItem(const QModelIndex &index) const;
 
@@ -200,14 +205,19 @@ public:
 	/// @{
 
 	/// Serialize the entire model to a QVariant.
-	///   QVariant toVariant() const override = 0;
+M_TODO("TEMP?");
+	QVariant toVariant() const override { return QVariant(); };
 
 	/// Serialize the entire model from a QVariant.
-	///   void fromVariant(const QVariant& variant) override = 0;
+M_TODO("TEMP?");
+	void fromVariant(const QVariant& variant) override {};
 
 	/// @} // END Serialization
 
 	/// @} // END Extended public model interface.
+
+//protected:
+	static int get_next_child_id();
 
 protected:
 
@@ -218,15 +228,18 @@ protected:
 	 * Override in derived classes to return a newly created root/header item node for the model.
 	 */
 //	virtual AbstractTreeModelHeaderItem * make_root_node(QVector<QVariant> rootData) = 0;
-
-	virtual QString getXmlStreamName() const = 0;
-	virtual QString getXmlStreamVersion() const = 0;
+M_TODO("TEMP?");
+	virtual QString getXmlStreamName() const { return QString(); };
+	virtual QString getXmlStreamVersion() const { return QString(); };
 
     /// @}
 
     /// Hidden root node of the tree model.
     /// Pulls double duty as the horizontal header item.
 	AbstractTreeModelHeaderItem* m_root_item;
+
+	static int m_next_child_id;
+
 };
 
 

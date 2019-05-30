@@ -34,7 +34,7 @@ void ScanResultsTreeModel::setBaseDirectory(const QUrl &base_directory)
 }
 
 
-bool ScanResultsTreeModel::appendItems(std::vector<std::unique_ptr<AbstractTreeModelItem>> new_items, const QModelIndex& parent)
+bool ScanResultsTreeModel::appendItems(std::vector<std::shared_ptr<AbstractTreeModelItem>> new_items, const QModelIndex& parent)
 {
 	return BASE_CLASS::appendItems(std::move(new_items), parent);
 }
@@ -124,7 +124,7 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 	{
 		delete m_root_item;
 	}
-	m_root_item = new AbstractTreeModelHeaderItem();
+	m_root_item = new AbstractTreeModelHeaderItem(nullptr);
 //	m_root_item->fromVariant(map.value(SRTMTagToXMLTagMap[SRTMTag::ROOT_ITEM]));
 M_WARNING("TODO: There sometimes isn't a root item in the map.");
 	map_read_field_or_warn(map, XMLTAG_SRTM_ROOT_ITEM, m_root_item);

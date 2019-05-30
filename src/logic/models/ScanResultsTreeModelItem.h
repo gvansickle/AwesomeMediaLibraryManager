@@ -38,21 +38,17 @@ class LibraryEntry;
 /**
  * Model of the results of scanning a directory tree.
  */
-class ScanResultsTreeModelItem :
-		public AbstractTreeModelItem
-//		public clone_inherit<abstract_method<ScanResultsTreeModelItem>, virtual_inherit_from<AbstractTreeModelItem>>
-//		public clone_inherit<ScanResultsTreeModelItem, AbstractTreeModelItem>
-
+class ScanResultsTreeModelItem : public AbstractTreeModelItem
 {
 	using BASE_CLASS = AbstractTreeModelItem;
 
 public:
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(ScanResultsTreeModelItem);
 
-	/// Create a default-constructed (i.e. "blank") ScanResultsTreeModelItem, possibly with a given parent.
-	explicit ScanResultsTreeModelItem(AbstractTreeModelItem *parent = nullptr) : BASE_CLASS(parent) {};
 	/// Create a new model item populated with the passed DirScanResult.
-	explicit ScanResultsTreeModelItem(const DirScanResult& dsr, AbstractTreeModelItem *parent = nullptr);
+	explicit ScanResultsTreeModelItem(const DirScanResult& dsr, AbstractTreeModel *parent_model = nullptr, bool is_root = false);
+	/// @todo NOT SURE IF WE REALLY WANT THIS OR NOT.
+	explicit ScanResultsTreeModelItem(AbstractTreeModel *parent_model = nullptr, bool is_root = false);
 	~ScanResultsTreeModelItem() override;
 
 	/**
@@ -83,7 +79,7 @@ protected:
 	 * @todo Convert to smart pointer (std::unique_ptr<AbstractTreeModelItem>) return type, retain covariant return.
 	 */
 	AbstractTreeModelItem*
-	do_create_default_constructed_child_item(AbstractTreeModelItem *parent = nullptr, int num_columns = 0) override;
+	do_create_default_constructed_child_item(AbstractTreeModel* parent_model = nullptr, int num_columns = 0) override;
 
 	/// @name Virtual functions called by the base class to complete certain operations.
 	///       The base class will have error-checked function parameters.
@@ -103,12 +99,11 @@ protected:
 
 class SRTMItem_LibEntry :
 		public ScanResultsTreeModelItem
-//		public clone_inherit<SRTMItem_LibEntry, virtual_inherit_from<ScanResultsTreeModelItem>>
 {
 	using BASE_CLASS = ScanResultsTreeModelItem;
 
 public:
-	explicit SRTMItem_LibEntry(AbstractTreeModelItem *parent = nullptr) : BASE_CLASS(parent) {};
+	explicit SRTMItem_LibEntry(AbstractTreeModel* parent_model, bool is_root = false) : BASE_CLASS(parent_model, is_root) {};
 	~SRTMItem_LibEntry() override = default;
 
 	QVariant data(int column, int role = Qt::DisplayRole) const override;

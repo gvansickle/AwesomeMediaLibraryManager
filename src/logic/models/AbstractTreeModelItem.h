@@ -89,6 +89,7 @@
 #include <future/guideline_helpers.h>
 #include <future/cloneable.h>
 #include <logic/serialization/ISerializable.h>
+class AbstractTreeModel;
 
 /**
  * Base class for AbstractItemTreeModel items.
@@ -97,19 +98,26 @@
  *       but I can't get it to work.
  */
 class AbstractTreeModelItem :
-		public virtual ISerializable
-//		public clone_inherit<AbstractTreeModelItem, virtual_inherit_from<cloneable>>
+		public virtual ISerializable, public virtual std::enable_shared_from_this<AbstractTreeModelItem>
 {
+public:
+	/// Virtual constructor.
+	/// @note Probably shouldn't take the columns here.
+	static AbstractTreeModelItem* make_tree_item(const std::vector<QVariant>& columns, AbstractTreeModel* model, bool is_root, int id = -1);
+
+	friend class AbstractTreeModel;
+
+protected:
+	/**
+	 * Default constructor is protected.
+	 */
+	explicit AbstractTreeModelItem(const std::vector<QVariant>& columns, AbstractTreeModel* model, bool is_root, int id = -1);
+
+	static void base_finish_construction(const AbstractTreeModelItem* self);
 
 public:
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(AbstractTreeModelItem);
-	/**
-	 * Default constructor.
-	 * @param parent_item  The AbstractTreeModelItem which is both the owner and "tree-wise" parent of this item.
-	 *                     @note This is completely unrelated to QObject parentage, this class isn't derived from QObject.
-	 *                     However, we still own our children and have to delete them on destruction.
-	 */
-	explicit AbstractTreeModelItem(AbstractTreeModelItem* parent_item = nullptr);
+
 	~AbstractTreeModelItem() override;
 
     /// Return a pointer to the number'th child of this item.
@@ -120,21 +128,22 @@ public:
 
 	/// @copydoc AbstractTreeModelItem::child(int)
 	/// Const version.
-	const AbstractTreeModelItem* child(int number) const;
+	[[nodiscard]] const AbstractTreeModelItem* child(int number) const;
 
     /// @returns The number of children this item has.
     virtual int childCount() const;
 
     /// @returns The number of columns of data this item has.
     /// This is the max of the column count of all child items.
-    virtual int columnCount() const = 0;
+	/// @todo FIX THIS, TEMP IMPLEMENTATION.
+	virtual int columnCount() const { return m_column_data.size(); };
 
     /**
      * Read access to the data of this item.
      * @param column  The column of data to return.
      * @return A QVariant containing all the data in @a column.
      */
-	virtual QVariant data(int column, int role = Qt::DisplayRole) const;
+	[[nodiscard]] virtual QVariant data(int column, int role = Qt::DisplayRole) const;
 
 	bool setData(int column, const QVariant &value);
 
@@ -167,27 +176,30 @@ public:
 	 * @param new_children
 	 * @return
 	 */
-	bool appendChildren(std::vector<std::unique_ptr<AbstractTreeModelItem>> new_children);
-	bool appendChild(std::unique_ptr<AbstractTreeModelItem> new_child);
+	bool appendChildren(std::vector<std::shared_ptr<AbstractTreeModelItem> > new_children);
+	bool appendChild(std::shared_ptr<AbstractTreeModelItem> new_child);
 
 	/// @name Serialization
 	/// These are from the ISerializable interface.
 	/// Be sure to override these in derived classes.
 	/// @{
 
-    // virtual QVariant toVariant() const = 0;
-    // virtual void fromVariant(const QVariant& variant) = 0;
+	/// @todo TEMP DUMMY DEFS TO GET IT TO BUILD.
+	virtual QVariant toVariant() const { return QVariant(); };
+	virtual void fromVariant(const QVariant& variant) {};
 
     /// @}
+
+	/**
+	 * Sets this item's parent item to parent_item.
+	 * Primarily for use in appendChildren().
+	 */
+	virtual void setParentItem(AbstractTreeModelItem* new_parent_item);
 
     // Debug stream op free func friender.
     QTH_DECLARE_FRIEND_QDEBUG_OP(AbstractTreeModelItem);
 
 protected:
-
-    /// Sets this item's parent item to parent_item.
-    /// Primarily for use in appendChildren().
-    virtual void setParentItem(AbstractTreeModelItem* parent_item);
 
 	/**
 	 * Non-virtual Interface factory function for creating default-constructed child nodes.
@@ -199,15 +211,17 @@ protected:
 	/**
 	 * The covariant-return-type factory function for child items.  Override in derived classes.
 	 */
+M_WARNING("TEMP: WAS PURE VIRTUAL");
 	virtual AbstractTreeModelItem*
-	do_create_default_constructed_child_item(AbstractTreeModelItem* parent, int num_columns) = 0;
+	do_create_default_constructed_child_item(AbstractTreeModelItem* parent, int num_columns) { return nullptr; };
 
 	/// @name Virtual functions called by the base class to complete certain operations.
 	///       The base class will have error-checked function parameters.
 	/// @{
-	virtual bool derivedClassSetData(int column, const QVariant &value) = 0;
-	virtual bool derivedClassInsertColumns(int insert_before_column, int num_columns) = 0;
-	virtual bool derivedClassRemoveColumns(int first_column_to_remove, int num_columns) = 0;
+M_WARNING("TEMP: WAS PURE VIRTUAL");
+	virtual bool derivedClassSetData(int column, const QVariant &value) { return true; };
+	virtual bool derivedClassInsertColumns(int insert_before_column, int num_columns) { return true;};
+	virtual bool derivedClassRemoveColumns(int first_column_to_remove, int num_columns) { return true; };
 	/// @}
 
 private:
@@ -215,14 +229,27 @@ private:
 	/// Pointer to our parent AbstractTreeModelItem.
 	/// For items in a tree model (i.e. not being copy/pasted or mid-construction), this will always
 	/// be non-null as long as this item is not the invisible root item.
-	AbstractTreeModelItem *m_parent_item { nullptr };
+	/// @todo std::weak_ptr<>.
+	AbstractTreeModelItem* m_parent_item { nullptr };
 
 	/// Vector of child items.
 	/// This item owns its children for memory-management purposes.
-	std::vector<std::unique_ptr<AbstractTreeModelItem>> m_child_items;
+	std::vector<std::shared_ptr<AbstractTreeModelItem>> m_child_items;
 
 	/// @note AbstractTreeModelItem contains no data members for actual item data.
 	/// Any actual item data beyond the child items is the responsibility of derived classes.
+	/// @todo ....um, well, just for temp:
+	std::vector<QVariant> m_column_data;
+
+	// Misc. info.
+
+	/// @todo std::weak<>.
+	AbstractTreeModel* m_model {nullptr};
+
+	/// @todo Make this a real id, e.g. UUID.
+	int m_id {0};
+
+	bool m_is_root {false};
 };
 
 // Debug stream op free func declaration.
