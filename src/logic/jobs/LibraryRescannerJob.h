@@ -32,65 +32,6 @@
 #include <concurrency/AMLMJobT.h>
 
 class LibraryModel;
-//class LibraryRescannerJob;
-//using LibraryRescannerJobPtr = QPointer<LibraryRescannerJob>;
-
-#if 0
-/*
- *
- */
-class LibraryRescannerJob: public AMLMJobT<ExtFuture<MetadataReturnVal>>, public UniqueIDMixin<LibraryRescannerJob>
-{
-    Q_OBJECT
-
-    using BASE_CLASS = AMLMJobT<ExtFuture<MetadataReturnVal>>;
-
-    /**
-     * @note CRTP: Still need this to avoid ambiguous name resolution.
-     * @see https://stackoverflow.com/a/46916924
-     */
-    using UniqueIDMixin<LibraryRescannerJob>::uniqueQObjectName;
-
-Q_SIGNALS:
-//    void SLOT_processReadyResults(MetadataReturnVal lritem_vec);
-
-protected:
-    explicit LibraryRescannerJob(QObject* parent);
-
-public:
-
-    /// @name Public types
-    /// @{
-    using ExtFutureType = ExtFuture<MetadataReturnVal>;
-    /// @}
-
-    ~LibraryRescannerJob() override;
-
-    static LibraryRescannerJobPtr make_job(QObject *parent);
-    static LibraryRescannerJobPtr make_job(QObject *parent, LibraryRescannerMapItem item_to_refresh, const LibraryModel *current_libmodel);
-//	static LibraryRescannerJobPtr make_job(QObject *parent, LibraryRescannerMapItem-future-iterators item_to_refresh, const LibraryModel *current_libmodel);
-
-	void run_async_rescan();
-
-	/// The map function for rescanning the library to reload metadata from the files.
-	/// Runs in an arbitrary thread context, so must be threadsafe.
-	MetadataReturnVal refresher_callback(const VecLibRescannerMapItems& mapitem);
-
-public Q_SLOTS:
-
-    void setDataToMap(QVector<VecLibRescannerMapItems> items_to_rescan, const LibraryModel* current_libmodel);
-
-protected:
-
-    void runFunctor() override;
-
-private:
-    Q_DISABLE_COPY(LibraryRescannerJob)
-
-    QVector<VecLibRescannerMapItems> m_items_to_rescan;
-    const LibraryModel* m_current_libmodel;
-};
-#endif
 
 /**
  * Function taking a CnR future to rescan the metadata.
@@ -100,6 +41,5 @@ void library_metadata_rescan_task(ExtFuture<MetadataReturnVal> ext_future, AMLMJ
 								  LibraryModel* current_libmodel);
 
 
-//Q_DECLARE_METATYPE(LibraryRescannerJobPtr);
 
 #endif /* SRC_LOGIC_JOBS_LIBRARYRESCANNERJOB_H_ */

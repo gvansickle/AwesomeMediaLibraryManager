@@ -46,12 +46,6 @@ LibraryRescannerJob::LibraryRescannerJob(QObject* parent) : AMLMJobT(parent)
     setCapabilities(KJob::Capability::Killable | KJob::Capability::Suspendable);
 }
 
-LibraryRescannerJob::~LibraryRescannerJob()
-{
-	// Can't access objectName() in destructor.
-	qDb() << "LibraryRescannerJob DELETED";// << this << objectName();
-}
-
 LibraryRescannerJobPtr LibraryRescannerJob::make_job(QObject *parent)
 {
     auto retval = new LibraryRescannerJob(parent);
@@ -82,68 +76,6 @@ void LibraryRescannerJob::setDataToMap(QVector<VecLibRescannerMapItems> items_to
     m_current_libmodel = current_libmodel;
 }
 
-void LibraryRescannerJob::runFunctor()
-{
-	// Make the internal connection to the SLOT_processReadyResults() slot.
-//	connect(this, &LibraryRescannerJob::SLOT_processReadyResults,
-//	        m_current_libmodel, qOverload<MetadataReturnVal>(&LibraryModel::SLOT_processReadyResults));
-
-//	this->run_async_rescan();
-	library_metadata_rescan_task(m_ext_future, this, m_items_to_rescan);
-}
-
-#if 0
-void LibraryRescannerJob::run_async_rescan()
-{
-    qDb() << "ENTER run";
-
-    setProgressUnit(KJob::Unit::Files);
-
-    // Send out progress text.
-    QString status_text = tr("Rereading metadata");
-    Q_EMIT description(this, status_text);//,
-//                                QPair<QString,QString>(QObject::tr("Root URL"), m_dir_url.toString()),
-//                                QPair<QString,QString>(QObject::tr("Current file"), QObject::tr("")));
-
-    setTotalAmountAndSize(KJob::Unit::Files, m_items_to_rescan.size());
-
-    // Make the internal connection to the SLOT_processReadyResults() slot.
-    connect(this, &LibraryRescannerJob::processReadyResults,
-            m_current_libmodel, qOverload<MetadataReturnVal>(&LibraryModel::SLOT_processReadyResults));
-
-    qulonglong num_items = 0;
-    for(QVector<VecLibRescannerMapItems>::const_iterator i = m_items_to_rescan.cbegin(); i != m_items_to_rescan.cend(); ++i)
-    {
-        qDb() << "Item number:" << num_items;
-        MetadataReturnVal a = this->refresher_callback(*i);
-        Q_EMIT SLOT_processReadyResults(a);
-        num_items++;
-
-        setProcessedAmountAndSize(KJob::Unit::Files, num_items);
-
-		if(m_ext_future.HandlePauseResumeShouldICancel())
-        {
-            // We've been cancelled.
-            qIno() << "CANCELLED";
-//            m_ext_future.reportCanceled();
-            break;
-        }
-    }
-
-    // We've either completed our work or been cancelled.
-    // Either way, defaultEnd() will handle setting the cancellation status as long as
-    // we set success/fail appropriately.
-//    if(!wasCancelRequested())
-//    {
-//    	setSuccessFlag(true);
-//    }
-
-    /// @todo push down
-    m_ext_future.reportFinished();
-}
-#else
-
-#endif
 #endif
 
 
