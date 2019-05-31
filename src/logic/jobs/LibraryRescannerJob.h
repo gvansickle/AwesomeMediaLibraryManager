@@ -41,5 +41,4 @@ void library_metadata_rescan_task(ExtFuture<MetadataReturnVal> ext_future, AMLMJ
 								  LibraryModel* current_libmodel);
 
 
-
 #endif /* SRC_LOGIC_JOBS_LIBRARYRESCANNERJOB_H_ */
