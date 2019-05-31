@@ -45,7 +45,6 @@ set(logic_subdir_SOURCES
 	TrackMetadata.cpp
 	CueSheetParser.cpp
 	CueSheet.cpp
-	CoverArtJob.cpp
 	ModelUserRoles.cpp
 	ColumnSpec.cpp
 	LibraryRescannerMapItem.cpp
@@ -78,7 +77,6 @@ set(logic_subdir_HEADERS
 	LibraryRescanner.h
 	CueSheetParser.h
 	CueSheet.h
-	CoverArtJob.h
 	TagLibHelpers.h
 	ModelUserRoles.h
 	ColumnSpec.h

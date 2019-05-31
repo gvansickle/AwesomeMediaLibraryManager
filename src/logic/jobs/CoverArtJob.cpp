@@ -17,11 +17,11 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "CoverArtJob.h"
+#include <jobs/CoverArtJob.h>
 
 
 /// TagLib includes.
-#if 0
+#if 1
 #include <taglib/tag.h>
 #include <taglib/fileref.h>
 #include <taglib/tpropertymap.h>

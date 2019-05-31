@@ -20,11 +20,13 @@
 # @file src/logic/jobs/CMakeLists.txt
 
 set(jobs_SOURCE_FILES
+		CoverArtJob.cpp
 		DirectoryScanJob.cpp
 		LibraryEntryLoaderJob.cpp
 		LibraryRescannerJob.cpp
 	)
 set(jobs_HEADER_FILES
+		CoverArtJob.h
 		DirectoryScanJob.h
 		LibraryEntryLoaderJob.h
 		LibraryRescannerJob.h
@@ -43,6 +45,7 @@ target_link_libraries(jobs
 		${QT5_LINK_LIB_TARGETS}
 		${KF5_LINK_LIB_TARGETS}
 	PRIVATE
+		${AMLM_TAGLIB_TARGET}
 		concurrency
 		)
 target_include_directories(jobs
