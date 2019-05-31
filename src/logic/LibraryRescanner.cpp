@@ -223,8 +223,10 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	// Create/Attach an AMLMJobT to the dirscan future.
 	QPointer<AMLMJobT<ExtFuture<DirScanResult>>> dirtrav_job = make_async_AMLMJobT(dirresults_future, "DirResultsAMLMJob", AMLMApp::instance());
 
-    // Makes a new AMLMJobT.
-	LibraryRescannerJobPtr lib_rescan_job = LibraryRescannerJob::make_job(this);
+
+//	LibraryRescannerJobPtr lib_rescan_job = LibraryRescannerJob::make_job(this);
+	AMLMJobT<ExtFuture<MetadataReturnVal>>* lib_rescan_job;
+	ExtFuture<MetadataReturnVal> lib_rescan_future = ExtAsync::make_started_only_future<MetadataReturnVal>();
 
     // Get a pointer to the Scan Results Tree model.
 	ScanResultsTreeModel* tree_model = AMLMApp::IScanResultsTreeModel();
@@ -411,7 +413,8 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 	})
 	.then(qApp, [=,
 				 tree_model_ptr=tree_model,
-				 kjob=/*FWD_DECAY_COPY(QPointer<AMLMJobT<ExtFuture<DirScanResult>>>,*/ dirtrav_job/*)*/
+				 kjob=/*FWD_DECAY_COPY(QPointer<AMLMJobT<ExtFuture<DirScanResult>>>,*/ dirtrav_job/*)*/,
+		  &lib_rescan_job
 		  ](ExtFuture<Unit> future_unit) {
 
 			AMLM_ASSERT_IN_GUITHREAD();
@@ -538,12 +541,20 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 			}
 			else
 			{
-				lib_rescan_job->setDataToMap(rescan_items, m_current_libmodel);
+				// Makes a new AMLMJobT.
+				ExtFuture<MetadataReturnVal> lib_rescan_future = ExtAsync::qthread_async_with_cnr_future(library_metadata_rescan_task,
+																										 nullptr, rescan_items,
+																										 m_current_libmodel);
+				lib_rescan_job = make_async_AMLMJobT<ExtFuture<MetadataReturnVal>>(lib_rescan_future, "LibRescanJob", AMLMApp::instance());
+//				lib_rescan_job->setDataToMap(rescan_items, m_current_libmodel);
+
+				master_job_tracker->registerJob(lib_rescan_job);
 
 				// Start the metadata scan.
 				qDb() << "STARTING RESCAN";
+//				lib_rescan_job->start();
 			}
-            lib_rescan_job->start();
+//            lib_rescan_job->start();
 #endif
         }
 	});
@@ -555,8 +566,8 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 
     master_job_tracker->registerJob(dirtrav_job);
 //	master_job_tracker->setAutoDelete(dirtrav_job, false);
-//    master_job_tracker->setStopOnClose(dirtrav_job, true);
-	master_job_tracker->registerJob(lib_rescan_job);
+//  master_job_tracker->setStopOnClose(dirtrav_job, true);
+//	master_job_tracker->registerJob(lib_rescan_job);
 //	master_job_tracker->setAutoDelete(lib_rescan_job, false);
 //	master_job_tracker->setStopOnClose(lib_rescan_job, true);
 
@@ -575,7 +586,8 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 	});
 
 
-	lib_rescan_job->get_extfuture().stap(this, [=](ExtFuture<MetadataReturnVal> ef, int begin, int end){
+	/*lib_rescan_job->get_extfuture()*/
+	lib_rescan_future.stap(this, [=](ExtFuture<MetadataReturnVal> ef, int begin, int end){
 		for(int i = begin; i<end; ++i)
 		{
 			this->SLOT_processReadyResults(ef.resultAt(i));

@@ -32,9 +32,10 @@
 #include <concurrency/AMLMJobT.h>
 
 class LibraryModel;
-class LibraryRescannerJob;
-using LibraryRescannerJobPtr = QPointer<LibraryRescannerJob>;
+//class LibraryRescannerJob;
+//using LibraryRescannerJobPtr = QPointer<LibraryRescannerJob>;
 
+#if 0
 /*
  *
  */
@@ -89,12 +90,16 @@ private:
     QVector<VecLibRescannerMapItems> m_items_to_rescan;
     const LibraryModel* m_current_libmodel;
 };
+#endif
+
+/**
+ * Function taking a CnR future to rescan the metadata.
+ */
+void library_metadata_rescan_task(ExtFuture<MetadataReturnVal> ext_future, AMLMJob* job,
+								  QVector<VecLibRescannerMapItems> items_to_rescan,
+								  LibraryModel* current_libmodel);
 
 
-void library_metadata_rescan_task(ExtFuture<MetadataReturnVal> ext_future, LibraryRescannerJob* job,
-                                  QVector<VecLibRescannerMapItems> items_to_rescan);
-
-
-Q_DECLARE_METATYPE(LibraryRescannerJobPtr);
+//Q_DECLARE_METATYPE(LibraryRescannerJobPtr);
 
 #endif /* SRC_LOGIC_JOBS_LIBRARYRESCANNERJOB_H_ */
