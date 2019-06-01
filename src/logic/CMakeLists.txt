@@ -54,6 +54,7 @@ set(logic_subdir_SOURCES
 	ExtUrl.cpp
 	PerfectDeleter.cpp
 	Frames.cpp
+	UUIncD.cpp
 	)
 
 set(logic_subdir_HEADERS
@@ -86,6 +87,7 @@ set(logic_subdir_HEADERS
 	ExtUrl.h
 	PerfectDeleter.h
 	Frames.h
+    UUIncD.h
 	)
 
 target_sources_local(logic
