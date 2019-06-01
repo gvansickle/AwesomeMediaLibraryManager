@@ -774,6 +774,7 @@ public:
 	 */
 
 	/// @name std::promise-like functionality.
+	/// @todo I'm thinking all of this should probably be moved to a real ExtPromise class.
 	/// @{
 
 	/**
@@ -803,11 +804,23 @@ public:
 	/**
 	 * Store @a value into shared state and make the state ready.
 	 * @link https://en.cppreference.com/w/cpp/thread/promise/set_value
-	 * @param value
+	 * @note We don't do this: "An exception is thrown if there is no shared state or the shared state already stores a
+	 * 			value or exception."
+	 * 			The call will simply be ignored here.
 	 */
 	void set_value(const T& value)
 	{
 		this->reportFinished(&value);
+	}
+
+	/**
+	 * Not-quite an overload which sets the QFuture<>'s QList<T> from a QVector<T>.
+	 * Avoids having a QList<> with one QVector<> item.
+	 */
+	void set_values(const QVector<T>& values)
+	{
+		this->reportResults(values);
+		this->reportFinished();
 	}
 
 	/**

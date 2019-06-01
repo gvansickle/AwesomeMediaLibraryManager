@@ -37,7 +37,7 @@ class LibraryModel;
  * Function taking a CnR future to rescan the metadata.
  */
 void library_metadata_rescan_task(ExtFuture<MetadataReturnVal> ext_future, AMLMJob* job,
-								  QVector<VecLibRescannerMapItems> items_to_rescan,
+								  ExtFuture<VecLibRescannerMapItems> items_to_rescan,
 								  LibraryModel* current_libmodel);
 
 

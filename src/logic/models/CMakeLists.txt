@@ -59,8 +59,6 @@ target_include_directories(models
 	    # For config.h
 		${PROJECT_BINARY_DIR}/src
 	PRIVATE
-		# For serialization
-#		"${CMAKE_CURRENT_LIST_DIR}/../serialization"
 		# For anything under src: utils/, logic/, etc.
 		${PROJECT_SOURCE_DIR}/src
 	)

@@ -179,7 +179,8 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
 }
 
 void library_metadata_rescan_task(ExtFuture<MetadataReturnVal> ext_future, AMLMJob* /*the_job*/,
-								  QVector<VecLibRescannerMapItems> items_to_rescan,
+									ExtFuture<VecLibRescannerMapItems> in_future,
+//								  QVector<VecLibRescannerMapItems> items_to_rescan,
 								  LibraryModel* current_libmodel)
 {
 	qDb() << "ENTER library_metadata_rescan_task";
@@ -194,6 +195,9 @@ void library_metadata_rescan_task(ExtFuture<MetadataReturnVal> ext_future, AMLMJ
                                 QPair<QString,QString>(QObject::tr("Root URL"), ""),
                                 QPair<QString,QString>(QObject::tr("Current file"), QObject::tr("")));
 
+	// Wait for the work to come in.
+	QList<VecLibRescannerMapItems> items_to_rescan = in_future.get();
+
 	/// @todo
 	//setTotalAmountAndSize(KJob::Unit::Files, m_items_to_rescan.size());
 
@@ -201,7 +205,7 @@ void library_metadata_rescan_task(ExtFuture<MetadataReturnVal> ext_future, AMLMJ
 	ext_future.setProgressValueAndText(0, status_text);
 
 	qulonglong num_items = 0;
-	for(QVector<VecLibRescannerMapItems>::const_iterator i = items_to_rescan.cbegin(); i != items_to_rescan.cend(); ++i)
+	for(QList<VecLibRescannerMapItems>::const_iterator i = items_to_rescan.cbegin(); i != items_to_rescan.cend(); ++i)
 	{
 		qDb() << "Item number:" << num_items;
 

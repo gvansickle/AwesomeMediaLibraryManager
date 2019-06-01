@@ -224,9 +224,13 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	QPointer<AMLMJobT<ExtFuture<DirScanResult>>> dirtrav_job = make_async_AMLMJobT(dirresults_future, "DirResultsAMLMJob", AMLMApp::instance());
 
 
-//	LibraryRescannerJobPtr lib_rescan_job = LibraryRescannerJob::make_job(this);
-	AMLMJobT<ExtFuture<MetadataReturnVal>>* lib_rescan_job;
-	ExtFuture<MetadataReturnVal> lib_rescan_future = ExtAsync::make_started_only_future<MetadataReturnVal>();
+	ExtFuture<VecLibRescannerMapItems> rescan_items_in_future = ExtAsync::make_started_only_future<VecLibRescannerMapItems>();
+
+	ExtFuture<MetadataReturnVal> lib_rescan_future = ExtAsync::qthread_async_with_cnr_future(library_metadata_rescan_task,
+																							 nullptr, rescan_items_in_future,
+																							 m_current_libmodel);
+	// Make a new AMLMJobT for the metadata rescan.
+	AMLMJobT<ExtFuture<MetadataReturnVal>>* lib_rescan_job = make_async_AMLMJobT(lib_rescan_future, "LibRescanJob", AMLMApp::instance());
 
     // Get a pointer to the Scan Results Tree model.
 	ScanResultsTreeModel* tree_model = AMLMApp::IScanResultsTreeModel();
@@ -238,11 +242,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	/// @todo Obsoleting.
 	ExtFuture<QString> qurl_future = ExtAsync::make_started_only_future<QString>();
 
-	// New container type we'll use to pass the incoming values to the new model.
-//	using ItemContType = std::vector<std::unique_ptr<AbstractTreeModelItem>>;
-
 	// Create a future so we can attach a continuation to get the results to the main thread.
-//	using SharedItemContType = std::shared_ptr<ItemContType>;
 	ExtFuture<SharedItemContType> tree_model_item_future = ExtAsync::make_started_only_future<SharedItemContType>();
 
 	// Attach a streaming tap to the dirscan future.
@@ -415,12 +415,11 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 				 tree_model_ptr=tree_model,
 				 kjob=/*FWD_DECAY_COPY(QPointer<AMLMJobT<ExtFuture<DirScanResult>>>,*/ dirtrav_job/*)*/,
 		  &lib_rescan_job
-		  ](ExtFuture<Unit> future_unit) {
+		  ](ExtFuture<Unit> future_unit) mutable {
 
 			AMLM_ASSERT_IN_GUITHREAD();
 
 			expect_and_set(3, 4);
-
 
 			qDb() << "DIRTRAV COMPLETE, NOW IN GUI THREAD";
 			if(kjob.isNull())
@@ -541,14 +540,9 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 			}
 			else
 			{
-				// Makes a new AMLMJobT.
-				ExtFuture<MetadataReturnVal> lib_rescan_future = ExtAsync::qthread_async_with_cnr_future(library_metadata_rescan_task,
-																										 nullptr, rescan_items,
-																										 m_current_libmodel);
-				lib_rescan_job = make_async_AMLMJobT<ExtFuture<MetadataReturnVal>>(lib_rescan_future, "LibRescanJob", AMLMApp::instance());
-//				lib_rescan_job->setDataToMap(rescan_items, m_current_libmodel);
-
-				master_job_tracker->registerJob(lib_rescan_job);
+				/// Start the metadata rescan.
+				rescan_items_in_future.set_values(rescan_items);
+				rescan_items_in_future.reportFinished();
 
 				// Start the metadata scan.
 				qDb() << "STARTING RESCAN";
@@ -567,7 +561,7 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
     master_job_tracker->registerJob(dirtrav_job);
 //	master_job_tracker->setAutoDelete(dirtrav_job, false);
 //  master_job_tracker->setStopOnClose(dirtrav_job, true);
-//	master_job_tracker->registerJob(lib_rescan_job);
+	master_job_tracker->registerJob(lib_rescan_job);
 //	master_job_tracker->setAutoDelete(lib_rescan_job, false);
 //	master_job_tracker->setStopOnClose(lib_rescan_job, true);
 
