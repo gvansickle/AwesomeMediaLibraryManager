@@ -269,7 +269,8 @@ target_link_libraries(${PROJECT_NAME}
 		cxx_settings
 		cxx_definitions_qt
 		#wt-target-dbo
-                      logic
+		src
+		logic
 	PRIVATE
 		${PROJECT_COMMON_LINK_LIBS})
 

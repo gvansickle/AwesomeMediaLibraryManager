@@ -23,12 +23,12 @@
 // Std C++
 #include <atomic>
 #include <cstdint>
-#include <utility> // For std::rel_ops;
+//#include <utility> // For std::rel_ops;
 
 // Ours
 #include <future/guideline_helpers.h>
 
-using namespace std::rel_ops;
+//using namespace std::rel_ops;
 
 class UUIncD
 {

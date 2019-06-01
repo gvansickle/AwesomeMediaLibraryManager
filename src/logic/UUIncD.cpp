@@ -21,13 +21,13 @@
 
 std::atomic_uint64_t UUIncD::m_next_id {0};
 
-//UUIncD::UUIncD(std::uint64_t id)
-//{
-//	m_my_id = id;
-//}
+UUIncD::UUIncD(std::uint64_t id)
+{
+	m_my_id = id;
+}
 
 // static
-//UUIncD UUIncD::create()
-//{
-//	return UUIncD(UUIncD::m_next_id.fetch_add(1));
-//}
+UUIncD UUIncD::create()
+{
+	return UUIncD(UUIncD::m_next_id.fetch_add(1));
+}

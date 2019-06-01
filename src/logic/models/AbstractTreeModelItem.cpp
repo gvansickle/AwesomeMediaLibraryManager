@@ -64,6 +64,7 @@
 // Ours
 #include <utils/DebugHelpers.h>
 #include <utils/VectorHelpers.h>
+#include <logic/UUIncD.h>
 
 AbstractTreeModelItem::AbstractTreeModelItem(AbstractTreeModelItem* parent_item)
 	: m_uuincid(UUIncD::create()), m_parent_item(parent_item)
