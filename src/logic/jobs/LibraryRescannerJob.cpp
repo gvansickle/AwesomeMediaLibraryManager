@@ -226,7 +226,7 @@ void library_metadata_rescan_task(ExtFuture<MetadataReturnVal> ext_future, AMLMJ
 		}
 	}
 
-	/// @todo push down
+	// And we're done.
 	ext_future.reportFinished();
 }
 

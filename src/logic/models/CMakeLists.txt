@@ -47,12 +47,9 @@ target_sources_local(models
 
 target_link_libraries(models
 	PUBLIC
-	    #${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS}
 		${QT5_LINK_LIB_TARGETS}
 		${KF5_LINK_LIB_TARGETS}
 		${GTK_LINK_LIB_TARGETS}
-#		${AMLM_TAGLIB_TARGET}
-#		${AMLM_LIBCUE_TARGET}
 )
 target_include_directories(models
 	PUBLIC

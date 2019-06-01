@@ -162,8 +162,8 @@ set(PROJECT_COMMON_INTERNAL_LINK_LIB_TARGETS
 		utils
 )
 
-# Models
-list(APPEND SOURCE_FILES ${SOURCE_FILES_LOGIC_MODELS})
+### @OBSOLETE Models
+#list(APPEND SOURCE_FILES ${SOURCE_FILES_LOGIC_MODELS})
 
 # QT5_LOGGING_CATEGORY_SOURCE_FILES
 list(APPEND SOURCE_FILES ${QT5_LOGGING_CATEGORY_SOURCE_FILES})
@@ -182,7 +182,8 @@ list(APPEND amlm_SRCS ${SOURCE_FILES} ${HEADER_FILES}
 # @link https://api.kde.org/ecm/module/ECMAddAppIcon.html
 # @link http://kfunk.org/2017/12/20/tips-streamlining-kde-application-for-deployment-microsoft-windows/
 target_link_libraries(src
-	PUBLIC 
+	PUBLIC
+	PRIVATE
 		resources
 		# Boost
 		Boost::boost					# Target for header-only dependencies
