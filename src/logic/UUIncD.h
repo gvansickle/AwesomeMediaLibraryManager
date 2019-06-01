@@ -23,24 +23,30 @@
 // Std C++
 #include <atomic>
 #include <cstdint>
+#include <utility> // For std::rel_ops;
 
 // Ours
 #include <future/guideline_helpers.h>
+
+using namespace std::rel_ops;
 
 class UUIncD
 {
 public:
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(UUIncD);
-	~UUIncD();
+	~UUIncD() = default;
 
 	static UUIncD create();
 
 protected:
-	UUIncD(std::uint64_t id);
+	explicit UUIncD(std::uint64_t id);
 
 private:
 
 	std::uint64_t m_my_id;
+
+	bool operator==(const UUIncD& rhs) const { return m_my_id == rhs.m_my_id; };
+	bool operator<(const UUIncD& rhs) const { return m_my_id < rhs.m_my_id; };
 
 	/**
 	 * The program-global threadsafe 64-bit ID which will next be doled out by create().
@@ -48,5 +54,14 @@ private:
 	static std::atomic_uint64_t m_next_id;
 };
 
+//inline static bool operator==(const UUIncD& lhs, const UUIncD& rhs)
+//{
+//	return lhs.m_my_id == rhs.m_my_id;
+//}
+
+//inline static bool operator<(const UUIncD& lhs, const UUIncD& rhs)
+//{
+//	return lhs.m_my_id < rhs.m_my_id;
+//}
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_UUINCD_H

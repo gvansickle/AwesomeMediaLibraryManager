@@ -88,17 +88,14 @@
 #include <utils/StaticAnalysis.h>
 #include <future/guideline_helpers.h>
 #include <future/cloneable.h>
+#include <logic/UUIncD.h>
 #include <logic/serialization/ISerializable.h>
 
 /**
  * Base class for AbstractItemTreeModel items.
  * @note Not derived from QObject.
- * @note base clone_inherit<> Would add covariant plus smart pointer clone() support to the derived class hierarchy,
- *       but I can't get it to work.
  */
-class AbstractTreeModelItem :
-		public virtual ISerializable
-//		public clone_inherit<AbstractTreeModelItem, virtual_inherit_from<cloneable>>
+class AbstractTreeModelItem : public virtual ISerializable
 {
 
 public:
@@ -211,6 +208,9 @@ protected:
 	/// @}
 
 private:
+
+	/// Our guaranteed-to-be unique-to-this-run-of-the-program numeric ID.
+	UUIncD m_uuincid;
 
 	/// Pointer to our parent AbstractTreeModelItem.
 	/// For items in a tree model (i.e. not being copy/pasted or mid-construction), this will always

@@ -183,6 +183,7 @@ list(APPEND amlm_SRCS ${SOURCE_FILES} ${HEADER_FILES}
 # @link http://kfunk.org/2017/12/20/tips-streamlining-kde-application-for-deployment-microsoft-windows/
 target_link_libraries(src
 	PUBLIC
+		logic
 	PRIVATE
 		resources
 		# Boost
@@ -268,6 +269,7 @@ target_link_libraries(${PROJECT_NAME}
 		cxx_settings
 		cxx_definitions_qt
 		#wt-target-dbo
+                      logic
 	PRIVATE
 		${PROJECT_COMMON_LINK_LIBS})
 

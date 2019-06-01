@@ -38,10 +38,7 @@ class LibraryEntry;
 /**
  * Model of the results of scanning a directory tree.
  */
-class ScanResultsTreeModelItem :
-		public AbstractTreeModelItem
-//		public clone_inherit<abstract_method<ScanResultsTreeModelItem>, virtual_inherit_from<AbstractTreeModelItem>>
-//		public clone_inherit<ScanResultsTreeModelItem, AbstractTreeModelItem>
+class ScanResultsTreeModelItem : public AbstractTreeModelItem
 
 {
 	using BASE_CLASS = AbstractTreeModelItem;

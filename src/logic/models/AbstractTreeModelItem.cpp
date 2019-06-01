@@ -66,7 +66,7 @@
 #include <utils/VectorHelpers.h>
 
 AbstractTreeModelItem::AbstractTreeModelItem(AbstractTreeModelItem* parent_item)
-	: m_parent_item(parent_item)
+	: m_uuincid(UUIncD::create()), m_parent_item(parent_item)
 {
 }
 
