@@ -26,6 +26,10 @@
 // Std C++
 #include <iostream>
 
+// Ours
+#include <utils/DebugHelpers.h>
+
+#define AMLMCOUT qDb()
 
 Stopwatch::Stopwatch()
 {
@@ -51,7 +55,7 @@ void Stopwatch::start(const std::string& being_timed_msg)
 	m_end = decltype(m_end)::min();
 	m_being_timed_msg = being_timed_msg;
 	m_start = std::chrono::steady_clock::now();
-	std::cout << "START: " << m_being_timed_msg << std::endl;
+	AMLMCOUT << "START: " << m_being_timed_msg; // << std::endl;
 }
 
 void Stopwatch::lap(const std::string& lap_marker_str)
@@ -65,7 +69,7 @@ void Stopwatch::lap(const std::string& lap_marker_str)
 
 	std::chrono::duration<double> elapsed = lm.m_lap_time - m_start;
 
-	std::cout << "ELAPSED TIME, LAP:" << lm.m_lap_discription << ": " << elapsed.count() << " sec" << std::endl;
+	AMLMCOUT << "ELAPSED TIME, LAP:" << lm.m_lap_discription << ": " << elapsed.count() << " sec"; // << std::endl;
 }
 
 void Stopwatch::stop()
@@ -98,17 +102,16 @@ void Stopwatch::print_results()
 		elapsed = m_end - m_start;
 	}
 
-	std::cout << "END: " << m_being_timed_msg << std::endl;
-	std::cout << "ELAPSED TIME: " << m_being_timed_msg << ": " << elapsed.count() << " sec" << std::endl;
+	AMLMCOUT << "END: " << m_being_timed_msg; // << std::endl;
+	AMLMCOUT << "TOTAL ELAPSED TIME: " << m_being_timed_msg << ": " << elapsed.count() << " sec"; // << std::endl;
 	if(!m_lap_markers.empty())
 	{
-		std::cout << "LAP MARKERS:\n";
+		AMLMCOUT << "LAP MARKERS:\n";
 		int lap = 0;
 		for(const auto& lm : m_lap_markers)
 		{
-			std::cout << "LAP " << lap << " DESC: " << lm.m_lap_discription << "\n";
 			std::chrono::duration<double> elapsed = lm.m_lap_time - m_start;
-			std::cout << "LAP " << lap << " TIME: " << elapsed.count() << "\n";
+			AMLMCOUT << "LAP " << lap << " TIME: " << elapsed.count() << " DESC: " << lm.m_lap_discription;// << "\n";
 			lap++;
 		}
 	}
