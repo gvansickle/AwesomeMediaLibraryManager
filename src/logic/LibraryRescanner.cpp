@@ -245,6 +245,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	// Create a future so we can attach a continuation to get the results to the main thread.
 	ExtFuture<SharedItemContType> tree_model_item_future = ExtAsync::make_started_only_future<SharedItemContType>();
 
+	sw.lap("End setup, start continuation attachements");
+
 	// Attach a streaming tap to the dirscan future.
 	ExtFuture<Unit> tail_future
 			= dirresults_future.stap([=](ExtFuture<DirScanResult> tap_future, int begin, int end) mutable -> void {
@@ -580,7 +582,6 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 	});
 
 
-	/*lib_rescan_job->get_extfuture()*/
 	lib_rescan_future.stap(this, [=](ExtFuture<MetadataReturnVal> ef, int begin, int end){
 		for(int i = begin; i<end; ++i)
 		{
@@ -597,6 +598,7 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 M_TODO("????");
 //	dirtrav_job->start();
 
+sw.lap("Leaving startAsyncDirTrav");
 
 	qDb() << "LEAVING" << __func__ << ":" << dir_url;
 }

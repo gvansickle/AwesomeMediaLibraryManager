@@ -38,6 +38,9 @@ public:
 
 	static UUIncD create();
 
+	// User-defined conversion to uin64_t.
+	operator uint64_t() const;
+
 protected:
 	explicit UUIncD(std::uint64_t id);
 

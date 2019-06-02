@@ -31,3 +31,8 @@ UUIncD UUIncD::create()
 {
 	return UUIncD(UUIncD::m_next_id.fetch_add(1));
 }
+
+UUIncD::operator uint64_t() const
+{
+	return m_my_id;
+}

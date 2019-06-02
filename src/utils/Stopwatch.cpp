@@ -41,6 +41,17 @@ Stopwatch::~Stopwatch()
 
 	std::cout << "END: " << m_being_timed_msg << std::endl;
 	std::cout << "ELAPSED TIME: " << m_being_timed_msg << ": " << elapsed.count() << " sec" << std::endl;
+	if(!m_lap_markers.empty())
+	{
+		std::cout << "LAP MARKERS:\n";
+		int lap = 0;
+		for(const auto& lm : m_lap_markers)
+		{
+			std::cout << "LAP " << lap << " DESC: " << lm.m_lap_discription << "\n";
+			std::chrono::duration<double> elapsed = lm.m_lap_time - m_start;
+			std::cout << "LAP " << lap << " TIME: " << elapsed.count() << "\n";
+		}
+	}
 }
 
 void Stopwatch::lap(const std::string& lap_marker_str)
