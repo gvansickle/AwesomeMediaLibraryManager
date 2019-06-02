@@ -133,7 +133,6 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
 
 void library_metadata_rescan_task(ExtFuture<MetadataReturnVal> ext_future, AMLMJob* /*the_job*/,
 									ExtFuture<VecLibRescannerMapItems> in_future,
-//								  QVector<VecLibRescannerMapItems> items_to_rescan,
 								  LibraryModel* current_libmodel)
 {
 	qDb() << "ENTER library_metadata_rescan_task";
@@ -187,104 +186,4 @@ void library_metadata_rescan_task(ExtFuture<MetadataReturnVal> ext_future, AMLMJ
 	ext_future.reportFinished();
 }
 
-#if 0
-MetadataReturnVal LibraryRescannerJob::refresher_callback(const VecLibRescannerMapItems &mapitem)
-{
-    qDebug() << "Current thread:" << QThread::currentThread()->objectName();
-
-    MetadataReturnVal retval;
-
-    // If we have more than a single entry in the incoming list, we have a multi-track file to refresh.
-    if(mapitem.size() == 1)
-    {
-        // Only one entry.
-
-        // Get the LibraryEntry* to the existing entry.
-M_WARNING("There's no locking here, there needs to be, or these need to be copies.");
-        std::shared_ptr<LibraryEntry> item = mapitem[0].item;
-
-        if(!item->isPopulated())
-        {
-            // Item's metadata has not been looked at.  We may have multiple tracks.
-
-            // Only one pindex though.
-            retval.m_original_pindexes.push_back(mapitem[0].pindex);
-
-			item->populate();
-			auto vec_items = item->split_to_tracks();
-			for (const auto& i : vec_items)
-            {
-                if (!i->isPopulated())
-                {
-                    qCritical() << "NOT POPULATED" << i.get();
-                }
-                retval.push_back(i);
-
-//                qDb() << "LIBENTRY METADATA:" << i->getAllMetadata();
-
-            }
-        }
-        else if (item->isPopulated() && item->isSubtrack())
-        {
-			qCr() << "TODO: FOUND SUBTRACK ITEM, SKIPPING:" << item->getUrl();
-            Q_ASSERT(0);
-        }
-        else
-        {
-			qDb() << "Re-reading metatdata for item" << item->getUrl();
-            item->refresh_metadata();
-
-            if(item->isError())
-            {
-                // Couldn't load the metadata from the file.
-                // Only option here is to return the old item, which should now be marked with an error.
-                qCritical() << "Couldn't load metadata for file" << item->getUrl();
-                retval.m_original_pindexes.push_back(mapitem[0].pindex);
-                retval.m_new_libentries.push_back(item);
-                retval.m_num_tracks_found = 1;
-            }
-            else
-            {
-                // Repackage it and return.
-                retval.m_original_pindexes.push_back(mapitem[0].pindex);
-                retval.m_new_libentries.push_back(item);
-                retval.m_num_tracks_found = 1;
-            }
-        }
-    }
-    else if (mapitem.size() > 1)
-    {
-        // Multiple incoming tracks.
-        std::shared_ptr<LibraryEntry> first_item = mapitem[0].item;
-        first_item->populate(true);
-		auto subtracks = first_item->split_to_tracks();
-        if(subtracks.size() < mapitem.size())
-        {
-            // We got fewer back than we had before.
-            if(subtracks.size() == 1)
-            {
-                // We only got one back.  This means we weren't able to read the file.
-                return retval;
-            }
-            else
-            {
-                // Not sure what exactly we got back.
-                qCritical() << "Unknown response: mapitem.size()==" << mapitem.size() << "subtracks.size()==" << subtracks.size();
-                Q_ASSERT(0);
-            }
-        }
-        for(int i=0; i<mapitem.size(); ++i)
-        {
-            Q_ASSERT(subtracks[i] != nullptr);
-            retval.push_back(mapitem[i].pindex, subtracks[i]);
-        }
-    }
-    else
-    {
-        qCritical() << "GOT EMPTY LIST OF LIBRARY ENTRIES TO RESCAN";
-    }
-
-    return retval;
-}
-#endif
 

@@ -100,6 +100,7 @@ class AbstractTreeModelItem : public virtual ISerializable
 
 public:
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(AbstractTreeModelItem);
+
 	/**
 	 * Default constructor.
 	 * @param parent_item  The AbstractTreeModelItem which is both the owner and "tree-wise" parent of this item.

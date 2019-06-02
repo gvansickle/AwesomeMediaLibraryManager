@@ -374,36 +374,35 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 		{
 			auto result = new_items_future.resultAt(index);
 			const SharedItemContType& new_items_vector_ptr = result;
-			{
-				// Append entries to the ScanResultsTreeModel.
-				for(std::unique_ptr<AbstractTreeModelItem>& entry : *new_items_vector_ptr)
-				{
-					// Make sure the entry wasn't moved from.
-					Q_ASSERT(bool(entry) == true);
 
-					auto new_child = std::make_unique<SRTMItem_LibEntry>();
-					std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(entry->data(1).toString());
+			// Append entries to the ScanResultsTreeModel.
+			for(std::unique_ptr<AbstractTreeModelItem>& entry : *new_items_vector_ptr)
+			{
+				// Make sure the entry wasn't moved from.
+				Q_ASSERT(bool(entry) == true);
+
+				auto new_child = std::make_unique<SRTMItem_LibEntry>();
+				std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(entry->data(1).toString());
 
 M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
-					qDb() << "ADDING TO NEW MODEL:" << M_ID_VAL(&entry) << M_ID_VAL(entry->data(1).toString());
-					lib_entry->populate(true);
+//				qDb() << "ADDING TO NEW MODEL:" << M_ID_VAL(&entry) << M_ID_VAL(entry->data(1).toString());
+				lib_entry->populate(true);
 
-					// Here we're only dealing with the per-file LibraryEntry's.
-					std::vector<std::shared_ptr<LibraryEntry>> lib_entries;
-					lib_entries.push_back(lib_entry);
+				// Here we're only dealing with the per-file LibraryEntry's.
+				std::vector<std::shared_ptr<LibraryEntry>> lib_entries;
+				lib_entries.push_back(lib_entry);
 
-					new_child->setLibraryEntry(lib_entries.at(0));
-					entry->appendChild(std::move(new_child));
-				}
-
-				// Finally, move the new model items to their new home.
-#if 1 // signal
-				tree_model_ptr->appendItems(std::move(*new_items_vector_ptr));
-#else
-				Q_EMIT SIGNAL_StapToTreeModel(std::move(*new_items_vector_ptr));
-#endif
-	//			qDb() << "TREEMODELPTR:" << M_ID_VAL(tree_model_ptr->rowCount());
+				new_child->setLibraryEntry(lib_entries.at(0));
+				entry->appendChild(std::move(new_child));
 			}
+
+			// Finally, move the new model items to their new home.
+#if 1 // signal
+			tree_model_ptr->appendItems(std::move(*new_items_vector_ptr));
+#else
+			Q_EMIT SIGNAL_StapToTreeModel(std::move(*new_items_vector_ptr));
+#endif
+//			qDb() << "TREEMODELPTR:" << M_ID_VAL(tree_model_ptr->rowCount());
 		}
 
 	})
