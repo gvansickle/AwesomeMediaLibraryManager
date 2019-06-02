@@ -28,7 +28,7 @@
 
 /// Qt5
 #include <QObject>
-#include <QElapsedTimer>
+//#include <QElapsedTimer>
 #include <QPersistentModelIndex>
 #include <QFuture>
 #include <QFutureWatcher>
@@ -38,6 +38,7 @@
 #include <concurrency/ExtAsync.h>
 #include "LibraryRescannerMapItem.h"
 #include <logic/models/AbstractTreeModelItem.h>
+#include <utils/Stopwatch.h>
 
 class LibraryModel;
 class LibraryEntry;
@@ -92,7 +93,6 @@ public:
 
 	void startAsyncRescan(QVector<VecLibRescannerMapItems> items_to_rescan);
 
-	QElapsedTimer m_timer;
 	qint64 m_last_elapsed_time_dirscan {0};
 
 public Q_SLOTS:
@@ -135,6 +135,9 @@ private:
 	using SharedItemContType = std::shared_ptr<ItemContType>;
 //	QFutureWatcher<SharedItemContType> m_efwatcher_tree_model_append;
 //	QFutureWatcher<MetadataReturnVal> m_extfuture_watcher_metadata;
+
+	Stopwatch m_timer;
+
 };
 
 

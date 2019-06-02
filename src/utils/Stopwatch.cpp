@@ -27,17 +27,76 @@
 #include <iostream>
 
 
-Stopwatch::Stopwatch(const std::string& being_timed_msg) : m_being_timed_msg(being_timed_msg)
+Stopwatch::Stopwatch()
 {
-	m_start = std::chrono::steady_clock::now();
-	std::cout << "START: " << m_being_timed_msg << std::endl;
+	reset();
+}
+
+Stopwatch::Stopwatch(const std::string& being_timed_msg)
+{
+	start(being_timed_msg);
 }
 
 Stopwatch::~Stopwatch()
 {
-	auto end = std::chrono::steady_clock::now();
+	stop();
+	print_results();
+}
 
-	std::chrono::duration<double> elapsed = end - m_start;
+void Stopwatch::start(const std::string& being_timed_msg)
+{
+	std::scoped_lock sl(m_mutex);
+
+	TSI_reset();
+	m_end = decltype(m_end)::min();
+	m_being_timed_msg = being_timed_msg;
+	m_start = std::chrono::steady_clock::now();
+	std::cout << "START: " << m_being_timed_msg << std::endl;
+}
+
+void Stopwatch::lap(const std::string& lap_marker_str)
+{
+	std::scoped_lock sl(m_mutex);
+
+	lap_marker lm;
+	lm.m_lap_time = std::chrono::steady_clock::now();
+	lm.m_lap_discription = lap_marker_str;
+	m_lap_markers.push_back(lm);
+
+	std::chrono::duration<double> elapsed = lm.m_lap_time - m_start;
+
+	std::cout << "ELAPSED TIME, LAP:" << lm.m_lap_discription << ": " << elapsed.count() << " sec" << std::endl;
+}
+
+void Stopwatch::stop()
+{
+	std::scoped_lock sl(m_mutex);
+
+	m_end = std::chrono::steady_clock::now();
+}
+
+void Stopwatch::reset()
+{
+	std::scoped_lock sl(m_mutex);
+
+	TSI_reset();
+}
+
+void Stopwatch::print_results()
+{
+	std::scoped_lock sl(m_mutex);
+
+	std::chrono::duration<double> elapsed{};
+	if(m_end == decltype(m_end)::min())
+	{
+		// Don't set m_end here, this print could be during the event still being timed.
+		elapsed = std::chrono::steady_clock::now() - m_start;
+	}
+	else
+	{
+		// m_end is set, so whatever was being timed is complete.  Use m_end.
+		elapsed = m_end - m_start;
+	}
 
 	std::cout << "END: " << m_being_timed_msg << std::endl;
 	std::cout << "ELAPSED TIME: " << m_being_timed_msg << ": " << elapsed.count() << " sec" << std::endl;
@@ -50,19 +109,16 @@ Stopwatch::~Stopwatch()
 			std::cout << "LAP " << lap << " DESC: " << lm.m_lap_discription << "\n";
 			std::chrono::duration<double> elapsed = lm.m_lap_time - m_start;
 			std::cout << "LAP " << lap << " TIME: " << elapsed.count() << "\n";
+			lap++;
 		}
 	}
 }
 
-void Stopwatch::lap(const std::string& lap_marker_str)
+void Stopwatch::TSI_reset()
 {
-	lap_marker lm;
-	lm.m_lap_time = std::chrono::steady_clock::now();
-	lm.m_lap_discription = lap_marker_str;
-	m_lap_markers.push_back(lm);
-
-	std::chrono::duration<double> elapsed = lm.m_lap_time - m_start;
-
-	std::cout << "ELAPSED TIME, LAP:" << lm.m_lap_discription << ": " << elapsed.count() << " sec" << std::endl;
+	m_start = decltype(m_start)::min();
+	m_end = decltype(m_end)::max();
+	m_lap_markers.clear();
+	m_being_timed_msg.clear();
 }
 

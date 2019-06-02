@@ -789,6 +789,66 @@ TEST_F(ExtFutureTest, QTBexceptions7)
 ///
 /// @{
 
+// For the next test.  This is a dummy-up of what we're doing with ExtFuture<T> and QFuture<T>.
+static std::string s_test_results_str;
+template<class T>
+class Base
+{
+public:
+	~Base()
+	{
+		s_test_results_str += "~B";
+	}
+};
+
+template <class T>
+class Derived : public Base<T>
+{
+public:
+	virtual ~Derived()
+	{
+		s_test_results_str += "~D";
+	}
+
+	// Extra params.
+	int m_some_int;
+	std::string m_some_string {"Hello From Derived"};
+};
+
+TEST_F(ExtFutureTest, InheritingFromNonvirtualDestructor)
+{
+	TC_ENTER();
+
+	s_test_results_str.clear();
+
+	/// Smart pointers are smart, this works correctly.
+	{
+		std::shared_ptr<Base<int>> tmp = std::make_shared<Derived<int>>();
+	}
+	TCOUT << "shared_ptr<Base<T>> Results:" << s_test_results_str << "\n";
+	EXPECT_STREQ("~D~B", s_test_results_str.c_str());
+
+	/// Raw pointers are not smart, this only calls the Base<T> destructor.
+	s_test_results_str.clear();
+	{
+		Base<int>* tmp = new Derived<int>();
+		delete tmp;
+	}
+	TCOUT << "Base<T>* Results:" << s_test_results_str << "\n";
+	EXPECT_STREQ("~B", s_test_results_str.c_str());
+
+	/// ????????????????? Raw pointers are not smart, this only calls the Base<T> destructor.
+	s_test_results_str.clear();
+	{
+		Derived<int>* tmp = new Derived<int>();
+		delete tmp;
+	}
+	TCOUT << "Derived<T>* Results:" << s_test_results_str << "\n";
+	EXPECT_STREQ("~D~B", s_test_results_str.c_str());
+
+	TC_EXIT();
+}
+
 TEST_F(ExtFutureTest, ReadyFutureCompletion)
 {
     TC_ENTER();

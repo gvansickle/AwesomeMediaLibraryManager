@@ -200,16 +200,15 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 {
     qDb() << "START:" << dir_url;
 
-	Stopwatch sw("############ startAsyncDirectoryTraversal()");
-
 	expect_and_set(0, 1);
 
-	// Time how long it takes.
-	m_timer.start();
+	// Time how long all this takes.
+	m_timer.start("############ startAsyncDirectoryTraversal()");
 
     auto master_job_tracker = MainWindow::master_tracker_instance();
     Q_CHECK_PTR(master_job_tracker);
 
+    // Get a list of the file extensions we're looking for.
     auto extensions = SupportedMimeTypes::instance().supportedAudioMimeTypesAsSuffixStringList();
 
 	// Run the directory scan in another thread.
@@ -223,7 +222,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	// Create/Attach an AMLMJobT to the dirscan future.
 	QPointer<AMLMJobT<ExtFuture<DirScanResult>>> dirtrav_job = make_async_AMLMJobT(dirresults_future, "DirResultsAMLMJob", AMLMApp::instance());
 
-
+	// The future that we'll use to move the LibraryRescannerMapItems to the library_metadata_rescan_task().
 	ExtFuture<VecLibRescannerMapItems> rescan_items_in_future = ExtAsync::make_started_only_future<VecLibRescannerMapItems>();
 
 	ExtFuture<MetadataReturnVal> lib_rescan_future = ExtAsync::qthread_async_with_cnr_future(library_metadata_rescan_task,
@@ -245,7 +244,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	// Create a future so we can attach a continuation to get the results to the main thread.
 	ExtFuture<SharedItemContType> tree_model_item_future = ExtAsync::make_started_only_future<SharedItemContType>();
 
-	sw.lap("End setup, start continuation attachements");
+	m_timer.lap("End setup, start continuation attachements");
 
 	// Attach a streaming tap to the dirscan future.
 	ExtFuture<Unit> tail_future
@@ -349,10 +348,12 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 		qDb() << "FINISHING TREE MODEL FUTURE:" << M_ID_VAL(tree_model_item_future); // == (Running|Started)
 		tree_model_item_future.reportFinished();
 		qDb() << "FINISHED TREE MODEL FUTURE:" << M_ID_VAL(tree_model_item_future); // == (Started|Finished)
+		m_timer.lap("Finished tree_model_item_future");
 
 		qDb() << "FINISHING:" << M_ID_VAL(qurl_future);
 		qurl_future.reportFinished();
 		qDb() << "FINISHED:" << M_ID_VAL(qurl_future);
+		m_timer.lap("Finished qurl_future");
 	});
 
 #if 1
@@ -438,8 +439,9 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 	        {
 	            // Succeeded, but we may still have outgoing filenames in flight.
 	            qIn() << "DIRTRAV SUCCEEDED";
-	            m_last_elapsed_time_dirscan = m_timer.elapsed();
-	            qIn() << "Directory scan took" << m_last_elapsed_time_dirscan << "ms";
+	            m_timer.lap("DirTrav succeeded");
+	            qIn() << "Directory scan time params:";
+	            m_timer.print_results();
 
 		        // Save the database out to XML.
 		        QString database_filename = QDir::homePath() + "/AMLMDatabase.xml";
@@ -597,7 +599,7 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 M_TODO("????");
 //	dirtrav_job->start();
 
-sw.lap("Leaving startAsyncDirTrav");
+	m_timer.lap("Leaving startAsyncDirTrav");
 
 	qDb() << "LEAVING" << __func__ << ":" << dir_url;
 }

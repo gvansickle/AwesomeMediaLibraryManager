@@ -27,19 +27,32 @@
 #include <chrono>
 #include <string>
 #include <vector>
+#include <mutex>
 
 /**
- * Scoped Elapsed time timer, mostly for debug purposes.
+ * Threadsafe, scoped Elapsed time timer, mostly for debug purposes.
  */
 class Stopwatch
 {
 public:
+	explicit Stopwatch();
 	explicit Stopwatch(const std::string& being_timed_msg);
 	virtual ~Stopwatch();
 
+	void start(const std::string& being_timed_msg);
+
 	void lap(const std::string& lap_marker_str);
 
+	void stop();
+	/// Threadsafe Interface pattern, public interface to the internal reset functionality in TSI_reset().
+	void reset();
+
+	void print_results();
+
 private:
+	/// Threadsafe Interface pattern, internal reset.
+	void TSI_reset();
+
 
 	struct lap_marker
 	{
@@ -47,7 +60,10 @@ private:
 		std::string m_lap_discription;
 	};
 
+	std::mutex m_mutex;
+
 	std::chrono::steady_clock::time_point m_start;
+	std::chrono::steady_clock::time_point m_end;
 	std::string m_being_timed_msg;
 	std::vector<lap_marker> m_lap_markers;
 };
