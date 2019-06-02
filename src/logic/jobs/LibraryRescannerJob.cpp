@@ -32,53 +32,6 @@
 #include <utils/TheSimplestThings.h>
 #include "LibraryModel.h"
 
-#if 0
-
-LibraryRescannerJob::LibraryRescannerJob(QObject* parent) : AMLMJobT(parent)
-{
-    // Set our object name.
-    setObjectName(uniqueQObjectName());
-
-	/// @todo This should be coming through the ExtFuture.
-	setProgressUnit(KJob::Unit::Files);
-
-    // Set our capabilities.
-    setCapabilities(KJob::Capability::Killable | KJob::Capability::Suspendable);
-}
-
-LibraryRescannerJobPtr LibraryRescannerJob::make_job(QObject *parent)
-{
-    auto retval = new LibraryRescannerJob(parent);
-    /// @todo Hook things up in here.
-
-    return retval;
-}
-
-LibraryRescannerJobPtr LibraryRescannerJob::make_job(QObject *parent, LibraryRescannerMapItem item_to_refresh,
-                                                     const LibraryModel* current_libmodel)
-{
-    auto retval = new LibraryRescannerJob(parent);
-
-    QVector<VecLibRescannerMapItems> vec_vec_items_to_refresh;
-    VecLibRescannerMapItems vec_items_to_refresh;
-    vec_items_to_refresh.push_back(item_to_refresh);
-    vec_vec_items_to_refresh.push_back(vec_items_to_refresh);
-
-    retval->setDataToMap(vec_vec_items_to_refresh, current_libmodel);
-
-    return retval;
-}
-
-void LibraryRescannerJob::setDataToMap(QVector<VecLibRescannerMapItems> items_to_rescan,
-                                                        const LibraryModel* current_libmodel)
-{
-    m_items_to_rescan = items_to_rescan;
-    m_current_libmodel = current_libmodel;
-}
-
-#endif
-
-
 MetadataReturnVal refresher_callback(const VecLibRescannerMapItems &mapitem)
 {
 	qDebug() << "Current thread:" << QThread::currentThread()->objectName();

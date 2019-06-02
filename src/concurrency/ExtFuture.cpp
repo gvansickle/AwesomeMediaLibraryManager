@@ -155,6 +155,7 @@ template class ExtFuture<Unit>;
 template class ExtFuture<bool>;
 template class ExtFuture<int>;
 template class ExtFuture<long>;
+template class ExtFuture<unsigned>;
 template class ExtFuture<unsigned long>;
 template class ExtFuture<unsigned long long>;
 template class ExtFuture<std::string>;

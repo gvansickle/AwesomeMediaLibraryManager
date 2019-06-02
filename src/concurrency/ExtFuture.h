@@ -489,7 +489,7 @@ public:
 		}
 	}
 
-	inline void reportResults(const ExtFuture<T> &ef, int begin_index = -1, int end_index = -1)
+	void reportResults(const ExtFuture<T> &ef, int begin_index = -1, int end_index = -1)
 	{
 		if(begin_index == -1)
 		{
