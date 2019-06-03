@@ -175,6 +175,7 @@ namespace ManagedExtFutureWatcher_detail
 
 		// Move the watcher to the backprop thread.
 		/// @note Per Qt5: "The object cannot be moved if it has a parent."
+		/// @note Note that we do not have an event loop in the bp_thread.
 //		Q_ASSERT(bp_thread->eventDispatcher() != nullptr);
 		watcher->moveToThread(bp_thread);
 
@@ -182,11 +183,6 @@ namespace ManagedExtFutureWatcher_detail
 		// We'll give it one.
 		Q_ASSERT(fwp != nullptr);
 		watcher->setParent(fwp);
-//		bool status = ExtAsync::detail::run_in_event_loop_and_wait_for_results(watcher, [=](){
-//			watcher->setParent(fwp);
-//			return true;
-//		});
-//		Q_ASSERT(status == true);
 		Q_ASSERT(watcher->parent() != nullptr);
 		Q_ASSERT(fwp->thread() == watcher->thread());
 //		qDb() << "FutureWatcher" << watcher << "has parent:" << watcher->parent();
@@ -241,7 +237,7 @@ namespace ManagedExtFutureWatcher_detail
 		// Note that the signals above may fire immediately upon the setFuture().
 		if(down.has_exception())
 		{
-			qWr() << "ABOUT TO SET EXCEPTION FUTURE:" << down;
+			qWr() << "ABOUT TO SET WATCHER ON EXCEPTION FUTURE:" << down;
 		}
 		fw_down->setFuture(down);
 	}

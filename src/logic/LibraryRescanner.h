@@ -86,6 +86,7 @@ class LibraryRescanner : public QObject
 Q_SIGNALS:
 
 //	void SIGNAL_StapToTreeModel(std::vector<std::unique_ptr<AbstractTreeModelItem>> new_items);
+	void SIGNAL_FileUrlQString(QString);
 
 public:
 	explicit LibraryRescanner(LibraryModel* parent);

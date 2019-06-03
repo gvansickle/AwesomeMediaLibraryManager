@@ -317,7 +317,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 		// Got all the ready results, send them to the model(s).
 		// Because of Qt5's model/view system not being threadsafeable, we have to do at least the final
 		// model item entry from the GUI thread.
-		qIn() << "Sending" << new_items->size() << "scan results to models";
+//		qIn() << "Sending" << new_items->size() << "scan results to models";
 
         /// @todo Obsoleting... very... slowly.
 		for(const std::unique_ptr<AbstractTreeModelItem>& entry : *new_items)
@@ -450,8 +450,9 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 
 		        Q_ASSERT(m_model_ready_to_save_to_db == true);
 		        m_model_ready_to_save_to_db = false;
-
+				m_timer.lap("Start of SaveDatabase");
 		        SaveDatabase(tree_model_ptr, database_filename);
+				m_timer.lap("End of SaveDatabase");
 
 
 /// @todo EXPERIMENTAL
@@ -584,6 +585,16 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 			m_current_libmodel->SLOT_onIncomingFilename(url_str);
 		}
 	});
+#elif 1
+	auto* efw = ManagedExtFutureWatcher_detail::get_managed_qfuture_watcher<QString>();
+	connect_or_die(efw, &QFutureWatcher<QString>::resultReadyAt, efw, [=](int i){
+			/// @todo Maybe coming in out of order.
+			QString url_str = qurl_future.resultAt(i);
+			Q_EMIT SIGNAL_FileUrlQString(url_str);
+	});
+	connect_or_die(this, &LibraryRescanner::SIGNAL_FileUrlQString, m_current_libmodel, &LibraryModel::SLOT_onIncomingFilename);
+	/// @todo Self-destruct.
+	efw->setFuture(qurl_future);
 #else
 	qurl_future.then(this, [=](ExtFuture<QString> ef){
 		Q_ASSERT(ef.isFinished());

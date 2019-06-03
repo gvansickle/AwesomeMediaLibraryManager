@@ -95,6 +95,7 @@ namespace ExtAsync
 		template <class CallableType, class R = std::invoke_result_t<CallableType>>
 		R run_in_event_loop_and_wait_for_results(QObject* context, CallableType&& callable)
 		{
+			Q_ASSERT_X(0, "", "THIS DOESN'T WORK");
 			R retval;
 			bool succeeded = QMetaObject::invokeMethod(context, FWD_DECAY_COPY(CallableType, callable), &retval);
 			Q_ASSERT(succeeded == true);
