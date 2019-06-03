@@ -148,7 +148,9 @@ void library_metadata_rescan_task(ExtFuture<MetadataReturnVal> ext_future, AMLMJ
                                 QPair<QString,QString>(QObject::tr("Current file"), QObject::tr("")));
 
 	// Wait for the work to come in.
+	qDb() << "Waiting for incoming items";
 	QList<VecLibRescannerMapItems> items_to_rescan = in_future.get();
+	qDb() << "Got items:" << items_to_rescan.size() << in_future;
 
 	/// @todo
 	//setTotalAmountAndSize(KJob::Unit::Files, m_items_to_rescan.size());

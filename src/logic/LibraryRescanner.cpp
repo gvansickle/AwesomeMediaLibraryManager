@@ -330,15 +330,17 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 		/// @note passing a shared_ptr to a vector of unique_ptrs between threads.
 		tree_model_item_future.reportResult(new_items);
 
-		qDb() << "END OF DSR TAP:" << M_ID_VAL(tree_model_item_future);
+//		qDb() << "END OF DSR TAP:" << M_ID_VAL(tree_model_item_future);
 	}) // returns ExtFuture<DirScanResult> tail_future.
 	.then([=](ExtFuture<DirScanResult> fut_ignored) -> Unit {
 		// The dirscan is complete.
 		qDb() << "DIRSCAN COMPLETE .then()";
+
 		return unit;
 	})
 	/// @then Finish the two output futures.
 	.then([=, tree_model_item_future=tree_model_item_future](ExtFuture<Unit> future) mutable {
+
 		// Finish a couple futures we started in this, and since this is done, there should be no more
 		// results coming for them.
 
@@ -573,6 +575,7 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 	// Hook up future watchers.
 	//
 
+#if 0
 	qurl_future.stap(this, [=](ExtFuture<QString> ef, int begin_index, int end_index) {
 		for(int i = begin_index; i<end_index; ++i)
 		{
@@ -581,6 +584,22 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 			m_current_libmodel->SLOT_onIncomingFilename(url_str);
 		}
 	});
+#else
+	qurl_future.then(this, [=](ExtFuture<QString> ef){
+		Q_ASSERT(ef.isFinished());
+		qDb() << "ENTERED qurl_future.then()" << ef;
+		m_timer.lap("Start of qurl_future.then()");
+		int begin_index = 0;
+		int end_index = ef.resultCount();
+		for(int i = begin_index; i<end_index; ++i)
+		{
+			/// @todo Maybe coming in out of order.
+			QString url_str = ef.resultAt(i);
+			m_current_libmodel->SLOT_onIncomingFilename(url_str);
+		}
+		m_timer.lap("End of qurl_future.then()");
+	});
+#endif
 
 
 	lib_rescan_future.stap(this, [=](ExtFuture<MetadataReturnVal> ef, int begin, int end){
