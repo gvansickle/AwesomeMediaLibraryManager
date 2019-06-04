@@ -98,9 +98,7 @@ protected:
 };
 
 
-class SRTMItem_LibEntry :
-		public ScanResultsTreeModelItem
-//		public clone_inherit<SRTMItem_LibEntry, virtual_inherit_from<ScanResultsTreeModelItem>>
+class SRTMItem_LibEntry : public ScanResultsTreeModelItem
 {
 	using BASE_CLASS = ScanResultsTreeModelItem;
 

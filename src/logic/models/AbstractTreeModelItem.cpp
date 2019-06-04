@@ -67,7 +67,7 @@
 #include <logic/UUIncD.h>
 
 AbstractTreeModelItem::AbstractTreeModelItem(AbstractTreeModelItem* parent_item)
-	: m_uuincid(UUIncD::create()), m_parent_item(parent_item)
+	: m_uuincid(UUIncD::create()), m_parent_item(parent_item->shared_from_this())
 {
 }
 
@@ -85,7 +85,7 @@ M_WARNING("FIXME: Both these are virtual calls");
 
 /// Debug streaming implementation.
 #define M_DATASTREAM_FIELDS(X) \
-    X(m_parent_item)\
+	X(m_parent_item.lock())\
     /*X(m_item_data)*/\
     X(m_child_items.size())
 
@@ -131,12 +131,17 @@ int AbstractTreeModelItem::childCount() const
  */
 int AbstractTreeModelItem::childNumber() const
 {
-	if (m_parent_item != nullptr)
+	if (auto shpt = m_parent_item.lock())
 	{
 //		return stdex::indexOf(m_parent_item->m_child_items, this);
-		auto iter = std::find_if(m_parent_item->m_child_items.cbegin(), m_parent_item->m_child_items.cend(),
+		auto iter = std::find_if(shpt->m_child_items.cbegin(), shpt->m_child_items.cend(),
 				[=](const auto& unptr){ return unptr.get() == this; });
-		return iter - m_parent_item->m_child_items.cbegin();
+		return iter - shpt->m_child_items.cbegin();
+	}
+	else
+	{
+		/// @note Expired parent item.
+		Q_ASSERT(0);
 	}
 
     return 0;
@@ -205,12 +210,12 @@ bool AbstractTreeModelItem::insertColumns(int insert_before_column, int num_colu
     return true;
 }
 
-AbstractTreeModelItem* AbstractTreeModelItem::parent()
+std::weak_ptr<AbstractTreeModelItem> AbstractTreeModelItem::parent()
 {
 	return m_parent_item;
 }
 
-const AbstractTreeModelItem* AbstractTreeModelItem::parent() const
+const std::weak_ptr<AbstractTreeModelItem> AbstractTreeModelItem::parent() const
 {
 	return m_parent_item;
 }
@@ -304,7 +309,7 @@ bool AbstractTreeModelItem::appendChildren(std::vector<std::unique_ptr<AbstractT
     /// @todo Support adding new columns if children have them?
     for(auto& child : new_children)
     {
-        child->setParentItem(this);
+		child->setParentItem(this->shared_from_this());
         m_child_items.emplace_back(std::move(child));
     }
 
@@ -320,10 +325,10 @@ bool AbstractTreeModelItem::appendChild(std::unique_ptr<AbstractTreeModelItem> n
 	return appendChildren(std::move(new_children));
 }
 
-void AbstractTreeModelItem::setParentItem(AbstractTreeModelItem *parent_item)
+void AbstractTreeModelItem::setParentItem(std::shared_ptr<AbstractTreeModelItem> parent_item)
 {
 //	Q_ASSERT(parent_item != nullptr);
-    AMLM_WARNIF(m_parent_item != nullptr);
+	AMLM_WARNIF(m_parent_item.expired());
 //	AMLM_WARNIF(m_parent_item->columnCount() != this->columnCount());
 
 	m_parent_item = parent_item;

@@ -76,7 +76,7 @@ AbstractTreeModel::AbstractTreeModel(QObject* parent) : QAbstractItemModel(paren
 {
 	auto horizontal_header_item = new AbstractTreeModelHeaderItem();
 
-	m_root_item = new AbstractTreeModelHeaderItem(this, horizontal_header_item);
+	m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(this, horizontal_header_item);
 }
 
 AbstractTreeModel::~AbstractTreeModel()
@@ -219,7 +219,7 @@ QModelIndex AbstractTreeModel::parent(const QModelIndex &index) const
 	}
 
     AbstractTreeModelItem *childItem = getItem(index);
-    AbstractTreeModelItem *parentItem = childItem->parent();
+	std::shared_ptr<AbstractTreeModelItem> parentItem = childItem->parent().lock();
 
 	if (parentItem == m_root_item)
 	{

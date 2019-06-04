@@ -226,7 +226,7 @@ protected:
 
     /// Hidden root node of the tree model.
     /// Pulls double duty as the horizontal header item.
-	AbstractTreeModelHeaderItem* m_root_item;
+	std::shared_ptr<AbstractTreeModelHeaderItem> m_root_item;
 };
 
 

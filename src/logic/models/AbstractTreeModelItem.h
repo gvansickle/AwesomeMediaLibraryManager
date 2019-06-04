@@ -76,7 +76,7 @@
 
 // Std C++
 #include <memory>
-#include <vector>
+#include <deque>
 
 // Qt5
 #include <QList>
@@ -95,7 +95,7 @@
  * Base class for AbstractItemTreeModel items.
  * @note Not derived from QObject.
  */
-class AbstractTreeModelItem : public virtual ISerializable
+class AbstractTreeModelItem : public virtual ISerializable, public virtual std::enable_shared_from_this<AbstractTreeModelItem>
 {
 
 public:
@@ -146,9 +146,9 @@ public:
     virtual bool insertColumns(int insert_before_column, int num_columns);
 
     /// Returns a pointer to this item's parent.
-    AbstractTreeModelItem *parent();
+	std::weak_ptr<AbstractTreeModelItem> parent();
 	/// Returns a const pointer to this item's parent.
-	const AbstractTreeModelItem *parent() const;
+	const std::weak_ptr<AbstractTreeModelItem> parent() const;
 
 	/**
 	 * Remove and delete the @a count children starting at @a position.
@@ -185,7 +185,7 @@ protected:
 
     /// Sets this item's parent item to parent_item.
     /// Primarily for use in appendChildren().
-    virtual void setParentItem(AbstractTreeModelItem* parent_item);
+	virtual void setParentItem(std::shared_ptr<AbstractTreeModelItem> parent_item);
 
 	/**
 	 * Non-virtual Interface factory function for creating default-constructed child nodes.
@@ -208,19 +208,18 @@ protected:
 	virtual bool derivedClassRemoveColumns(int first_column_to_remove, int num_columns) = 0;
 	/// @}
 
-private:
-
 	/// Our guaranteed-to-be unique-to-this-run-of-the-program numeric ID.
 	UUIncD m_uuincid;
+
+private:
 
 	/// Pointer to our parent AbstractTreeModelItem.
 	/// For items in a tree model (i.e. not being copy/pasted or mid-construction), this will always
 	/// be non-null as long as this item is not the invisible root item.
-	AbstractTreeModelItem *m_parent_item { nullptr };
+	std::weak_ptr<AbstractTreeModelItem> m_parent_item;
 
-	/// Vector of child items.
-	/// This item owns its children for memory-management purposes.
-	std::vector<std::unique_ptr<AbstractTreeModelItem>> m_child_items;
+	/// Deque of shared_ptr's to child items.
+	std::deque<std::shared_ptr<AbstractTreeModelItem>> m_child_items;
 
 	/// @note AbstractTreeModelItem contains no data members for actual item data.
 	/// Any actual item data beyond the child items is the responsibility of derived classes.
