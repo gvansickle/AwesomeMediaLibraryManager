@@ -1402,28 +1402,6 @@ public:
 
 protected:
 
-#if 0
-	/**
-	 * TapHelper which calls tap_callback whenever there's a new result ready.
-	 * @param guard_qobject
-	 * @param tap_callback   callable with signature void(*)(T)
-	 * @return
-	 */
-	template <typename F,
-		REQUIRES(ct::is_invocable_r_v<void, F, T>)
-		>
-	ExtFuture<T> TapHelper(QObject *guard_qobject, F&& tap_callback)
-	{
-		return StreamingTapHelper(guard_qobject, [=, tap_cb = DECAY_COPY(tap_callback)](ExtFuture<T> f, int begin, int end) {
-			Q_ASSERT(f.isStarted());
-//			Q_ASSERT(!f.isFinished());
-			for(auto i = begin; i < end; ++i)
-			{
-				std::invoke(tap_cb, f.resultAt(i));
-			}
-		});
-	}
-#endif
 	/// @name Additional member variables on top of what QFuture<T> has.
 	/// These will cause us to need to worry about slicing, additional copy construction/assignment work
 	/// which needs to be synchronized somehow, etc etc.
@@ -1547,6 +1525,7 @@ extern template class ExtFuture<bool>;
 extern template class ExtFuture<int>;
 extern template class ExtFuture<long>;
 extern template class ExtFuture<long long>;
+extern template class ExtFuture<unsigned int>;
 extern template class ExtFuture<unsigned long>;
 extern template class ExtFuture<unsigned long long>;
 extern template class ExtFuture<std::string>;

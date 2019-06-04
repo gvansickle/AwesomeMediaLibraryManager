@@ -23,13 +23,11 @@
 
 /// Qt5
 #include <QVector>
-#include <QWeakPointer>
-#include <QSharedPointer>
 
 /// Ours
 #include "LibraryRescannerMapItem.h"
 #include "LibraryRescanner.h" ///< For MetadataReturnVal
-#include <concurrency/AMLMJobT.h>
+
 
 class LibraryModel;
 

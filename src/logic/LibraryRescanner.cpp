@@ -392,10 +392,7 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 				lib_entry->populate(true);
 
 				// Here we're only dealing with the per-file LibraryEntry's.
-				std::vector<std::shared_ptr<LibraryEntry>> lib_entries;
-				lib_entries.push_back(lib_entry);
-
-				new_child->setLibraryEntry(lib_entries.at(0));
+				new_child->setLibraryEntry(lib_entry);
 				entry->appendChild(std::move(new_child));
 			}
 
