@@ -21,32 +21,39 @@
 #include <QDebug>
 #include "WorkerThreadBase.h"
 
-
-WorkerThreadBase::WorkerThreadBase(QObject *parent) : QObject(parent)
-{
-	/// @warning We're still in the creating thread in the constructor here.
-	/// Don't allocate anything from the heap, and be aware of this if you allocate anything else.
-}
-
-WorkerThreadBase::~WorkerThreadBase()
+namespace ExtAsync
 {
 
-}
+//WorkerThreadBase::WorkerThreadBase(/*QObject *parent*/) : QObject(parent)
+//{
+//	/// @warning We're still in the creating thread in the constructor here.
+//	/// Don't allocate anything from the heap, and be aware of this if you allocate anything else.
+//}
+
+//WorkerThreadBase::~WorkerThreadBase()
+//{
+
+//}
 
 
-void WorkerThreadBase::moveToThread(QThread *targetThread)
-{
-	qDebug() << "Current thread is:" << this->thread();
-	qDebug() << "Moving to thread:" << targetThread;
-    this->QObject::moveToThread(targetThread);
-	qDebug() << "Current thread is:" << this->thread();
-    connectDefaultSignals(targetThread);
-}
+//void WorkerThreadBase::moveToThread(QThread *targetThread)
+//{
+//	qDebug() << "Current thread is:" << this->thread();
+//	qDebug() << "Moving to thread:" << targetThread;
+//    this->QObject::moveToThread(targetThread);
+//	qDebug() << "Current thread is:" << this->thread();
+//    connectDefaultSignals(targetThread);
+//}
 
-void WorkerThreadBase::WorkerStarted()
-{
-    qWarning() << "WorkerStarted() slot was not overridden in derived class";
-}
+//void WorkerThreadBase::WorkerStarted()
+//{
+//    qWarning() << "WorkerStarted() slot was not overridden in derived class";
+//}
+
+//void WorkerThreadBase::WorkerFinished()
+//{
+//	qWarning() << "WorkerFinished() slot was not overridden in derived class";
+//}
 
 void WorkerThreadBase::quit()
 {
@@ -54,14 +61,5 @@ void WorkerThreadBase::quit()
 	Q_EMIT finished();
 }
 
-void WorkerThreadBase::connectDefaultSignals(QThread *targetThread)
-{
-    connect(targetThread, &QThread::started, this, &WorkerThreadBase::WorkerStarted);
-    // When work is done, tell the QThread to quit.
-    connect(this, &WorkerThreadBase::finished, targetThread, &QThread::quit);
-    // ...and also tell the infrastructure to delete us later.
-    connect(this, &WorkerThreadBase::finished, this, &WorkerThreadBase::deleteLater);
-    // Tell the thread to delete itself when it is finally shut down.
-    connect(targetThread, &QThread::finished, targetThread, &QThread::deleteLater);
-}
 
+} // End ns

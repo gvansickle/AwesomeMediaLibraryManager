@@ -37,6 +37,7 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	ThreadsafeMap.h
 	DebugSequence.h
 	WorkerThreadBase.h
+	WorkerThreadControllerBase.h
 	)
 set(PRIVATE_HEADER_FILES_UTILS_CONCURRENCY
 	impl/IExecutor.h
@@ -67,6 +68,7 @@ set(SOURCE_FILES_UTILS_CONCURRENCY
 	ThreadsafeMap.cpp
 	DebugSequence.cpp
 	WorkerThreadBase.cpp
+	WorkerThreadControllerBase.cpp
 	)
 
 target_sources_local(concurrency

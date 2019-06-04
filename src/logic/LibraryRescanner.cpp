@@ -413,6 +413,7 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 	.then([&](ExtFuture<SharedItemContType> f){
 		Q_ASSERT(m_model_ready_to_save_to_db == false);
 		m_model_ready_to_save_to_db = true;
+		m_timer.lap("TreeModelItems stap() finished.");
 		return unit;
 	})
 	.then(qApp, [=,
@@ -422,6 +423,8 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 		  ](ExtFuture<Unit> future_unit) mutable {
 
 			AMLM_ASSERT_IN_GUITHREAD();
+
+			m_timer.lap("GUI Thread dirtrav over start.");
 
 			expect_and_set(3, 4);
 
@@ -527,6 +530,7 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 #endif
 	/// @todo EXPERIMENTAL
 
+			m_timer.lap("GUI Thread dirtrav over partial, starting metadata rescan.");
 
 #if 1
             // Directory traversal complete, start rescan.
@@ -549,6 +553,8 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 				/// Start the metadata rescan.
 				rescan_items_in_future.set_values(rescan_items);
 				rescan_items_in_future.reportFinished();
+
+				m_timer.lap("GUI Thread dirtrav over partial, metadata rescan complete.");
 
 				// Start the metadata scan.
 				qDb() << "STARTING RESCAN";
