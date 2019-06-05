@@ -101,29 +101,21 @@ QDebug operator<<(QDebug dbg, const AbstractTreeModelItem& obj)
 	return dbg;
 }
 
-AbstractTreeModelItem* AbstractTreeModelItem::child(int number)
+std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::child(int row)
 {
-	if(number >= childCount())
-	{
-		qWr() << "### CHILD INDEX OUT OF RANGE:" << number;
-		Q_ASSERT(0);
-		return nullptr;
-	}
+	Q_ASSERT_X(row >= 0 && row < m_child_items.size(), __func__, "Child row out of range.");
+
+	auto it = m_child_items.cbegin();
+	std::advance(it, row);
 
 	/// @note .value() here returns a default constructed AbstractTreeModelItem which is not added to the QVector.
 	/// @todo This seems all kinds of wrong, should probably return a nullptr or assert or something.
-	return m_child_items[number].get();
+	return *it;
 }
 
-const AbstractTreeModelItem* AbstractTreeModelItem::child(int number) const
+const std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::child(int row) const
 {
-	if(number >= childCount())
-	{
-		qWr() << "### CHILD INDEX OUT OF RANGE:" << number;
-		Q_ASSERT(0);
-		return nullptr;
-	}
-	return m_child_items[number].get();
+	return child(row);
 }
 
 
@@ -327,7 +319,7 @@ bool AbstractTreeModelItem::appendChildren(std::vector<std::unique_ptr<AbstractT
 	return true;
 }
 
-bool AbstractTreeModelItem::appendChild(std::unique_ptr<AbstractTreeModelItem> new_child)
+bool AbstractTreeModelItem::appendChild(std::shared_ptr<AbstractTreeModelItem> new_child)
 {
 	std::vector<std::unique_ptr<AbstractTreeModelItem>> new_children;
 

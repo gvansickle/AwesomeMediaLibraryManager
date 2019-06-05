@@ -124,7 +124,7 @@ QVariant AbstractTreeModel::data(const QModelIndex &index, int role) const
 	}
 
     // Get a pointer to the indexed item.
-    AbstractTreeModelItem *item = getItem(index);
+	auto item = getItemById(UUIncD(index.internalId()));
 
     return item->data(index.column());
 }
@@ -180,17 +180,27 @@ QVariant AbstractTreeModel::headerData(int section, Qt::Orientation orientation,
 
 QModelIndex AbstractTreeModel::index(int row, int column, const QModelIndex &parent) const
 {
-    if (parent.isValid() && parent.column() != 0)
+	std::shared_ptr<AbstractTreeModelItem> parent_item;
+
+	if(!parent.isValid())
+	{
+		parent_item = m_root_item;
+	}
+	else
+	{
+		parent_item = getItemById(UUIncD(parent.internalId()));
+	}
+
+	if (row >= parent_item->childCount())
 	{
         return QModelIndex();
 	}
 
-    AbstractTreeModelItem *parentItem = getItem(parent);
+	std::shared_ptr<AbstractTreeModelItem> childItem = parent_item->child(row);
 
-    AbstractTreeModelItem *childItem = parentItem->child(row);
-	if(childItem != nullptr)
+	if(childItem)
 	{
-        return createIndex(row, column, childItem);
+		return createIndex(row, column, quintptr(childItem->getId()));
 	}
     else
 	{

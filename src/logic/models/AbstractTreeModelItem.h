@@ -114,11 +114,11 @@ public:
     /// @returns If @a number is not valid, a pointer to a default constructed AbstractTreeModelItem,
     /// 			which is not added to the QVector.
 	/// @todo That seems all kinds of wrong, should probably return a nullptr or throw or something.
-	AbstractTreeModelItem* child(int number);
+	std::shared_ptr<AbstractTreeModelItem> child(int number);
 
 	/// @copydoc AbstractTreeModelItem::child(int)
 	/// Const version.
-	const AbstractTreeModelItem* child(int number) const;
+	const std::shared_ptr<AbstractTreeModelItem> child(int number) const;
 
     /// @returns The number of children this item has.
     virtual int childCount() const;
@@ -171,7 +171,7 @@ public:
 	 * @return
 	 */
 	bool appendChildren(std::vector<std::unique_ptr<AbstractTreeModelItem>> new_children);
-	bool appendChild(std::unique_ptr<AbstractTreeModelItem> new_child);
+	bool appendChild(std::shared_ptr<AbstractTreeModelItem> new_child);
 
 	/// @name Serialization
 	/// These are from the ISerializable interface.
