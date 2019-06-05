@@ -27,6 +27,11 @@ UUIncD::UUIncD(std::uint64_t id)
 }
 
 // static
+UUIncD::UUIncD(quintptr qmodelindex_int_id)
+{
+	m_my_id = qmodelindex_int_id;
+}
+
 UUIncD UUIncD::create()
 {
 	return UUIncD(UUIncD::m_next_id.fetch_add(1));

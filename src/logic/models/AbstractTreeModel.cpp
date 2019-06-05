@@ -81,7 +81,7 @@ AbstractTreeModel::AbstractTreeModel(QObject* parent) : QAbstractItemModel(paren
 
 AbstractTreeModel::~AbstractTreeModel()
 {
-	delete m_root_item;
+	m_root_item.reset();
 }
 
 bool AbstractTreeModel::setColumnSpecs(std::initializer_list<QString> column_specs)
@@ -139,17 +139,31 @@ Qt::ItemFlags AbstractTreeModel::flags(const QModelIndex &index) const
     return Qt::ItemIsEditable | QAbstractItemModel::flags(index);
 }
 
-AbstractTreeModelItem* AbstractTreeModel::getItem(const QModelIndex &index) const
+//AbstractTreeModelItem* AbstractTreeModel::getItem(const QModelIndex &index) const
+//{
+//	if (index.isValid())
+//	{
+//        AbstractTreeModelItem *item = static_cast<AbstractTreeModelItem*>(index.internalPointer());
+//		if (item != nullptr)
+//		{
+//            return item;
+//		}
+//    }
+//	/// @todo This might want to be an assert() due to invalid index.
+//	return m_root_item;
+//}
+
+std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getItemById(const UUIncD& id) const
 {
-	if (index.isValid())
+	if(id == m_root_item->getId())
 	{
-        AbstractTreeModelItem *item = static_cast<AbstractTreeModelItem*>(index.internalPointer());
-		if (item != nullptr)
-		{
-            return item;
-		}
-    }
-	/// @todo This might want to be an assert() due to invalid index.
+		return m_root_item;
+	}
+	return m_model_item_map.at(id).lock();
+}
+
+std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getRootItem() const
+{
 	return m_root_item;
 }
 
@@ -218,15 +232,17 @@ QModelIndex AbstractTreeModel::parent(const QModelIndex &index) const
         return QModelIndex();
 	}
 
-    AbstractTreeModelItem *childItem = getItem(index);
+	std::shared_ptr<AbstractTreeModelItem> childItem = getItemById(static_cast<UUIncD>(index.internalId()));
 	std::shared_ptr<AbstractTreeModelItem> parentItem = childItem->parent().lock();
+
+	Q_ASSERT(parentItem);
 
 	if (parentItem == m_root_item)
 	{
 		return QModelIndex();
 	}
 
-    return createIndex(parentItem->childNumber(), 0, parentItem);
+	return createIndex(parentItem->childNumber(), 0, quintptr(parentItem->getId()));
 }
 
 bool AbstractTreeModel::removeColumns(int position, int columns, const QModelIndex& parent_model_index)

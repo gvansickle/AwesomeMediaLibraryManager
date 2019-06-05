@@ -151,6 +151,11 @@ public:
 	const std::weak_ptr<AbstractTreeModelItem> parent() const;
 
 	/**
+	 * Return the UUIncD of this item.
+	 */
+	UUIncD getId() const;
+
+	/**
 	 * Remove and delete the @a count children starting at @a position.
 	 */
     bool removeChildren(int position, int count);

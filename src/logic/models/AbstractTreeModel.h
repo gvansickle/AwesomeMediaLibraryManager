@@ -59,6 +59,7 @@
 // Std C++
 #include <memory>
 #include <vector>
+#include <map>
 
 // Qt5
 #include <QAbstractItemModel>
@@ -70,6 +71,7 @@ class AbstractTreeModelItem;
 class AbstractHeaderSection;
 class AbstractTreeModelHeaderItem;
 #include <logic/serialization/ISerializable.h>
+#include <logic/UUIncD.h>
 
 
 /**
@@ -193,7 +195,10 @@ public:
 	virtual bool appendItems(std::vector<std::unique_ptr<AbstractTreeModelItem>> new_items, const QModelIndex &parent = QModelIndex());
 	virtual bool appendItem(std::unique_ptr<AbstractTreeModelItem> new_items, const QModelIndex &parent = QModelIndex());
 
-	AbstractTreeModelItem* getItem(const QModelIndex &index) const;
+//	[[deprecated]] AbstractTreeModelItem* getItem(const QModelIndex &index) const;
+
+	std::shared_ptr<AbstractTreeModelItem> getItemById(const UUIncD &id) const;
+	std::shared_ptr<AbstractTreeModelItem> getRootItem() const;
 
 	/// @name Serialization, from ISerializable.
 	/// Remember to override these in derived classes.
@@ -227,6 +232,11 @@ protected:
     /// Hidden root node of the tree model.
     /// Pulls double duty as the horizontal header item.
 	std::shared_ptr<AbstractTreeModelHeaderItem> m_root_item;
+
+	/**
+	 * Map of UUIncD's to AbstractTreeItems.
+	 */
+	std::map<UUIncD, std::weak_ptr<AbstractTreeModelItem>> m_model_item_map;
 };
 
 

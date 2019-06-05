@@ -89,11 +89,17 @@ M_WARNING("FIXME: Both these are virtual calls");
     /*X(m_item_data)*/\
     X(m_child_items.size())
 
-#define X(field) << obj.field
-QTH_DEFINE_QDEBUG_OP(AbstractTreeModelItem,
-							 M_DATASTREAM_FIELDS(X)
-                     );
-#undef X
+//#define X(field) << obj.field
+//QTH_DEFINE_QDEBUG_OP(AbstractTreeModelItem,
+//							 M_DATASTREAM_FIELDS(X)
+//                     );
+//#undef X
+QDebug operator<<(QDebug dbg, const AbstractTreeModelItem& obj)
+{
+	QDebugStateSaver saver(dbg);
+	dbg << "AbstractTreeModelItem (" << M_ID_VAL(*obj.m_parent_item.lock().get()) << M_ID_VAL(obj.m_child_items.size()) << ")";
+	return dbg;
+}
 
 AbstractTreeModelItem* AbstractTreeModelItem::child(int number)
 {
@@ -218,6 +224,11 @@ std::weak_ptr<AbstractTreeModelItem> AbstractTreeModelItem::parent()
 const std::weak_ptr<AbstractTreeModelItem> AbstractTreeModelItem::parent() const
 {
 	return m_parent_item;
+}
+
+UUIncD AbstractTreeModelItem::getId() const
+{
+	return m_uuincid;
 }
 
 bool AbstractTreeModelItem::removeChildren(int position, int count)

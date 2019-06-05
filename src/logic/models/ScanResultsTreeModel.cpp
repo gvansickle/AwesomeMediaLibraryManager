@@ -122,9 +122,9 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 	/// @note This is a QVariantMap, contains abstract_tree_model_header as a QVariantList.
 	if(m_root_item != nullptr)
 	{
-		delete m_root_item;
+		m_root_item.reset();
 	}
-	m_root_item = new AbstractTreeModelHeaderItem();
+	m_root_item = std::make_shared<AbstractTreeModelHeaderItem>();
 //	m_root_item->fromVariant(map.value(SRTMTagToXMLTagMap[SRTMTag::ROOT_ITEM]));
 M_WARNING("TODO: There sometimes isn't a root item in the map.");
 	map_read_field_or_warn(map, XMLTAG_SRTM_ROOT_ITEM, m_root_item);

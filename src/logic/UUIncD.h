@@ -25,6 +25,9 @@
 #include <cstdint>
 //#include <utility> // For std::rel_ops;
 
+// Qt5
+#include <Qt>
+
 // Ours
 #include <future/guideline_helpers.h>
 
@@ -34,6 +37,7 @@ class UUIncD
 {
 public:
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(UUIncD);
+	explicit UUIncD(quintptr qmodelindex_int_id);
 	~UUIncD() = default;
 
 	static UUIncD create();
@@ -41,15 +45,15 @@ public:
 	// User-defined conversion to uin64_t.
 	operator uint64_t() const;
 
+	bool operator==(const UUIncD& rhs) const { return m_my_id == rhs.m_my_id; };
+	bool operator<(const UUIncD& rhs) const { return m_my_id < rhs.m_my_id; };
+
 protected:
 	explicit UUIncD(std::uint64_t id);
 
 private:
 
 	std::uint64_t m_my_id;
-
-	bool operator==(const UUIncD& rhs) const { return m_my_id == rhs.m_my_id; };
-	bool operator<(const UUIncD& rhs) const { return m_my_id < rhs.m_my_id; };
 
 	/**
 	 * The program-global threadsafe 64-bit ID which will next be doled out by create().
