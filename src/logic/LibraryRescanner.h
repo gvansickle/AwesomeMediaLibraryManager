@@ -104,7 +104,7 @@ public Q_SLOTS:
 	/**
 	 * Slot which accepts the incoming metadata.
 	 */
-    void SLOT_processReadyResults(MetadataReturnVal lritem_vec);
+	void SLOT_processReadyResults(MetadataReturnVal lritem_vec);
 
 	/// Slot called by m_rescan_future_watcher when the rescan is complete.
 //    void onRescanFinished();
@@ -119,7 +119,7 @@ protected:
 
 	void SaveDatabase(ScanResultsTreeModel* tree_model_ptr, const QString& database_filename);
 
-        
+
 private:
 	Q_DISABLE_COPY(LibraryRescanner)
 

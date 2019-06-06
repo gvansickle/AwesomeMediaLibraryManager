@@ -40,9 +40,7 @@ class AbstractTreeModel;
 /**
  *
  */
-class AbstractTreeModelHeaderItem:
-		public AbstractTreeModelItem
-//		public clone_inherit<abstract_method<AbstractTreeModelHeaderItem>, AbstractTreeModelItem>
+class AbstractTreeModelHeaderItem: public AbstractTreeModelItem
 {
 	using BASE_CLASS = AbstractTreeModelItem;
 
@@ -98,5 +96,7 @@ protected:
 	/// @note Not sure we actually need this for anything.
 	AbstractTreeModel* m_parent_model;
 };
+
+Q_DECLARE_METATYPE(std::shared_ptr<AbstractTreeModelHeaderItem>)
 
 #endif /* SRC_LOGIC_MODELS_ABSTRACTTREEMODELHEADERITEM_H_ */

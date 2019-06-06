@@ -320,7 +320,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 //		qIn() << "Sending" << new_items->size() << "scan results to models";
 
         /// @todo Obsoleting... very... slowly.
-		for(const std::unique_ptr<AbstractTreeModelItem>& entry : *new_items)
+		for(const std::shared_ptr<AbstractTreeModelItem>& entry : *new_items)
 		{
 			// Send the URL ~dsr.getMediaExtUrl().m_url.toString()) to the LibraryModel via the watcher.
 			qurl_future.reportResult(entry->data(1).toString());
@@ -379,12 +379,12 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 			const SharedItemContType& new_items_vector_ptr = result;
 
 			// Append entries to the ScanResultsTreeModel.
-			for(std::unique_ptr<AbstractTreeModelItem>& entry : *new_items_vector_ptr)
+			for(std::shared_ptr<AbstractTreeModelItem>& entry : *new_items_vector_ptr)
 			{
 				// Make sure the entry wasn't moved from.
 				Q_ASSERT(bool(entry) == true);
 
-				auto new_child = std::make_unique<SRTMItem_LibEntry>();
+				auto new_child = std::make_shared<SRTMItem_LibEntry>();
 				std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(entry->data(1).toString());
 
 M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
@@ -398,7 +398,7 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 
 			// Finally, move the new model items to their new home.
 #if 1 // signal
-			tree_model_ptr->appendItems(std::move(*new_items_vector_ptr));
+			tree_model_ptr->appendItems(new_items_vector_ptr);
 #else
 			Q_EMIT SIGNAL_StapToTreeModel(std::move(*new_items_vector_ptr));
 #endif

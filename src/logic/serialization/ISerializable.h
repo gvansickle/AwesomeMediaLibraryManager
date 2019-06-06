@@ -109,6 +109,7 @@ void map_insert_or_die(MapType& map, const StringType& key, const MemberType& me
 /// @name Read entries from a maplike type into the apropriate @a member.
 /// @{
 
+/// Ptrs to ISerializable-derived members.
 template <class MapType, class StringType>
 void map_read_field_or_warn(const MapType& map, const StringType& key, ISerializable* member)
 {
@@ -144,6 +145,7 @@ void map_read_field_or_warn(const MapType& map, const StringType& key, MemberTyp
 //	static_assert (!std::is_base_of_v<ISerializable, MemberType>, "DEDUCTION FAILED");
 //	if(QVariant qvar = map.value(key); qvar.isValid())
 //	{
+//M_WARNING("Does this need to transfer sharedness?");
 //		member = qvar.value<MemberType>();
 //	}
 //	else
