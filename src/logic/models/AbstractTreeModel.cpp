@@ -338,9 +338,23 @@ bool AbstractTreeModel::appendItem(std::unique_ptr<AbstractTreeModelItem> new_it
 
 int AbstractTreeModel::rowCount(const QModelIndex &parent) const
 {
-    AbstractTreeModelItem *parentItem = getItem(parent);
+	// Only the hidden parent item has row count info.
+	/// @todo Is this right?
+	if(parent.column() > 0)
+	{
+		return 0;
+	}
+	std::shared_ptr<AbstractTreeModelItem> parent_item;
+	if(!parent.isValid())
+	{
+		parent_item = m_root_item;
+	}
+	else
+	{
+		parent_item = getItemById(UUIncD(parent.internalId()));
+	}
 
-    return parentItem->childCount();
+	return parent_item->childCount();
 }
 
 bool AbstractTreeModel::setData(const QModelIndex &index, const QVariant &value, int role)
