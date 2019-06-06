@@ -137,6 +137,21 @@ void map_read_field_or_warn(const MapType& map, const StringType& key, MemberTyp
 	}
 }
 
+//template <class MapType, class StringType, class MemberType,
+//		  REQUIRES(!std::is_base_of_v<ISerializable, std::shared_ptr<MemberType>>)>
+//void map_read_field_or_warn(const MapType& map, const StringType& key, MemberType member)
+//{
+//	static_assert (!std::is_base_of_v<ISerializable, MemberType>, "DEDUCTION FAILED");
+//	if(QVariant qvar = map.value(key); qvar.isValid())
+//	{
+//		member = qvar.value<MemberType>();
+//	}
+//	else
+//	{
+//		qWr() << "Couldn't read field:" << key;
+//	}
+//}
+
 /// @}
 
 

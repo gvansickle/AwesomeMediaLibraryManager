@@ -99,7 +99,9 @@ class AbstractTreeModelItem : public virtual ISerializable, public virtual std::
 {
 
 public:
-	M_GH_RULE_OF_FIVE_DEFAULT_C21(AbstractTreeModelItem);
+//	M_GH_RULE_OF_FIVE_DEFAULT_C21(AbstractTreeModelItem);
+	/// Default constructor.  Sets the UUIncD.
+	AbstractTreeModelItem();
 
 	/**
 	 * Default constructor.
@@ -170,7 +172,7 @@ public:
 	 * @param new_children
 	 * @return
 	 */
-	bool appendChildren(std::vector<std::unique_ptr<AbstractTreeModelItem>> new_children);
+	bool appendChildren(std::vector<std::shared_ptr<AbstractTreeModelItem>> new_children);
 	bool appendChild(std::shared_ptr<AbstractTreeModelItem> new_child);
 
 	/// @name Serialization

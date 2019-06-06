@@ -66,6 +66,11 @@
 #include <utils/VectorHelpers.h>
 #include <logic/UUIncD.h>
 
+AbstractTreeModelItem::AbstractTreeModelItem()
+	: m_uuincid(UUIncD::create())
+{
+}
+
 AbstractTreeModelItem::AbstractTreeModelItem(AbstractTreeModelItem* parent_item)
 	: m_uuincid(UUIncD::create()), m_parent_item(parent_item->shared_from_this())
 {
@@ -307,7 +312,7 @@ bool AbstractTreeModelItem::setData(int column, const QVariant &value)
 	return derivedClassSetData(column, value);
 }
 
-bool AbstractTreeModelItem::appendChildren(std::vector<std::unique_ptr<AbstractTreeModelItem>> new_children)
+bool AbstractTreeModelItem::appendChildren(std::vector<std::shared_ptr<AbstractTreeModelItem>> new_children)
 {
     /// @todo Support adding new columns if children have them?
     for(auto& child : new_children)
@@ -321,7 +326,7 @@ bool AbstractTreeModelItem::appendChildren(std::vector<std::unique_ptr<AbstractT
 
 bool AbstractTreeModelItem::appendChild(std::shared_ptr<AbstractTreeModelItem> new_child)
 {
-	std::vector<std::unique_ptr<AbstractTreeModelItem>> new_children;
+	std::vector<std::shared_ptr<AbstractTreeModelItem>> new_children;
 
 	new_children.emplace_back(std::move(new_child));
 

@@ -77,7 +77,7 @@ class AbstractTreeModelHeaderItem;
 /**
  * Abstract tree model base class.  Inherits from QAbstractItemModel and ISerializable.
  */
-class AbstractTreeModel : public QAbstractItemModel, public virtual ISerializable
+class AbstractTreeModel : public QAbstractItemModel, public virtual ISerializable, std::enable_shared_from_this<AbstractTreeModel>
 {
     Q_OBJECT
 
@@ -192,11 +192,12 @@ public:
 	 * This is effectively the same as insertRows() followed by numerous setData() calls, but the default construction
 	 * of the item objects is skipped since we're passing in the @a new_items.
 	 */
-	virtual bool appendItems(std::vector<std::unique_ptr<AbstractTreeModelItem>> new_items, const QModelIndex &parent = QModelIndex());
-	virtual bool appendItem(std::unique_ptr<AbstractTreeModelItem> new_items, const QModelIndex &parent = QModelIndex());
+	virtual bool appendItems(std::vector<std::shared_ptr<AbstractTreeModelItem> > new_items, const QModelIndex &parent = QModelIndex());
+	virtual bool appendItem(std::shared_ptr<AbstractTreeModelItem> new_items, const QModelIndex &parent = QModelIndex());
 
 //	[[deprecated]] AbstractTreeModelItem* getItem(const QModelIndex &index) const;
-
+	QModelIndex getIndexFromItem(const std::shared_ptr<AbstractTreeModelItem>& item) const;
+	QModelIndex getIndexFromId(UUIncD id) const;
 	std::shared_ptr<AbstractTreeModelItem> getItemById(const UUIncD &id) const;
 	std::shared_ptr<AbstractTreeModelItem> getRootItem() const;
 
@@ -214,7 +215,13 @@ public:
 
 	/// @} // END Extended public model interface.
 
+	friend class AbstractTreeModelItem;
+
+
 protected:
+
+	virtual void register_item(const std::shared_ptr<AbstractTreeModelItem>& item);
+	virtual void deregister_item(UUIncD id, AbstractTreeModelItem* item);
 
 	/// @name Extended protected model interface.
 	/// @{

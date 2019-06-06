@@ -100,7 +100,7 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 	QVariantHomogenousList vl("children", "child");
 	for(int i=0; i<childCount(); i++)
 	{
-		auto* child_ptr = child(i);
+		auto child_ptr = child(i);
 //		list_push_back_or_die(vl, child_ptr);
 		vl.push_back(child_ptr->toVariant());
 	}
