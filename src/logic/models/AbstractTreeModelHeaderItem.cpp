@@ -161,7 +161,7 @@ M_WARNING("NEED TO GO THROUGH MODEL HERE?");
 	// 1. We could possibly do step 1 in a non-GUI thread.
 	// 2. We can add the children in a single batch vs. one at a time, avoiding the model/view signaling overhead.
 	// It does however burn more RAM.
-	std::vector<std::unique_ptr<AbstractTreeModelItem>> temp_items;
+	std::vector<std::shared_ptr<AbstractTreeModelItem>> temp_items;
 	for(const QVariant& child : child_list)
 	{
 		qDb() << "READING CHILD ITEM:" << child;
