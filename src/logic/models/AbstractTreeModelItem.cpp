@@ -65,6 +65,7 @@
 #include <utils/DebugHelpers.h>
 #include <utils/VectorHelpers.h>
 #include <logic/UUIncD.h>
+#include "AbstractTreeModel.h"
 
 AbstractTreeModelItem(std::shared_ptr<AbstractTreeModel> model, bool is_root)
 	: m_model(model), m_depth(0), m_uuincid(UUIncD::create())/** TODO */,
@@ -332,6 +333,48 @@ bool AbstractTreeModelItem::appendChild(std::shared_ptr<AbstractTreeModelItem> n
 	new_children.emplace_back(std::move(new_child));
 
 	return appendChildren(std::move(new_children));
+}
+
+void AbstractTreeModelItem::baseFinishConstruct(const std::shared_ptr<AbstractTreeModelItem>& self)
+{
+	if(self->m_is_root)
+	{
+		registerSelf(self);
+	}
+}
+
+void AbstractTreeModelItem::registerSelf(const std::shared_ptr<AbstractTreeModelItem>& self)
+{
+	for (const auto &child : self->m_childItems)
+	{
+		registerSelf(child);
+	}
+	if (auto ptr = self->m_model.lock())
+	{
+		ptr->registerItem(self);
+		self->m_isInModel = true;
+	}
+	else
+	{
+		qDebug() << "Error : construction of treeItem failed because parent model is not available anymore";
+		Q_ASSERT(false);
+	}
+}
+
+void AbstractTreeModelItem::deregisterSelf()
+{
+	for (const auto &child : m_childItems)
+	{
+		child->deregisterSelf();
+	}
+	if (m_isInModel)
+	{
+		if (auto ptr = m_model.lock())
+		{
+			ptr->deregisterItem(m_id, this);
+			m_isInModel = false;
+		}
+	}
 }
 
 void AbstractTreeModelItem::setParentItem(std::shared_ptr<AbstractTreeModelItem> parent_item)

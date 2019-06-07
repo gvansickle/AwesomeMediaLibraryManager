@@ -190,6 +190,13 @@ public:
     QTH_DECLARE_FRIEND_QDEBUG_OP(AbstractTreeModelItem);
 
 protected:
+	/* @brief Finish construction of object given its pointer
+       This is a separated function so that it can be called from derived classes */
+	static void baseFinishConstruct(const std::shared_ptr<AbstractTreeModelItem>& self);
+
+	/* @brief Helper functions to handle registration / deregistration to the model */
+	static void registerSelf(const std::shared_ptr<AbstractTreeModelItem>& self);
+	void deregisterSelf();
 
     /// Sets this item's parent item to parent_item.
     /// Primarily for use in appendChildren().
