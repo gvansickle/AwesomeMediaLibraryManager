@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -27,18 +27,17 @@
 #include <logic/serialization/XmlObjects.h>
 
 
-AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(AbstractTreeModelItem* parentItem)
-	: AbstractTreeModelItem(parentItem)
-{
-	m_parent_model = nullptr;
-}
+//AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(AbstractTreeModelItem* parentItem)
+//	: AbstractTreeModelItem(parentItem)
+//{
+//	m_parent_model = nullptr;
+//}
 
 
 AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(AbstractTreeModel *parent_model,
 														 AbstractTreeModelItem *parentItem)
 	: AbstractTreeModelItem(parentItem)
 {
-
 	// Save the pointer to the parent_model.
 	m_parent_model = parent_model;
 }

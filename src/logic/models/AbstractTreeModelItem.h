@@ -90,26 +90,27 @@
 #include <future/cloneable.h>
 #include <logic/UUIncD.h>
 #include <logic/serialization/ISerializable.h>
+class AbstractTreeModel;
 
 /**
  * Base class for AbstractItemTreeModel items.
  * @note Not derived from QObject.
  */
-class AbstractTreeModelItem : public virtual ISerializable, public virtual std::enable_shared_from_this<AbstractTreeModelItem>
+class AbstractTreeModelItem : public virtual ISerializable, public std::enable_shared_from_this<AbstractTreeModelItem>
 {
 
 public:
 //	M_GH_RULE_OF_FIVE_DEFAULT_C21(AbstractTreeModelItem);
 	/// Default constructor.  Sets the UUIncD.
-	AbstractTreeModelItem();
+	AbstractTreeModelItem(std::shared_ptr<AbstractTreeModel> model, bool is_root);
 
-	/**
-	 * Default constructor.
-	 * @param parent_item  The AbstractTreeModelItem which is both the owner and "tree-wise" parent of this item.
-	 *                     @note This is completely unrelated to QObject parentage, this class isn't derived from QObject.
-	 *                     However, we still own our children and have to delete them on destruction.
-	 */
-	explicit AbstractTreeModelItem(AbstractTreeModelItem* parent_item = nullptr);
+//	/**
+//	 * Default constructor.
+//	 * @param parent_item  The AbstractTreeModelItem which is both the owner and "tree-wise" parent of this item.
+//	 *                     @note This is completely unrelated to QObject parentage, this class isn't derived from QObject.
+//	 *                     However, we still own our children and have to delete them on destruction.
+//	 */
+//	explicit AbstractTreeModelItem(AbstractTreeModelItem* parent_item);
 	~AbstractTreeModelItem() override;
 
     /// Return a pointer to the number'th child of this item.
@@ -227,6 +228,13 @@ private:
 
 	/// Deque of shared_ptr's to child items.
 	std::deque<std::shared_ptr<AbstractTreeModelItem>> m_child_items;
+
+	std::weak_ptr<AbstractTreeModel> m_model;
+
+	int m_depth;
+
+	bool m_is_in_model;
+	bool m_is_root;
 
 	/// @note AbstractTreeModelItem contains no data members for actual item data.
 	/// Any actual item data beyond the child items is the responsibility of derived classes.

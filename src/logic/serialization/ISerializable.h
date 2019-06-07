@@ -109,17 +109,21 @@ void map_insert_or_die(MapType& map, const StringType& key, const MemberType& me
 /// @name Read entries from a maplike type into the apropriate @a member.
 /// @{
 
-/// Ptrs to ISerializable-derived members.
-template <class MapType, class StringType>
-void map_read_field_or_warn(const MapType& map, const StringType& key, ISerializable* member)
+/// Ptrs to ISerializable-implementing members.
+template <class MapType, class StringType, class RawMemberType>
+void map_read_field_or_warn(const MapType& map, const StringType& key, RawMemberType member)
 {
-	if(QVariant qvar = map.value(key); qvar.isValid())
+	if constexpr(std::is_convertible_v<RawMemberType, ISerializable*>)
 	{
-		member->fromVariant(qvar);
-	}
-	else
-	{
-		qWr() << "Couldn't read field:" << key;
+
+		if(QVariant qvar = map.value(key); qvar.isValid())
+		{
+			member->fromVariant(qvar);
+		}
+		else
+		{
+			qWr() << "Couldn't read field:" << key;
+		}
 	}
 }
 

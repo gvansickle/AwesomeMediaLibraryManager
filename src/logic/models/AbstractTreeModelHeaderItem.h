@@ -40,12 +40,14 @@ class AbstractTreeModel;
 /**
  *
  */
-class AbstractTreeModelHeaderItem: public AbstractTreeModelItem
+class AbstractTreeModelHeaderItem: public virtual AbstractTreeModelItem, public std::enable_shared_from_this<AbstractTreeModelHeaderItem>
 {
 	using BASE_CLASS = AbstractTreeModelItem;
 
 public:
-	explicit AbstractTreeModelHeaderItem(AbstractTreeModelItem *parentItem = nullptr);
+	/// Default constructor.  Sets the UUIncD.
+	AbstractTreeModelHeaderItem() {};
+//	explicit AbstractTreeModelHeaderItem(AbstractTreeModelItem *parentItem);
 	explicit AbstractTreeModelHeaderItem(AbstractTreeModel *parent_model,
 										 AbstractTreeModelItem *parentItem = nullptr);
 	 ~AbstractTreeModelHeaderItem() override;

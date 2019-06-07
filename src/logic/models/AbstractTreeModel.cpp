@@ -74,13 +74,15 @@
 
 AbstractTreeModel::AbstractTreeModel(QObject* parent) : QAbstractItemModel(parent)
 {
-	auto horizontal_header_item = new AbstractTreeModelHeaderItem();
+//	auto horizontal_header_item = std::shared_ptr<AbstractTreeModelHeaderItem>();
 
-	m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(this, horizontal_header_item);
+	/// @todo The equiv. of this is in kdenlive's ::construct()
+	m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(this);//, horizontal_header_item);
 }
 
 AbstractTreeModel::~AbstractTreeModel()
 {
+	m_model_item_map.clear();
 	m_root_item.reset();
 }
 
@@ -89,10 +91,21 @@ bool AbstractTreeModel::setColumnSpecs(std::initializer_list<QString> column_spe
 	return m_root_item->setColumnSpecs(column_specs);
 }
 
-int AbstractTreeModel::columnCount(const QModelIndex & /* parent */) const
+int AbstractTreeModel::columnCount(const QModelIndex& parent) const
 {
+#if 0
 	Q_ASSERT(m_root_item != nullptr);
 	return m_root_item->columnCount();
+#else //kden
+	if(!parent.isValid())
+	{
+		/// Does this make sense?
+		return m_root_item->columnCount();
+	}
+	const auto id = UUIncD(parent.internalId());
+	auto item = getItemById(id);
+	return item->columnCount();
+#endif
 }
 
 QVariant AbstractTreeModel::data(const QModelIndex &index, int role) const
@@ -105,6 +118,7 @@ QVariant AbstractTreeModel::data(const QModelIndex &index, int role) const
         return QVariant();
 	}
 
+	/// @todo ###
 	// Color invalid model indexes.
 	if(index.column() > columnCount())
 	{
@@ -122,6 +136,7 @@ QVariant AbstractTreeModel::data(const QModelIndex &index, int role) const
 	{
         return QVariant();
 	}
+    /// @todo #######
 
     // Get a pointer to the indexed item.
 	auto item = getItemById(UUIncD(index.internalId()));
@@ -186,6 +201,7 @@ QVariant AbstractTreeModel::headerData(int section, Qt::Orientation orientation,
 {
     if (orientation == Qt::Horizontal && role == Qt::DisplayRole)
 	{
+    	/// @kden : dataColumn()
 		return m_root_item->data(section);
 	}
 

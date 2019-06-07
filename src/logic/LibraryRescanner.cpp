@@ -398,7 +398,7 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 
 			// Finally, move the new model items to their new home.
 #if 1 // signal
-			tree_model_ptr->appendItems(new_items_vector_ptr);
+			tree_model_ptr->appendItems(*new_items_vector_ptr);
 #else
 			Q_EMIT SIGNAL_StapToTreeModel(std::move(*new_items_vector_ptr));
 #endif

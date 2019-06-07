@@ -132,7 +132,7 @@ private:
 
 	QFutureWatcher<QString> m_extfuture_watcher_dirtrav;
 	/// @todo
-	using ItemContType = std::vector<std::unique_ptr<AbstractTreeModelItem>>;
+	using ItemContType = std::vector<std::shared_ptr<AbstractTreeModelItem>>;
 	using SharedItemContType = std::shared_ptr<ItemContType>;
 //	QFutureWatcher<SharedItemContType> m_efwatcher_tree_model_append;
 //	QFutureWatcher<MetadataReturnVal> m_extfuture_watcher_metadata;

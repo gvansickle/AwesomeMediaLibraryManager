@@ -66,15 +66,16 @@
 #include <utils/VectorHelpers.h>
 #include <logic/UUIncD.h>
 
-AbstractTreeModelItem::AbstractTreeModelItem()
-	: m_uuincid(UUIncD::create())
+AbstractTreeModelItem(std::shared_ptr<AbstractTreeModel> model, bool is_root)
+	: m_model(model), m_depth(0), m_uuincid(UUIncD::create())/** TODO */,
+	  m_is_in_model(false), m_is_root(is_root)
 {
 }
 
-AbstractTreeModelItem::AbstractTreeModelItem(AbstractTreeModelItem* parent_item)
-	: m_uuincid(UUIncD::create()), m_parent_item(parent_item->shared_from_this())
-{
-}
+//AbstractTreeModelItem::AbstractTreeModelItem(AbstractTreeModelItem* parent_item)
+//	: m_uuincid(UUIncD::create()), m_parent_item(parent_item->shared_from_this())
+//{
+//}
 
 AbstractTreeModelItem::~AbstractTreeModelItem()
 {
