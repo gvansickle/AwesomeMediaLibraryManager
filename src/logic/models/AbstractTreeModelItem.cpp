@@ -77,7 +77,7 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::construct(std::sha
 	return self;
 }
 
-AbstractTreeModelItem(const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id)
+AbstractTreeModelItem::AbstractTreeModelItem(const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id)
 	: m_model(model), m_depth(0), m_uuincid(UUIncD::create())/** TODO */,
 	  m_is_in_model(false), m_is_root(is_root)
 {

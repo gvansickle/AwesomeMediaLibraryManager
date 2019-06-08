@@ -84,7 +84,7 @@ AbstractTreeModel::AbstractTreeModel(QObject* parent) : QAbstractItemModel(paren
 //	auto horizontal_header_item = std::shared_ptr<AbstractTreeModelHeaderItem>();
 
 	/// @todo The equiv. of this is in kdenlive's ::construct()
-	m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(this);//, horizontal_header_item);
+	m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(this->shared_from_this(), true);//, horizontal_header_item);
 }
 
 AbstractTreeModel::~AbstractTreeModel()

@@ -136,8 +136,8 @@ AbstractTreeModelItem *
 ScanResultsTreeModelItem::do_create_default_constructed_child_item(AbstractTreeModelItem *parent, int num_columns)
 {
 	SRTMItem_LibEntry* child_item;
-
-	child_item = new SRTMItem_LibEntry(parent);
+Q_ASSERT(0); /// @todo
+//	child_item = new SRTMItem_LibEntry(parent);
 
 	return child_item;
 }
