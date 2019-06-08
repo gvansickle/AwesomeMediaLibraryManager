@@ -46,10 +46,9 @@ class AbstractTreeModelHeaderItem: public virtual AbstractTreeModelItem, public 
 
 public:
 	/// Default constructor.  Sets the UUIncD.
-	AbstractTreeModelHeaderItem() {};
+//	AbstractTreeModelHeaderItem();
 //	explicit AbstractTreeModelHeaderItem(AbstractTreeModelItem *parentItem);
-	explicit AbstractTreeModelHeaderItem(AbstractTreeModel *parent_model,
-										 AbstractTreeModelItem *parentItem = nullptr);
+	explicit AbstractTreeModelHeaderItem(const std::shared_ptr<AbstractTreeModel>& parent_model, bool isRoot);
 	 ~AbstractTreeModelHeaderItem() override;
 
 	 /**

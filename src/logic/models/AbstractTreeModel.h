@@ -77,18 +77,23 @@ class AbstractTreeModelHeaderItem;
 /**
  * Abstract tree model base class.  Inherits from QAbstractItemModel and ISerializable.
  */
-class AbstractTreeModel : public QAbstractItemModel, public virtual ISerializable, std::enable_shared_from_this<AbstractTreeModel>
+class AbstractTreeModel : public QAbstractItemModel, public virtual ISerializable, public std::enable_shared_from_this<AbstractTreeModel>
 {
     Q_OBJECT
 
 	using BASE_CLASS = QAbstractItemModel;
 
 public:
+	static std::shared_ptr<AbstractTreeModel> construct(QObject* parent = nullptr);
+
+protected:
 	/**
 	 * Creates a new AbstractTreeModel object.
 	 * This model will have a default constructed AbstractTreeModelHeader with no columns and no children.
 	 */
 	explicit AbstractTreeModel(QObject *parent = nullptr);
+
+public:
 	~AbstractTreeModel() override;
 
 	/**
@@ -206,10 +211,10 @@ public:
 	/// @{
 
 	/// Serialize the entire model to a QVariant.
-	///   QVariant toVariant() const override = 0;
+	QVariant toVariant() const override { return QVariant(); };
 
 	/// Serialize the entire model from a QVariant.
-	///   void fromVariant(const QVariant& variant) override = 0;
+	void fromVariant(const QVariant& variant) override {};
 
 	/// @} // END Serialization
 
@@ -231,8 +236,8 @@ protected:
 	 */
 //	virtual AbstractTreeModelHeaderItem * make_root_node(QVector<QVariant> rootData) = 0;
 
-	virtual QString getXmlStreamName() const = 0;
-	virtual QString getXmlStreamVersion() const = 0;
+	virtual QString getXmlStreamName() const { return ""; };
+	virtual QString getXmlStreamVersion() const { return ""; };
 
     /// @}
 

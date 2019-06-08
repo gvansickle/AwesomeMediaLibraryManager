@@ -35,10 +35,16 @@
 #include <LibraryEntry.h>
 
 
-ScanResultsTreeModelItem::ScanResultsTreeModelItem(const DirScanResult& dsr, AbstractTreeModelItem* parent)
-	: AbstractTreeModelItem(parent)
+//ScanResultsTreeModelItem::ScanResultsTreeModelItem(const DirScanResult& dsr, AbstractTreeModelItem* parent)
+//	: AbstractTreeModelItem(parent)
+//{
+//	m_dsr = dsr;
+//}
+
+ScanResultsTreeModelItem::ScanResultsTreeModelItem(const std::shared_ptr<AbstractTreeModel> model, bool is_root)
+	: BASE_CLASS(model, is_root)
 {
-	m_dsr = dsr;
+
 }
 
 ScanResultsTreeModelItem::~ScanResultsTreeModelItem()
@@ -185,6 +191,12 @@ bool SRTMItem_LibEntry::derivedClassInsertColumns(int insert_before_column, int 
 bool SRTMItem_LibEntry::derivedClassRemoveColumns(int first_column_to_remove, int num_columns)
 {
 	return ScanResultsTreeModelItem::derivedClassRemoveColumns(first_column_to_remove, num_columns);
+}
+
+SRTMItem_LibEntry::SRTMItem_LibEntry(const std::shared_ptr<AbstractTreeModel>& model, bool is_root)
+	: BASE_CLASS(std::static_pointer_cast<AbstractTreeModel>(model), is_root)
+{
+
 }
 
 QVariant SRTMItem_LibEntry::data(int column, int role) const

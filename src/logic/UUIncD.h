@@ -42,6 +42,8 @@ public:
 
 	static UUIncD create();
 
+	static UUIncD null();
+
 	// User-defined conversion to uin64_t.
 	operator uint64_t() const;
 
@@ -50,6 +52,7 @@ public:
 
 protected:
 	explicit UUIncD(std::uint64_t id);
+//	explicit UUIncD(quintptr id) : UUIncD(id) {};
 
 private:
 

@@ -34,12 +34,10 @@
 //}
 
 
-AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(AbstractTreeModel *parent_model,
-														 AbstractTreeModelItem *parentItem)
-	: AbstractTreeModelItem(parentItem)
+AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(const std::shared_ptr<AbstractTreeModel>& parent_model, bool isRoot)
+	: BASE_CLASS(std::static_pointer_cast<AbstractTreeModel>(parent_model), isRoot)
 {
-	// Save the pointer to the parent_model.
-	m_parent_model = parent_model;
+
 }
 
 AbstractTreeModelHeaderItem::~AbstractTreeModelHeaderItem()
@@ -174,15 +172,15 @@ M_WARNING("NEED TO GO THROUGH MODEL HERE?");
 	this->appendChildren(std::move(temp_items));
 }
 
-ScanResultsTreeModelItem*
-AbstractTreeModelHeaderItem::do_create_default_constructed_child_item(AbstractTreeModelItem *parent, int num_columns)
-{
-	ScanResultsTreeModelItem* child_item;
+//ScanResultsTreeModelItem*
+//AbstractTreeModelHeaderItem::do_create_default_constructed_child_item(AbstractTreeModelItem *parent, int num_columns)
+//{
+//	ScanResultsTreeModelItem* child_item;
 
-	child_item = new ScanResultsTreeModelItem(parent);
+//	child_item = new ScanResultsTreeModelItem(parent);
 
-	return child_item;
-}
+//	return child_item;
+//}
 
 bool AbstractTreeModelHeaderItem::derivedClassSetData(int column, const QVariant& value)
 {

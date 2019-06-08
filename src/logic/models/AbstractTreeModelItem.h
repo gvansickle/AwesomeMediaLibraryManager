@@ -100,10 +100,15 @@ class AbstractTreeModelItem : public virtual ISerializable, public std::enable_s
 {
 
 public:
+	static std::shared_ptr<AbstractTreeModelItem> construct(std::shared_ptr<AbstractTreeModel>& model, bool isRoot,
+			UUIncD id = UUIncD::null());
+
+protected:
 //	M_GH_RULE_OF_FIVE_DEFAULT_C21(AbstractTreeModelItem);
 	/// Default constructor.  Sets the UUIncD.
-	AbstractTreeModelItem(std::shared_ptr<AbstractTreeModel> model, bool is_root);
+	AbstractTreeModelItem(const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id = UUIncD::null());
 
+public:
 //	/**
 //	 * Default constructor.
 //	 * @param parent_item  The AbstractTreeModelItem which is both the owner and "tree-wise" parent of this item.
@@ -128,7 +133,7 @@ public:
 
     /// @returns The number of columns of data this item has.
     /// This is the max of the column count of all child items.
-    virtual int columnCount() const = 0;
+	virtual int columnCount() const { return 0; };
 
     /**
      * Read access to the data of this item.
@@ -181,8 +186,8 @@ public:
 	/// Be sure to override these in derived classes.
 	/// @{
 
-    // virtual QVariant toVariant() const = 0;
-    // virtual void fromVariant(const QVariant& variant) = 0;
+	 QVariant toVariant() const override { return QVariant(); };
+	 void fromVariant(const QVariant& variant) override {};
 
     /// @}
 
@@ -213,14 +218,14 @@ protected:
 	 * The covariant-return-type factory function for child items.  Override in derived classes.
 	 */
 	virtual AbstractTreeModelItem*
-	do_create_default_constructed_child_item(AbstractTreeModelItem* parent, int num_columns) = 0;
+	do_create_default_constructed_child_item(AbstractTreeModelItem* parent, int num_columns) { return 0; };
 
 	/// @name Virtual functions called by the base class to complete certain operations.
 	///       The base class will have error-checked function parameters.
 	/// @{
-	virtual bool derivedClassSetData(int column, const QVariant &value) = 0;
-	virtual bool derivedClassInsertColumns(int insert_before_column, int num_columns) = 0;
-	virtual bool derivedClassRemoveColumns(int first_column_to_remove, int num_columns) = 0;
+	virtual bool derivedClassSetData(int column, const QVariant &value) { return 0; };
+	virtual bool derivedClassInsertColumns(int insert_before_column, int num_columns) { return 0; };
+	virtual bool derivedClassRemoveColumns(int first_column_to_remove, int num_columns) { return 0; };
 	/// @}
 
 	/// Our guaranteed-to-be unique-to-this-run-of-the-program numeric ID.

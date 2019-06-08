@@ -55,6 +55,9 @@
 
 #include "AbstractTreeModelItem.h"
 
+// Std C++
+#include <memory>
+
 // Qt5
 #include <QBrush>
 #include <QStringList>
@@ -67,7 +70,14 @@
 #include <logic/UUIncD.h>
 #include "AbstractTreeModel.h"
 
-AbstractTreeModelItem(std::shared_ptr<AbstractTreeModel> model, bool is_root)
+std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::construct(std::shared_ptr<AbstractTreeModel>& model, bool isRoot, UUIncD id)
+{
+	std::shared_ptr<AbstractTreeModelItem> self(new AbstractTreeModelItem(model, isRoot, id));
+	baseFinishConstruct(self);
+	return self;
+}
+
+AbstractTreeModelItem(const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id)
 	: m_model(model), m_depth(0), m_uuincid(UUIncD::create())/** TODO */,
 	  m_is_in_model(false), m_is_root(is_root)
 {
@@ -345,14 +355,14 @@ void AbstractTreeModelItem::baseFinishConstruct(const std::shared_ptr<AbstractTr
 
 void AbstractTreeModelItem::registerSelf(const std::shared_ptr<AbstractTreeModelItem>& self)
 {
-	for (const auto &child : self->m_childItems)
+	for (const auto &child : self->m_child_items)
 	{
 		registerSelf(child);
 	}
 	if (auto ptr = self->m_model.lock())
 	{
-		ptr->registerItem(self);
-		self->m_isInModel = true;
+		ptr->register_item(self);
+		self->m_is_in_model = true;
 	}
 	else
 	{
@@ -363,16 +373,16 @@ void AbstractTreeModelItem::registerSelf(const std::shared_ptr<AbstractTreeModel
 
 void AbstractTreeModelItem::deregisterSelf()
 {
-	for (const auto &child : m_childItems)
+	for (const auto &child : m_child_items)
 	{
 		child->deregisterSelf();
 	}
-	if (m_isInModel)
+	if (m_is_in_model)
 	{
 		if (auto ptr = m_model.lock())
 		{
-			ptr->deregisterItem(m_id, this);
-			m_isInModel = false;
+			ptr->deregister_item(m_uuincid, this);
+			m_is_in_model = false;
 		}
 	}
 }

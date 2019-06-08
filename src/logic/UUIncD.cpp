@@ -41,3 +41,8 @@ UUIncD::operator uint64_t() const
 {
 	return m_my_id;
 }
+
+UUIncD UUIncD::null()
+{
+	return UUIncD(0xFFFFFFFFFFFFFFFF);
+}
