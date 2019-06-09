@@ -100,12 +100,12 @@ class AbstractTreeModelItem : public virtual ISerializable, public std::enable_s
 {
 
 public:
-	static std::shared_ptr<AbstractTreeModelItem> construct(std::shared_ptr<AbstractTreeModel>& model, bool isRoot,
+	static std::shared_ptr<AbstractTreeModelItem> construct(std::shared_ptr<AbstractTreeModel>& model, bool isRoot = false,
 			UUIncD id = UUIncD::null());
 
 protected:
 //	M_GH_RULE_OF_FIVE_DEFAULT_C21(AbstractTreeModelItem);
-	/// Default constructor.  Sets the UUIncD.
+	/// Default constructor.  Sets the model and UUIncD.
 	AbstractTreeModelItem(const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id = UUIncD::null());
 
 public:

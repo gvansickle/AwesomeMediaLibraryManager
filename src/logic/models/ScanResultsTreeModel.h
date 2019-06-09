@@ -46,7 +46,13 @@ class ScanResultsTreeModel : public AbstractTreeModel
 	using BASE_CLASS = AbstractTreeModel;
 
 public:
+
+	static std::shared_ptr<ScanResultsTreeModel> construct(QObject *parent);
+
+protected:
 	explicit ScanResultsTreeModel(QObject *parent = nullptr);
+
+public:
     ~ScanResultsTreeModel() override = default;
 
     /**

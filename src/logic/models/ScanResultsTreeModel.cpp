@@ -28,6 +28,14 @@ ScanResultsTreeModel::ScanResultsTreeModel(QObject *parent)
 
 }
 
+// static
+std::shared_ptr<ScanResultsTreeModel> ScanResultsTreeModel::construct(QObject* parent)
+{
+	std::shared_ptr<ScanResultsTreeModel> retval(new ScanResultsTreeModel(parent));
+	retval->m_root_item = AbstractTreeModelHeaderItem::construct(retval);
+	return retval;
+}
+
 void ScanResultsTreeModel::setBaseDirectory(const QUrl &base_directory)
 {
 	m_base_directory = base_directory;
@@ -135,5 +143,4 @@ M_WARNING("TODO: There sometimes isn't a root item in the map.");
 
 #warning @todo INCOMPLETE/error handling
 }
-
 

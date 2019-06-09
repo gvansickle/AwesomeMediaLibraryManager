@@ -23,6 +23,9 @@
 
 #include "AbstractTreeModelHeaderItem.h"
 
+// Std C++
+#include <memory>
+
 // Ours
 #include <logic/serialization/XmlObjects.h>
 
@@ -33,6 +36,18 @@
 //	m_parent_model = nullptr;
 //}
 
+// static
+std::shared_ptr<AbstractTreeModelHeaderItem>
+AbstractTreeModelHeaderItem::construct(const std::shared_ptr<AbstractTreeModel>& model, bool isRoot)
+{
+M_WARNING("Make_shared doesn't have access to the constructor if it's protected, I'm not understanding what's happening here.");
+//	std::shared_ptr<AbstractTreeModelHeaderItem> self = std::make_shared<AbstractTreeModelHeaderItem>(model, isRoot);
+	std::shared_ptr<AbstractTreeModelHeaderItem> self(new AbstractTreeModelHeaderItem(model, isRoot));
+
+	baseFinishConstruct(self);
+
+	return self;
+}
 
 AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(const std::shared_ptr<AbstractTreeModel>& parent_model, bool isRoot)
 	: BASE_CLASS(std::static_pointer_cast<AbstractTreeModel>(parent_model), isRoot)

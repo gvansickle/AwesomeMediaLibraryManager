@@ -40,15 +40,18 @@ class AbstractTreeModel;
 /**
  *
  */
-class AbstractTreeModelHeaderItem: public virtual AbstractTreeModelItem, public std::enable_shared_from_this<AbstractTreeModelHeaderItem>
+class AbstractTreeModelHeaderItem: public AbstractTreeModelItem, public std::enable_shared_from_this<AbstractTreeModelHeaderItem>
 {
 	using BASE_CLASS = AbstractTreeModelItem;
 
 public:
-	/// Default constructor.  Sets the UUIncD.
-//	AbstractTreeModelHeaderItem();
-//	explicit AbstractTreeModelHeaderItem(AbstractTreeModelItem *parentItem);
+
+	static std::shared_ptr<AbstractTreeModelHeaderItem> construct(const std::shared_ptr<AbstractTreeModel>& model, bool isRoot = true);
+
+protected:
 	explicit AbstractTreeModelHeaderItem(const std::shared_ptr<AbstractTreeModel>& parent_model, bool isRoot);
+
+public:
 	 ~AbstractTreeModelHeaderItem() override;
 
 	 /**
