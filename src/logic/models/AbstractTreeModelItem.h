@@ -87,7 +87,7 @@
 #include <utils/QtHelpers.h>
 #include <utils/StaticAnalysis.h>
 #include <future/guideline_helpers.h>
-#include <future/cloneable.h>
+#include <future/enable_shared_from_this_virtual.h>
 #include <logic/UUIncD.h>
 #include <logic/serialization/ISerializable.h>
 class AbstractTreeModel;
@@ -96,16 +96,20 @@ class AbstractTreeModel;
  * Base class for AbstractItemTreeModel items.
  * @note Not derived from QObject.
  */
-class AbstractTreeModelItem : public virtual ISerializable, public std::enable_shared_from_this<AbstractTreeModelItem>
+class AbstractTreeModelItem : public virtual ISerializable, public enable_shared_from_this_virtual<AbstractTreeModelItem>
 {
-
 public:
-	static std::shared_ptr<AbstractTreeModelItem> construct(std::shared_ptr<AbstractTreeModel>& model, bool isRoot = false,
+
+	friend class AbstractTreeModel;
+
+	/**
+	 * Named constructor.
+	 */
+	static std::shared_ptr<AbstractTreeModelItem> construct(std::shared_ptr<AbstractTreeModel> model, bool isRoot = false,
 			UUIncD id = UUIncD::null());
 
 protected:
-//	M_GH_RULE_OF_FIVE_DEFAULT_C21(AbstractTreeModelItem);
-	/// Default constructor.  Sets the model and UUIncD.
+	/// Sets the model and UUIncD.
 	AbstractTreeModelItem(const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id = UUIncD::null());
 
 public:
@@ -185,15 +189,25 @@ public:
 
     /// @}
 
+    /**
+     * Returns true if @a this has @a id as an ancestor.
+     */
+    bool has_ancestor(UUIncD id);
+
     // Debug stream op free func friender.
     QTH_DECLARE_FRIEND_QDEBUG_OP(AbstractTreeModelItem);
 
 protected:
-	/* @brief Finish construction of object given its pointer
-       This is a separated function so that it can be called from derived classes */
+	/**
+	 * Finish construction of object given its pointer.
+	 * If @a self is root, calls registerSelf() to register it with the model.
+	 * This is a separated function so that it can be called from derived classes
+	 */
 	static void baseFinishConstruct(const std::shared_ptr<AbstractTreeModelItem>& self);
 
-	/* @brief Helper functions to handle registration / deregistration to the model */
+	/**
+	 * Helper functions to handle registration / deregistration to the model.
+	 */
 	static void registerSelf(const std::shared_ptr<AbstractTreeModelItem>& self);
 	void deregisterSelf();
 

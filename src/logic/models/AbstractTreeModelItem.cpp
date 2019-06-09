@@ -70,7 +70,7 @@
 #include <logic/UUIncD.h>
 #include "AbstractTreeModel.h"
 
-std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::construct(std::shared_ptr<AbstractTreeModel>& model, bool isRoot, UUIncD id)
+std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::construct(std::shared_ptr<AbstractTreeModel> model, bool isRoot, UUIncD id)
 {
 	std::shared_ptr<AbstractTreeModelItem> self(new AbstractTreeModelItem(model, isRoot, id));
 	baseFinishConstruct(self);
@@ -78,18 +78,15 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::construct(std::sha
 }
 
 AbstractTreeModelItem::AbstractTreeModelItem(const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id)
-	: m_model(model), m_depth(0), m_uuincid(UUIncD::create())/** TODO */,
+	: m_model(model), m_depth(0), m_uuincid(id == UUIncD::null() ? UUIncD::create() : id),
 	  m_is_in_model(false), m_is_root(is_root)
 {
 }
 
-//AbstractTreeModelItem::AbstractTreeModelItem(AbstractTreeModelItem* parent_item)
-//	: m_uuincid(UUIncD::create()), m_parent_item(parent_item->shared_from_this())
-//{
-//}
-
 AbstractTreeModelItem::~AbstractTreeModelItem()
 {
+	deregisterSelf();
+#if 0 /// OBSOLETE
 	// Doesn't remove child items, just deletes them.
 //	qDeleteAll(m_child_items);
 M_WARNING("FIXME: Both these are virtual calls");
@@ -98,6 +95,7 @@ M_WARNING("FIXME: Both these are virtual calls");
 		// Remove and delete all children.
 		removeChildren(0, childCount());
 	}
+#endif
 }
 
 /// Debug streaming implementation.
@@ -327,6 +325,12 @@ bool AbstractTreeModelItem::setData(int column, const QVariant &value)
 bool AbstractTreeModelItem::appendChildren(std::vector<std::shared_ptr<AbstractTreeModelItem>> new_children)
 {
     /// @todo Support adding new columns if children have them?
+    Q_ASSERT(0);
+//    if(auto ptr = m_model.lock())
+//    {
+//    	// We still have a model.
+//    	auto child
+//    }
     for(auto& child : new_children)
     {
 		child->setParentItem(this->shared_from_this());
@@ -338,14 +342,50 @@ bool AbstractTreeModelItem::appendChildren(std::vector<std::shared_ptr<AbstractT
 
 bool AbstractTreeModelItem::appendChild(std::shared_ptr<AbstractTreeModelItem> new_child)
 {
+#if 0
 	std::vector<std::shared_ptr<AbstractTreeModelItem>> new_children;
 
 	new_children.emplace_back(std::move(new_child));
 
 	return appendChildren(std::move(new_children));
+#endif
+
+	if(hasAncestor(new_child->getId())
+	{
+		// Somehow trying to create a cycle in the tree.
+		return false;
+	}
+	if (auto oldParent = child->parentItem().lock())
+	{
+		if (oldParent->getId() == m_id)
+		{
+			// no change needed
+			return true;
+		}
+		else
+		{
+			// in that case a call to removeChild should have been carried out
+			qDebug() << "ERROR: trying to append a child that already has a parent";
+			return false;
+		}
+	}
+	if (auto ptr = m_model.lock())
+	{
+		ptr->notifyRowAboutToAppend(shared_from_this());
+		child->updateParent(shared_from_this());
+		int id = child->getId();
+		auto it = m_childItems.insert(m_childItems.end(), child);
+		m_iteratorTable[id] = it;
+		registerSelf(child);
+		ptr->notifyRowAppended(child);
+		return true;
+	}
+	qDebug() << "ERROR: Something went wrong when appending child in TreeItem. Model is not available anymore";
+	Q_ASSERT(false);
+	return false;
 }
 
-/// Append a  child item from data.
+/// Append a child item from data.
 /// @todo
 std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::appendChild(const QVector<QVariant>& data)
 {
@@ -360,6 +400,16 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::appendChild(const 
 	return std::shared_ptr<AbstractTreeModelItem>();
 }
 
+bool AbstractTreeModelItem::has_ancestor(UUIncD id)
+{
+	if(m_uuincid == id)
+	{
+		// We're our own ancestor.
+		return true;
+	}
+
+}
+
 
 void AbstractTreeModelItem::baseFinishConstruct(const std::shared_ptr<AbstractTreeModelItem>& self)
 {
@@ -371,10 +421,12 @@ void AbstractTreeModelItem::baseFinishConstruct(const std::shared_ptr<AbstractTr
 
 void AbstractTreeModelItem::registerSelf(const std::shared_ptr<AbstractTreeModelItem>& self)
 {
-	for (const auto &child : self->m_child_items)
+	// Register children.
+	for (const auto& child : self->m_child_items)
 	{
 		registerSelf(child);
 	}
+	// If we still have a model, register with it.
 	if (auto ptr = self->m_model.lock())
 	{
 		ptr->register_item(self);

@@ -21,6 +21,7 @@
 
 set(HEADER_FILES_SRC_FUTURE
 	deduced_type.hpp
+	enable_shared_from_this_virtual.h
 	function_traits.hpp
 	future_type_traits.hpp
 	future_algorithms.h

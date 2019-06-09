@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -29,16 +29,18 @@
 #include <QStringLiteral>
 
 // Ours
-#include "../DirScanResult.h"
+#include <logic/DirScanResult.h>
 #include <logic/serialization/ISerializable.h>
+#include <future/enable_shared_from_this_virtual.h>
 class LibraryEntry;
+class ScanResultsTreeModel;
 /// @todo TEMP
 
 
 /**
  * Model of the results of scanning a directory tree.
  */
-class ScanResultsTreeModelItem : public AbstractTreeModelItem
+class ScanResultsTreeModelItem : public AbstractTreeModelItem, public enable_shared_from_this_virtual<ScanResultsTreeModelItem>
 
 {
 	using BASE_CLASS = AbstractTreeModelItem;
@@ -51,8 +53,8 @@ public:
 	/// Create a new model item populated with the passed DirScanResult.
 //	explicit ScanResultsTreeModelItem(const DirScanResult& dsr, AbstractTreeModelItem *parent = nullptr);
 	explicit ScanResultsTreeModelItem(const DirScanResult& dsr,
-			const std::shared_ptr<AbstractTreeModel/**@todo Should be the matching model*/> model,
-			bool is_root = false);
+	                                  const std::shared_ptr<AbstractTreeModel> model,
+	                                  bool is_root = false);
 	~ScanResultsTreeModelItem() override;
 
 	void setDirscanResults(const DirScanResult& dsr);
@@ -105,7 +107,7 @@ protected:
 };
 
 
-class SRTMItem_LibEntry : public ScanResultsTreeModelItem
+class SRTMItem_LibEntry : public ScanResultsTreeModelItem, public enable_shared_from_this_virtual<SRTMItem_LibEntry>
 {
 	using BASE_CLASS = ScanResultsTreeModelItem;
 

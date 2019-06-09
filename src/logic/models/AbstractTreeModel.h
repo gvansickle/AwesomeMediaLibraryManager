@@ -72,12 +72,16 @@ class AbstractHeaderSection;
 class AbstractTreeModelHeaderItem;
 #include <logic/serialization/ISerializable.h>
 #include <logic/UUIncD.h>
+#include <future/enable_shared_from_this_virtual.h>
 
 
 /**
  * Abstract tree model base class.  Inherits from QAbstractItemModel and ISerializable.
  */
-class AbstractTreeModel : public QAbstractItemModel, public virtual ISerializable, public std::enable_shared_from_this<AbstractTreeModel>
+class AbstractTreeModel : public QAbstractItemModel,
+		public virtual ISerializable,
+		public enable_shared_from_this_virtual<AbstractTreeModel>
+//		public std::enable_shared_from_this<AbstractTreeModel>
 {
     Q_OBJECT
 

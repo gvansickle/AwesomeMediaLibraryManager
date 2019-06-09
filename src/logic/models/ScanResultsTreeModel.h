@@ -30,6 +30,7 @@
 #include <utils/QtHelpers.h>
 #include "ScanResultsTreeModelItem.h"
 class AbstractTreeModelHeaderItem;
+#include <future/enable_shared_from_this_virtual.h>
 
 
 /**
@@ -39,7 +40,7 @@ class AbstractTreeModelHeaderItem;
  * - Contains 1 or more tracks.
  * - May have a sidecar or embedded cue sheet.
  */
-class ScanResultsTreeModel : public AbstractTreeModel
+class ScanResultsTreeModel : public AbstractTreeModel, public enable_shared_from_this_virtual<ScanResultsTreeModel>
 {
 	Q_OBJECT
 

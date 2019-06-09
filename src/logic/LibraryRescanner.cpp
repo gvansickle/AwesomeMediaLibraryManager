@@ -232,8 +232,10 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	AMLMJobT<ExtFuture<MetadataReturnVal>>* lib_rescan_job = make_async_AMLMJobT(lib_rescan_future, "LibRescanJob", AMLMApp::instance());
 
     // Get a pointer to the Scan Results Tree model.
+    /// @note This ptr will go away when we exit the function, so we can't copy it into any stap() lambdas.
     M_WARNING("THIS SHOULD BE ::construct");
 	std::shared_ptr<ScanResultsTreeModel> tree_model = AMLMApp::IScanResultsTreeModel();
+	Q_ASSERT(tree_model);
     // Set the root URL of the scan results model.
     /// @todo Should this really be done here, or somewhere else?
     tree_model->setBaseDirectory(dir_url);
@@ -363,17 +365,15 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	});
 
 #if 1
-	/// @stap
-	/// Load the LibraryEntry's.
-//	tree_model_item_future.stap([=, tree_model_ptr=tree_model](ExtFuture<SharedItemContType> new_items_future, int begin_index, int end_index){
-
-//	})
 	/// Append TreeModelItems to the tree_model.
+	Q_ASSERT(tree_model);
 	tree_model_item_future.stap(this,
-								[=, tree_model_ptr=tree_model](ExtFuture<SharedItemContType> new_items_future, int begin_index, int end_index) mutable {
+								[this/*, tree_model_sptr=tree_model*/](ExtFuture<SharedItemContType> new_items_future,
+								                                               int begin_index, int end_index) mutable {
 
 		AMLM_ASSERT_IN_GUITHREAD();
-
+		std::shared_ptr<ScanResultsTreeModel> tree_model_ptr = AMLMApp::IScanResultsTreeModel();
+		Q_ASSERT(tree_model_ptr);
 //		qDb() << "START: tree_model_item_future.stap(), new_items_future count:" << new_items_future.resultCount();
 
 		// For each QList<SharedItemContType> entry.
@@ -402,6 +402,7 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 
 			// Finally, move the new model items to their new home.
 #if 1 // signal
+			M_WARNING("CRASHING HERE");
 			tree_model_ptr->appendItems(*new_items_vector_ptr);
 #else
 			Q_EMIT SIGNAL_StapToTreeModel(std::move(*new_items_vector_ptr));
