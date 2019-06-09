@@ -109,13 +109,6 @@ protected:
 	AbstractTreeModelItem(const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id = UUIncD::null());
 
 public:
-//	/**
-//	 * Default constructor.
-//	 * @param parent_item  The AbstractTreeModelItem which is both the owner and "tree-wise" parent of this item.
-//	 *                     @note This is completely unrelated to QObject parentage, this class isn't derived from QObject.
-//	 *                     However, we still own our children and have to delete them on destruction.
-//	 */
-//	explicit AbstractTreeModelItem(AbstractTreeModelItem* parent_item);
 	~AbstractTreeModelItem() override;
 
     /// Return a pointer to the number'th child of this item.
@@ -173,13 +166,14 @@ public:
     int childNumber() const;
 
 	/**
-	 * Append the given @a new_children to this item.  This item takes ownership of the children via std::unique_ptr<>,
-	 * and is set as the parent of the child items.
-	 * @param new_children
-	 * @return
+	 * Append the given @a new_children to this item.
 	 */
 	bool appendChildren(std::vector<std::shared_ptr<AbstractTreeModelItem>> new_children);
 	bool appendChild(std::shared_ptr<AbstractTreeModelItem> new_child);
+	/**
+	 * Construct and Append a new child item to this item, initializing it from @a data.
+	 */
+	std::shared_ptr<AbstractTreeModelItem> appendChild(const QVector<QVariant>& data = {});
 
 	/// @name Serialization
 	/// These are from the ISerializable interface.
@@ -203,8 +197,10 @@ protected:
 	static void registerSelf(const std::shared_ptr<AbstractTreeModelItem>& self);
 	void deregisterSelf();
 
-    /// Sets this item's parent item to parent_item.
-    /// Primarily for use in appendChildren().
+    /**
+     * Sets this item's parent item to parent_item.
+     * Primarily for use in appendChildren().
+     */
 	virtual void setParentItem(std::shared_ptr<AbstractTreeModelItem> parent_item);
 
 	/**

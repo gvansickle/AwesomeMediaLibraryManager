@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *

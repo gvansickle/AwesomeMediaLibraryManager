@@ -41,10 +41,9 @@
 //	m_dsr = dsr;
 //}
 
-ScanResultsTreeModelItem::ScanResultsTreeModelItem(const std::shared_ptr<AbstractTreeModel> model, bool is_root)
-	: BASE_CLASS(model, is_root)
+ScanResultsTreeModelItem::ScanResultsTreeModelItem(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModel> model, bool is_root)
+	: BASE_CLASS(model, is_root), m_dsr(dsr)
 {
-
 }
 
 ScanResultsTreeModelItem::~ScanResultsTreeModelItem()
@@ -175,6 +174,11 @@ bool ScanResultsTreeModelItem::derivedClassRemoveColumns(int first_column_to_rem
 	return true;
 }
 
+void ScanResultsTreeModelItem::setDirscanResults(const DirScanResult& dsr)
+{
+	m_dsr = dsr;
+}
+
 
 /////////// @todo SRTMItem_LibEntry
 
@@ -193,8 +197,8 @@ bool SRTMItem_LibEntry::derivedClassRemoveColumns(int first_column_to_remove, in
 	return ScanResultsTreeModelItem::derivedClassRemoveColumns(first_column_to_remove, num_columns);
 }
 
-SRTMItem_LibEntry::SRTMItem_LibEntry(const std::shared_ptr<AbstractTreeModel>& model, bool is_root)
-	: BASE_CLASS(std::static_pointer_cast<AbstractTreeModel>(model), is_root)
+SRTMItem_LibEntry::SRTMItem_LibEntry(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModel>& model, bool is_root)
+	: BASE_CLASS(dsr, std::static_pointer_cast<AbstractTreeModel>(model), is_root)
 {
 
 }

@@ -21,6 +21,9 @@
 
 #include "AMLMApp.h"
 
+// Std C++
+#include <memory>
+
 // Qt5
 #include <QProcessEnvironment>
 #include <QStandardPaths>
@@ -89,7 +92,7 @@ void AMLMApp::Init(bool gtest_only)
 //	auto db_dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
 
 	// Create and set up the scan results tree model.
-	m_srtm_instance = new ScanResultsTreeModel(this);
+	m_srtm_instance = std::make_shared<ScanResultsTreeModel>(this);
 	// Create and set the root item / headers
 M_TODO("Needs to be ColumnSpecs");
 	m_srtm_instance->setColumnSpecs({"DirProps", "MediaURL", "SidecarCueURL"});
@@ -116,6 +119,13 @@ AMLMApp* AMLMApp::instance()
     Q_ASSERT(m_the_instance != nullptr);
     return m_the_instance;
 }
+
+// Static
+std::shared_ptr<ScanResultsTreeModel> AMLMApp::IScanResultsTreeModel()
+{
+	return amlmApp->m_srtm_instance;
+};
+
 
 QMimeDatabase& AMLMApp::mime_db()
 {

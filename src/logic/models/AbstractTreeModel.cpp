@@ -75,16 +75,13 @@
 std::shared_ptr<AbstractTreeModel> AbstractTreeModel::construct(QObject* parent)
 {
 	std::shared_ptr<AbstractTreeModel> self(new AbstractTreeModel(parent));
-	self->m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(self, true);
+//	self->m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(self, true);
+	self->m_root_item = AbstractTreeModelHeaderItem::construct(self, true);
 	return self;
 }
 
 AbstractTreeModel::AbstractTreeModel(QObject* parent) : QAbstractItemModel(parent)
 {
-//	auto horizontal_header_item = std::shared_ptr<AbstractTreeModelHeaderItem>();
-
-	/// @todo The equiv. of this is in kdenlive's ::construct()
-	m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(this->shared_from_this(), true);//, horizontal_header_item);
 }
 
 AbstractTreeModel::~AbstractTreeModel()

@@ -1755,11 +1755,13 @@ void MainWindow::newCollectionView()
 
 //    child->getTableView()->setModel(model);
 //    child->setPane2Model(AMLMApp::instance()->cdb2_model_instance());
-    child->setPane2Model(AMLMApp::instance()->IScanResultsTreeModel());
+M_WARNING("SHARED PTR");
+	child->setPane2Model(AMLMApp::instance()->IScanResultsTreeModel().get());
 
 	auto second_child = new ExperimentalKDEView1(this);
 	auto second_mdi_child = m_mdi_area->addSubWindow(second_child);
-	second_child->setModel(AMLMApp::instance()->IScanResultsTreeModel());
+M_WARNING("SHARED PTR");
+	second_child->setModel(AMLMApp::instance()->IScanResultsTreeModel().get());
 
     mdi_child->show();
 	second_mdi_child->show();

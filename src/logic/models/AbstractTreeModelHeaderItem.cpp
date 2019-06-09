@@ -172,13 +172,16 @@ M_WARNING("NEED TO GO THROUGH MODEL HERE?");
 	this->appendChildren(std::move(temp_items));
 }
 
-//ScanResultsTreeModelItem*
+//std::shared_ptr<ScanResultsTreeModelItem>
 //AbstractTreeModelHeaderItem::do_create_default_constructed_child_item(AbstractTreeModelItem *parent, int num_columns)
 //{
+//M_WARNING("SHARED PTR");
+////	std::shared_ptr<ScanResultsTreeModelItem> child_item;
 //	ScanResultsTreeModelItem* child_item;
-
-//	child_item = new ScanResultsTreeModelItem(parent);
-
+//
+////	child_item = std::make_shared<ScanResultsTreeModelItem>(parent);
+//	auto child_item = appendChild();
+//
 //	return child_item;
 //}
 

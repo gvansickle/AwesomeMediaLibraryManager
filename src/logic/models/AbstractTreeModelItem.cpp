@@ -345,6 +345,22 @@ bool AbstractTreeModelItem::appendChild(std::shared_ptr<AbstractTreeModelItem> n
 	return appendChildren(std::move(new_children));
 }
 
+/// Append a  child item from data.
+/// @todo
+std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::appendChild(const QVector<QVariant>& data)
+{
+	if (auto ptr = m_model.lock())
+	{
+		auto child = construct(ptr, false);
+		appendChild(child);
+		return child;
+	}
+	qDebug() << "ERROR: Something went wrong when appending child in TreeItem. Model is not available anymore";
+	Q_ASSERT(false);
+	return std::shared_ptr<AbstractTreeModelItem>();
+}
+
+
 void AbstractTreeModelItem::baseFinishConstruct(const std::shared_ptr<AbstractTreeModelItem>& self)
 {
 	if(self->m_is_root)

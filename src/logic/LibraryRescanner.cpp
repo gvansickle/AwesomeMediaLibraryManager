@@ -232,7 +232,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	AMLMJobT<ExtFuture<MetadataReturnVal>>* lib_rescan_job = make_async_AMLMJobT(lib_rescan_future, "LibRescanJob", AMLMApp::instance());
 
     // Get a pointer to the Scan Results Tree model.
-	ScanResultsTreeModel* tree_model = AMLMApp::IScanResultsTreeModel();
+    M_WARNING("THIS SHOULD BE ::construct");
+	std::shared_ptr<ScanResultsTreeModel> tree_model = AMLMApp::IScanResultsTreeModel();
     // Set the root URL of the scan results model.
     /// @todo Should this really be done here, or somewhere else?
     tree_model->setBaseDirectory(dir_url);
@@ -261,7 +262,9 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 		// Create a new container instance we'll use to pass the incoming values to the GUI thread below.
 		/// @todo We should find a better way to do this sort of thing.
 		/// Maybe a multi-output .tap()?
+		/// @note This is really populated with as type vector<shared_ptr<ScanResultsTreeModelItem>>
 		SharedItemContType new_items = std::make_shared<ItemContType>();
+//		std::shared_ptr<std::vector<std::shared_ptr<ScanResultsTreeModelItem>>> new_items = std::make_shared<std::vector<std::shared_ptr<ScanResultsTreeModelItem>>>();
 
 		int original_end = end;
 		for(int i=begin; i<end; i++)
@@ -269,7 +272,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 			DirScanResult dsr = tap_future.resultAt(i);
 
 			// Add another entry to the vector we'll send to the model.
-			new_items->emplace_back(std::make_unique<ScanResultsTreeModelItem>(dsr));
+			new_items->emplace_back(std::make_shared<ScanResultsTreeModelItem>(dsr, tree_model));
 
 			if(i >= end)
 			{
@@ -328,6 +331,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 
 		/// @note This could also be a signal emit.
 		/// @note passing a shared_ptr to a vector of unique_ptrs between threads.
+//		auto new_items_upcast = std::static_pointer_cast<std::shared_ptr<std::vector<std::shared_ptr<AbstractTreeModelItem> > >(new_items);
 		tree_model_item_future.reportResult(new_items);
 
 //		qDb() << "END OF DSR TAP:" << M_ID_VAL(tree_model_item_future);
@@ -383,8 +387,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 			{
 				// Make sure the entry wasn't moved from.
 				Q_ASSERT(bool(entry) == true);
-
-				auto new_child = std::make_shared<SRTMItem_LibEntry>();
+				auto entry_dp = std::dynamic_pointer_cast<ScanResultsTreeModelItem>(entry);
+				auto new_child = std::make_shared<SRTMItem_LibEntry>(entry_dp->getDsr(), tree_model_ptr, /**isRoot*/false);
 				std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(entry->data(1).toString());
 
 M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
@@ -451,7 +455,8 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 		        Q_ASSERT(m_model_ready_to_save_to_db == true);
 		        m_model_ready_to_save_to_db = false;
 				m_timer.lap("Start of SaveDatabase");
-		        SaveDatabase(tree_model_ptr, database_filename);
+M_WARNING("SHARED PTR");
+				SaveDatabase(tree_model_ptr.get(), database_filename);
 				m_timer.lap("End of SaveDatabase");
 
 
