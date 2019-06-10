@@ -200,6 +200,35 @@ void AbstractTreeModel::deregister_item(UUIncD id, AbstractTreeModelItem* item)
 	m_model_item_map.erase(id);
 }
 
+void AbstractTreeModel::notifyRowAboutToAppend(const std::shared_ptr<AbstractTreeModelItem>& item)
+{
+	auto index = getIndexFromItem(item);
+	beginInsertRows(index, item->childCount(), item->childCount());
+}
+
+void AbstractTreeModel::notifyRowAppended(const std::shared_ptr<AbstractTreeModelItem>& row)
+{
+	Q_UNUSED(row);
+	endInsertRows();
+}
+
+void AbstractTreeModel::notifyRowAboutToDelete(std::shared_ptr<AbstractTreeModelItem> item, int row)
+{
+	auto index = getIndexFromItem(item);
+	beginRemoveRows(index, row, row);
+}
+
+void AbstractTreeModel::notifyRowDeleted()
+{
+	endRemoveRows();
+}
+
+bool AbstractTreeModel::checkConsistency()
+{
+	/// @todo
+	return true;
+}
+
 QVariant AbstractTreeModel::headerData(int section, Qt::Orientation orientation,
                                int role) const
 {

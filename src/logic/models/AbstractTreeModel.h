@@ -210,6 +210,8 @@ public:
 	std::shared_ptr<AbstractTreeModelItem> getItemById(const UUIncD &id) const;
 	std::shared_ptr<AbstractTreeModelItem> getRootItem() const;
 
+
+
 	/// @name Serialization, from ISerializable.
 	/// Remember to override these in derived classes.
 	/// @{
@@ -231,6 +233,31 @@ protected:
 
 	virtual void register_item(const std::shared_ptr<AbstractTreeModelItem>& item);
 	virtual void deregister_item(UUIncD id, AbstractTreeModelItem* item);
+
+	/**
+	 * Send the appropriate pre-notification related to a row that we are appending.
+	 * @param item is the parent item to which row is about to be appended.
+	 */
+	void notifyRowAboutToAppend(const std::shared_ptr<AbstractTreeModelItem> &item);
+
+	/* @brief Send the appropriate notification related to a row that we have appended
+       @param row is the new element
+    */
+	void notifyRowAppended(const std::shared_ptr<AbstractTreeModelItem> &row);
+
+	/* @brief Send the appropriate notification related to a row that we are deleting
+	   @param item is the parent of the row being deleted
+	   @param row is the index of the row being deleted
+	*/
+	void notifyRowAboutToDelete(std::shared_ptr<AbstractTreeModelItem> item, int row);
+
+	/* @brief Send the appropriate notification related to a row that we have appended
+	   @param row is the old element
+	*/
+	void notifyRowDeleted();
+
+	/* @brief This is a convenience function that helps check if the tree is in a valid state */
+	virtual bool checkConsistency();
 
 	/// @name Extended protected model interface.
 	/// @{

@@ -382,13 +382,15 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 			auto result = new_items_future.resultAt(index);
 			const SharedItemContType& new_items_vector_ptr = result;
 
-			// Append entries to the ScanResultsTreeModel.
+			// Append ScanResultTreeModelItem entries to the ScanResultsTreeModel.
 			for(std::shared_ptr<AbstractTreeModelItem>& entry : *new_items_vector_ptr)
 			{
 				// Make sure the entry wasn't moved from.
 				Q_ASSERT(bool(entry) == true);
 				auto entry_dp = std::dynamic_pointer_cast<ScanResultsTreeModelItem>(entry);
-				auto new_child = std::make_shared<SRTMItem_LibEntry>(entry_dp->getDsr(), tree_model_ptr, /**isRoot*/false);
+				Q_ASSERT(entry_dp);
+				std::shared_ptr<SRTMItem_LibEntry> new_child = std::make_shared<SRTMItem_LibEntry>(entry_dp->getDsr(), tree_model_ptr, /**isRoot*/false);
+				Q_ASSERT(new_child);
 				std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(entry->data(1).toString());
 
 M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
@@ -397,7 +399,7 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 
 				// Here we're only dealing with the per-file LibraryEntry's.
 				new_child->setLibraryEntry(lib_entry);
-				entry->appendChild(std::move(new_child));
+				entry->appendChild(new_child);
 			}
 
 			// Finally, move the new model items to their new home.

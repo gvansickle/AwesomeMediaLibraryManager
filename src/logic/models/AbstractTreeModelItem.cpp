@@ -1,62 +1,38 @@
-/**
- * Adapted from the "Editable Tree Model Example" shipped with Qt5.
+/*
+ * Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ *
+ * This file is part of AwesomeMediaLibraryManager.
+ *
+ * AwesomeMediaLibraryManager is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * AwesomeMediaLibraryManager is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/****************************************************************************
-**
-** Copyright (C) 2016 The Qt Company Ltd.
-** Contact: https://www.qt.io/licensing/
-**
-** This file is part of the examples of the Qt Toolkit.
-**
-** $QT_BEGIN_LICENSE:BSD$
-** Commercial License Usage
-** Licensees holding valid commercial Qt licenses may use this file in
-** accordance with the commercial license agreement provided with the
-** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see https://www.qt.io/terms-conditions. For further
-** information use the contact form at https://www.qt.io/contact-us.
-**
-** BSD License Usage
-** Alternatively, you may use this file under the terms of the BSD license
-** as follows:
-**
-** "Redistribution and use in source and binary forms, with or without
-** modification, are permitted provided that the following conditions are
-** met:
-**   * Redistributions of source code must retain the above copyright
-**     notice, this list of conditions and the following disclaimer.
-**   * Redistributions in binary form must reproduce the above copyright
-**     notice, this list of conditions and the following disclaimer in
-**     the documentation and/or other materials provided with the
-**     distribution.
-**   * Neither the name of The Qt Company Ltd nor the names of its
-**     contributors may be used to endorse or promote products derived
-**     from this software without specific prior written permission.
-**
-**
-** THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-** "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-** LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-** A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-** OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-** SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-** LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-** DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-** THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-** (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-** OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
-**
-** $QT_END_LICENSE$
-**
-****************************************************************************/
-
+/**
+ * @file AbstractTreeModelItem.cpp
+ * Implementation of AbstractTreeModelItem.
+ *
+ * This class is heavily adapted from at least the following:
+ * - The "Editable Tree Model Example" shipped with Qt5.
+ * - KDenLive's TreeItem class.
+ * - My own original work.
+ * - Hundreds of nuggets of information from all over the Internet.
+ */
 
 #include "AbstractTreeModelItem.h"
 
 // Std C++
 #include <memory>
+//#include <execution>
 
 // Qt5
 #include <QBrush>
@@ -86,16 +62,6 @@ AbstractTreeModelItem::AbstractTreeModelItem(const std::shared_ptr<AbstractTreeM
 AbstractTreeModelItem::~AbstractTreeModelItem()
 {
 	deregisterSelf();
-#if 0 /// OBSOLETE
-	// Doesn't remove child items, just deletes them.
-//	qDeleteAll(m_child_items);
-M_WARNING("FIXME: Both these are virtual calls");
-	if(childCount() > 0)
-	{
-		// Remove and delete all children.
-		removeChildren(0, childCount());
-	}
-#endif
 }
 
 /// Debug streaming implementation.
@@ -146,10 +112,12 @@ int AbstractTreeModelItem::childNumber() const
 {
 	if (auto shpt = m_parent_item.lock())
 	{
-//		return stdex::indexOf(m_parent_item->m_child_items, this);
-		auto iter = std::find_if(shpt->m_child_items.cbegin(), shpt->m_child_items.cend(),
-				[=](const auto& unptr){ return unptr.get() == this; });
-		return iter - shpt->m_child_items.cbegin();
+//		auto iter = std::find_if(shpt->m_child_items.cbegin(), shpt->m_child_items.cend(),
+//				[=](const auto& unptr){ return unptr.get() == this; });
+//		return iter - shpt->m_child_items.cbegin();
+		// We compute the distance in the parent's children list
+		auto it = shpt->m_child_items.begin();
+		return (int)std::distance(it, (decltype(it))shpt->get_m_child_items_iterator(m_uuincid));
 	}
 	else
 	{
@@ -157,7 +125,7 @@ int AbstractTreeModelItem::childNumber() const
 		Q_ASSERT(0);
 	}
 
-    return 0;
+    return -1;
 }
 
 //int AbstractTreeModelItem::columnCount() const
@@ -263,7 +231,33 @@ bool AbstractTreeModelItem::removeChildren(int position, int count)
 //		child.release();
 //	}
 
-    return true;
+	return true;
+}
+
+void AbstractTreeModelItem::removeChild(const std::shared_ptr<AbstractTreeModelItem>& child)
+{
+	if (auto ptr = m_model.lock())
+	{
+		ptr->notifyRowAboutToDelete(shared_from_this(), child->childNumber());
+		// get iterator corresponding to child
+		auto it = get_m_child_items_iterator(child->getId());
+		Q_ASSERT(it != m_child_items.end());
+//		Q_ASSERT(m_iteratorTable.count(child->getId()) > 0);
+//		auto it = m_iteratorTable[child->getId()];
+		// deletion of child
+		m_child_items.erase(it);
+		// clean iterator table
+//		m_iteratorTable.erase(child->getId());
+		child->m_depth = 0;
+		child->m_parent_item.reset();
+		child->deregisterSelf();
+		ptr->notifyRowDeleted();
+	}
+	else
+	{
+		qDebug() << "ERROR: Something went wrong when removing child in TreeItem. Model is not available anymore";
+		Q_ASSERT(false);
+	}
 }
 
 
@@ -325,16 +319,15 @@ bool AbstractTreeModelItem::setData(int column, const QVariant &value)
 bool AbstractTreeModelItem::appendChildren(std::vector<std::shared_ptr<AbstractTreeModelItem>> new_children)
 {
     /// @todo Support adding new columns if children have them?
-    Q_ASSERT(0);
-//    if(auto ptr = m_model.lock())
-//    {
-//    	// We still have a model.
-//    	auto child
-//    }
     for(auto& child : new_children)
     {
-		child->setParentItem(this->shared_from_this());
-        m_child_items.emplace_back(std::move(child));
+		bool retval = appendChild(child);
+		if(!retval)
+		{
+			/// @todo Recovery?
+			Q_ASSERT(0);
+			return false;
+		}
     }
 
 	return true;
@@ -342,22 +335,14 @@ bool AbstractTreeModelItem::appendChildren(std::vector<std::shared_ptr<AbstractT
 
 bool AbstractTreeModelItem::appendChild(std::shared_ptr<AbstractTreeModelItem> new_child)
 {
-#if 0
-	std::vector<std::shared_ptr<AbstractTreeModelItem>> new_children;
-
-	new_children.emplace_back(std::move(new_child));
-
-	return appendChildren(std::move(new_children));
-#endif
-
-	if(hasAncestor(new_child->getId())
+	if(has_ancestor(new_child->getId()))
 	{
 		// Somehow trying to create a cycle in the tree.
 		return false;
 	}
-	if (auto oldParent = child->parentItem().lock())
+	if (auto oldParent = new_child->parent().lock())
 	{
-		if (oldParent->getId() == m_id)
+		if (oldParent->getId() == m_uuincid)
 		{
 			// no change needed
 			return true;
@@ -372,12 +357,12 @@ bool AbstractTreeModelItem::appendChild(std::shared_ptr<AbstractTreeModelItem> n
 	if (auto ptr = m_model.lock())
 	{
 		ptr->notifyRowAboutToAppend(shared_from_this());
-		child->updateParent(shared_from_this());
-		int id = child->getId();
-		auto it = m_childItems.insert(m_childItems.end(), child);
-		m_iteratorTable[id] = it;
-		registerSelf(child);
-		ptr->notifyRowAppended(child);
+		new_child->updateParent(shared_from_this());
+		int id = new_child->getId();
+		auto it = m_child_items.insert(m_child_items.end(), new_child);
+//		m_iteratorTable[id] = it;
+		registerSelf(new_child);
+		ptr->notifyRowAppended(new_child);
 		return true;
 	}
 	qDebug() << "ERROR: Something went wrong when appending child in TreeItem. Model is not available anymore";
@@ -407,7 +392,13 @@ bool AbstractTreeModelItem::has_ancestor(UUIncD id)
 		// We're our own ancestor.
 		return true;
 	}
-
+	if(auto ptr = m_parent_item.lock())
+	{
+		// We have a parent, recurse into it for the answer.
+		/// @note It's nice to have a lot of stack sometimes, isn't it?
+		return ptr->has_ancestor(id);
+	}
+	return false;
 }
 
 
@@ -455,18 +446,55 @@ void AbstractTreeModelItem::deregisterSelf()
 	}
 }
 
-void AbstractTreeModelItem::setParentItem(std::shared_ptr<AbstractTreeModelItem> parent_item)
+void AbstractTreeModelItem::updateParent(std::shared_ptr<AbstractTreeModelItem> parent)
 {
-//	Q_ASSERT(parent_item != nullptr);
-	AMLM_WARNIF(m_parent_item.expired());
-//	AMLM_WARNIF(m_parent_item->columnCount() != this->columnCount());
+	m_parent_item = parent;
+	if(parent)
+	{
+		m_depth = parent->m_depth + 1;
+	}
+}
 
-	m_parent_item = parent_item;
+bool AbstractTreeModelItem::setParentItem(std::shared_ptr<AbstractTreeModelItem> new_parent)
+{
+	Q_ASSERT(!m_is_root);
+	if (m_is_root)
+	{
+		return false;
+	}
+	std::shared_ptr<AbstractTreeModelItem> oldParent;
+	if ((oldParent = m_parent_item.lock()))
+	{
+		oldParent->removeChild(shared_from_this());
+	}
+	bool res = true;
+	if (new_parent)
+	{
+		res = new_parent->appendChild(shared_from_this());
+		if (res)
+		{
+			m_parent_item = new_parent;
+		}
+		else if (oldParent)
+		{
+			// something went wrong, we have to reset the parent.
+			bool reverse = oldParent->appendChild(shared_from_this());
+			Q_ASSERT(reverse);
+		}
+	}
+	return res;
 }
 
 std::unique_ptr<AbstractTreeModelItem>
 AbstractTreeModelItem::create_default_constructed_child_item(AbstractTreeModelItem* parent, int num_columns)
 {
 	return std::unique_ptr<AbstractTreeModelItem>(this->do_create_default_constructed_child_item(parent, num_columns));
+}
+
+AbstractTreeModelItem::CICTIteratorType AbstractTreeModelItem::get_m_child_items_iterator(UUIncD id)
+{
+	CICTIteratorType retval;
+	retval = std::find_if(/*std::execution::par,*/ m_child_items.begin(), m_child_items.end(), [id](auto& val){ return val->m_uuincid == id; });
+	return retval;
 }
 

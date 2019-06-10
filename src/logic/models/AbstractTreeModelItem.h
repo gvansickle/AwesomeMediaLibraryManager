@@ -164,6 +164,11 @@ public:
 	 * Remove and delete the @a count children starting at @a position.
 	 */
     bool removeChildren(int position, int count);
+	/* @brief Remove given child from children list. The parent of the child is updated
+	   accordingly
+	 */
+	void removeChild(const std::shared_ptr<AbstractTreeModelItem>& child);
+
     bool removeColumns(int position, int columns);
 
     /// The row number of this item in its parent's list of children.
@@ -211,11 +216,18 @@ protected:
 	static void registerSelf(const std::shared_ptr<AbstractTreeModelItem>& self);
 	void deregisterSelf();
 
+	/**
+	 * Reflect update of the parent ptr (for example set the correct depth).
+     * This is meant to be overridden in derived classes
+     * @param ptr is the pointer to the new parent
+	 */
+	virtual void updateParent(std::shared_ptr<AbstractTreeModelItem> parent);
+
     /**
      * Sets this item's parent item to parent_item.
      * Primarily for use in appendChildren().
      */
-	virtual void setParentItem(std::shared_ptr<AbstractTreeModelItem> parent_item);
+	virtual bool setParentItem(std::shared_ptr<AbstractTreeModelItem> new_parent);
 
 	/**
 	 * Non-virtual Interface factory function for creating default-constructed child nodes.
@@ -232,16 +244,29 @@ protected:
 
 	/// @name Virtual functions called by the base class to complete certain operations.
 	///       The base class will have error-checked function parameters.
+	/// @todo I think these are obsolete now, remove.
 	/// @{
 	virtual bool derivedClassSetData(int column, const QVariant &value) { return 0; };
 	virtual bool derivedClassInsertColumns(int insert_before_column, int num_columns) { return 0; };
 	virtual bool derivedClassRemoveColumns(int first_column_to_remove, int num_columns) { return 0; };
 	/// @}
 
+
+
 	/// Our guaranteed-to-be unique-to-this-run-of-the-program numeric ID.
 	UUIncD m_uuincid;
 
 private:
+
+	using ChildItemContainerType = std::deque<std::shared_ptr<AbstractTreeModelItem>>;
+	using CICTIteratorType = ChildItemContainerType::iterator;
+
+	/**
+	 * Returns an iterator pointing to the item with id @a id in @var m_child_items, or m_child_items.end() if not found.
+	 * @param id
+	 * @return
+	 */
+	CICTIteratorType get_m_child_items_iterator(UUIncD id);
 
 	/// Pointer to our parent AbstractTreeModelItem.
 	/// For items in a tree model (i.e. not being copy/pasted or mid-construction), this will always
