@@ -46,8 +46,11 @@ class ScanResultsTreeModelItem : public AbstractTreeModelItem, public enable_sha
 	using BASE_CLASS = AbstractTreeModelItem;
 
 public:
-//	M_GH_RULE_OF_FIVE_DEFAULT_C21(ScanResultsTreeModelItem);
+	static std::shared_ptr<ScanResultsTreeModelItem> construct(const DirScanResult& dsr,
+            const std::shared_ptr<AbstractTreeModel> model,
+            bool is_root = false);
 
+protected:
 	/// Create a default-constructed (i.e. "blank") ScanResultsTreeModelItem, possibly with a given parent.
 //	explicit ScanResultsTreeModelItem(AbstractTreeModelItem *parent = nullptr) : BASE_CLASS(parent) {};
 	/// Create a new model item populated with the passed DirScanResult.
@@ -55,6 +58,8 @@ public:
 	explicit ScanResultsTreeModelItem(const DirScanResult& dsr,
 	                                  const std::shared_ptr<AbstractTreeModel> model,
 	                                  bool is_root = false);
+
+public:
 	~ScanResultsTreeModelItem() override;
 
 	void setDirscanResults(const DirScanResult& dsr);
@@ -112,9 +117,14 @@ class SRTMItem_LibEntry : public ScanResultsTreeModelItem, public enable_shared_
 	using BASE_CLASS = ScanResultsTreeModelItem;
 
 public:
-//	explicit SRTMItem_LibEntry(AbstractTreeModelItem *parent = nullptr) : BASE_CLASS(parent) {};
+	static std::shared_ptr<SRTMItem_LibEntry> construct(const DirScanResult& dsr,
+			const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root);
+
+protected:
 	explicit SRTMItem_LibEntry(const DirScanResult& dsr,
-			const std::shared_ptr</** @todo Associated model*/AbstractTreeModel>& model, bool is_root);
+	                           const std::shared_ptr</** @todo Associated model*/AbstractTreeModel>& model, bool is_root);
+
+public:
 	~SRTMItem_LibEntry() override = default;
 
 	QVariant data(int column, int role = Qt::DisplayRole) const override;

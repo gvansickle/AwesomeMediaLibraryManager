@@ -40,8 +40,7 @@
 std::shared_ptr<AbstractTreeModelHeaderItem>
 AbstractTreeModelHeaderItem::construct(const std::shared_ptr<AbstractTreeModel>& model, bool isRoot)
 {
-M_WARNING("Make_shared doesn't have access to the constructor if it's protected, I'm not understanding what's happening here.");
-//	std::shared_ptr<AbstractTreeModelHeaderItem> self = std::make_shared<AbstractTreeModelHeaderItem>(model, isRoot);
+	/// @note make_shared doesn't have access to the constructor if it's protected, so we have to do this.
 	std::shared_ptr<AbstractTreeModelHeaderItem> self(new AbstractTreeModelHeaderItem(model, isRoot));
 
 	baseFinishConstruct(self);

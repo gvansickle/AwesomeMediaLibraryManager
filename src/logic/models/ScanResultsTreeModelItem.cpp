@@ -42,6 +42,13 @@
 //	m_dsr = dsr;
 //}
 
+std::shared_ptr<ScanResultsTreeModelItem> ScanResultsTreeModelItem::construct(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModel> model, bool is_root)
+{
+	std::shared_ptr<ScanResultsTreeModelItem> self(new ScanResultsTreeModelItem(dsr, model, is_root));
+	baseFinishConstruct(self);
+	return self;
+}
+
 ScanResultsTreeModelItem::ScanResultsTreeModelItem(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModel> model, bool is_root)
 	: BASE_CLASS(model, is_root), m_dsr(dsr)
 {
@@ -196,6 +203,13 @@ bool SRTMItem_LibEntry::derivedClassInsertColumns(int insert_before_column, int 
 bool SRTMItem_LibEntry::derivedClassRemoveColumns(int first_column_to_remove, int num_columns)
 {
 	return ScanResultsTreeModelItem::derivedClassRemoveColumns(first_column_to_remove, num_columns);
+}
+
+std::shared_ptr<SRTMItem_LibEntry> SRTMItem_LibEntry::construct(const DirScanResult& dsr, const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root)
+{
+	std::shared_ptr<SRTMItem_LibEntry> self(new SRTMItem_LibEntry(dsr, model, is_root));
+	baseFinishConstruct(self);
+	return self;
 }
 
 SRTMItem_LibEntry::SRTMItem_LibEntry(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModel>& model, bool is_root)

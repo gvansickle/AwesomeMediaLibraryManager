@@ -274,7 +274,9 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 			DirScanResult dsr = tap_future.resultAt(i);
 
 			// Add another entry to the vector we'll send to the model.
-			new_items->emplace_back(std::make_shared<ScanResultsTreeModelItem>(dsr, tree_model));
+//			new_items->emplace_back(std::make_shared<ScanResultsTreeModelItem>(dsr, tree_model));
+			auto new_item = ScanResultsTreeModelItem::construct(dsr, tree_model);
+			new_items->emplace_back(new_item);
 
 			if(i >= end)
 			{
@@ -387,9 +389,10 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 			{
 				// Make sure the entry wasn't moved from.
 				Q_ASSERT(bool(entry) == true);
+				Q_ASSERT(entry->isInModel());
 				auto entry_dp = std::dynamic_pointer_cast<ScanResultsTreeModelItem>(entry);
 				Q_ASSERT(entry_dp);
-				std::shared_ptr<SRTMItem_LibEntry> new_child = std::make_shared<SRTMItem_LibEntry>(entry_dp->getDsr(), tree_model_ptr, /**isRoot*/false);
+				std::shared_ptr<SRTMItem_LibEntry> new_child = SRTMItem_LibEntry::construct(entry_dp->getDsr(), tree_model_ptr, /**isRoot*/false);
 				Q_ASSERT(new_child);
 				std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(entry->data(1).toString());
 
@@ -399,12 +402,12 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 
 				// Here we're only dealing with the per-file LibraryEntry's.
 				new_child->setLibraryEntry(lib_entry);
+M_WARNING("CRASHING HERE");
 				entry->appendChild(new_child);
 			}
 
 			// Finally, move the new model items to their new home.
 #if 1 // signal
-			M_WARNING("CRASHING HERE");
 			tree_model_ptr->appendItems(*new_items_vector_ptr);
 #else
 			Q_EMIT SIGNAL_StapToTreeModel(std::move(*new_items_vector_ptr));

@@ -201,13 +201,25 @@ const std::weak_ptr<AbstractTreeModelItem> AbstractTreeModelItem::parent() const
 	return m_parent_item;
 }
 
+int AbstractTreeModelItem::depth() const
+{
+	return m_depth;
+}
+
 UUIncD AbstractTreeModelItem::getId() const
 {
 	return m_uuincid;
 }
 
+bool AbstractTreeModelItem::isInModel() const
+{
+	return m_is_in_model;
+}
+
 bool AbstractTreeModelItem::removeChildren(int position, int count)
 {
+	/// @todo
+	Q_ASSERT(0);
 	if (position < 0 || position + count > m_child_items.size())
 	{
 		qCr() << "out of bounds:" << position << count;
@@ -258,6 +270,36 @@ void AbstractTreeModelItem::removeChild(const std::shared_ptr<AbstractTreeModelI
 		qDebug() << "ERROR: Something went wrong when removing child in TreeItem. Model is not available anymore";
 		Q_ASSERT(false);
 	}
+}
+
+bool AbstractTreeModelItem::changeParent(std::shared_ptr<AbstractTreeModelItem> newParent)
+{
+	Q_ASSERT(!m_is_root);
+	if (m_is_root)
+	{
+		return false;
+	}
+	std::shared_ptr<AbstractTreeModelItem> oldParent;
+	if ((oldParent = m_parent_item.lock()))
+	{
+		oldParent->removeChild(shared_from_this());
+	}
+	bool res = true;
+	if (newParent)
+	{
+		res = newParent->appendChild(shared_from_this());
+		if (res)
+		{
+			m_parent_item = newParent;
+		}
+		else if (oldParent)
+		{
+			// something went wrong, we have to reset the parent.
+			bool reverse = oldParent->appendChild(shared_from_this());
+			Q_ASSERT(reverse);
+		}
+	}
+	return res;
 }
 
 
@@ -333,7 +375,7 @@ bool AbstractTreeModelItem::appendChildren(std::vector<std::shared_ptr<AbstractT
 	return true;
 }
 
-bool AbstractTreeModelItem::appendChild(std::shared_ptr<AbstractTreeModelItem> new_child)
+bool AbstractTreeModelItem::appendChild(const std::shared_ptr<AbstractTreeModelItem>& new_child)
 {
 	if(has_ancestor(new_child->getId()))
 	{
@@ -344,7 +386,7 @@ bool AbstractTreeModelItem::appendChild(std::shared_ptr<AbstractTreeModelItem> n
 	{
 		if (oldParent->getId() == m_uuincid)
 		{
-			// no change needed
+			// new_child has us as current parent, no change needed.
 			return true;
 		}
 		else
@@ -380,9 +422,42 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::appendChild(const 
 		appendChild(child);
 		return child;
 	}
-	qDebug() << "ERROR: Something went wrong when appending child in TreeItem. Model is not available anymore";
+	qDebug() << "ERROR: Something went wrong when appending child to AbstractTreeModelItem. Model is not available anymore";
 	Q_ASSERT(false);
 	return std::shared_ptr<AbstractTreeModelItem>();
+}
+
+void AbstractTreeModelItem::moveChild(int ix, const std::shared_ptr<AbstractTreeModelItem>& child)
+{
+	if (auto ptr = m_model.lock())
+	{
+		auto parentPtr = child->m_parent_item.lock();
+		if (parentPtr && parentPtr->getId() != m_uuincid)
+		{
+			parentPtr->removeChild(child);
+		}
+		else
+		{
+			// deletion of child
+//			auto it = m_iteratorTable[child->getId()];
+			auto it = get_m_child_items_iterator(child->getId());
+			m_child_items.erase(it);
+		}
+		ptr->notifyRowAboutToAppend(shared_from_this());
+		child->updateParent(shared_from_this());
+		int id = child->getId();
+		auto pos = m_child_items.begin();
+		std::advance(pos, ix);
+		auto it = m_child_items.insert(pos, child);
+//		m_iteratorTable[id] = it;
+		ptr->notifyRowAppended(child);
+		m_is_in_model = true;
+	}
+	else
+	{
+		qDebug() << "ERROR: Something went wrong when moving child in AbstractTreeModelItem. Model is not available anymore";
+		Q_ASSERT(false);
+	}
 }
 
 bool AbstractTreeModelItem::has_ancestor(UUIncD id)
@@ -425,7 +500,7 @@ void AbstractTreeModelItem::registerSelf(const std::shared_ptr<AbstractTreeModel
 	}
 	else
 	{
-		qDebug() << "Error : construction of treeItem failed because parent model is not available anymore";
+		qDebug() << "Error : construction of AbstractTreeModelItem failed because parent model is not available anymore";
 		Q_ASSERT(false);
 	}
 }
@@ -455,35 +530,35 @@ void AbstractTreeModelItem::updateParent(std::shared_ptr<AbstractTreeModelItem> 
 	}
 }
 
-bool AbstractTreeModelItem::setParentItem(std::shared_ptr<AbstractTreeModelItem> new_parent)
-{
-	Q_ASSERT(!m_is_root);
-	if (m_is_root)
-	{
-		return false;
-	}
-	std::shared_ptr<AbstractTreeModelItem> oldParent;
-	if ((oldParent = m_parent_item.lock()))
-	{
-		oldParent->removeChild(shared_from_this());
-	}
-	bool res = true;
-	if (new_parent)
-	{
-		res = new_parent->appendChild(shared_from_this());
-		if (res)
-		{
-			m_parent_item = new_parent;
-		}
-		else if (oldParent)
-		{
-			// something went wrong, we have to reset the parent.
-			bool reverse = oldParent->appendChild(shared_from_this());
-			Q_ASSERT(reverse);
-		}
-	}
-	return res;
-}
+//bool AbstractTreeModelItem::setParentItem(std::shared_ptr<AbstractTreeModelItem> new_parent)
+//{
+//	Q_ASSERT(!m_is_root);
+//	if (m_is_root)
+//	{
+//		return false;
+//	}
+//	std::shared_ptr<AbstractTreeModelItem> oldParent;
+//	if ((oldParent = m_parent_item.lock()))
+//	{
+//		oldParent->removeChild(shared_from_this());
+//	}
+//	bool res = true;
+//	if (new_parent)
+//	{
+//		res = new_parent->appendChild(shared_from_this());
+//		if (res)
+//		{
+//			m_parent_item = new_parent;
+//		}
+//		else if (oldParent)
+//		{
+//			// something went wrong, we have to reset the parent.
+//			bool reverse = oldParent->appendChild(shared_from_this());
+//			Q_ASSERT(reverse);
+//		}
+//	}
+//	return res;
+//}
 
 std::unique_ptr<AbstractTreeModelItem>
 AbstractTreeModelItem::create_default_constructed_child_item(AbstractTreeModelItem* parent, int num_columns)

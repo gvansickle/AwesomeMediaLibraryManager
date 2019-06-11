@@ -75,7 +75,6 @@
 std::shared_ptr<AbstractTreeModel> AbstractTreeModel::construct(QObject* parent)
 {
 	std::shared_ptr<AbstractTreeModel> self(new AbstractTreeModel(parent));
-//	self->m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(self, true);
 	self->m_root_item = AbstractTreeModelHeaderItem::construct(self, true);
 	return self;
 }
