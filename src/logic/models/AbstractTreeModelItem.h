@@ -98,7 +98,7 @@ public:
 	 * Default construction is via the create_default_constructed_child_item() function (pure virtual here).
 	 * @return true if successful.
 	 */
-    virtual bool insertChildren(int position, int count, int columns);
+//    virtual bool insertChildren(int position, int count, int columns);
 
     virtual bool insertColumns(int insert_before_column, int num_columns);
 
@@ -190,18 +190,12 @@ protected:
 	 */
 	virtual void updateParent(std::shared_ptr<AbstractTreeModelItem> parent);
 
-    /**
-     * Sets this item's parent item to parent_item.
-     * Primarily for use in appendChildren().
-     */
-//	virtual bool setParentItem(std::shared_ptr<AbstractTreeModelItem> new_parent);
-
-	/**
-	 * Non-virtual Interface factory function for creating default-constructed child nodes.
-	 * Used by insertChildren().  Do not attempt to override in derived classes.
-	 */
-	std::unique_ptr<AbstractTreeModelItem>
-	create_default_constructed_child_item(AbstractTreeModelItem* parent, int num_columns);
+//	/**
+//	 * Non-virtual Interface factory function for creating default-constructed child nodes.
+//	 * Used by insertChildren().  Do not attempt to override in derived classes.
+//	 */
+//	std::unique_ptr<AbstractTreeModelItem>
+//	create_default_constructed_child_item(AbstractTreeModelItem* parent, int num_columns);
 
 	/**
 	 * The covariant-return-type factory function for child items.  Override in derived classes.

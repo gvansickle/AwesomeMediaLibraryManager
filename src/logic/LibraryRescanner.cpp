@@ -409,6 +409,8 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 				// Here we're only dealing with the per-file LibraryEntry's.
 				new_child->setLibraryEntry(lib_entry);
 M_WARNING("CRASHING HERE");
+				/// NEW: Give the incoming entry a parent.
+				entry->changeParent(tree_model_ptr->getRootItem());
 				entry->appendChild(new_child);
 			}
 

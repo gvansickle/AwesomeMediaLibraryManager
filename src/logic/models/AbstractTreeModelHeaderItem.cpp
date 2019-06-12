@@ -175,7 +175,8 @@ M_WARNING("NEED TO GO THROUGH MODEL HERE?");
 	for(const QVariant& child : child_list)
 	{
 		qDb() << "READING CHILD ITEM:" << child;
-		auto child_item = this->create_default_constructed_child_item(this, columnCount());
+//		auto child_item = this->create_default_constructed_child_item(this, columnCount());
+		auto child_item = this->appendChild();
 		child_item->fromVariant(child);
 		// Save it off temporarily.
 		temp_items.push_back(std::move(child_item));

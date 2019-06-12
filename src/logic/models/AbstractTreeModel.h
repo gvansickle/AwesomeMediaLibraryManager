@@ -159,8 +159,8 @@ public:
      *
      * @return true on success.
      */
-    bool insertColumns(int insert_before_column, int num_columns,
-                       const QModelIndex& parent_model_index = QModelIndex()) override;
+//    bool insertColumns(int insert_before_column, int num_columns,
+//                       const QModelIndex& parent_model_index = QModelIndex()) override;
 	/**
 	 * Remove columns.
 	 */
@@ -174,8 +174,8 @@ public:
      *
      * @return true on success.
      */
-    bool insertRows(int insert_before_row, int num_rows,
-                    const QModelIndex& parent_model_index = QModelIndex()) override;
+//    bool insertRows(int insert_before_row, int num_rows,
+//                    const QModelIndex& parent_model_index = QModelIndex()) override;
 
     /**
      * Remove rows [@a remove_start_row, @a remove_start_row + @a num_rows - 1 ].
@@ -203,7 +203,6 @@ public:
 	virtual bool appendItems(std::vector<std::shared_ptr<AbstractTreeModelItem> > new_items, const QModelIndex &parent = QModelIndex());
 	virtual bool appendItem(std::shared_ptr<AbstractTreeModelItem> new_items, const QModelIndex &parent = QModelIndex());
 
-//	[[deprecated]] AbstractTreeModelItem* getItem(const QModelIndex &index) const;
 	QModelIndex getIndexFromItem(const std::shared_ptr<AbstractTreeModelItem>& item) const;
 	QModelIndex getIndexFromId(UUIncD id) const;
 	std::shared_ptr<AbstractTreeModelItem> getItemById(const UUIncD &id) const;

@@ -131,6 +131,7 @@ int AbstractTreeModelItem::childNumber() const
 //	return m_item_data.value(column);
 //}
 
+#if 0 /// 1
 bool AbstractTreeModelItem::insertChildren(int position, int count, int columns)
 {
 	AMLM_WARNIF(1);
@@ -154,6 +155,7 @@ bool AbstractTreeModelItem::insertChildren(int position, int count, int columns)
 
     return true;
 }
+#endif
 
 bool AbstractTreeModelItem::insertColumns(int insert_before_column, int num_columns)
 {
@@ -202,6 +204,7 @@ int AbstractTreeModelItem::depth() const
 
 UUIncD AbstractTreeModelItem::getId() const
 {
+	Q_ASSERT(m_uuincid != UUIncD::null());
 	return m_uuincid;
 }
 
@@ -501,12 +504,14 @@ void AbstractTreeModelItem::registerSelf(const std::shared_ptr<AbstractTreeModel
 
 void AbstractTreeModelItem::deregisterSelf()
 {
+	// Deregister our child items.
 	for (const auto &child : m_child_items)
 	{
 		child->deregisterSelf();
 	}
 	if (m_is_in_model)
 	{
+		// We're in a model, deregister ourself from it.
 		if (auto ptr = m_model.lock())
 		{
 			ptr->deregister_item(m_uuincid, this);
@@ -554,11 +559,11 @@ void AbstractTreeModelItem::updateParent(std::shared_ptr<AbstractTreeModelItem> 
 //	return res;
 //}
 
-std::unique_ptr<AbstractTreeModelItem>
-AbstractTreeModelItem::create_default_constructed_child_item(AbstractTreeModelItem* parent, int num_columns)
-{
-	return std::unique_ptr<AbstractTreeModelItem>(this->do_create_default_constructed_child_item(parent, num_columns));
-}
+//std::unique_ptr<AbstractTreeModelItem>
+//AbstractTreeModelItem::create_default_constructed_child_item(AbstractTreeModelItem* parent, int num_columns)
+//{
+//	return std::unique_ptr<AbstractTreeModelItem>(this->do_create_default_constructed_child_item(parent, num_columns));
+//}
 
 AbstractTreeModelItem::CICTIteratorType AbstractTreeModelItem::get_m_child_items_iterator(UUIncD id)
 {

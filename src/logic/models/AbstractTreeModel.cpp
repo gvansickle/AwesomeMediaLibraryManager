@@ -270,32 +270,32 @@ QModelIndex AbstractTreeModel::index(int row, int column, const QModelIndex &par
 	}
 }
 
-bool AbstractTreeModel::insertColumns(int insert_before_column, int num_columns, const QModelIndex& parent_model_index)
-{
-	Q_CHECK_PTR(m_root_item);
+//bool AbstractTreeModel::insertColumns(int insert_before_column, int num_columns, const QModelIndex& parent_model_index)
+//{
+//	Q_CHECK_PTR(m_root_item);
+//
+//	bool success;
+//
+//    beginInsertColumns(parent_model_index, insert_before_column, insert_before_column + num_columns - 1);
+//	success = m_root_item->insertColumns(insert_before_column, num_columns);
+//    endInsertColumns();
+//
+//    return success;
+//}
 
-	bool success;
-
-    beginInsertColumns(parent_model_index, insert_before_column, insert_before_column + num_columns - 1);
-	success = m_root_item->insertColumns(insert_before_column, num_columns);
-    endInsertColumns();
-
-    return success;
-}
-
-bool AbstractTreeModel::insertRows(int insert_before_row, int num_rows, const QModelIndex& parent_model_index)
-{
-	Q_CHECK_PTR(m_root_item);
-
-	std::shared_ptr<AbstractTreeModelItem> parent_item = getItemById(UUIncD(parent_model_index.internalId()));
-    bool success;
-
-    beginInsertRows(parent_model_index, insert_before_row, insert_before_row + num_rows - 1);
-	success = parent_item->insertChildren(insert_before_row, num_rows, m_root_item->columnCount());
-    endInsertRows();
-
-    return success;
-}
+//bool AbstractTreeModel::insertRows(int insert_before_row, int num_rows, const QModelIndex& parent_model_index)
+//{
+//	Q_CHECK_PTR(m_root_item);
+//
+//	std::shared_ptr<AbstractTreeModelItem> parent_item = getItemById(UUIncD(parent_model_index.internalId()));
+//    bool success;
+//
+//    beginInsertRows(parent_model_index, insert_before_row, insert_before_row + num_rows - 1);
+//	success = parent_item->insertChildren(insert_before_row, num_rows, m_root_item->columnCount());
+//    endInsertRows();
+//
+//    return success;
+//}
 
 QModelIndex AbstractTreeModel::parent(const QModelIndex &index) const
 {
@@ -366,7 +366,7 @@ bool AbstractTreeModel::moveColumns(const QModelIndex& sourceParent, int sourceC
 
 bool AbstractTreeModel::appendItems(std::vector<std::shared_ptr<AbstractTreeModelItem>> new_items, const QModelIndex &parent)
 {
-	Q_ASSERT(0/*NOT IMPL*/);
+//	Q_ASSERT(0/*NOT IMPL*/);
 	std::shared_ptr<AbstractTreeModelItem> parent_item = getItemById(static_cast<UUIncD>(parent.internalId()));
 	Q_CHECK_PTR(parent_item);
 
@@ -402,6 +402,7 @@ bool AbstractTreeModel::appendItem(std::shared_ptr<AbstractTreeModelItem> new_it
 
 QModelIndex AbstractTreeModel::getIndexFromItem(const std::shared_ptr<AbstractTreeModelItem>& item) const
 {
+	Q_CHECK_PTR(item);
 	if(item == m_root_item)
 	{
 		return QModelIndex();
