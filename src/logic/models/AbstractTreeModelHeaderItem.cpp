@@ -38,18 +38,17 @@
 
 // static
 std::shared_ptr<AbstractTreeModelHeaderItem>
-AbstractTreeModelHeaderItem::construct(const std::shared_ptr<AbstractTreeModel>& model, bool isRoot)
+AbstractTreeModelHeaderItem::construct(const std::shared_ptr<AbstractTreeModel>& model, bool isRoot, UUIncD id)
 {
-	/// @note make_shared doesn't have access to the constructor if it's protected, so we have to do this.
-	std::shared_ptr<AbstractTreeModelHeaderItem> self(new AbstractTreeModelHeaderItem(model, isRoot));
+	std::shared_ptr<AbstractTreeModelHeaderItem> self(new AbstractTreeModelHeaderItem(model, isRoot, id));
 
 	baseFinishConstruct(self);
 
 	return self;
 }
 
-AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(const std::shared_ptr<AbstractTreeModel>& parent_model, bool isRoot)
-	: BASE_CLASS(std::static_pointer_cast<AbstractTreeModel>(parent_model), isRoot)
+AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(const std::shared_ptr<AbstractTreeModel>& parent_model, bool isRoot, UUIncD id)
+	: BASE_CLASS(parent_model, isRoot, id)
 {
 
 }

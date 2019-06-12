@@ -62,7 +62,7 @@ public:
 	/**
 	 * Named constructor.
 	 */
-	static std::shared_ptr<AbstractTreeModelItem> construct(std::shared_ptr<AbstractTreeModel> model, bool isRoot = false,
+	static std::shared_ptr<AbstractTreeModelItem> construct(std::shared_ptr<AbstractTreeModel> model, bool isRoot,
 			UUIncD id = UUIncD::null());
 
 protected:
@@ -75,12 +75,7 @@ public:
     /// Return a pointer to the number'th child of this item.
     /// @returns If @a number is not valid, a pointer to a default constructed AbstractTreeModelItem,
     /// 			which is not added to the QVector.
-	/// @todo That seems all kinds of wrong, should probably return a nullptr or throw or something.
-	std::shared_ptr<AbstractTreeModelItem> child(int number);
-
-	/// @copydoc AbstractTreeModelItem::child(int)
-	/// Const version.
-	const std::shared_ptr<AbstractTreeModelItem> child(int number) const;
+	std::shared_ptr<AbstractTreeModelItem> child(int number) const;
 
     /// @returns The number of children this item has.
     virtual int childCount() const;
@@ -107,10 +102,10 @@ public:
 
     virtual bool insertColumns(int insert_before_column, int num_columns);
 
-    /// Returns a pointer to this item's parent.
-	std::weak_ptr<AbstractTreeModelItem> parent();
+//    /// Returns a pointer to this item's parent.
+//	std::weak_ptr<AbstractTreeModelItem> parent();
 	/// Returns a const pointer to this item's parent.
-	const std::weak_ptr<AbstractTreeModelItem> parent() const;
+	std::weak_ptr<AbstractTreeModelItem> parent() const;
 
 	int depth() const;
 

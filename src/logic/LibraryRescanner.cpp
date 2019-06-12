@@ -251,10 +251,14 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 
 	// Attach a streaming tap to the dirscan future.
 	ExtFuture<Unit> tail_future
-			= dirresults_future.stap([=](ExtFuture<DirScanResult> tap_future, int begin, int end) mutable -> void {
+			= dirresults_future.stap(this,[=](ExtFuture<DirScanResult> tap_future, int begin, int end) mutable -> void {
 
 		// Start of the dirtrav tap callback.  This should be a non-main thread.
-		AMLM_ASSERT_NOT_IN_GUITHREAD();
+//		AMLM_ASSERT_NOT_IN_GUITHREAD();
+		AMLM_ASSERT_IN_GUITHREAD();
+        std::shared_ptr<ScanResultsTreeModel> tree_model_ptr = AMLMApp::IScanResultsTreeModel();
+        Q_ASSERT(tree_model_ptr);
+
 		if(begin == 0)
 		{
 			expect_and_set(1, 2);
@@ -275,7 +279,9 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 
 			// Add another entry to the vector we'll send to the model.
 //			new_items->emplace_back(std::make_shared<ScanResultsTreeModelItem>(dsr, tree_model));
-			auto new_item = ScanResultsTreeModelItem::construct(dsr, tree_model);
+			/// @todo This is in a non-GUI thread.
+			Q_ASSERT(tree_model_ptr);
+			auto new_item = ScanResultsTreeModelItem::construct(dsr, tree_model_ptr);
 			new_items->emplace_back(new_item);
 
 			if(i >= end)
@@ -389,7 +395,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 			{
 				// Make sure the entry wasn't moved from.
 				Q_ASSERT(bool(entry) == true);
-				Q_ASSERT(entry->isInModel());
+//				Q_ASSERT(entry->isInModel());
 				auto entry_dp = std::dynamic_pointer_cast<ScanResultsTreeModelItem>(entry);
 				Q_ASSERT(entry_dp);
 				std::shared_ptr<SRTMItem_LibEntry> new_child = SRTMItem_LibEntry::construct(entry_dp->getDsr(), tree_model_ptr, /**isRoot*/false);

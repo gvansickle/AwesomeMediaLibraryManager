@@ -42,7 +42,7 @@ public:
 
 	static UUIncD create();
 
-	static UUIncD null();
+	static UUIncD null() { return UUIncD(0xFFFFFFFFFFFFFFFF); };
 
 	// User-defined conversion to uin64_t.
 	operator uint64_t() const;
@@ -56,7 +56,7 @@ protected:
 
 private:
 
-	std::uint64_t m_my_id;
+	std::uint64_t m_my_id { 0xFFFF'FFFF'FFFF'FFFF };
 
 	/**
 	 * The program-global threadsafe 64-bit ID which will next be doled out by create().

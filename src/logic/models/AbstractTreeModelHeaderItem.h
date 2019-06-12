@@ -32,6 +32,7 @@
 #include <logic/ColumnSpec.h>
 
 // Ours
+#include <future/enable_shared_from_this_virtual.h>
 #include "AbstractTreeModelItem.h"
 #include "AbstractHeaderSection.h"
 #include "ScanResultsTreeModelItem.h"
@@ -40,16 +41,17 @@ class AbstractTreeModel;
 /**
  *
  */
-class AbstractTreeModelHeaderItem: public AbstractTreeModelItem, public std::enable_shared_from_this<AbstractTreeModelHeaderItem>
+class AbstractTreeModelHeaderItem: public AbstractTreeModelItem, public enable_shared_from_this_virtual<AbstractTreeModelHeaderItem>
 {
 	using BASE_CLASS = AbstractTreeModelItem;
 
 public:
 
-	static std::shared_ptr<AbstractTreeModelHeaderItem> construct(const std::shared_ptr<AbstractTreeModel>& model, bool isRoot = true);
+	static std::shared_ptr<AbstractTreeModelHeaderItem> construct(const std::shared_ptr<AbstractTreeModel>& model, bool isRoot = true,
+	                                                              UUIncD id = UUIncD::null());
 
 protected:
-	explicit AbstractTreeModelHeaderItem(const std::shared_ptr<AbstractTreeModel>& parent_model, bool isRoot);
+	explicit AbstractTreeModelHeaderItem(const std::shared_ptr<AbstractTreeModel>& parent_model, bool isRoot, UUIncD id = UUIncD::null());
 
 public:
 	 ~AbstractTreeModelHeaderItem() override;

@@ -360,12 +360,13 @@ bool AbstractTreeModel::moveRows(const QModelIndex& sourceParent, int sourceRow,
 bool AbstractTreeModel::moveColumns(const QModelIndex& sourceParent, int sourceColumn, int count, const QModelIndex& destinationParent, int destinationChild)
 {
 	// Defer to base class.
-	return this->BASE_CLASS::moveRows(sourceParent, sourceColumn, count, destinationParent, destinationChild);
+	return this->BASE_CLASS::moveColumns(sourceParent, sourceColumn, count, destinationParent, destinationChild);
 }
 
 
 bool AbstractTreeModel::appendItems(std::vector<std::shared_ptr<AbstractTreeModelItem>> new_items, const QModelIndex &parent)
 {
+	Q_ASSERT(0/*NOT IMPL*/);
 	std::shared_ptr<AbstractTreeModelItem> parent_item = getItemById(static_cast<UUIncD>(parent.internalId()));
 	Q_CHECK_PTR(parent_item);
 
@@ -392,6 +393,7 @@ bool AbstractTreeModel::appendItems(std::vector<std::shared_ptr<AbstractTreeMode
 
 bool AbstractTreeModel::appendItem(std::shared_ptr<AbstractTreeModelItem> new_item, const QModelIndex& parent)
 {
+	Q_ASSERT(0/*NOT IMPL*/);
 	std::vector<std::shared_ptr<AbstractTreeModelItem>> new_items;
 
 	new_items.emplace_back(std::move(new_item));

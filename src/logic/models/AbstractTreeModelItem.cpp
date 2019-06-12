@@ -48,6 +48,7 @@
 
 std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::construct(std::shared_ptr<AbstractTreeModel> model, bool isRoot, UUIncD id)
 {
+	/// @note make_shared doesn't have access to the constructor if it's protected, so we have to do this.
 	std::shared_ptr<AbstractTreeModelItem> self(new AbstractTreeModelItem(model, isRoot, id));
 	baseFinishConstruct(self);
 	return self;
@@ -82,23 +83,15 @@ QDebug operator<<(QDebug dbg, const AbstractTreeModelItem& obj)
 	return dbg;
 }
 
-std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::child(int row)
+std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::child(int row) const
 {
 	Q_ASSERT_X(row >= 0 && row < m_child_items.size(), __func__, "Child row out of range.");
 
 	auto it = m_child_items.cbegin();
 	std::advance(it, row);
 
-	/// @note .value() here returns a default constructed AbstractTreeModelItem which is not added to the QVector.
-	/// @todo This seems all kinds of wrong, should probably return a nullptr or assert or something.
 	return *it;
 }
-
-const std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::child(int row) const
-{
-	return child(row);
-}
-
 
 int AbstractTreeModelItem::childCount() const
 {
@@ -121,7 +114,7 @@ int AbstractTreeModelItem::childNumber() const
 	}
 	else
 	{
-		/// @note Expired parent item.
+		/// @note Expired parent item. KDenLive doesn't do this.
 		Q_ASSERT(0);
 	}
 
@@ -140,6 +133,7 @@ int AbstractTreeModelItem::childNumber() const
 
 bool AbstractTreeModelItem::insertChildren(int position, int count, int columns)
 {
+	AMLM_WARNIF(1);
 	if (position < 0 || position > m_child_items.size())
 	{
 		// Insertion point out of range of existing children.
@@ -191,12 +185,12 @@ bool AbstractTreeModelItem::insertColumns(int insert_before_column, int num_colu
     return true;
 }
 
-std::weak_ptr<AbstractTreeModelItem> AbstractTreeModelItem::parent()
-{
-	return m_parent_item;
-}
+//std::weak_ptr<AbstractTreeModelItem> AbstractTreeModelItem::parent()
+//{
+//	return m_parent_item;
+//}
 
-const std::weak_ptr<AbstractTreeModelItem> AbstractTreeModelItem::parent() const
+std::weak_ptr<AbstractTreeModelItem> AbstractTreeModelItem::parent() const
 {
 	return m_parent_item;
 }
