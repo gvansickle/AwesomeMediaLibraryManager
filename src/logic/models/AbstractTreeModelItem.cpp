@@ -343,6 +343,13 @@ QVariant AbstractTreeModelItem::data(int column, int role) const
 	return QVariant();
 }
 
+/// NEW: Return the QVariant in @a column.
+/// KDen behavior is to return def const QVariant if > num cols.
+QVariant AbstractTreeModelItem::dataColumn(int column) const
+{
+	return data(column);
+}
+
 bool AbstractTreeModelItem::setData(int column, const QVariant &value)
 {
 	auto current_num_columns = columnCount();

@@ -52,7 +52,6 @@ public:
 
 protected:
 	explicit UUIncD(std::uint64_t id);
-//	explicit UUIncD(quintptr id) : UUIncD(id) {};
 
 private:
 
@@ -66,12 +65,27 @@ private:
 
 //inline static bool operator==(const UUIncD& lhs, const UUIncD& rhs)
 //{
-//	return lhs.m_my_id == rhs.m_my_id;
+//	return lhs.operator==(rhs);
 //}
 
 //inline static bool operator<(const UUIncD& lhs, const UUIncD& rhs)
 //{
 //	return lhs.m_my_id < rhs.m_my_id;
 //}
+
+namespace std
+{
+	template <> struct hash<UUIncD>
+	{
+		using argument_type = UUIncD;
+		using result_type = std::size_t;
+
+		result_type operator()(argument_type const& u) const noexcept
+		{
+			result_type const h1 ( std::hash<std::uint64_t>{}(static_cast<std::uint64_t>(u)) );
+			return h1;
+		}
+	};
+}
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_UUINCD_H

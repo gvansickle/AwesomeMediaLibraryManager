@@ -88,13 +88,13 @@ public:
 
 protected:
 
-	/**
-	 * Factory function for creating default-constructed nodes.
-	 * Used by insertChildren().  Override in derived classes.
-	 * @todo Convert to smart pointer (std::unique_ptr<AbstractTreeModelItem>) return type, retain covariant return.
-	 */
-	AbstractTreeModelItem*
-	do_create_default_constructed_child_item(AbstractTreeModelItem *parent = nullptr, int num_columns = 0) override;
+//	/**
+//	 * Factory function for creating default-constructed nodes.
+//	 * Used by insertChildren().  Override in derived classes.
+//	 * @todo Convert to smart pointer (std::unique_ptr<AbstractTreeModelItem>) return type, retain covariant return.
+//	 */
+//	AbstractTreeModelItem*
+//	do_create_default_constructed_child_item(AbstractTreeModelItem *parent = nullptr, int num_columns = 0) override;
 
 	/// @name Virtual functions called by the base class to complete certain operations.
 	///       The base class will have error-checked function parameters.

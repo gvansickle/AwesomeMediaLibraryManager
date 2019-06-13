@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
@@ -90,6 +90,9 @@ public:
      * @return A QVariant containing all the data in @a column.
      */
 	virtual QVariant data(int column, int role = Qt::DisplayRole) const;
+
+	/// @todo NEW: Return the QVariant in @a column.  Not sure if this is needed.
+	QVariant dataColumn(int column) const;
 
 	bool setData(int column, const QVariant &value);
 
@@ -197,11 +200,11 @@ protected:
 //	std::unique_ptr<AbstractTreeModelItem>
 //	create_default_constructed_child_item(AbstractTreeModelItem* parent, int num_columns);
 
-	/**
-	 * The covariant-return-type factory function for child items.  Override in derived classes.
-	 */
-	virtual AbstractTreeModelItem*
-	do_create_default_constructed_child_item(AbstractTreeModelItem* parent, int num_columns) { return 0; };
+//	/**
+//	 * The covariant-return-type factory function for child items.  Override in derived classes.
+//	 */
+//	virtual AbstractTreeModelItem*
+//	do_create_default_constructed_child_item(AbstractTreeModelItem* parent, int num_columns) { return 0; };
 
 	/// @name Virtual functions called by the base class to complete certain operations.
 	///       The base class will have error-checked function parameters.

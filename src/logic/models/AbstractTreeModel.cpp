@@ -69,6 +69,8 @@
 #include "AbstractTreeModelHeaderItem.h"
 #include <utils/DebugHelpers.h>
 #include <logic/serialization/XmlSerializer.h>
+#include <unordered_set>
+#include <queue>
 #include "ScanResultsTreeModel.h"
 
 
@@ -99,7 +101,7 @@ int AbstractTreeModel::columnCount(const QModelIndex& parent) const
 #if 0
 	Q_ASSERT(m_root_item != nullptr);
 	return m_root_item->columnCount();
-#else //kden
+#else /// kden
 	if(!parent.isValid())
 	{
 		/// Does this make sense?
@@ -122,6 +124,7 @@ QVariant AbstractTreeModel::data(const QModelIndex &index, int role) const
 	}
 
 	/// @todo ###
+#if 0 // TEMP?
 	// Color invalid model indexes.
 	if(index.column() > columnCount())
 	{
@@ -134,17 +137,16 @@ QVariant AbstractTreeModel::data(const QModelIndex &index, int role) const
 				break;
 		}
 	}
-
-    if (role != Qt::DisplayRole && role != Qt::EditRole)
+#endif
+    if (role != Qt::DisplayRole) /// @todo KDen: && role != Qt::EditRole)
 	{
         return QVariant();
 	}
-    /// @todo #######
 
     // Get a pointer to the indexed item.
 	auto item = getItemById(UUIncD(index.internalId()));
 
-    return item->data(index.column());
+    return item->data(index.column(), role);
 }
 
 Qt::ItemFlags AbstractTreeModel::flags(const QModelIndex &index) const
@@ -153,6 +155,15 @@ Qt::ItemFlags AbstractTreeModel::flags(const QModelIndex &index) const
 	{
 		return Qt::NoItemFlags;
 	}
+
+#if 0 /// KDen does this here, not sure we need it.
+	if (index.isValid()) {
+        auto item = getItemById((int)index.internalId());
+        if (item->depth() == 1) {
+            return flags & ~Qt::ItemIsSelectable;
+        }
+    }
+#endif
 
     return Qt::ItemIsEditable | QAbstractItemModel::flags(index);
 }
@@ -171,6 +182,7 @@ Qt::ItemFlags AbstractTreeModel::flags(const QModelIndex &index) const
 //	return m_root_item;
 //}
 
+/// NEW: KDEN:
 std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getItemById(const UUIncD& id) const
 {
 	if(id == m_root_item->getId())
@@ -180,6 +192,7 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getItemById(const UUIn
 	return m_model_item_map.at(id).lock();
 }
 
+/// BOTH
 std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getRootItem() const
 {
 	return m_root_item;
@@ -222,14 +235,76 @@ void AbstractTreeModel::notifyRowDeleted()
 	endRemoveRows();
 }
 
+/// NEW: KDEN:
 bool AbstractTreeModel::checkConsistency()
 {
-	/// @todo
+// first check that the root is all good
+	if (!m_root_item || !m_root_item->m_is_root || !m_root_item->isInModel() || m_model_item_map.count(m_root_item->getId()) == 0) {
+		qDebug() << !m_root_item->m_is_root << !m_root_item->isInModel() << (m_model_item_map.count(m_root_item->getId()) == 0);
+		qDebug() << "ERROR: Model is not valid because root is not properly constructed";
+		return false;
+	}
+	// Then we traverse the tree from the root, checking the infos on the way
+	std::unordered_set<UUIncD> seenIDs;
+	std::queue<std::pair<UUIncD, std::pair<int, UUIncD>>> queue; // store (id, (depth, parentId))
+	queue.push({m_root_item->getId(), {0, m_root_item->getId()}});
+	while (!queue.empty())
+	{
+		auto current = queue.front();
+		UUIncD currentId = current.first;
+		int currentDepth = current.second.first;
+		UUIncD parentId = current.second.second;
+		queue.pop();
+		if (seenIDs.count(currentId) != 0) {
+			qDebug() << "ERROR: Invalid tree: Id found twice."
+			         << "It either a cycle or a clash in id attribution";
+			return false;
+		}
+		if (m_model_item_map.count(currentId) == 0) {
+			qDebug() << "ERROR: Invalid tree: Id not found. Item is not registered";
+			return false;
+		}
+		auto currentItem = m_model_item_map[currentId].lock();
+		if (currentItem->depth() != currentDepth) {
+			qDebug() << "ERROR: Invalid tree: invalid depth info found";
+			return false;
+		}
+		if (!currentItem->isInModel()) {
+			qDebug() << "ERROR: Invalid tree: item thinks it is not in a model";
+			return false;
+		}
+		if (currentId != m_root_item->getId()) {
+			if ((currentDepth == 0 || currentItem->m_is_root)) {
+				qDebug() << "ERROR: Invalid tree: duplicate root";
+				return false;
+			}
+			if (auto ptr = currentItem->parent().lock())
+			{
+				if (ptr->getId() != parentId || ptr->child(currentItem->childNumber())->getId() != currentItem->getId()) {
+					qDebug() << "ERROR: Invalid tree: invalid parent link";
+					return false;
+				}
+			} else {
+				qDebug() << "ERROR: Invalid tree: invalid parent";
+				return false;
+			}
+		}
+		// propagate to children
+		int i = 0;
+		for (const auto &child : currentItem->m_child_items)
+		{
+			if (currentItem->child(i) != child) {
+				qDebug() << "ERROR: Invalid tree: invalid child ordering";
+				return false;
+			}
+			queue.push({child->getId(), {currentDepth + 1, currentId}});
+			i++;
+		}
+	}
 	return true;
 }
 
-QVariant AbstractTreeModel::headerData(int section, Qt::Orientation orientation,
-                               int role) const
+QVariant AbstractTreeModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if (orientation == Qt::Horizontal && role == Qt::DisplayRole)
 	{
@@ -366,7 +441,6 @@ bool AbstractTreeModel::moveColumns(const QModelIndex& sourceParent, int sourceC
 
 bool AbstractTreeModel::appendItems(std::vector<std::shared_ptr<AbstractTreeModelItem>> new_items, const QModelIndex &parent)
 {
-//	Q_ASSERT(0/*NOT IMPL*/);
 	std::shared_ptr<AbstractTreeModelItem> parent_item = getItemById(static_cast<UUIncD>(parent.internalId()));
 	Q_CHECK_PTR(parent_item);
 
