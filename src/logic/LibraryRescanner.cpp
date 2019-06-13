@@ -417,6 +417,12 @@ M_WARNING("CRASHING HERE");
 			// Finally, move the new model items to their new home.
 #if 1 // signal
 			tree_model_ptr->appendItems(*new_items_vector_ptr);
+			/// @temp
+			bool ok = tree_model_ptr->checkConsistency();
+			if(!ok)
+			{
+				qDb() << "########################### TREE MODEL CHECK ERROR";
+			}
 #else
 			Q_EMIT SIGNAL_StapToTreeModel(std::move(*new_items_vector_ptr));
 #endif

@@ -239,7 +239,8 @@ void AbstractTreeModel::notifyRowDeleted()
 bool AbstractTreeModel::checkConsistency()
 {
 // first check that the root is all good
-	if (!m_root_item || !m_root_item->m_is_root || !m_root_item->isInModel() || m_model_item_map.count(m_root_item->getId()) == 0) {
+	if (!m_root_item || !m_root_item->m_is_root || !m_root_item->isInModel() || m_model_item_map.count(m_root_item->getId()) == 0)
+	{
 		qDebug() << !m_root_item->m_is_root << !m_root_item->isInModel() << (m_model_item_map.count(m_root_item->getId()) == 0);
 		qDebug() << "ERROR: Model is not valid because root is not properly constructed";
 		return false;
@@ -255,36 +256,45 @@ bool AbstractTreeModel::checkConsistency()
 		int currentDepth = current.second.first;
 		UUIncD parentId = current.second.second;
 		queue.pop();
-		if (seenIDs.count(currentId) != 0) {
+		if (seenIDs.count(currentId) != 0)
+		{
 			qDebug() << "ERROR: Invalid tree: Id found twice."
 			         << "It either a cycle or a clash in id attribution";
 			return false;
 		}
-		if (m_model_item_map.count(currentId) == 0) {
+		if (m_model_item_map.count(currentId) == 0)
+		{
 			qDebug() << "ERROR: Invalid tree: Id not found. Item is not registered";
 			return false;
 		}
 		auto currentItem = m_model_item_map[currentId].lock();
-		if (currentItem->depth() != currentDepth) {
+		if (currentItem->depth() != currentDepth)
+		{
 			qDebug() << "ERROR: Invalid tree: invalid depth info found";
 			return false;
 		}
-		if (!currentItem->isInModel()) {
+		if (!currentItem->isInModel())
+		{
 			qDebug() << "ERROR: Invalid tree: item thinks it is not in a model";
 			return false;
 		}
-		if (currentId != m_root_item->getId()) {
-			if ((currentDepth == 0 || currentItem->m_is_root)) {
+		if (currentId != m_root_item->getId())
+		{
+			if ((currentDepth == 0 || currentItem->m_is_root))
+			{
 				qDebug() << "ERROR: Invalid tree: duplicate root";
 				return false;
 			}
 			if (auto ptr = currentItem->parent().lock())
 			{
-				if (ptr->getId() != parentId || ptr->child(currentItem->childNumber())->getId() != currentItem->getId()) {
+				if (ptr->getId() != parentId || ptr->child(currentItem->childNumber())->getId() != currentItem->getId())
+				{
 					qDebug() << "ERROR: Invalid tree: invalid parent link";
 					return false;
 				}
-			} else {
+			}
+			else
+			{
 				qDebug() << "ERROR: Invalid tree: invalid parent";
 				return false;
 			}

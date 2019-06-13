@@ -254,9 +254,10 @@ protected:
 	*/
 	void notifyRowDeleted();
 
-	/* @brief This is a convenience function that helps check if the tree is in a valid state */
+public:
+	/** This is a convenience function that helps check if the tree is in a valid state */
 	virtual bool checkConsistency();
-
+protected:
 	/// @name Extended protected model interface.
 	/// @{
 
