@@ -251,11 +251,12 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 
 	// Attach a streaming tap to the dirscan future.
 	ExtFuture<Unit> tail_future
-			= dirresults_future.stap(this,[=](ExtFuture<DirScanResult> tap_future, int begin, int end) mutable -> void {
+			= dirresults_future.stap(/*this,*/[=](ExtFuture<DirScanResult> tap_future, int begin, int end) mutable -> void {
 
 		// Start of the dirtrav tap callback.  This should be a non-main thread.
-//		AMLM_ASSERT_NOT_IN_GUITHREAD();
-		AMLM_ASSERT_IN_GUITHREAD();
+		AMLM_ASSERT_NOT_IN_GUITHREAD();
+//		AMLM_ASSERT_IN_GUITHREAD();
+
         std::shared_ptr<ScanResultsTreeModel> tree_model_ptr = AMLMApp::IScanResultsTreeModel();
         Q_ASSERT(tree_model_ptr);
 
@@ -419,12 +420,9 @@ M_WARNING("CRASHING HERE");
 			tree_model_ptr->appendItems(*new_items_vector_ptr);
 			/// @temp
 			bool ok = tree_model_ptr->checkConsistency();
-			if(!ok)
-			{
-				qDb() << "########################### TREE MODEL CHECK ERROR";
-			}
+			qDb() << "########################### TREE MODEL CHECK checkConsistency:" << ok;
 #else
-			Q_EMIT SIGNAL_StapToTreeModel(std::move(*new_items_vector_ptr));
+			Q_EMIT SIGNAL_StapToTreeModel(*new_items_vector_ptr);
 #endif
 //			qDb() << "TREEMODELPTR:" << M_ID_VAL(tree_model_ptr->rowCount());
 		}
