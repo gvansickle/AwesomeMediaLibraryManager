@@ -98,19 +98,14 @@ bool AbstractTreeModel::setColumnSpecs(std::initializer_list<QString> column_spe
 
 int AbstractTreeModel::columnCount(const QModelIndex& parent) const
 {
-#if 0
-	Q_ASSERT(m_root_item != nullptr);
-	return m_root_item->columnCount();
-#else /// kden
 	if(!parent.isValid())
 	{
-		/// Does this make sense?
+		// Return root column count.
 		return m_root_item->columnCount();
 	}
 	const auto id = UUIncD(parent.internalId());
 	auto item = getItemById(id);
 	return item->columnCount();
-#endif
 }
 
 QVariant AbstractTreeModel::data(const QModelIndex &index, int role) const
@@ -167,20 +162,6 @@ Qt::ItemFlags AbstractTreeModel::flags(const QModelIndex &index) const
 
     return Qt::ItemIsEditable | QAbstractItemModel::flags(index);
 }
-
-//AbstractTreeModelItem* AbstractTreeModel::getItem(const QModelIndex &index) const
-//{
-//	if (index.isValid())
-//	{
-//        AbstractTreeModelItem *item = static_cast<AbstractTreeModelItem*>(index.internalPointer());
-//		if (item != nullptr)
-//		{
-//            return item;
-//		}
-//    }
-//	/// @todo This might want to be an assert() due to invalid index.
-//	return m_root_item;
-//}
 
 /// NEW: KDEN:
 std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getItemById(const UUIncD& id) const
@@ -319,7 +300,7 @@ QVariant AbstractTreeModel::headerData(int section, Qt::Orientation orientation,
     if (orientation == Qt::Horizontal && role == Qt::DisplayRole)
 	{
     	/// @kden : dataColumn()
-		return m_root_item->data(section);
+		return m_root_item->data(section, role);
 	}
 
     return QVariant();

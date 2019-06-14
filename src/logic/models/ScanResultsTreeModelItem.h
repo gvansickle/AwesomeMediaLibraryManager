@@ -47,7 +47,7 @@ class ScanResultsTreeModelItem : public AbstractTreeModelItem, public enable_sha
 
 public:
 	static std::shared_ptr<ScanResultsTreeModelItem> construct(const DirScanResult& dsr,
-            const std::shared_ptr<AbstractTreeModel> model,
+            const std::shared_ptr<ScanResultsTreeModel> model,
             bool is_root = false);
 
 protected:
@@ -56,7 +56,7 @@ protected:
 	/// Create a new model item populated with the passed DirScanResult.
 //	explicit ScanResultsTreeModelItem(const DirScanResult& dsr, AbstractTreeModelItem *parent = nullptr);
 	explicit ScanResultsTreeModelItem(const DirScanResult& dsr,
-	                                  const std::shared_ptr<AbstractTreeModel> model,
+	                                  const std::shared_ptr<ScanResultsTreeModel> model,
 	                                  bool is_root = false);
 
 public:
@@ -88,30 +88,14 @@ public:
 
 protected:
 
-//	/**
-//	 * Factory function for creating default-constructed nodes.
-//	 * Used by insertChildren().  Override in derived classes.
-//	 * @todo Convert to smart pointer (std::unique_ptr<AbstractTreeModelItem>) return type, retain covariant return.
-//	 */
-//	AbstractTreeModelItem*
-//	do_create_default_constructed_child_item(AbstractTreeModelItem *parent = nullptr, int num_columns = 0) override;
-
-	/// @name Virtual functions called by the base class to complete certain operations.
-	///       The base class will have error-checked function parameters.
-	/// @{
-	bool derivedClassSetData(int column, const QVariant &value) override;
-	bool derivedClassInsertColumns(int insert_before_column, int num_columns) override;
-	bool derivedClassRemoveColumns(int first_column_to_remove, int num_columns) override;
-	/// @}
-
 	/// The directory scan results corresponding to this entry.
 	/// This is things like the main media URL, sidecar cue sheet URLs, timestamp info, etc.
 	DirScanResult m_dsr;
-
-
 };
 
-
+/**
+ * A ScanResultsTreeModelItem with a LibraryEntry field.
+ */
 class SRTMItem_LibEntry : public ScanResultsTreeModelItem, public enable_shared_from_this_virtual<SRTMItem_LibEntry>
 {
 	using BASE_CLASS = ScanResultsTreeModelItem;
@@ -122,7 +106,7 @@ public:
 
 protected:
 	explicit SRTMItem_LibEntry(const DirScanResult& dsr,
-	                           const std::shared_ptr</** @todo Associated model*/AbstractTreeModel>& model, bool is_root);
+	                           const std::shared_ptr</** @todo Associated model*/ScanResultsTreeModel>& model, bool is_root);
 
 public:
 	~SRTMItem_LibEntry() override = default;

@@ -388,7 +388,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 		// For each QList<SharedItemContType> entry.
 		for(int index = begin_index; index < end_index; ++index)
 		{
-			auto result = new_items_future.resultAt(index);
+			SharedItemContType result = new_items_future.resultAt(index);
 			const SharedItemContType& new_items_vector_ptr = result;
 
 			// Append ScanResultTreeModelItem entries to the ScanResultsTreeModel.
@@ -409,7 +409,7 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 
 				// Here we're only dealing with the per-file LibraryEntry's.
 				new_child->setLibraryEntry(lib_entry);
-M_WARNING("CRASHING HERE");
+
 				/// NEW: Give the incoming entry a parent.
 				entry->changeParent(tree_model_ptr->getRootItem());
 				entry->appendChild(new_child);
@@ -419,8 +419,8 @@ M_WARNING("CRASHING HERE");
 #if 1 // signal
 			tree_model_ptr->appendItems(*new_items_vector_ptr);
 			/// @temp
-			bool ok = tree_model_ptr->checkConsistency();
-			qDb() << "########################### TREE MODEL CHECK checkConsistency:" << ok;
+//			bool ok = tree_model_ptr->checkConsistency();
+//			qDb() << "########################### TREE MODEL CHECK checkConsistency:" << ok;
 #else
 			Q_EMIT SIGNAL_StapToTreeModel(*new_items_vector_ptr);
 #endif

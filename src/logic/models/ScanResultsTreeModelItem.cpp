@@ -42,14 +42,14 @@
 //	m_dsr = dsr;
 //}
 
-std::shared_ptr<ScanResultsTreeModelItem> ScanResultsTreeModelItem::construct(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModel> model, bool is_root)
+std::shared_ptr<ScanResultsTreeModelItem> ScanResultsTreeModelItem::construct(const DirScanResult& dsr, const std::shared_ptr<ScanResultsTreeModel> model, bool is_root)
 {
 	std::shared_ptr<ScanResultsTreeModelItem> self(new ScanResultsTreeModelItem(dsr, model, is_root));
 	baseFinishConstruct(self);
 	return self;
 }
 
-ScanResultsTreeModelItem::ScanResultsTreeModelItem(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModel> model, bool is_root)
+ScanResultsTreeModelItem::ScanResultsTreeModelItem(const DirScanResult& dsr, const std::shared_ptr<ScanResultsTreeModel> model, bool is_root)
 	: BASE_CLASS(model, is_root), m_dsr(dsr)
 {
 }
@@ -139,49 +139,6 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 //	}
 }
 
-//AbstractTreeModelItem *
-//ScanResultsTreeModelItem::do_create_default_constructed_child_item(AbstractTreeModelItem *parent, int num_columns)
-//{
-//	SRTMItem_LibEntry* child_item;
-//Q_ASSERT(0); /// @todo
-////	child_item = new SRTMItem_LibEntry(parent);
-//
-//	return child_item;
-//}
-
-bool ScanResultsTreeModelItem::derivedClassSetData(int column, const QVariant& value)
-{
-	// We have at the moment only a DirScanResult, not sure we need to set data by column.
-	return true;
-}
-
-bool ScanResultsTreeModelItem::derivedClassInsertColumns(int insert_before_column, int num_columns)
-{
-	/// @todo Again only a DirScanResult.  Not sure what to do here.
-	/// Qt5 TreeModel has this:
-	///   bool TreeModel::insertColumns(int position, int columns, const QModelIndex &parent)
-	///		beginInsertColumns(parent, position, position + columns - 1);
-	///		success = rootItem->insertColumns(position, columns);
-	///		endInsertColumns();
-	/// So it's up to the root item to decide what to do, not the model.
-	/// The root item calls child items and they add/remove QVariant's as required.
-
-	return true;
-}
-
-bool ScanResultsTreeModelItem::derivedClassRemoveColumns(int first_column_to_remove, int num_columns)
-{
-	/// @todo Again only a DirScanResult.  Not sure what to do here.
-	/// Qt5 TreeModel has this:
-	///   bool TreeModel::insertColumns(int position, int columns, const QModelIndex &parent)
-	///		beginInsertColumns(parent, position, position + columns - 1);
-	///		success = rootItem->insertColumns(position, columns);
-	///		endInsertColumns();
-	/// So it's up to the root item to decide what to do, not the model.
-
-	return true;
-}
-
 void ScanResultsTreeModelItem::setDirscanResults(const DirScanResult& dsr)
 {
 	m_dsr = dsr;
@@ -212,8 +169,8 @@ std::shared_ptr<SRTMItem_LibEntry> SRTMItem_LibEntry::construct(const DirScanRes
 	return self;
 }
 
-SRTMItem_LibEntry::SRTMItem_LibEntry(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModel>& model, bool is_root)
-	: BASE_CLASS(dsr, std::static_pointer_cast<AbstractTreeModel>(model), is_root)
+SRTMItem_LibEntry::SRTMItem_LibEntry(const DirScanResult& dsr, const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root)
+	: BASE_CLASS(dsr, model, is_root)
 {
 
 }

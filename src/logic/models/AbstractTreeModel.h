@@ -102,6 +102,7 @@ public:
 	/**
 	 * Set the ColumnSpecs in the model's root item, which holds the info for the horizontal header.
 	 */
+	 /// OLD
 	virtual bool setColumnSpecs(std::initializer_list<QString> column_specs);
 
 	// bool hasIndex() is not virtual.
@@ -112,6 +113,7 @@ public:
 	 *
 	 * @todo role gets lost along the way, we need to put that in.
 	 */
+	 /// BOTH
     QVariant data(const QModelIndex &index, int role) const override;
 
     /// @todo Maybe override these.
@@ -122,8 +124,8 @@ public:
     /// @{
 
     /// Get the header data corresponding to the given section number, orientation, and role.
-    QVariant headerData(int section, Qt::Orientation orientation,
-                        int role = Qt::DisplayRole) const override;
+    /// BOTH
+    QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
 
     /// Set the header data corresponding to the given section number, orientation, and role.
     bool setHeaderData(int section, Qt::Orientation orientation,
@@ -134,14 +136,19 @@ public:
 
     /// @}
 
+    /// BOTH
     QModelIndex index(int row, int column,
                       const QModelIndex &parent = QModelIndex()) const override;
-    QModelIndex parent(const QModelIndex &index) const override;
+	/// BOTH
+	Qt::ItemFlags flags(const QModelIndex &index) const override;
 
+    /// BOTH
+    QModelIndex parent(const QModelIndex &index) const override;
+	/// BOTH
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+    /// BOTH
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
 
-    Qt::ItemFlags flags(const QModelIndex &index) const override;
 
     bool setData(const QModelIndex &index, const QVariant &value,
                  int role = Qt::EditRole) override;
@@ -261,11 +268,6 @@ protected:
 	/// @name Extended protected model interface.
 	/// @{
 
-	/**
-	 * Override in derived classes to return a newly created root/header item node for the model.
-	 */
-//	virtual AbstractTreeModelHeaderItem * make_root_node(QVector<QVariant> rootData) = 0;
-
 	virtual QString getXmlStreamName() const { return ""; };
 	virtual QString getXmlStreamVersion() const { return ""; };
 
@@ -276,7 +278,7 @@ protected:
 	std::shared_ptr<AbstractTreeModelHeaderItem> m_root_item;
 
 	/**
-	 * Map of UUIncD's to AbstractTreeItems.
+	 * Map of UUIncD's to AbstractTreeModelItems.
 	 */
 	std::map<UUIncD, std::weak_ptr<AbstractTreeModelItem>> m_model_item_map;
 };
