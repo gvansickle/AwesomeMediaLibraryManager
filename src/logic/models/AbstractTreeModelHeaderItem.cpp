@@ -20,6 +20,16 @@
 /**
  * @file AbstractTreeModelHeaderItem.cpp
  */
+/**
+ * @file AbstractTreeModelItem.cpp
+ * Implementation of AbstractTreeModelItem.
+ *
+ * This class is heavily adapted from at least the following:
+ * - The "Editable Tree Model Example" shipped with Qt5.
+ * - KDenLive's TreeItem class.
+ * - My own original work.
+ * - Hundreds of nuggets of information from all over the Internet.
+ */
 
 #include "AbstractTreeModelHeaderItem.h"
 

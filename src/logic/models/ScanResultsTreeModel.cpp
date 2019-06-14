@@ -18,7 +18,12 @@
  */
 #include "ScanResultsTreeModel.h"
 
+// Qt5
+#include <QAbstractItemModelTester>
+
+
 // Ours
+#include "AbstractTreeModel.h"
 #include "ScanResultsTreeModelItem.h"
 #include "AbstractTreeModelHeaderItem.h"
 
@@ -31,6 +36,7 @@ std::shared_ptr<ScanResultsTreeModel> ScanResultsTreeModel::construct(QObject* p
 {
 	std::shared_ptr<ScanResultsTreeModel> retval(new ScanResultsTreeModel(parent));
 	retval->m_root_item = AbstractTreeModelHeaderItem::construct(retval);
+	retval->m_model_tester = new QAbstractItemModelTester(retval.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, retval.get());
 	return retval;
 }
 
@@ -38,12 +44,6 @@ void ScanResultsTreeModel::setBaseDirectory(const QUrl &base_directory)
 {
 	m_base_directory = base_directory;
 }
-
-
-//bool ScanResultsTreeModel::appendItems(std::vector<std::shared_ptr<AbstractTreeModelItem>> new_items, const QModelIndex& parent)
-//{
-//	return BASE_CLASS::appendItems(std::move(new_items), parent);
-//}
 
 /**
  * ScanResultsTreeModel XML tags.

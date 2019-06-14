@@ -346,8 +346,9 @@ find_package(Qt5 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
 	Multimedia
 	XmlPatterns
 	Concurrent
+	Test
 	)
-set(QT5_LINK_LIB_TARGETS Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::XmlPatterns Qt5::Concurrent)
+set(QT5_LINK_LIB_TARGETS Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::XmlPatterns Qt5::Concurrent Qt5::Test)
 
 # Unix-only
 if(UNIX)

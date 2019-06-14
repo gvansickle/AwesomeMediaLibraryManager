@@ -66,6 +66,11 @@ public:
 	/// Append a vector of AbstractTreeModelItem's as children of @p parent.
 //	bool appendItems(std::vector<std::shared_ptr<AbstractTreeModelItem>> new_items, const QModelIndex &parent = QModelIndex()) override;
 
+	/// @todo Push these down?
+	bool requestAppendItem(const std::shared_ptr<ScanResultsTreeModelItem>& item, UUIncD parent_uuincd, Fun& undo, Fun& redo);
+	// protected:
+	bool appendItem(const std::shared_ptr<ScanResultsTreeModelItem>& item, UUIncD parent_uuincd, Fun& undo, Fun& redo);
+
 	/// @name Serialization
 	/// @{
 
