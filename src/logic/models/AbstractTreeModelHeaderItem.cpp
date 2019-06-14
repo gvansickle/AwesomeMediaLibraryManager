@@ -124,7 +124,6 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 	}
 
 	// Add list of child tree items to our QVariantMap.
-//	map.insert("child_node_list", list);
 	map_insert_or_die(map, "child_node_list", child_list);
 
 	return map;
@@ -185,19 +184,6 @@ M_WARNING("NEED TO GO THROUGH MODEL HERE?");
 	// Append the children we read in to our list all in one batch.
 	this->appendChildren(std::move(temp_items));
 }
-
-//std::shared_ptr<ScanResultsTreeModelItem>
-//AbstractTreeModelHeaderItem::do_create_default_constructed_child_item(AbstractTreeModelItem *parent, int num_columns)
-//{
-//M_WARNING("SHARED PTR");
-////	std::shared_ptr<ScanResultsTreeModelItem> child_item;
-//	ScanResultsTreeModelItem* child_item;
-//
-////	child_item = std::make_shared<ScanResultsTreeModelItem>(parent);
-//	auto child_item = appendChild();
-//
-//	return child_item;
-//}
 
 bool AbstractTreeModelHeaderItem::derivedClassSetData(int column, const QVariant& value)
 {

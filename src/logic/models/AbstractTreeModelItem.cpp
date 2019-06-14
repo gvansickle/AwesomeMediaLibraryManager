@@ -536,42 +536,6 @@ void AbstractTreeModelItem::updateParent(std::shared_ptr<AbstractTreeModelItem> 
 	}
 }
 
-//bool AbstractTreeModelItem::setParentItem(std::shared_ptr<AbstractTreeModelItem> new_parent)
-//{
-//	Q_ASSERT(!m_is_root);
-//	if (m_is_root)
-//	{
-//		return false;
-//	}
-//	std::shared_ptr<AbstractTreeModelItem> oldParent;
-//	if ((oldParent = m_parent_item.lock()))
-//	{
-//		oldParent->removeChild(shared_from_this());
-//	}
-//	bool res = true;
-//	if (new_parent)
-//	{
-//		res = new_parent->appendChild(shared_from_this());
-//		if (res)
-//		{
-//			m_parent_item = new_parent;
-//		}
-//		else if (oldParent)
-//		{
-//			// something went wrong, we have to reset the parent.
-//			bool reverse = oldParent->appendChild(shared_from_this());
-//			Q_ASSERT(reverse);
-//		}
-//	}
-//	return res;
-//}
-
-//std::unique_ptr<AbstractTreeModelItem>
-//AbstractTreeModelItem::create_default_constructed_child_item(AbstractTreeModelItem* parent, int num_columns)
-//{
-//	return std::unique_ptr<AbstractTreeModelItem>(this->do_create_default_constructed_child_item(parent, num_columns));
-//}
-
 AbstractTreeModelItem::CICTIteratorType AbstractTreeModelItem::get_m_child_items_iterator(UUIncD id)
 {
 	CICTIteratorType retval;
