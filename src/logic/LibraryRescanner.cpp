@@ -377,7 +377,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	/// Append TreeModelItems to the tree_model.
 	Q_ASSERT(tree_model);
 	tree_model_item_future.stap(this,
-								[this/*, tree_model_sptr=tree_model*/](ExtFuture<SharedItemContType> new_items_future,
+								[this/*, tree_model_sptr=tree_model*/](ExtFuture< std::shared_ptr<std::vector<std::shared_ptr<ScanResultsTreeModelItem>>> > new_items_future,
 								                                               int begin_index, int end_index) mutable {
 
 		AMLM_ASSERT_IN_GUITHREAD();
@@ -388,11 +388,12 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 		// For each QList<SharedItemContType> entry.
 		for(int index = begin_index; index < end_index; ++index)
 		{
-			SharedItemContType result = new_items_future.resultAt(index);
-			const SharedItemContType& new_items_vector_ptr = result;
+			std::shared_ptr<std::vector<std::shared_ptr<ScanResultsTreeModelItem>>> result = new_items_future.resultAt(index);
+			const std::shared_ptr<std::vector<std::shared_ptr<ScanResultsTreeModelItem>>>&
+			/*const SharedItemContType&*/ new_items_vector_ptr = result;
 
 			// Append ScanResultTreeModelItem entries to the ScanResultsTreeModel.
-			for(std::shared_ptr<AbstractTreeModelItem>& entry : *new_items_vector_ptr)
+			for(std::shared_ptr<ScanResultsTreeModelItem>& entry : *new_items_vector_ptr)
 			{
 				// Make sure the entry wasn't moved from.
 				Q_ASSERT(bool(entry) == true);
@@ -417,7 +418,7 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 
 			// Finally, move the new model items to their new home.
 #if 1 // signal
-			tree_model_ptr->appendItems(*new_items_vector_ptr);
+			tree_model_ptr->requestAppendItems(*new_items_vector_ptr, tree_model_ptr->getRootItem()->getId(), noop_undo_redo_lambda, noop_undo_redo_lambda);
 			/// @temp
 //			bool ok = tree_model_ptr->checkConsistency();
 //			qDb() << "########################### TREE MODEL CHECK checkConsistency:" << ok;

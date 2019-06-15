@@ -45,6 +45,74 @@ void ScanResultsTreeModel::setBaseDirectory(const QUrl &base_directory)
 	m_base_directory = base_directory;
 }
 
+bool ScanResultsTreeModel::appendItem(const std::shared_ptr<ScanResultsTreeModelItem>& item, UUIncD parent_uuincd, Fun& undo, Fun& redo)
+{
+	// Acquire a write lock.
+	std::unique_lock lock(m_rw_mutex);
+
+	// Get ptr to the specified parent item.
+	auto parent_item_by_id = getItemById(parent_uuincd);
+	std::shared_ptr<AbstractTreeModelItem> parent_item = std::dynamic_pointer_cast<AbstractTreeModelItem>(parent_item_by_id);
+
+	Q_ASSERT(parent_item);
+
+	/// @todo KDen does some type checking in here of what item is and if it can be added to parent.
+
+	// Create an addItem lambda which will be what ultimately adds the item to the parent.
+	Fun op = addItem_lambda(item, parent_item->getId());
+
+	UUIncD item_id = item->getId();
+	Fun reverse = removeItem_lambda(item_id);
+	bool retval = op();
+	Q_ASSERT(item->isInModel());
+	if(retval)
+	{
+		UPDATE_UNDO_REDO(m_rw_mutex, op, reverse, undo, redo);
+	}
+	return retval;
+}
+
+bool ScanResultsTreeModel::requestAppendItem(const std::shared_ptr<ScanResultsTreeModelItem>& item, UUIncD parent_uuincd, Fun& undo, Fun& redo)
+{
+	std::unique_lock write_lock(m_rw_mutex);
+
+	/// @note KDenLive does a number of id checks here, in its requestAddXxxx() members in ProjectItemModel.
+	/// They take an id instead of the already-existing item we have here, then call <whatever>::create(...); to create
+	/// the new item.
+	/// So I'm not sure this request func is actually needed.
+//Q_ASSERT(0);
+//	std::shared_ptr<ScanResultsTreeModelItem> new_item = ScanResultsTreeModelItem::construct(DirScanResult(), std::static_pointer_cast<ScanResultsTreeModel>(shared_from_this()));
+	return appendItem(item, parent_uuincd, undo, redo);
+}
+
+bool ScanResultsTreeModel::requestAppendItems(std::vector<std::shared_ptr<ScanResultsTreeModelItem>> items,
+											  UUIncD parent_uuincd, Fun& undo, Fun& redo)
+{
+	std::unique_lock write_lock(m_rw_mutex);
+	bool retval = true;
+
+	for(auto sptr : items)
+	{
+		/// @todo Batch undo/redo?
+		bool status = requestAppendItem(sptr, parent_uuincd, noop_undo_redo_lambda, noop_undo_redo_lambda);
+		if(status == false)
+		{
+			retval = false;
+		}
+	}
+
+	return retval;
+}
+
+bool ScanResultsTreeModel::requestAddScanResultsTreeModelItem(const DirScanResult& dsr, UUIncD parent_uuincd, Fun& undo, Fun& redo)
+{
+	std::unique_lock write_lock(m_rw_mutex);
+
+	std::shared_ptr<ScanResultsTreeModelItem> new_item
+			= ScanResultsTreeModelItem::construct(dsr, std::static_pointer_cast<ScanResultsTreeModel>(shared_from_this()));
+	return appendItem(new_item, parent_uuincd, undo, redo);
+}
+
 /**
  * ScanResultsTreeModel XML tags.
  */

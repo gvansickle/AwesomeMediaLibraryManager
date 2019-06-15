@@ -41,6 +41,7 @@
 #include <QAbstractItemModel>
 #include <QModelIndex>
 #include <QVariant>
+class QAbstractItemModelTester;
 
 // Ours
 class AbstractTreeModelItem;
@@ -49,7 +50,7 @@ class AbstractTreeModelHeaderItem;
 #include <logic/serialization/ISerializable.h>
 #include <logic/UUIncD.h>
 #include <future/enable_shared_from_this_virtual.h>
-class QAbstractItemModelTester;
+#include <logic/UndoRedoHelper.h>
 
 
 /**
@@ -194,6 +195,25 @@ public:
 	std::shared_ptr<AbstractTreeModelItem> getRootItem() const;
 
 
+	/// @name Public interface: Lambda generators for tree structure modification.
+	/// @{
+
+	/**
+	 * Helper function to generate a lambda that adds an item to the tree.
+	 */
+	Fun addItem_lambda(const std::shared_ptr<AbstractTreeModelItem> &new_item, UUIncD parentId);
+
+	/**
+	 * Helper function to generate a lambda that removes an item from the tree.
+	 */
+	Fun removeItem_lambda(UUIncD id);
+
+	/**
+	 * Helper function to generate a lambda that changes the row of an item.
+	 */
+	Fun moveItem_lambda(UUIncD id, int destRow, bool force = false);
+
+	/// @} // END Lambda generators.
 
 	/// @name Serialization, from ISerializable.
 	/// Remember to override these in derived classes.

@@ -157,6 +157,86 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getRootItem() const
 	return m_root_item;
 }
 
+Fun AbstractTreeModel::addItem_lambda(const std::shared_ptr<AbstractTreeModelItem>& new_item, UUIncD parentId)
+{
+	return [this, new_item, parentId]() {
+		// Insertion is simply setting the parent of the item...
+		std::shared_ptr<AbstractTreeModelItem> parent;
+		if (parentId != UUIncD::null())
+		{
+			parent = getItemById(parentId);
+			if (!parent)
+			{
+				Q_ASSERT(parent);
+				return false;
+			}
+		}
+		// ...and fixing up the parent.
+		return new_item->changeParent(parent);
+	};
+}
+
+Fun AbstractTreeModel::removeItem_lambda(UUIncD id)
+{
+	return [this, id]() {
+		/* Deletion simply deregister clip and remove it from parent.
+		   The actual object is not actually deleted, because a shared_pointer to it
+		   is captured by the reverse operation.
+		   Actual deletions occurs when the undo object is destroyed.
+		*/
+		auto item = m_model_item_map[id].lock();
+		Q_ASSERT(item);
+		if (!item)
+		{
+			return false;
+		}
+		auto parent = item->parent().lock();
+		parent->removeChild(item);
+		return true;
+	};
+}
+
+Fun AbstractTreeModel::moveItem_lambda(UUIncD id, int destRow, bool force)
+{
+	Fun lambda = []() { return true; };
+
+	std::vector<std::shared_ptr<AbstractTreeModelItem>> oldStack;
+	auto item = getItemById(id);
+	if (!force && item->childNumber() == destRow)
+	{
+		// nothing to do
+		return lambda;
+	}
+	if (auto parent = item->parent().lock())
+	{
+		if (destRow > parent->childCount() || destRow < 0)
+		{
+			return []() { return false; };
+		}
+		UUIncD parentId = parent->getId();
+		// remove the element to move
+		oldStack.push_back(item);
+		Fun oper = removeItem_lambda(id);
+		PUSH_LAMBDA(oper, lambda);
+		// remove the tail of the stack
+		for (int i = destRow; i < parent->childCount(); ++i) {
+			auto current = parent->child(i);
+			if (current->getId() != id) {
+				oldStack.push_back(current);
+				oper = removeItem_lambda(current->getId());
+				PUSH_LAMBDA(oper, lambda);
+			}
+		}
+		// insert back in order
+		for (const auto &elem : oldStack) {
+			oper = addItem_lambda(elem, parentId);
+			PUSH_LAMBDA(oper, lambda);
+		}
+		return lambda;
+	}
+	return []() { return false; };
+}
+
 void AbstractTreeModel::register_item(const std::shared_ptr<AbstractTreeModelItem>& item)
 {
 	UUIncD id = item->getId();

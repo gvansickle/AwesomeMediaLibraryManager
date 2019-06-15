@@ -43,6 +43,7 @@
 class LibraryModel;
 class LibraryEntry;
 class ScanResultsTreeModel;
+class ScanResultsTreeModelItem;
 class SharedItemContType;
 
 
@@ -132,7 +133,7 @@ private:
 
 	QFutureWatcher<QString> m_extfuture_watcher_dirtrav;
 	/// @todo
-	using ItemContType = std::vector<std::shared_ptr<AbstractTreeModelItem>>;
+	using ItemContType = std::vector<std::shared_ptr<ScanResultsTreeModelItem>>;
 	using SharedItemContType = std::shared_ptr<ItemContType>;
 //	QFutureWatcher<SharedItemContType> m_efwatcher_tree_model_append;
 //	QFutureWatcher<MetadataReturnVal> m_extfuture_watcher_metadata;

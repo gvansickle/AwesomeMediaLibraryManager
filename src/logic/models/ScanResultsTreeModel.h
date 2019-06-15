@@ -22,6 +22,9 @@
 
 #include "AbstractTreeModel.h"
 
+// Std C++
+#include <shared_mutex>
+
 // Qt5
 #include <QUrl>
 #include <QString>
@@ -31,6 +34,7 @@
 #include "ScanResultsTreeModelItem.h"
 class AbstractTreeModelHeaderItem;
 #include <future/enable_shared_from_this_virtual.h>
+#include "UndoRedoHelper.h"
 
 
 /**
@@ -40,7 +44,7 @@ class AbstractTreeModelHeaderItem;
  * - Contains 1 or more tracks.
  * - May have a sidecar or embedded cue sheet.
  */
-class ScanResultsTreeModel : public AbstractTreeModel, public enable_shared_from_this_virtual<ScanResultsTreeModel>
+class ScanResultsTreeModel : public AbstractTreeModel//, public enable_shared_from_this_virtual<ScanResultsTreeModel>
 {
 	Q_OBJECT
 
@@ -68,8 +72,8 @@ public:
 
 	/// @todo Push these down?
 	bool requestAppendItem(const std::shared_ptr<ScanResultsTreeModelItem>& item, UUIncD parent_uuincd, Fun& undo, Fun& redo);
-	// protected:
-	bool appendItem(const std::shared_ptr<ScanResultsTreeModelItem>& item, UUIncD parent_uuincd, Fun& undo, Fun& redo);
+	bool requestAppendItems(std::vector<std::shared_ptr<ScanResultsTreeModelItem>> items, UUIncD parent_uuincd, Fun& undo, Fun& redo);
+	bool requestAddScanResultsTreeModelItem(const DirScanResult& dsr, UUIncD parent_uuincd, Fun& undo, Fun& redo);
 
 	/// @name Serialization
 	/// @{
@@ -82,12 +86,22 @@ public:
 	/// @}
 
 protected:
+	/// ~KDenLive
+	bool appendItem(const std::shared_ptr<ScanResultsTreeModelItem>& item, UUIncD parent_uuincd, Fun& undo, Fun& redo);
+
 	QString getXmlStreamName() const override { return "AMLMScanResults"; };
 	QString getXmlStreamVersion() const override { return "0.1"; };
 
 	// The tree's base directory URL.
     QUrl m_base_directory;
 
+private:
+
+	/**
+	 * Single writer/multi-reader mutex.
+	 */
+//	mutable std::shared_mutex m_rw_mutex;
+	mutable std::recursive_mutex m_rw_mutex;
 };
 
 

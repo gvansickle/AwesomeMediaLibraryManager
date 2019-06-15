@@ -40,7 +40,7 @@ class ScanResultsTreeModel;
 /**
  * Model of the results of scanning a directory tree.
  */
-class ScanResultsTreeModelItem : public AbstractTreeModelItem, public enable_shared_from_this_virtual<ScanResultsTreeModelItem>
+class ScanResultsTreeModelItem : public AbstractTreeModelItem//, public enable_shared_from_this_virtual<ScanResultsTreeModelItem>
 
 {
 	using BASE_CLASS = AbstractTreeModelItem;
