@@ -114,6 +114,7 @@ public:
 
 	/**
 	 * Return the UUIncD of this item.
+	 * @note Asserts if the UUIncD is ::null().
 	 */
 	UUIncD getId() const;
 

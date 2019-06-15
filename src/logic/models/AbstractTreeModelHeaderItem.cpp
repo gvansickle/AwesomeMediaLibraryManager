@@ -18,9 +18,6 @@
  */
 
 /**
- * @file AbstractTreeModelHeaderItem.cpp
- */
-/**
  * @file AbstractTreeModelItem.cpp
  * Implementation of AbstractTreeModelItem.
  *

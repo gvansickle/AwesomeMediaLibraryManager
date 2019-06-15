@@ -38,7 +38,7 @@ class ScanResultsTreeModel;
 
 
 /**
- * Model of the results of scanning a directory tree.
+ * Tree model item containing the results of a single DirScanResult.
  */
 class ScanResultsTreeModelItem : public AbstractTreeModelItem//, public enable_shared_from_this_virtual<ScanResultsTreeModelItem>
 
@@ -51,10 +51,9 @@ public:
             bool is_root = false);
 
 protected:
-	/// Create a default-constructed (i.e. "blank") ScanResultsTreeModelItem, possibly with a given parent.
-//	explicit ScanResultsTreeModelItem(AbstractTreeModelItem *parent = nullptr) : BASE_CLASS(parent) {};
-	/// Create a new model item populated with the passed DirScanResult.
-//	explicit ScanResultsTreeModelItem(const DirScanResult& dsr, AbstractTreeModelItem *parent = nullptr);
+	/**
+	 * Create a new model item populated with the passed DirScanResult.
+	 */
 	explicit ScanResultsTreeModelItem(const DirScanResult& dsr,
 	                                  const std::shared_ptr<ScanResultsTreeModel> model,
 	                                  bool is_root = false);

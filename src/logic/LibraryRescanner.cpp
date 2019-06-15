@@ -418,6 +418,7 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 
 			// Finally, move the new model items to their new home.
 #if 1 // signal
+//			tree_model_ptr->requestAddScanResultsTreeModelItem();
 			tree_model_ptr->requestAppendItems(*new_items_vector_ptr, tree_model_ptr->getRootItem()->getId(), noop_undo_redo_lambda, noop_undo_redo_lambda);
 			/// @temp
 //			bool ok = tree_model_ptr->checkConsistency();
@@ -614,7 +615,7 @@ M_WARNING("SHARED PTR");
 	});
 #elif 1
 	auto* efw = ManagedExtFutureWatcher_detail::get_managed_qfuture_watcher<QString>();
-	connect_or_die(efw, &QFutureWatcher<QString>::resultReadyAt, efw, [=](int i){
+	connect_or_die(efw, &QFutureWatcher<QString>::resultReadyAt, efw, [this, qurl_future](int i){
 			/// @todo Maybe coming in out of order.
 			QString url_str = qurl_future.resultAt(i);
 			Q_EMIT SIGNAL_FileUrlQString(url_str);

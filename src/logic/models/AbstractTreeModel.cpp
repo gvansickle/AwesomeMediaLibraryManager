@@ -50,9 +50,14 @@
 #include <logic/serialization/XmlSerializer.h>
 #include "ScanResultsTreeModel.h"
 
-
+/**
+ * This really should never get called, since AbstractTreeModel is abstract.  Mostly here for an example for derived classes.
+ * @param parent
+ * @return
+ */
 std::shared_ptr<AbstractTreeModel> AbstractTreeModel::construct(QObject* parent)
 {
+	Q_ASSERT(0);
 	std::shared_ptr<AbstractTreeModel> self(new AbstractTreeModel(parent));
 	self->m_root_item = AbstractTreeModelHeaderItem::construct(self, true);
 	self->m_model_tester = new QAbstractItemModelTester(self.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, self.get());
@@ -119,6 +124,7 @@ QVariant AbstractTreeModel::data(const QModelIndex &index, int role) const
     // Get a pointer to the indexed item.
 	auto item = getItemById(UUIncD(index.internalId()));
 
+	// Return the requested [column,role] data from the item.
     return item->data(index.column(), role);
 }
 
@@ -368,6 +374,7 @@ QModelIndex AbstractTreeModel::index(int row, int column, const QModelIndex &par
 {
 	std::shared_ptr<AbstractTreeModelItem> parent_item;
 
+	// Get the parent item.
 	if(!parent.isValid())
 	{
 		parent_item = m_root_item;
@@ -379,14 +386,15 @@ QModelIndex AbstractTreeModel::index(int row, int column, const QModelIndex &par
 
 	if (row >= parent_item->childCount())
 	{
+		// Request is for a row beyond what the parent actually has.
         return QModelIndex();
 	}
 
-	std::shared_ptr<AbstractTreeModelItem> childItem = parent_item->child(row);
+	std::shared_ptr<AbstractTreeModelItem> child_item = parent_item->child(row);
 
-	if(childItem)
+	if(child_item)
 	{
-		return createIndex(row, column, quintptr(childItem->getId()));
+		return createIndex(row, column, quintptr(child_item->getId()));
 	}
     else
 	{

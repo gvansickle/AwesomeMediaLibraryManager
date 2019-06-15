@@ -55,6 +55,9 @@ public:
 	static std::shared_ptr<ScanResultsTreeModel> construct(QObject *parent);
 
 protected:
+	/**
+	 * The constructed model will NOT have a root, that's what construct() adds.
+	 */
 	explicit ScanResultsTreeModel(QObject *parent = nullptr);
 
 public:
@@ -86,8 +89,11 @@ public:
 	/// @}
 
 protected:
+	/**
+	 * Adds @a item to this tree model.
+	 */
 	/// ~KDenLive
-	bool appendItem(const std::shared_ptr<ScanResultsTreeModelItem>& item, UUIncD parent_uuincd, Fun& undo, Fun& redo);
+	bool addItem(const std::shared_ptr<ScanResultsTreeModelItem>& item, UUIncD parent_uuincd, Fun& undo, Fun& redo);
 
 	QString getXmlStreamName() const override { return "AMLMScanResults"; };
 	QString getXmlStreamVersion() const override { return "0.1"; };
@@ -99,6 +105,7 @@ private:
 
 	/**
 	 * Single writer/multi-reader mutex.
+	 * @todo The KDenLive code has/needs this to be recursive, but we should try to un-recurse it.
 	 */
 //	mutable std::shared_mutex m_rw_mutex;
 	mutable std::recursive_mutex m_rw_mutex;

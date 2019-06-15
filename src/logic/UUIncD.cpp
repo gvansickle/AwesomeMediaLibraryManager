@@ -19,7 +19,7 @@
 
 #include "UUIncD.h"
 
-std::atomic_uint64_t UUIncD::m_next_id {0};
+std::atomic_uint64_t UUIncD::m_next_id {1};
 
 UUIncD::UUIncD(std::uint64_t id)
 {
@@ -29,6 +29,7 @@ UUIncD::UUIncD(std::uint64_t id)
 // static
 UUIncD::UUIncD(quintptr qmodelindex_int_id)
 {
+	static_assert(sizeof(quintptr) == sizeof(m_my_id));
 	m_my_id = qmodelindex_int_id;
 }
 

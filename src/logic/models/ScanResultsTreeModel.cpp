@@ -35,7 +35,9 @@ ScanResultsTreeModel::ScanResultsTreeModel(QObject *parent) : BASE_CLASS(parent)
 std::shared_ptr<ScanResultsTreeModel> ScanResultsTreeModel::construct(QObject* parent)
 {
 	std::shared_ptr<ScanResultsTreeModel> retval(new ScanResultsTreeModel(parent));
+	// Create the root item, which is a HeaderItem.
 	retval->m_root_item = AbstractTreeModelHeaderItem::construct(retval);
+	/// @todo Need on/off, this slows things way down.
 	retval->m_model_tester = new QAbstractItemModelTester(retval.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, retval.get());
 	return retval;
 }
@@ -45,10 +47,10 @@ void ScanResultsTreeModel::setBaseDirectory(const QUrl &base_directory)
 	m_base_directory = base_directory;
 }
 
-bool ScanResultsTreeModel::appendItem(const std::shared_ptr<ScanResultsTreeModelItem>& item, UUIncD parent_uuincd, Fun& undo, Fun& redo)
+bool ScanResultsTreeModel::addItem(const std::shared_ptr<ScanResultsTreeModelItem>& item, UUIncD parent_uuincd, Fun& undo, Fun& redo)
 {
 	// Acquire a write lock.
-	std::unique_lock lock(m_rw_mutex);
+	std::unique_lock wrlock(m_rw_mutex);
 
 	// Get ptr to the specified parent item.
 	auto parent_item_by_id = getItemById(parent_uuincd);
@@ -59,15 +61,17 @@ bool ScanResultsTreeModel::appendItem(const std::shared_ptr<ScanResultsTreeModel
 	/// @todo KDen does some type checking in here of what item is and if it can be added to parent.
 
 	// Create an addItem lambda which will be what ultimately adds the item to the parent.
-	Fun op = addItem_lambda(item, parent_item->getId());
+	Fun operation = addItem_lambda(item, parent_item->getId());
 
 	UUIncD item_id = item->getId();
 	Fun reverse = removeItem_lambda(item_id);
-	bool retval = op();
+	// Run the addItem_lambda() we created a few lines above to add the item to the model.
+	bool retval = operation();
 	Q_ASSERT(item->isInModel());
 	if(retval)
 	{
-		UPDATE_UNDO_REDO(m_rw_mutex, op, reverse, undo, redo);
+		// It was added, update the undo/redo state.
+		UPDATE_UNDO_REDO(m_rw_mutex, operation, reverse, undo, redo);
 	}
 	return retval;
 }
@@ -82,7 +86,7 @@ bool ScanResultsTreeModel::requestAppendItem(const std::shared_ptr<ScanResultsTr
 	/// So I'm not sure this request func is actually needed.
 //Q_ASSERT(0);
 //	std::shared_ptr<ScanResultsTreeModelItem> new_item = ScanResultsTreeModelItem::construct(DirScanResult(), std::static_pointer_cast<ScanResultsTreeModel>(shared_from_this()));
-	return appendItem(item, parent_uuincd, undo, redo);
+	return addItem(item, parent_uuincd, undo, redo);
 }
 
 bool ScanResultsTreeModel::requestAppendItems(std::vector<std::shared_ptr<ScanResultsTreeModelItem>> items,
@@ -110,7 +114,7 @@ bool ScanResultsTreeModel::requestAddScanResultsTreeModelItem(const DirScanResul
 
 	std::shared_ptr<ScanResultsTreeModelItem> new_item
 			= ScanResultsTreeModelItem::construct(dsr, std::static_pointer_cast<ScanResultsTreeModel>(shared_from_this()));
-	return appendItem(new_item, parent_uuincd, undo, redo);
+	return addItem(new_item, parent_uuincd, undo, redo);
 }
 
 /**

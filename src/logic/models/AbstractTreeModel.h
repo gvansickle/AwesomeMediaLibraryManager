@@ -70,28 +70,28 @@ public:
 protected:
 	/**
 	 * Creates a new AbstractTreeModel object.
-	 * This model will have a default constructed AbstractTreeModelHeader with no columns and no children.
+	 * This model will NOT have a root, that's what construct() adds.
 	 */
 	explicit AbstractTreeModel(QObject *parent = nullptr);
 
 public:
 	~AbstractTreeModel() override;
 
+	/// OLD
 	/**
 	 * Set the ColumnSpecs in the model's root item, which holds the info for the horizontal header.
 	 */
-	 /// OLD
 	virtual bool setColumnSpecs(std::initializer_list<QString> column_specs);
 
 	// bool hasIndex() is not virtual.
 
+	/// BOTH
 	/**
 	 * Calls getItem(index), which returns index.internalPointer() which is an AbstractTreeModelItem*.
 	 * Item then returns the data for this index and role from its @a data(column) function.
 	 *
 	 * @todo role gets lost along the way, we need to put that in.
 	 */
-	 /// BOTH
     QVariant data(const QModelIndex &index, int role) const override;
 
     /// @todo Maybe override these.
@@ -187,7 +187,7 @@ public:
 	 */
 	 /// OLD
 //	virtual bool appendItems(std::vector<std::shared_ptr<AbstractTreeModelItem> > new_items, const QModelIndex &parent = QModelIndex());
-//	virtual bool appendItem(std::shared_ptr<AbstractTreeModelItem> new_items, const QModelIndex &parent = QModelIndex());
+//	virtual bool addItem(std::shared_ptr<AbstractTreeModelItem> new_items, const QModelIndex &parent = QModelIndex());
 
 	QModelIndex getIndexFromItem(const std::shared_ptr<AbstractTreeModelItem>& item) const;
 	QModelIndex getIndexFromId(UUIncD id) const;
@@ -241,12 +241,12 @@ protected:
 	 * Send the appropriate pre-notification related to a row that we are appending.
 	 * @param item is the parent item to which row is about to be appended.
 	 */
-	void notifyRowAboutToAppend(const std::shared_ptr<AbstractTreeModelItem> &item);
+	void notifyRowAboutToAppend(const std::shared_ptr<AbstractTreeModelItem>& item);
 
 	/* @brief Send the appropriate notification related to a row that we have appended
        @param row is the new element
     */
-	void notifyRowAppended(const std::shared_ptr<AbstractTreeModelItem> &row);
+	void notifyRowAppended(const std::shared_ptr<AbstractTreeModelItem>& row);
 
 	/* @brief Send the appropriate notification related to a row that we are deleting
 	   @param item is the parent of the row being deleted
