@@ -59,7 +59,7 @@ std::shared_ptr<AbstractTreeModel> AbstractTreeModel::construct(QObject* parent)
 {
 	Q_ASSERT(0);
 	std::shared_ptr<AbstractTreeModel> self(new AbstractTreeModel(parent));
-	self->m_root_item = AbstractTreeModelHeaderItem::construct(self, true);
+	self->m_root_item = AbstractTreeModelHeaderItem::construct({}, self, true);
 //	self->m_model_tester = new QAbstractItemModelTester(self.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, self.get());
 	return self;
 }
@@ -253,7 +253,8 @@ void AbstractTreeModel::register_item(const std::shared_ptr<AbstractTreeModelIte
 void AbstractTreeModel::deregister_item(UUIncD id, AbstractTreeModelItem* item)
 {
 	Q_UNUSED(item);
-	Q_ASSERT(m_model_item_map.count(id) > 0);
+//	Q_ASSERT(m_model_item_map.count(id) > 0);
+	AMLM_ASSERT_GT(m_model_item_map.count(id), 0);
 	m_model_item_map.erase(id);
 }
 

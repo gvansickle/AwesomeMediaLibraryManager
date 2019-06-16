@@ -71,10 +71,14 @@ protected:
 	/**
 	 * Creates a new AbstractTreeModel object.
 	 * This model will NOT have a root, that's what construct() adds.
+	 * In general, derived constructors don't do much more than pass the @a parent param.
 	 */
 	explicit AbstractTreeModel(QObject *parent = nullptr);
 
 public:
+	/**
+	 * Clears all items in the model, including the root item.
+	 */
 	~AbstractTreeModel() override;
 
 	/// OLD

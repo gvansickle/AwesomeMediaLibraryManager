@@ -47,11 +47,12 @@ class AbstractTreeModelHeaderItem: public AbstractTreeModelItem, public enable_s
 
 public:
 
-	static std::shared_ptr<AbstractTreeModelHeaderItem> construct(const std::shared_ptr<AbstractTreeModel>& model, bool isRoot = true,
-	                                                              UUIncD id = UUIncD::null());
+	static std::shared_ptr<AbstractTreeModelHeaderItem> construct(const QVector<QVariant>& data,
+			const std::shared_ptr<AbstractTreeModel>& model, bool isRoot = true, UUIncD id = UUIncD::null());
 
 protected:
-	explicit AbstractTreeModelHeaderItem(const std::shared_ptr<AbstractTreeModel>& parent_model, bool isRoot, UUIncD id = UUIncD::null());
+	explicit AbstractTreeModelHeaderItem(const QVector<QVariant>& data, const std::shared_ptr<AbstractTreeModel>& parent_model,
+			bool isRoot = true, UUIncD id = UUIncD::null());
 
 public:
 	 ~AbstractTreeModelHeaderItem() override;

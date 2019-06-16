@@ -36,7 +36,8 @@ std::shared_ptr<ScanResultsTreeModel> ScanResultsTreeModel::construct(QObject* p
 {
 	std::shared_ptr<ScanResultsTreeModel> retval(new ScanResultsTreeModel(parent));
 	// Create the root item, which is a HeaderItem.
-	retval->m_root_item = AbstractTreeModelHeaderItem::construct(retval);
+	Q_ASSERT(retval->m_root_item == nullptr);
+	retval->m_root_item = AbstractTreeModelHeaderItem::construct({}, retval);
 	/// @todo Need on/off, this slows things way down.
 //	retval->m_model_tester = new QAbstractItemModelTester(retval.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, retval.get());
 	return retval;

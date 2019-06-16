@@ -46,15 +46,16 @@
 #include <logic/UUIncD.h>
 #include "AbstractTreeModel.h"
 
-std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::construct(std::shared_ptr<AbstractTreeModel> model, bool isRoot, UUIncD id)
+std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::construct(const QVector<QVariant>& data,
+		std::shared_ptr<AbstractTreeModel> model, bool isRoot, UUIncD id)
 {
 	/// @note make_shared doesn't have access to the constructor if it's protected, so we have to do this.
-	std::shared_ptr<AbstractTreeModelItem> self(new AbstractTreeModelItem(model, isRoot, id));
+	std::shared_ptr<AbstractTreeModelItem> self(new AbstractTreeModelItem(data, model, isRoot, id));
 	baseFinishConstruct(self);
 	return self;
 }
 
-AbstractTreeModelItem::AbstractTreeModelItem(const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id)
+AbstractTreeModelItem::AbstractTreeModelItem(const QVector<QVariant>& data, const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id)
 	: m_model(model), m_depth(0), m_uuincid(id == UUIncD::null() ? UUIncD::create() : id),
 	  m_is_in_model(false), m_is_root(is_root)
 {
@@ -416,13 +417,14 @@ bool AbstractTreeModelItem::appendChild(const std::shared_ptr<AbstractTreeModelI
 	return false;
 }
 
-/// Append a child item from data.
-/// @todo
+/**
+ * Append a child item from data.
+ */
 std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::appendChild(const QVector<QVariant>& data)
 {
 	if (auto ptr = m_model.lock())
 	{
-		auto child = construct(ptr, false);
+		auto child = construct(data, ptr, false);
 		appendChild(child);
 		return child;
 	}

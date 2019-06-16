@@ -61,13 +61,15 @@ public:
 
 	/**
 	 * Named constructor.
+	 * Taking a QVariant list mostly to keep as close as I can to the two designs I'm mostly leaning on here.
 	 */
-	static std::shared_ptr<AbstractTreeModelItem> construct(std::shared_ptr<AbstractTreeModel> model, bool isRoot,
-			UUIncD id = UUIncD::null());
+	static std::shared_ptr<AbstractTreeModelItem> construct(const QVector<QVariant>& data,
+			std::shared_ptr<AbstractTreeModel> model, bool isRoot, UUIncD id = UUIncD::null());
 
 protected:
 	/// Sets the model and UUIncD.
-	AbstractTreeModelItem(const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id = UUIncD::null());
+	AbstractTreeModelItem(const QVector<QVariant>& data, const std::shared_ptr<AbstractTreeModel>& model,
+			bool is_root, UUIncD id = UUIncD::null());
 
 public:
 	~AbstractTreeModelItem() override;

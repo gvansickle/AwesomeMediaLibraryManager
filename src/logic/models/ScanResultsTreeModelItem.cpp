@@ -50,7 +50,7 @@ std::shared_ptr<ScanResultsTreeModelItem> ScanResultsTreeModelItem::construct(co
 }
 
 ScanResultsTreeModelItem::ScanResultsTreeModelItem(const DirScanResult& dsr, const std::shared_ptr<ScanResultsTreeModel> model, bool is_root)
-	: BASE_CLASS(model, is_root), m_dsr(dsr)
+	: BASE_CLASS({}, model, is_root), m_dsr(dsr)
 {
 }
 

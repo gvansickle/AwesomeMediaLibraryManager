@@ -45,17 +45,17 @@
 
 // static
 std::shared_ptr<AbstractTreeModelHeaderItem>
-AbstractTreeModelHeaderItem::construct(const std::shared_ptr<AbstractTreeModel>& model, bool isRoot, UUIncD id)
+AbstractTreeModelHeaderItem::construct(const QVector<QVariant>& data, const std::shared_ptr<AbstractTreeModel>& model, bool isRoot, UUIncD id)
 {
-	std::shared_ptr<AbstractTreeModelHeaderItem> self(new AbstractTreeModelHeaderItem(model, isRoot, id));
+	std::shared_ptr<AbstractTreeModelHeaderItem> self(new AbstractTreeModelHeaderItem(data, model, isRoot, id));
 
 	baseFinishConstruct(self);
 
 	return self;
 }
 
-AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(const std::shared_ptr<AbstractTreeModel>& parent_model, bool isRoot, UUIncD id)
-	: BASE_CLASS(parent_model, isRoot, id)
+AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(const QVector<QVariant>& data, const std::shared_ptr<AbstractTreeModel>& parent_model, bool isRoot, UUIncD id)
+	: BASE_CLASS(data, parent_model, isRoot, id)
 {
 
 }
