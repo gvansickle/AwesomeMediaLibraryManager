@@ -91,13 +91,7 @@ void AMLMApp::Init(bool gtest_only)
 	/// @todo TEMP hardcoded db file name in home dir.
 //	auto db_dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
 
-	// Create and set up the scan results tree model.
-	m_srtm_instance = ScanResultsTreeModel::construct(this);
-	// Create and set the root item / headers
-M_TODO("Needs to be ColumnSpecs");
-	m_srtm_instance->setColumnSpecs({"DirProps", "MediaURL", "SidecarCueURL"});
-	// Let's add two more columns
-	m_srtm_instance->insertColumns(3, 2);
+
 
 
 	/// @end Experiments
@@ -123,7 +117,18 @@ AMLMApp* AMLMApp::instance()
 // Static
 std::shared_ptr<ScanResultsTreeModel> AMLMApp::IScanResultsTreeModel()
 {
-	return amlmApp->m_srtm_instance;
+	// Create-on-first-use and set up the scan results tree model.
+	static auto s_srtm_instance = []{
+		auto temp = ScanResultsTreeModel::construct(amlmApp);
+		// Create and set the root item / headers
+		M_TODO("Needs to be ColumnSpecs");
+		temp->setColumnSpecs({"DirProps", "MediaURL", "SidecarCueURL"});
+		// Let's add two more columns
+		temp->insertColumns(3, 2);
+		return temp;
+	}();
+
+	return s_srtm_instance;
 };
 
 

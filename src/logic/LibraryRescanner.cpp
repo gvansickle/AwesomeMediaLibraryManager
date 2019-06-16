@@ -24,6 +24,13 @@
 /// Std C++
 #include <functional>
 
+/// Linux Callgrind
+/// @link http://www.valgrind.org/docs/manual/manual-core-adv.html#manual-core-adv.clientreq :
+/// "You are encouraged to copy the valgrind/*.h headers into your project's include directory, so your program doesn't
+/// have a compile-time dependency on Valgrind being installed. The Valgrind headers, unlike most of the rest of the
+/// code, are under a BSD-style license so you may include them without worrying about license incompatibility."
+#include <valgrind/callgrind.h>
+
 /// Qt5
 #include <QThread>
 #include <QXmlFormatter>
@@ -198,6 +205,8 @@ void LibraryRescanner::SaveDatabase(ScanResultsTreeModel* tree_model_ptr, const 
 
 void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 {
+	CALLGRIND_START_INSTRUMENTATION;
+
     qDb() << "START:" << dir_url;
 
 	expect_and_set(0, 1);
@@ -432,8 +441,10 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 	})
 #endif
 	.then([&](ExtFuture<SharedItemContType> f){
+		Q_ASSERT(f.isFinished());
 		Q_ASSERT(m_model_ready_to_save_to_db == false);
 		m_model_ready_to_save_to_db = true;
+		/// @todo This is happening immediately, and also before "Finished tree_model_item_future" & qurl_future.
 		m_timer.lap("TreeModelItems stap() finished.");
 		return unit;
 	})
@@ -445,6 +456,8 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 
 			AMLM_ASSERT_IN_GUITHREAD();
 
+			/// @note The time between this and the immediately previous "Finished qurl_future" takes all the time
+			///       (about 271 secs atm).
 			m_timer.lap("GUI Thread dirtrav over start.");
 
 			expect_and_set(3, 4);
@@ -581,6 +594,9 @@ M_WARNING("SHARED PTR");
 				// Start the metadata scan.
 				qDb() << "STARTING RESCAN";
 //				lib_rescan_job->start();
+
+				CALLGRIND_STOP_INSTRUMENTATION;
+				CALLGRIND_DUMP_STATS;
 			}
 //            lib_rescan_job->start();
 #endif

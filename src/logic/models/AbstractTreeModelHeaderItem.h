@@ -94,10 +94,6 @@ protected:
 	/// @todo This is where we're ultimately headed, but QStrings in the interim.
 //	std::vector<ColumnSpec> m_column_specs;
 	std::vector<QString> m_column_specs {};
-
-	// The model we belong to.
-	/// @note Not sure we actually need this for anything.
-	AbstractTreeModel* m_parent_model;
 };
 
 Q_DECLARE_METATYPE(std::shared_ptr<AbstractTreeModelHeaderItem>)

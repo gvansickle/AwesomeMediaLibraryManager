@@ -176,7 +176,7 @@ public:
 protected:
 	/**
 	 * Finish construction of object given its pointer.
-	 * If @a self is root, calls registerSelf() to register it with the model.
+	 * If @a self is root, calls registerSelf() to register it with the model, otherwise does nothing.
 	 * This is a separated function so that it can be called from derived classes
 	 */
 	static void baseFinishConstruct(const std::shared_ptr<AbstractTreeModelItem>& self);

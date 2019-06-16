@@ -175,7 +175,7 @@ private:
 
 	AbstractTreeModel* m_cdb2_model_instance;
 
-	std::shared_ptr<ScanResultsTreeModel> m_srtm_instance {};
+//	std::shared_ptr<ScanResultsTreeModel> m_srtm_instance {};
 
     // This shouldn't be needed to destroy the PD singleton, since it's parented to this.
 //	PerfectDeleter *m_perfect_deleter;
