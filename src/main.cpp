@@ -44,6 +44,7 @@
 #endif
 
 /// Ours
+#include "Core.h"
 #include <gui/Theme.h>
 #include <utils/AboutDataSetup.h>
 #include "utils/DebugHelpers.h"
@@ -240,6 +241,10 @@ int main(int argc, char *argv[])
 		mainWin->show();
 	}
 
-    return app.exec();
+	AMLM::Core::build();
+	AMLM::Core::self()->initGUI();
+    int result = app.exec();
+	AMLM::Core::clean();
+	return result;
 }
 

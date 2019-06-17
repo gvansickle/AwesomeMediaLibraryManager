@@ -52,7 +52,7 @@ class ScanResultsTreeModel : public AbstractTreeModel//, public enable_shared_fr
 
 public:
 
-	static std::shared_ptr<ScanResultsTreeModel> construct(QObject *parent);
+	static std::shared_ptr<ScanResultsTreeModel> construct(QObject *parent = nullptr);
 
 protected:
 	/**

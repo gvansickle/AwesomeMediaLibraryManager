@@ -50,10 +50,11 @@
 #include "SupportedMimeTypes.h"
 
 // Boost
-#include <boost/thread.hpp>
+//#include <boost/thread.hpp>
 
 /// Ours
 #include <AMLMApp.h>
+#include <Core.h>
 #include <gui/MainWindow.h>
 #include <logic/models/AbstractTreeModelItem.h>
 #include <logic/models/ScanResultsTreeModel.h>
@@ -243,7 +244,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
     // Get a pointer to the Scan Results Tree model.
     /// @note This ptr will go away when we exit the function, so we can't copy it into any stap() lambdas.
     M_WARNING("THIS SHOULD BE ::construct");
-	std::shared_ptr<ScanResultsTreeModel> tree_model = AMLMApp::IScanResultsTreeModel();
+//	std::shared_ptr<ScanResultsTreeModel> tree_model = AMLMApp::IScanResultsTreeModel();
+	std::shared_ptr<ScanResultsTreeModel> tree_model = AMLM::Core::self()->getScanResultsTreeModel();
 	Q_ASSERT(tree_model);
     // Set the root URL of the scan results model.
     /// @todo Should this really be done here, or somewhere else?
@@ -266,7 +268,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 		AMLM_ASSERT_NOT_IN_GUITHREAD();
 //		AMLM_ASSERT_IN_GUITHREAD();
 
-        std::shared_ptr<ScanResultsTreeModel> tree_model_ptr = AMLMApp::IScanResultsTreeModel();
+        std::shared_ptr<ScanResultsTreeModel> tree_model_ptr = AMLM::Core::self()->getScanResultsTreeModel();
         Q_ASSERT(tree_model_ptr);
 
 		if(begin == 0)
@@ -390,7 +392,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 								                                               int begin_index, int end_index) mutable {
 
 		AMLM_ASSERT_IN_GUITHREAD();
-		std::shared_ptr<ScanResultsTreeModel> tree_model_ptr = AMLMApp::IScanResultsTreeModel();
+		std::shared_ptr<ScanResultsTreeModel> tree_model_ptr = AMLM::Core::self()->getScanResultsTreeModel();
 		Q_ASSERT(tree_model_ptr);
 //		qDb() << "START: tree_model_item_future.stap(), new_items_future count:" << new_items_future.resultCount();
 

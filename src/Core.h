@@ -23,18 +23,62 @@
 #ifndef SRC_CORE_H_
 #define SRC_CORE_H_
 
+// Std C++
+#include <memory>
+
+// Qt5
 #include <QObject>
+
+// Ours.
+#include <future/guideline_helpers.h>
+#include <logic/models/ScanResultsTreeModel.h>
+#include <models/ScanResultsTreeModel.h>
 
 namespace AMLM
 {
 
-/*
+/**
  *
  */
 class Core : public QObject
 {
+	Q_OBJECT
+
 public:
-	Core *m_self;
+	M_GH_DELETE_COPY_AND_MOVE(Core);
+	~Core() override;
+
+	/**
+	 * Named constructor for the Core singleton.
+	 * This can be expanded to take any necessary parameters.
+	 */
+	static void build();
+
+	/**
+     * Init the GUI part of the app and show the main window
+     */
+	void initGUI(/*const QUrl &Url*/);
+
+	/** Returns a pointer to the singleton object. */
+	static std::unique_ptr<Core>& self();
+
+	/** Delete the global core instance */
+	static void clean();
+
+	/// @name Accessors for the singletons.
+	/// @{
+
+	std::shared_ptr<ScanResultsTreeModel> getScanResultsTreeModel();
+
+	/// @}
+
+private:
+	explicit Core();
+	// Singleton ptr to us.
+	static std::unique_ptr<Core> m_self;
+
+	// Shared ptr to the scan results tree model.  Will be deleted in the destructor.
+	std::shared_ptr<ScanResultsTreeModel> m_srtm_instance;
 };
 
 } /* namespace AMLM */
