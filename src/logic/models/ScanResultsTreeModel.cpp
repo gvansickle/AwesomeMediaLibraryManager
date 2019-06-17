@@ -48,33 +48,93 @@ void ScanResultsTreeModel::setBaseDirectory(const QUrl &base_directory)
 	m_base_directory = base_directory;
 }
 
-bool ScanResultsTreeModel::addItem(const std::shared_ptr<ScanResultsTreeModelItem>& item, UUIncD parent_uuincd, Fun& undo, Fun& redo)
+std::shared_ptr<AbstractTreeModelItem> ScanResultsTreeModel::getItemByIndex(const QModelIndex& index)
 {
-	// Acquire a write lock.
-	std::unique_lock wrlock(m_rw_mutex);
+//	std::shared_lock read_lock(m_rw_mutex);
+	std::unique_lock write_lock(m_rw_mutex);
 
-	// Get ptr to the specified parent item.
-	auto parent_item_by_id = getItemById(parent_uuincd);
-	std::shared_ptr<AbstractTreeModelItem> parent_item = std::dynamic_pointer_cast<AbstractTreeModelItem>(parent_item_by_id);
+	// Get a pointer to the indexed item.
+	auto retval = BASE_CLASS::getItemById(UUIncD(index.internalId()));
 
-	Q_ASSERT(parent_item);
-
-	/// @todo KDen does some type checking in here of what item is and if it can be added to parent.
-
-	// Create an addItem lambda which will be what ultimately adds the item to the parent.
-	Fun operation = addItem_lambda(item, parent_item->getId());
-
-	UUIncD item_id = item->getId();
-	Fun reverse = removeItem_lambda(item_id);
-	// Run the addItem_lambda() we created a few lines above to add the item to the model.
-	bool retval = operation();
-	Q_ASSERT(item->isInModel());
-	if(retval)
-	{
-		// It was added, update the undo/redo state.
-		UPDATE_UNDO_REDO(m_rw_mutex, operation, reverse, undo, redo);
-	}
 	return retval;
+}
+
+QVariant ScanResultsTreeModel::data(const QModelIndex& index, int role) const
+{
+//	std::shared_lock read_lock(m_rw_mutex);
+	std::unique_lock write_lock(m_rw_mutex);
+
+	/// @todo Specialize behavior in here if needed.
+	return BASE_CLASS::data(index, role);
+}
+
+bool ScanResultsTreeModel::setData(const QModelIndex& index, const QVariant& value, int role)
+{
+	std::unique_lock write_lock(m_rw_mutex);
+
+	std::shared_ptr<AbstractTreeModelItem> item = getItemByIndex(index);
+	/// @todo Kden looks like it's only handling a rename here:
+	// if (item->rename(value.toString(), index.column())) {
+	//	emit dataChanged(index, index, {role});
+	//	return true;
+	//}
+	//// Item name was not changed
+	//return false;
+
+	return BASE_CLASS::setData(index, value, role);
+}
+
+Qt::ItemFlags ScanResultsTreeModel::flags(const QModelIndex& index) const
+{
+//	std::shared_lock read_lock(m_rw_mutex);
+	std::unique_lock write_lock(m_rw_mutex);
+
+	/// @note Kden does a switch on the derived item type and returns ItemIsEnabled/Selectable/DropEnabled/etc. here.
+
+	return BASE_CLASS::flags(index);
+}
+
+QVariant ScanResultsTreeModel::headerData(int section, Qt::Orientation orientation, int role) const
+{
+//	std::shared_lock read_lock(m_rw_mutex);
+	std::unique_lock write_lock(m_rw_mutex);
+
+	/// @todo KDen is doing a switch(section) and sending out the column name here.
+
+	return BASE_CLASS::headerData(section, orientation, role);
+}
+
+int ScanResultsTreeModel::columnCount(const QModelIndex& parent) const
+{
+//	std::shared_lock read_lock(m_rw_mutex);
+	std::unique_lock write_lock(m_rw_mutex);
+
+	/// @note KDen does this slightly different:
+	///     if (parent.isValid()) {
+	//	return getBinItemByIndex(parent)->supportedDataCount();
+	//}
+	//return std::static_pointer_cast<ProjectFolder>(rootItem)->supportedDataCount();
+
+	return BASE_CLASS::columnCount(parent);
+}
+
+QMimeData* ScanResultsTreeModel::mimeData(const QModelIndexList& indices) const
+{
+//	std::shared_lock read_lock(m_rw_mutex);
+	std::unique_lock write_lock(m_rw_mutex);
+
+	/// @todo Return mime data here.
+
+	return BASE_CLASS::mimeData(indices);
+}
+
+bool ScanResultsTreeModel::dropMimeData(const QMimeData* data, Qt::DropAction action, int row, int column, const QModelIndex& parent)
+{
+	std::unique_lock write_lock(m_rw_mutex);
+
+	/// KDen does requestAddWhatever()'s here.
+
+	return BASE_CLASS::dropMimeData(data, action, row, column, parent);
 }
 
 bool ScanResultsTreeModel::requestAppendItem(const std::shared_ptr<ScanResultsTreeModelItem>& item, UUIncD parent_uuincd, Fun& undo, Fun& redo)
@@ -139,6 +199,8 @@ QVariant ScanResultsTreeModel::toVariant() const
 {
 	QVariantInsertionOrderedMap map;
 
+	std::unique_lock write_lock(m_rw_mutex);
+
 #define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
 //	M_DATASTREAM_FIELDS(X)
 #undef X
@@ -182,6 +244,8 @@ QVariant ScanResultsTreeModel::toVariant() const
 
 void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 {
+	std::unique_lock write_lock(m_rw_mutex);
+
 	QVariantInsertionOrderedMap map;
 	qviomap_from_qvar_or_die(&map, variant);
 
@@ -215,3 +279,44 @@ M_WARNING("TODO: There sometimes isn't a root item in the map.");
 #warning @todo INCOMPLETE/error handling
 }
 
+void ScanResultsTreeModel::register_item(const std::shared_ptr<AbstractTreeModelItem>& item)
+{
+	std::unique_lock write_lock(m_rw_mutex);
+	BASE_CLASS::register_item(item);
+}
+
+void ScanResultsTreeModel::deregister_item(UUIncD id, AbstractTreeModelItem* item)
+{
+	std::unique_lock write_lock(m_rw_mutex);
+	/// Per KDenLive comment: TODO : here, we should suspend jobs belonging to the item we delete. They can be restarted if the item is reinserted by undo
+	BASE_CLASS::deregister_item(id, item);
+}
+
+bool ScanResultsTreeModel::addItem(const std::shared_ptr<ScanResultsTreeModelItem>& item, UUIncD parent_uuincd, Fun& undo, Fun& redo)
+{
+	// Acquire a write lock.
+	std::unique_lock write_lock(m_rw_mutex);
+
+	// Get ptr to the specified parent item.
+	auto parent_item_by_id = getItemById(parent_uuincd);
+	std::shared_ptr<AbstractTreeModelItem> parent_item = std::dynamic_pointer_cast<AbstractTreeModelItem>(parent_item_by_id);
+
+	Q_ASSERT(parent_item);
+
+	/// @todo KDen does some type checking in here of what item is and if it can be added to parent.
+
+	// Create an addItem lambda which will be what ultimately adds the item to the parent.
+	Fun operation = addItem_lambda(item, parent_item->getId());
+
+	UUIncD item_id = item->getId();
+	Fun reverse = removeItem_lambda(item_id);
+	// Run the addItem_lambda() we created a few lines above to add the item to the model.
+	bool retval = operation();
+	Q_ASSERT(item->isInModel());
+	if(retval)
+	{
+		// It was added, update the undo/redo state.
+		UPDATE_UNDO_REDO(m_rw_mutex, operation, reverse, undo, redo);
+	}
+	return retval;
+}

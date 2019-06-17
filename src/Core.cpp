@@ -73,6 +73,7 @@ std::unique_ptr<Core>& Core::self()
 	if (!m_self)
 	{
 		qDb() << "Error : Core has not been created";
+		Q_ASSERT(0);
 	}
 	return m_self;
 }

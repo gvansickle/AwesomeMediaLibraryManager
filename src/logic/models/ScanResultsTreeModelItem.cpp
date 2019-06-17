@@ -147,20 +147,20 @@ void ScanResultsTreeModelItem::setDirscanResults(const DirScanResult& dsr)
 
 /////////// @todo SRTMItem_LibEntry
 
-bool SRTMItem_LibEntry::derivedClassSetData(int column, const QVariant& value)
-{
-	return ScanResultsTreeModelItem::derivedClassSetData(column, value);
-}
-
-bool SRTMItem_LibEntry::derivedClassInsertColumns(int insert_before_column, int num_columns)
-{
-	return ScanResultsTreeModelItem::derivedClassInsertColumns(insert_before_column, num_columns);
-}
-
-bool SRTMItem_LibEntry::derivedClassRemoveColumns(int first_column_to_remove, int num_columns)
-{
-	return ScanResultsTreeModelItem::derivedClassRemoveColumns(first_column_to_remove, num_columns);
-}
+//bool SRTMItem_LibEntry::derivedClassSetData(int column, const QVariant& value)
+//{
+//	return ScanResultsTreeModelItem::derivedClassSetData(column, value);
+//}
+//
+//bool SRTMItem_LibEntry::derivedClassInsertColumns(int insert_before_column, int num_columns)
+//{
+//	return ScanResultsTreeModelItem::derivedClassInsertColumns(insert_before_column, num_columns);
+//}
+//
+//bool SRTMItem_LibEntry::derivedClassRemoveColumns(int first_column_to_remove, int num_columns)
+//{
+//	return ScanResultsTreeModelItem::derivedClassRemoveColumns(first_column_to_remove, num_columns);
+//}
 
 std::shared_ptr<SRTMItem_LibEntry> SRTMItem_LibEntry::construct(const DirScanResult& dsr, const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root)
 {

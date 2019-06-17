@@ -69,6 +69,34 @@ public:
      */
     void setBaseDirectory(const QUrl& base_directory);
 
+    /**
+     * Threadsafe function which takes a QModelIndex and returns the corresponding model item.
+     */
+	std::shared_ptr<AbstractTreeModelItem> getItemByIndex(const QModelIndex& index);
+
+	/// @name Threadsafe Overrides
+    /// @{
+
+	/** Returns item data depending on role requested */
+	QVariant data(const QModelIndex &index, int role) const override;
+	/** Called when user edits an item */
+	bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
+	/** Allow selection and drag & drop */
+	Qt::ItemFlags flags(const QModelIndex &index) const override;
+	/** Returns column names in case we want to use columns in QTreeView */
+	QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
+	/** Mandatory reimplementation from QAbstractItemModel */
+	int columnCount(const QModelIndex &parent = QModelIndex()) const override;
+	/** Returns the MIME type used for Drag actions */
+//	QStringList mimeTypes() const override;
+	/** Create data that will be used for Drag events */
+	QMimeData *mimeData(const QModelIndexList &indices) const override;
+	/** Set size for thumbnails */
+//	void setIconSize(QSize s);
+	bool dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent) override;
+//	Qt::DropActions supportedDropActions() const override;
+
+	/// @} END Threadsafe Overrides
 
 	/// Append a vector of AbstractTreeModelItem's as children of @p parent.
 //	bool appendItems(std::vector<std::shared_ptr<AbstractTreeModelItem>> new_items, const QModelIndex &parent = QModelIndex()) override;
@@ -89,6 +117,11 @@ public:
 	/// @}
 
 protected:
+
+	/// Thread-safe overrides.
+	void register_item(const std::shared_ptr<AbstractTreeModelItem>& item) override;
+	void deregister_item(UUIncD id, AbstractTreeModelItem* item) override;
+
 	/**
 	 * Adds @a item to this tree model.
 	 */
@@ -110,6 +143,8 @@ private:
 //	mutable std::shared_mutex m_rw_mutex;
 	mutable std::recursive_mutex m_rw_mutex;
 };
+
+
 
 
 #endif // SCANRESULTSTREEMODEL_H

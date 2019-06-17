@@ -385,13 +385,15 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	});
 
 #if 1
-	/// Append TreeModelItems to the tree_model.
+	/// Append TreeModelItems to the ScanResultsTreeModel tree_model.
 	Q_ASSERT(tree_model);
-	tree_model_item_future.stap(this,
+	tree_model_item_future.stap(/*this,*/
 								[this/*, tree_model_sptr=tree_model*/](ExtFuture< std::shared_ptr<std::vector<std::shared_ptr<ScanResultsTreeModelItem>>> > new_items_future,
 								                                               int begin_index, int end_index) mutable {
 
-		AMLM_ASSERT_IN_GUITHREAD();
+//		AMLM_ASSERT_IN_GUITHREAD();
+		AMLM_ASSERT_NOT_IN_GUITHREAD();
+
 		std::shared_ptr<ScanResultsTreeModel> tree_model_ptr = AMLM::Core::self()->getScanResultsTreeModel();
 		Q_ASSERT(tree_model_ptr);
 //		qDb() << "START: tree_model_item_future.stap(), new_items_future count:" << new_items_future.resultCount();
@@ -467,6 +469,7 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 			qDb() << "DIRTRAV COMPLETE, NOW IN GUI THREAD";
 			if(kjob.isNull())
 			{
+M_WARNING("kjob is now null here and we fail");
 				Q_ASSERT_X(0, __func__, "Dir scan job was deleted");
 			}
 			if(kjob->error())
