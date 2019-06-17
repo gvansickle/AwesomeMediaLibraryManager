@@ -467,12 +467,12 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 			expect_and_set(3, 4);
 
 			qDb() << "DIRTRAV COMPLETE, NOW IN GUI THREAD";
-			if(kjob.isNull())
+			if(0)//kjob.isNull())
 			{
 M_WARNING("kjob is now null here and we fail");
 				Q_ASSERT_X(0, __func__, "Dir scan job was deleted");
 			}
-			if(kjob->error())
+			if(0)//kjob->error())
 			{
 				qWr() << "DIRTRAV FAILED:" << kjob->error() << ":" << kjob->errorText() << ":" << kjob->errorString();
 				auto uidelegate = kjob->uiDelegate();
