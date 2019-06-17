@@ -1,5 +1,5 @@
 #
-# Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -118,12 +118,14 @@ set(PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS
 # Main program header files.
 set(HEADER_FILES
 	AMLMApp.h
+    Core.h
 	${PROJECT_SOURCE_DIR}/resources/VersionInfo.h    ### @todo
     )
 
 # Source file list.
 set(SOURCE_FILES
 	AMLMApp.cpp
+    Core.cpp
 	)
 
 # NoMoc files.
