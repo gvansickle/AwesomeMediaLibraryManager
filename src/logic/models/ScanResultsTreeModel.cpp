@@ -59,6 +59,14 @@ std::shared_ptr<AbstractTreeModelItem> ScanResultsTreeModel::getItemByIndex(cons
 	return retval;
 }
 
+std::shared_ptr<AbstractTreeModelItem> ScanResultsTreeModel::getItemById(const UUIncD& id) const
+{
+//	std::shared_lock read_lock(m_rw_mutex);
+	std::unique_lock write_lock(m_rw_mutex);
+
+	return BASE_CLASS::getItemById(id);
+}
+
 QVariant ScanResultsTreeModel::data(const QModelIndex& index, int role) const
 {
 //	std::shared_lock read_lock(m_rw_mutex);

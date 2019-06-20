@@ -73,6 +73,8 @@ public:
      * Threadsafe function which takes a QModelIndex and returns the corresponding model item.
      */
 	std::shared_ptr<AbstractTreeModelItem> getItemByIndex(const QModelIndex& index);
+	std::shared_ptr<AbstractTreeModelItem> getItemById(const UUIncD &id) const;
+
 
 	/// @name Threadsafe Overrides
     /// @{
