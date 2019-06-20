@@ -99,6 +99,12 @@ int AbstractTreeModelItem::childCount() const
 	return m_child_items.size();
 }
 
+int AbstractTreeModelItem::columnCount() const
+{
+	M_TODO("KDEN returns the length of the QVariant vector here.");
+	return 0;
+}
+
 /**
  * Find our index in the parent's child list.
  */
@@ -193,7 +199,7 @@ bool AbstractTreeModelItem::insertColumns(int insert_before_column, int num_colu
 //	return m_parent_item;
 //}
 
-std::weak_ptr<AbstractTreeModelItem> AbstractTreeModelItem::parent() const
+std::weak_ptr<AbstractTreeModelItem> AbstractTreeModelItem::parent_item() const
 {
 	return m_parent_item;
 }
@@ -387,7 +393,7 @@ bool AbstractTreeModelItem::appendChild(const std::shared_ptr<AbstractTreeModelI
 		// Somehow trying to create a cycle in the tree.
 		return false;
 	}
-	if (auto oldParent = new_child->parent().lock())
+	if (auto oldParent = new_child->parent_item().lock())
 	{
 		if (oldParent->getId() == m_uuincid)
 		{

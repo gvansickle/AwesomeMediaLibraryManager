@@ -413,26 +413,28 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 //				Q_ASSERT(entry->isInModel());
 				auto entry_dp = std::dynamic_pointer_cast<ScanResultsTreeModelItem>(entry);
 				Q_ASSERT(entry_dp);
-				std::shared_ptr<SRTMItem_LibEntry> new_child = SRTMItem_LibEntry::construct(entry_dp->getDsr(), tree_model_ptr, /**isRoot*/false);
-				Q_ASSERT(new_child);
 				std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(entry->data(1).toString());
+//				std::shared_ptr<SRTMItem_LibEntry> new_child = SRTMItem_LibEntry::construct(lib_entry, entry_dp->getDsr(), tree_model_ptr);
+//				Q_ASSERT(new_child);
+//				std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(entry->data(1).toString());
+				tree_model_ptr->requestAddSRTMItem_LibEntry(lib_entry, entry->getDsr(),
+						tree_model_ptr->getRootItem()->getId(), noop_undo_redo_lambda, noop_undo_redo_lambda);
 
 M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 //				qDb() << "ADDING TO NEW MODEL:" << M_ID_VAL(&entry) << M_ID_VAL(entry->data(1).toString());
 				lib_entry->populate(true);
 
 				// Here we're only dealing with the per-file LibraryEntry's.
-				new_child->setLibraryEntry(lib_entry);
+//				new_child->setLibraryEntry(lib_entry);
 
 				/// NEW: Give the incoming entry a parent.
-				entry->changeParent(tree_model_ptr->getRootItem());
-				entry->appendChild(new_child);
+//				entry->changeParent(tree_model_ptr->getRootItem());
+//				entry->appendChild(new_child);
 			}
 
 			// Finally, move the new model items to their new home.
 #if 1 // signal
-//			tree_model_ptr->requestAddScanResultsTreeModelItem();
-			tree_model_ptr->requestAppendItems(*new_items_vector_ptr, tree_model_ptr->getRootItem()->getId(), noop_undo_redo_lambda, noop_undo_redo_lambda);
+//			tree_model_ptr->requestAppendItems(*new_items_vector_ptr, tree_model_ptr->getRootItem()->getId(), noop_undo_redo_lambda, noop_undo_redo_lambda);
 			/// @temp
 //			bool ok = tree_model_ptr->checkConsistency();
 //			qDb() << "########################### TREE MODEL CHECK checkConsistency:" << ok;

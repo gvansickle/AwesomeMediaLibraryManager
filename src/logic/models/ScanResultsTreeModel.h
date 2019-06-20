@@ -90,7 +90,7 @@ public:
 	/** Returns the MIME type used for Drag actions */
 //	QStringList mimeTypes() const override;
 	/** Create data that will be used for Drag events */
-	QMimeData *mimeData(const QModelIndexList &indices) const override;
+	QMimeData* mimeData(const QModelIndexList &indices) const override;
 
 	bool dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent) override;
 //	Qt::DropActions supportedDropActions() const override;
@@ -104,6 +104,8 @@ public:
 	bool requestAppendItem(const std::shared_ptr<ScanResultsTreeModelItem>& item, UUIncD parent_uuincd, Fun& undo, Fun& redo);
 	bool requestAppendItems(std::vector<std::shared_ptr<ScanResultsTreeModelItem>> items, UUIncD parent_uuincd, Fun& undo, Fun& redo);
 	bool requestAddScanResultsTreeModelItem(const DirScanResult& dsr, UUIncD parent_uuincd, Fun& undo, Fun& redo);
+	bool requestAddSRTMItem_LibEntry(const std::shared_ptr<LibraryEntry>& libentry, const DirScanResult& dsr,
+			UUIncD parent_uuincd, Fun& undo, Fun& redo);
 
 	/// @name Serialization
 	/// @{

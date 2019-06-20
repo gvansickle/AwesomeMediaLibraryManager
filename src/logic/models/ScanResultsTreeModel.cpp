@@ -178,6 +178,16 @@ bool ScanResultsTreeModel::requestAddScanResultsTreeModelItem(const DirScanResul
 	return addItem(new_item, parent_uuincd, undo, redo);
 }
 
+bool ScanResultsTreeModel::requestAddSRTMItem_LibEntry(const std::shared_ptr<LibraryEntry>& libentry, const DirScanResult& dsr,
+		UUIncD parent_uuincd, Fun& undo, Fun& redo)
+{
+	std::unique_lock write_lock(m_rw_mutex);
+
+	std::shared_ptr<SRTMItem_LibEntry> new_item
+			= SRTMItem_LibEntry::construct(libentry, dsr, std::static_pointer_cast<ScanResultsTreeModel>(shared_from_this()));
+	return addItem(new_item, parent_uuincd, undo, redo);
+}
+
 /**
  * ScanResultsTreeModel XML tags.
  */

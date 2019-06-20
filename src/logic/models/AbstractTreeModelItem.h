@@ -34,6 +34,7 @@
 // Std C++
 #include <memory>
 #include <deque>
+#include <mutex>
 
 // Qt5
 #include <QList>
@@ -84,7 +85,7 @@ public:
 
     /// @returns The number of columns of data this item has.
     /// This is the max of the column count of all child items.
-	virtual int columnCount() const { return 0; };
+	virtual int columnCount() const;
 
     /**
      * Read access to the data of this item.
@@ -107,10 +108,8 @@ public:
 
     virtual bool insertColumns(int insert_before_column, int num_columns);
 
-//    /// Returns a pointer to this item's parent.
-//	std::weak_ptr<AbstractTreeModelItem> parent();
 	/// Returns a const pointer to this item's parent.
-	std::weak_ptr<AbstractTreeModelItem> parent() const;
+	std::weak_ptr<AbstractTreeModelItem> parent_item() const;
 
 	int depth() const;
 
@@ -210,6 +209,15 @@ protected:
 	/// Our guaranteed-to-be unique-to-this-run-of-the-program numeric ID.
 	UUIncD m_uuincid;
 
+	/// Pointer to our parent AbstractTreeModelItem.
+	/// For items in a tree model (i.e. not being copy/pasted or mid-construction), this will always
+	/// be non-null as long as this item is not the invisible root item.
+	std::weak_ptr<AbstractTreeModelItem> m_parent_item;
+
+	/// Mutex for derived classes' use.
+	/// @note Should try to make this non-recursive.
+	mutable std::recursive_mutex m_mutex;
+
 private:
 
 	using ChildItemContainerType = std::deque<std::shared_ptr<AbstractTreeModelItem>>;
@@ -221,11 +229,6 @@ private:
 	 * @return
 	 */
 	CICTIteratorType get_m_child_items_iterator(UUIncD id);
-
-	/// Pointer to our parent AbstractTreeModelItem.
-	/// For items in a tree model (i.e. not being copy/pasted or mid-construction), this will always
-	/// be non-null as long as this item is not the invisible root item.
-	std::weak_ptr<AbstractTreeModelItem> m_parent_item;
 
 	/// Deque of shared_ptr's to child items.
 	std::deque<std::shared_ptr<AbstractTreeModelItem>> m_child_items;

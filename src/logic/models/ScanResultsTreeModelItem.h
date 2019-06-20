@@ -32,6 +32,7 @@
 #include <logic/DirScanResult.h>
 #include <logic/serialization/ISerializable.h>
 #include <future/enable_shared_from_this_virtual.h>
+class AbstractTreeModelHeaderItem;
 class LibraryEntry;
 class ScanResultsTreeModel;
 /// @todo TEMP
@@ -39,6 +40,7 @@ class ScanResultsTreeModel;
 
 /**
  * Tree model item containing the results of a single DirScanResult.
+ * KDEN: ~similar to AbstractProjectItem
  */
 class ScanResultsTreeModelItem : public AbstractTreeModelItem//, public enable_shared_from_this_virtual<ScanResultsTreeModelItem>
 
@@ -74,6 +76,9 @@ public:
 
 	int columnCount() const override;
 
+	/// KDEN::AbsProjItem
+	std::shared_ptr<AbstractTreeModelHeaderItem> parent() const;
+
 	/// @name ISerializable interface
 	/// @{
 
@@ -86,6 +91,13 @@ public:
 
 
 protected:
+
+	/// KDEN AbstractProjectItem
+	/// Overload of AbstractTreeItem::updateParent().
+	void updateParent(std::shared_ptr<AbstractTreeModelItem> new_parent) override;
+
+	/// KDEN AbstractProjectItem
+	UUIncD m_last_parent_uuincd { UUIncD::null() };
 
 	/// The directory scan results corresponding to this entry.
 	/// This is things like the main media URL, sidecar cue sheet URLs, timestamp info, etc.
@@ -100,11 +112,11 @@ class SRTMItem_LibEntry : public ScanResultsTreeModelItem, public enable_shared_
 	using BASE_CLASS = ScanResultsTreeModelItem;
 
 public:
-	static std::shared_ptr<SRTMItem_LibEntry> construct(const DirScanResult& dsr,
-			const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root);
+	static std::shared_ptr<SRTMItem_LibEntry> construct(const std::shared_ptr<LibraryEntry>& libentry, const DirScanResult& dsr,
+			const std::shared_ptr<ScanResultsTreeModel>& model);
 
 protected:
-	explicit SRTMItem_LibEntry(const DirScanResult& dsr,
+	explicit SRTMItem_LibEntry(const std::shared_ptr<LibraryEntry>& libentry, const DirScanResult& dsr,
 	                           const std::shared_ptr</** @todo Associated model*/ScanResultsTreeModel>& model, bool is_root);
 
 public:
@@ -127,6 +139,7 @@ public:
 	/// @} // END Serialization
 	
 protected:
+
 
 private:
 	std::string m_key {"key"};

@@ -197,7 +197,7 @@ Fun AbstractTreeModel::removeItem_lambda(UUIncD id)
 		{
 			return false;
 		}
-		auto parent = item->parent().lock();
+		auto parent = item->parent_item().lock();
 		parent->removeChild(item);
 		return true;
 	};
@@ -214,7 +214,7 @@ Fun AbstractTreeModel::moveItem_lambda(UUIncD id, int destRow, bool force)
 		// nothing to do
 		return lambda;
 	}
-	if (auto parent = item->parent().lock())
+	if (auto parent = item->parent_item().lock())
 	{
 		if (destRow > parent->childCount() || destRow < 0)
 		{
@@ -332,7 +332,7 @@ bool AbstractTreeModel::checkConsistency()
 				qDebug() << "ERROR: Invalid tree: duplicate root";
 				return false;
 			}
-			if (auto ptr = currentItem->parent().lock())
+			if (auto ptr = currentItem->parent_item().lock())
 			{
 				if (ptr->getId() != parentId || ptr->child(currentItem->childNumber())->getId() != currentItem->getId())
 				{
@@ -439,7 +439,7 @@ QModelIndex AbstractTreeModel::parent(const QModelIndex &index) const
 	}
 
 	std::shared_ptr<AbstractTreeModelItem> childItem = getItemById(static_cast<UUIncD>(index.internalId()));
-	std::shared_ptr<AbstractTreeModelItem> parentItem = childItem->parent().lock();
+	std::shared_ptr<AbstractTreeModelItem> parentItem = childItem->parent_item().lock();
 
 	Q_ASSERT(parentItem);
 
@@ -499,9 +499,9 @@ bool AbstractTreeModel::moveColumns(const QModelIndex& sourceParent, int sourceC
 
 #if 0
 /// OLD
-bool AbstractTreeModel::appendItems(std::vector<std::shared_ptr<AbstractTreeModelItem>> new_items, const QModelIndex &parent)
+bool AbstractTreeModel::appendItems(std::vector<std::shared_ptr<AbstractTreeModelItem>> new_items, const QModelIndex &parent_item)
 {
-	std::shared_ptr<AbstractTreeModelItem> parent_item = getItemById(static_cast<UUIncD>(parent.internalId()));
+	std::shared_ptr<AbstractTreeModelItem> parent_item = getItemById(static_cast<UUIncD>(parent_item.internalId()));
 	Q_CHECK_PTR(parent_item);
 
     if(new_items.empty())
@@ -516,7 +516,7 @@ bool AbstractTreeModel::appendItems(std::vector<std::shared_ptr<AbstractTreeMode
 	/// @todo These items have data already and aren't default-constructed, do we need to do anything different
 	///       than begin/endInsert rows?
 	// parent, first_row_num_after_insertion, last_row_num_after_insertion.
-	this->beginInsertRows(parent, first_new_row_num_after_insertion, first_new_row_num_after_insertion + new_items.size() - 1);
+	this->beginInsertRows(parent_item, first_new_row_num_after_insertion, first_new_row_num_after_insertion + new_items.size() - 1);
 
     parent_item->appendChildren(std::move(new_items));
 
@@ -525,13 +525,13 @@ bool AbstractTreeModel::appendItems(std::vector<std::shared_ptr<AbstractTreeMode
     return true;
 }
 
-bool AbstractTreeModel::appendItem(std::shared_ptr<AbstractTreeModelItem> new_item, const QModelIndex& parent)
+bool AbstractTreeModel::appendItem(std::shared_ptr<AbstractTreeModelItem> new_item, const QModelIndex& parent_item)
 {
 	Q_ASSERT(0/*NOT IMPL*/);
 	std::vector<std::shared_ptr<AbstractTreeModelItem>> new_items;
 
 	new_items.emplace_back(std::move(new_item));
-	return appendItems(std::move(new_items), parent);
+	return appendItems(std::move(new_items), parent_item);
 }
 #endif // old
 
@@ -542,7 +542,7 @@ QModelIndex AbstractTreeModel::getIndexFromItem(const std::shared_ptr<AbstractTr
 	{
 		return QModelIndex();
 	}
-	auto parent_index = getIndexFromItem(item->parent().lock());
+	auto parent_index = getIndexFromItem(item->parent_item().lock());
 	return index(item->childNumber(), 0, parent_index);
 }
 

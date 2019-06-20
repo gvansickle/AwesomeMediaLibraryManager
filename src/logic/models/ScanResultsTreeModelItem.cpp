@@ -32,6 +32,7 @@
 // Ours
 #include <utils/DebugHelpers.h>
 #include <logic/DirScanResult.h>
+#include "AbstractTreeModelHeaderItem.h"
 #include "ScanResultsTreeModel.h"
 #include <LibraryEntry.h>
 
@@ -82,6 +83,11 @@ int ScanResultsTreeModelItem::columnCount() const
 	return 3;
 }
 
+std::shared_ptr<AbstractTreeModelHeaderItem> ScanResultsTreeModelItem::parent() const
+{
+	return std::static_pointer_cast<AbstractTreeModelHeaderItem>(m_parent_item.lock());
+}
+
 using strviw_type = QLatin1Literal;
 
 #define M_DATASTREAM_FIELDS(X) \
@@ -130,7 +136,18 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 //	for(const auto& ch : vl)
 //	{
 //		appendChild(ch.fromVariant());
-//	}
+	//	}
+}
+
+/// AbsProjItem
+void ScanResultsTreeModelItem::updateParent(std::shared_ptr<AbstractTreeModelItem> new_parent)
+{
+	m_last_parent_uuincd = UUIncD::null();
+	if(new_parent)
+	{
+		m_last_parent_uuincd = new_parent->getId();
+	}
+	AbstractTreeModelItem::updateParent(new_parent);
 }
 
 void ScanResultsTreeModelItem::setDirscanResults(const DirScanResult& dsr)
@@ -141,17 +158,19 @@ void ScanResultsTreeModelItem::setDirscanResults(const DirScanResult& dsr)
 
 /////////// @todo SRTMItem_LibEntry
 
-std::shared_ptr<SRTMItem_LibEntry> SRTMItem_LibEntry::construct(const DirScanResult& dsr, const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root)
+std::shared_ptr<SRTMItem_LibEntry> SRTMItem_LibEntry::construct(const std::shared_ptr<LibraryEntry>& libentry,
+		const DirScanResult& dsr, const std::shared_ptr<ScanResultsTreeModel>& model)
 {
-	std::shared_ptr<SRTMItem_LibEntry> self(new SRTMItem_LibEntry(dsr, model, is_root));
+	std::shared_ptr<SRTMItem_LibEntry> self(new SRTMItem_LibEntry(libentry, dsr, model, false));
 	baseFinishConstruct(self);
 	return self;
 }
 
-SRTMItem_LibEntry::SRTMItem_LibEntry(const DirScanResult& dsr, const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root)
+SRTMItem_LibEntry::SRTMItem_LibEntry(const std::shared_ptr<LibraryEntry>& libentry, const DirScanResult& dsr,
+		const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root)
 	: BASE_CLASS(dsr, model, is_root)
 {
-
+	m_library_entry = libentry;
 }
 
 QVariant SRTMItem_LibEntry::data(int column, int role) const
