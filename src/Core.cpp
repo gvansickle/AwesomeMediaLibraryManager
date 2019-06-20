@@ -80,6 +80,7 @@ std::unique_ptr<Core>& Core::self()
 
 std::shared_ptr<ScanResultsTreeModel> Core::getScanResultsTreeModel()
 {
+	Q_CHECK_PTR(m_srtm_instance);
 	return m_srtm_instance;
 };
 

@@ -91,8 +91,7 @@ public:
 //	QStringList mimeTypes() const override;
 	/** Create data that will be used for Drag events */
 	QMimeData *mimeData(const QModelIndexList &indices) const override;
-	/** Set size for thumbnails */
-//	void setIconSize(QSize s);
+
 	bool dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent) override;
 //	Qt::DropActions supportedDropActions() const override;
 
@@ -124,8 +123,10 @@ protected:
 
 	/**
 	 * Adds @a item to this tree model.
+	 * ~KDenLive
+	 * This is the workhorse threadsafe function which adds all new items to the model.  It should be not be called by clients,
+	 * but rather called by one of the requestAddXxxx() members.
 	 */
-	/// ~KDenLive
 	bool addItem(const std::shared_ptr<ScanResultsTreeModelItem>& item, UUIncD parent_uuincd, Fun& undo, Fun& redo);
 
 	QString getXmlStreamName() const override { return "AMLMScanResults"; };

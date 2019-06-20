@@ -58,7 +58,8 @@ class AbstractTreeModelHeaderItem;
  */
 class AbstractTreeModel : public QAbstractItemModel,
 		public virtual ISerializable,
-		public enable_shared_from_this_virtual<AbstractTreeModel>
+//		public enable_shared_from_this_virtual<AbstractTreeModel>
+		public std::enable_shared_from_this<AbstractTreeModel>
 {
     Q_OBJECT
 
@@ -224,10 +225,10 @@ public:
 	/// @{
 
 	/// Serialize the entire model to a QVariant.
-	QVariant toVariant() const override { return QVariant(); };
+	QVariant toVariant() const override { Q_ASSERT(0); return QVariant(); }; // = 0;
 
 	/// Serialize the entire model from a QVariant.
-	void fromVariant(const QVariant& variant) override {};
+	void fromVariant(const QVariant& variant) override { Q_ASSERT(0); }; // = 0;
 
 	/// @} // END Serialization
 
@@ -237,7 +238,10 @@ public:
 
 
 protected:
-
+	/**
+	 * Register/deregister a new item with this model.  These are intended to be called from an AbstractTreeModelItem.
+	 * @param item
+	 */
 	virtual void register_item(const std::shared_ptr<AbstractTreeModelItem>& item);
 	virtual void deregister_item(UUIncD id, AbstractTreeModelItem* item);
 

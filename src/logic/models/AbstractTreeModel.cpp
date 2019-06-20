@@ -83,9 +83,10 @@ int AbstractTreeModel::columnCount(const QModelIndex& parent) const
 {
 	if(!parent.isValid())
 	{
-		// Return root column count.
+		// Invalid parent, return root column count.
 		return m_root_item->columnCount();
 	}
+	// Else look up the item and return it's column count.
 	const auto id = UUIncD(parent.internalId());
 	auto item = getItemById(id);
 	return item->columnCount();
