@@ -404,6 +404,7 @@ bool AbstractTreeModelItem::appendChild(const std::shared_ptr<AbstractTreeModelI
 		{
 			// in that case a call to removeChild should have been carried out
 			qDebug() << "ERROR: trying to append a child that already has a parent";
+			Q_ASSERT(0);
 			return false;
 		}
 	}

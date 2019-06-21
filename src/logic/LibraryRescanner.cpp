@@ -262,11 +262,11 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 
 	// Attach a streaming tap to the dirscan future.
 	ExtFuture<Unit> tail_future
-			= dirresults_future.stap(/*this,*/[=](ExtFuture<DirScanResult> tap_future, int begin, int end) mutable -> void {
+			= dirresults_future.stap(this, [=](ExtFuture<DirScanResult> tap_future, int begin, int end) mutable -> void {
 
 		// Start of the dirtrav tap callback.  This should be a non-main thread.
-		AMLM_ASSERT_NOT_IN_GUITHREAD();
-//		AMLM_ASSERT_IN_GUITHREAD();
+//		AMLM_ASSERT_NOT_IN_GUITHREAD();
+		AMLM_ASSERT_IN_GUITHREAD();
 
         std::shared_ptr<ScanResultsTreeModel> tree_model_ptr = AMLM::Core::self()->getScanResultsTreeModel();
         Q_ASSERT(tree_model_ptr);
@@ -417,12 +417,15 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 //				std::shared_ptr<SRTMItem_LibEntry> new_child = SRTMItem_LibEntry::construct(lib_entry, entry_dp->getDsr(), tree_model_ptr);
 //				Q_ASSERT(new_child);
 //				std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(entry->data(1).toString());
+				M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
+//				qDb() << "ADDING TO NEW MODEL:" << M_ID_VAL(&entry) << M_ID_VAL(entry->data(1).toString());
+				lib_entry->populate(true);
 				tree_model_ptr->requestAddSRTMItem_LibEntry(lib_entry, entry->getDsr(),
 						tree_model_ptr->getRootItem()->getId(), noop_undo_redo_lambda, noop_undo_redo_lambda);
 
-M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
-//				qDb() << "ADDING TO NEW MODEL:" << M_ID_VAL(&entry) << M_ID_VAL(entry->data(1).toString());
-				lib_entry->populate(true);
+//M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
+////				qDb() << "ADDING TO NEW MODEL:" << M_ID_VAL(&entry) << M_ID_VAL(entry->data(1).toString());
+//				lib_entry->populate(true);
 
 				// Here we're only dealing with the per-file LibraryEntry's.
 //				new_child->setLibraryEntry(lib_entry);
@@ -436,8 +439,8 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 #if 1 // signal
 //			tree_model_ptr->requestAppendItems(*new_items_vector_ptr, tree_model_ptr->getRootItem()->getId(), noop_undo_redo_lambda, noop_undo_redo_lambda);
 			/// @temp
-//			bool ok = tree_model_ptr->checkConsistency();
-//			qDb() << "########################### TREE MODEL CHECK checkConsistency:" << ok;
+			bool ok = tree_model_ptr->checkConsistency();
+			qDb() << "########################### TREE MODEL CHECK checkConsistency:" << ok;
 #else
 			Q_EMIT SIGNAL_StapToTreeModel(*new_items_vector_ptr);
 #endif
@@ -667,6 +670,7 @@ M_WARNING("SHARED PTR");
 	lib_rescan_future.stap(this, [=](ExtFuture<MetadataReturnVal> ef, int begin, int end){
 		for(int i = begin; i<end; ++i)
 		{
+			qDb() << "LRF STAP:" << i;
 			this->SLOT_processReadyResults(ef.resultAt(i));
 		}
 	});

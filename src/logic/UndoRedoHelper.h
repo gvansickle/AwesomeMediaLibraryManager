@@ -76,27 +76,28 @@ reading a Read-protected property. In that case, we try to write lock it first (
    The lambdas are transformed to make sure they lock access to the class they operate on.
    Then they are added on the undoStack
 */
-#define PUSH_UNDO(undo, redo, text)                                                                                                                            \
-	if (auto ptr = m_undoStack.lock()) {                                                                                                                       \
-		ptr->push(new FunctionalUndoCommand(undo, redo, text));                                                                                                \
-	} else {                                                                                                                                                   \
-		qDebug() << "ERROR : unable to access undo stack";                                                                                                     \
-		Q_ASSERT(false);                                                                                                                                       \
+#define PUSH_UNDO(undo, redo, text) \
+	if (auto ptr = m_undoStack.lock()) { \
+		ptr->push(new FunctionalUndoCommand(undo, redo, text)); \
+	} else { \
+		qDebug() << "ERROR : unable to access undo stack"; \
+		Q_ASSERT(false); \
 	}
 
 /* @brief This macro takes as parameter one atomic operation and its reverse, and update
    the undo and redo functional stacks/queue accordingly
    This should be used in the rare case where we don't need a lock mutex. In general, prefer the other version
 */
-#define UPDATE_UNDO_REDO_NOLOCK(operation, reverse, undo, redo)                                                                                                \
-	undo = [reverse, undo]() {                                                                                                                                 \
-		bool v = reverse();                                                                                                                                    \
-		return undo() && v;                                                                                                                                    \
-	};                                                                                                                                                         \
-	redo = [operation, redo]() {                                                                                                                               \
-		bool v = redo();                                                                                                                                       \
-		return operation() && v;                                                                                                                               \
+#define UPDATE_UNDO_REDO_NOLOCK(operation, reverse, undo, redo) \
+	undo = [reverse, undo]() { \
+		bool v = reverse(); \
+		return undo() && v; \
+	}; \
+	redo = [operation, redo]() { \
+		bool v = redo(); \
+		return operation() && v; \
 	};
+
 /* @brief This macro takes as parameter one atomic operation and its reverse, and update
    the undo and redo functional stacks/queue accordingly
    It will also ensure that operation and reverse are dealing with mutexes

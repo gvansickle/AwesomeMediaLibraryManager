@@ -39,7 +39,7 @@ std::shared_ptr<ScanResultsTreeModel> ScanResultsTreeModel::construct(QObject* p
 	Q_ASSERT(retval->m_root_item == nullptr);
 	retval->m_root_item = AbstractTreeModelHeaderItem::construct({}, retval);
 	/// @todo Need on/off, this slows things way down.
-//	retval->m_model_tester = new QAbstractItemModelTester(retval.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, retval.get());
+	retval->m_model_tester = new QAbstractItemModelTester(retval.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, retval.get());
 	return retval;
 }
 
@@ -80,7 +80,7 @@ bool ScanResultsTreeModel::setData(const QModelIndex& index, const QVariant& val
 {
 	std::unique_lock write_lock(m_rw_mutex);
 
-	std::shared_ptr<AbstractTreeModelItem> item = getItemByIndex(index);
+//	std::shared_ptr<AbstractTreeModelItem> item = getItemByIndex(index);
 	/// @todo Kden looks like it's only handling a rename here:
 	// if (item->rename(value.toString(), index.column())) {
 	//	emit dataChanged(index, index, {role});
@@ -124,6 +124,14 @@ int ScanResultsTreeModel::columnCount(const QModelIndex& parent) const
 	//return std::static_pointer_cast<ProjectFolder>(rootItem)->supportedDataCount();
 
 	return BASE_CLASS::columnCount(parent);
+}
+
+int ScanResultsTreeModel::rowCount(const QModelIndex& parent) const
+{
+//	std::shared_lock read_lock(m_rw_mutex);
+	std::unique_lock write_lock(m_rw_mutex);
+
+	return BASE_CLASS::rowCount(parent);
 }
 
 QMimeData* ScanResultsTreeModel::mimeData(const QModelIndexList& indices) const
@@ -316,7 +324,7 @@ bool ScanResultsTreeModel::addItem(const std::shared_ptr<ScanResultsTreeModelIte
 	std::unique_lock write_lock(m_rw_mutex);
 
 	// Get ptr to the specified parent item.
-	auto parent_item_by_id = getItemById(parent_uuincd);
+	std::shared_ptr<AbstractTreeModelItem> parent_item_by_id = getItemById(parent_uuincd);
 	std::shared_ptr<AbstractTreeModelItem> parent_item = std::dynamic_pointer_cast<AbstractTreeModelItem>(parent_item_by_id);
 
 	Q_ASSERT(parent_item);
