@@ -50,6 +50,9 @@ class ScanResultsTreeModel : public AbstractTreeModel//, public enable_shared_fr
 
 	using BASE_CLASS = AbstractTreeModel;
 
+Q_SIGNALS:
+	void modelChanged();
+
 public:
 
 	static std::shared_ptr<ScanResultsTreeModel> construct(QObject *parent = nullptr);
@@ -59,6 +62,17 @@ protected:
 	 * The constructed model will NOT have a root, that's what construct() adds.
 	 */
 	explicit ScanResultsTreeModel(QObject *parent = nullptr);
+
+	/**
+	 * Make sig/slot connections.
+	 */
+	void setup();
+
+	/**
+	 * Commit the modification to the model.
+	 * Note that this is really a slot, but not marked as such in KDENLive
+*/
+	void sendModification();
 
 public:
     ~ScanResultsTreeModel() override = default;
@@ -148,6 +162,9 @@ private:
 	 */
 //	mutable std::shared_mutex m_rw_mutex;
 	mutable std::recursive_mutex m_rw_mutex;
+
+	/// KDEN KeyFrameModel
+	QPersistentModelIndex m_pmindex;
 };
 
 

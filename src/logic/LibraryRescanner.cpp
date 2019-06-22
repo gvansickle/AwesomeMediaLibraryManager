@@ -408,6 +408,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 			// Append ScanResultTreeModelItem entries to the ScanResultsTreeModel.
 			for(std::shared_ptr<ScanResultsTreeModelItem>& entry : *new_items_vector_ptr)
 			{
+#if 0
 				// Make sure the entry wasn't moved from.
 				Q_ASSERT(bool(entry) == true);
 //				Q_ASSERT(entry->isInModel());
@@ -433,6 +434,23 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 				/// NEW: Give the incoming entry a parent.
 //				entry->changeParent(tree_model_ptr->getRootItem());
 //				entry->appendChild(new_child);
+#else /// NEW
+				// Make sure the entry wasn't moved from.
+				Q_ASSERT(bool(entry) == true);
+
+				// Get a LibraryEntry.
+//				std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(entry->data(1).toString());
+//				lib_entry->populate(true);
+
+				/// NEW: Give the incoming entry a parent.
+				tree_model_ptr->requestAddScanResultsTreeModelItem(entry->getDsr(), tree_model_ptr->getRootItem()->getId(),
+						noop_undo_redo_lambda, noop_undo_redo_lambda);
+//				entry->changeParent(tree_model_ptr->getRootItem());
+//				entry->appendChild(new_child);
+//				tree_model_ptr->requestAddSRTMItem_LibEntry(lib_entry, entry->getDsr(),
+//				                                            entry->getId(), noop_undo_redo_lambda, noop_undo_redo_lambda);
+
+#endif
 			}
 
 			// Finally, move the new model items to their new home.
@@ -630,7 +648,7 @@ M_WARNING("SHARED PTR");
 	// Hook up future watchers.
 	//
 
-#if 0
+#if 1
 	qurl_future.stap(this, [=](ExtFuture<QString> ef, int begin_index, int end_index) {
 		for(int i = begin_index; i<end_index; ++i)
 		{
@@ -639,7 +657,7 @@ M_WARNING("SHARED PTR");
 			m_current_libmodel->SLOT_onIncomingFilename(url_str);
 		}
 	});
-#elif 1
+#elif 0
 	auto* efw = ManagedExtFutureWatcher_detail::get_managed_qfuture_watcher<QString>();
 	connect_or_die(efw, &QFutureWatcher<QString>::resultReadyAt, efw, [this, qurl_future](int i){
 			/// @todo Maybe coming in out of order.

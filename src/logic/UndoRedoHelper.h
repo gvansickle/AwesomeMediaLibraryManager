@@ -57,20 +57,26 @@ using Fun = std::function<bool(void)>;
 		return res_lambda; \
 	};
 
-/*This convenience macro locks the mutex for reading.
+/**
+ * This convenience macro locks the mutex for reading.
 Note that it might happen that a thread is executing a write operation that requires
 reading a Read-protected property. In that case, we try to write lock it first (this will be granted since the lock is recursive)
 */
-//#define READ_LOCK()                                                                                                                                            \
-//	std::unique_ptr<QReadLocker> rlocker(new QReadLocker(nullptr));                                                                                            \
-//	std::unique_ptr<QWriteLocker> wlocker(new QWriteLocker(nullptr));                                                                                          \
-//	if (m_lock.tryLockForWrite()) {                                                                                                                            \
-//		/*we yield ownership of the lock to the WriteLocker*/                                                                                                  \
-//		m_lock.unlock();                                                                                                                                       \
-//		wlocker.reset(new QWriteLocker(&m_lock));                                                                                                              \
-//	} else {                                                                                                                                                   \
-//		rlocker.reset(new QReadLocker(&m_lock));                                                                                                               \
-//	}
+#if 0
+#define READ_LOCK(mutex) \
+	using ul_type = std::unique_lock<std::recursive_mutex>; \
+	std::unique_ptr<ul_type> read_locker = std::make_unique<ul_type>(); \
+	std::unique_ptr<ul_type> write_locker = std::make_unique<ul_type>(); \
+	if (mutex.try_lock()) { \
+		/*we yield ownership of the lock to the WriteLocker*/ \
+		mutex.unlock(); \
+		write_locker.reset(new ul_type(mutex)); \
+	} else { \
+		read_locker.reset(new ul_type(mutex)); \
+	}
+#endif
+
+#define READ_LOCK(mutex) std::unique_lock<std::recursive_mutex> read_locker(mutex);
 
 /* @brief This macro takes some lambdas that represent undo/redo for an operation and the text (name) associated with this operation
    The lambdas are transformed to make sure they lock access to the class they operate on.

@@ -26,9 +26,43 @@
 #include "AbstractTreeModel.h"
 #include "ScanResultsTreeModelItem.h"
 #include "AbstractTreeModelHeaderItem.h"
+#include "LibraryEntry.h"
+#include <utils/ConnectHelpers.h>
 
 ScanResultsTreeModel::ScanResultsTreeModel(QObject *parent) : BASE_CLASS(parent)
 {
+}
+
+void ScanResultsTreeModel::setup()
+{
+	// We connect the signals of the abstractitemmodel to a more generic one.
+	connect_or_die(this, &ScanResultsTreeModel::columnsMoved, this, &ScanResultsTreeModel::modelChanged);
+	connect_or_die(this, &ScanResultsTreeModel::columnsRemoved, this, &ScanResultsTreeModel::modelChanged);
+	connect_or_die(this, &ScanResultsTreeModel::columnsInserted, this, &ScanResultsTreeModel::modelChanged);
+	connect_or_die(this, &ScanResultsTreeModel::rowsMoved, this, &ScanResultsTreeModel::modelChanged);
+	connect_or_die(this, &ScanResultsTreeModel::rowsRemoved, this, &ScanResultsTreeModel::modelChanged);
+	connect_or_die(this, &ScanResultsTreeModel::rowsInserted, this, &ScanResultsTreeModel::modelChanged);
+	connect_or_die(this, &ScanResultsTreeModel::modelReset, this, &ScanResultsTreeModel::modelChanged);
+	connect_or_die(this, &ScanResultsTreeModel::dataChanged, this, &ScanResultsTreeModel::modelChanged);
+	connect_or_die(this, &ScanResultsTreeModel::modelChanged, this, &ScanResultsTreeModel::sendModification);
+}
+
+void ScanResultsTreeModel::sendModification()
+{
+//	if (auto ptr = this)
+//	{
+//		Q_ASSERT(m_pmindex.isValid());
+//		QString name = ptr->data(m_pmindex, AssetParameterModel::NameRole).toString();
+//		if (m_paramType == ParamType::KeyframeParam || m_paramType == ParamType::AnimatedRect || m_paramType == ParamType::Roto_spline)
+//		{
+//			m_lastData = getAnimProperty();
+//			ptr->setParameter(name, m_lastData, false);
+//		}
+//		else
+//		{
+//			Q_ASSERT(false); // Not implemented, TODO
+//		}
+//	}
 }
 
 // static
@@ -39,7 +73,7 @@ std::shared_ptr<ScanResultsTreeModel> ScanResultsTreeModel::construct(QObject* p
 	Q_ASSERT(retval->m_root_item == nullptr);
 	retval->m_root_item = AbstractTreeModelHeaderItem::construct({}, retval);
 	/// @todo Need on/off, this slows things way down.
-	retval->m_model_tester = new QAbstractItemModelTester(retval.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, retval.get());
+//	retval->m_model_tester = new QAbstractItemModelTester(retval.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, retval.get());
 	return retval;
 }
 
@@ -70,7 +104,8 @@ std::shared_ptr<AbstractTreeModelItem> ScanResultsTreeModel::getItemById(const U
 QVariant ScanResultsTreeModel::data(const QModelIndex& index, int role) const
 {
 //	std::shared_lock read_lock(m_rw_mutex);
-	std::unique_lock write_lock(m_rw_mutex);
+//	std::unique_lock write_lock(m_rw_mutex);
+	READ_LOCK(m_rw_mutex);
 
 	/// @todo Specialize behavior in here if needed.
 	return BASE_CLASS::data(index, role);
@@ -95,7 +130,8 @@ bool ScanResultsTreeModel::setData(const QModelIndex& index, const QVariant& val
 Qt::ItemFlags ScanResultsTreeModel::flags(const QModelIndex& index) const
 {
 //	std::shared_lock read_lock(m_rw_mutex);
-	std::unique_lock write_lock(m_rw_mutex);
+//	std::unique_lock write_lock(m_rw_mutex);
+	READ_LOCK(m_rw_mutex);
 
 	/// @note Kden does a switch on the derived item type and returns ItemIsEnabled/Selectable/DropEnabled/etc. here.
 
@@ -105,7 +141,8 @@ Qt::ItemFlags ScanResultsTreeModel::flags(const QModelIndex& index) const
 QVariant ScanResultsTreeModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
 //	std::shared_lock read_lock(m_rw_mutex);
-	std::unique_lock write_lock(m_rw_mutex);
+//	std::unique_lock write_lock(m_rw_mutex);
+	READ_LOCK(m_rw_mutex);
 
 	/// @todo KDen is doing a switch(section) and sending out the column name here.
 
@@ -115,7 +152,8 @@ QVariant ScanResultsTreeModel::headerData(int section, Qt::Orientation orientati
 int ScanResultsTreeModel::columnCount(const QModelIndex& parent) const
 {
 //	std::shared_lock read_lock(m_rw_mutex);
-	std::unique_lock write_lock(m_rw_mutex);
+//	std::unique_lock write_lock(m_rw_mutex);
+	READ_LOCK(m_rw_mutex);
 
 	/// @note KDen does this slightly different:
 	///     if (parent.isValid()) {
@@ -129,7 +167,8 @@ int ScanResultsTreeModel::columnCount(const QModelIndex& parent) const
 int ScanResultsTreeModel::rowCount(const QModelIndex& parent) const
 {
 //	std::shared_lock read_lock(m_rw_mutex);
-	std::unique_lock write_lock(m_rw_mutex);
+//	std::unique_lock write_lock(m_rw_mutex);
+	READ_LOCK(m_rw_mutex);
 
 	return BASE_CLASS::rowCount(parent);
 }
@@ -153,6 +192,7 @@ bool ScanResultsTreeModel::dropMimeData(const QMimeData* data, Qt::DropAction ac
 	return BASE_CLASS::dropMimeData(data, action, row, column, parent);
 }
 
+#if 1
 bool ScanResultsTreeModel::requestAppendItem(const std::shared_ptr<ScanResultsTreeModelItem>& item, UUIncD parent_uuincd, Fun& undo, Fun& redo)
 {
 	std::unique_lock write_lock(m_rw_mutex);
@@ -184,6 +224,7 @@ bool ScanResultsTreeModel::requestAppendItems(std::vector<std::shared_ptr<ScanRe
 
 	return retval;
 }
+#endif
 
 bool ScanResultsTreeModel::requestAddScanResultsTreeModelItem(const DirScanResult& dsr, UUIncD parent_uuincd, Fun& undo, Fun& redo)
 {
@@ -191,7 +232,20 @@ bool ScanResultsTreeModel::requestAddScanResultsTreeModelItem(const DirScanResul
 
 	std::shared_ptr<ScanResultsTreeModelItem> new_item
 			= ScanResultsTreeModelItem::construct(dsr, std::static_pointer_cast<ScanResultsTreeModel>(shared_from_this()));
-	return addItem(new_item, parent_uuincd, undo, redo);
+
+	// Add the item to the model.
+	bool retval = addItem(new_item, parent_uuincd, undo, redo);
+
+	Q_ASSERT(retval == true);
+	Q_ASSERT(new_item->isInModel());
+
+	/// @todo Add _LibEntries...
+	std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(new_item->data(1).toString());
+	lib_entry->populate(true);
+	requestAddSRTMItem_LibEntry(lib_entry, dsr, new_item->getId(),
+	                            noop_undo_redo_lambda, noop_undo_redo_lambda);
+
+	return retval;
 }
 
 bool ScanResultsTreeModel::requestAddSRTMItem_LibEntry(const std::shared_ptr<LibraryEntry>& libentry, const DirScanResult& dsr,

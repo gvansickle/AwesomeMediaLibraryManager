@@ -151,10 +151,12 @@ Qt::ItemFlags AbstractTreeModel::flags(const QModelIndex &index) const
 /// NEW: KDEN:
 std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getItemById(const UUIncD& id) const
 {
+	Q_ASSERT(id != UUIncD::null());
 	if(id == m_root_item->getId())
 	{
 		return m_root_item;
 	}
+	Q_ASSERT(m_model_item_map.find(id) != m_model_item_map.end());
 	return m_model_item_map.at(id).lock();
 }
 
