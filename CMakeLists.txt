@@ -356,6 +356,10 @@ if(UNIX)
         X11Extras)
     list(APPEND QT5_LINK_LIB_TARGETS Qt5::X11Extras)
 endif(UNIX)
+# Windows only
+if(WIN32)
+	list(APPEND QT5_LINK_LIB_TARGETS Qt5::WinMain)
+endif(WIN32)
 
 print_qtinfo()
 
