@@ -442,7 +442,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 //				std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(entry->data(1).toString());
 //				lib_entry->populate(true);
 
-				/// NEW: Give the incoming entry a parent.
+				/// NEW: Add the incoming entry to the model.
 				tree_model_ptr->requestAddScanResultsTreeModelItem(entry->getDsr(), tree_model_ptr->getRootItem()->getId(),
 						noop_undo_redo_lambda, noop_undo_redo_lambda);
 //				entry->changeParent(tree_model_ptr->getRootItem());
