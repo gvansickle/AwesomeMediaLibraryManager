@@ -116,6 +116,7 @@ public:
 
 	/// Append a vector of AbstractTreeModelItem's as children of @p parent.
 //	bool appendItems(std::vector<std::shared_ptr<AbstractTreeModelItem>> new_items, const QModelIndex &parent = QModelIndex()) override;
+	bool appendItems(std::vector<std::shared_ptr<ScanResultsTreeModelItem>> new_items, const QModelIndex &parent = QModelIndex());
 
 	/// @todo Push these down?
 	bool requestAppendItem(const std::shared_ptr<ScanResultsTreeModelItem>& item, UUIncD parent_uuincd, Fun& undo, Fun& redo);
@@ -155,13 +156,6 @@ protected:
     QUrl m_base_directory;
 
 private:
-
-	/**
-	 * Single writer/multi-reader mutex.
-	 * @todo The KDenLive code has/needs this to be recursive, but we should try to un-recurse it.
-	 */
-//	mutable std::shared_mutex m_rw_mutex;
-	mutable std::recursive_mutex m_rw_mutex;
 
 	/// KDEN KeyFrameModel
 	QPersistentModelIndex m_pmindex;

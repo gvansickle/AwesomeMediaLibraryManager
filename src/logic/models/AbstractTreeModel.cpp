@@ -94,6 +94,8 @@ int AbstractTreeModel::columnCount(const QModelIndex& parent) const
 
 QVariant AbstractTreeModel::data(const QModelIndex &index, int role) const
 {
+	std::unique_lock read_lock(m_rw_mutex);
+
 	Q_ASSERT(checkIndex(index, CheckIndexOption::IndexIsValid));
 
 	if (!index.isValid())
@@ -163,6 +165,8 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getItemById(const UUIn
 /// BOTH
 std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getRootItem() const
 {
+	std::unique_lock read_lock(m_rw_mutex);
+
 	return m_root_item;
 }
 
@@ -244,6 +248,21 @@ Fun AbstractTreeModel::moveItem_lambda(UUIncD id, int destRow, bool force)
 		return lambda;
 	}
 	return []() { return false; };
+}
+
+std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getItem(const QModelIndex& index) const
+{
+	if(index.isValid())
+	{
+		UUIncD id = static_cast<UUIncD>(index.internalId());
+		Q_ASSERT(id != m_root_item->getId());
+		std::shared_ptr<AbstractTreeModelItem> item = m_model_item_map.at(id).lock();
+		if(item)
+		{
+			return item;
+		}
+	}
+	return m_root_item;
 }
 
 void AbstractTreeModel::register_item(const std::shared_ptr<AbstractTreeModelItem>& item)
@@ -406,32 +425,32 @@ QModelIndex AbstractTreeModel::index(int row, int column, const QModelIndex &par
 	}
 }
 
-//bool AbstractTreeModel::insertColumns(int insert_before_column, int num_columns, const QModelIndex& parent_model_index)
-//{
-//	Q_CHECK_PTR(m_root_item);
-//
-//	bool success;
-//
-//    beginInsertColumns(parent_model_index, insert_before_column, insert_before_column + num_columns - 1);
-//	success = m_root_item->insertColumns(insert_before_column, num_columns);
-//    endInsertColumns();
-//
-//    return success;
-//}
+bool AbstractTreeModel::insertColumns(int insert_before_column, int num_columns, const QModelIndex& parent_model_index)
+{
+	Q_CHECK_PTR(m_root_item);
 
-//bool AbstractTreeModel::insertRows(int insert_before_row, int num_rows, const QModelIndex& parent_model_index)
-//{
-//	Q_CHECK_PTR(m_root_item);
-//
-//	std::shared_ptr<AbstractTreeModelItem> parent_item = getItemById(UUIncD(parent_model_index.internalId()));
-//    bool success;
-//
-//    beginInsertRows(parent_model_index, insert_before_row, insert_before_row + num_rows - 1);
-//	success = parent_item->insertChildren(insert_before_row, num_rows, m_root_item->columnCount());
-//    endInsertRows();
-//
-//    return success;
-//}
+	bool success;
+
+	beginInsertColumns(parent_model_index, insert_before_column, insert_before_column + num_columns - 1);
+	success = m_root_item->insertColumns(insert_before_column, num_columns);
+	endInsertColumns();
+
+	return success;
+}
+
+bool AbstractTreeModel::insertRows(int insert_before_row, int num_rows, const QModelIndex& parent_model_index)
+{
+	Q_CHECK_PTR(m_root_item);
+
+	std::shared_ptr<AbstractTreeModelItem> parent_item = getItemById(UUIncD(parent_model_index.internalId()));
+	bool success;
+
+	beginInsertRows(parent_model_index, insert_before_row, insert_before_row + num_rows - 1);
+	success = parent_item->insertChildren(insert_before_row, num_rows, m_root_item->columnCount());
+	endInsertRows();
+
+	return success;
+}
 
 QModelIndex AbstractTreeModel::parent(const QModelIndex &index) const
 {
@@ -499,11 +518,11 @@ bool AbstractTreeModel::moveColumns(const QModelIndex& sourceParent, int sourceC
 	return this->BASE_CLASS::moveColumns(sourceParent, sourceColumn, count, destinationParent, destinationChild);
 }
 
-#if 0
+#if 1
 /// OLD
-bool AbstractTreeModel::appendItems(std::vector<std::shared_ptr<AbstractTreeModelItem>> new_items, const QModelIndex &parent_item)
+bool AbstractTreeModel::appendItems(std::vector<std::shared_ptr<AbstractTreeModelItem>> new_items, const QModelIndex &parent_item_idx)
 {
-	std::shared_ptr<AbstractTreeModelItem> parent_item = getItemById(static_cast<UUIncD>(parent_item.internalId()));
+	std::shared_ptr<AbstractTreeModelItem> parent_item = getItemById(static_cast<UUIncD>(parent_item_idx.internalId()));
 	Q_CHECK_PTR(parent_item);
 
     if(new_items.empty())
@@ -518,7 +537,7 @@ bool AbstractTreeModel::appendItems(std::vector<std::shared_ptr<AbstractTreeMode
 	/// @todo These items have data already and aren't default-constructed, do we need to do anything different
 	///       than begin/endInsert rows?
 	// parent, first_row_num_after_insertion, last_row_num_after_insertion.
-	this->beginInsertRows(parent_item, first_new_row_num_after_insertion, first_new_row_num_after_insertion + new_items.size() - 1);
+	this->beginInsertRows(parent_item_idx, first_new_row_num_after_insertion, first_new_row_num_after_insertion + new_items.size() - 1);
 
     parent_item->appendChildren(std::move(new_items));
 
@@ -529,7 +548,7 @@ bool AbstractTreeModel::appendItems(std::vector<std::shared_ptr<AbstractTreeMode
 
 bool AbstractTreeModel::appendItem(std::shared_ptr<AbstractTreeModelItem> new_item, const QModelIndex& parent_item)
 {
-	Q_ASSERT(0/*NOT IMPL*/);
+//	Q_ASSERT(0/*NOT IMPL*/);
 	std::vector<std::shared_ptr<AbstractTreeModelItem>> new_items;
 
 	new_items.emplace_back(std::move(new_item));
@@ -586,6 +605,7 @@ int AbstractTreeModel::rowCount(const QModelIndex &parent) const
 
 bool AbstractTreeModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
+	Q_ASSERT(checkIndex(index, CheckIndexOption::IndexIsValid));
 	if (role != Qt::EditRole)
 	{
         return false;

@@ -147,7 +147,7 @@ void ScanResultsTreeModelItem::updateParent(std::shared_ptr<AbstractTreeModelIte
 	{
 		m_last_parent_uuincd = new_parent->getId();
 	}
-	AbstractTreeModelItem::updateParent(new_parent);
+	BASE_CLASS::updateParent(new_parent);
 }
 
 void ScanResultsTreeModelItem::setDirscanResults(const DirScanResult& dsr)

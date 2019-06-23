@@ -104,11 +104,11 @@ public:
 	 * Default construction is via the create_default_constructed_child_item() function (pure virtual here).
 	 * @return true if successful.
 	 */
-//    virtual bool insertChildren(int position, int count, int columns);
+	virtual bool insertChildren(int position, int count, int columns);
 
     virtual bool insertColumns(int insert_before_column, int num_columns);
 
-	/// Returns a const pointer to this item's parent.
+	/// Returns a weak_ptr to this item's parent.
 	std::weak_ptr<AbstractTreeModelItem> parent_item() const;
 
 	int depth() const;
@@ -152,7 +152,8 @@ public:
 	 */
 	void removeChild(const std::shared_ptr<AbstractTreeModelItem>& child);
 
-	/* @brief Change the parent of the current item. Structures are modified accordingly
+	/**
+	 * Change the parent of the current item. Structures are modified accordingly.
 	 */
 	virtual bool changeParent(std::shared_ptr<AbstractTreeModelItem> newParent);
 

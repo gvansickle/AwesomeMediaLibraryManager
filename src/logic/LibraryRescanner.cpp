@@ -352,8 +352,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 		}
 
 		/// @note This could also be a signal emit.
-		/// @note passing a shared_ptr to a vector of unique_ptrs between threads.
 //		auto new_items_upcast = std::static_pointer_cast<std::shared_ptr<std::vector<std::shared_ptr<AbstractTreeModelItem> > >(new_items);
+		Q_ASSERT(new_items->size() == 1);
 		tree_model_item_future.reportResult(new_items);
 
 //		qDb() << "END OF DSR TAP:" << M_ID_VAL(tree_model_item_future);
@@ -387,12 +387,12 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 #if 1
 	/// Append TreeModelItems to the ScanResultsTreeModel tree_model.
 	Q_ASSERT(tree_model);
-	tree_model_item_future.stap(/*this,*/
+	tree_model_item_future.stap(this,
 								[this/*, tree_model_sptr=tree_model*/](ExtFuture< std::shared_ptr<std::vector<std::shared_ptr<ScanResultsTreeModelItem>>> > new_items_future,
 								                                               int begin_index, int end_index) mutable {
 
-//		AMLM_ASSERT_IN_GUITHREAD();
-		AMLM_ASSERT_NOT_IN_GUITHREAD();
+		AMLM_ASSERT_IN_GUITHREAD();
+//		AMLM_ASSERT_NOT_IN_GUITHREAD();
 
 		std::shared_ptr<ScanResultsTreeModel> tree_model_ptr = AMLM::Core::self()->getScanResultsTreeModel();
 		Q_ASSERT(tree_model_ptr);
@@ -402,7 +402,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 		for(int index = begin_index; index < end_index; ++index)
 		{
 			std::shared_ptr<std::vector<std::shared_ptr<ScanResultsTreeModelItem>>> result = new_items_future.resultAt(index);
-			const std::shared_ptr<std::vector<std::shared_ptr<ScanResultsTreeModelItem>>>&
+			std::shared_ptr<std::vector<std::shared_ptr<ScanResultsTreeModelItem>>>
 			/*const SharedItemContType&*/ new_items_vector_ptr = result;
 
 			// Append ScanResultTreeModelItem entries to the ScanResultsTreeModel.
@@ -434,7 +434,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 				/// NEW: Give the incoming entry a parent.
 //				entry->changeParent(tree_model_ptr->getRootItem());
 //				entry->appendChild(new_child);
-#else /// NEW
+#elif 0 /// NEW
 				// Make sure the entry wasn't moved from.
 				Q_ASSERT(bool(entry) == true);
 
@@ -449,16 +449,35 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 //				entry->appendChild(new_child);
 //				tree_model_ptr->requestAddSRTMItem_LibEntry(lib_entry, entry->getDsr(),
 //				                                            entry->getId(), noop_undo_redo_lambda, noop_undo_redo_lambda);
+#elif 1 // IEVERCATCHABREAK
+					// Make sure the entry wasn't moved from.
+					Q_ASSERT(bool(entry) == true);
 
+//					auto new_child = std::make_shared<SRTMItem_LibEntry>();
+					std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(entry->data(1).toString());
+
+M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
+					qDb() << "ADDING TO NEW MODEL:" << M_ID_VAL(&entry) << M_ID_VAL(entry->data(1).toString());
+					lib_entry->populate(true);
+
+					// Here we're only dealing with the per-file LibraryEntry's.
+					std::vector<std::shared_ptr<LibraryEntry>> lib_entries;
+					lib_entries.push_back(lib_entry);
+
+					auto new_child = SRTMItem_LibEntry::construct(lib_entry, entry->getDsr(), tree_model_ptr);
+					new_child->setLibraryEntry(lib_entries.at(0));
+					entry->appendChild(std::move(new_child));
 #endif
 			}
 
 			// Finally, move the new model items to their new home.
 #if 1 // signal
-//			tree_model_ptr->requestAppendItems(*new_items_vector_ptr, tree_model_ptr->getRootItem()->getId(), noop_undo_redo_lambda, noop_undo_redo_lambda);
+			//tree_model_ptr->requestAppendItems(*new_items_vector_ptr, tree_model_ptr->getRootItem()->getId(), noop_undo_redo_lambda, noop_undo_redo_lambda);
+			tree_model_ptr->appendItems(*new_items_vector_ptr);
 			/// @temp
 			bool ok = tree_model_ptr->checkConsistency();
 			qDb() << "########################### TREE MODEL CHECK checkConsistency:" << ok;
+			Q_ASSERT(ok);
 #else
 			Q_EMIT SIGNAL_StapToTreeModel(*new_items_vector_ptr);
 #endif

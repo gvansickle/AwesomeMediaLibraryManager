@@ -37,12 +37,6 @@
 #include <logic/serialization/XmlObjects.h>
 
 
-//AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(AbstractTreeModelItem* parentItem)
-//	: AbstractTreeModelItem(parentItem)
-//{
-//	m_parent_model = nullptr;
-//}
-
 // static
 std::shared_ptr<AbstractTreeModelHeaderItem>
 AbstractTreeModelHeaderItem::construct(const QVector<QVariant>& data, const std::shared_ptr<AbstractTreeModel>& model, bool isRoot, UUIncD id)

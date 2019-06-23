@@ -108,6 +108,7 @@ void Logging::SetFilterRules()
 {
 	// Allow us to see qDebug() messages, except for mouse movement.
 	QLoggingCategory::setFilterRules(
+			"qt.modeltest.*\n"
 			"*.debug=true\n"
 			"qt.qpa.input*.debug=false\n"
 			"qt.*=false\n"

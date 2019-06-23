@@ -149,8 +149,8 @@ public:
      *
      * @return true on success.
      */
-//    bool insertColumns(int insert_before_column, int num_columns,
-//                       const QModelIndex& parent_model_index = QModelIndex()) override;
+	bool insertColumns(int insert_before_column, int num_columns,
+					   const QModelIndex& parent_model_index = QModelIndex()) override;
 	/**
 	 * Remove columns.
 	 */
@@ -164,8 +164,8 @@ public:
      *
      * @return true on success.
      */
-//    bool insertRows(int insert_before_row, int num_rows,
-//                    const QModelIndex& parent_model_index = QModelIndex()) override;
+	bool insertRows(int insert_before_row, int num_rows,
+					const QModelIndex& parent_model_index = QModelIndex()) override;
 
     /**
      * Remove rows [@a remove_start_row, @a remove_start_row + @a num_rows - 1 ].
@@ -191,8 +191,8 @@ public:
 	 * of the item objects is skipped since we're passing in the @a new_items.
 	 */
 	 /// OLD
-//	virtual bool appendItems(std::vector<std::shared_ptr<AbstractTreeModelItem> > new_items, const QModelIndex &parent = QModelIndex());
-//	virtual bool addItem(std::shared_ptr<AbstractTreeModelItem> new_items, const QModelIndex &parent = QModelIndex());
+	virtual bool appendItems(std::vector<std::shared_ptr<AbstractTreeModelItem> > new_items, const QModelIndex &parent = QModelIndex());
+	virtual bool appendItem(std::shared_ptr<AbstractTreeModelItem> new_items, const QModelIndex &parent = QModelIndex());
 
 	QModelIndex getIndexFromItem(const std::shared_ptr<AbstractTreeModelItem>& item) const;
 	QModelIndex getIndexFromId(UUIncD id) const;
@@ -238,6 +238,12 @@ public:
 
 
 protected:
+
+	/**
+	 * getItem() index->ptr conversion function, ala Qt Editable Tree Model item.
+	 */
+	std::shared_ptr<AbstractTreeModelItem> getItem(const QModelIndex& index) const;
+
 	/**
 	 * Register/deregister a new item with this model.  These are intended to be called from an AbstractTreeModelItem.
 	 * @param item
@@ -270,6 +276,7 @@ protected:
 public:
 	/** This is a convenience function that helps check if the tree is in a valid state */
 	virtual bool checkConsistency();
+
 protected:
 	/// @name Extended protected model interface.
 	/// @{
@@ -282,6 +289,13 @@ protected:
     /// Associated model tester.
     /// Parented to the model itself.
     QAbstractItemModelTester* m_model_tester {nullptr};
+
+    /**
+	 * Single writer/multi-reader mutex.
+	 * @todo The KDenLive code has/needs this to be recursive, but we should try to un-recurse it.
+	 */
+//	mutable std::shared_mutex m_rw_mutex;
+	mutable std::recursive_mutex m_rw_mutex;
 
     /// Hidden root node of the tree model.
     /// Pulls double duty as the horizontal header item.

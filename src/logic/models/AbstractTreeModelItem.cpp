@@ -110,6 +110,7 @@ int AbstractTreeModelItem::columnCount() const
  */
 int AbstractTreeModelItem::childNumber() const
 {
+#if 0 /// NEW
 	if (auto shpt = m_parent_item.lock())
 	{
 //		auto iter = std::find_if(shpt->m_child_items.cbegin(), shpt->m_child_items.cend(),
@@ -126,6 +127,18 @@ int AbstractTreeModelItem::childNumber() const
 	}
 
     return -1;
+#else
+
+	if (auto strong_parent_item = m_parent_item.lock())
+	{
+//		return stdex::indexOf(m_parent_item->m_child_items, this);
+		auto iter = std::find_if(strong_parent_item->m_child_items.cbegin(), strong_parent_item->m_child_items.cend(),
+				[=](const auto& unptr){ return unptr.get() == this; });
+		return iter - strong_parent_item->m_child_items.cbegin();
+	}
+
+    return 0;
+#endif
 }
 
 //int AbstractTreeModelItem::columnCount() const
@@ -138,7 +151,7 @@ int AbstractTreeModelItem::childNumber() const
 //	return m_item_data.value(column);
 //}
 
-#if 0 /// 1
+#if 1 /// 1
 bool AbstractTreeModelItem::insertChildren(int position, int count, int columns)
 {
 	AMLM_WARNIF(1);
@@ -156,7 +169,7 @@ bool AbstractTreeModelItem::insertChildren(int position, int count, int columns)
 //        QVector<QVariant> data(columns);
 //		AbstractTreeModelItem *item = new AbstractTreeModelItem(data, this);
 		// Create a new default-constructed item.
-		std::unique_ptr<AbstractTreeModelItem> item = std::move(create_default_constructed_child_item(this, columns));
+		std::shared_ptr<AbstractTreeModelItem> item = AbstractTreeModelItem::construct({}, nullptr, false);
 		m_child_items.insert(pos_iterator, std::move(item));
     }
 
@@ -403,7 +416,7 @@ bool AbstractTreeModelItem::appendChild(const std::shared_ptr<AbstractTreeModelI
 		else
 		{
 			// in that case a call to removeChild should have been carried out
-			qDebug() << "ERROR: trying to append a child that already has a parent";
+			qDebug() << "ERROR: trying to append a child that already has a different parent";
 			Q_ASSERT(0);
 			return false;
 		}

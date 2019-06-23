@@ -73,12 +73,14 @@ std::shared_ptr<ScanResultsTreeModel> ScanResultsTreeModel::construct(QObject* p
 	Q_ASSERT(retval->m_root_item == nullptr);
 	retval->m_root_item = AbstractTreeModelHeaderItem::construct({}, retval);
 	/// @todo Need on/off, this slows things way down.
-//	retval->m_model_tester = new QAbstractItemModelTester(retval.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, retval.get());
+	retval->m_model_tester = new QAbstractItemModelTester(retval.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, retval.get());
 	return retval;
 }
 
 void ScanResultsTreeModel::setBaseDirectory(const QUrl &base_directory)
 {
+	std::unique_lock write_lock(m_rw_mutex);
+
 	m_base_directory = base_directory;
 }
 
@@ -192,6 +194,20 @@ bool ScanResultsTreeModel::dropMimeData(const QMimeData* data, Qt::DropAction ac
 	return BASE_CLASS::dropMimeData(data, action, row, column, parent);
 }
 
+bool ScanResultsTreeModel::appendItems(std::vector<std::shared_ptr<ScanResultsTreeModelItem> > new_items, const QModelIndex& parent)
+{
+	auto parent_item = getItem(parent);
+
+	requestAppendItems(new_items, parent_item->getId(), noop_undo_redo_lambda, noop_undo_redo_lambda);
+
+//	for(auto item : new_items)
+//	{
+//		bool retval2 = appendItem(item, parent_item);
+//		Q_ASSERT(retval2);
+//	}
+	return true;
+}
+
 #if 1
 bool ScanResultsTreeModel::requestAppendItem(const std::shared_ptr<ScanResultsTreeModelItem>& item, UUIncD parent_uuincd, Fun& undo, Fun& redo)
 {
@@ -233,6 +249,8 @@ bool ScanResultsTreeModel::requestAddScanResultsTreeModelItem(const DirScanResul
 	std::shared_ptr<ScanResultsTreeModelItem> new_item
 			= ScanResultsTreeModelItem::construct(dsr, std::static_pointer_cast<ScanResultsTreeModel>(shared_from_this()));
 
+	Q_ASSERT(rowCount() == getRootItem()->childCount());
+
 	// Add the item to the model.
 	bool retval = addItem(new_item, parent_uuincd, undo, redo);
 
@@ -242,8 +260,9 @@ bool ScanResultsTreeModel::requestAddScanResultsTreeModelItem(const DirScanResul
 	/// @todo Add _LibEntries...
 	std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(new_item->data(1).toString());
 	lib_entry->populate(true);
-	requestAddSRTMItem_LibEntry(lib_entry, dsr, new_item->getId(),
+	bool libadd_status = requestAddSRTMItem_LibEntry(lib_entry, dsr, new_item->getId(),
 	                            noop_undo_redo_lambda, noop_undo_redo_lambda);
+	Q_ASSERT(libadd_status == true);
 
 	return retval;
 }
@@ -382,11 +401,12 @@ bool ScanResultsTreeModel::addItem(const std::shared_ptr<ScanResultsTreeModelIte
 	std::shared_ptr<AbstractTreeModelItem> parent_item = std::dynamic_pointer_cast<AbstractTreeModelItem>(parent_item_by_id);
 
 	Q_ASSERT(parent_item);
+	Q_ASSERT(parent_item->getId() == parent_uuincd);
 
 	/// @todo KDen does some type checking in here of what item is and if it can be added to parent.
 
 	// Create an addItem lambda which will be what ultimately adds the item to the parent.
-	Fun operation = addItem_lambda(item, parent_item->getId());
+	Fun operation = addItem_lambda(item, parent_uuincd);
 
 	UUIncD item_id = item->getId();
 	Fun reverse = removeItem_lambda(item_id);
