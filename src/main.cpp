@@ -44,6 +44,7 @@
 #endif
 
 /// Ours
+#include "Core.h"
 #include <gui/Theme.h>
 #include <utils/AboutDataSetup.h>
 #include "utils/DebugHelpers.h"
@@ -106,6 +107,8 @@ int main(int argc, char *argv[])
 	/// @note Must be set before Q(Gui)Application is constructed.
     AMLMApp::setAttribute(Qt::AA_EnableHighDpiScaling);
     // Use HighDPI pixmaps as long as we're supporting High DPI scaling.
+    // "After setting this attribute, application code that uses pixmap sizes in layout geometry calculations should
+    // typically divide by devicePixelRatio() to get device-independent layout geometry."
     /// @note Must be set before Q(Gui)Application is constructed.
     AMLMApp::setAttribute(Qt::AA_UseHighDpiPixmaps, true);
 	/// @todo Look at:
@@ -240,6 +243,15 @@ int main(int argc, char *argv[])
 		mainWin->show();
 	}
 
-    return app.exec();
+	AMLM::Core::build();
+	AMLM::Core::self()->initGUI();
+    int result = app.exec();
+	AMLM::Core::clean();
+
+	/*
+	 * Look at the retval and see if we should restart, etc.
+	 */
+
+	return result;
 }
 

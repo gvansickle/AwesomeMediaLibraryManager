@@ -86,6 +86,7 @@ inline static QDebug& operator<<(QDebug& d, const std::string& s)
 				Q_ASSERT_X(0, "AMLM_ASSERT_EQ", "MACRO BROKEN, DISAGREES WITH Q_ASSERT"); \
 			}\
 		} while(0)
+#define AMLM_ASSERT_GT(a, b) AMLM_ASSERT_LT((b), (a))
 
 #define AMLM_ASSERT_LT(a, b) \
 		do { auto la = (a); auto lb = (b); \
