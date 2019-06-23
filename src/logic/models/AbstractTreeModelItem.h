@@ -34,6 +34,7 @@
 // Std C++
 #include <memory>
 #include <deque>
+#include <mutex>
 
 // Qt5
 #include <QList>
@@ -114,6 +115,7 @@ public:
 
 	/**
 	 * Return the UUIncD of this item.
+	 * @note Asserts if the UUIncD is ::null().
 	 */
 	UUIncD getId() const;
 

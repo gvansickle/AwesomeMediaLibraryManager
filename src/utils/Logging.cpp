@@ -74,10 +74,10 @@ void printDebugMessagesWhileDebuggingHandler(QtMsgType type, const QMessageLogCo
 
 	if(context.function != nullptr && debug_str.contains(QLatin1String("%shortfunction")))
 	{
-    // Log a short form of the function name.  With templates, %{function} becomes enormous.
-    // Unfortunately we can't use __FUNCTION__ here because QMessageLogContext captures only __PRETTY_FUNCTION__,.
-    // and even that already gets cleaned up by %{function}. So we have to simply truncate what we get.
-	/// @todo This needs to be smarter, we mostly only get the return and linkage types.
+		// Log a short form of the function name.  With templates, %{function} becomes enormous.
+		// Unfortunately we can't use __FUNCTION__ here because QMessageLogContext captures only __PRETTY_FUNCTION__,.
+		// and even that already gets cleaned up by %{function}. So we have to simply truncate what we get.
+		/// @todo This needs to be smarter, we mostly only get the return and linkage types.
 #if 0
 		QString shortfunction = context.function;
 		shortfunction.remove(QRegularExpression(QStringLiteral(uR"!(^[\s]*(static|void|template|virtual|\*))!")));
