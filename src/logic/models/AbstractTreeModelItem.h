@@ -67,6 +67,7 @@ public:
 			UUIncD id = UUIncD::null());
 
 protected:
+
 	/// Sets the model and UUIncD.
 	AbstractTreeModelItem(const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id = UUIncD::null());
 
@@ -97,19 +98,15 @@ public:
 
 	bool setData(int column, const QVariant &value);
 
-	/**
-	 * Insert @a count default-constructed (i.e. empty) child items (rows), starting after child index @a position.
-	 * Default construction is via the create_default_constructed_child_item() function (pure virtual here).
-	 * @return true if successful.
-	 */
-//    virtual bool insertChildren(int position, int count, int columns);
 
-    virtual bool insertColumns(int insert_before_column, int num_columns);
+
+	virtual bool insertColumns(int insert_before_column, int num_columns);
 
 //    /// Returns a pointer to this item's parent.
 //	std::weak_ptr<AbstractTreeModelItem> parent();
 	/// Returns a const pointer to this item's parent.
 	std::weak_ptr<AbstractTreeModelItem> parent() const;
+	std::weak_ptr<AbstractTreeModelItem> parent_item() const { return parent(); };
 
 	int depth() const;
 
@@ -120,6 +117,13 @@ public:
 	UUIncD getId() const;
 
 	bool isInModel() const;
+
+	/**
+	 * Insert @a count default-constructed (i.e. empty) child items (rows), starting after child index @a position.
+	 * Default construction is via the create_default_constructed_child_item() function (pure virtual here).
+	 * @return true if successful.
+	 */
+	virtual bool insertChildren(int position, int count, int columns);
 
 	/**
 	 * Remove and delete the @a count children starting at @a position.

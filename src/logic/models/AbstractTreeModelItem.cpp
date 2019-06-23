@@ -32,19 +32,19 @@
 
 // Std C++
 #include <memory>
-//#include <execution>
 
 // Qt5
 #include <QBrush>
 #include <QStringList>
-#include <QXmlStreamWriter>
-#include <QXmlStreamReader>
+//#include <QXmlStreamWriter>
+//#include <QXmlStreamReader>
 
 // Ours
 #include <utils/DebugHelpers.h>
 #include <utils/VectorHelpers.h>
 #include <logic/UUIncD.h>
 #include "AbstractTreeModel.h"
+#include "PlaceholderTreeModelItem.h"
 
 std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::construct(std::shared_ptr<AbstractTreeModel> model, bool isRoot, UUIncD id)
 {
@@ -130,32 +130,6 @@ int AbstractTreeModelItem::childNumber() const
 //{
 //	return m_item_data.value(column);
 //}
-
-#if 0 /// 1
-bool AbstractTreeModelItem::insertChildren(int position, int count, int columns)
-{
-	AMLM_WARNIF(1);
-	if (position < 0 || position > m_child_items.size())
-	{
-		// Insertion point out of range of existing children.
-		qWr() << "INVALID INSERT POSITION:" << position << ", balking.";
-        return false;
-	}
-
-	decltype(m_child_items)::iterator pos_iterator = m_child_items.begin() + position;
-
-	for (int row = 0; row < count; ++row)
-	{
-//        QVector<QVariant> data(columns);
-//		AbstractTreeModelItem *item = new AbstractTreeModelItem(data, this);
-		// Create a new default-constructed item.
-		std::unique_ptr<AbstractTreeModelItem> item = std::move(create_default_constructed_child_item(this, columns));
-		m_child_items.insert(pos_iterator, std::move(item));
-    }
-
-    return true;
-}
-#endif
 
 bool AbstractTreeModelItem::insertColumns(int insert_before_column, int num_columns)
 {
@@ -379,6 +353,48 @@ bool AbstractTreeModelItem::appendChildren(std::vector<std::shared_ptr<AbstractT
 	return true;
 }
 
+#if 1 /// 1
+bool AbstractTreeModelItem::insertChildren(int position, int count, int columns)
+{
+	if (position < 0 || position > m_child_items.size())
+	{
+		// Insertion point out of range of existing children.
+		qWr() << "INVALID INSERT POSITION:" << position << ", balking.";
+		return false;
+	}
+
+	// No ancestor cycle or existing parent check needed, rows will be new.
+
+	if(auto model_ptr = m_model.lock())
+	{
+		// Currently model handles the notifications in insertRows().
+//		ptr->notifyRowsAboutToInsert()
+
+		decltype(m_child_items)::iterator pos_iterator = m_child_items.begin() + position;
+
+		for (int row = 0; row < count; ++row)
+		{
+			QVector<QVariant> data(columns);
+
+			// Create a new default-constructed item.
+			std::shared_ptr<PlaceholderTreeModelItem> item = PlaceholderTreeModelItem::construct(data, nullptr);
+			// Set us as the new item's parent.
+			item->updateParent(shared_from_this());
+			UUIncD id = item->getId();
+			Q_ASSERT(id != UUIncD::null());
+			pos_iterator = m_child_items.insert(pos_iterator, item);
+			Q_ASSERT(pos_iterator != m_child_items.end());
+			registerSelf(item);
+			++pos_iterator;
+		}
+
+//		ptr->notifyRowsInserted();
+	}
+
+	return true;
+}
+#endif
+
 bool AbstractTreeModelItem::appendChild(const std::shared_ptr<AbstractTreeModelItem>& new_child)
 {
 	if(has_ancestor(new_child->getId()))
@@ -422,7 +438,7 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::appendChild(const 
 {
 	if (auto ptr = m_model.lock())
 	{
-		auto child = construct(ptr, false);
+		auto child = PlaceholderTreeModelItem::construct(data, ptr, false);
 		appendChild(child);
 		return child;
 	}
@@ -489,8 +505,15 @@ void AbstractTreeModelItem::baseFinishConstruct(const std::shared_ptr<AbstractTr
 	}
 }
 
+/**
+ * Static function which registers @a self and its children with the model self is already registered with.
+ * @warning Will assert if @a self doesn't already know its model.
+ * @param self
+ */
 void AbstractTreeModelItem::registerSelf(const std::shared_ptr<AbstractTreeModelItem>& self)
 {
+	Q_ASSERT(!self->m_model.expired());
+
 	// Register children.
 	for (const auto& child : self->m_child_items)
 	{

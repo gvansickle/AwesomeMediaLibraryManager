@@ -43,10 +43,11 @@
 #include "SupportedMimeTypes.h"
 
 // Boost
-#include <boost/thread.hpp>
+//#include <boost/thread.hpp>
 
 /// Ours
 #include <AMLMApp.h>
+#include <Core.h>
 #include <gui/MainWindow.h>
 #include <logic/models/AbstractTreeModelItem.h>
 #include <logic/models/ScanResultsTreeModel.h>
@@ -234,7 +235,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
     // Get a pointer to the Scan Results Tree model.
     /// @note This ptr will go away when we exit the function, so we can't copy it into any stap() lambdas.
     M_WARNING("THIS SHOULD BE ::construct");
-	std::shared_ptr<ScanResultsTreeModel> tree_model = AMLMApp::IScanResultsTreeModel();
+//	std::shared_ptr<ScanResultsTreeModel> tree_model = AMLMApp::IScanResultsTreeModel();
+	std::shared_ptr<ScanResultsTreeModel> tree_model = AMLM::Core::self()->getScanResultsTreeModel();
 	Q_ASSERT(tree_model);
     // Set the root URL of the scan results model.
     /// @todo Should this really be done here, or somewhere else?
@@ -257,7 +259,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 		AMLM_ASSERT_NOT_IN_GUITHREAD();
 //		AMLM_ASSERT_IN_GUITHREAD();
 
-        std::shared_ptr<ScanResultsTreeModel> tree_model_ptr = AMLMApp::IScanResultsTreeModel();
+        std::shared_ptr<ScanResultsTreeModel> tree_model_ptr = AMLM::Core::self()->getScanResultsTreeModel();
         Q_ASSERT(tree_model_ptr);
 
 		if(begin == 0)
@@ -341,8 +343,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 		}
 
 		/// @note This could also be a signal emit.
-		/// @note passing a shared_ptr to a vector of unique_ptrs between threads.
 //		auto new_items_upcast = std::static_pointer_cast<std::shared_ptr<std::vector<std::shared_ptr<AbstractTreeModelItem> > >(new_items);
+		Q_ASSERT(new_items->size() == 1);
 		tree_model_item_future.reportResult(new_items);
 
 //		qDb() << "END OF DSR TAP:" << M_ID_VAL(tree_model_item_future);
@@ -374,14 +376,16 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	});
 
 #if 1
-	/// Append TreeModelItems to the tree_model.
+	/// Append TreeModelItems to the ScanResultsTreeModel tree_model.
 	Q_ASSERT(tree_model);
 	tree_model_item_future.stap(this,
 								[this/*, tree_model_sptr=tree_model*/](ExtFuture<SharedItemContType> new_items_future,
 								                                               int begin_index, int end_index) mutable {
 
 		AMLM_ASSERT_IN_GUITHREAD();
-		std::shared_ptr<ScanResultsTreeModel> tree_model_ptr = AMLMApp::IScanResultsTreeModel();
+//		AMLM_ASSERT_NOT_IN_GUITHREAD();
+
+		std::shared_ptr<ScanResultsTreeModel> tree_model_ptr = AMLM::Core::self()->getScanResultsTreeModel();
 		Q_ASSERT(tree_model_ptr);
 //		qDb() << "START: tree_model_item_future.stap(), new_items_future count:" << new_items_future.resultCount();
 
@@ -417,6 +421,7 @@ M_WARNING("CRASHING HERE");
 
 			// Finally, move the new model items to their new home.
 #if 1 // signal
+			Q_ASSERT(new_items_vector_ptr->at(0));
 			tree_model_ptr->appendItems(*new_items_vector_ptr);
 			/// @temp
 			bool ok = tree_model_ptr->checkConsistency();

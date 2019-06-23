@@ -1,65 +1,44 @@
-/**
- * Adapted from the "Editable Tree Model Example" shipped with Qt5.
+/*
+ * Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ *
+ * This file is part of AwesomeMediaLibraryManager.
+ *
+ * AwesomeMediaLibraryManager is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * AwesomeMediaLibraryManager is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/****************************************************************************
-**
-** Copyright (C) 2016 The Qt Company Ltd.
-** Contact: https://www.qt.io/licensing/
-**
-** This file is part of the examples of the Qt Toolkit.
-**
-** $QT_BEGIN_LICENSE:BSD$
-** Commercial License Usage
-** Licensees holding valid commercial Qt licenses may use this file in
-** accordance with the commercial license agreement provided with the
-** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see https://www.qt.io/terms-conditions. For further
-** information use the contact form at https://www.qt.io/contact-us.
-**
-** BSD License Usage
-** Alternatively, you may use this file under the terms of the BSD license
-** as follows:
-**
-** "Redistribution and use in source and binary forms, with or without
-** modification, are permitted provided that the following conditions are
-** met:
-**   * Redistributions of source code must retain the above copyright
-**     notice, this list of conditions and the following disclaimer.
-**   * Redistributions in binary form must reproduce the above copyright
-**     notice, this list of conditions and the following disclaimer in
-**     the documentation and/or other materials provided with the
-**     distribution.
-**   * Neither the name of The Qt Company Ltd nor the names of its
-**     contributors may be used to endorse or promote products derived
-**     from this software without specific prior written permission.
-**
-**
-** THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-** "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-** LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-** A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-** OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-** SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-** LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-** DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-** THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-** (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-** OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
-**
-** $QT_END_LICENSE$
-**
-****************************************************************************/
+/**
+ * @file AbstractTreeModel.cpp
+ * Implementation of AbstractTreeModel.
+ *
+ * This class is heavily adapted from at least the following:
+ * - The "Editable Tree Model Example" shipped with Qt5.
+ * - KDenLive's AbstractItemModel class.
+ * - My own original work.
+ * - Hundreds of nuggets of information from all over the Internet.
+ */
 
 // This class's header.
 #include "AbstractTreeModel.h"
 
 // Std C++
 #include <functional>
+#include <unordered_set>
+#include <queue>
 
 // Qt5
 #include <QtWidgets>
+#include <QAbstractItemModelTester>
 
 // KF5
 #include <KItemViews/KCategorizedSortFilterProxyModel>
@@ -69,15 +48,18 @@
 #include "AbstractTreeModelHeaderItem.h"
 #include <utils/DebugHelpers.h>
 #include <logic/serialization/XmlSerializer.h>
-#include <unordered_set>
-#include <queue>
 #include "ScanResultsTreeModel.h"
 
-
+/**
+ * This really should never get called, since AbstractTreeModel is abstract.  Mostly here for an example for derived classes.
+ * @param parent
+ * @return
+ */
 std::shared_ptr<AbstractTreeModel> AbstractTreeModel::construct(QObject* parent)
 {
 	std::shared_ptr<AbstractTreeModel> self(new AbstractTreeModel(parent));
 	self->m_root_item = AbstractTreeModelHeaderItem::construct(self, true);
+	self->m_model_tester = new QAbstractItemModelTester(self.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, self.get());
 	return self;
 }
 
@@ -104,9 +86,10 @@ int AbstractTreeModel::columnCount(const QModelIndex& parent) const
 #else /// kden
 	if(!parent.isValid())
 	{
-		/// Does this make sense?
+		// Invalid parent, return root column count.
 		return m_root_item->columnCount();
 	}
+	// Else look up the item and return it's column count.
 	const auto id = UUIncD(parent.internalId());
 	auto item = getItemById(id);
 	return item->columnCount();
@@ -146,6 +129,7 @@ QVariant AbstractTreeModel::data(const QModelIndex &index, int role) const
     // Get a pointer to the indexed item.
 	auto item = getItemById(UUIncD(index.internalId()));
 
+	// Return the requested [column,role] data from the item.
     return item->data(index.column(), role);
 }
 
@@ -185,10 +169,12 @@ Qt::ItemFlags AbstractTreeModel::flags(const QModelIndex &index) const
 /// NEW: KDEN:
 std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getItemById(const UUIncD& id) const
 {
+	Q_ASSERT(id != UUIncD::null());
 	if(id == m_root_item->getId())
 	{
 		return m_root_item;
 	}
+	Q_ASSERT(m_model_item_map.count(id) > 0);
 	return m_model_item_map.at(id).lock();
 }
 
@@ -196,6 +182,86 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getItemById(const UUIn
 std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getRootItem() const
 {
 	return m_root_item;
+}
+
+Fun AbstractTreeModel::addItem_lambda(const std::shared_ptr<AbstractTreeModelItem>& new_item, UUIncD parentId)
+{
+	return [this, new_item, parentId]() {
+		// Insertion is simply setting the parent of the item...
+		std::shared_ptr<AbstractTreeModelItem> parent;
+		if (parentId != UUIncD::null())
+		{
+			parent = getItemById(parentId);
+			if (!parent)
+			{
+				Q_ASSERT(parent);
+				return false;
+			}
+		}
+		// ...and fixing up the parent.
+		return new_item->changeParent(parent);
+	};
+}
+
+Fun AbstractTreeModel::removeItem_lambda(UUIncD id)
+{
+	return [this, id]() {
+		/* Deletion simply deregister clip and remove it from parent.
+		   The actual object is not actually deleted, because a shared_pointer to it
+		   is captured by the reverse operation.
+		   Actual deletions occurs when the undo object is destroyed.
+		*/
+		auto item = m_model_item_map[id].lock();
+		Q_ASSERT(item);
+		if (!item)
+		{
+			return false;
+		}
+		auto parent = item->parent_item().lock();
+		parent->removeChild(item);
+		return true;
+	};
+}
+
+Fun AbstractTreeModel::moveItem_lambda(UUIncD id, int destRow, bool force)
+{
+	Fun lambda = []() { return true; };
+
+	std::vector<std::shared_ptr<AbstractTreeModelItem>> oldStack;
+	auto item = getItemById(id);
+	if (!force && item->childNumber() == destRow)
+	{
+		// nothing to do
+		return lambda;
+	}
+	if (auto parent = item->parent_item().lock())
+	{
+		if (destRow > parent->childCount() || destRow < 0)
+		{
+			return []() { return false; };
+		}
+		UUIncD parentId = parent->getId();
+		// remove the element to move
+		oldStack.push_back(item);
+		Fun oper = removeItem_lambda(id);
+		PUSH_LAMBDA(oper, lambda);
+		// remove the tail of the stack
+		for (int i = destRow; i < parent->childCount(); ++i) {
+			auto current = parent->child(i);
+			if (current->getId() != id) {
+				oldStack.push_back(current);
+				oper = removeItem_lambda(current->getId());
+				PUSH_LAMBDA(oper, lambda);
+			}
+		}
+		// insert back in order
+		for (const auto &elem : oldStack) {
+			oper = addItem_lambda(elem, parentId);
+			PUSH_LAMBDA(oper, lambda);
+		}
+		return lambda;
+	}
+	return []() { return false; };
 }
 
 void AbstractTreeModel::register_item(const std::shared_ptr<AbstractTreeModelItem>& item)
@@ -208,9 +274,23 @@ void AbstractTreeModel::register_item(const std::shared_ptr<AbstractTreeModelIte
 void AbstractTreeModel::deregister_item(UUIncD id, AbstractTreeModelItem* item)
 {
 	Q_UNUSED(item);
-	Q_ASSERT(m_model_item_map.count(id) > 0);
+//	Q_ASSERT(m_model_item_map.count(id) > 0);
+	AMLM_ASSERT_GT(m_model_item_map.count(id), 0);
 	m_model_item_map.erase(id);
 }
+
+#if EVER_NEEDED
+void AbstractTreeModel::notifyRowsAboutToInsert(const std::shared_ptr<AbstractTreeModelItem>& row, int first, int last)
+{
+	/// @todo handle root item
+	auto parent_index = getIndexFromItem(item);
+}
+
+void AbstractTreeModel::notifyRowsInserted(const std::shared_ptr<AbstractTreeModelItem>& row)
+{
+
+}
+#endif
 
 void AbstractTreeModel::notifyRowAboutToAppend(const std::shared_ptr<AbstractTreeModelItem>& item)
 {
@@ -319,7 +399,7 @@ QVariant AbstractTreeModel::headerData(int section, Qt::Orientation orientation,
     if (orientation == Qt::Horizontal && role == Qt::DisplayRole)
 	{
     	/// @kden : dataColumn()
-		return m_root_item->data(section);
+		return m_root_item->data(section, role);
 	}
 
     return QVariant();
@@ -329,6 +409,7 @@ QModelIndex AbstractTreeModel::index(int row, int column, const QModelIndex &par
 {
 	std::shared_ptr<AbstractTreeModelItem> parent_item;
 
+	// Get the parent item.
 	if(!parent.isValid())
 	{
 		parent_item = m_root_item;
@@ -340,14 +421,15 @@ QModelIndex AbstractTreeModel::index(int row, int column, const QModelIndex &par
 
 	if (row >= parent_item->childCount())
 	{
+		// Request is for a row beyond what the parent actually has.
         return QModelIndex();
 	}
 
-	std::shared_ptr<AbstractTreeModelItem> childItem = parent_item->child(row);
+	std::shared_ptr<AbstractTreeModelItem> child_item = parent_item->child(row);
 
-	if(childItem)
+	if(child_item)
 	{
-		return createIndex(row, column, quintptr(childItem->getId()));
+		return createIndex(row, column, quintptr(child_item->getId()));
 	}
     else
 	{
@@ -355,32 +437,33 @@ QModelIndex AbstractTreeModel::index(int row, int column, const QModelIndex &par
 	}
 }
 
-//bool AbstractTreeModel::insertColumns(int insert_before_column, int num_columns, const QModelIndex& parent_model_index)
-//{
-//	Q_CHECK_PTR(m_root_item);
-//
-//	bool success;
-//
-//    beginInsertColumns(parent_model_index, insert_before_column, insert_before_column + num_columns - 1);
-//	success = m_root_item->insertColumns(insert_before_column, num_columns);
-//    endInsertColumns();
-//
-//    return success;
-//}
+bool AbstractTreeModel::insertColumns(int insert_before_column, int num_columns, const QModelIndex& parent_model_index)
+{
+	Q_CHECK_PTR(m_root_item);
 
-//bool AbstractTreeModel::insertRows(int insert_before_row, int num_rows, const QModelIndex& parent_model_index)
-//{
-//	Q_CHECK_PTR(m_root_item);
-//
-//	std::shared_ptr<AbstractTreeModelItem> parent_item = getItemById(UUIncD(parent_model_index.internalId()));
-//    bool success;
-//
-//    beginInsertRows(parent_model_index, insert_before_row, insert_before_row + num_rows - 1);
-//	success = parent_item->insertChildren(insert_before_row, num_rows, m_root_item->columnCount());
-//    endInsertRows();
-//
-//    return success;
-//}
+	bool success;
+
+	beginInsertColumns(parent_model_index, insert_before_column, insert_before_column + num_columns - 1);
+M_WARNING("TODO: This should be the parent_model_index, not the root_item.");
+	success = m_root_item->insertColumns(insert_before_column, num_columns);
+	endInsertColumns();
+
+	return success;
+}
+
+bool AbstractTreeModel::insertRows(int insert_before_row, int num_rows, const QModelIndex& parent_model_index)
+{
+	Q_CHECK_PTR(m_root_item);
+
+	std::shared_ptr<AbstractTreeModelItem> parent_item = getItemById(UUIncD(parent_model_index.internalId()));
+	bool success;
+
+	beginInsertRows(parent_model_index, insert_before_row, insert_before_row + num_rows - 1);
+	success = parent_item->insertChildren(insert_before_row, num_rows, m_root_item->columnCount());
+	endInsertRows();
+
+	return success;
+}
 
 QModelIndex AbstractTreeModel::parent(const QModelIndex &index) const
 {
@@ -451,7 +534,16 @@ bool AbstractTreeModel::moveColumns(const QModelIndex& sourceParent, int sourceC
 
 bool AbstractTreeModel::appendItems(std::vector<std::shared_ptr<AbstractTreeModelItem>> new_items, const QModelIndex &parent)
 {
-	std::shared_ptr<AbstractTreeModelItem> parent_item = getItemById(static_cast<UUIncD>(parent.internalId()));
+	std::shared_ptr<AbstractTreeModelItem> parent_item;
+	if(!parent.isValid())
+	{
+		parent_item = m_root_item;
+	}
+	else
+	{
+		parent_item = getItemById(static_cast<UUIncD>(parent.internalId()));
+	}
+
 	Q_CHECK_PTR(parent_item);
 
     if(new_items.empty())
@@ -533,6 +625,7 @@ int AbstractTreeModel::rowCount(const QModelIndex &parent) const
 
 bool AbstractTreeModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
+	Q_ASSERT(checkIndex(index, CheckIndexOption::IndexIsValid));
 	if (role != Qt::EditRole)
 	{
         return false;

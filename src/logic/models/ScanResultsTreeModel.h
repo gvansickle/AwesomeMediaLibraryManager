@@ -48,9 +48,12 @@ class ScanResultsTreeModel : public AbstractTreeModel, public enable_shared_from
 
 public:
 
-	static std::shared_ptr<ScanResultsTreeModel> construct(QObject *parent);
+	static std::shared_ptr<ScanResultsTreeModel> construct(QObject *parent = nullptr);
 
 protected:
+	/**
+	 * The constructed model will NOT have a root, that's what construct() adds.
+	 */
 	explicit ScanResultsTreeModel(QObject *parent = nullptr);
 
 public:

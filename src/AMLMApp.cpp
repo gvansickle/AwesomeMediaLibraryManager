@@ -45,6 +45,7 @@
 // Pointer to the AMLMApp singleton.
 AMLMApp *AMLMApp::m_the_instance = nullptr;
 
+
 AMLMApp::AMLMApp(int& argc, char** argv) : BASE_CLASS(argc, argv)
 {
     Q_ASSERT(m_the_instance == nullptr);
@@ -91,13 +92,7 @@ void AMLMApp::Init(bool gtest_only)
 	/// @todo TEMP hardcoded db file name in home dir.
 //	auto db_dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
 
-	// Create and set up the scan results tree model.
-	m_srtm_instance = ScanResultsTreeModel::construct(this);
-	// Create and set the root item / headers
-M_TODO("Needs to be ColumnSpecs");
-	m_srtm_instance->setColumnSpecs({"DirProps", "MediaURL", "SidecarCueURL"});
-	// Let's add two more columns
-	m_srtm_instance->insertColumns(3, 2);
+
 
 
 	/// @end Experiments
@@ -120,11 +115,25 @@ AMLMApp* AMLMApp::instance()
     return m_the_instance;
 }
 
-// Static
-std::shared_ptr<ScanResultsTreeModel> AMLMApp::IScanResultsTreeModel()
-{
-	return amlmApp->m_srtm_instance;
-};
+//// Static
+//std::atomic_bool f_already_created = false;
+//std::shared_ptr<ScanResultsTreeModel> AMLMApp::IScanResultsTreeModel()
+//{
+//	// Create-on-first-use and set up the scan results tree model.
+//	static auto s_srtm_instance = []{
+//		Q_ASSERT(f_already_created == false);
+//		auto temp = ScanResultsTreeModel::construct(amlmApp);
+//		// Create and set the root item / headers
+//		M_TODO("Needs to be ColumnSpecs");
+//		temp->setColumnSpecs({"DirProps", "MediaURL", "SidecarCueURL"});
+//		// Let's add two more columns
+//		temp->insertColumns(3, 2);
+//		m_srtm_instance = temp;
+//		return temp;
+//	}();
+//
+//	return m_srtm_instance;
+//};
 
 
 QMimeDatabase& AMLMApp::mime_db()
