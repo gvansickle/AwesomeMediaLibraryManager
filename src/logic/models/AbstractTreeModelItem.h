@@ -71,8 +71,8 @@ public:
 	/**
 	 * Named constructor.
 	 */
-	static std::shared_ptr<AbstractTreeModelItem> construct(const std::vector<QVariant>& data, std::shared_ptr<AbstractTreeModel> model, bool isRoot,
-			UUIncD id = UUIncD::null());
+	static std::shared_ptr<AbstractTreeModelItem> construct(const std::vector<QVariant>& data,
+			std::shared_ptr<AbstractTreeModel> model, bool isRoot, UUIncD id = UUIncD::null());
 
 protected:
 
@@ -91,7 +91,6 @@ public:
     virtual int childCount() const;
 
     /// @returns The number of columns of data this item has.
-    /// This is the max of the column count of all child items.
 	virtual int columnCount() const;
 
     /**
@@ -106,6 +105,9 @@ public:
 
 	bool setData(int column, const QVariant &value);
 
+	/**
+	 * Insert default-constructed columns into this item/row.
+	 */
 	virtual bool insertColumns(int insert_before_column, int num_columns);
 
 //    /// Returns a pointer to this item's parent.

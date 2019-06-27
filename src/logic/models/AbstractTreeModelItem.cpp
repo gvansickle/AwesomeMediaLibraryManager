@@ -103,6 +103,7 @@ int AbstractTreeModelItem::childCount() const
 
 int AbstractTreeModelItem::columnCount() const
 {
+#if 0 /// @todo Move to model.
 	// Do this the slow, painful way.
 	/// @todo Add some caching.
 	int max_columns = 0;
@@ -113,6 +114,8 @@ int AbstractTreeModelItem::columnCount() const
 	}
 
 	return max_columns;
+#endif
+	return m_item_data.size();
 }
 
 /**
@@ -150,9 +153,7 @@ int AbstractTreeModelItem::childNumber() const
 
 bool AbstractTreeModelItem::insertColumns(int insert_before_column, int num_columns)
 {
-	auto current_num_columns = columnCount();
-
-	if (insert_before_column < 0 || insert_before_column > current_num_columns)
+	if (insert_before_column < 0 || insert_before_column > m_item_data.size())
 	{
 		// Check if we're out of bounds.
 		/// @todo Probably assert here?
@@ -160,14 +161,11 @@ bool AbstractTreeModelItem::insertColumns(int insert_before_column, int num_colu
 	}
 
 	// Insert new columns in this.
-	// Since we're ~abstract, we don't have our own data structures to resize here.
-	// So I think the best thing to do is punt the adding of columns to this to the
-	// derived class via this call, but insert the new columns into all of our children here in the loop below.
-	bool success = derivedClassInsertColumns(insert_before_column, num_columns);
-//	for (int column = 0; column < num_columns; ++column)
-//	{
-//		m_item_data.insert(insert_before_column, QVariant());
-//	}
+//	bool success = derivedClassInsertColumns(insert_before_column, num_columns);
+	for (int column = 0; column < num_columns; ++column)
+	{
+		m_item_data.insert(m_item_data.begin()+insert_before_column, QVariant());
+	}
 
 	// Insert new columns in children.
 	for(auto& child : m_child_items)
@@ -411,7 +409,8 @@ bool AbstractTreeModelItem::insertChildren(int position, int count, int columns)
 			std::vector<QVariant> data(columns);
 
 			// Create a new default-constructed item.
-			std::shared_ptr<PlaceholderTreeModelItem> item = PlaceholderTreeModelItem::construct(data, nullptr);
+//			std::shared_ptr<PlaceholderTreeModelItem> item = PlaceholderTreeModelItem::construct(data, model_ptr);
+			std::shared_ptr<AbstractTreeModelItem> item = AbstractTreeModelItem::construct(data, model_ptr, false);
 			// Set us as the new item's parent.
 			item->updateParent(shared_from_this());
 			UUIncD id = item->getId();
