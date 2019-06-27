@@ -99,7 +99,7 @@ int AbstractTreeModel::columnCount(const QModelIndex& parent) const
 QVariant AbstractTreeModel::data(const QModelIndex &index, int role) const
 {
 	// data() expects a valid index.
-	Q_ASSERT(checkIndex(index, CheckIndexOption::IndexIsValid));
+//	Q_ASSERT(checkIndex(index, CheckIndexOption::IndexIsValid));
 
 	if (!index.isValid())
 	{

@@ -34,6 +34,7 @@
 // Std C++
 #include <memory>
 #include <deque>
+#include <vector>
 #include <mutex>
 #include <iterator>
 
@@ -70,13 +71,13 @@ public:
 	/**
 	 * Named constructor.
 	 */
-	static std::shared_ptr<AbstractTreeModelItem> construct(std::shared_ptr<AbstractTreeModel> model, bool isRoot,
+	static std::shared_ptr<AbstractTreeModelItem> construct(const std::vector<QVariant>& data, std::shared_ptr<AbstractTreeModel> model, bool isRoot,
 			UUIncD id = UUIncD::null());
 
 protected:
 
 	/// Sets the model and UUIncD.
-	AbstractTreeModelItem(const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id = UUIncD::null());
+	AbstractTreeModelItem(const std::vector<QVariant>& data, const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id = UUIncD::null());
 
 public:
 	~AbstractTreeModelItem() override;
@@ -91,7 +92,7 @@ public:
 
     /// @returns The number of columns of data this item has.
     /// This is the max of the column count of all child items.
-	virtual int columnCount() const { return 0; };
+	virtual int columnCount() const;
 
     /**
      * Read access to the data of this item.
@@ -156,7 +157,7 @@ public:
 	/**
 	 * Construct and Append a new child item to this item, initializing it from @a data.
 	 */
-	std::shared_ptr<AbstractTreeModelItem> appendChild(const QVector<QVariant>& data = {});
+	std::shared_ptr<AbstractTreeModelItem> appendChild(const std::vector<QVariant>& data = {});
 
 	void moveChild(int ix, const std::shared_ptr<AbstractTreeModelItem> &child);
 
@@ -165,6 +166,7 @@ public:
 	 */
 	void removeChild(const std::shared_ptr<AbstractTreeModelItem>& child);
 
+	/// DO NOT USE
 	bfs_iterator begin_bfs();
 	bfs_iterator end_bfs();
 
@@ -205,8 +207,8 @@ protected:
 	void deregisterSelf();
 
 	/**
-	 * Reflect update of the parent ptr (for example set the correct depth).
-     * This is meant to be overridden in derived classes
+	 * Reflect update of the parent ptr (for example set this's correct depth).
+     * This is called on the child when (re)parented, and meant to be overridden in derived classes.
      * @param ptr is the pointer to the new parent
 	 */
 	virtual void updateParent(std::shared_ptr<AbstractTreeModelItem> parent);
@@ -237,6 +239,15 @@ protected:
 
 	/// Our guaranteed-to-be unique-to-this-run-of-the-program numeric ID.
 	UUIncD m_uuincid;
+
+	/// The actual number of columns this item (row) has.
+	int m_num_columns {0};
+	/// The number of columns this item's parent has, and hence the maximum (column-1) we should
+	/// ever see in a model index.  -1 if unknown.
+	int m_num_parent_columns {-1};
+
+	/// The data for each column of this row.
+	std::vector<QVariant> m_item_data;
 
 private:
 

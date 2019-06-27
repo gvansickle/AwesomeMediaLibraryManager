@@ -125,6 +125,10 @@ public:
     QModelIndex parent(const QModelIndex &index) const override;
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+
+    /**
+     * Returns the number of columns for the children of the given parent.
+     */
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
 
     Qt::ItemFlags flags(const QModelIndex &index) const override;

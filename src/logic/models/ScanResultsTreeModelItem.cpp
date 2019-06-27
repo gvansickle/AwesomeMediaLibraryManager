@@ -50,7 +50,7 @@ std::shared_ptr<ScanResultsTreeModelItem> ScanResultsTreeModelItem::construct(co
 }
 
 ScanResultsTreeModelItem::ScanResultsTreeModelItem(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModel> model, bool is_root)
-	: BASE_CLASS(model, is_root), m_dsr(dsr)
+	: BASE_CLASS({}, model, is_root), m_dsr(dsr)
 {
 }
 
@@ -77,6 +77,7 @@ QVariant ScanResultsTreeModelItem::data(int column, int role) const
 		return QUrl(m_dsr.getSidecarCuesheetExtUrl());
 	default:
 		qWr() << "data() request for unknown column:" << column;
+		return BASE_CLASS::data(column, role);
 		break;
 	}
 

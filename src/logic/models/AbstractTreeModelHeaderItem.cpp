@@ -48,7 +48,7 @@ AbstractTreeModelHeaderItem::construct(const std::shared_ptr<AbstractTreeModel>&
 }
 
 AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(const std::shared_ptr<AbstractTreeModel>& parent_model, bool isRoot, UUIncD id)
-	: BASE_CLASS(parent_model, isRoot, id)
+	: BASE_CLASS({}, parent_model, isRoot, id)
 {
 
 }

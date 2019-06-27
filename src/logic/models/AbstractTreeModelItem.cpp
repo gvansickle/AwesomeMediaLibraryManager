@@ -45,17 +45,20 @@
 #include <logic/UUIncD.h>
 #include "AbstractTreeModel.h"
 #include "PlaceholderTreeModelItem.h"
+#include <utils/ext_iterators.h>
 
-std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::construct(std::shared_ptr<AbstractTreeModel> model, bool isRoot, UUIncD id)
+std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::construct(const std::vector<QVariant>& data,
+		std::shared_ptr<AbstractTreeModel> model, bool isRoot, UUIncD id)
 {
 	/// @note make_shared doesn't have access to the constructor if it's protected, so we have to do this.
-	std::shared_ptr<AbstractTreeModelItem> self(new AbstractTreeModelItem(model, isRoot, id));
+	std::shared_ptr<AbstractTreeModelItem> self(new AbstractTreeModelItem(data, model, isRoot, id));
 	baseFinishConstruct(self);
 	return self;
 }
 
-AbstractTreeModelItem::AbstractTreeModelItem(const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id)
-	: m_model(model), m_depth(0), m_uuincid(id == UUIncD::null() ? UUIncD::create() : id),
+AbstractTreeModelItem::AbstractTreeModelItem(const std::vector<QVariant>& data,
+		const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id)
+	: m_item_data(data), m_model(model), m_depth(0), m_uuincid(id == UUIncD::null() ? UUIncD::create() : id),
 	  m_is_in_model(false), m_is_root(is_root)
 {
 }
@@ -96,6 +99,20 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::child(int row) con
 int AbstractTreeModelItem::childCount() const
 {
 	return m_child_items.size();
+}
+
+int AbstractTreeModelItem::columnCount() const
+{
+	// Do this the slow, painful way.
+	/// @todo Add some caching.
+	int max_columns = 0;
+	for(auto it : m_child_items)
+	{
+		int child_column_max = it->columnCount();
+		max_columns = std::max(max_columns, child_column_max);
+	}
+
+	return max_columns;
 }
 
 /**
@@ -319,13 +336,13 @@ bool AbstractTreeModelItem::removeColumns(int position, int columns)
 
 QVariant AbstractTreeModelItem::data(int column, int role) const
 {
-	// Color invalid model indexes.
+	// Color model indexes with a column beyond what we have data for.
 	if(column > columnCount())
 	{
 		switch(role)
 		{
 			case Qt::ItemDataRole::BackgroundRole:
-				return QVariant::fromValue(QBrush(Qt::lightGray));
+				return QVariant::fromValue(QBrush(Qt::red /*lightGray*/));
 				break;
 			default:
 				break;
@@ -391,7 +408,7 @@ bool AbstractTreeModelItem::insertChildren(int position, int count, int columns)
 
 		for (int row = 0; row < count; ++row)
 		{
-			QVector<QVariant> data(columns);
+			std::vector<QVariant> data(columns);
 
 			// Create a new default-constructed item.
 			std::shared_ptr<PlaceholderTreeModelItem> item = PlaceholderTreeModelItem::construct(data, nullptr);
@@ -449,9 +466,9 @@ bool AbstractTreeModelItem::appendChild(const std::shared_ptr<AbstractTreeModelI
 	return false;
 }
 
-/// Append a child item from data.
+/// Append a child item created from @a data.
 /// @todo
-std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::appendChild(const QVector<QVariant>& data)
+std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::appendChild(const std::vector<QVariant>& data)
 {
 	if (auto ptr = m_model.lock())
 	{
@@ -572,7 +589,11 @@ void AbstractTreeModelItem::updateParent(std::shared_ptr<AbstractTreeModelItem> 
 	m_parent_item = parent;
 	if(parent)
 	{
+		// Keep depth up to date.
 		m_depth = parent->m_depth + 1;
+		// Keep max column count up to date.
+		/// @todo
+//		m_num_parent_columns = parent->columnCount();
 	}
 }
 
@@ -618,6 +639,8 @@ AbstractTreeModelItem::CICTIteratorType AbstractTreeModelItem::get_m_child_items
 	retval = std::find_if(/*std::execution::par,*/ m_child_items.begin(), m_child_items.end(), [id](auto& val){ return val->m_uuincid == id; });
 	return retval;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 ///
 /// AbstractTreeModelItem::bfs_iterator
