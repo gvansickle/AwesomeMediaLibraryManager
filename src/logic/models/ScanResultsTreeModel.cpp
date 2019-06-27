@@ -132,7 +132,6 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 	{
 		m_root_item.reset();
 	}
-	M_TODO("");
 //	m_root_item = std::make_shared<AbstractTreeModelHeaderItem>();
 //	m_root_item->fromVariant(map.value(SRTMTagToXMLTagMap[SRTMTag::ROOT_ITEM]));
 M_WARNING("TODO: There sometimes isn't a root item in the map.");
@@ -143,4 +142,3 @@ M_WARNING("TODO: There sometimes isn't a root item in the map.");
 
 #warning @todo INCOMPLETE/error handling
 }
-

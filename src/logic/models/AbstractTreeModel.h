@@ -129,8 +129,7 @@ public:
 
     Qt::ItemFlags flags(const QModelIndex &index) const override;
 
-    bool setData(const QModelIndex &index, const QVariant &value,
-                 int role = Qt::EditRole) override;
+	bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
 
     /// @name Row and column insert, remove, and move operations.
     /// @note Singular insert/remove/move row and column functions are not virtual
@@ -233,11 +232,26 @@ public:
 
 	friend class AbstractTreeModelItem;
 
+	long get_total_model_node_count() const { return m_model_item_map.size(); };
+
+	/// @temp?
+	using item_map_type = std::map<UUIncD, std::weak_ptr<AbstractTreeModelItem>>;
+	/// Generic node iterator type.  No order guarantees at all.
+	using iterator = item_map_type::iterator;
+	iterator begin();
+	iterator end();
 
 protected:
 
 	virtual void register_item(const std::shared_ptr<AbstractTreeModelItem>& item);
 	virtual void deregister_item(UUIncD id, AbstractTreeModelItem* item);
+
+	/// @name High-cost operations
+	/// @{
+
+
+
+	/// @}
 
 	/**
 	 * Send the appropriate pre-notification related to a row that we are appending.
@@ -308,7 +322,9 @@ protected:
 	/**
 	 * Map of UUIncD's to AbstractTreeModelItems.
 	 */
-	std::map<UUIncD, std::weak_ptr<AbstractTreeModelItem>> m_model_item_map;
+//	std::map<UUIncD, std::weak_ptr<AbstractTreeModelItem>> m_model_item_map;
+	item_map_type m_model_item_map;
+
 };
 
 

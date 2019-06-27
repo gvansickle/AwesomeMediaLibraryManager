@@ -52,6 +52,7 @@
 #include <logic/models/AbstractTreeModelItem.h>
 #include <logic/models/ScanResultsTreeModel.h>
 #include <utils/DebugHelpers.h>
+#include <utils/ext_iterators.h>
 
 #include <concurrency/ExtAsync.h>
 #include <concurrency/AsyncTaskManager.h>
@@ -426,6 +427,14 @@ M_WARNING("CRASHING HERE");
 			/// @temp
 			bool ok = tree_model_ptr->checkConsistency();
 			qDb() << "########################### TREE MODEL CHECK checkConsistency:" << ok;
+			/// @temp Check if iterator works.
+			long node_ct = 0;
+			using ittype = map_value_iterator<decltype(tree_model_ptr->begin()->first), decltype(tree_model_ptr->begin()->second)>;
+			for(ittype it = std::begin(*tree_model_ptr); it != std::end(*tree_model_ptr); ++it)
+			{
+				node_ct++;
+			}
+			qDb() << "TREE MODEL ITERATOR COUNT:" << node_ct << ", MODEL SAYS:" << tree_model_ptr->get_total_model_node_count();
 #else
 			Q_EMIT SIGNAL_StapToTreeModel(*new_items_vector_ptr);
 #endif

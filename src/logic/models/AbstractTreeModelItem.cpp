@@ -187,6 +187,11 @@ bool AbstractTreeModelItem::isInModel() const
 	return m_is_in_model;
 }
 
+bool AbstractTreeModelItem::operator==(const AbstractTreeModelItem& other) const
+{
+	return m_uuincid == other.m_uuincid;
+}
+
 bool AbstractTreeModelItem::removeChildren(int position, int count)
 {
 	/// @todo
@@ -241,6 +246,18 @@ void AbstractTreeModelItem::removeChild(const std::shared_ptr<AbstractTreeModelI
 		qDebug() << "ERROR: Something went wrong when removing child in TreeItem. Model is not available anymore";
 		Q_ASSERT(false);
 	}
+}
+
+AbstractTreeModelItem::bfs_iterator AbstractTreeModelItem::begin_bfs()
+{
+	Q_ASSERT(0);
+	return bfs_iterator(shared_from_this());
+}
+
+AbstractTreeModelItem::bfs_iterator AbstractTreeModelItem::end_bfs()
+{
+	Q_ASSERT(0);
+	return bfs_iterator();
 }
 
 bool AbstractTreeModelItem::changeParent(std::shared_ptr<AbstractTreeModelItem> newParent)
@@ -602,3 +619,93 @@ AbstractTreeModelItem::CICTIteratorType AbstractTreeModelItem::get_m_child_items
 	return retval;
 }
 
+///
+/// AbstractTreeModelItem::bfs_iterator
+///
+
+AbstractTreeModelItem::bfs_iterator::bfs_iterator() { }
+
+AbstractTreeModelItem::bfs_iterator::bfs_iterator(std::shared_ptr<AbstractTreeModelItem> root_node)
+	: m_root_node(root_node), m_current_node(root_node),
+	  m_child_list_it(root_node->m_child_items.begin())
+{
+	m_child_bfs_it = std::make_shared<bfs_iterator>(root_node->begin_bfs());
+}
+
+AbstractTreeModelItem::bfs_iterator AbstractTreeModelItem::bfs_iterator::operator++(int)
+{
+	auto retval = *this;
+	++(*this);
+	return retval;
+}
+
+bool AbstractTreeModelItem::bfs_iterator::operator==(const AbstractTreeModelItem::bfs_iterator& other) const
+{
+	return (m_current_node == other.m_current_node);
+}
+
+bool AbstractTreeModelItem::bfs_iterator::operator!=(const AbstractTreeModelItem::bfs_iterator& other) const
+{
+	return !(*this == other);
+}
+
+AbstractTreeModelItem::bfs_iterator::reference AbstractTreeModelItem::bfs_iterator::operator*() const
+{
+	return *m_current_node;
+}
+
+AbstractTreeModelItem::bfs_iterator& AbstractTreeModelItem::bfs_iterator::operator++()
+{
+	// Steps of a DFS at each node:
+	// Perform pre-order operation.
+	// For each i from 1 to the number of children do:
+	//     Visit i-th, if present.
+	//     Perform in-order operation.
+	// Perform post-order operation.
+
+	// Are we already at the end?
+	if(m_current_node == nullptr || m_is_at_end)
+	{
+		// end() iterator doesn't increment.
+		return *this;
+	}
+
+	/// Preorder return here?
+
+	// Lock our weak parent ptr.  We should have a parent unless we're the true root.
+//	auto parent = m_current_node->parent_item().lock();
+
+//	if(parent == nullptr || parent == m_root_node) /// Handle no-parent differently?
+//	{
+//		// We hit the node we started at on the way up, next state is end().
+
+//		/// Post-order return here?
+
+//		m_current_node = nullptr;
+//		m_is_at_end = true;
+//		return *this;
+//	}
+
+	// Else we should have a valid m_current_node and it's parent, which should be us?
+	// So we visit all children of this node in-order.
+//	m_current_node = *m_child_list_it;
+	if(m_child_list_it == m_current_node->m_child_items.end())
+	{
+		// Reached the end of the current node's child list.
+		// Now we go back to the parent of m_current_node.
+		auto parent = m_current_node->parent_item().lock();
+		if(parent != m_root_node)
+		{
+			m_current_node = m_current_node->parent_item().lock();
+		}
+	}
+	else
+	{
+		// Still iterating over the child items.
+		++m_child_list_it;
+		// Recurse on this node as a new root node.
+		(*m_child_bfs_it)++;
+	}
+
+	return *this;
+}

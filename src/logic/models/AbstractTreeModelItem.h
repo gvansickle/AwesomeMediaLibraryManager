@@ -35,6 +35,7 @@
 #include <memory>
 #include <deque>
 #include <mutex>
+#include <iterator>
 
 // Qt5
 #include <QList>
@@ -59,6 +60,12 @@ class AbstractTreeModelItem : public virtual ISerializable, public enable_shared
 public:
 
 	friend class AbstractTreeModel;
+
+	// Ok, now we're gonna burn all kinds of blood, toil, tears, and sweat trying to make both a BFS
+	// and DFS iterator for AbstractTreeModelItem trees.
+//	template<class ItemType = AbstractTreeModelItem>
+	class bfs_iterator;
+
 
 	/**
 	 * Named constructor.
@@ -98,8 +105,6 @@ public:
 
 	bool setData(int column, const QVariant &value);
 
-
-
 	virtual bool insertColumns(int insert_before_column, int num_columns);
 
 //    /// Returns a pointer to this item's parent.
@@ -117,6 +122,10 @@ public:
 	UUIncD getId() const;
 
 	bool isInModel() const;
+
+	/// @name Operators
+
+	bool operator==(const AbstractTreeModelItem& other) const;
 
 	/**
 	 * Insert @a count default-constructed (i.e. empty) child items (rows), starting after child index @a position.
@@ -155,6 +164,9 @@ public:
 	 * Remove given child from children list. The parent of the child is updated accordingly.
 	 */
 	void removeChild(const std::shared_ptr<AbstractTreeModelItem>& child);
+
+	bfs_iterator begin_bfs();
+	bfs_iterator end_bfs();
 
 	/* @brief Change the parent of the current item. Structures are modified accordingly
 	 */
@@ -259,5 +271,45 @@ private:
 
 // Debug stream op free func declaration.
 QTH_DECLARE_QDEBUG_OP(AbstractTreeModelItem);
+
+//////////////////
+/// DO NOT USE, THIS DOES NOT WORK YET.
+//////////////////////////////////////
+class AbstractTreeModelItem::bfs_iterator : public std::iterator<
+														// Category: bfs will be a LegacyInputIterator (can only be incremented, may invalidate all copies of prev value).
+														/// @link https://en.cppreference.com/w/cpp/named_req/InputIterator
+														std::input_iterator_tag,
+														//ItemType,
+														AbstractTreeModelItem,
+														// Distance is meaningless
+														void,
+														// Pointer and Reference need to be smart.
+														std::shared_ptr<AbstractTreeModelItem>,
+														AbstractTreeModelItem&
+														>
+{
+public:
+	using iterator_concept = std::input_iterator_tag;
+
+	bfs_iterator();
+	explicit bfs_iterator(std::shared_ptr<AbstractTreeModelItem> root_node);
+
+	bfs_iterator& operator++();
+
+	bfs_iterator operator++(int);
+
+	bool operator==(const bfs_iterator& other) const;
+
+	bool operator!=(const bfs_iterator& other) const;
+
+	reference operator*() const;
+
+private:
+	std::shared_ptr<AbstractTreeModelItem> m_root_node;
+	std::shared_ptr<AbstractTreeModelItem> m_current_node;
+	std::shared_ptr<bfs_iterator> m_child_bfs_it;
+	CICTIteratorType m_child_list_it;
+	bool m_is_at_end {false};
+};
 
 #endif // ABSTRACTTREEMODELITEM_H

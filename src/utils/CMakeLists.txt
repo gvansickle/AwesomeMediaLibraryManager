@@ -37,10 +37,12 @@ set(utils_HEADER_FILES
 	Stopwatch.h
 	VectorHelpers.h
 	EnumFlagHelpers.h
+	ext_iterators.h
 )
 set(utils_SOURCE_FILES
 	DebugBlock.cpp
 	DebugHelpers.cpp
+	ext_iterators.cpp
 	Fraction.cpp
 	MapConverter.cpp
 	RegisterQtMetatypes.cpp

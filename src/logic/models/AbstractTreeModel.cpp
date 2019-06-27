@@ -98,6 +98,7 @@ int AbstractTreeModel::columnCount(const QModelIndex& parent) const
 
 QVariant AbstractTreeModel::data(const QModelIndex &index, int role) const
 {
+	// data() expects a valid index.
 	Q_ASSERT(checkIndex(index, CheckIndexOption::IndexIsValid));
 
 	if (!index.isValid())
@@ -262,6 +263,16 @@ Fun AbstractTreeModel::moveItem_lambda(UUIncD id, int destRow, bool force)
 		return lambda;
 	}
 	return []() { return false; };
+}
+
+AbstractTreeModel::iterator AbstractTreeModel::begin()
+{
+	return m_model_item_map.begin();
+}
+
+AbstractTreeModel::iterator AbstractTreeModel::end()
+{
+	return m_model_item_map.end();
 }
 
 void AbstractTreeModel::register_item(const std::shared_ptr<AbstractTreeModelItem>& item)
@@ -625,7 +636,9 @@ int AbstractTreeModel::rowCount(const QModelIndex &parent) const
 
 bool AbstractTreeModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
+	// setData() expects a valid index.
 	Q_ASSERT(checkIndex(index, CheckIndexOption::IndexIsValid));
+
 	if (role != Qt::EditRole)
 	{
         return false;
