@@ -48,7 +48,7 @@ public:
 	~PlaceholderTreeModelItem() override = default;
 
 protected:
-	QVector<QVariant> m_item_data;
+//	QVector<QVariant> m_item_data;
 
 private:
 };

@@ -83,9 +83,6 @@ public:
 
 protected:
 
-	/// @todo
-//	std::shared_ptr<ScanResultsTreeModelItem> do_create_default_constructed_child_item(AbstractTreeModelItem *parent, int num_columns) override;
-
 	/// @name Virtual functions called by the base class to complete certain operations.
 	///       The base class will have error-checked function parameters.
 	/// @{
@@ -97,10 +94,6 @@ protected:
 	/// @todo This is where we're ultimately headed, but QStrings in the interim.
 //	std::vector<ColumnSpec> m_column_specs;
 	std::vector<QString> m_column_specs {};
-
-	// The model we belong to.
-	/// @note Not sure we actually need this for anything.
-	AbstractTreeModel* m_parent_model;
 };
 
 Q_DECLARE_METATYPE(std::shared_ptr<AbstractTreeModelHeaderItem>)

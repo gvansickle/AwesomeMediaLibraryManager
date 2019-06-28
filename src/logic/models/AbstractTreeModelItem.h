@@ -71,12 +71,14 @@ public:
 	/**
 	 * Named constructor.
 	 */
+	/// KDEN
 	static std::shared_ptr<AbstractTreeModelItem> construct(const std::vector<QVariant>& data,
 			std::shared_ptr<AbstractTreeModel> model, bool isRoot, UUIncD id = UUIncD::null());
 
 protected:
 
 	/// Sets the model and UUIncD.
+	/// ETM+KDen
 	AbstractTreeModelItem(const std::vector<QVariant>& data, const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id = UUIncD::null());
 
 public:
@@ -85,11 +87,14 @@ public:
     /// Return a pointer to the number'th child of this item.
     /// @returns If @a number is not valid, a pointer to a default constructed AbstractTreeModelItem,
     /// 			which is not added to the QVector.
+    // ETM+KDEN
 	std::shared_ptr<AbstractTreeModelItem> child(int number) const;
 
+    /// ETM+KDEN
     /// @returns The number of children this item has.
     virtual int childCount() const;
 
+    /// ETM+KDEN
     /// @returns The number of columns of data this item has.
 	virtual int columnCount() const;
 
@@ -98,82 +103,99 @@ public:
      * @param column  The column of data to return.
      * @return A QVariant containing all the data in @a column.
      */
+     // Both ETM&KDEN have this, but they don't take a role param.
 	virtual QVariant data(int column, int role = Qt::DisplayRole) const;
 
 	/// @todo NEW: Return the QVariant in @a column.  Not sure if this is needed.
+	// KDEN, see data().
 	QVariant dataColumn(int column) const;
 
+	// ETM+KDEN
 	bool setData(int column, const QVariant &value);
 
 	/**
 	 * Insert default-constructed columns into this item/row.
 	 */
+	 // ETM
 	virtual bool insertColumns(int insert_before_column, int num_columns);
 
-//    /// Returns a pointer to this item's parent.
-//	std::weak_ptr<AbstractTreeModelItem> parent();
-	/// Returns a const pointer to this item's parent.
+	/// Returns a pointer to this item's parent.
+	/// ETM+KDEN
 	std::weak_ptr<AbstractTreeModelItem> parent() const;
 	std::weak_ptr<AbstractTreeModelItem> parent_item() const { return parent(); };
 
+	// KDEN, seems unused.
 	int depth() const;
 
 	/**
 	 * Return the UUIncD of this item.
 	 * @note Asserts if the UUIncD is ::null().
 	 */
+	// GRVS
 	UUIncD getId() const;
 
+	// KDEN
 	bool isInModel() const;
 
 	/// @name Operators
 
+	/// Returns true if this and other are the same node, i.e. have the same UUIncD.
+	// GRVS
 	bool operator==(const AbstractTreeModelItem& other) const;
 
 	/**
 	 * Insert @a count default-constructed (i.e. empty) child items (rows), starting after child index @a position.
-	 * Default construction is via the create_default_constructed_child_item() function (pure virtual here).
 	 * @return true if successful.
 	 */
+	// ETM, KDEN only has appendChild().
 	virtual bool insertChildren(int position, int count, int columns);
 
-	/**
-	 * Remove and delete the @a count children starting at @a position.
-	 */
-    bool removeChildren(int position, int count);
-
-
+	// ETM, no KDEN
     bool removeColumns(int position, int columns);
 
     /// The row number of this item in its parent's list of children.
+    // ETM+KDEN (row())
     int childNumber() const;
 
 	/**
 	 * Append the given @a new_children to this item.
 	 */
+	// GRVS+KDEN
 	bool appendChildren(std::vector<std::shared_ptr<AbstractTreeModelItem>> new_children);
 	/**
 	 * @note this must already have a model or this call will assert.
 	 */
+	// GRVS+KDEN
 	bool appendChild(const std::shared_ptr<AbstractTreeModelItem>& new_child);
 	/**
 	 * Construct and Append a new child item to this item, initializing it from @a data.
 	 */
+	// KDEN
 	std::shared_ptr<AbstractTreeModelItem> appendChild(const std::vector<QVariant>& data = {});
 
+	// KDEN
 	void moveChild(int ix, const std::shared_ptr<AbstractTreeModelItem> &child);
+
+	/**
+     * Remove and delete the @a count children starting at @a position.
+     */
+	// ETM, KDEN no plural, see removeChild().
+	bool removeChildren(int position, int count);
 
 	/**
 	 * Remove given child from children list. The parent of the child is updated accordingly.
 	 */
+	// KDEN, ETM no singular.
 	void removeChild(const std::shared_ptr<AbstractTreeModelItem>& child);
 
 	/// DO NOT USE
 	bfs_iterator begin_bfs();
 	bfs_iterator end_bfs();
 
-	/* @brief Change the parent of the current item. Structures are modified accordingly
+	/**
+	 * Change the parent of the current item. Structures are modified accordingly
 	 */
+	// KDEN
 	virtual bool changeParent(std::shared_ptr<AbstractTreeModelItem> newParent);
 
 	/// @name Serialization
@@ -215,18 +237,6 @@ protected:
 	 */
 	virtual void updateParent(std::shared_ptr<AbstractTreeModelItem> parent);
 
-//	/**
-//	 * Non-virtual Interface factory function for creating default-constructed child nodes.
-//	 * Used by insertChildren().  Do not attempt to override in derived classes.
-//	 */
-//	std::unique_ptr<AbstractTreeModelItem>
-//	create_default_constructed_child_item(AbstractTreeModelItem* parent, int num_columns);
-
-//	/**
-//	 * The covariant-return-type factory function for child items.  Override in derived classes.
-//	 */
-//	virtual AbstractTreeModelItem*
-//	do_create_default_constructed_child_item(AbstractTreeModelItem* parent, int num_columns) { return 0; };
 
 	/// @name Virtual functions called by the base class to complete certain operations.
 	///       The base class will have error-checked function parameters.

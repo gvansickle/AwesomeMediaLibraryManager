@@ -258,7 +258,7 @@ void AbstractTreeModelItem::removeChild(const std::shared_ptr<AbstractTreeModelI
 	}
 	else
 	{
-		qDebug() << "ERROR: Something went wrong when removing child in TreeItem. Model is not available anymore";
+		qCr() << "ERROR: Something went wrong when removing child in TreeItem. Model is not available anymore";
 		Q_ASSERT(false);
 	}
 }
@@ -310,8 +310,8 @@ bool AbstractTreeModelItem::removeColumns(int position, int columns)
 {
 	auto current_num_columns = columnCount();
 
-	// Check that the range is legitimate.
-	if (position < 0 || position + columns > current_num_columns)
+	// Check that the range is within our number of real columns.
+	if (position < 0 || position + columns > m_item_data.size())
 	{
 		return false;
 	}
@@ -358,14 +358,25 @@ QVariant AbstractTreeModelItem::dataColumn(int column) const
 
 bool AbstractTreeModelItem::setData(int column, const QVariant &value)
 {
+#if 0 // NOT NEW
 	auto current_num_columns = columnCount();
 
 	if (column < 0 || column >= current_num_columns)
 	{
         return false;
 	}
-
 	return derivedClassSetData(column, value);
+#else // New
+	/// Not new.
+	if (column < 0 || column >= m_item_data.size())
+	{
+		qWr() << "Column Out Of Range:" << column;
+		return false;
+	}
+	/// @note KDenLive just does this here.
+	m_item_data[column] = value;
+	return true;
+#endif
 }
 
 bool AbstractTreeModelItem::appendChildren(std::vector<std::shared_ptr<AbstractTreeModelItem>> new_children)

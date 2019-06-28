@@ -98,7 +98,7 @@ int AbstractTreeModel::columnCount(const QModelIndex& parent) const
 
 QVariant AbstractTreeModel::data(const QModelIndex &index, int role) const
 {
-	// data() expects a valid index.
+	// data() expects a valid index, except it won't get one for data() calls for the root item info.
 //	Q_ASSERT(checkIndex(index, CheckIndexOption::IndexIsValid));
 
 	if (!index.isValid())
@@ -122,7 +122,7 @@ QVariant AbstractTreeModel::data(const QModelIndex &index, int role) const
 		}
 	}
 #endif
-    if (role != Qt::DisplayRole) /// @todo KDen: && role != Qt::EditRole)
+    if (role != Qt::DisplayRole) /// @todo Not in KDen AbstTreeModel: && role != Qt::EditRole)
 	{
         return QVariant();
 	}
@@ -141,7 +141,7 @@ Qt::ItemFlags AbstractTreeModel::flags(const QModelIndex &index) const
 		return Qt::NoItemFlags;
 	}
 
-#if 0 /// KDen does this here, not sure we need it.
+#if 0 /// KDen does this here, non-selectable root items, not sure we want it.
 	if (index.isValid()) {
         auto item = getItemById((int)index.internalId());
         if (item->depth() == 1) {
@@ -478,6 +478,8 @@ bool AbstractTreeModel::insertRows(int insert_before_row, int num_rows, const QM
 
 QModelIndex AbstractTreeModel::parent(const QModelIndex &index) const
 {
+	// Check index but don't touch parent, since per Qt5 docs that would make this go recursive.
+	Q_ASSERT(checkIndex(index, CheckIndexOption::IndexIsValid | CheckIndexOption::DoNotUseParent));
     if (!index.isValid())
 	{
         return QModelIndex();
@@ -637,6 +639,15 @@ int AbstractTreeModel::rowCount(const QModelIndex &parent) const
 bool AbstractTreeModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
 	// setData() expects a valid index.
+	// From Qt5 docs:
+	/// "A legal model index is either an invalid model index, or a valid model index for which all the following holds:
+	//    the index' model is this;
+	//    the index' row is greater or equal than zero;
+	//    the index' row is less than the row count for the index' parent;
+	//    the index' column is greater or equal than zero;
+	//    the index' column is less than the column count for the index' parent."
+	/// But options change the check.
+
 	Q_ASSERT(checkIndex(index, CheckIndexOption::IndexIsValid));
 
 	if (role != Qt::EditRole)
