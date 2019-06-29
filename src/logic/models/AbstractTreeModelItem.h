@@ -280,6 +280,8 @@ private:
 	/// Any actual item data beyond the child items is the responsibility of derived classes.
 };
 
+Q_DECLARE_METATYPE(std::vector<QVariant>);
+
 // Debug stream op free func declaration.
 QTH_DECLARE_QDEBUG_OP(AbstractTreeModelItem);
 

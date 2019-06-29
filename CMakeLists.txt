@@ -201,6 +201,8 @@ add_library(cxx_settings INTERFACE)
 target_compile_features(cxx_settings INTERFACE cxx_std_17)
 add_library(cxx_definitions_qt INTERFACE)
 target_compile_definitions(cxx_definitions_qt INTERFACE)
+add_library(cxx_compile_options INTERFACE)
+target_compile_options(cxx_compile_options INTERFACE)
 if(UNIX)
 	ucm_add_flags(-fmessage-length=0 -pthread -Werror=return-type -fno-omit-frame-pointer)
 	ucm_add_flags(-Og -ggdb3)
@@ -213,7 +215,14 @@ endif(UNIX)
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	message(STATUS "C++ Compiler is GCC")
 	ucm_add_flags(-fvar-tracking -fvar-tracking-assignments -gpubnames -ggnu-pubnames)
-	ucm_add_flags(-grecord-gcc-switches -gas-loc-support -gstatement-frontiers -ginline-points -femit-struct-debug-detailed=any)
+	# Max debug flags
+	target_compile_options(cxx_compile_options
+		INTERFACE
+			-gvariable-location-views
+			-gas-loc-support -gstatement-frontiers -ginline-points -femit-struct-debug-detailed=any
+		)
+	#ucm_add_flags(-gvariable-location-views)
+	ucm_add_flags(-grecord-gcc-switches)
 	ucm_add_flags(-fno-eliminate-unused-debug-types -fno-inline)
 	ucm_add_flags(-Wmaybe-uninitialized -Werror=maybe-uninitialized -fdiagnostics-show-template-tree -fdiagnostics-show-option)
 	ucm_add_flags(-fuse-ld=gold) # Let's try the gold linker.
@@ -230,6 +239,8 @@ endif()
 if(WIN32)
 #ucm_add_flags(/showIncludes)
 endif(WIN32)
+target_link_libraries(cxx_settings INTERFACE cxx_compile_options)
+
 message(STATUS "C compiler supported features = ${CMAKE_C_COMPILE_FEATURES}")
 message(STATUS "C++ compiler supported features = ${CMAKE_CXX_COMPILE_FEATURES}")
 message(STATUS "C++ CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS}")
