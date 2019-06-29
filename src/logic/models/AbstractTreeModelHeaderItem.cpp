@@ -30,12 +30,6 @@
 #include <logic/serialization/XmlObjects.h>
 
 
-//AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(AbstractTreeModelItem* parentItem)
-//	: AbstractTreeModelItem(parentItem)
-//{
-//	m_parent_model = nullptr;
-//}
-
 // static
 std::shared_ptr<AbstractTreeModelHeaderItem>
 AbstractTreeModelHeaderItem::construct(const std::shared_ptr<AbstractTreeModel>& model, bool isRoot, UUIncD id)
@@ -62,7 +56,7 @@ bool AbstractTreeModelHeaderItem::setColumnSpecs(std::initializer_list<QString> 
 	M_WARNING("TODO This should take a list of ColumnSpecs, NEEDS TO INSERT COLUMNS");
 	Q_ASSERT_X(childCount() == 0, __PRETTY_FUNCTION__, "Model has children already");
 #warning "INSERT COLUMNS"
-	std::copy(column_specs.begin(), column_specs.end(), std::back_inserter(m_column_specs));
+	std::copy(column_specs.begin(), column_specs.end(), std::back_inserter(m_item_data));
 	return true;
 }
 
@@ -75,14 +69,14 @@ QVariant AbstractTreeModelHeaderItem::data(int column, int role) const
 
 	if(column < columnCount())
 	{
-		return m_column_specs.at(column);
+		return m_item_data.at(column);
 	}
 	return QVariant();
 }
 
 int AbstractTreeModelHeaderItem::columnCount() const
 {
-	return m_column_specs.size();
+	return m_item_data.size();
 }
 
 #define M_DATASTREAM_FIELDS(X) \
@@ -106,7 +100,13 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 	map.insert(XMLTAG_HEADER_NUM_SECTIONS, columnCount());
 	for(int i = 0; i < columnCount(); ++i)
 	{
-		header_section_list.push_back(data(i));
+		QVariant section = data(i);
+		/// @todo Hopefully temp validity checking and replacement here.
+		if(!section.isValid())
+		{
+			section = QString("[empty]");
+		}
+		header_section_list.push_back(section);
 	}
 	map.insert("header_section_list", header_section_list);
 
@@ -199,32 +199,32 @@ M_WARNING("NEED TO GO THROUGH MODEL HERE?");
 //	return child_item;
 //}
 
-bool AbstractTreeModelHeaderItem::derivedClassSetData(int column, const QVariant& value)
-{
-	// We're the header, we should never have the Abstract Model's setData() called on us,
-	// but this is the AbstractTreeModel*Item*'s setData(), and we're calling it in at least fromVariant() above.
+//bool AbstractTreeModelHeaderItem::derivedClassSetData(int column, const QVariant& value)
+//{
+//	// We're the header, we should never have the Abstract Model's setData() called on us,
+//	// but this is the AbstractTreeModel*Item*'s setData(), and we're calling it in at least fromVariant() above.
+//
+//	/// @todo Take ColumnSpecs instead.
+////	m_column_specs.at(column) = value.toString();
+//
+//	return false;
+//}
 
-	/// @todo Take ColumnSpecs instead.
-	m_column_specs.at(column) = value.toString();
+//bool AbstractTreeModelHeaderItem::derivedClassInsertColumns(int insert_before_column, int num_columns)
+//{
+//	// vector.insert(pos, size, ...):
+//	// - pos has the same definition as we're exposing here, it's the insert-before point.  Can be the end() iterator.
+//	/// @todo Again, convert to default constructed ColumnSpecs.
+////	m_column_specs.insert(m_column_specs.cbegin() + insert_before_column, num_columns, QString());
+//
+//	return true;
+//}
 
-	return false;
-}
-
-bool AbstractTreeModelHeaderItem::derivedClassInsertColumns(int insert_before_column, int num_columns)
-{
-	// vector.insert(pos, size, ...):
-	// - pos has the same definition as we're exposing here, it's the insert-before point.  Can be the end() iterator.
-	/// @todo Again, convert to default constructed ColumnSpecs.
-	m_column_specs.insert(m_column_specs.cbegin() + insert_before_column, num_columns, QString());
-
-	return true;
-}
-
-bool AbstractTreeModelHeaderItem::derivedClassRemoveColumns(int first_column_to_remove, int num_columns)
-{
-	m_column_specs.erase(m_column_specs.cbegin() + first_column_to_remove,
-			m_column_specs.cbegin() + first_column_to_remove + num_columns);
-
-	return true;
-}
+//bool AbstractTreeModelHeaderItem::derivedClassRemoveColumns(int first_column_to_remove, int num_columns)
+//{
+////	m_column_specs.erase(m_column_specs.cbegin() + first_column_to_remove,
+////			m_column_specs.cbegin() + first_column_to_remove + num_columns);
+//
+//	return true;
+//}
 

@@ -140,38 +140,38 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 //	}
 }
 
-bool ScanResultsTreeModelItem::derivedClassSetData(int column, const QVariant& value)
-{
-	// We have at the moment only a DirScanResult, not sure we need to set data by column.
-	return true;
-}
+//bool ScanResultsTreeModelItem::derivedClassSetData(int column, const QVariant& value)
+//{
+//	// We have at the moment only a DirScanResult, not sure we need to set data by column.
+//	return true;
+//}
 
-bool ScanResultsTreeModelItem::derivedClassInsertColumns(int insert_before_column, int num_columns)
-{
-	/// @todo Again only a DirScanResult.  Not sure what to do here.
-	/// Qt5 TreeModel has this:
-	///   bool TreeModel::insertColumns(int position, int columns, const QModelIndex &parent)
-	///		beginInsertColumns(parent, position, position + columns - 1);
-	///		success = rootItem->insertColumns(position, columns);
-	///		endInsertColumns();
-	/// So it's up to the root item to decide what to do, not the model.
-	/// The root item calls child items and they add/remove QVariant's as required.
+//bool ScanResultsTreeModelItem::derivedClassInsertColumns(int insert_before_column, int num_columns)
+//{
+//	/// @todo Again only a DirScanResult.  Not sure what to do here.
+//	/// Qt5 TreeModel has this:
+//	///   bool TreeModel::insertColumns(int position, int columns, const QModelIndex &parent)
+//	///		beginInsertColumns(parent, position, position + columns - 1);
+//	///		success = rootItem->insertColumns(position, columns);
+//	///		endInsertColumns();
+//	/// So it's up to the root item to decide what to do, not the model.
+//	/// The root item calls child items and they add/remove QVariant's as required.
+//
+//	return true;
+//}
 
-	return true;
-}
-
-bool ScanResultsTreeModelItem::derivedClassRemoveColumns(int first_column_to_remove, int num_columns)
-{
-	/// @todo Again only a DirScanResult.  Not sure what to do here.
-	/// Qt5 TreeModel has this:
-	///   bool TreeModel::insertColumns(int position, int columns, const QModelIndex &parent)
-	///		beginInsertColumns(parent, position, position + columns - 1);
-	///		success = rootItem->insertColumns(position, columns);
-	///		endInsertColumns();
-	/// So it's up to the root item to decide what to do, not the model.
-
-	return true;
-}
+//bool ScanResultsTreeModelItem::derivedClassRemoveColumns(int first_column_to_remove, int num_columns)
+//{
+//	/// @todo Again only a DirScanResult.  Not sure what to do here.
+//	/// Qt5 TreeModel has this:
+//	///   bool TreeModel::insertColumns(int position, int columns, const QModelIndex &parent)
+//	///		beginInsertColumns(parent, position, position + columns - 1);
+//	///		success = rootItem->insertColumns(position, columns);
+//	///		endInsertColumns();
+//	/// So it's up to the root item to decide what to do, not the model.
+//
+//	return true;
+//}
 
 void ScanResultsTreeModelItem::setDirscanResults(const DirScanResult& dsr)
 {
@@ -181,20 +181,20 @@ void ScanResultsTreeModelItem::setDirscanResults(const DirScanResult& dsr)
 
 /////////// @todo SRTMItem_LibEntry
 
-bool SRTMItem_LibEntry::derivedClassSetData(int column, const QVariant& value)
-{
-	return ScanResultsTreeModelItem::derivedClassSetData(column, value);
-}
-
-bool SRTMItem_LibEntry::derivedClassInsertColumns(int insert_before_column, int num_columns)
-{
-	return ScanResultsTreeModelItem::derivedClassInsertColumns(insert_before_column, num_columns);
-}
-
-bool SRTMItem_LibEntry::derivedClassRemoveColumns(int first_column_to_remove, int num_columns)
-{
-	return ScanResultsTreeModelItem::derivedClassRemoveColumns(first_column_to_remove, num_columns);
-}
+//bool SRTMItem_LibEntry::derivedClassSetData(int column, const QVariant& value)
+//{
+//	return ScanResultsTreeModelItem::derivedClassSetData(column, value);
+//}
+//
+//bool SRTMItem_LibEntry::derivedClassInsertColumns(int insert_before_column, int num_columns)
+//{
+//	return ScanResultsTreeModelItem::derivedClassInsertColumns(insert_before_column, num_columns);
+//}
+//
+//bool SRTMItem_LibEntry::derivedClassRemoveColumns(int first_column_to_remove, int num_columns)
+//{
+//	return ScanResultsTreeModelItem::derivedClassRemoveColumns(first_column_to_remove, num_columns);
+//}
 
 std::shared_ptr<SRTMItem_LibEntry> SRTMItem_LibEntry::construct(const DirScanResult& dsr, const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root)
 {

@@ -308,20 +308,14 @@ bool AbstractTreeModelItem::changeParent(std::shared_ptr<AbstractTreeModelItem> 
 
 bool AbstractTreeModelItem::removeColumns(int position, int columns)
 {
-	auto current_num_columns = columnCount();
-
 	// Check that the range is within our number of real columns.
 	if (position < 0 || position + columns > m_item_data.size())
 	{
 		return false;
 	}
 
-	// Remove our columns in derived classes.
-	bool success = derivedClassRemoveColumns(position, columns);
-	if(!success)
-	{
-		return false;
-	}
+	/// @note Don't need a remove() here, items will be deleted.
+	m_item_data.erase(m_item_data.begin()+position, m_item_data.begin()+position+columns);
 
 	// Remove columns from all children.
 	for(auto& child : m_child_items)

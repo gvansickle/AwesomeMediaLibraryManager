@@ -99,9 +99,9 @@ protected:
 	/// @name Virtual functions called by the base class to complete certain operations.
 	///       The base class will have error-checked function parameters.
 	/// @{
-	bool derivedClassSetData(int column, const QVariant &value) override;
-	bool derivedClassInsertColumns(int insert_before_column, int num_columns) override;
-	bool derivedClassRemoveColumns(int first_column_to_remove, int num_columns) override;
+//	bool derivedClassSetData(int column, const QVariant &value) override;
+//	bool derivedClassInsertColumns(int insert_before_column, int num_columns) override;
+//	bool derivedClassRemoveColumns(int first_column_to_remove, int num_columns) override;
 	/// @}
 
 	/// The directory scan results corresponding to this entry.
@@ -147,9 +147,9 @@ protected:
 	/// @name Virtual functions called by the base class to complete certain operations.
 	///       The base class will have error-checked function parameters.
 	/// @{
-	bool derivedClassSetData(int column, const QVariant &value) override;
-	bool derivedClassInsertColumns(int insert_before_column, int num_columns) override;
-	bool derivedClassRemoveColumns(int first_column_to_remove, int num_columns) override;
+//	bool derivedClassSetData(int column, const QVariant &value) override;
+//	bool derivedClassInsertColumns(int insert_before_column, int num_columns) override;
+//	bool derivedClassRemoveColumns(int first_column_to_remove, int num_columns) override;
 	/// @}
 
 private:
