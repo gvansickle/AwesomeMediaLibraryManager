@@ -62,7 +62,7 @@ bool ThreadsafeTreeModel::requestAddItem(std::vector<QVariant> values, UUIncD pa
 {
 	std::unique_lock write_lock(m_rw_mutex);
 
-	auto new_item = AbstractTreeModelItem::construct(values, shared_from_this(), /*not root*/false);
+	auto new_item = AbstractTreeModelItem::construct(values, std::static_pointer_cast<ThreadsafeTreeModel>(shared_from_this()), /*not root*/false);
 
 	return addItem(new_item, parent_id, undo, redo);
 }

@@ -305,6 +305,71 @@ bool AbstractTreeModelItem::changeParent(std::shared_ptr<AbstractTreeModelItem> 
 	return res;
 }
 
+#define M_DATASTREAM_FIELDS(X) \
+	X(XMLTAG_NUM_COLUMNS, dummy)
+using strviw_type = QLatin1Literal;
+
+/// Strings to use for the tags.
+#define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
+	M_DATASTREAM_FIELDS(X);
+#undef X
+
+QVariant AbstractTreeModelItem::toVariant() const
+{
+	QVariantInsertionOrderedMap map;
+
+	map_insert_or_die(map, "item_data_size", QVariant::fromValue<qulonglong>(m_item_data.size()));
+
+	QVariantHomogenousList list("m_item_data", "item");
+
+	for(const QVariant& itemdata : m_item_data)
+	{
+		list_push_back_or_die(list, itemdata);
+	}
+
+	map_insert_or_die(map, "item_data", list);
+
+	return map;
+
+#if 0
+	QVariantInsertionOrderedMap map;
+
+#define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
+	M_DATASTREAM_FIELDS(X);
+#undef X
+
+	// Children to variant list.
+	QVariantHomogenousList vl("children", "child");
+	for(int i=0; i<childCount(); i++)
+	{
+		auto child_ptr = child(i);
+//		list_push_back_or_die(vl, child_ptr);
+		vl.push_back(child_ptr->toVariant());
+	}
+	map.insert("children", vl);
+
+	return map;
+#endif
+}
+
+void AbstractTreeModelItem::fromVariant(const QVariant& variant)
+{
+	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
+
+	// Get the number of item_data entries.
+	std::vector<QVariant>::size_type item_data_size = 0;
+	map_read_field_or_warn(map, "item_data_size", &item_data_size);
+
+	// Children to variant list.
+	QVariantHomogenousList vl("itemdata_list", "m_item_data");
+	map_read_field_or_warn(map, "item_data", &vl);
+	for(const auto& it : vl)
+	{
+		QString itstr = it.toString();
+		m_item_data.push_back(itstr);
+	}
+}
+
 
 bool AbstractTreeModelItem::removeColumns(int position, int columns)
 {

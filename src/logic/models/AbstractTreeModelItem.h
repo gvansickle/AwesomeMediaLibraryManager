@@ -203,8 +203,8 @@ public:
 	/// Be sure to override these in derived classes.
 	/// @{
 
-	 QVariant toVariant() const override { Q_ASSERT(0); return QVariant(); };
-	 void fromVariant(const QVariant& variant) override {Q_ASSERT(0);};
+	 QVariant toVariant() const override;
+	 void fromVariant(const QVariant& variant) override;
 
     /// @}
 

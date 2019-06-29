@@ -61,6 +61,9 @@ void Core::build()
 	m_self->m_srtm_instance->setColumnSpecs({"DirProps", "MediaURL", "SidecarCueURL"});
 	// Let's add two more columns
 	m_self->m_srtm_instance->insertColumns(3, 2);
+
+	/// @todo experimental
+	m_self->m_srtm_instance->requestAddItem({"A", "B", "C", "D"}, m_self->m_srtm_instance->getRootItem()->getId());
 }
 
 void Core::initGUI()

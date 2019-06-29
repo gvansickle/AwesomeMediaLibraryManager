@@ -301,7 +301,8 @@ template <class ListType, class ListEntryType, template<typename> class OutListT
 void list_read_all_fields_or_warn(const ListType& list, OutListType<ListEntryType>* p_list,
 								  const char* caller = "UNKNOWN"/*__builtin_FUNCTION()*/)
 {
-	static_assert(std::is_same_v<ListType, QVariantHomogenousList> || std::is_same_v<ListType, QVariantList>,
+	static_assert(std::is_same_v<ListType, QVariantHomogenousList>
+				  || std::is_same_v<ListType, QVariantList>,
 				  "Not a list type");
 
 	// Make sure return list is empty.

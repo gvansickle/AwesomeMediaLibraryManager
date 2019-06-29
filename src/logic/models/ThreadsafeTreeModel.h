@@ -44,7 +44,7 @@
  * Don't know how threadsafe this really is, all indications are that QT5's model/view cannot be made threadsafe.
  * Borrowing requestXxx() concept from KDenLive's ProjectItemModel.
  */
-class ThreadsafeTreeModel : public AbstractTreeModel
+class ThreadsafeTreeModel : public AbstractTreeModel//, public virtual enable_shared_from_this_virtual<ThreadsafeTreeModel>
 {
 	Q_OBJECT
 
@@ -60,7 +60,8 @@ public:
 	static std::shared_ptr<ThreadsafeTreeModel> construct(QObject* parent = nullptr);
 	~ThreadsafeTreeModel() override;
 
-	bool requestAddItem(std::vector<QVariant> values, UUIncD parent_id, Fun undo, Fun redo);
+	bool requestAddItem(std::vector<QVariant> values, UUIncD parent_id,
+			Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
 
 protected:
 

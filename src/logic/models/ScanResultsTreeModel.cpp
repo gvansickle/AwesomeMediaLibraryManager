@@ -25,7 +25,6 @@
 ScanResultsTreeModel::ScanResultsTreeModel(QObject *parent)
     : BASE_CLASS(parent)
 {
-
 }
 
 // static
