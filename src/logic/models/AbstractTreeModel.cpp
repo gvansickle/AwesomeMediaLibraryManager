@@ -149,23 +149,23 @@ Qt::ItemFlags AbstractTreeModel::flags(const QModelIndex &index) const
         }
     }
 #endif
-
+	// ETM:
     return Qt::ItemIsEditable | QAbstractItemModel::flags(index);
 }
 
-//AbstractTreeModelItem* AbstractTreeModel::getItem(const QModelIndex &index) const
-//{
-//	if (index.isValid())
-//	{
-//        AbstractTreeModelItem *item = static_cast<AbstractTreeModelItem*>(index.internalPointer());
-//		if (item != nullptr)
-//		{
-//            return item;
-//		}
-//    }
-//	/// @todo This might want to be an assert() due to invalid index.
-//	return m_root_item;
-//}
+std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getItem(const QModelIndex &index) const
+{
+	if (index.isValid())
+	{
+		std::shared_ptr<AbstractTreeModelItem> item = getItemById(UUIncD(index.internalId()));
+		if (item != nullptr)
+		{
+            return item;
+		}
+    }
+	/// @todo This might want to be an assert() due to invalid index.
+	return m_root_item;
+}
 
 /// NEW: KDEN:
 std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getItemById(const UUIncD& id) const
@@ -655,12 +655,12 @@ bool AbstractTreeModel::setData(const QModelIndex &index, const QVariant &value,
         return false;
 	}
 
-	std::shared_ptr<AbstractTreeModelItem> item = getItemById(UUIncD(index.internalId()));
+	std::shared_ptr<AbstractTreeModelItem> item = getItem(index);
     bool result = item->setData(index.column(), value);
 
 	if(result)
 	{
-		Q_EMIT dataChanged(index, index);
+		Q_EMIT dataChanged(index, index, {Qt::DisplayRole, Qt::EditRole});
 	}
 
     return result;

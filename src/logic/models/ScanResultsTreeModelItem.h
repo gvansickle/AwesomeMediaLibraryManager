@@ -51,10 +51,7 @@ public:
             bool is_root = false);
 
 protected:
-	/// Create a default-constructed (i.e. "blank") ScanResultsTreeModelItem, possibly with a given parent.
-//	explicit ScanResultsTreeModelItem(AbstractTreeModelItem *parent = nullptr) : BASE_CLASS(parent) {};
 	/// Create a new model item populated with the passed DirScanResult.
-//	explicit ScanResultsTreeModelItem(const DirScanResult& dsr, AbstractTreeModelItem *parent = nullptr);
 	explicit ScanResultsTreeModelItem(const DirScanResult& dsr,
 	                                  const std::shared_ptr<AbstractTreeModel> model,
 	                                  bool is_root = false);
@@ -88,27 +85,9 @@ public:
 
 protected:
 
-//	/**
-//	 * Factory function for creating default-constructed nodes.
-//	 * Used by insertChildren().  Override in derived classes.
-//	 * @todo Convert to smart pointer (std::unique_ptr<AbstractTreeModelItem>) return type, retain covariant return.
-//	 */
-//	AbstractTreeModelItem*
-//	do_create_default_constructed_child_item(AbstractTreeModelItem *parent = nullptr, int num_columns = 0) override;
-
-	/// @name Virtual functions called by the base class to complete certain operations.
-	///       The base class will have error-checked function parameters.
-	/// @{
-//	bool derivedClassSetData(int column, const QVariant &value) override;
-//	bool derivedClassInsertColumns(int insert_before_column, int num_columns) override;
-//	bool derivedClassRemoveColumns(int first_column_to_remove, int num_columns) override;
-	/// @}
-
 	/// The directory scan results corresponding to this entry.
 	/// This is things like the main media URL, sidecar cue sheet URLs, timestamp info, etc.
 	DirScanResult m_dsr;
-
-
 };
 
 
@@ -144,13 +123,6 @@ public:
 	/// @} // END Serialization
 	
 protected:
-	/// @name Virtual functions called by the base class to complete certain operations.
-	///       The base class will have error-checked function parameters.
-	/// @{
-//	bool derivedClassSetData(int column, const QVariant &value) override;
-//	bool derivedClassInsertColumns(int insert_before_column, int num_columns) override;
-//	bool derivedClassRemoveColumns(int first_column_to_remove, int num_columns) override;
-	/// @}
 
 private:
 	std::string m_key {"key"};

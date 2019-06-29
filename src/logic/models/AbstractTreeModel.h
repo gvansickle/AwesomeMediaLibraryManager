@@ -198,6 +198,9 @@ public:
 	QModelIndex getIndexFromId(UUIncD id) const;
 	std::shared_ptr<AbstractTreeModelItem> getItemById(const UUIncD &id) const;
 	std::shared_ptr<AbstractTreeModelItem> getRootItem() const;
+	// ETM
+	std::shared_ptr<AbstractTreeModelItem> getItem(const QModelIndex &index) const;
+
 
 
 	/// @name Public interface: Lambda generators for tree structure modification.
@@ -297,11 +300,6 @@ public:
 protected:
 	/// @name Extended protected model interface.
 	/// @{
-
-	/**
-	 * Override in derived classes to return a newly created root/header item node for the model.
-	 */
-//	virtual AbstractTreeModelHeaderItem * make_root_node(QVector<QVariant> rootData) = 0;
 
 	virtual QString getXmlStreamName() const { return ""; };
 	virtual QString getXmlStreamVersion() const { return ""; };

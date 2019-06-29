@@ -394,7 +394,6 @@ bool AbstractTreeModelItem::appendChildren(std::vector<std::shared_ptr<AbstractT
 	return true;
 }
 
-#if 1 /// 1
 bool AbstractTreeModelItem::insertChildren(int position, int count, int columns)
 {
 	if (position < 0 || position > m_child_items.size())
@@ -435,7 +434,6 @@ bool AbstractTreeModelItem::insertChildren(int position, int count, int columns)
 
 	return true;
 }
-#endif
 
 bool AbstractTreeModelItem::appendChild(const std::shared_ptr<AbstractTreeModelItem>& new_child)
 {
@@ -605,46 +603,10 @@ void AbstractTreeModelItem::updateParent(std::shared_ptr<AbstractTreeModelItem> 
 	}
 }
 
-//bool AbstractTreeModelItem::setParentItem(std::shared_ptr<AbstractTreeModelItem> new_parent)
-//{
-//	Q_ASSERT(!m_is_root);
-//	if (m_is_root)
-//	{
-//		return false;
-//	}
-//	std::shared_ptr<AbstractTreeModelItem> oldParent;
-//	if ((oldParent = m_parent_item.lock()))
-//	{
-//		oldParent->removeChild(shared_from_this());
-//	}
-//	bool res = true;
-//	if (new_parent)
-//	{
-//		res = new_parent->appendChild(shared_from_this());
-//		if (res)
-//		{
-//			m_parent_item = new_parent;
-//		}
-//		else if (oldParent)
-//		{
-//			// something went wrong, we have to reset the parent.
-//			bool reverse = oldParent->appendChild(shared_from_this());
-//			Q_ASSERT(reverse);
-//		}
-//	}
-//	return res;
-//}
-
-//std::unique_ptr<AbstractTreeModelItem>
-//AbstractTreeModelItem::create_default_constructed_child_item(AbstractTreeModelItem* parent, int num_columns)
-//{
-//	return std::unique_ptr<AbstractTreeModelItem>(this->do_create_default_constructed_child_item(parent, num_columns));
-//}
-
 AbstractTreeModelItem::CICTIteratorType AbstractTreeModelItem::get_m_child_items_iterator(UUIncD id)
 {
 	CICTIteratorType retval;
-	retval = std::find_if(/*std::execution::par,*/ m_child_items.begin(), m_child_items.end(), [id](auto& val){ return val->m_uuincid == id; });
+	retval = std::find_if(m_child_items.begin(), m_child_items.end(), [id](auto& val){ return val->m_uuincid == id; });
 	return retval;
 }
 
