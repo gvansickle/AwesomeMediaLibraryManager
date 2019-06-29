@@ -29,18 +29,30 @@
 
 // The following is a hack that allows to use shared_from_this in the case of a multiple inheritance.
 // Credit: https://stackoverflow.com/questions/14939190/boost-shared-from-this-and-multiple-inheritance
-template <typename T> struct enable_shared_from_this_virtual;
+template <typename T>
+struct enable_shared_from_this_virtual;
 
 class enable_shared_from_this_virtual_base : public std::enable_shared_from_this<enable_shared_from_this_virtual_base>
 {
     using base_type = std::enable_shared_from_this<enable_shared_from_this_virtual_base>;
-    template <typename T> friend struct enable_shared_from_this_virtual;
+    template <typename T>
+    friend struct enable_shared_from_this_virtual;
 
-    std::shared_ptr<enable_shared_from_this_virtual_base> shared_from_this() { return base_type::shared_from_this(); }
-    std::shared_ptr<enable_shared_from_this_virtual_base const> shared_from_this() const { return base_type::shared_from_this(); }
+    std::shared_ptr<enable_shared_from_this_virtual_base> shared_from_this()
+    {
+    	return base_type::shared_from_this();
+    }
+    std::shared_ptr<enable_shared_from_this_virtual_base const> shared_from_this() const
+    {
+    	return base_type::shared_from_this();
+    }
+
+	std::weak_ptr<enable_shared_from_this_virtual_base> weak_from_this() noexcept { return base_type::weak_from_this(); };
+	std::weak_ptr<enable_shared_from_this_virtual_base const> weak_from_this() const noexcept { return base_type::weak_from_this(); };
 };
 
-template <typename T> struct enable_shared_from_this_virtual : virtual enable_shared_from_this_virtual_base
+template <typename T>
+struct enable_shared_from_this_virtual : public virtual enable_shared_from_this_virtual_base
 {
     using base_type = enable_shared_from_this_virtual_base;
 
@@ -56,6 +68,15 @@ public:
         std::shared_ptr<T const> result(base_type::shared_from_this(), static_cast<T const *>(this));
         return result;
     }
+	std::weak_ptr<T> weak_from_this() noexcept
+	{
+    	std::weak_ptr<T> result(base_type::weak_from_this(), static_cast<T*>(this));
+    	return result;
+	};
+	std::weak_ptr<T const> weak_from_this() const noexcept
+	{
+		std::weak_ptr<T const> result(base_type::weak_from_this(), static_cast<T const*>(this));
+	};
 };
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_ENABLE_SHARED_FROM_THIS_VIRTUAL_H

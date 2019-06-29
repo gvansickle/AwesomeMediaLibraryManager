@@ -23,12 +23,17 @@
 #ifndef SRC_LOGIC_MODELS_THREADSAFETREEMODEL_H_
 #define SRC_LOGIC_MODELS_THREADSAFETREEMODEL_H_
 
+// Std C++
 #include <memory>
 #include <vector>
 #include <map>
+
+// Qt5
 #include <QAbstractItemModel>
 #include <QModelIndex>
 #include <QVariant>
+
+// Ours
 #include <logic/serialization/ISerializable.h>
 #include <logic/UUIncD.h>
 #include <future/enable_shared_from_this_virtual.h>
@@ -43,20 +48,26 @@ class ThreadsafeTreeModel : public AbstractTreeModel
 {
 	Q_OBJECT
 
-public:
-	static std::shared_ptr<ThreadsafeTreeModel> construct(QObject* parent = nullptr);
+	using BASE_CLASS = AbstractTreeModel;
 
 protected:
 	explicit ThreadsafeTreeModel(QObject* parent);
 
 public:
+	/**
+	 * Named constructor.
+	 */
+	static std::shared_ptr<ThreadsafeTreeModel> construct(QObject* parent = nullptr);
 	~ThreadsafeTreeModel() override;
 
-	bool requestAddItem(std::vector<QVariant> values, QUuid parent_id, Fun undo, Fun redo);
+	bool requestAddItem(std::vector<QVariant> values, UUIncD parent_id, Fun undo, Fun redo);
 
 protected:
+
 	/// KDEN/ProjItemModel.
-	bool addItem(const std::shared_ptr<AbstractTreeModelItem>);
+	/// Final function which adds the @a item to the model as a child of @a parent_id.
+	bool addItem(const std::shared_ptr<AbstractTreeModelItem> &item, UUIncD parent_id, Fun &undo, Fun &redo);
+
 };
 
 #endif /* SRC_LOGIC_MODELS_THREADSAFETREEMODEL_H_ */

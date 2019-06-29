@@ -58,8 +58,7 @@ class AbstractTreeModelHeaderItem;
  */
 class AbstractTreeModel : public QAbstractItemModel,
 		public virtual ISerializable,
-//		public enable_shared_from_this_virtual<AbstractTreeModel>
-		public std::enable_shared_from_this<AbstractTreeModel>
+		public enable_shared_from_this_virtual<AbstractTreeModel>
 {
     Q_OBJECT
 

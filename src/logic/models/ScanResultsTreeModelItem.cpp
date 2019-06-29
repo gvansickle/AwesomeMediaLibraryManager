@@ -36,12 +36,6 @@
 #include <LibraryEntry.h>
 
 
-//ScanResultsTreeModelItem::ScanResultsTreeModelItem(const DirScanResult& dsr, AbstractTreeModelItem* parent)
-//	: AbstractTreeModelItem(parent)
-//{
-//	m_dsr = dsr;
-//}
-
 std::shared_ptr<ScanResultsTreeModelItem> ScanResultsTreeModelItem::construct(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModel> model, bool is_root)
 {
 	std::shared_ptr<ScanResultsTreeModelItem> self(new ScanResultsTreeModelItem(dsr, model, is_root));
