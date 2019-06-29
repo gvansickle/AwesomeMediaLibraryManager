@@ -41,7 +41,7 @@
 #include <QAbstractItemModelTester>
 
 // KF5
-#include <KItemViews/KCategorizedSortFilterProxyModel>
+//#include <KItemViews/KCategorizedSortFilterProxyModel>
 
 // Ours
 #include "AbstractTreeModelItem.h"

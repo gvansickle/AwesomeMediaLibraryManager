@@ -144,7 +144,6 @@ protected:
 /// So we can more easily pass ptrs in QVariants.
 Q_DECLARE_METATYPE(LibraryEntry);
 Q_DECLARE_METATYPE(LibraryEntry*);
-Q_DECLARE_SMART_POINTER_METATYPE(std::shared_ptr);
 Q_DECLARE_METATYPE(std::shared_ptr<LibraryEntry>);
 Q_DECLARE_METATYPE(std::vector<std::shared_ptr<LibraryEntry>>);
 Q_DECLARE_METATYPE(QSharedPointer<LibraryEntry>);

@@ -58,13 +58,38 @@ ThreadsafeTreeModel::~ThreadsafeTreeModel()
 
 }
 
-bool ThreadsafeTreeModel::requestAddItem(std::vector<QVariant> values, UUIncD parent_id, Fun undo, Fun redo)
+UUIncD ThreadsafeTreeModel::requestAddItem(std::vector<QVariant> values, UUIncD parent_id, Fun undo, Fun redo)
 {
 	std::unique_lock write_lock(m_rw_mutex);
 
 	auto new_item = AbstractTreeModelItem::construct(values, std::static_pointer_cast<ThreadsafeTreeModel>(shared_from_this()), /*not root*/false);
 
-	return addItem(new_item, parent_id, undo, redo);
+	bool status = addItem(new_item, parent_id, undo, redo);
+
+	if(!status)
+	{
+		// Add failed for some reason, return a null UUIncD.
+		return UUIncD::null();
+	}
+	return new_item->getId();
+}
+
+void ThreadsafeTreeModel::register_item(const std::shared_ptr<AbstractTreeModelItem>& item)
+{
+	std::unique_lock write_lock(m_rw_mutex);
+
+	AbstractTreeModel::register_item(item);
+}
+
+void ThreadsafeTreeModel::deregister_item(UUIncD id, AbstractTreeModelItem* item)
+{
+	std::unique_lock write_lock(m_rw_mutex);
+
+	// Per KdenLive:
+	// "here, we should suspend jobs belonging to the item we delete. They can be restarted if the item is reinserted by undo"
+
+	AbstractTreeModel::deregister_item(id, item);
+
 }
 
 bool ThreadsafeTreeModel::addItem(const std::shared_ptr<AbstractTreeModelItem>& item, UUIncD parent_id, Fun& undo, Fun& redo)

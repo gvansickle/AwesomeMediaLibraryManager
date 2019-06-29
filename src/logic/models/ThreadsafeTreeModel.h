@@ -60,12 +60,16 @@ public:
 	static std::shared_ptr<ThreadsafeTreeModel> construct(QObject* parent = nullptr);
 	~ThreadsafeTreeModel() override;
 
-	bool requestAddItem(std::vector<QVariant> values, UUIncD parent_id,
-			Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
+	UUIncD requestAddItem(std::vector<QVariant> values, UUIncD parent_id,
+	                      Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
 
 protected:
 
 	/// KDEN/ProjItemModel.
+
+	void register_item(const std::shared_ptr<AbstractTreeModelItem>& item) override;
+	void deregister_item(UUIncD id, AbstractTreeModelItem* item) override;
+
 	/// Final function which adds the @a item to the model as a child of @a parent_id.
 	bool addItem(const std::shared_ptr<AbstractTreeModelItem> &item, UUIncD parent_id, Fun &undo, Fun &redo);
 

@@ -318,16 +318,30 @@ QVariant AbstractTreeModelItem::toVariant() const
 {
 	QVariantInsertionOrderedMap map;
 
+	// Number of elements in the std::vector<QVariant>.
 	map_insert_or_die(map, "item_data_size", QVariant::fromValue<qulonglong>(m_item_data.size()));
 
+	/// @todo The "m_item_data" string is not getting written out, not sure if we care.
 	QVariantHomogenousList list("m_item_data", "item");
-
+	// The item data itself.
 	for(const QVariant& itemdata : m_item_data)
 	{
 		list_push_back_or_die(list, itemdata);
 	}
-
+	// Add them to the output map.
 	map_insert_or_die(map, "item_data", list);
+
+	// Child nodes.
+	// Create a list of them.
+	QVariantHomogenousList vl("children", "child");
+	for(int i=0; i<childCount(); i++)
+	{
+		auto child_ptr = child(i);
+		list_push_back_or_die(vl, child_ptr->toVariant());
+//		vl.push_back(child_ptr->toVariant());
+	}
+	// Insert the list into the map.
+	map.insert("children", vl);
 
 	return map;
 

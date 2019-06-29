@@ -63,7 +63,9 @@ void Core::build()
 	m_self->m_srtm_instance->insertColumns(3, 2);
 
 	/// @todo experimental
-	m_self->m_srtm_instance->requestAddItem({"A", "B", "C", "D"}, m_self->m_srtm_instance->getRootItem()->getId());
+	UUIncD new_id = m_self->m_srtm_instance->requestAddItem({"A", "B", "C", "D"}, m_self->m_srtm_instance->getRootItem()->getId());
+	m_self->m_srtm_instance->requestAddItem({"E", "F", "GHI", "J"}, new_id);
+
 }
 
 void Core::initGUI()

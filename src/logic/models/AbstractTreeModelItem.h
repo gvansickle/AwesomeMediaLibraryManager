@@ -44,6 +44,7 @@
 #include <QVector>
 
 // Ours
+#include <utils/RegisterQtMetatypes.h>
 #include <utils/QtHelpers.h>
 #include <utils/StaticAnalysis.h>
 #include <future/guideline_helpers.h>
