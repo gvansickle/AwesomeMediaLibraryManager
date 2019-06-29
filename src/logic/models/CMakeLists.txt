@@ -28,6 +28,7 @@ set(SOURCE_FILES_SRC_LOGIC_MODELS
     PlaceholderTreeModelItem.cpp
 	ScanResultsTreeModel.cpp
 	ScanResultsTreeModelItem.cpp
+	ThreadsafeTreeModel.cpp
 	)
 set(HEADER_FILES_SRC_LOGIC_MODELS
 		AbstractHeaderSection.h
@@ -38,6 +39,7 @@ set(HEADER_FILES_SRC_LOGIC_MODELS
         PlaceholderTreeModelItem.h
 		ScanResultsTreeModel.h
 		ScanResultsTreeModelItem.h
+		ThreadsafeTreeModel.h
 		)
 
 target_sources_local(models

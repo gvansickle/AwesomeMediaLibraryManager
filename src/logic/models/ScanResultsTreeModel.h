@@ -20,8 +20,6 @@
 #ifndef SCANRESULTSTREEMODEL_H
 #define SCANRESULTSTREEMODEL_H
 
-#include "AbstractTreeModel.h"
-
 // Qt5
 #include <QUrl>
 #include <QString>
@@ -29,6 +27,9 @@
 // Ours
 #include <utils/QtHelpers.h>
 #include "ScanResultsTreeModelItem.h"
+//#include "AbstractTreeModel.h"
+#include "ThreadsafeTreeModel.h"
+
 class AbstractTreeModelHeaderItem;
 #include <future/enable_shared_from_this_virtual.h>
 
@@ -40,11 +41,11 @@ class AbstractTreeModelHeaderItem;
  * - Contains 1 or more tracks.
  * - May have a sidecar or embedded cue sheet.
  */
-class ScanResultsTreeModel : public AbstractTreeModel, public enable_shared_from_this_virtual<ScanResultsTreeModel>
+class ScanResultsTreeModel : public ThreadsafeTreeModel, public enable_shared_from_this_virtual<ScanResultsTreeModel>
 {
 	Q_OBJECT
 
-	using BASE_CLASS = AbstractTreeModel;
+	using BASE_CLASS = ThreadsafeTreeModel;
 
 public:
 

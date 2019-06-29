@@ -49,6 +49,7 @@
 #include <utils/DebugHelpers.h>
 #include <logic/serialization/XmlSerializer.h>
 #include "ScanResultsTreeModel.h"
+#include "ThreadsafeTreeModel.h"
 
 /**
  * This really should never get called, since AbstractTreeModel is abstract.  Mostly here for an example for derived classes.
@@ -264,6 +265,7 @@ Fun AbstractTreeModel::moveItem_lambda(UUIncD id, int destRow, bool force)
 	}
 	return []() { return false; };
 }
+
 
 AbstractTreeModel::iterator AbstractTreeModel::begin()
 {
@@ -694,6 +696,7 @@ bool AbstractTreeModel::setHeaderData(int section, const AbstractHeaderSection& 
 //	for()
 	return true;
 }
+
 
 
 

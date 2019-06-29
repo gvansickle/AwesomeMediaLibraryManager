@@ -133,6 +133,7 @@ public:
 
     Qt::ItemFlags flags(const QModelIndex &index) const override;
 
+    /// ETM, KDEN AbsTreeModel doesn't override this.
 	bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
 
     /// @name Row and column insert, remove, and move operations.
@@ -223,6 +224,14 @@ public:
 
 	/// @} // END Lambda generators.
 
+	/// @name The requestXxxx() interface.
+	///       Borrowed from KDenLive.  Admittedly not 100% clear on why KDenLive makes model operations even more
+	///       circuitous than stock Qt5 does, I think it's an attempt at threadsafety, but also undo/redo are involved.
+	///       KDen doesn't have any of these in this base model class.
+	/// @{
+
+	/// @}
+
 	/// @name Serialization, from ISerializable.
 	/// Remember to override these in derived classes.
 	/// @{
@@ -255,8 +264,6 @@ protected:
 
 	/// @name High-cost operations
 	/// @{
-
-
 
 	/// @}
 

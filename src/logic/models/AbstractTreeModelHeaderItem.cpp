@@ -186,45 +186,5 @@ M_WARNING("NEED TO GO THROUGH MODEL HERE?");
 	this->appendChildren(std::move(temp_items));
 }
 
-//std::shared_ptr<ScanResultsTreeModelItem>
-//AbstractTreeModelHeaderItem::do_create_default_constructed_child_item(AbstractTreeModelItem *parent, int num_columns)
-//{
-//M_WARNING("SHARED PTR");
-////	std::shared_ptr<ScanResultsTreeModelItem> child_item;
-//	ScanResultsTreeModelItem* child_item;
-//
-////	child_item = std::make_shared<ScanResultsTreeModelItem>(parent);
-//	auto child_item = appendChild();
-//
-//	return child_item;
-//}
 
-//bool AbstractTreeModelHeaderItem::derivedClassSetData(int column, const QVariant& value)
-//{
-//	// We're the header, we should never have the Abstract Model's setData() called on us,
-//	// but this is the AbstractTreeModel*Item*'s setData(), and we're calling it in at least fromVariant() above.
-//
-//	/// @todo Take ColumnSpecs instead.
-////	m_column_specs.at(column) = value.toString();
-//
-//	return false;
-//}
-
-//bool AbstractTreeModelHeaderItem::derivedClassInsertColumns(int insert_before_column, int num_columns)
-//{
-//	// vector.insert(pos, size, ...):
-//	// - pos has the same definition as we're exposing here, it's the insert-before point.  Can be the end() iterator.
-//	/// @todo Again, convert to default constructed ColumnSpecs.
-////	m_column_specs.insert(m_column_specs.cbegin() + insert_before_column, num_columns, QString());
-//
-//	return true;
-//}
-
-//bool AbstractTreeModelHeaderItem::derivedClassRemoveColumns(int first_column_to_remove, int num_columns)
-//{
-////	m_column_specs.erase(m_column_specs.cbegin() + first_column_to_remove,
-////			m_column_specs.cbegin() + first_column_to_remove + num_columns);
-//
-//	return true;
-//}
 
