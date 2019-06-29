@@ -237,18 +237,6 @@ protected:
 	 */
 	virtual void updateParent(std::shared_ptr<AbstractTreeModelItem> parent);
 
-
-	/// @name Virtual functions called by the base class to complete certain operations.
-	///       The base class will have error-checked function parameters.
-	/// @todo I think these are obsolete now, remove.
-	/// @{
-//	virtual bool derivedClassSetData(int column, const QVariant &value) { return 0; };
-//	virtual bool derivedClassInsertColumns(int insert_before_column, int num_columns) { return 0; };
-//	virtual bool derivedClassRemoveColumns(int first_column_to_remove, int num_columns) { return 0; };
-	/// @}
-
-
-
 	/// Our guaranteed-to-be unique-to-this-run-of-the-program numeric ID.
 	UUIncD m_uuincid;
 

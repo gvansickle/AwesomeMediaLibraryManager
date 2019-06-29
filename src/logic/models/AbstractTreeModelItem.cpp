@@ -329,7 +329,7 @@ bool AbstractTreeModelItem::removeColumns(int position, int columns)
 QVariant AbstractTreeModelItem::data(int column, int role) const
 {
 	// Color model indexes with a column beyond what we have data for.
-	if(column > columnCount())
+	if(column < 0 || column >= m_item_data.size())
 	{
 		switch(role)
 		{
@@ -339,6 +339,10 @@ QVariant AbstractTreeModelItem::data(int column, int role) const
 			default:
 				break;
 		}
+	}
+	else if(role == Qt::ItemDataRole::DisplayRole || role == Qt::ItemDataRole::EditRole)
+	{
+		return m_item_data.at(column);
 	}
 	return QVariant();
 }
