@@ -62,6 +62,42 @@ public:
 	virtual void fromVariant(const QVariant& variant) = 0;
 };
 
+class IUUIDSerializable : public virtual ISerializable
+{
+public:
+	IUUIDSerializable() : m_uuid(QUuid::createUuid()) {};
+	~IUUIDSerializable() override = default;
+
+	QUuid m_uuid;
+};
+
+Q_DECLARE_METATYPE(IUUIDSerializable*);
+
+struct KeyValuePair
+{
+	std::string m_key;
+	std::string m_value;
+};
+
+class AttributedQVariant
+{
+public:
+	AttributedQVariant() {};
+	AttributedQVariant(const QVariant& var, std::initializer_list<KeyValuePair> kvpairs) : m_variant(var)
+	{
+		for(const auto& it : kvpairs)
+		{
+			m_key_value_pairs.insert({it.m_key, it.m_value});
+		}
+	};
+	virtual ~AttributedQVariant() {};
+
+	std::map<std::string, std::string> m_key_value_pairs;
+	QVariant m_variant;
+};
+
+Q_DECLARE_METATYPE(AttributedQVariant);
+
 template <class OutMapType>
 void qviomap_from_qvar_or_die(OutMapType* map_out, const QVariant& var_in)
 {

@@ -31,6 +31,9 @@ namespace AMLM
  */
 class Track
 {
+public:
+	Track();
+	virtual ~Track();
 };
 
 };

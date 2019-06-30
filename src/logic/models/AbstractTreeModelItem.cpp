@@ -44,7 +44,7 @@
 #include <utils/VectorHelpers.h>
 #include <logic/UUIncD.h>
 #include "AbstractTreeModel.h"
-#include "PlaceholderTreeModelItem.h"
+//#include "PlaceholderTreeModelItem.h"
 #include <utils/ext_iterators.h>
 
 std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::construct(const std::vector<QVariant>& data,
@@ -305,21 +305,27 @@ bool AbstractTreeModelItem::changeParent(std::shared_ptr<AbstractTreeModelItem> 
 	return res;
 }
 
-#define M_DATASTREAM_FIELDS(X) \
-	X(XMLTAG_NUM_COLUMNS, dummy)
-using strviw_type = QLatin1Literal;
+//#define M_DATASTREAM_FIELDS(X) \
+//	X(XMLTAG_NUM_COLUMNS, dummy)
+//using strviw_type = QLatin1Literal;
 
-/// Strings to use for the tags.
-#define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
-	M_DATASTREAM_FIELDS(X);
-#undef X
+///// Strings to use for the tags.
+//#define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
+//	M_DATASTREAM_FIELDS(X);
+//#undef X
+
+static const QLatin1Literal XMLTAG_NUM_COLUMNS("num_columns");
+static const QLatin1Literal XMLTAG_ITEM_DATA_SIZE("item_data_size");
+static const QLatin1Literal XMLTAG_NUM_CHILDREN("num_children");
 
 QVariant AbstractTreeModelItem::toVariant() const
 {
 	QVariantInsertionOrderedMap map;
 
 	// Number of elements in the std::vector<QVariant>.
-	map_insert_or_die(map, "item_data_size", QVariant::fromValue<qulonglong>(m_item_data.size()));
+	map_insert_or_die(map, XMLTAG_ITEM_DATA_SIZE, QVariant::fromValue<qulonglong>(m_item_data.size()));
+	// Number of immediate children.
+	map_insert_or_die(map, XMLTAG_NUM_CHILDREN, QVariant::fromValue<qulonglong>(m_child_items.size()));
 
 	/// @todo The "m_item_data" string is not getting written out, not sure if we care.
 	QVariantHomogenousList list("m_item_data", "item");
@@ -338,7 +344,6 @@ QVariant AbstractTreeModelItem::toVariant() const
 	{
 		auto child_ptr = child(i);
 		list_push_back_or_die(vl, child_ptr->toVariant());
-//		vl.push_back(child_ptr->toVariant());
 	}
 	// Insert the list into the map.
 	map.insert("children", vl);
@@ -372,7 +377,7 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 
 	// Get the number of item_data entries.
 	std::vector<QVariant>::size_type item_data_size = 0;
-	map_read_field_or_warn(map, "item_data_size", &item_data_size);
+	map_read_field_or_warn(map, XMLTAG_ITEM_DATA_SIZE, &item_data_size);
 
 	// Children to variant list.
 	QVariantHomogenousList vl("itemdata_list", "m_item_data");
@@ -557,7 +562,7 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::appendChild(const 
 {
 	if (auto ptr = m_model.lock())
 	{
-		auto child = PlaceholderTreeModelItem::construct(data, ptr, false);
+		auto child = AbstractTreeModelItem::construct(data, ptr, false);
 		appendChild(child);
 		return child;
 	}

@@ -141,9 +141,10 @@ void XmlSerializer::load(ISerializable& serializable, const QUrl &file_url)
 	}
 }
 
-static const int iomap_id = qMetaTypeId<QVariantInsertionOrderedMap>();
-static const int qvarlist_id = qMetaTypeId<QVariantHomogenousList>();
-static const int serqvarlist_id = qMetaTypeId<SerializableQVariantList>();
+static const int f_iomap_id = qMetaTypeId<QVariantInsertionOrderedMap>();
+static const int f_qvarlist_id = qMetaTypeId<QVariantHomogenousList>();
+static const int f_serqvarlist_id = qMetaTypeId<SerializableQVariantList>();
+static const int f_attributed_qvariant_id = qMetaTypeId<AttributedQVariant>();
 
 void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant& variant, QXmlStreamWriter& xmlstream)
 {
@@ -187,19 +188,23 @@ void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant
 //				<< QVariant::typeToName(type) << QVariant::typeToName(usertype);
 	}
 
-	if(usertype == iomap_id)
+	if(usertype == f_iomap_id)
 	{
 		writeVariantOrderedMapToStream(variant, xmlstream);
 	}
-	else if(usertype == qvarlist_id)
+	else if(usertype == f_qvarlist_id)
 	{
 		writeQVariantHomogenousListToStream(variant, xmlstream);
 	}
-	else if(usertype == serqvarlist_id)
+	else if(usertype == f_serqvarlist_id)
 	{
 		QVariantHomogenousList list = variant.value<QVariantHomogenousList>();
 
 		writeQVariantHomogenousListToStream(list, xmlstream);
+	}
+	else if(usertype == f_attributed_qvariant_id)
+	{
+		writeVariantToStream(nodeName, variant.value<AttributedQVariant>(), xmlstream);
 	}
 	else
 	{
@@ -217,6 +222,56 @@ void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant
 				break;
 			default:
 				writeVariantValueToStream(variant, xmlstream);
+				break;
+		}
+	}
+	xmlstream.writeEndElement();
+}
+
+void XmlSerializer::writeVariantToStream(const QString& nodeName, const AttributedQVariant& variant, QXmlStreamWriter& xmlstream)
+{
+	xmlstream.writeStartElement(nodeName);
+	xmlstream.writeAttribute("type", variant.m_variant.typeName());
+
+	// Handle attributes.
+	for(const auto& it : variant.m_key_value_pairs)
+	{
+		xmlstream.writeAttribute(toqstr(it.first), toqstr(it.second));
+	}
+
+	int type = variant.m_variant.type(); // AFAICT this is just wrong.
+	int usertype = variant.m_variant.userType(); // This matches variant.typeName()
+
+	if(usertype == f_iomap_id)
+	{
+		writeVariantOrderedMapToStream(variant.m_variant, xmlstream);
+	}
+	else if(usertype == f_qvarlist_id)
+	{
+		writeQVariantHomogenousListToStream(variant.m_variant, xmlstream);
+	}
+	else if(usertype == f_serqvarlist_id)
+	{
+		QVariantHomogenousList list = variant.m_variant.value<QVariantHomogenousList>();
+
+		writeQVariantHomogenousListToStream(list, xmlstream);
+	}
+	else
+	{
+		switch(usertype)//variant.type())
+		{
+			case QMetaType::QVariantList:
+				/// @link http://doc.qt.io/qt-5/qvariant.html#toList
+				/// "Returns the variant as a QVariantList if the variant has userType() QMetaType::QVariantList
+				/// or QMetaType::QStringList"
+			case QMetaType::QStringList:
+				writeVariantListToStream(variant.m_variant, xmlstream);
+				break;
+			case QMetaType::QVariantMap:
+				writeVariantMapToStream(variant.m_variant, xmlstream);
+				break;
+			default:
+				writeVariantValueToStream(variant.m_variant, xmlstream);
 				break;
 		}
 	}
@@ -327,15 +382,15 @@ QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 //	auto metatype_v = QVariant::nameToType(typeString.toStdString().c_str());
 	int metatype = QMetaType::type(typeString.toStdString().c_str());
 
-	if(metatype == iomap_id)
+	if(metatype == f_iomap_id)
 	{
 		variant = readVariantOrderedMapFromStream(xmlstream);
 	}
-	else if(metatype == qvarlist_id)
+	else if(metatype == f_qvarlist_id)
 	{
 		variant = readHomogenousListFromStream(xmlstream);
 	}
-	else if(metatype == serqvarlist_id)
+	else if(metatype == f_serqvarlist_id)
 	{
 		variant = readHomogenousListFromStream(xmlstream);
 	}

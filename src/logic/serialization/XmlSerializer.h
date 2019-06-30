@@ -39,6 +39,7 @@ class QVariantHomogenousList;
 
 // Ours
 #include "ISerializer.h"
+class AttributedQVariant;
 
 /**
  * Concrete ISerializer class for serializing ISerializables as XML.
@@ -82,11 +83,15 @@ private:
 
 	void writeVariantToStream(const QString& nodeName,
 	                          const QVariant& variant, QXmlStreamWriter& xmlstream);
+	void writeVariantToStream(const QString& nodeName,
+							  const AttributedQVariant& variant, QXmlStreamWriter& xmlstream);
 
 	void writeQVariantHomogenousListToStream(const QVariant& variant, QXmlStreamWriter& xmlstream);
 	void writeVariantListToStream(const QVariant &variant, QXmlStreamWriter& xmlstream);
 	void writeVariantMapToStream(const QVariant& variant, QXmlStreamWriter& xmlstream);
 	void writeVariantOrderedMapToStream(const QVariant& variant, QXmlStreamWriter& xmlstream);
+	void writeAttributedQVariantToStream(const QVariant& variant, QXmlStreamWriter* xmlstream);
+
 	void writeVariantValueToStream(const QVariant& variant, QXmlStreamWriter& xmlstream);
 
 	/// @}

@@ -48,8 +48,8 @@
 #include "AbstractTreeModelHeaderItem.h"
 #include <utils/DebugHelpers.h>
 #include <logic/serialization/XmlSerializer.h>
-#include "ScanResultsTreeModel.h"
-#include "ThreadsafeTreeModel.h"
+//#include "ScanResultsTreeModel.h"
+//#include "ThreadsafeTreeModel.h"
 
 /**
  * This really should never get called, since AbstractTreeModel is abstract.  Mostly here for an example for derived classes.

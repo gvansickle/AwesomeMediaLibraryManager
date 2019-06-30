@@ -22,3 +22,13 @@
  */
 #include <AMLMTrack.h>
 
+
+AMLM::Track::Track()
+{
+
+}
+
+AMLM::Track::~Track()
+{
+
+}

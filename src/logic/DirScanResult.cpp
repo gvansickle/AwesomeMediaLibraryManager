@@ -70,7 +70,12 @@ QVariant DirScanResult::toVariant() const
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
-	return map;
+//	return map;
+	AttributedQVariant retval;
+	retval.m_variant = map;
+	// Generate and insert a unique ID into the map.
+	retval.m_key_value_pairs.insert({"xml:id", tostdstr(QUuid::createUuid().toString(QUuid::WithoutBraces))});
+	return QVariant::fromValue(retval);
 }
 
 void DirScanResult::fromVariant(const QVariant& variant)
