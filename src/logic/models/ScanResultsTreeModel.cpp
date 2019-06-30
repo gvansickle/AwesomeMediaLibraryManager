@@ -40,12 +40,6 @@ void ScanResultsTreeModel::setBaseDirectory(const QUrl &base_directory)
 	m_base_directory = base_directory;
 }
 
-
-//bool ScanResultsTreeModel::appendItems(std::vector<std::shared_ptr<AbstractTreeModelItem>> new_items, const QModelIndex& parent)
-//{
-//	return BASE_CLASS::appendItems(std::move(new_items), parent);
-//}
-
 /**
  * ScanResultsTreeModel XML tags.
  */
@@ -99,7 +93,9 @@ QVariant ScanResultsTreeModel::toVariant() const
 
 	// Insert the invisible root item, which will recursively add all children.
 	/// @todo It also serves as the model's header, not sure that's a good overloading.
+	qDb() << "START tree serialize";
 	map_insert_or_die(map, XMLTAG_SRTM_ROOT_ITEM, m_root_item->toVariant());
+	qDb() << "END tree serialize";
 
 	// Timestamps for the start and end of the last full scan.
 	map_insert_or_die(map, XMLTAG_SRTM_TS_LAST_SCAN_START, QVariant(QDateTime()));

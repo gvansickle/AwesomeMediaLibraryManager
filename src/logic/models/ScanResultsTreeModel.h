@@ -47,10 +47,6 @@ class ScanResultsTreeModel : public ThreadsafeTreeModel, public virtual enable_s
 
 	using BASE_CLASS = ThreadsafeTreeModel;
 
-public:
-
-	static std::shared_ptr<ScanResultsTreeModel> construct(QObject *parent = nullptr);
-
 protected:
 	/**
 	 * The constructed model will NOT have a root, that's what construct() adds.
@@ -58,17 +54,14 @@ protected:
 	explicit ScanResultsTreeModel(QObject *parent = nullptr);
 
 public:
-    ~ScanResultsTreeModel() override = default;
+	static std::shared_ptr<ScanResultsTreeModel> construct(QObject *parent = nullptr);
+	~ScanResultsTreeModel() override = default;
 
     /**
      * Sets the base directory of the model.
      * @todo Not sure if we should support more than one or not, but should support "known alias paths".
      */
     void setBaseDirectory(const QUrl& base_directory);
-
-
-	/// Append a vector of AbstractTreeModelItem's as children of @p parent.
-//	bool appendItems(std::vector<std::shared_ptr<AbstractTreeModelItem>> new_items, const QModelIndex &parent = QModelIndex()) override;
 
 	/// @name Serialization
 	/// @{
@@ -79,6 +72,9 @@ public:
 	QTH_FRIEND_QDATASTREAM_OPS(ScanResultsTreeModel);
 
 	/// @}
+
+public Q_SLOTS:
+
 
 protected:
 	QString getXmlStreamName() const override { return "AMLMScanResults"; };

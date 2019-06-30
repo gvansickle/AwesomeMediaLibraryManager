@@ -23,11 +23,16 @@
 #ifndef SRC_LOGIC_AMLMTRACK_H_
 #define SRC_LOGIC_AMLMTRACK_H_
 
-/*
+namespace AMLM
+{
+
+/**
  *
  */
-class AMLMTrack
+class Track
 {
+};
+
 };
 
 #endif /* SRC_LOGIC_AMLMTRACK_H_ */

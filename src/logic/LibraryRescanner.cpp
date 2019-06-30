@@ -420,20 +420,20 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 			}
 
 			// Finally, move the new model items to their new home.
-#if 1 // signal
 			Q_ASSERT(new_items_vector_ptr->at(0));
+#if 1 // signal
 			tree_model_ptr->appendItems(*new_items_vector_ptr);
 			/// @temp
-			bool ok = tree_model_ptr->checkConsistency();
-			qDb() << "########################### TREE MODEL CHECK checkConsistency:" << ok;
+//			bool ok = tree_model_ptr->checkConsistency();
+//			qDb() << "########################### TREE MODEL CHECK checkConsistency:" << ok;
 			/// @temp Check if iterator works.
 			long node_ct = 0;
 			using ittype = map_value_iterator<decltype(tree_model_ptr->begin()->first), decltype(tree_model_ptr->begin()->second)>;
-			for(ittype it = std::begin(*tree_model_ptr); it != std::end(*tree_model_ptr); ++it)
-			{
-				node_ct++;
-			}
-			qDb() << "TREE MODEL ITERATOR COUNT:" << node_ct << ", MODEL SAYS:" << tree_model_ptr->get_total_model_node_count();
+//			for(ittype it = std::begin(*tree_model_ptr); it != std::end(*tree_model_ptr); ++it)
+//			{
+//				node_ct++;
+//			}
+//			qDb() << "TREE MODEL ITERATOR COUNT:" << node_ct << ", MODEL SAYS:" << tree_model_ptr->get_total_model_node_count();
 #else
 			Q_EMIT SIGNAL_StapToTreeModel(*new_items_vector_ptr);
 #endif
