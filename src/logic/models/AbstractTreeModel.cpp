@@ -409,9 +409,9 @@ bool AbstractTreeModel::checkConsistency()
 
 QVariant AbstractTreeModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
+	// Both ETM and KDEN are the same here.
     if (orientation == Qt::Horizontal && role == Qt::DisplayRole)
 	{
-    	/// @kden : dataColumn()
 		return m_root_item->data(section, role);
 	}
 
@@ -582,14 +582,14 @@ bool AbstractTreeModel::appendItems(std::vector<std::shared_ptr<AbstractTreeMode
     return true;
 }
 
-bool AbstractTreeModel::appendItem(std::shared_ptr<AbstractTreeModelItem> new_item, const QModelIndex& parent)
-{
-	Q_ASSERT(0/*NOT IMPL*/);
-	std::vector<std::shared_ptr<AbstractTreeModelItem>> new_items;
+//bool AbstractTreeModel::appendItem(std::shared_ptr<AbstractTreeModelItem> new_item, const QModelIndex& parent)
+//{
+//	Q_ASSERT(0/*NOT IMPL*/);
+//	std::vector<std::shared_ptr<AbstractTreeModelItem>> new_items;
 
-	new_items.emplace_back(std::move(new_item));
-	return appendItems(std::move(new_items), parent);
-}
+//	new_items.emplace_back(std::move(new_item));
+//	return appendItems(std::move(new_items), parent);
+//}
 
 QModelIndex AbstractTreeModel::getIndexFromItem(const std::shared_ptr<AbstractTreeModelItem>& item) const
 {

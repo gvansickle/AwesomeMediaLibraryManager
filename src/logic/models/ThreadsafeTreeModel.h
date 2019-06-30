@@ -60,8 +60,15 @@ public:
 	static std::shared_ptr<ThreadsafeTreeModel> construct(QObject* parent = nullptr);
 	~ThreadsafeTreeModel() override;
 
+	/// @name The requestXxxx() interface.
+	///       Borrowed from KDenLive.  Admittedly not 100% clear on why KDenLive makes model operations even more
+	///       circuitous than stock Qt5 does, I think it's an attempt at threadsafety, but also undo/redo are involved.
+	///       KDen doesn't have any of these in this base model class.
+	/// @{
+
 	UUIncD requestAddItem(std::vector<QVariant> values, UUIncD parent_id,
 	                      Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
+	/// @}
 
 protected:
 

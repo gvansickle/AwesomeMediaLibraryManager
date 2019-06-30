@@ -192,13 +192,13 @@ public:
 	 */
 	 /// OLD
 	virtual bool appendItems(std::vector<std::shared_ptr<AbstractTreeModelItem> > new_items, const QModelIndex &parent = QModelIndex());
-	virtual bool appendItem(std::shared_ptr<AbstractTreeModelItem> new_items, const QModelIndex &parent = QModelIndex());
+//	virtual bool appendItem(std::shared_ptr<AbstractTreeModelItem> new_items, const QModelIndex &parent = QModelIndex());
 
 	QModelIndex getIndexFromItem(const std::shared_ptr<AbstractTreeModelItem>& item) const;
 	QModelIndex getIndexFromId(UUIncD id) const;
 	std::shared_ptr<AbstractTreeModelItem> getItemById(const UUIncD &id) const;
 	std::shared_ptr<AbstractTreeModelItem> getRootItem() const;
-	// ETM
+	// ETM/GRVS
 	std::shared_ptr<AbstractTreeModelItem> getItem(const QModelIndex &index) const;
 
 
@@ -223,13 +223,7 @@ public:
 
 	/// @} // END Lambda generators.
 
-	/// @name The requestXxxx() interface.
-	///       Borrowed from KDenLive.  Admittedly not 100% clear on why KDenLive makes model operations even more
-	///       circuitous than stock Qt5 does, I think it's an attempt at threadsafety, but also undo/redo are involved.
-	///       KDen doesn't have any of these in this base model class.
-	/// @{
 
-	/// @}
 
 	/// @name Serialization, from ISerializable.
 	/// Remember to override these in derived classes.
