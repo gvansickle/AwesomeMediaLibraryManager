@@ -63,7 +63,7 @@ public:
 	/// @name The requestXxxx() interface.
 	///       Borrowed from KDenLive.  Admittedly not 100% clear on why KDenLive makes model operations even more
 	///       circuitous than stock Qt5 does, I think it's an attempt at threadsafety, but also undo/redo are involved.
-	///       KDen doesn't have any of these in this base model class.
+	///       KDen doesn't have any of these in this base AbstractTreeModel class.
 	/// @{
 
 	UUIncD requestAddItem(std::vector<QVariant> values, UUIncD parent_id,

@@ -39,7 +39,7 @@
 class AbstractTreeModel;
 
 /**
- *
+ * Type representing a tree model's invisible root item which also doubles as the model's header item.
  */
 class AbstractTreeModelHeaderItem: public AbstractTreeModelItem, public enable_shared_from_this_virtual<AbstractTreeModelHeaderItem>
 {
@@ -84,7 +84,7 @@ public:
 protected:
 
 	/// @todo This is where we're ultimately headed, but QStrings in the interim.
-//	std::vector<ColumnSpec> m_column_specs;
+//	std::vector<AbstractHeaderSection> m_column_specs;
 
 };
 

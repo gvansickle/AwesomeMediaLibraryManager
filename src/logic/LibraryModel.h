@@ -37,15 +37,14 @@ class QFileDevice;
 // Ours
 #include <logic/serialization/ISerializable.h>
 #include <logic/dbmodels/CollectionDatabaseModel.h>
-
 #include <concurrency/ThreadsafeMap.h>
-
 #include "ColumnSpec.h"
 #include "Library.h"
 #include "LibraryRescanner.h" ///< For MetadataReturnVal
 #include "LibraryEntry.h"
 #include <jobs/LibraryEntryLoaderJob.h>
 #include "LibraryRescannerMapItem.h"
+#include <utils/RegisterQtMetatypes.h> ///< For common metatype declarations of C++ std types.
 
 
 class LibraryRescanner;
@@ -56,8 +55,6 @@ using VecOfPMIs = QVector<QPersistentModelIndex>;
 struct LibraryRescannerMapItem;
 
 Q_DECLARE_METATYPE(VecOfUrls);
-//Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE(std::vector);
-//Q_DECLARE_SMART_POINTER_METATYPE(std::shared_ptr);
 //Q_DECLARE_METATYPE(std::vector<std::shared_ptr<LibraryEntry>>);
 //Q_DECLARE_METATYPE(VecOfLEs);
 Q_DECLARE_METATYPE(VecOfPMIs);
