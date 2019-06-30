@@ -60,7 +60,7 @@ std::shared_ptr<AbstractTreeModel> AbstractTreeModel::construct(QObject* parent)
 {
 	std::shared_ptr<AbstractTreeModel> self(new AbstractTreeModel(parent));
 	self->m_root_item = AbstractTreeModelHeaderItem::construct(self, true);
-	self->m_model_tester = new QAbstractItemModelTester(self.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, self.get());
+//	self->m_model_tester = new QAbstractItemModelTester(self.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, self.get());
 	return self;
 }
 

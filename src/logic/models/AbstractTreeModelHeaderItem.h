@@ -83,6 +83,8 @@ public:
 
 protected:
 
+	std::shared_ptr<AbstractHeaderSection> getHeaderSection(int column);
+
 	/// @todo This is where we're ultimately headed, but QStrings in the interim.
 //	std::vector<AbstractHeaderSection> m_column_specs;
 

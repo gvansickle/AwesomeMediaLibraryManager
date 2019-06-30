@@ -1,7 +1,7 @@
 #include "ExperimentalKDEView1.h"
 #include "ui_ExperimentalKDEView1.h"
 
-
+#include <utils/ConnectHelpers.h>
 
 ExperimentalKDEView1::ExperimentalKDEView1(QWidget *parent) :
 	QWidget(parent),
@@ -39,6 +39,18 @@ bool ExperimentalKDEView1::setModel(ScanResultsTreeModel* model)
 //	view->setAlternatingBlockColors(true);
 //	view->setCollapsibleBlocks(false);
 //	view->setCategorySpacing(24);
+
+	view->expandAll();
+
+	// Hook up Just-In-Time item expansion.
+	connect_or_die(ui->m_top_level_tree_view->model(), &QAbstractItemModel::rowsInserted,
+				   this, [this](const QModelIndex& parent, int first, int last)
+	{
+		if(!ui->m_top_level_tree_view->isExpanded(parent))
+		{
+			ui->m_top_level_tree_view->expand(parent);
+		}
+	});
 
 	return true;
 }

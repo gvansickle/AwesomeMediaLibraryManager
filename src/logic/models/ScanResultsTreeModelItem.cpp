@@ -161,6 +161,11 @@ QVariant SRTMItem_LibEntry::data(int column, int role) const
 	{
 		return QVariant();
 	}
+
+	// We should have a valid LibraryEntry pointer.
+	Q_ASSERT(m_library_entry);
+
+#if 0
 	switch(column)
 	{
 		case 0:
@@ -173,6 +178,31 @@ QVariant SRTMItem_LibEntry::data(int column, int role) const
 			return QVariant();
 			break;
 	}
+#else
+
+	if(!m_library_entry->isPopulated())
+	{
+		return QVariant("???");
+	}
+
+	if(role == Qt::DisplayRole /*|| role == Qt::ToolTipRole*/)
+	{
+		switch(column)
+		{
+			case 0:
+				return m_library_entry->getFilename();
+				break;
+			case 1:
+				return m_library_entry->getFileType();
+				break;
+			default:
+				return QVariant();
+				break;
+		}
+	}
+	return QVariant();
+#endif
+
 }
 
 int SRTMItem_LibEntry::columnCount() const

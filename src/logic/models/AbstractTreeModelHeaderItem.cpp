@@ -28,6 +28,7 @@
 
 // Ours
 #include <logic/serialization/XmlObjects.h>
+#include "AbstractHeaderSection.h"
 
 
 // static
@@ -184,6 +185,16 @@ M_WARNING("NEED TO GO THROUGH MODEL HERE?");
 
 	// Append the children we read in to our list all in one batch.
 	this->appendChildren(std::move(temp_items));
+}
+
+std::shared_ptr<AbstractHeaderSection> AbstractTreeModelHeaderItem::getHeaderSection(int column)
+{
+	// This is just a type conversion from the base class's vector<QVariant>.
+	QVariant var = m_item_data.at(column);
+	Q_ASSERT(var.canConvert<std::shared_ptr<AbstractHeaderSection>>());
+	auto retval = var.value<std::shared_ptr<AbstractHeaderSection>>();
+
+	return retval;
 }
 
 
