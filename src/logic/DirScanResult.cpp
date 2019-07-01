@@ -45,7 +45,7 @@ AMLM_QREG_CALLBACK([](){
 
 
 DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_finfo)
-	: m_exturl_media(found_url, &found_url_finfo)
+	: IUUIDSerializable("id_dsr_"), m_exturl_media(found_url, &found_url_finfo)
 {
 	determineDirProps(found_url_finfo);
 }
@@ -73,14 +73,16 @@ QVariant DirScanResult::toVariant() const
 //	return map;
 	AttributedQVariant retval;// = AttributedQVariant(map, {"xml:id", tostdstr(QUuid::createUuid().toString(QUuid::WithoutBraces))});
 	retval.m_variant = map;
-	// Generate and insert a unique ID into the map.
-	retval.m_key_value_pairs.insert({"xml:id", "id_dsr_" + tostdstr(QUuid::createUuid().toString(QUuid::WithoutBraces))});
+	// Insert a unique ID into the AttQVar.
+//	retval.m_key_value_pairs.insert({"xml:id", "id_dsr_" + tostdstr(QUuid::createUuid().toString(QUuid::WithoutBraces))});
 	return QVariant::fromValue(retval);
 }
 
 void DirScanResult::fromVariant(const QVariant& variant)
 {
-	QVariantInsertionOrderedMap map(variant);
+	AttributedQVariant avar = variant.value<AttributedQVariant>();
+
+	QVariantInsertionOrderedMap map(avar.m_variant);
 
 	// Extract all the fields from the map.
 #define X(field_tag, member_field) map_read_field_or_warn(map, field_tag, &(member_field));

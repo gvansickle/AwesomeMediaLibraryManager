@@ -65,9 +65,22 @@ public:
 class IUUIDSerializable : public virtual ISerializable
 {
 public:
-	IUUIDSerializable() : m_uuid(QUuid::createUuid()) {};
+	M_GH_RULE_OF_FIVE_DEFAULT_C21(IUUIDSerializable);
+	explicit IUUIDSerializable(std::string uuid_prefix)
+		: m_uuid_prefix(uuid_prefix), m_uuid((!uuid_prefix.empty())?QUuid::createUuid():QUuid("null")) {};
 	~IUUIDSerializable() override = default;
 
+	bool isUuidNull() const { return m_uuid.isNull() || m_uuid_prefix.empty(); };
+
+	std::string get_prefixed_uuid() const
+	{
+		return m_uuid_prefix + m_uuid.toString(QUuid::WithoutBraces).toStdString();
+	}
+
+protected:
+//	void set_uuid() { m_uuid = QUuid::createUuid(); };
+
+	std::string m_uuid_prefix;
 	QUuid m_uuid;
 };
 
@@ -82,12 +95,19 @@ struct KeyValuePair
 class AttributedQVariant
 {
 public:
-	AttributedQVariant() {};
+	M_GH_RULE_OF_FIVE_DEFAULT_C21(AttributedQVariant);
 	AttributedQVariant(const QVariant& var, std::initializer_list<KeyValuePair> kvpairs) : m_variant(var)
 	{
 		for(const auto& it : kvpairs)
 		{
 			m_key_value_pairs.insert({it.m_key, it.m_value});
+		}
+	};
+	explicit AttributedQVariant(const IUUIDSerializable& var) : m_variant(var.toVariant())
+	{
+		if(!var.isUuidNull())
+		{
+			m_key_value_pairs.insert({"xml:id", var.get_prefixed_uuid()});
 		}
 	};
 	virtual ~AttributedQVariant() {};

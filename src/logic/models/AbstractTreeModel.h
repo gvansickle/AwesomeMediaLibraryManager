@@ -224,6 +224,13 @@ public:
 	/// @} // END Lambda generators.
 
 
+	/// @name Cut/Copy/Paste support.
+	/// @{
+
+	bool has_cut_item() const { return false; };
+
+	/// @}
+
 
 	/// @name Serialization, from ISerializable.
 	/// Remember to override these in derived classes.

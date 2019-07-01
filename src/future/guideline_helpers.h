@@ -36,6 +36,13 @@
 
 #define M_GH_RULE_OF_ZERO(classname) /* Nothing we can really do here, just for documentation purposes. */
 
+
+#define M_GH_IMPL_DEFAULT_OR_DELETE_COPY(classname, default_or_delete) \
+	/** Copy constructor. */ \
+	classname(const classname&) = default_or_delete; \
+	/** Copy assignment. */ \
+	classname& operator=(const classname&) = default_or_delete;
+
 #define M_GH_IMPL_DEFAULT_OR_DELETE_COPY_AND_MOVE(classname, default_or_delete) \
 	/** Copy constructor. */ \
 	classname(const classname&) = default_or_delete; \
@@ -58,6 +65,9 @@
 	/** Move assignment. */ \
 	classname& operator=(classname&&) = default_or_delete;
 
+///
+
+#define M_GH_DELETE_COPY(classname)  M_GH_IMPL_DEFAULT_OR_DELETE_COPY(classname, delete)
 #define M_GH_DELETE_COPY_AND_MOVE(classname) M_GH_IMPL_DEFAULT_OR_DELETE_COPY_AND_MOVE(classname, delete)
 
 #define M_GH_RULE_OF_FIVE_DEFAULT_C21(classname) IMPL_RULE_OF_FIVE(classname, default)
