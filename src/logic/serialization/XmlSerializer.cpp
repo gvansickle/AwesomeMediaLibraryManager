@@ -394,6 +394,10 @@ QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 	{
 		variant = readHomogenousListFromStream(xmlstream);
 	}
+	else if(metatype == f_attributed_qvariant_id)
+	{
+		variant = readAttributedQVariantFromStream(attributes, xmlstream);
+	}
 	else
 	{
 		switch(metatype)
@@ -618,6 +622,20 @@ QVariant XmlSerializer::readVariantOrderedMapFromStream(QXmlStreamReader& xmlstr
 		map.insert(xmlstream.name().toString(), readVariantFromStream(xmlstream));
 	}
 	return QVariant::fromValue(map);
+}
+
+QVariant XmlSerializer::readAttributedQVariantFromStream(QXmlStreamAttributes attributes, QXmlStreamReader& xmlstream)
+{
+	AttributedQVariant retval;
+
+	for(const auto& it : attributes)
+	{
+		retval.m_key_value_pairs.insert({it.qualifiedName().toString().toStdString(), it.value().toString().toStdString()});
+	}
+
+	retval.m_variant = readVariantFromStream(xmlstream);
+
+	return QVariant::fromValue(retval);
 }
 
 void XmlSerializer::check_for_stream_error_and_skip(QXmlStreamReader& xmlstream)
