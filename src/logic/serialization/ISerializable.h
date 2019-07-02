@@ -88,6 +88,7 @@ Q_DECLARE_METATYPE(IUUIDSerializable*);
 
 struct KeyValuePair
 {
+	KeyValuePair(std::string key, std::string value) : m_key(key), m_value(value) {};
 	std::string m_key;
 	std::string m_value;
 };
@@ -112,10 +113,12 @@ public:
 	};
 	virtual ~AttributedQVariant() {};
 
+	/// The attributes as key/value pairs.
 	std::map<std::string, std::string> m_key_value_pairs;
 	QVariant m_variant;
 };
 
+/// So we can use these in QVariant's.
 Q_DECLARE_METATYPE(AttributedQVariant);
 
 template <class OutMapType>

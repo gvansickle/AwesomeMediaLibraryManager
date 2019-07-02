@@ -71,8 +71,12 @@ QVariant DirScanResult::toVariant() const
 #undef X
 
 //	return map;
-	AttributedQVariant retval;// = AttributedQVariant(map, {"xml:id", tostdstr(QUuid::createUuid().toString(QUuid::WithoutBraces))});
-	retval.m_variant = map;
+	Q_ASSERT(!isUuidNull());
+	AttributedQVariant retval = AttributedQVariant(map, {
+													   //{"xml:id", tostdstr(QUuid::createUuid().toString(QUuid::WithoutBraces))}
+													   {"xml:id", get_prefixed_uuid()}
+												   });
+//	retval.m_variant = map;
 	// Insert a unique ID into the AttQVar.
 //	retval.m_key_value_pairs.insert({"xml:id", "id_dsr_" + tostdstr(QUuid::createUuid().toString(QUuid::WithoutBraces))});
 	return QVariant::fromValue(retval);

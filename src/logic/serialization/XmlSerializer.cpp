@@ -151,6 +151,17 @@ void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant
 	xmlstream.writeStartElement(nodeName);
 	xmlstream.writeAttribute("type", variant.typeName());
 
+	InnerWriteVariantToStream(variant, &xmlstream);
+
+
+	xmlstream.writeEndElement();
+}
+
+void XmlSerializer::InnerWriteVariantToStream(const QVariant& variant, QXmlStreamWriter* xmlstream)
+{
+	// Handles the QVariant type dispatch and basically everything between the writing of the node name and type
+	// and the end element.
+
 	/**
 	 * @note Uhhhhhh..... QMetaType sometimes != QVariant.type().
 	 *
@@ -171,12 +182,12 @@ void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant
 	 * ...oh, ok, a partial explanation:
 	 * From qvariant.h:495:
 	 * "// QVariant::Type is marked as \obsolete, but we don't want to
-    // provide a constructor from its intended replacement,
-    // QMetaType::Type, instead, because the idea behind these
-    // constructors is flawed in the first place. But we also don't
-    // want QVariant(QMetaType::String) to compile and falsely be an
-    // int variant, so delete this constructor:
-    QVariant(QMetaType::Type) Q_DECL_EQ_DELETE;"
+	// provide a constructor from its intended replacement,
+	// QMetaType::Type, instead, because the idea behind these
+	// constructors is flawed in the first place. But we also don't
+	// want QVariant(QMetaType::String) to compile and falsely be an
+	// int variant, so delete this constructor:
+	QVariant(QMetaType::Type) Q_DECL_EQ_DELETE;"
 	 */
 
 	int type = variant.type(); // AFAICT this is just wrong.
@@ -190,21 +201,21 @@ void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant
 
 	if(usertype == f_iomap_id)
 	{
-		writeVariantOrderedMapToStream(variant, xmlstream);
+		writeVariantOrderedMapToStream(variant, *xmlstream);
 	}
 	else if(usertype == f_qvarlist_id)
 	{
-		writeQVariantHomogenousListToStream(variant, xmlstream);
+		writeQVariantHomogenousListToStream(variant, *xmlstream);
 	}
 	else if(usertype == f_serqvarlist_id)
 	{
 		QVariantHomogenousList list = variant.value<QVariantHomogenousList>();
 
-		writeQVariantHomogenousListToStream(list, xmlstream);
+		writeQVariantHomogenousListToStream(list, *xmlstream);
 	}
 	else if(usertype == f_attributed_qvariant_id)
 	{
-		writeVariantToStream(nodeName, variant.value<AttributedQVariant>(), xmlstream);
+		writeAttributedQVariantToStream(variant.value<AttributedQVariant>(), *xmlstream);
 	}
 	else
 	{
@@ -215,67 +226,27 @@ void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant
 				/// "Returns the variant as a QVariantList if the variant has userType() QMetaType::QVariantList
 				/// or QMetaType::QStringList"
 			case QMetaType::QStringList:
-				writeVariantListToStream(variant, xmlstream);
+				writeVariantListToStream(variant, *xmlstream);
 				break;
 			case QMetaType::QVariantMap:
-				writeVariantMapToStream(variant, xmlstream);
+				writeVariantMapToStream(variant, *xmlstream);
 				break;
 			default:
-				writeVariantValueToStream(variant, xmlstream);
+				writeVariantValueToStream(variant, *xmlstream);
 				break;
 		}
 	}
-	xmlstream.writeEndElement();
 }
 
-void XmlSerializer::writeVariantToStream(const QString& nodeName, const AttributedQVariant& variant, QXmlStreamWriter& xmlstream)
+void XmlSerializer::writeAttributedQVariantToStream(const AttributedQVariant& variant, QXmlStreamWriter& xmlstream)
 {
-	xmlstream.writeStartElement(nodeName);
-	xmlstream.writeAttribute("type", variant.m_variant.typeName());
-
-	// Handle attributes.
+	// Add the attributes to the XML tag's attributes list.
 	for(const auto& it : variant.m_key_value_pairs)
 	{
 		xmlstream.writeAttribute(toqstr(it.first), toqstr(it.second));
 	}
 
-	int type = variant.m_variant.type(); // AFAICT this is just wrong.
-	int usertype = variant.m_variant.userType(); // This matches variant.typeName()
-
-	if(usertype == f_iomap_id)
-	{
-		writeVariantOrderedMapToStream(variant.m_variant, xmlstream);
-	}
-	else if(usertype == f_qvarlist_id)
-	{
-		writeQVariantHomogenousListToStream(variant.m_variant, xmlstream);
-	}
-	else if(usertype == f_serqvarlist_id)
-	{
-		QVariantHomogenousList list = variant.m_variant.value<QVariantHomogenousList>();
-
-		writeQVariantHomogenousListToStream(list, xmlstream);
-	}
-	else
-	{
-		switch(usertype)//variant.type())
-		{
-			case QMetaType::QVariantList:
-				/// @link http://doc.qt.io/qt-5/qvariant.html#toList
-				/// "Returns the variant as a QVariantList if the variant has userType() QMetaType::QVariantList
-				/// or QMetaType::QStringList"
-			case QMetaType::QStringList:
-				writeVariantListToStream(variant.m_variant, xmlstream);
-				break;
-			case QMetaType::QVariantMap:
-				writeVariantMapToStream(variant.m_variant, xmlstream);
-				break;
-			default:
-				writeVariantValueToStream(variant.m_variant, xmlstream);
-				break;
-		}
-	}
-	xmlstream.writeEndElement();
+	InnerWriteVariantToStream(variant.m_variant, &xmlstream);
 }
 
 void XmlSerializer::writeQVariantHomogenousListToStream(const QVariant& variant, QXmlStreamWriter& xmlstream)
