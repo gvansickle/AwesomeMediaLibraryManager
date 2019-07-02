@@ -594,13 +594,22 @@ QVariant XmlSerializer::readVariantOrderedMapFromStream(QXmlStreamReader& xmlstr
 	return QVariant::fromValue(map);
 }
 
-QVariant XmlSerializer::readAttributedQVariantFromStream(QXmlStreamAttributes attributes, QXmlStreamReader& xmlstream)
+QVariant XmlSerializer::readAttributedQVariantFromStream(const QXmlStreamAttributes& attributes, QXmlStreamReader& xmlstream)
 {
 	AttributedQVariant retval;
 
-	for(const auto& it : attributes)
+	QXmlStreamAttributes attributes_cp = xmlstream.attributes();
+
+	for(const auto& it : qAsConst(attributes_cp))
 	{
-		retval.m_key_value_pairs.insert({it.qualifiedName().toString().toStdString(), it.value().toString().toStdString()});
+		// Skip "type"  attribute.
+		QString type = QStringLiteral("type");
+		QString qualname = it.qualifiedName().toString();
+		if(qualname == type)
+		{
+			continue;
+		}
+		retval.m_key_value_pairs.insert({qualname.toStdString(), it.value().toString().toStdString()});
 	}
 
 	retval.m_variant = readVariantFromStream(xmlstream);

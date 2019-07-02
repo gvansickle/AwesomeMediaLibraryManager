@@ -105,7 +105,7 @@ private:
 	QVariant readVariantListFromStream(QXmlStreamReader& xmlstream);
 	QVariant readVariantMapFromStream(QXmlStreamReader& xmlstream);
 	QVariant readVariantOrderedMapFromStream(QXmlStreamReader& xmlstream);
-	QVariant readAttributedQVariantFromStream(QXmlStreamAttributes attributes, QXmlStreamReader& xmlstream);
+	QVariant readAttributedQVariantFromStream(const QXmlStreamAttributes& attributes, QXmlStreamReader& xmlstream);
 
 	QVariant readVariantValueFromStream(QXmlStreamReader& xmlstream);
 
