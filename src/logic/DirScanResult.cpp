@@ -72,19 +72,18 @@ QVariant DirScanResult::toVariant() const
 
 //	return map;
 	Q_ASSERT(!isUuidNull());
+	// Insert the map and a unique ID into the AttQVar.
 	AttributedQVariant retval = AttributedQVariant(map, {
-													   //{"xml:id", tostdstr(QUuid::createUuid().toString(QUuid::WithoutBraces))}
 													   {"xml:id", get_prefixed_uuid()}
 												   });
-//	retval.m_variant = map;
-	// Insert a unique ID into the AttQVar.
-//	retval.m_key_value_pairs.insert({"xml:id", "id_dsr_" + tostdstr(QUuid::createUuid().toString(QUuid::WithoutBraces))});
 	return QVariant::fromValue(retval);
 }
 
 void DirScanResult::fromVariant(const QVariant& variant)
 {
 	AttributedQVariant avar = variant.value<AttributedQVariant>();
+	auto idval = avar.m_key_value_pairs.at("xml:id");
+	set_prefixed_uuid(idval);
 
 	QVariantInsertionOrderedMap map(avar.m_variant);
 

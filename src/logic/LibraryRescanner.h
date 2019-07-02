@@ -119,6 +119,7 @@ protected:
 	void ExpRunXQuery1(const QString& database_filename, const QString& in_filename);
 
 	void SaveDatabase(ScanResultsTreeModel* tree_model_ptr, const QString& database_filename);
+	void LoadDatabase(ScanResultsTreeModel* tree_model_ptr, const QString& database_filename);
 
 
 private:

@@ -153,7 +153,6 @@ void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant
 
 	InnerWriteVariantToStream(variant, &xmlstream);
 
-
 	xmlstream.writeEndElement();
 }
 

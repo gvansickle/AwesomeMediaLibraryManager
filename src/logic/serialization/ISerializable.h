@@ -77,8 +77,14 @@ public:
 		return m_uuid_prefix + m_uuid.toString(QUuid::WithoutBraces).toStdString();
 	}
 
+	void set_prefixed_uuid(std::string uuid_string)
+	{
+		Q_ASSERT(!m_uuid_prefix.empty());
+		m_uuid = QUuid::fromString(toqstr(uuid_string).remove(toqstr(m_uuid_prefix)));
+		Q_ASSERT(m_uuid.isNull());
+	}
+
 protected:
-//	void set_uuid() { m_uuid = QUuid::createUuid(); };
 
 	std::string m_uuid_prefix;
 	QUuid m_uuid;
