@@ -125,6 +125,47 @@ public:
 		return cit->second;
 	}
 
+	/// @name Attribute access
+	/// @{
+
+	template <class VectorLike>
+	void insert_attributes(const VectorLike& attr_list)
+	{
+		for(const auto& it : attr_list)
+		{
+			m_attribute_map[it.qualifiedName().toString().toStdString()] = it.value().toString().toStdString();
+		}
+	}
+
+	void insert_attributes(std::initializer_list<std::pair<std::string,std::string>> attr_list)
+	{
+		for(const auto& it : attr_list)
+		{
+			m_attribute_map[it.first] = it.second;
+		}
+	}
+
+	std::string get_attr(const std::string& key) const
+	{
+		auto it = m_attribute_map.find(key);
+		if(it == m_attribute_map.end())
+		{
+			return std::string();
+		}
+		else
+		{
+			return it->second;
+		}
+	}
+
+	using attr_map_type = std::map<std::string, std::string>;
+	attr_map_type get_attrs() const
+	{
+		return m_attribute_map;
+	}
+
+	/// @}
+
 	const_iterator cbegin() const { return std::cbegin(m_vector_of_elements); };
 	const_iterator begin() const { return this->cbegin(); }
 	const_iterator cend() const { return std::cend(m_vector_of_elements); };
@@ -153,6 +194,8 @@ protected:
 	underlying_container_type m_vector_of_elements;
 	// Map of keys to indexes in the vector.
 	std::map<KeyType, uc_size_type> m_map_of_keys_to_vector_indices;
+
+	std::map<std::string, std::string> m_attribute_map;
 
 };
 

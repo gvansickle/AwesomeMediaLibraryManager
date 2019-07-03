@@ -40,8 +40,8 @@
 // Ours
 #include <utils/DebugHelpers.h>
 #include <utils/Stopwatch.h>
+#include <future/future_algorithms.h>
 #include "ISerializable.h"
-
 
 void XmlSerializer::save(const ISerializable &serializable, const QUrl &file_url, const QString &root_name,
                          std::function<void(void)> extra_save_actions)
@@ -305,6 +305,12 @@ void XmlSerializer::writeVariantOrderedMapToStream(const QVariant& variant, QXml
 
 	QVariantInsertionOrderedMap omap = variant.value<QVariantInsertionOrderedMap>();
 
+	auto attrs = omap.get_attrs();
+	for(const auto& it : attrs)
+	{
+		xmlstream.writeAttribute(toqstr(it.first), toqstr(it.second));
+	}
+
 	for(const auto& i : omap)
 	{
 		writeVariantToStream(i.first, i.second, xmlstream);
@@ -348,13 +354,29 @@ QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 	Q_ASSERT(xmlstream.isStartElement());
 
 	QVariant variant;
+
+	variant = InnerReadVariantFromStream(typeString, attributes, xmlstream);
+
+	check_for_stream_error_and_skip(xmlstream);
+
+	return variant;
+}
+
+QVariant XmlSerializer::InnerReadVariantFromStream(QString typeString, QXmlStreamAttributes attributes, QXmlStreamReader& xmlstream)
+{
+	QVariant variant;
+
+	// Copy the attributes, removing "type".
+	std::vector<QXmlStreamAttribute> attributes_cp = attributes.toStdVector();
+	std::experimental::erase_if(attributes_cp, [](auto& attr){ return attr.qualifiedName() == "type" ? true : false; });
+
 	/// @todo QVariant::Type returned, switch is on QMetaType::Type.  OK but former is deprecated and clang-tidy warns.
 //	auto metatype_v = QVariant::nameToType(typeString.toStdString().c_str());
 	int metatype = QMetaType::type(typeString.toStdString().c_str());
 
 	if(metatype == f_iomap_id)
 	{
-		variant = readVariantOrderedMapFromStream(xmlstream);
+		variant = readVariantOrderedMapFromStream(attributes_cp, xmlstream);
 	}
 	else if(metatype == f_qvarlist_id)
 	{
@@ -366,7 +388,7 @@ QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 	}
 	else if(metatype == f_attributed_qvariant_id)
 	{
-		variant = readAttributedQVariantFromStream(attributes, xmlstream);
+		variant = readAttributedQVariantFromStream(attributes_cp, xmlstream);
 	}
 	else
 	{
@@ -399,8 +421,6 @@ QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 //		// Not at an end element, parsing went wrong somehow.
 //		xmlstream.raiseError("#### NOT AT END ELEMENT, Reading xml stream failed, skipping to next start element");
 //	}
-
-	check_for_stream_error_and_skip(xmlstream);
 
 	return variant;
 }
@@ -525,7 +545,7 @@ QVariant XmlSerializer::readVariantValueFromStream(QXmlStreamReader& xmlstream)
 
 		if(!is_compatible)
 		{
-			xmlstream.raiseError(QString("ERROR: CAN'T CONVERT FROM QSTRING TO INCOMPATIBLE TYPE: %1 %2 %3 != %4")
+			xmlstream.raiseError(QString("ERROR: CAN'T CONVERT FROM QSTRING TO INCOMPATIBLE TYPE: %1/%2/%3 != %4")
 				.arg(attr_type_str)
 				.arg(metatype).arg(metatype_name).arg(metatype_v));
 		}
@@ -580,12 +600,15 @@ QVariant XmlSerializer::readVariantMapFromStream(QXmlStreamReader& xmlstream)
 	return map;
 }
 
-QVariant XmlSerializer::readVariantOrderedMapFromStream(QXmlStreamReader& xmlstream)
+QVariant XmlSerializer::readVariantOrderedMapFromStream(std::vector<QXmlStreamAttribute> attributes, QXmlStreamReader& xmlstream)
 {
 	// Only difference from readVariantMapFromStream() is the local map type we use.
 	QVariantInsertionOrderedMap map;
 
 	Q_ASSERT(xmlstream.isStartElement());
+
+	// Add the attributes to the map, under a "ATTR" item.
+	map.insert_attributes(attributes);
 
 	while(xmlstream.readNextStartElement())
 	{
@@ -594,25 +617,39 @@ QVariant XmlSerializer::readVariantOrderedMapFromStream(QXmlStreamReader& xmlstr
 	return QVariant::fromValue(map);
 }
 
-QVariant XmlSerializer::readAttributedQVariantFromStream(const QXmlStreamAttributes& attributes, QXmlStreamReader& xmlstream)
+QVariant XmlSerializer::readAttributedQVariantFromStream(std::vector<QXmlStreamAttribute> attributes, QXmlStreamReader& xmlstream)
 {
 	AttributedQVariant retval;
 
-	QXmlStreamAttributes attributes_cp = xmlstream.attributes();
+	Q_ASSERT(xmlstream.isStartElement());
 
-	for(const auto& it : qAsConst(attributes_cp))
+	// Thanks Qt5.
+	if(attributes.size() > 0)
+	{
+		qDb() << "Attributes" << attributes[0].name();
+	}
+	else
+	{
+		qDb() << "Attributes EMPTY";
+	}
+	const std::vector<QXmlStreamAttribute> attributes_cp = attributes;
+//	const QXmlStreamAttributes attributes_cp = xmlstream.attributes();
+	decltype(attributes_cp)::const_iterator it;
+	const std::string type = "type";
+	for(it = attributes_cp.cbegin(); it != attributes_cp.cend(); ++it)
 	{
 		// Skip "type"  attribute.
-		QString type = QStringLiteral("type");
-		QString qualname = it.qualifiedName().toString();
+		std::string qualname = it->qualifiedName().toString().toStdString();
+		std::string value = it->value().toString().toStdString();
 		if(qualname == type)
 		{
 			continue;
 		}
-		retval.m_key_value_pairs.insert({qualname.toStdString(), it.value().toString().toStdString()});
+		retval.m_key_value_pairs.insert({qualname, value});
 	}
 
-	retval.m_variant = readVariantFromStream(xmlstream);
+	qDb() << "xmlstream tokenString:" << xmlstream.tokenString();
+//	retval.m_variant = readVariantValueFromStream(xmlstream);
 
 	return QVariant::fromValue(retval);
 }

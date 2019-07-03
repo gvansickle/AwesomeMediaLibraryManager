@@ -27,7 +27,7 @@
 // Std C++
 #include <functional>
 #include <variant>
-
+#include <vector>
 
 // Qt5
 #include <QXmlStreamWriter>
@@ -100,12 +100,14 @@ private:
 	/// @{
 
 	QVariant readVariantFromStream(QXmlStreamReader& xmlstream);
+	QVariant InnerReadVariantFromStream(QString typeString, QXmlStreamAttributes attributes, QXmlStreamReader& xmlstream);
+
 
 	QVariant readHomogenousListFromStream(QXmlStreamReader& xmlstream);
 	QVariant readVariantListFromStream(QXmlStreamReader& xmlstream);
 	QVariant readVariantMapFromStream(QXmlStreamReader& xmlstream);
-	QVariant readVariantOrderedMapFromStream(QXmlStreamReader& xmlstream);
-	QVariant readAttributedQVariantFromStream(const QXmlStreamAttributes& attributes, QXmlStreamReader& xmlstream);
+	QVariant readVariantOrderedMapFromStream(std::vector<QXmlStreamAttribute> attributes, QXmlStreamReader& xmlstream);
+	QVariant readAttributedQVariantFromStream(std::vector<QXmlStreamAttribute> attributes, QXmlStreamReader& xmlstream);
 
 	QVariant readVariantValueFromStream(QXmlStreamReader& xmlstream);
 
