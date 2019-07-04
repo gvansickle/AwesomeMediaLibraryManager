@@ -292,6 +292,17 @@ void AbstractTreeModel::deregister_item(UUIncD id, AbstractTreeModelItem* item)
 	m_model_item_map.erase(id);
 }
 
+void AbstractTreeModel::notifyColumnsAboutToInserted(const std::shared_ptr<AbstractTreeModelItem>& parent, int first_column, int last_column)
+{
+	auto parent_index = getIndexFromItem(parent);
+	beginInsertColumns(parent_index, first_column, last_column);
+}
+
+void AbstractTreeModel::notifyColumnsInserted()
+{
+	endInsertColumns();
+}
+
 #if EVER_NEEDED
 void AbstractTreeModel::notifyRowsAboutToInsert(const std::shared_ptr<AbstractTreeModelItem>& row, int first, int last)
 {

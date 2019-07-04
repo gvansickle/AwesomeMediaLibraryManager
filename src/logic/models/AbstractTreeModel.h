@@ -143,8 +143,7 @@ public:
     /**
      * Inserts @a num_columns new columns into the model before column @a insert_before_column.  If
      * @a insert_before_column is 0, columns are still prepended, and if it's columnCount(), they're still prepended
-     * to the non-existent one-past-the-end column;
-     * i.e. they're appended to the list.
+     * to the non-existent one-past-the-end column, i.e. they're appended to the list.
      *
      * @return true on success.
      */
@@ -277,6 +276,9 @@ protected:
 	   @param row is the new element
 	*/
 //	void notifyRowsInserted(const std::shared_ptr<AbstractTreeModelItem>& row);
+
+	void notifyColumnsAboutToInserted(const std::shared_ptr<AbstractTreeModelItem>& parent, int first_column, int last_column);
+	void notifyColumnsInserted();
 
 	/**
 	 * Send the appropriate pre-notification related to a row that we are appending.

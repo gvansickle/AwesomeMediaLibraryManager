@@ -75,10 +75,10 @@ QVariant AbstractTreeModelHeaderItem::data(int column, int role) const
 	return QVariant();
 }
 
-int AbstractTreeModelHeaderItem::columnCount() const
-{
-	return m_item_data.size();
-}
+//int AbstractTreeModelHeaderItem::columnCount() const
+//{
+//	return m_item_data.size();
+//}
 
 #define M_DATASTREAM_FIELDS(X) \
 	X(XMLTAG_HEADER_NUM_SECTIONS, header_num_sections)
@@ -148,6 +148,7 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 M_WARNING("NEED TO GO THROUGH MODEL HERE?");
 //	insertColumns(0, header_num_sections);
 
+//#error "WE NEVER GET HERE"
 	qDb() << "READING HEADER SECTION LIST," << header_num_sections << "COLUMNS:"  << header_section_list;
 
 	int section_index = 0;

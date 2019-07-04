@@ -150,7 +150,7 @@ void XmlSerializer::load(ISerializable& serializable, const QUrl &file_url)
 static const int f_iomap_id = qMetaTypeId<QVariantInsertionOrderedMap>();
 static const int f_qvarlist_id = qMetaTypeId<QVariantHomogenousList>();
 static const int f_serqvarlist_id = qMetaTypeId<SerializableQVariantList>();
-static const int f_attributed_qvariant_id = qMetaTypeId<AttributedQVariant>();
+//static const int f_attributed_qvariant_id = qMetaTypeId<AttributedQVariant>();
 
 void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant& variant, QXmlStreamWriter& xmlstream)
 {
@@ -218,10 +218,10 @@ void XmlSerializer::InnerWriteVariantToStream(const QVariant& variant, QXmlStrea
 
 		writeQVariantHomogenousListToStream(list, *xmlstream);
 	}
-	else if(usertype == f_attributed_qvariant_id)
-	{
-		writeAttributedQVariantToStream(variant.value<AttributedQVariant>(), *xmlstream);
-	}
+//	else if(usertype == f_attributed_qvariant_id)
+//	{
+//		writeAttributedQVariantToStream(variant.value<AttributedQVariant>(), *xmlstream);
+//	}
 	else
 	{
 		switch(usertype)//variant.type())
@@ -392,10 +392,10 @@ QVariant XmlSerializer::InnerReadVariantFromStream(QString typeString, QXmlStrea
 	{
 		variant = readHomogenousListFromStream(xmlstream);
 	}
-	else if(metatype == f_attributed_qvariant_id)
-	{
-		variant = readAttributedQVariantFromStream(attributes_cp, xmlstream);
-	}
+//	else if(metatype == f_attributed_qvariant_id)
+//	{
+//		variant = readAttributedQVariantFromStream(attributes_cp, xmlstream);
+//	}
 	else
 	{
 		switch(metatype)

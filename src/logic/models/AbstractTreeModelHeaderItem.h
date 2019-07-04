@@ -45,16 +45,16 @@ class AbstractTreeModelHeaderItem: public AbstractTreeModelItem, public enable_s
 {
 	using BASE_CLASS = AbstractTreeModelItem;
 
-public:
-
-	static std::shared_ptr<AbstractTreeModelHeaderItem> construct(const std::shared_ptr<AbstractTreeModel>& model, bool isRoot = true,
-	                                                              UUIncD id = UUIncD::null());
-
 protected:
 	explicit AbstractTreeModelHeaderItem(const std::shared_ptr<AbstractTreeModel>& parent_model, bool isRoot, UUIncD id = UUIncD::null());
 
 public:
-	 ~AbstractTreeModelHeaderItem() override;
+	/**
+	 * Named constructor.
+	 */
+	static std::shared_ptr<AbstractTreeModelHeaderItem> construct(const std::shared_ptr<AbstractTreeModel>& model, bool isRoot = true,
+	                                                              UUIncD id = UUIncD::null());
+	~AbstractTreeModelHeaderItem() override;
 
 	 /**
 	  * @warning This must be called before any child items are added to the model.
@@ -65,7 +65,7 @@ public:
 
 	QVariant data(int column, int role = Qt::DisplayRole) const override;
 
-	int columnCount() const override;
+//	int columnCount() const override;
 
 
 	/// @name Serialization
@@ -84,9 +84,6 @@ public:
 protected:
 
 	std::shared_ptr<AbstractHeaderSection> getHeaderSection(int column);
-
-	/// @todo This is where we're ultimately headed, but QStrings in the interim.
-//	std::vector<AbstractHeaderSection> m_column_specs;
 
 };
 

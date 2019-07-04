@@ -153,21 +153,26 @@ int AbstractTreeModelItem::childNumber() const
 
 bool AbstractTreeModelItem::insertColumns(int insert_before_column, int num_columns)
 {
+	/// @todo Force this to only be called at the root level?
+	Q_ASSERT(m_is_root);
+
 	if (insert_before_column < 0 || insert_before_column > m_item_data.size())
 	{
 		// Check if we're out of bounds.
 		/// @todo Probably assert here?
+		Q_ASSERT_X(0, __PRETTY_FUNCTION__, "Bad insert_before_column");
         return false;
 	}
 
-	// Insert new columns in this.
-//	bool success = derivedClassInsertColumns(insert_before_column, num_columns);
+	// Insert new, empty columns in this.
+	// Note that we're really doing a sort of "push_back_from_middle()" here by not taking the column var into account
+	// when we do the actual insert.
 	for (int column = 0; column < num_columns; ++column)
 	{
-		m_item_data.insert(m_item_data.begin()+insert_before_column, QVariant());
+		m_item_data.insert(m_item_data.begin() + insert_before_column, QVariant("???"));
 	}
 
-	// Insert new columns in children.
+	// Propagate the column insertion to our children.
 	for(auto& child : m_child_items)
 	{
         child->insertColumns(insert_before_column, num_columns);
@@ -176,10 +181,25 @@ bool AbstractTreeModelItem::insertColumns(int insert_before_column, int num_colu
     return true;
 }
 
-//std::weak_ptr<AbstractTreeModelItem> AbstractTreeModelItem::parent()
-//{
-//	return m_parent_item;
-//}
+bool AbstractTreeModelItem::removeColumns(int position, int columns)
+{
+	// Check that the range is within our number of real columns.
+	if (position < 0 || position + columns > m_item_data.size())
+	{
+		return false;
+	}
+
+	/// @note Don't need a remove() here, items will be deleted.
+	m_item_data.erase(m_item_data.begin()+position, m_item_data.begin()+position+columns);
+
+	// Remove columns from all children.
+	for(auto& child : m_child_items)
+	{
+		child->removeColumns(position, columns);
+	}
+
+	return true;
+}
 
 std::weak_ptr<AbstractTreeModelItem> AbstractTreeModelItem::parent() const
 {
@@ -389,26 +409,6 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 	}
 }
 
-
-bool AbstractTreeModelItem::removeColumns(int position, int columns)
-{
-	// Check that the range is within our number of real columns.
-	if (position < 0 || position + columns > m_item_data.size())
-	{
-		return false;
-	}
-
-	/// @note Don't need a remove() here, items will be deleted.
-	m_item_data.erase(m_item_data.begin()+position, m_item_data.begin()+position+columns);
-
-	// Remove columns from all children.
-	for(auto& child : m_child_items)
-	{
-        child->removeColumns(position, columns);
-	}
-
-    return true;
-}
 
 QVariant AbstractTreeModelItem::data(int column, int role) const
 {
@@ -676,6 +676,7 @@ void AbstractTreeModelItem::deregisterSelf()
 
 void AbstractTreeModelItem::updateParent(std::shared_ptr<AbstractTreeModelItem> parent)
 {
+	// New parent.
 	m_parent_item = parent;
 	if(parent)
 	{

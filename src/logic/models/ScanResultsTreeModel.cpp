@@ -91,15 +91,15 @@ QVariant ScanResultsTreeModel::toVariant() const
 	///	A sample date is "2005-01-08T17:10:47-05:00".
 	map_insert_or_die(map, XMLTAG_SRTM_DATE, QDateTime::currentDateTimeUtc().toString(Qt::ISODate));
 
+	// Timestamps for the start and end of the last full scan.
+	map_insert_or_die(map, XMLTAG_SRTM_TS_LAST_SCAN_START, QVariant(QDateTime()));
+	map_insert_or_die(map, XMLTAG_SRTM_TS_LAST_SCAN_END, QVariant(QDateTime()));
+
 	// Insert the invisible root item, which will recursively add all children.
 	/// @todo It also serves as the model's header, not sure that's a good overloading.
 	qDb() << "START tree serialize";
 	map_insert_or_die(map, XMLTAG_SRTM_ROOT_ITEM, m_root_item->toVariant());
 	qDb() << "END tree serialize";
-
-	// Timestamps for the start and end of the last full scan.
-	map_insert_or_die(map, XMLTAG_SRTM_TS_LAST_SCAN_START, QVariant(QDateTime()));
-	map_insert_or_die(map, XMLTAG_SRTM_TS_LAST_SCAN_END, QVariant(QDateTime()));
 
 	return map;
 }
@@ -122,6 +122,11 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 	QString creation_date;
 	map_read_field_or_warn(map, XMLTAG_SRTM_DATE, &creation_date);//.toString();
 
+	/// @todo Read these in.
+	QDateTime last_scan_start, last_scan_end;
+	map_read_field_or_warn(map, XMLTAG_SRTM_TS_LAST_SCAN_START, &last_scan_start);
+	map_read_field_or_warn(map, XMLTAG_SRTM_TS_LAST_SCAN_END, &last_scan_end);
+
 	/// @note This is a QVariantMap, contains abstract_tree_model_header as a QVariantList.
 //	if(m_root_item != nullptr)
 //	{
@@ -130,10 +135,10 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 //	m_root_item = std::make_shared<AbstractTreeModelHeaderItem>();
 //	m_root_item->fromVariant(map.value(SRTMTagToXMLTagMap[SRTMTag::ROOT_ITEM]));
 M_WARNING("TODO: There sometimes isn't a root item in the map.");
-//	map_read_field_or_warn(map, XMLTAG_SRTM_ROOT_ITEM, m_root_item);
-	/// @todo Read these in.
-	// SRTMItemTagToXMLTagMap[SRTMItemTag::TS_LAST_SCAN_START]
-	// SRTMItemTagToXMLTagMap[SRTMItemTag::TS_LAST_SCAN_END]
+	QVariantInsertionOrderedMap root_map;
+	map_read_field_or_warn(map, XMLTAG_SRTM_ROOT_ITEM, &root_map);
+	m_root_item->fromVariant(root_map);
+
 
 #warning @todo INCOMPLETE/error handling
 }

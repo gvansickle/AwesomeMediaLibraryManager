@@ -117,8 +117,10 @@ public:
 	/**
 	 * Insert default-constructed columns into this item/row.
 	 */
-	 // ETM
+	 // ETM, no KDEN
 	virtual bool insertColumns(int insert_before_column, int num_columns);
+	// ETM, no KDEN
+	virtual bool removeColumns(int position, int columns);
 
 	/// Returns a pointer to this item's parent.
 	/// ETM+KDEN
@@ -150,9 +152,6 @@ public:
 	 */
 	// ETM, KDEN only has appendChild().
 	virtual bool insertChildren(int position, int count, int columns);
-
-	// ETM, no KDEN
-    bool removeColumns(int position, int columns);
 
     /// The row number of this item in its parent's list of children.
     // ETM+KDEN (row())
