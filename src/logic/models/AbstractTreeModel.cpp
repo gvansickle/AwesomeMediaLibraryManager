@@ -628,6 +628,7 @@ int AbstractTreeModel::rowCount(const QModelIndex &parent) const
 	std::shared_ptr<AbstractTreeModelItem> parent_item;
 	if(!parent.isValid())
 	{
+		Q_CHECK_PTR(m_root_item);
 		parent_item = m_root_item;
 	}
 	else

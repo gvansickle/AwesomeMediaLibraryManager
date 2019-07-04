@@ -197,7 +197,7 @@ void LibraryRescanner::SaveDatabase(ScanResultsTreeModel* tree_model_ptr, const 
 	qIn() << "###### WROTE" << database_filename;
 }
 
-void LibraryRescanner::LoadDatabase(ScanResultsTreeModel* tree_model_ptr, const QString& database_filename)
+void LibraryRescanner::LoadDatabase(std::shared_ptr<ScanResultsTreeModel> tree_model_ptr, const QString& database_filename)
 {
 	qIn() << "###### READING" << database_filename;
 
@@ -504,7 +504,7 @@ M_WARNING("SHARED PTR");
 
 				/// Try to load it back in.
 				std::shared_ptr<ScanResultsTreeModel> load_tree = ScanResultsTreeModel::construct();
-				LoadDatabase(load_tree.get(), database_filename);
+				LoadDatabase(load_tree, database_filename);
 				SaveDatabase(load_tree.get(), "/home/gary/AMLMDatabaseRT.xml");
 
 /// @todo EXPERIMENTAL

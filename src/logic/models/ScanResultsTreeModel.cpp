@@ -123,14 +123,14 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 	map_read_field_or_warn(map, XMLTAG_SRTM_DATE, &creation_date);//.toString();
 
 	/// @note This is a QVariantMap, contains abstract_tree_model_header as a QVariantList.
-	if(m_root_item != nullptr)
-	{
-		m_root_item.reset();
-	}
+//	if(m_root_item != nullptr)
+//	{
+//		m_root_item.reset();
+//	}
 //	m_root_item = std::make_shared<AbstractTreeModelHeaderItem>();
 //	m_root_item->fromVariant(map.value(SRTMTagToXMLTagMap[SRTMTag::ROOT_ITEM]));
 M_WARNING("TODO: There sometimes isn't a root item in the map.");
-	map_read_field_or_warn(map, XMLTAG_SRTM_ROOT_ITEM, m_root_item);
+//	map_read_field_or_warn(map, XMLTAG_SRTM_ROOT_ITEM, m_root_item);
 	/// @todo Read these in.
 	// SRTMItemTagToXMLTagMap[SRTMItemTag::TS_LAST_SCAN_START]
 	// SRTMItemTagToXMLTagMap[SRTMItemTag::TS_LAST_SCAN_END]
