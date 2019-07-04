@@ -108,17 +108,23 @@ void XmlSerializer::load(ISerializable& serializable, const QUrl &file_url)
 
 
 	/// @todo EXTRA READ INFO NEEDS TO COME FROM CALLER
-	// Read the first start element,  namespace element we added.
+	// Read the first start element of the document.
 	/// @todo Don't just throw it away.
 	xmlstream.readNextStartElement();
 	qIn() << "First start element tag:" << xmlstream.name();
+
 //	if(xmlstream.readNextStartElement())
 //	{
 //		qIn() << "First start element tag:" << xmlstream.name() << ", skipping...";
 //		xmlstream.skipCurrentElement();
 //	}
 
-	// Read the first element in the file.
+	if(!m_HACK_SKIP)
+	{
+//		load_extra_start_info(&xmlstream);
+	}
+
+	// Read the first "real" element in the file.
 	if(!xmlstream.readNextStartElement())
 	{
 		// Something went wrong.
@@ -386,10 +392,10 @@ QVariant XmlSerializer::InnerReadVariantFromStream(QString typeString, QXmlStrea
 	{
 		variant = readHomogenousListFromStream(xmlstream);
 	}
-	else if(metatype == f_attributed_qvariant_id)
-	{
-		variant = readAttributedQVariantFromStream(attributes_cp, xmlstream);
-	}
+//	else if(metatype == f_attributed_qvariant_id)
+//	{
+//		variant = readAttributedQVariantFromStream(attributes_cp, xmlstream);
+//	}
 	else
 	{
 		switch(metatype)
@@ -617,6 +623,7 @@ QVariant XmlSerializer::readVariantOrderedMapFromStream(std::vector<QXmlStreamAt
 	return QVariant::fromValue(map);
 }
 
+#if 0
 QVariant XmlSerializer::readAttributedQVariantFromStream(std::vector<QXmlStreamAttribute> attributes, QXmlStreamReader& xmlstream)
 {
 	AttributedQVariant retval;
@@ -653,6 +660,7 @@ QVariant XmlSerializer::readAttributedQVariantFromStream(std::vector<QXmlStreamA
 
 	return QVariant::fromValue(retval);
 }
+#endif
 
 void XmlSerializer::check_for_stream_error_and_skip(QXmlStreamReader& xmlstream)
 {
@@ -740,6 +748,18 @@ void XmlSerializer::save_extra_start_info(QXmlStreamWriter& xmlstream)
 //	xml.writeStartElement(m_tree_model->getXmlStreamName());
 //	xml.writeAttribute(AbstractTreeModelReader::versionAttribute(), m_tree_model->getXmlStreamVersion());
 #endif
+}
+
+void XmlSerializer::load_extra_start_info(QXmlStreamReader* xmlstream)
+{
+	// Write Start Element, default namespace and version.
+//	xmlstream.writeStartElement("amlm_database");
+//	xmlstream.writeDefaultNamespace(m_default_ns);
+	/// @temp Read "playlist"
+	xmlstream->readNextStartElement();
+	AMLM_ASSERT_EQ(xmlstream->name(), "playlist");
+//	xmlstream.writeAttribute("version", m_default_ns_version);
+//	xmlstream.writeNamespace("http://amlm/ns/0/", "amlm");
 }
 
 

@@ -203,6 +203,7 @@ void LibraryRescanner::LoadDatabase(ScanResultsTreeModel* tree_model_ptr, const 
 
 	XmlSerializer xmlser;
 	xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
+	xmlser.HACK_skip_extra(false);
 	xmlser.load(*tree_model_ptr, QUrl::fromLocalFile(database_filename));
 
 	qIn() << "###### TREEMODELPTR HAS NUM ROWS:" << tree_model_ptr->rowCount();

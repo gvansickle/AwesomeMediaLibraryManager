@@ -98,7 +98,7 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 
 	// Header info.
 	/// @todo Or is some of this really model info?  Children are.
-	map.insert(XMLTAG_HEADER_NUM_SECTIONS, columnCount());
+	map_insert_or_die(map, XMLTAG_HEADER_NUM_SECTIONS, columnCount());
 	for(int i = 0; i < columnCount(); ++i)
 	{
 		QVariant section = data(i);
@@ -109,10 +109,10 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 		}
 		header_section_list.push_back(section);
 	}
-	map.insert("header_section_list", header_section_list);
+	map_insert_or_die(map, "header_section_list", header_section_list);
 
 	qDb() << M_NAME_VAL(childCount());
-	map.insert("num_child_items", childCount());
+	map_insert_or_die(map, "num_child_items", childCount());
 
 	// Create a list of our children.
 	QVariantHomogenousList child_list("child_list", "child");
@@ -125,7 +125,6 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 	}
 
 	// Add list of child tree items to our QVariantMap.
-//	map.insert("child_node_list", list);
 	map_insert_or_die(map, "child_node_list", child_list);
 
 	return map;
@@ -140,20 +139,22 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	header_section_list = map.value("header_section_list").value<QVariantHomogenousList>();
 
 	// Read the number of header sections...
-	auto header_num_sections = map.value(XMLTAG_HEADER_NUM_SECTIONS).toInt();
+	int header_num_sections = 0;
+	map_read_field_or_warn(map, XMLTAG_HEADER_NUM_SECTIONS, &header_num_sections);
 	// ... and insert that many default-constructed columns to this HeaderItem.
 	// Note that the AbstractTreeModel forwards it's insertColumns() call to here, but it handles the begin/end signaling.
 	// So... I think we need to go through that mechanism if we're already in a model.
 	// But... we're being deserialized here, so will we have a model yet?
 M_WARNING("NEED TO GO THROUGH MODEL HERE?");
-	insertColumns(0, header_num_sections);
+//	insertColumns(0, header_num_sections);
 
 	qDb() << "READING HEADER SECTION LIST," << header_num_sections << "COLUMNS:"  << header_section_list;
 
 	int section_index = 0;
 	for(const QVariant& e : header_section_list)
 	{
-		setData(section_index, e);
+//		setData(section_index, e);
+		m_item_data.push_back(e);
 		section_index++;
 	}
 

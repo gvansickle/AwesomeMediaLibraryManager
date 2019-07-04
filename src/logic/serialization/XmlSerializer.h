@@ -65,6 +65,8 @@ public:
 
 	void load(ISerializable& serializable, const QUrl& file_url) override;
 
+	void HACK_skip_extra(bool hack_skip) { m_HACK_SKIP = hack_skip; };
+
 	/**
 	 * Call this before save() to set the default XML namespace.
 	 * @param default_ns
@@ -75,6 +77,7 @@ public:
 protected:
 
 	void save_extra_start_info(QXmlStreamWriter& xmlstream);
+	void load_extra_start_info(QXmlStreamReader* xmlstream);
 
 private:
 
@@ -107,7 +110,7 @@ private:
 	QVariant readVariantListFromStream(QXmlStreamReader& xmlstream);
 	QVariant readVariantMapFromStream(QXmlStreamReader& xmlstream);
 	QVariant readVariantOrderedMapFromStream(std::vector<QXmlStreamAttribute> attributes, QXmlStreamReader& xmlstream);
-	QVariant readAttributedQVariantFromStream(std::vector<QXmlStreamAttribute> attributes, QXmlStreamReader& xmlstream);
+//	QVariant readAttributedQVariantFromStream(std::vector<QXmlStreamAttribute> attributes, QXmlStreamReader& xmlstream);
 
 	QVariant readVariantValueFromStream(QXmlStreamReader& xmlstream);
 
@@ -136,6 +139,7 @@ private:
 	QString m_root_name;
 	QString m_default_ns;
 	QString m_default_ns_version;
+	bool m_HACK_SKIP {true};
 };
 
 #endif /* SRC_LOGIC_SERIALIZATION_XMLSERIALIZER_H_ */
