@@ -107,6 +107,7 @@ AMLM_QREG_CALLBACK([](){
 	DUP_NS_AND_NOT(RMT, uint32_t);
 	DUP_NS_AND_NOT(RMT, int64_t);
 	DUP_NS_AND_NOT(RMT, uint64_t);
+	DUP_NS_AND_NOT(RMT, size_t);
 });
 /// @todo Compile breaks if this is in the lambda.
 #undef RMT

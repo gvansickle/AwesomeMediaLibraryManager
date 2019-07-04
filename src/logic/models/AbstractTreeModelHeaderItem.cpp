@@ -75,11 +75,6 @@ QVariant AbstractTreeModelHeaderItem::data(int column, int role) const
 	return QVariant();
 }
 
-//int AbstractTreeModelHeaderItem::columnCount() const
-//{
-//	return m_item_data.size();
-//}
-
 #define M_DATASTREAM_FIELDS(X) \
 	X(XMLTAG_HEADER_NUM_SECTIONS, header_num_sections)
 
@@ -115,7 +110,7 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 	map_insert_or_die(map, "num_child_items", childCount());
 
 	// Create a list of our children.
-	QVariantHomogenousList child_list("child_list", "child");
+	QVariantHomogenousList child_list("child_node_list", "child");
 	child_list.clear();
 	for(int i = 0; i < childCount(); ++i)
 	{

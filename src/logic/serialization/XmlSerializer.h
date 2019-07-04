@@ -88,12 +88,12 @@ private:
 	                          const QVariant& variant, QXmlStreamWriter& xmlstream);
 	void InnerWriteVariantToStream(const QVariant& variant, QXmlStreamWriter* xmlstream);
 
-	void writeAttributedQVariantToStream(const AttributedQVariant& variant, QXmlStreamWriter& xmlstream);
+//	void writeAttributedQVariantToStream(const AttributedQVariant& variant, QXmlStreamWriter& xmlstream);
 	void writeQVariantHomogenousListToStream(const QVariant& variant, QXmlStreamWriter& xmlstream);
 	void writeVariantListToStream(const QVariant &variant, QXmlStreamWriter& xmlstream);
 	void writeVariantMapToStream(const QVariant& variant, QXmlStreamWriter& xmlstream);
 	void writeVariantOrderedMapToStream(const QVariant& variant, QXmlStreamWriter& xmlstream);
-	void writeAttributedQVariantToStream(const QVariant& variant, QXmlStreamWriter* xmlstream);
+//	void writeAttributedQVariantToStream(const QVariant& variant, QXmlStreamWriter* xmlstream);
 
 	void writeVariantValueToStream(const QVariant& variant, QXmlStreamWriter& xmlstream);
 
@@ -110,7 +110,7 @@ private:
 	QVariant readVariantListFromStream(QXmlStreamReader& xmlstream);
 	QVariant readVariantMapFromStream(QXmlStreamReader& xmlstream);
 	QVariant readVariantOrderedMapFromStream(std::vector<QXmlStreamAttribute> attributes, QXmlStreamReader& xmlstream);
-	QVariant readAttributedQVariantFromStream(std::vector<QXmlStreamAttribute> attributes, QXmlStreamReader& xmlstream);
+//	QVariant readAttributedQVariantFromStream(std::vector<QXmlStreamAttribute> attributes, QXmlStreamReader& xmlstream);
 
 	QVariant readVariantValueFromStream(QXmlStreamReader& xmlstream);
 

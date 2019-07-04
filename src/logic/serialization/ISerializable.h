@@ -92,6 +92,7 @@ protected:
 
 Q_DECLARE_METATYPE(IUUIDSerializable*);
 
+#if 0 // REMOVE?
 struct KeyValuePair
 {
 	KeyValuePair(std::string key, std::string value) : m_key(key), m_value(value) {};
@@ -126,6 +127,7 @@ public:
 
 /// So we can use these in QVariant's.
 Q_DECLARE_METATYPE(AttributedQVariant);
+#endif // OBSOLETE
 
 template <class OutMapType>
 void qviomap_from_qvar_or_die(OutMapType* map_out, const QVariant& var_in)

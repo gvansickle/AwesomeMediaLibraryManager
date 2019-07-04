@@ -243,16 +243,16 @@ void XmlSerializer::InnerWriteVariantToStream(const QVariant& variant, QXmlStrea
 	}
 }
 
-void XmlSerializer::writeAttributedQVariantToStream(const AttributedQVariant& variant, QXmlStreamWriter& xmlstream)
-{
-	// Add the attributes to the XML tag's attributes list.
-	for(const auto& it : variant.m_key_value_pairs)
-	{
-		xmlstream.writeAttribute(toqstr(it.first), toqstr(it.second));
-	}
-
-	InnerWriteVariantToStream(variant.m_variant, &xmlstream);
-}
+//void XmlSerializer::writeAttributedQVariantToStream(const AttributedQVariant& variant, QXmlStreamWriter& xmlstream)
+//{
+//	// Add the attributes to the XML tag's attributes list.
+//	for(const auto& it : variant.m_key_value_pairs)
+//	{
+//		xmlstream.writeAttribute(toqstr(it.first), toqstr(it.second));
+//	}
+//
+//	InnerWriteVariantToStream(variant.m_variant, &xmlstream);
+//}
 
 void XmlSerializer::writeQVariantHomogenousListToStream(const QVariant& variant, QXmlStreamWriter& xmlstream)
 {
@@ -613,7 +613,7 @@ QVariant XmlSerializer::readVariantOrderedMapFromStream(std::vector<QXmlStreamAt
 
 	Q_ASSERT(xmlstream.isStartElement());
 
-	// Add the attributes to the map, under a "ATTR" item.
+	// Add the attributes to the QVariantInsertionOrderedMap.
 	map.insert_attributes(attributes);
 
 	while(xmlstream.readNextStartElement())
@@ -623,6 +623,7 @@ QVariant XmlSerializer::readVariantOrderedMapFromStream(std::vector<QXmlStreamAt
 	return QVariant::fromValue(map);
 }
 
+#if 0 // REMOVE
 QVariant XmlSerializer::readAttributedQVariantFromStream(std::vector<QXmlStreamAttribute> attributes, QXmlStreamReader& xmlstream)
 {
 	AttributedQVariant retval;
@@ -659,6 +660,7 @@ QVariant XmlSerializer::readAttributedQVariantFromStream(std::vector<QXmlStreamA
 
 	return QVariant::fromValue(retval);
 }
+#endif
 
 void XmlSerializer::check_for_stream_error_and_skip(QXmlStreamReader& xmlstream)
 {

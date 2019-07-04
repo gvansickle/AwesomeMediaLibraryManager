@@ -41,7 +41,8 @@ Q_DECLARE_METATYPE(std::int32_t);
 Q_DECLARE_METATYPE(std::uint32_t);
 Q_DECLARE_METATYPE(std::int64_t);
 Q_DECLARE_METATYPE(std::uint64_t);
-
+//Q_DECLARE_METATYPE(std::size_t);
+//Q_DECLARE_METATYPE(std::ssize_t);
 
 void RegisterQtMetatypes();
 
