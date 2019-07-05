@@ -83,15 +83,25 @@ int ScanResultsTreeModelItem::columnCount() const
 	return 3;
 }
 
-using strviw_type = QLatin1Literal;
 
 #define M_DATASTREAM_FIELDS(X) \
-	X(XMLTAG_DIRSCANRESULT, m_dsr)
+	/* TAG_IDENTIFIER, tag_string, member_field, var_name */ \
+	X(XMLTAG_DIRSCANRESULT, m_dsr, m_dsr) \
+	/*X(XMLTAG_NUM_COLUMNS, num_columns, (qulonglong)m_item_data.size())*/ \
+	/*X(XMLTAG_ITEM_DATA_SIZE, item_data_size, (qulonglong)m_item_data.size())*/ \
+	/*X(XMLTAG_NUM_CHILDREN, num_children, (qulonglong)m_child_items.size())*/ \
+	X(XMLTAG_CHILD_NODE_LIST, child_node_list, nullptr)
+
 
 /// Strings to use for the tags.
-#define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
+using strviw_type = QLatin1Literal;
+
+///// Strings to use for the tags.
+#define X(field_tag, tag_string, var_name) static const strviw_type field_tag ( # tag_string );
 	M_DATASTREAM_FIELDS(X);
 #undef X
+
+
 
 QVariant ScanResultsTreeModelItem::toVariant() const
 {
@@ -100,19 +110,19 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 	/// @todo Will be more fields, justifying the map vs. value?
 	/// @todo Need the parent here too?  Probably needs to be handled by the parent, but maybe for error detection.
 
-#define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
+#define X(field_tag, tag_string, var_name) if constexpr(!std::is_null_pointer_v<decltype(var_name)>) { map_insert_or_die(map, field_tag, var_name); };
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
 	// Children to variant list.
-	QVariantHomogenousList vl("children", "child");
+	QVariantHomogenousList child_list(XMLTAG_CHILD_NODE_LIST, "child");
 	for(int i=0; i<childCount(); i++)
 	{
 		auto child_ptr = child(i);
 //		list_push_back_or_die(vl, child_ptr);
-		vl.push_back(child_ptr->toVariant());
+		child_list.push_back(child_ptr->toVariant());
 	}
-	map.insert("children", vl);
+	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, &child_list);
 
 	return map;
 }
@@ -121,7 +131,7 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 {
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
-#define X(field_tag, member_field) map_read_field_or_warn(map, field_tag, &(member_field));
+#define X(field_tag, tag_string, var_name) if constexpr(!std::is_null_pointer_v<decltype(var_name)>) { map_read_field_or_warn(map, field_tag, &var_name); };
 	M_DATASTREAM_FIELDS(X);
 #undef X
 

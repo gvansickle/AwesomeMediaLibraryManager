@@ -148,8 +148,8 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	// So... I think we need to go through that mechanism if we're already in a model.
 	// But... we're being deserialized here, so will we have a model yet?
 	Q_ASSERT(isInModel());
-	Q_ASSERT(m_model != nullptr);
-M_WARNING("NEED TO GO THROUGH MODEL HERE?");
+	Q_ASSERT(!m_model.expired());
+
 //	insertColumns(0, header_num_sections);
 
 	int section_index = 0;
