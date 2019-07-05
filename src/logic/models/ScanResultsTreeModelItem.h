@@ -45,11 +45,6 @@ class ScanResultsTreeModelItem : public AbstractTreeModelItem, public enable_sha
 {
 	using BASE_CLASS = AbstractTreeModelItem;
 
-public:
-	static std::shared_ptr<ScanResultsTreeModelItem> construct(const DirScanResult& dsr,
-            const std::shared_ptr<AbstractTreeModel> model,
-            bool is_root = false);
-
 protected:
 	/// Create a new model item populated with the passed DirScanResult.
 	explicit ScanResultsTreeModelItem(const DirScanResult& dsr,
@@ -57,6 +52,9 @@ protected:
 	                                  bool is_root = false);
 
 public:
+	static std::shared_ptr<ScanResultsTreeModelItem> construct(const DirScanResult& dsr,
+            const std::shared_ptr<AbstractTreeModel> model,
+            bool is_root = false);
 	~ScanResultsTreeModelItem() override;
 
 	void setDirscanResults(const DirScanResult& dsr);

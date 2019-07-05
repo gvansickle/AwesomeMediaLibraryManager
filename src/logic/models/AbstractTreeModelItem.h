@@ -206,6 +206,12 @@ public:
 	 QVariant toVariant() const override;
 	 void fromVariant(const QVariant& variant) override;
 
+	 /**
+	  * Call from derived classes from within toVariant()/fromVariant() if necessary.
+	  */
+	 virtual QVariant toVariantGuts() const;
+	 virtual void fromVariantGuts(const QVariant& variant) const;
+
     /// @}
 
     /**
@@ -249,6 +255,8 @@ protected:
 	/// The data for each column of this row.
 	std::vector<QVariant> m_item_data;
 
+	std::weak_ptr<AbstractTreeModel> m_model;
+
 private:
 
 	using ChildItemContainerType = std::deque<std::shared_ptr<AbstractTreeModelItem>>;
@@ -268,8 +276,6 @@ private:
 
 	/// Deque of shared_ptr's to child items.
 	std::deque<std::shared_ptr<AbstractTreeModelItem>> m_child_items;
-
-	std::weak_ptr<AbstractTreeModel> m_model;
 
 	int m_depth;
 

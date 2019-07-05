@@ -158,6 +158,10 @@ Q_DECLARE_METATYPE(SerializableQVariantList);
 /// @name Some helper templates.
 /// @{
 
+/**
+ *
+ * @param member  The ISerializer-derived member variable to insert.
+ */
 template <class MapType, class StringType>
 void map_insert_or_die(MapType& map, const StringType& key, const ISerializable& member)
 {
@@ -180,44 +184,34 @@ void map_insert_or_die(MapType& map, const StringType& key, const MemberType& me
 template <class MapType, class StringType, class RawMemberType>
 void map_read_field_or_warn(const MapType& map, const StringType& key, RawMemberType member)
 {
+	// Regardless, get the qvar out of the map.
+	QVariant qvar = map.value(key);
+	if(!qvar.isValid())
+	{
+		qWr() << "Couldn't read value of key '" << key << "' from map:" << map;
+		return;
+	}
 	if constexpr(std::is_convertible_v<RawMemberType, ISerializable*>)
 	{
-
-		if(QVariant qvar = map.value(key); qvar.isValid())
-		{
-			member->fromVariant(qvar);
-		}
-		else
-		{
-			qWr() << "Couldn't read field:" << key;
-		}
-	}
-}
-
-template <class MapType, class StringType, class MemberType,
-		  REQUIRES(!std::is_base_of_v<ISerializable, MemberType>)>
-void map_read_field_or_warn(const MapType& map, const StringType& key, MemberType* member)
-{
-	static_assert (!std::is_base_of_v<ISerializable, MemberType>, "DEDUCTION FAILED");
-	if(QVariant qvar = map.value(key); qvar.isValid())
-	{
-		*member = qvar.value<MemberType>();
+		// This value should know how to read itself from a QVariant.
+		member->fromVariant(qvar);
 	}
 	else
 	{
-		qWr() << "Couldn't read field:" << key;
+		// Try to read the value as a de-pointered RawMemberType.
+		Q_ASSERT(qvar.canConvert<std::remove_pointer_t<RawMemberType>>());
+		*member = qvar.value<std::remove_pointer_t<RawMemberType>>();
 	}
 }
 
 //template <class MapType, class StringType, class MemberType,
-//		  REQUIRES(!std::is_base_of_v<ISerializable, std::shared_ptr<MemberType>>)>
-//void map_read_field_or_warn(const MapType& map, const StringType& key, MemberType member)
+//		  REQUIRES(!std::is_base_of_v<ISerializable, MemberType>)>
+//void map_read_field_or_warn(const MapType& map, const StringType& key, MemberType* member)
 //{
 //	static_assert (!std::is_base_of_v<ISerializable, MemberType>, "DEDUCTION FAILED");
 //	if(QVariant qvar = map.value(key); qvar.isValid())
 //	{
-//M_WARNING("Does this need to transfer sharedness?");
-//		member = qvar.value<MemberType>();
+//		*member = qvar.value<MemberType>();
 //	}
 //	else
 //	{
@@ -250,6 +244,7 @@ void list_push_back_or_die(ListType& list, const ISerializable& member)
 
 /**
  * Push a single entry given by @a member onto the @a list.
+ * @todo Does this handle an incoming QVariant correctly?
  */
 template <class ListType, class MemberType,
 		  REQUIRES(!std::is_base_of_v<ISerializable, MemberType>)>

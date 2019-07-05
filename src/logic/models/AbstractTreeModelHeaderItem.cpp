@@ -76,7 +76,8 @@ QVariant AbstractTreeModelHeaderItem::data(int column, int role) const
 }
 
 #define M_DATASTREAM_FIELDS(X) \
-	X(XMLTAG_HEADER_NUM_SECTIONS, header_num_sections)
+	X(XMLTAG_HEADER_NUM_SECTIONS, header_num_sections) \
+	X(XMLTAG_CHILD_NODE_LIST, child_node_list)
 
 using strviw_type = QLatin1Literal;
 
@@ -89,6 +90,7 @@ using strviw_type = QLatin1Literal;
 QVariant AbstractTreeModelHeaderItem::toVariant() const
 {
 	QVariantInsertionOrderedMap map;
+
 	QVariantHomogenousList header_section_list("header_section_list", "section");
 
 	// Header info.
@@ -110,17 +112,20 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 	map_insert_or_die(map, "num_child_items", childCount());
 
 	// Create a list of our children.
-	QVariantHomogenousList child_list("child_node_list", "child");
+	auto model = m_model.lock();
+	Q_ASSERT(model);
+	QVariantHomogenousList child_list(XMLTAG_CHILD_NODE_LIST, "child");
 	child_list.clear();
 	for(int i = 0; i < childCount(); ++i)
 	{
+		AbstractTreeModelItem::construct({}, model, false);
 		const std::shared_ptr<AbstractTreeModelItem> child = this->child(i);
 		child_list.push_back(child->toVariant());
 //		list_push_back_or_warn(child_list, "child", child);
 	}
 
 	// Add list of child tree items to our QVariantMap.
-	map_insert_or_die(map, "child_node_list", child_list);
+	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, child_list);
 
 	return map;
 }
@@ -130,21 +135,22 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	QVariantInsertionOrderedMap map;
 	qviomap_from_qvar_or_die(&map, variant);
 
-	QVariantHomogenousList header_section_list("header_section_list", "section");
-	header_section_list = map.value("header_section_list").value<QVariantHomogenousList>();
-
 	// Read the number of header sections...
 	int header_num_sections = 0;
 	map_read_field_or_warn(map, XMLTAG_HEADER_NUM_SECTIONS, &header_num_sections);
+	QVariantHomogenousList header_section_list("header_section_list", "section");
+	header_section_list = map.value("header_section_list").value<QVariantHomogenousList>();
+
+	AMLM_ASSERT_EQ(header_num_sections, header_section_list.size());
+
 	// ... and insert that many default-constructed columns to this HeaderItem.
 	// Note that the AbstractTreeModel forwards it's insertColumns() call to here, but it handles the begin/end signaling.
 	// So... I think we need to go through that mechanism if we're already in a model.
 	// But... we're being deserialized here, so will we have a model yet?
+	Q_ASSERT(isInModel());
+	Q_ASSERT(m_model != nullptr);
 M_WARNING("NEED TO GO THROUGH MODEL HERE?");
 //	insertColumns(0, header_num_sections);
-
-//#error "WE NEVER GET HERE"
-	qDb() << "READING HEADER SECTION LIST," << header_num_sections << "COLUMNS:"  << header_section_list;
 
 	int section_index = 0;
 	for(const QVariant& e : header_section_list)
@@ -157,25 +163,18 @@ M_WARNING("NEED TO GO THROUGH MODEL HERE?");
 	/// @todo This is a QVariantList containing <item>/QVariantMap's, each of which
 	/// contains a single <scan_res_tree_model_item type="QVariantMap">, which in turn
 	/// contains a single <dirscanresult>/QVariantMap.
-	QVariantHomogenousList child_list = map.value("child_node_list").value<QVariantHomogenousList>();
+	QVariantHomogenousList child_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
 
-
-	// We'll break this into two phases:
-	/// @note Maybe not.  This node isn't in a model here yet.
-	/// Unless we can't parent the child here and it has to be appended through the model, but I think we can.
-	// 1. Deserialize the list into new, unparented ScanResultsTreeModelItems.
-	// 2. Add them as children of this model.
-	// This buys us a few things:
-	// 1. We could possibly do step 1 in a non-GUI thread.
-	// 2. We can add the children in a single batch vs. one at a time, avoiding the model/view signaling overhead.
-	// It does however burn more RAM.
 	std::vector<std::shared_ptr<AbstractTreeModelItem>> temp_items;
 	for(const QVariant& child : child_list)
 	{
 		qDb() << "READING CHILD ITEM:" << child;
-//		auto child_item = this->create_default_constructed_child_item(this, columnCount());
+
+
+
 		auto child_item = this->appendChild();
 		child_item->fromVariant(child);
+
 		// Save it off temporarily.
 		temp_items.push_back(std::move(child_item));
 	}

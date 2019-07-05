@@ -68,6 +68,7 @@ public:
 
 	UUIncD requestAddItem(std::vector<QVariant> values, UUIncD parent_id,
 	                      Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
+
 	/// @}
 
 protected:

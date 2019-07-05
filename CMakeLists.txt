@@ -233,6 +233,10 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	target_link_libraries(cxx_settings INTERFACE cxx_suggestions)
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	message(STATUS "C++ Compiler is Clang")
+	target_compile_options(cxx_compile_options
+		INTERFACE
+			-fforce-emit-vtables
+			)
 	ucm_add_flags(-Wthread-safety -fdebug-macro -fdiagnostics-show-template-tree -mno-omit-leaf-frame-pointer)
 	#ucm_add_flags(-fdelayed-template-parsing -frelaxed-template-template-args)
 endif()

@@ -63,6 +63,9 @@ public:
      */
     void setBaseDirectory(const QUrl& base_directory);
 
+	UUIncD requestAddItem(std::shared_ptr<ScanResultsTreeModelItem> item, UUIncD parent_id,
+						  Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
+
 	/// @name Serialization
 	/// @{
 

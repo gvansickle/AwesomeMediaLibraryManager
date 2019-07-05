@@ -118,7 +118,7 @@ protected:
 	/// Experimental: Run XQuery in a separate thread.
 	void ExpRunXQuery1(const QString& database_filename, const QString& in_filename);
 
-	void SaveDatabase(ScanResultsTreeModel* tree_model_ptr, const QString& database_filename);
+	void SaveDatabase(std::shared_ptr<ScanResultsTreeModel> tree_model_ptr, const QString& database_filename);
 	void LoadDatabase(std::shared_ptr<ScanResultsTreeModel> tree_model_ptr, const QString& database_filename);
 
 

@@ -40,6 +40,24 @@ void ScanResultsTreeModel::setBaseDirectory(const QUrl &base_directory)
 	m_base_directory = base_directory;
 }
 
+UUIncD ScanResultsTreeModel::requestAddItem(std::shared_ptr<ScanResultsTreeModelItem> item, UUIncD parent_id, Fun undo, Fun redo)
+{
+	std::unique_lock write_lock(m_rw_mutex);
+
+//	auto new_item = AbstractTreeModelItem::construct(values, std::static_pointer_cast<ThreadsafeTreeModel>(shared_from_this()), /*not root*/false);
+	/// @todo Temp, this prob won't work.
+	auto new_item = item;
+
+	bool status = addItem(new_item, parent_id, undo, redo);
+
+	if(!status)
+	{
+		// Add failed for some reason, return a null UUIncD.
+		return UUIncD::null();
+	}
+	return new_item->getId();
+}
+
 /**
  * ScanResultsTreeModel XML tags.
  */
@@ -128,16 +146,9 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 	map_read_field_or_warn(map, XMLTAG_SRTM_TS_LAST_SCAN_END, &last_scan_end);
 
 	/// @note This is a QVariantMap, contains abstract_tree_model_header as a QVariantList.
-//	if(m_root_item != nullptr)
-//	{
-//		m_root_item.reset();
-//	}
-//	m_root_item = std::make_shared<AbstractTreeModelHeaderItem>();
-//	m_root_item->fromVariant(map.value(SRTMTagToXMLTagMap[SRTMTag::ROOT_ITEM]));
-M_WARNING("TODO: There sometimes isn't a root item in the map.");
-	QVariantInsertionOrderedMap root_map;
-	map_read_field_or_warn(map, XMLTAG_SRTM_ROOT_ITEM, &root_map);
-	m_root_item->fromVariant(root_map);
+	QVariantInsertionOrderedMap root_item_map;
+	map_read_field_or_warn(map, XMLTAG_SRTM_ROOT_ITEM, &root_item_map);
+	m_root_item->fromVariant(root_item_map);
 
 
 #warning @todo INCOMPLETE/error handling

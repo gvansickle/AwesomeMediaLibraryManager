@@ -185,7 +185,7 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
     return retval;
 }
 
-void LibraryRescanner::SaveDatabase(ScanResultsTreeModel* tree_model_ptr, const QString& database_filename)
+void LibraryRescanner::SaveDatabase(std::shared_ptr<ScanResultsTreeModel> tree_model_ptr, const QString& database_filename)
 {
 	qIn() << "###### WRITING" << database_filename;
 	qIn() << "###### TREEMODELPTR HAS NUM ROWS:" << tree_model_ptr->rowCount();
@@ -499,13 +499,13 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 		        m_model_ready_to_save_to_db = false;
 				m_timer.lap("Start of SaveDatabase");
 M_WARNING("SHARED PTR");
-				SaveDatabase(tree_model_ptr.get(), database_filename);
+				SaveDatabase(tree_model_ptr, database_filename);
 				m_timer.lap("End of SaveDatabase");
 
 				/// Try to load it back in.
 				std::shared_ptr<ScanResultsTreeModel> load_tree = ScanResultsTreeModel::construct();
 				LoadDatabase(load_tree, database_filename);
-				SaveDatabase(load_tree.get(), "/home/gary/AMLMDatabaseRT.xml");
+				SaveDatabase(load_tree, "/home/gary/AMLMDatabaseRT.xml");
 
 /// @todo EXPERIMENTAL
 #if 0
