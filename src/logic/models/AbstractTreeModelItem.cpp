@@ -412,14 +412,22 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 	qulonglong num_children = 0;
 	map_read_field_or_warn(map, XMLTAG_NUM_CHILDREN, &num_children);
 
-	QVariantHomogenousList vchildren("children", "child");
-	map_read_field_or_warn(map, "children", &vchildren);
-	for(const auto& it : vchildren)
+	QVariantHomogenousList child_list = map.value("children").value<QVariantHomogenousList>();
+	std::vector<std::shared_ptr<AbstractTreeModelItem>> temp_items;
+	for(const QVariant& child : child_list)
 	{
-		auto child = it.value<std::shared_ptr<AbstractTreeModelItem>>();
-		m_child_items.push_back(child);
+		qDb() << "READING CHILD ITEM:" << child;
+//		auto child_item = this->create_default_constructed_child_item(this, columnCount());
+		auto child_item = this->appendChild();
+		child_item->fromVariant(child);
+		// Save it off temporarily.
+		temp_items.push_back(std::move(child_item));
 	}
 
+	// Append the children we read in to our list all in one batch.
+	this->appendChildren(std::move(temp_items));
+
+	Q_ASSERT(num_children == m_child_items.size());
 }
 
 
