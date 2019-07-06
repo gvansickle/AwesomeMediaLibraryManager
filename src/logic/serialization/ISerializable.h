@@ -158,72 +158,24 @@ Q_DECLARE_METATYPE(SerializableQVariantList);
 /// @name Some helper templates.
 /// @{
 
-/**
- *
- * @param member  The ISerializer-derived member variable to insert.
- */
-template <class MapType, class StringType>
-void map_insert_or_die(MapType& map, const StringType& key, const ISerializable& member)
-{
-	map.insert( key , member.toVariant() );
-}
-
-template <class MapType, class StringType, class MemberType,
-		  REQUIRES(!std::is_base_of_v<ISerializable, MemberType>)> ///< Not clear why these are required to get the ISerializable above to be preferred.
-void map_insert_or_die(MapType& map, const StringType& key, const MemberType& member)
-{
-	static_assert (!std::is_base_of_v<ISerializable, MemberType>, "DEDUCTION FAILED");
-	map.insert( key , QVariant::fromValue<MemberType>( member ) );
-
-}
-
-/// @name Read entries from a maplike type into the apropriate @a member.
-/// @{
-
-///// Ptrs to ISerializable-implementing members.
-//template <class MapType, class StringType, class RawMemberType>
-//void map_read_field_or_warn(const MapType& map, const StringType& key, RawMemberType member)
+///**
+// *
+// * @param member  The ISerializer-derived member variable to insert.
+// */
+//template <class MapType, class StringType>
+//void map_insert_or_die(MapType& map, const StringType& key, const ISerializable& member)
 //{
-//	// Regardless, get the qvar out of the map.
-//	QVariant qvar = map.value(key);
-//	if(!qvar.isValid())
-//	{
-//		qWr() << "Couldn't read value of key '" << key << "' from map:" << map;
-//		return;
-//	}
-//	if constexpr(std::is_convertible_v<RawMemberType, ISerializable*>)
-//	{
-//		// This value should know how to read itself from a QVariant.
-//		member->fromVariant(qvar);
-//	}
-//	else if constexpr(std::is_pointer_v<RawMemberType>)
-//	{
-//		*member = qvar.value<std::remove_pointer_t<RawMemberType>>();
-//	}
-//	else
-//	{
-//		// Try to read the value as a de-pointered RawMemberType.
-//		Q_ASSERT(qvar.canConvert<std::remove_pointer_t<RawMemberType>>());
-//		member = qvar.value<std::remove_pointer_t<RawMemberType>>();
-//	}
+//	map.insert( key , member.toVariant() );
 //}
 
 //template <class MapType, class StringType, class MemberType,
-//		  REQUIRES(!std::is_base_of_v<ISerializable, MemberType>)>
-//void map_read_field_or_warn(const MapType& map, const StringType& key, MemberType* member)
+//		  REQUIRES(!std::is_base_of_v<ISerializable, MemberType>)> ///< Not clear why these are required to get the ISerializable above to be preferred.
+//void map_insert_or_die(MapType& map, const StringType& key, const MemberType& member)
 //{
 //	static_assert (!std::is_base_of_v<ISerializable, MemberType>, "DEDUCTION FAILED");
-//	if(QVariant qvar = map.value(key); qvar.isValid())
-//	{
-//		*member = qvar.value<MemberType>();
-//	}
-//	else
-//	{
-//		qWr() << "Couldn't read field:" << key;
-//	}
-//}
+//	map.insert( key , QVariant::fromValue<MemberType>( member ) );
 
-/// @}
+//}
 
 
 /// @name Functions for pushing values/list-likes to a QList<QVariant>.

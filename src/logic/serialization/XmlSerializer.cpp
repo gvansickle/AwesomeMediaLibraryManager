@@ -243,6 +243,16 @@ void XmlSerializer::InnerWriteVariantToStream(const QVariant& variant, QXmlStrea
 	}
 }
 
+void XmlSerializer::writeVariantToStream(const QString& nodeName, const ISerializable& variant, QXmlStreamWriter& xmlstream)
+{
+	writeVariantToStream(nodeName, variant.toVariant(), xmlstream);
+}
+
+void XmlSerializer::writeVariantToStream(const QString& nodeName, const ISerializable* variant, QXmlStreamWriter& xmlstream)
+{
+	writeVariantToStream(nodeName, variant->toVariant(), xmlstream);
+}
+
 //void XmlSerializer::writeAttributedQVariantToStream(const AttributedQVariant& variant, QXmlStreamWriter& xmlstream)
 //{
 //	// Add the attributes to the XML tag's attributes list.

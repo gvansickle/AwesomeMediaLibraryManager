@@ -86,7 +86,7 @@ int ScanResultsTreeModelItem::columnCount() const
 
 #define M_DATASTREAM_FIELDS(X) \
 	/* TAG_IDENTIFIER, tag_string, member_field, var_name */ \
-	X(XMLTAG_DIRSCANRESULT, m_dsr, &m_dsr) \
+	X(XMLTAG_DIRSCANRESULT, m_dsr, nullptr) \
 	/*X(XMLTAG_NUM_COLUMNS, num_columns, (qulonglong)m_item_data.size())*/ \
 	/*X(XMLTAG_ITEM_DATA_SIZE, item_data_size, (qulonglong)m_item_data.size())*/ \
 	/*X(XMLTAG_NUM_CHILDREN, num_children, (qulonglong)m_child_items.size())*/ \
@@ -110,7 +110,8 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 	/// @todo Will be more fields, justifying the map vs. value?
 	/// @todo Need the parent here too?  Probably needs to be handled by the parent, but maybe for error detection.
 
-#define X(field_tag, tag_string, var_name) if constexpr(!std::is_null_pointer_v<decltype(var_name)>) { map_insert_or_die(map, field_tag, var_name); };
+	map_insert_or_die(map, XMLTAG_DIRSCANRESULT, m_dsr.toVariant());
+#define X(field_tag, tag_string, var_name) map_insert_or_die(map, field_tag, var_name);
 	M_DATASTREAM_FIELDS(X);
 #undef X
 

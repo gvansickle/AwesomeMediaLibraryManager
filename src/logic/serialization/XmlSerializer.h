@@ -87,6 +87,10 @@ private:
 	void writeVariantToStream(const QString& nodeName,
 	                          const QVariant& variant, QXmlStreamWriter& xmlstream);
 	void InnerWriteVariantToStream(const QVariant& variant, QXmlStreamWriter* xmlstream);
+	void writeVariantToStream(const QString& nodeName,
+	                          const ISerializable& variant, QXmlStreamWriter& xmlstream);
+	void writeVariantToStream(const QString& nodeName,
+							  const ISerializable* variant, QXmlStreamWriter& xmlstream);
 
 //	void writeAttributedQVariantToStream(const AttributedQVariant& variant, QXmlStreamWriter& xmlstream);
 	void writeQVariantHomogenousListToStream(const QVariant& variant, QXmlStreamWriter& xmlstream);

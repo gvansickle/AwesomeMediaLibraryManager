@@ -25,6 +25,37 @@
 
 #include "ISerializable.h"
 
+
+/**
+ *
+ * @param member  The ISerializer-derived member variable to insert.
+ */
+template <class MapType, class StringType>
+void map_insert_or_die(MapType& map, const StringType& key, const std::nullptr_t member)
+{
+	// Do nothing.
+}
+
+template <class MapType, class StringType, class MemberType>
+void map_insert_or_die(MapType& map, const StringType& key, const MemberType member)
+{
+	if constexpr(std::is_convertible_v<MemberType, ISerializable*> || std::is_convertible_v<MemberType, IUUIDSerializable*>)
+	{
+		map.insert( key , member->toVariant());
+	}
+	else if constexpr(std::is_convertible_v<MemberType, ISerializable&> || std::is_convertible_v<MemberType, IUUIDSerializable&>)
+	{
+		map.insert( key , member.toVariant());
+	}
+	else
+	{
+		map.insert( key , QVariant::fromValue<MemberType>( member ) );
+	}
+
+//	static_assert (!std::is_base_of_v<ISerializable, MemberType>, "DEDUCTION FAILED");
+}
+
+
 namespace AMLM
 {
 
@@ -62,7 +93,7 @@ void map_read_field_or_warn(const MapType& map, const StringType& key, RawMember
 		/// @todo I think this is an assert.
 		// Try to read the value as a de-pointered RawMemberType.
 		Q_ASSERT(qvar.canConvert<RawMemberType>());
-		*member = qvar.value<RawMemberType>();
+		member = qvar.value<RawMemberType>();
 	}
 }
 

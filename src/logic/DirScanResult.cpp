@@ -40,6 +40,7 @@
 
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering DirScanResult";
+	qRegisterMetaType<DirScanResult>();
 	qRegisterMetaType<DirScanResult::DirPropFlags>("DirScanResult::DirPropFlags");
 	AMLMRegisterQFlagQStringConverters<DirScanResult::DirPropFlags>();
 });
