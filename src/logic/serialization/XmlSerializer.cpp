@@ -43,6 +43,7 @@
 #include <future/future_algorithms.h>
 #include "ISerializable.h"
 
+
 void XmlSerializer::save(const ISerializable &serializable, const QUrl &file_url, const QString &root_name,
                          std::function<void(void)> extra_save_actions)
 {
@@ -218,10 +219,6 @@ void XmlSerializer::InnerWriteVariantToStream(const QVariant& variant, QXmlStrea
 
 		writeQVariantHomogenousListToStream(list, *xmlstream);
 	}
-//	else if(usertype == f_attributed_qvariant_id)
-//	{
-//		writeAttributedQVariantToStream(variant.value<AttributedQVariant>(), *xmlstream);
-//	}
 	else
 	{
 		switch(usertype)//variant.type())
@@ -243,15 +240,15 @@ void XmlSerializer::InnerWriteVariantToStream(const QVariant& variant, QXmlStrea
 	}
 }
 
-void XmlSerializer::writeVariantToStream(const QString& nodeName, const ISerializable& variant, QXmlStreamWriter& xmlstream)
-{
-	writeVariantToStream(nodeName, variant.toVariant(), xmlstream);
-}
+//void XmlSerializer::writeVariantToStream(const QString& nodeName, const ISerializable& variant, QXmlStreamWriter& xmlstream)
+//{
+//	writeVariantToStream(nodeName, variant.toVariant(), xmlstream);
+//}
 
-void XmlSerializer::writeVariantToStream(const QString& nodeName, const ISerializable* variant, QXmlStreamWriter& xmlstream)
-{
-	writeVariantToStream(nodeName, variant->toVariant(), xmlstream);
-}
+//void XmlSerializer::writeVariantToStream(const QString& nodeName, const ISerializable* variant, QXmlStreamWriter& xmlstream)
+//{
+//	writeVariantToStream(nodeName, variant->toVariant(), xmlstream);
+//}
 
 //void XmlSerializer::writeAttributedQVariantToStream(const AttributedQVariant& variant, QXmlStreamWriter& xmlstream)
 //{
@@ -336,6 +333,9 @@ void XmlSerializer::writeVariantOrderedMapToStream(const QVariant& variant, QXml
 void XmlSerializer::writeVariantValueToStream(const QVariant &variant, QXmlStreamWriter& xmlstream)
 {
 	Q_ASSERT(variant.isValid());
+
+	Q_ASSERT(!variant.canConvert<ISerializable*>());
+//	Q_ASSERT(!variant.canConvert<ISerializable&>());
 
 	// variant must be convertible to a string.
 	if(!variant.canConvert<QString>())

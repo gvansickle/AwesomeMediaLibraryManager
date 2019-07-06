@@ -60,7 +60,7 @@ struct compiles<T, Expression, std::void_t<Expression<T>>> : std::true_type {};
 
 /**
  * SFINAE-based "requires".
- * Return type is ResultType if all Concepts applied t CheckType are fulfilled, otherwise it's ill-formed and template
+ * Return type is ResultType if all Concepts applied to CheckType are fulfilled, otherwise it's ill-formed and template
  * will drop out of the resolution set.
  * Example use:
  * @code

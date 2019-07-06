@@ -110,7 +110,9 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 	/// @todo Will be more fields, justifying the map vs. value?
 	/// @todo Need the parent here too?  Probably needs to be handled by the parent, but maybe for error detection.
 
-	map_insert_or_die(map, XMLTAG_DIRSCANRESULT, m_dsr.toVariant());
+	qDb() << "DSR INSERT";
+	map_insert_or_die(map, XMLTAG_DIRSCANRESULT, m_dsr);
+	qDb() << "DSR INSERT COMPLETE";
 #define X(field_tag, tag_string, var_name) map_insert_or_die(map, field_tag, var_name);
 	M_DATASTREAM_FIELDS(X);
 #undef X

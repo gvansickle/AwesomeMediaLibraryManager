@@ -33,6 +33,7 @@
 
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering InsertionOrderedMap<QString, QVariant> alias QVariantInsertionOrderedMap";
+	qRegisterMetaType<InsertionOrderedMap<QString, QVariant>>();
 	qRegisterMetaType<InsertionOrderedMap<QString, QVariant>>("QVariantInsertionOrderedMap");
 //	AMLMRegisterQFlagQStringConverters<DirScanResult::DirPropFlags>();
 });

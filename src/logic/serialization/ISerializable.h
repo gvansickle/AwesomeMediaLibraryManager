@@ -48,6 +48,7 @@
  */
 class ISerializable
 {
+
 public:
 	virtual ~ISerializable() = default;
 
@@ -60,7 +61,12 @@ public:
 	 * Override in derived classes to serialize from a QVariantMap or QVariantList.
 	 */
 	virtual void fromVariant(const QVariant& variant) = 0;
+
+	operator QVariant() const { return toVariant(); };
 };
+
+Q_DECLARE_METATYPE(ISerializable*);
+Q_DECLARE_INTERFACE(ISerializable, "ISerializable") // define this out of namespace scope
 
 class IUUIDSerializable : public virtual ISerializable
 {
