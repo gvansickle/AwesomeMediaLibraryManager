@@ -61,6 +61,7 @@ class AbstractTreeModel : public QAbstractItemModel,
 		public enable_shared_from_this_virtual<AbstractTreeModel>
 {
     Q_OBJECT
+	Q_DISABLE_COPY(AbstractTreeModel);
 
 	using BASE_CLASS = QAbstractItemModel;
 

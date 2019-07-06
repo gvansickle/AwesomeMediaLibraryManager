@@ -29,6 +29,8 @@
 // Ours
 #include <logic/serialization/XmlObjects.h>
 #include "AbstractHeaderSection.h"
+#include <logic/serialization/SerializationHelpers.h>
+
 
 
 // static
@@ -137,7 +139,7 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 
 	// Read the number of header sections...
 	int header_num_sections = 0;
-	map_read_field_or_warn(map, XMLTAG_HEADER_NUM_SECTIONS, &header_num_sections);
+	AMLM::map_read_field_or_warn(map, XMLTAG_HEADER_NUM_SECTIONS, &header_num_sections);
 	QVariantHomogenousList header_section_list("header_section_list", "section");
 	header_section_list = map.value("header_section_list").value<QVariantHomogenousList>();
 

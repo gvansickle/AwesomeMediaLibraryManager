@@ -44,6 +44,7 @@ class AbstractTreeModelHeaderItem;
 class ScanResultsTreeModel : public ThreadsafeTreeModel, public virtual enable_shared_from_this_virtual<ScanResultsTreeModel>
 {
 	Q_OBJECT
+	Q_DISABLE_COPY(ScanResultsTreeModel);
 
 	using BASE_CLASS = ThreadsafeTreeModel;
 
@@ -63,7 +64,7 @@ public:
      */
     void setBaseDirectory(const QUrl& base_directory);
 
-	UUIncD requestAddItem(std::shared_ptr<ScanResultsTreeModelItem> item, UUIncD parent_id,
+	UUIncD requestAddScanResultsTreeModelItem(std::shared_ptr<ScanResultsTreeModelItem> item, UUIncD parent_id,
 						  Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
 
 	/// @name Serialization

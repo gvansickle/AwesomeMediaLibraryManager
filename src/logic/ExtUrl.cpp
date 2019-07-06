@@ -31,7 +31,7 @@
 
 // Ours
 #include <utils/DebugHelpers.h>
-
+#include <logic/serialization/SerializationHelpers.h>
 
 
 AMLM_QREG_CALLBACK([](){
@@ -77,7 +77,7 @@ void ExtUrl::fromVariant(const QVariant& variant)
 	QVariantInsertionOrderedMap map(variant);
 
 	// Extract all the fields from the map, cast them to their type.
-#define X(field_tag, field)    map_read_field_or_warn(map, field_tag, &(field));
+#define X(field_tag, field)    AMLM::map_read_field_or_warn(map, field_tag, &(field));
 	M_DATASTREAM_FIELDS(X)
 #undef X
 }

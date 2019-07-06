@@ -180,29 +180,33 @@ void map_insert_or_die(MapType& map, const StringType& key, const MemberType& me
 /// @name Read entries from a maplike type into the apropriate @a member.
 /// @{
 
-/// Ptrs to ISerializable-implementing members.
-template <class MapType, class StringType, class RawMemberType>
-void map_read_field_or_warn(const MapType& map, const StringType& key, RawMemberType member)
-{
-	// Regardless, get the qvar out of the map.
-	QVariant qvar = map.value(key);
-	if(!qvar.isValid())
-	{
-		qWr() << "Couldn't read value of key '" << key << "' from map:" << map;
-		return;
-	}
-	if constexpr(std::is_convertible_v<RawMemberType, ISerializable*>)
-	{
-		// This value should know how to read itself from a QVariant.
-		member->fromVariant(qvar);
-	}
-	else
-	{
-		// Try to read the value as a de-pointered RawMemberType.
-		Q_ASSERT(qvar.canConvert<std::remove_pointer_t<RawMemberType>>());
-		*member = qvar.value<std::remove_pointer_t<RawMemberType>>();
-	}
-}
+///// Ptrs to ISerializable-implementing members.
+//template <class MapType, class StringType, class RawMemberType>
+//void map_read_field_or_warn(const MapType& map, const StringType& key, RawMemberType member)
+//{
+//	// Regardless, get the qvar out of the map.
+//	QVariant qvar = map.value(key);
+//	if(!qvar.isValid())
+//	{
+//		qWr() << "Couldn't read value of key '" << key << "' from map:" << map;
+//		return;
+//	}
+//	if constexpr(std::is_convertible_v<RawMemberType, ISerializable*>)
+//	{
+//		// This value should know how to read itself from a QVariant.
+//		member->fromVariant(qvar);
+//	}
+//	else if constexpr(std::is_pointer_v<RawMemberType>)
+//	{
+//		*member = qvar.value<std::remove_pointer_t<RawMemberType>>();
+//	}
+//	else
+//	{
+//		// Try to read the value as a de-pointered RawMemberType.
+//		Q_ASSERT(qvar.canConvert<std::remove_pointer_t<RawMemberType>>());
+//		member = qvar.value<std::remove_pointer_t<RawMemberType>>();
+//	}
+//}
 
 //template <class MapType, class StringType, class MemberType,
 //		  REQUIRES(!std::is_base_of_v<ISerializable, MemberType>)>

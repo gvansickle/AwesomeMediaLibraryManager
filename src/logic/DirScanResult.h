@@ -42,7 +42,7 @@ class ScanResultsTreeModelItem;
 /**
  * A single hit found during a directory scan.
  */
-class DirScanResult : public IUUIDSerializable
+class DirScanResult : public virtual IUUIDSerializable, public virtual ISerializable
 {
 	Q_GADGET // Needed for DirProp enum below.
 

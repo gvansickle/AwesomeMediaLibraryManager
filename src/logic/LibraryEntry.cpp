@@ -43,6 +43,7 @@
 #include "utils/DebugHelpers.h"
 #include "TrackMetadata.h"
 #include "ntp.h"
+#include <logic/serialization/SerializationHelpers.h>
 
 #define LIBRARY_ENTRY_MAGIC_NUMBER 0x98542123
 #define LIBRARY_ENTRY_VERSION 0x01
@@ -325,7 +326,7 @@ void LibraryEntry::fromVariant(const QVariant& variant)
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
 	// Extract all the fields from the map, cast them to their type.
-#define X(field_tag, member_field)   map_read_field_or_warn(map, field_tag, &(member_field));
+#define X(field_tag, member_field)   AMLM::map_read_field_or_warn(map, field_tag, &(member_field));
 	M_DATASTREAM_FIELDS(X);
 #undef X
 

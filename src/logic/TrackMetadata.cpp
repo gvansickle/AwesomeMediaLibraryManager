@@ -37,6 +37,7 @@ extern "C" {
 #include <utils/RegisterQtMetatypes.h>
 
 #include "AMLMTagMap.h"
+#include <logic/serialization/SerializationHelpers.h>
 
 
 
@@ -194,7 +195,7 @@ void TrackMetadata::fromVariant(const QVariant& variant)
 {
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
-#define X(field_tag, member_field) map_read_field_or_warn(map, field_tag, & (member_field) );
+#define X(field_tag, member_field) AMLM::map_read_field_or_warn(map, field_tag, & (member_field) );
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
@@ -205,7 +206,7 @@ M_TODO("REMOVE");
 
 	// Load the index list.
 	QVariantHomogenousList index_list("m_indexes", "index");
-	map_read_field_or_warn(map, XMLTAG_TRACK_META_INDEXES, &index_list);
+	AMLM::map_read_field_or_warn(map, XMLTAG_TRACK_META_INDEXES, &index_list);
 
 	// Read the m_indexes TrackIndex'es out of the list.
 	// This is a QList<QVariant> where the qvar holds QVariantInsertionOrderedMap's.
@@ -277,7 +278,7 @@ void TrackIndex::fromVariant(const QVariant& variant)
 {
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
-	map_read_field_or_warn(map, XMLTAG_TRACK_INDEX_NUM, &m_index_num);
-	map_read_field_or_warn(map, XMLTAG_TRACK_INDEX_FRAMES, &m_index_frames);
+	AMLM::map_read_field_or_warn(map, XMLTAG_TRACK_INDEX_NUM, &m_index_num);
+	AMLM::map_read_field_or_warn(map, XMLTAG_TRACK_INDEX_FRAMES, &m_index_frames);
 
 }

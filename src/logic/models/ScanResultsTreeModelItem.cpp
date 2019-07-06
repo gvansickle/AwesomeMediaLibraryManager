@@ -34,7 +34,7 @@
 #include <logic/DirScanResult.h>
 #include "ScanResultsTreeModel.h"
 #include <LibraryEntry.h>
-
+#include <serialization/SerializationHelpers.h>
 
 std::shared_ptr<ScanResultsTreeModelItem> ScanResultsTreeModelItem::construct(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModel> model, bool is_root)
 {
@@ -86,7 +86,7 @@ int ScanResultsTreeModelItem::columnCount() const
 
 #define M_DATASTREAM_FIELDS(X) \
 	/* TAG_IDENTIFIER, tag_string, member_field, var_name */ \
-	X(XMLTAG_DIRSCANRESULT, m_dsr, m_dsr) \
+	X(XMLTAG_DIRSCANRESULT, m_dsr, &m_dsr) \
 	/*X(XMLTAG_NUM_COLUMNS, num_columns, (qulonglong)m_item_data.size())*/ \
 	/*X(XMLTAG_ITEM_DATA_SIZE, item_data_size, (qulonglong)m_item_data.size())*/ \
 	/*X(XMLTAG_NUM_CHILDREN, num_children, (qulonglong)m_child_items.size())*/ \
@@ -122,7 +122,7 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 //		list_push_back_or_die(vl, child_ptr);
 		child_list.push_back(child_ptr->toVariant());
 	}
-	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, &child_list);
+	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, child_list);
 
 	return map;
 }
@@ -131,13 +131,13 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 {
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
-#define X(field_tag, tag_string, var_name) if constexpr(!std::is_null_pointer_v<decltype(var_name)>) { map_read_field_or_warn(map, field_tag, &var_name); };
+#define X(field_tag, tag_string, var_name) AMLM::map_read_field_or_warn(map, field_tag, var_name);
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
 	// Children to variant list.
-	QVariantHomogenousList vl("children", "child");
-	map_read_field_or_warn(map, "children", &vl);
+	QVariantHomogenousList vl(XMLTAG_CHILD_NODE_LIST, "child");
+	AMLM::map_read_field_or_warn(map, XMLTAG_CHILD_NODE_LIST, &vl);
 //	for(const auto& ch : vl)
 //	{
 //		appendChild(ch.fromVariant());

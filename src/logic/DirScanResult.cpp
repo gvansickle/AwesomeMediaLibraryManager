@@ -35,6 +35,8 @@
 // Ours
 #include "models/ScanResultsTreeModel.h"
 #include <utils/EnumFlagHelpers.h>
+#include <logic/serialization/SerializationHelpers.h>
+
 
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering DirScanResult";
@@ -89,7 +91,7 @@ void DirScanResult::fromVariant(const QVariant& variant)
 	set_prefixed_uuid(idval);
 
 	// Extract all the fields from the map.
-#define X(field_tag, member_field) map_read_field_or_warn(map, field_tag, &(member_field));
+#define X(field_tag, member_field) AMLM::map_read_field_or_warn(map, field_tag, &(member_field));
 	M_DATASTREAM_FIELDS(X);
 #undef X
 }

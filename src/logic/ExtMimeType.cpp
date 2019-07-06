@@ -23,7 +23,7 @@
 #include <utils/DebugHelpers.h>
 #include <utils/RegisterQtMetatypes.h>
 
-
+//Q_GLOBAL_STATIC(,)
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering ExtMimeType";
 	qRegisterMetaType<ExtMimeType>();

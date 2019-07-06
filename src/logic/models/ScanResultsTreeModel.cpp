@@ -21,6 +21,8 @@
 // Ours
 #include "ScanResultsTreeModelItem.h"
 #include "AbstractTreeModelHeaderItem.h"
+#include <logic/serialization/SerializationHelpers.h>
+
 
 ScanResultsTreeModel::ScanResultsTreeModel(QObject *parent)
     : BASE_CLASS(parent)
@@ -40,7 +42,7 @@ void ScanResultsTreeModel::setBaseDirectory(const QUrl &base_directory)
 	m_base_directory = base_directory;
 }
 
-UUIncD ScanResultsTreeModel::requestAddItem(std::shared_ptr<ScanResultsTreeModelItem> item, UUIncD parent_id, Fun undo, Fun redo)
+UUIncD ScanResultsTreeModel::requestAddScanResultsTreeModelItem(std::shared_ptr<ScanResultsTreeModelItem> item, UUIncD parent_id, Fun undo, Fun redo)
 {
 	std::unique_lock write_lock(m_rw_mutex);
 
@@ -126,6 +128,8 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 {
 	QVariantInsertionOrderedMap map;
 	qviomap_from_qvar_or_die(&map, variant);
+
+	using namespace AMLM;
 
 	/// @todo This should have a list of known base directory paths,
 	///         e.g. the file:// URL and the gvfs /run/... mount point, Windows drive letter paths, etc.

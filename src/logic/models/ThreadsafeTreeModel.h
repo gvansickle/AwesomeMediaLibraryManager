@@ -47,6 +47,7 @@
 class ThreadsafeTreeModel : public AbstractTreeModel//, public virtual enable_shared_from_this_virtual<ThreadsafeTreeModel>
 {
 	Q_OBJECT
+	Q_DISABLE_COPY(ThreadsafeTreeModel);
 
 	using BASE_CLASS = AbstractTreeModel;
 

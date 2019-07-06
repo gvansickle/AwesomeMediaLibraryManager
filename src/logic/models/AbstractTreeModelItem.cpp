@@ -46,6 +46,8 @@
 #include "AbstractTreeModel.h"
 //#include "PlaceholderTreeModelItem.h"
 #include <utils/ext_iterators.h>
+#include <logic/serialization/SerializationHelpers.h>
+
 
 std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::construct(const std::vector<QVariant>& data,
 		std::shared_ptr<AbstractTreeModel> model, bool isRoot, UUIncD id)
@@ -396,11 +398,11 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 
 	// Get the number of item_data entries.
 	std::vector<QVariant>::size_type item_data_size = 0;
-	map_read_field_or_warn(map, XMLTAG_ITEM_DATA_SIZE, &item_data_size);
+	AMLM::map_read_field_or_warn(map, XMLTAG_ITEM_DATA_SIZE, &item_data_size);
 
 	// This item's data from variant list.
 	QVariantHomogenousList vl("itemdata_list", "m_item_data");
-	map_read_field_or_warn(map, "item_data", &vl);
+	AMLM::map_read_field_or_warn(map, "item_data", &vl);
 	for(const auto& it : vl)
 	{
 		QString itstr = it.toString();
@@ -409,7 +411,7 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 
 	// Get this item's children.
 	qulonglong num_children = 0;
-	map_read_field_or_warn(map, XMLTAG_NUM_CHILDREN, &num_children);
+	AMLM::map_read_field_or_warn(map, XMLTAG_NUM_CHILDREN, &num_children);
 
 	QVariantHomogenousList child_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
 
@@ -424,8 +426,8 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 
 		qDb() << "READING CHILD ITEM of type:" << child.typeName();
 
-		auto child_item = child.value<child.type()>();
-				std::static_pointer_cast<AbstractTreeModelItem>(child);
+//		auto child_item = child.value<child.type()>();
+//				std::static_pointer_cast<AbstractTreeModelItem>(child);
 		auto child_item = this->appendChild();
 		child_item->fromVariant(child);
 
