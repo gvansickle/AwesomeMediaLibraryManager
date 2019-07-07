@@ -95,6 +95,9 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 
 	QVariantHomogenousList header_section_list("header_section_list", "section");
 
+	// Call down to base class for writing e.g. children.
+	map = BASE_CLASS::toVariant();
+
 	// Header info.
 	/// @todo Or is some of this really model info?  Children are.
 	map_insert_or_die(map, XMLTAG_HEADER_NUM_SECTIONS, columnCount());
@@ -110,6 +113,8 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 	}
 	map_insert_or_die(map, "header_section_list", header_section_list);
 
+
+#if 0
 	qDb() << M_NAME_VAL(childCount());
 	map_insert_or_die(map, "num_child_items", childCount());
 
@@ -128,7 +133,7 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 
 	// Add list of child tree items to our QVariantMap.
 	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, child_list);
-
+#endif
 	return map;
 }
 
@@ -161,6 +166,8 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 		m_item_data.push_back(e);
 		section_index++;
 	}
+
+	Q_ASSERT(isInModel());
 
 	/// @todo This is a QVariantList containing <item>/QVariantMap's, each of which
 	/// contains a single <scan_res_tree_model_item type="QVariantMap">, which in turn

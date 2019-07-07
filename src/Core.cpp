@@ -63,11 +63,11 @@ void Core::build()
 	m_self->m_srtm_instance->insertColumns(3, 2);
 
 	/// @todo experimental
-	UUIncD new_id = m_self->m_srtm_instance->requestAddItem({"Artist1", "B", "C", "D"}, m_self->m_srtm_instance->getRootItem()->getId());
-	auto new_child_id_1 = m_self->m_srtm_instance->requestAddItem({"Album1", "F", "GHI", "J"}, new_id);
-	auto new_grandchild_id_1 = m_self->m_srtm_instance->requestAddItem({"Track1", "F", "GHI", "J"}, new_child_id_1);
-	auto new_child_id_2 = m_self->m_srtm_instance->requestAddItem({"Album2", "F", "GHI", "J"}, new_id);
-	auto new_grandchild_id_2 = m_self->m_srtm_instance->requestAddItem({"Track1", "F", "GHI", "J"}, new_child_id_2);
+//	UUIncD new_id = m_self->m_srtm_instance->requestAddItem({"Artist1", "B", "C", "D"}, m_self->m_srtm_instance->getRootItem()->getId());
+//	auto new_child_id_1 = m_self->m_srtm_instance->requestAddItem({"Album1", "F", "GHI", "J"}, new_id);
+//	auto new_grandchild_id_1 = m_self->m_srtm_instance->requestAddItem({"Track1", "F", "GHI", "J"}, new_child_id_1);
+//	auto new_child_id_2 = m_self->m_srtm_instance->requestAddItem({"Album2", "F", "GHI", "J"}, new_id);
+//	auto new_grandchild_id_2 = m_self->m_srtm_instance->requestAddItem({"Track1", "F", "GHI", "J"}, new_child_id_2);
 }
 
 void Core::initGUI()

@@ -502,7 +502,8 @@ M_WARNING("SHARED PTR");
 				SaveDatabase(tree_model_ptr, database_filename);
 				m_timer.lap("End of SaveDatabase");
 
-				/// Try to load it back in.
+				////////// EXPERIMENTAL
+				/// Try to load it back in and round-trip it.
 				std::shared_ptr<ScanResultsTreeModel> load_tree = ScanResultsTreeModel::construct();
 				LoadDatabase(load_tree, database_filename);
 				SaveDatabase(load_tree, "/home/gary/AMLMDatabaseRT.xml");

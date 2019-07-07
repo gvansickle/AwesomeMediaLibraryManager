@@ -318,16 +318,19 @@ bool AbstractTreeModelItem::changeParent(std::shared_ptr<AbstractTreeModelItem> 
 
 #define M_DATASTREAM_FIELDS(X) \
 	/* TAG_IDENTIFIER, tag_string, member_field, var_name */ \
-	X(XMLTAG_NUM_COLUMNS, num_columns, (qulonglong)m_item_data.size()) \
-	X(XMLTAG_ITEM_DATA_SIZE, item_data_size, (qulonglong)m_item_data.size()) \
-	X(XMLTAG_NUM_CHILDREN, num_children, (qulonglong)m_child_items.size()) \
 	X(XMLTAG_CHILD_NODE_LIST, child_node_list, nullptr)
+
+#define M_DATASTREAM_FIELDS_CONTSIZES(X) \
+	X(XMLTAG_NUM_COLUMNS, num_columns, m_item_data) \
+	X(XMLTAG_ITEM_DATA_SIZE, item_data_size, m_item_data) \
+	X(XMLTAG_NUM_CHILDREN, num_children, m_child_items)
 
 using strviw_type = QLatin1Literal;
 
 ///// Strings to use for the tags.
 #define X(field_tag, tag_string, var_name) static const strviw_type field_tag ( # tag_string );
 	M_DATASTREAM_FIELDS(X);
+	M_DATASTREAM_FIELDS_CONTSIZES(X);
 #undef X
 
 
@@ -335,8 +338,11 @@ QVariant AbstractTreeModelItem::toVariant() const
 {
 	QVariantInsertionOrderedMap map;
 
-#define X(field_tag, tag_string, var_name) if constexpr(!std::is_null_pointer_v<decltype(var_name)>) { map_insert_or_die(map, field_tag, var_name); };
+#define X(field_tag, tag_string, var_name) map_insert_or_die(map, field_tag, var_name);
 	M_DATASTREAM_FIELDS(X);
+#undef X
+#define X(field_tag, tag_string, var_name) map_insert_or_die(map, field_tag, (qulonglong)(var_name).size());
+	M_DATASTREAM_FIELDS_CONTSIZES(X);
 #undef X
 
 	// Number of elements in the std::vector<QVariant>.
@@ -366,26 +372,6 @@ QVariant AbstractTreeModelItem::toVariant() const
 	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, child_list);
 
 	return map;
-
-#if 0
-	QVariantInsertionOrderedMap map;
-
-#define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
-	M_DATASTREAM_FIELDS(X);
-#undef X
-
-	// Children to variant list.
-	QVariantHomogenousList vl("children", "child");
-	for(int i=0; i<childCount(); i++)
-	{
-		auto child_ptr = child(i);
-//		list_push_back_or_die(vl, child_ptr);
-		vl.push_back(child_ptr->toVariant());
-	}
-	map.insert("children", vl);
-
-	return map;
-#endif
 }
 
 void AbstractTreeModelItem::fromVariant(const QVariant& variant)
@@ -443,6 +429,7 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 
 QVariant AbstractTreeModelItem::toVariantGuts() const
 {
+	Q_ASSERT(0);
 	return QVariant();
 }
 

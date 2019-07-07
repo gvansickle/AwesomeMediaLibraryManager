@@ -68,14 +68,6 @@ public:
 //	template<class ItemType = AbstractTreeModelItem>
 	class bfs_iterator;
 
-
-	/**
-	 * Named constructor.
-	 */
-	/// KDEN
-	static std::shared_ptr<AbstractTreeModelItem> construct(const std::vector<QVariant>& data,
-			std::shared_ptr<AbstractTreeModel> model, bool isRoot, UUIncD id = UUIncD::null());
-
 protected:
 
 	/// Sets the model and UUIncD.
@@ -83,7 +75,15 @@ protected:
 	AbstractTreeModelItem(const std::vector<QVariant>& data, const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id = UUIncD::null());
 
 public:
+	/**
+	 * Named constructor.
+	 */
+	/// KDEN
+	static std::shared_ptr<AbstractTreeModelItem> construct(const std::vector<QVariant>& data,
+			std::shared_ptr<AbstractTreeModel> model, bool isRoot, UUIncD id = UUIncD::null());
 	~AbstractTreeModelItem() override;
+
+//	static AbstractTreeModelItem* AbstractTreeModelItemFactory(QVariant);
 
     /// Return a pointer to the number'th child of this item.
     /// @returns If @a number is not valid, a pointer to a default constructed AbstractTreeModelItem,

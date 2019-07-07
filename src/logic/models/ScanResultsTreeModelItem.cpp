@@ -107,16 +107,18 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 {
 	QVariantInsertionOrderedMap map;
 
+	// Defer to the base class for streaming out common data.
+	map = BASE_CLASS::toVariant();
+
 	/// @todo Will be more fields, justifying the map vs. value?
 	/// @todo Need the parent here too?  Probably needs to be handled by the parent, but maybe for error detection.
 
-	qDb() << "DSR INSERT";
 	map_insert_or_die(map, XMLTAG_DIRSCANRESULT, m_dsr);
-	qDb() << "DSR INSERT COMPLETE";
+
 #define X(field_tag, tag_string, var_name) map_insert_or_die(map, field_tag, var_name);
 	M_DATASTREAM_FIELDS(X);
 #undef X
-
+#if 0
 	// Children to variant list.
 	QVariantHomogenousList child_list(XMLTAG_CHILD_NODE_LIST, "child");
 	for(int i=0; i<childCount(); i++)
@@ -126,7 +128,7 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 		child_list.push_back(child_ptr->toVariant());
 	}
 	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, child_list);
-
+#endif
 	return map;
 }
 

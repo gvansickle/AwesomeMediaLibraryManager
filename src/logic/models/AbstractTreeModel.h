@@ -62,6 +62,7 @@ class AbstractTreeModel : public QAbstractItemModel,
 {
     Q_OBJECT
 	Q_DISABLE_COPY(AbstractTreeModel);
+	Q_INTERFACES(ISerializable);
 
 	using BASE_CLASS = QAbstractItemModel;
 

@@ -40,8 +40,8 @@ using toVariant_t = decltype(std::declval<T>().toVariant());
 template <class T>
 using has_toVariant = future_detection::is_detected<toVariant_t, T>;
 
-#define M_IS_MEM_FUNC(Type, MemFunction) \
-	(std::is_class_v<Type> && std::is_member_function_pointer_v<decltype(& Type :: MemFunction )>)
+/// @name Some helper templates.
+/// @{
 
 /**
  *
@@ -50,26 +50,16 @@ using has_toVariant = future_detection::is_detected<toVariant_t, T>;
 template <class MapType, class StringType>
 void map_insert_or_die(MapType& map, const StringType& key, const std::nullptr_t member)
 {
+	(void)map;
+	(void)member;
 	qDb() << "###### MIOD NULL, KEY:" << key;
 	// Do nothing.
 }
-#if 0
-/**
- * Overload for ValueType's which have a toVariant() member function.
- */
-template <class MapType, class StringType, class ValueType,
-        REQUIRES(M_IS_MEM_FUNC(ValueType, toVariant))> //std::is_member_function_pointer_v<decltype(&ValueType::toVariant)>)>
-void map_insert_or_die(MapType& map, const StringType& key, const ValueType* member)
-{
-	qDb() << "MIOD 1:" << key;
-	map.insert(key, member->toVariant());
-}
-#endif
 
 template <class MapType, class StringType>
 void map_insert_or_die(MapType& map, const StringType& key, const ISerializable& member)
 {
-	qDb() << "MIOD 2:" << key;
+//	qDb() << "MIOD 2:" << key;
 	map.insert(key, member.toVariant());
 }
 
@@ -77,62 +67,259 @@ template <class MapType, class StringType, class ValueType,
 		  REQUIRES(!std::is_base_of_v<ISerializable, ValueType>)>
 void map_insert_or_die(MapType& map, const StringType& key, const ValueType& member)
 {
-	qDb() << "MIOD 2b:" << key;
+//	qDb() << "MIOD 2b:" << key;
 	map.insert(key, QVariant::fromValue(member));
 }
 
-#if 0
-template <class MapType, class StringType, class ValueType,
-		REQUIRES(!M_IS_MEM_FUNC(ValueType, toVariant))> //!std::is_member_function_pointer_v<decltype(&ValueType::toVariant)>)>
-void map_insert_or_die(MapType& map, const StringType& key, const ValueType* member)
-{
-//	static_assert (/*dependent_false<OtherValueType>() &&*/ !std::is_member_function_pointer_v<decltype(&ValueType::toVariant)>,
-//	        "Deduction failed.");
-	qDb() << "MIOD 2:" << key;
-	map.insert(key, QVariant::fromValue<ValueType>(*member));
-}
-
-template <class MapType, class StringType, class ValueType>//,
-//		REQUIRES(!M_IS_MEM_FUNC(ValueType, toVariant))>
-void map_insert_or_die(MapType& map, const StringType& key, const ValueType& member)
-{
-	qDb() << "MIOD 2:" << key;
-	map.insert(key, QVariant::fromValue<ValueType>(member));
-}
 
 
-template <class MapType, class StringType, class MemberType>
-void map_insert_or_die(MapType& map, const StringType& key, const MemberType member)
+/// @name Functions for pushing values/list-likes to a QList<QVariant>.
+/// @{
+
+/**
+ * Push a single entry given by @a member onto the @a list.
+ * @overload For ISerializable @a member's.
+ */
+template <class ListType>
+void list_push_back_or_die(ListType& list, const ISerializable& member)
 {
-	if constexpr(std::is_pointer_v<MemberType> && has_toVariant<std::remove_pointer_t<MemberType>>::value)
-//	        && std::is_invocable_v<std::remove_pointer_t<MemberType>::toVariant, MemberType>)
-//	        && std::is_class_v<std::remove_pointer_t<MemberType>>
-//	                && std::is_member_function_pointer_v<&MemberType::toVariant>)//std::is_convertible_v<MemberType, ISerializable*> || std::is_convertible_v<MemberType, IUUIDSerializable*>)
+	// ISerializable knows how to turn itself into a QVariant.
+	QVariant qvar = member.toVariant();
+	if(!qvar.isValid())
 	{
-		qDb() << "MIOD 2:" << key;
-		map.insert( key , member->toVariant());
-	}
-	else if constexpr(std::is_reference_v<MemberType> && has_toVariant<std::remove_reference_t<MemberType>>::value)
-//			&& std::is_class_v<std::remove_reference_t<MemberType>>
-//			        && std::is_member_function_pointer_v<&MemberType::toVariant>)//std::is_convertible_v<MemberType, ISerializable&> || std::is_convertible_v<MemberType, IUUIDSerializable&>)
-	{
-		qDb() << "MIOD 3:" << key;
-		map.insert( key , member.toVariant());
-	}
-//	else if constexpr(std::is_pointer_v<MemberType>)
-//	{
-//		qDb() << "MIOD 4:" << key;
-//		map.insert( key , QVariant::fromValue<MemberType>(*member));
-//	}
-	else if constexpr(!std::is_pointer_v<MemberType> && !std::is_reference_v<MemberType>)
-	{
-		qDb() << "MIOD 5:" << key;
-		map.insert( key , QVariant::fromValue<MemberType>( member ) );
+		throw SerializationException("Coudn't push_back() to list.");
 	}
 
-//	static_assert (!std::is_base_of_v<ISerializable, MemberType>, "DEDUCTION FAILED");
+	list.push_back(qvar);
 }
-#endif
+
+/**
+ * Push a single entry given by @a member onto the @a list.
+ * @todo Does this handle an incoming QVariant correctly?
+ */
+template <class ListType, class MemberType,
+		  REQUIRES(!std::is_base_of_v<ISerializable, MemberType>)>
+void list_push_back_or_die(ListType& list, const MemberType& member)
+{
+	static_assert (!std::is_base_of_v<ISerializable, MemberType>, "DEDUCTION FAILED");
+
+	QVariant qvar = QVariant::fromValue<MemberType>( member );
+	if(!qvar.isValid())
+	{
+		throw SerializationException("Coudn't push_back() to list.");
+	}
+
+	list.push_back(qvar);
+}
+
+/**
+ * Use a blocking call to blockingMappedReduce() to serialize the entries in
+ * @a in_list to the output QVariantHomogenousList @a out_list.
+ * @note Like it says on the tin, the map part is concurrent, so it has to be threadsafe.
+ *
+ * @tparam InListType  A container of pointers to ISerializable-derived objects.
+ */
+template <class InListType>
+void list_blocking_map_reduce_push_back_or_die(QVariantHomogenousList& out_list, const InListType& in_list)
+{
+	if constexpr(std::is_base_of_v<ISerializable, typename InListType::value_type::element_type>)
+	{
+		struct mapped_reduce_helper
+		{
+			/**
+			 * The Reduce callback.  Doesn't really need to be in this struct, but it was handy.
+			 */
+			static void add_to_list(QVariantHomogenousList& list, const QVariant& entry)
+			{
+				list.push_back(entry);
+			};
+
+			/**
+			 * The mapping functor.
+			 */
+			using result_type = QVariant;
+			result_type operator()(const typename InListType::value_type& incoming)
+			{
+				// Convert to a QVariant and return.
+				QVariant qvar = incoming->toVariant();
+				if(!qvar.isValid())
+				{
+					throw SerializationException("invalid QVariant conversion.");
+				}
+
+				return qvar;
+			}
+		};
+
+		mapped_reduce_helper mapper;
+
+		// Qt5.12 QFuture iterators are basically broken. STL-style iterators won't block.  Java-style will detach, and new results won't show up.
+		// So we'll try blocking, which we're doing all this to avoid.
+		// OrderedReduce == reduce func called in order of input sequence,
+		// SequentialReduce == reduce func called by one thread at a time.
+		auto initial_list_tag = out_list.get_list_tag();
+		auto initial_list_item_tag = out_list.get_list_item_tag();
+		out_list = QtConcurrent::blockingMappedReduced(in_list.cbegin(), in_list.cend(), mapper,
+													   mapped_reduce_helper::add_to_list,
+											QtConcurrent::OrderedReduce|QtConcurrent::SequentialReduce);
+		// Reset the tag names.
+		out_list.set_tag_names(initial_list_tag, initial_list_item_tag);
+	}
+	else
+	{
+		static_assert(dependent_false_v<InListType>, "No matching template for params: list_blocking_map_reduce_push_back_or_die");
+	}
+}
+
+/// @}
+
+/**
+ * Read all entries in @a list and copy them to @a p_list.
+ * @tparam ListType  A list-like of QVariant's, each holding a single @a ListEntryType.
+ */
+template <class ListType, class ListEntryType, template<typename> class OutListType,
+		  REQUIRES(!std::is_base_of_v<ISerializable, ListEntryType>)>
+void list_read_all_fields_or_warn(const ListType& list, OutListType<ListEntryType>* p_list,
+								  const char* caller = "UNKNOWN"/*__builtin_FUNCTION()*/)
+{
+	static_assert(std::is_same_v<ListType, QVariantHomogenousList> || std::is_same_v<ListType, QVariantList>,
+				  "Not a list type");
+
+	// Make sure return list is empty.
+	p_list->clear();
+
+	auto num_entries = list.size();
+	if(num_entries == 0)
+	{
+		qWr() << M_ID_VAL(caller) << "LIST IS EMPTY:" << list;
+		return;
+	}
+
+	for(const QVariant& qvar : qAsConst(list))
+	{
+		throwif<SerializationException>(!qvar.isValid(), "Invalid QVariant");
+		throwif<SerializationException>(!qvar.canConvert<ListEntryType>(), "Can't convert QVariant contents of list to ListEntryType");
+
+		p_list->push_back(qvar.value<ListEntryType>());
+	}
+}
+
+/**
+ * Read all entries in @a list and copy them to @a p_list.
+ * @overload For ISerializable @a ListEntryType's.
+ * @tparam ListType  A list-like of QVariant's, each holding a single @a ListEntryType.
+ */
+template <class ListType, class ListEntryType, template<typename> class OutListType,
+		  REQUIRES(std::is_base_of_v<ISerializable, ListEntryType>)>
+void list_read_all_fields_or_warn(const ListType& list, OutListType<ListEntryType>* p_list,
+								  const char* caller = "UNKNOWN"/*__builtin_FUNCTION()*/)
+{
+	static_assert(std::is_same_v<ListType, QVariantHomogenousList>
+				  || std::is_same_v<ListType, QVariantList>,
+				  "Not a list type");
+
+	// Make sure return list is empty.
+	p_list->clear();
+
+	auto num_entries = list.size();
+	if(num_entries == 0)
+	{
+		qWr() << M_ID_VAL(caller) << "LIST IS EMPTY:" << list;
+		return;
+	}
+
+	for(const QVariant& qvar : qAsConst(list))
+	{
+		throwif<SerializationException>(!qvar.isValid(), "Invalid QVariant");
+//		throwif<SerializationException>(!qvar.canConvert<ListEntryType>(), "Can't convert QVariant contents of list to ListEntryType");
+
+		// It's an ISerializable-derived class.
+		ListEntryType list_entry = qvar.value<ListEntryType>();
+//		ISerializable* Iser = dynamic_cast<ISerializable*>(qvar.value<ListEntryType>());
+		list_entry.fromVariant(qvar);
+		p_list->push_back(list_entry);
+	}
+}
+
+/**
+ * Use a blocking call to blockingMappedReduce() to serialize the entries in
+ * @a in_list to the output QVariantHomogenousList @a out_list.
+ * @note Like it says on the tin, the map part is concurrent, so it has to be threadsafe.
+ *
+ * @tparam InListType  A container of pointers to ISerializable-derived objects.
+ */
+template <class InListType, /*class OutListValueType,*/ /*template<typename>*/ class OutListType>
+void list_blocking_map_reduce_read_all_entries_or_warn(const InListType& in_list, OutListType/*<OutListValueType>*/* p_out_list)
+{
+	static_assert(std::is_same_v<InListType, QVariantHomogenousList> || std::is_same_v<InListType, QVariantList>,
+				  "InListType is not a recognized list type");
+
+	using OutListValueType = typename OutListType::value_type;
+
+	// We're trying to make this serial code concurrent:
+	//		for(const QVariant& e : in_list)
+	//		{
+	//			Q_ASSERT(e.isValid());
+	//			std::shared_ptr<LibraryEntry> libentry = std::make_shared<LibraryEntry>();
+	//			libentry->fromVariant(e);
+	//			m_lib_entries.push_back(libentry);
+	//		}
+
+	if constexpr(std::is_base_of_v<ISerializable, typename OutListType/*<OutListValueType>*/::value_type::element_type>)
+	{
+		// For this case, in_list should hold shared_ptr's to ISerializable's, e.g.:
+		// QVariantList<std::shared_ptr<LibraryEntry>>
+
+		// This will be e.g. std::shared_ptr<LibraryEntry>
+		using OutListPtrType = typename OutListType/*<OutListValueType>*/::value_type;
+		// This will be e.g. LibraryEntry:
+		using OutElementType = typename OutListType/*<OutListValueType>*/::value_type::element_type;
+
+		struct mapped_reduce_helper
+		{
+			/**
+			 * The Reduce callback.  Doesn't really need to be in this struct, but it was handy.
+			 */
+			static void add_to_list(OutListType/*<OutListValueType>*/& out_list, const OutListPtrType& new_entry)
+			{
+				out_list.push_back(new_entry);
+			};
+
+			/**
+			 * The mapping functor.
+			 */
+			using result_type = OutListPtrType;
+			result_type operator()(const QVariant& incoming)
+			{
+				// Convert from a QVariant and return.
+				throwif<SerializationException>(!incoming.isValid(), "invalid QVariant in read.");
+				OutListPtrType ptr_to_new_element = std::make_shared<OutElementType>();
+				ptr_to_new_element->fromVariant(incoming);
+				return ptr_to_new_element;
+			}
+		};
+
+		mapped_reduce_helper mapper;
+
+		// Qt5.12 QFuture iterators are basically broken. STL-style iterators won't block.  Java-style will detach, and new results won't show up.
+		// So we'll try blocking, which we're doing all this to avoid.
+		// OrderedReduce == reduce func called in order of input sequence,
+		// SequentialReduce == reduce func called by one thread at a time.
+
+		OutListType/*<OutListValueType>*/ throwaway_list;
+		throwaway_list = QtConcurrent::blockingMappedReduced(in_list.cbegin(), in_list.cend(), mapper,
+													   mapped_reduce_helper::add_to_list,
+													   QtConcurrent::OrderedReduce|QtConcurrent::SequentialReduce);
+
+		std::move(throwaway_list.begin(), throwaway_list.end(), std::back_inserter(*p_out_list));
+	}
+	else
+	{
+		static_assert(dependent_false_v<InListType>, "No matching template for params: list_blocking_map_reduce_push_back_or_die");
+	}
+}
+
+
 
 namespace AMLM
 {
