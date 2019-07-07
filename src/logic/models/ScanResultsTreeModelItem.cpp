@@ -185,9 +185,7 @@ std::shared_ptr<SRTMItem_LibEntry> SRTMItem_LibEntry::construct(const DirScanRes
 
 std::shared_ptr<SRTMItem_LibEntry> SRTMItem_LibEntry::construct(const QVariant& variant, const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root)
 {
-	std::shared_ptr<SRTMItem_LibEntry> self = std::make_shared<SRTMItem_LibEntry>(); //(new SRTMItem_LibEntry(variant, model, is_root));
-	self->m_model = model;
-	self->m_is_root = is_root;
+	std::shared_ptr<SRTMItem_LibEntry> self(new SRTMItem_LibEntry(model, is_root));
 	self->fromVariant(variant);
 	baseFinishConstruct(self);
 	return self;
@@ -195,6 +193,12 @@ std::shared_ptr<SRTMItem_LibEntry> SRTMItem_LibEntry::construct(const QVariant& 
 
 SRTMItem_LibEntry::SRTMItem_LibEntry(const DirScanResult& dsr, const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root)
 	: BASE_CLASS(dsr, std::static_pointer_cast<AbstractTreeModel>(model), is_root)
+{
+
+}
+
+SRTMItem_LibEntry::SRTMItem_LibEntry(const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root)
+	: BASE_CLASS(std::static_pointer_cast<AbstractTreeModel>(model), is_root)
 {
 
 }

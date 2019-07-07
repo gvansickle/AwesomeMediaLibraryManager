@@ -419,6 +419,28 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 
 	AMLM_ASSERT_EQ(num_children, child_list.size());
 
+	////////////////////////////////////
+	// Now read in our children.  We need this HeaderItem to be in a model for that to work.
+	Q_ASSERT(isInModel());
+
+	/// @todo This is a QVariantList containing <item>/QVariantMap's, each of which
+	/// contains a single <scan_res_tree_model_item type="QVariantMap">, which in turn
+	/// contains a single <dirscanresult>/QVariantMap.
+//	QVariantHomogenousList child_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
+
+	auto model_ptr = m_model.lock();
+	Q_ASSERT(model_ptr);
+
+	std::vector<std::shared_ptr<AbstractTreeModelItem>> temp_items;
+	for(const QVariant& child : child_list)
+	{
+		qDb() << "READING CHILD ITEM:" << child;
+
+		model_ptr->requestAddTreeModelItem(child, getId());
+	}
+	////////////////////////
+
+#if 0
 	std::vector<std::shared_ptr<AbstractTreeModelItem>> temp_items;
 	for(const QVariant& child : child_list)
 	{
@@ -439,7 +461,7 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 
 	// Append the children we read in to our list all in one batch.
 	this->appendChildren(std::move(temp_items));
-
+#endif
 	AMLM_ASSERT_EQ(num_children, m_child_items.size());
 }
 
