@@ -28,6 +28,7 @@
 
 // Ours
 #include <logic/serialization/XmlObjects.h>
+#include "AbstractTreeModel.h"
 #include "AbstractHeaderSection.h"
 #include <logic/serialization/SerializationHelpers.h>
 
@@ -151,6 +152,7 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 		section_index++;
 	}
 
+	// Now read in our children.  We need this HeaderItem to be in a model for that to work.
 	Q_ASSERT(isInModel());
 
 	/// @todo This is a QVariantList containing <item>/QVariantMap's, each of which
@@ -158,22 +160,27 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	/// contains a single <dirscanresult>/QVariantMap.
 	QVariantHomogenousList child_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
 
+	auto model_ptr = m_model.lock();
+	Q_ASSERT(model_ptr);
+
 	std::vector<std::shared_ptr<AbstractTreeModelItem>> temp_items;
 	for(const QVariant& child : child_list)
 	{
 		qDb() << "READING CHILD ITEM:" << child;
 
+		std::shared_ptr<AbstractTreeModelItem> new_child = model_ptr->make_item_from_variant(child);
 
+		model_ptr->requestAddTreeModelItem(child, m_uuincid);
 
-		auto child_item = this->appendChild();
-		child_item->fromVariant(child);
+//		auto child_item = this->appendChild();
+//		child_item->fromVariant(child);
 
 		// Save it off temporarily.
-		temp_items.push_back(std::move(child_item));
+//		temp_items.push_back(std::move(child_item));
 	}
 
 	// Append the children we read in to our list all in one batch.
-	this->appendChildren(std::move(temp_items));
+//	this->appendChildren(std::move(temp_items));
 }
 
 std::shared_ptr<AbstractHeaderSection> AbstractTreeModelHeaderItem::getHeaderSection(int column)

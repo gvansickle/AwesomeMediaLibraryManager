@@ -576,7 +576,7 @@ QVariant XmlSerializer::readVariantValueFromStream(QXmlStreamReader& xmlstream)
 				// Empty string, return default constructed object.
 				// We checked metatype above, it's valid.
 //				void* retobj_p = QMetaType::create(metatype);
-//				qWr() << "TODO: NULL QVARIANT, SKIPPING. Type:" << attr_type_str;
+				qWr() << "TODO: NULL QVARIANT, SKIPPING. Type:" << attr_type_str;
 			}
 			else
 			{
@@ -632,16 +632,6 @@ QVariant XmlSerializer::readVariantOrderedMapFromStream(std::vector<QXmlStreamAt
 	while(xmlstream.readNextStartElement())
 	{
 		map.insert(xmlstream.name().toString(), readVariantFromStream(xmlstream));
-	}
-
-	// What was the derived class that was actually written?
-	int metatype_id = map.value("metatype_id", QVariant()).value<int>();
-	if(metatype_id != 0)
-	{
-		// It was something.
-		auto retvar = QVariant::fromValue(map);
-		///// @todo
-		Q_ASSERT(retvar.canConvert(metatype_id));
 	}
 
 	return QVariant::fromValue(map);

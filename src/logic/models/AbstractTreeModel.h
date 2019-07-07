@@ -243,6 +243,16 @@ public:
 	/// Serialize the entire model from a QVariant.
 	void fromVariant(const QVariant& variant) override { Q_ASSERT(0); }; // = 0;
 
+	/**
+	 * Non-static factory function for creating new, typed tree nodes from QVariantMaps.
+	 */
+	virtual std::shared_ptr<AbstractTreeModelItem>
+	make_item_from_variant(const QVariant& variant)	{ Q_ASSERT(0); return nullptr; };
+
+	virtual UUIncD requestAddTreeModelItem(const QVariant& variant, UUIncD parent_id,
+	                               Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda)
+	                               { Q_ASSERT(0); return UUIncD::null(); };
+
 	/// @} // END Serialization
 
 	/// @} // END Extended public model interface.

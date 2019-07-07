@@ -41,10 +41,11 @@ class AbstractTreeModelHeaderItem;
  * - Contains 1 or more tracks.
  * - May have a sidecar or embedded cue sheet.
  */
-class ScanResultsTreeModel : public ThreadsafeTreeModel, public virtual enable_shared_from_this_virtual<ScanResultsTreeModel>
+class ScanResultsTreeModel : public ThreadsafeTreeModel//, public virtual enable_shared_from_this_virtual<ScanResultsTreeModel>
 {
 	Q_OBJECT
 	Q_DISABLE_COPY(ScanResultsTreeModel);
+	Q_INTERFACES(ISerializable);
 
 	using BASE_CLASS = ThreadsafeTreeModel;
 
@@ -64,14 +65,20 @@ public:
      */
     void setBaseDirectory(const QUrl& base_directory);
 
-	UUIncD requestAddScanResultsTreeModelItem(std::shared_ptr<ScanResultsTreeModelItem> item, UUIncD parent_id,
-						  Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
-
 	/// @name Serialization
 	/// @{
 
 	QVariant toVariant() const override;
 	void fromVariant(const QVariant& variant) override;
+
+	/**
+	 * Non-static factory function for creating new, typed tree nodes from QVariantMaps.
+	 */
+	std::shared_ptr<AbstractTreeModelItem>
+	make_item_from_variant(const QVariant& variant) override;
+
+	UUIncD requestAddTreeModelItem(const QVariant& variant, UUIncD parent_id,
+	                               Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda) override;
 
 	QTH_FRIEND_QDATASTREAM_OPS(ScanResultsTreeModel);
 

@@ -42,13 +42,12 @@ void ScanResultsTreeModel::setBaseDirectory(const QUrl &base_directory)
 	m_base_directory = base_directory;
 }
 
-UUIncD ScanResultsTreeModel::requestAddScanResultsTreeModelItem(std::shared_ptr<ScanResultsTreeModelItem> item, UUIncD parent_id, Fun undo, Fun redo)
+UUIncD ScanResultsTreeModel::requestAddTreeModelItem(const QVariant& variant, UUIncD parent_id, Fun undo, Fun redo)
 {
 	std::unique_lock write_lock(m_rw_mutex);
 
-//	auto new_item = AbstractTreeModelItem::construct(values, std::static_pointer_cast<ThreadsafeTreeModel>(shared_from_this()), /*not root*/false);
-	/// @todo Temp, this prob won't work.
-	auto new_item = item;
+	// ::construct() a new tree model item from variant.
+	auto new_item = make_item_from_variant(variant);
 
 	bool status = addItem(new_item, parent_id, undo, redo);
 
@@ -58,6 +57,53 @@ UUIncD ScanResultsTreeModel::requestAddScanResultsTreeModelItem(std::shared_ptr<
 		return UUIncD::null();
 	}
 	return new_item->getId();
+}
+
+/// Qt5 ids for the TreeItems it can hold.
+static const int f_atmi_id = qMetaTypeId<AbstractTreeModelItem>();
+static const int f_strmi_id = qMetaTypeId<ScanResultsTreeModelItem>();
+static const int f_strmile_id = qMetaTypeId<SRTMItem_LibEntry>();
+
+
+std::shared_ptr<AbstractTreeModelItem>
+ScanResultsTreeModel::make_item_from_variant(const QVariant& variant)
+{
+	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
+
+	// What was the derived class that was actually written?
+	std::string metatype_class_str = map.get_attr("class");
+	int metatype_id = QMetaType::type(metatype_class_str.c_str());
+
+	if(metatype_id != 0)
+	{
+		// It was something.
+		auto retvar = QVariant::fromValue(map);
+		///// @todo
+		Q_ASSERT(retvar.canConvert(metatype_id));
+	}
+
+	std::shared_ptr<AbstractTreeModelItem> retval;
+
+	auto typed_model_ptr = std::static_pointer_cast<ScanResultsTreeModel>(shared_from_this());
+
+	if(metatype_id == f_atmi_id)
+	{
+		retval = AbstractTreeModelItem::construct(variant, typed_model_ptr, /*is root*/false);
+	}
+	else if(metatype_id == f_strmi_id)
+	{
+		retval = ScanResultsTreeModelItem::construct(variant, typed_model_ptr);
+	}
+	else if(metatype_id == f_strmile_id)
+	{
+		retval = SRTMItem_LibEntry::construct(variant, typed_model_ptr);
+	}
+	else
+	{
+		qCr() << "Trying to read in unknown class:" << metatype_id << metatype_class_str;
+	}
+
+	return retval;
 }
 
 /**

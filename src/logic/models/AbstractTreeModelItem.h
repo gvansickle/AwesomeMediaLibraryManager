@@ -81,6 +81,8 @@ public:
 	/// KDEN
 	static std::shared_ptr<AbstractTreeModelItem> construct(const std::vector<QVariant>& data,
 			std::shared_ptr<AbstractTreeModel> model, bool isRoot, UUIncD id = UUIncD::null());
+	static std::shared_ptr<AbstractTreeModelItem> construct(const QVariant& variant,
+			std::shared_ptr<AbstractTreeModel> model, bool isRoot, UUIncD id = UUIncD::null());
 	AbstractTreeModelItem() {};
 	~AbstractTreeModelItem() override;
 
@@ -258,6 +260,8 @@ protected:
 
 	std::weak_ptr<AbstractTreeModel> m_model;
 
+	bool m_is_root;
+
 private:
 
 	using ChildItemContainerType = std::deque<std::shared_ptr<AbstractTreeModelItem>>;
@@ -281,7 +285,6 @@ private:
 	int m_depth;
 
 	bool m_is_in_model;
-	bool m_is_root;
 };
 
 Q_DECLARE_METATYPE(AbstractTreeModelItem);
