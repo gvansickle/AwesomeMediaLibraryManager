@@ -46,16 +46,19 @@ std::shared_ptr<ScanResultsTreeModelItem> ScanResultsTreeModelItem::construct(co
 std::shared_ptr<ScanResultsTreeModelItem> ScanResultsTreeModelItem::construct(const QVariant& variant,
 																			  const std::shared_ptr<AbstractTreeModel> model, bool is_root)
 {
-	std::shared_ptr<ScanResultsTreeModelItem> self = std::make_shared<ScanResultsTreeModelItem>();
-	self->m_model = model;
-	self->m_is_root = is_root;
+	std::shared_ptr<ScanResultsTreeModelItem> self(new ScanResultsTreeModelItem(model, is_root));
 	self->fromVariant(variant);
 	baseFinishConstruct(self);
 	return self;
 }
 
 ScanResultsTreeModelItem::ScanResultsTreeModelItem(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModel> model, bool is_root)
-	: BASE_CLASS({}, model, is_root), m_dsr(dsr)
+	: BASE_CLASS(model, is_root), m_dsr(dsr)
+{
+}
+
+ScanResultsTreeModelItem::ScanResultsTreeModelItem(const std::shared_ptr<AbstractTreeModel> model, bool is_root)
+	: BASE_CLASS(model, is_root)
 {
 }
 

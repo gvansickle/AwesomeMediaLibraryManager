@@ -51,6 +51,8 @@ protected:
 	                                  const std::shared_ptr<AbstractTreeModel> model,
 	                                  bool is_root = false);
 
+	explicit ScanResultsTreeModelItem(const std::shared_ptr<AbstractTreeModel> model,
+									  bool is_root = false);
 public:
 	/**
 	 * Named constructors.

@@ -47,7 +47,7 @@ UUIncD ScanResultsTreeModel::requestAddTreeModelItem(const QVariant& variant, UU
 	std::unique_lock write_lock(m_rw_mutex);
 
 	// ::construct() a new tree model item from variant.
-	auto new_item = make_item_from_variant(variant);
+	std::shared_ptr<AbstractTreeModelItem> new_item = make_item_from_variant(variant);
 
 	bool status = addItem(new_item, parent_id, undo, redo);
 
@@ -72,15 +72,8 @@ ScanResultsTreeModel::make_item_from_variant(const QVariant& variant)
 
 	// What was the derived class that was actually written?
 	std::string metatype_class_str = map.get_attr("class");
+	Q_ASSERT(!metatype_class_str.empty());
 	int metatype_id = QMetaType::type(metatype_class_str.c_str());
-
-	if(metatype_id != 0)
-	{
-		// It was something.
-		auto retvar = QVariant::fromValue(map);
-		///// @todo
-		Q_ASSERT(retvar.canConvert(metatype_id));
-	}
 
 	std::shared_ptr<AbstractTreeModelItem> retval;
 

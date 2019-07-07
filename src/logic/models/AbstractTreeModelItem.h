@@ -73,6 +73,7 @@ protected:
 	/// Sets the model and UUIncD.
 	/// ETM+KDen
 	AbstractTreeModelItem(const std::vector<QVariant>& data, const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id = UUIncD::null());
+	AbstractTreeModelItem(const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id = UUIncD::null());
 
 public:
 	/**

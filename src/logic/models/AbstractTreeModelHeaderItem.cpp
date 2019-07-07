@@ -46,7 +46,7 @@ AbstractTreeModelHeaderItem::construct(const std::shared_ptr<AbstractTreeModel>&
 }
 
 AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(const std::shared_ptr<AbstractTreeModel>& parent_model, bool isRoot, UUIncD id)
-	: BASE_CLASS({}, parent_model, isRoot, id)
+	: BASE_CLASS(parent_model, isRoot, id)
 {
 
 }
@@ -168,9 +168,9 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	{
 		qDb() << "READING CHILD ITEM:" << child;
 
-		std::shared_ptr<AbstractTreeModelItem> new_child = model_ptr->make_item_from_variant(child);
+//		std::shared_ptr<AbstractTreeModelItem> new_child = model_ptr->make_item_from_variant(child);
 
-		model_ptr->requestAddTreeModelItem(child, m_uuincid);
+		model_ptr->requestAddTreeModelItem(child, getId());
 
 //		auto child_item = this->appendChild();
 //		child_item->fromVariant(child);

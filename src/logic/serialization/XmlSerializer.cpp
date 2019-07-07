@@ -576,7 +576,7 @@ QVariant XmlSerializer::readVariantValueFromStream(QXmlStreamReader& xmlstream)
 				// Empty string, return default constructed object.
 				// We checked metatype above, it's valid.
 //				void* retobj_p = QMetaType::create(metatype);
-				qWr() << "TODO: NULL QVARIANT, SKIPPING. Type:" << attr_type_str;
+//				qWr() << "TODO: NULL QVARIANT, SKIPPING. Type:" << attr_type_str;
 			}
 			else
 			{

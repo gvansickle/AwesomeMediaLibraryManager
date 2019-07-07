@@ -60,9 +60,10 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::construct(const st
 
 std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::construct(const QVariant& variant, std::shared_ptr<AbstractTreeModel> model, bool isRoot, UUIncD id)
 {
-	std::shared_ptr<AbstractTreeModelItem> retval;
+	std::shared_ptr<AbstractTreeModelItem> retval(new AbstractTreeModelItem(model, isRoot, id));
 
 	retval->fromVariant(variant);
+	baseFinishConstruct(retval);
 
 	return retval;
 }
@@ -70,6 +71,12 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::construct(const QV
 AbstractTreeModelItem::AbstractTreeModelItem(const std::vector<QVariant>& data,
 		const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id)
 	: m_item_data(data), m_model(model), m_depth(0), m_uuincid(id == UUIncD::null() ? UUIncD::create() : id),
+	  m_is_in_model(false), m_is_root(is_root)
+{
+}
+
+AbstractTreeModelItem::AbstractTreeModelItem(const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id)
+	: m_model(model), m_depth(0), m_uuincid(id == UUIncD::null() ? UUIncD::create() : id),
 	  m_is_in_model(false), m_is_root(is_root)
 {
 }
