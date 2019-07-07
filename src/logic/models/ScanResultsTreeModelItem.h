@@ -55,6 +55,7 @@ public:
 	static std::shared_ptr<ScanResultsTreeModelItem> construct(const DirScanResult& dsr,
             const std::shared_ptr<AbstractTreeModel> model,
             bool is_root = false);
+	ScanResultsTreeModelItem() {};
 	~ScanResultsTreeModelItem() override;
 
 	void setDirscanResults(const DirScanResult& dsr);
@@ -93,15 +94,14 @@ class SRTMItem_LibEntry : public ScanResultsTreeModelItem, public enable_shared_
 {
 	using BASE_CLASS = ScanResultsTreeModelItem;
 
-public:
-	static std::shared_ptr<SRTMItem_LibEntry> construct(const DirScanResult& dsr,
-			const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root);
-
 protected:
 	explicit SRTMItem_LibEntry(const DirScanResult& dsr,
 	                           const std::shared_ptr</** @todo Associated model*/AbstractTreeModel>& model, bool is_root);
 
 public:
+	static std::shared_ptr<SRTMItem_LibEntry> construct(const DirScanResult& dsr,
+			const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root);
+	SRTMItem_LibEntry() {};
 	~SRTMItem_LibEntry() override = default;
 
 	QVariant data(int column, int role = Qt::DisplayRole) const override;
@@ -130,5 +130,7 @@ private:
 
 /// @todo Need this here for QVariant::fromValue().
 //Q_DECLARE_METATYPE(std::string);
+Q_DECLARE_METATYPE(ScanResultsTreeModelItem);
+Q_DECLARE_METATYPE(SRTMItem_LibEntry);
 
 #endif /* SRC_LOGIC_MODELS_SCANRESULTSTREEMODELITEM_H_ */

@@ -54,6 +54,7 @@ public:
 	 */
 	static std::shared_ptr<AbstractTreeModelHeaderItem> construct(const std::shared_ptr<AbstractTreeModel>& model, bool isRoot = true,
 	                                                              UUIncD id = UUIncD::null());
+	AbstractTreeModelHeaderItem() {};
 	~AbstractTreeModelHeaderItem() override;
 
 	 /**
@@ -87,6 +88,7 @@ protected:
 
 };
 
+Q_DECLARE_METATYPE(AbstractTreeModelHeaderItem);
 Q_DECLARE_METATYPE(std::shared_ptr<AbstractTreeModelHeaderItem>)
 
 #endif /* SRC_LOGIC_MODELS_ABSTRACTTREEMODELHEADERITEM_H_ */

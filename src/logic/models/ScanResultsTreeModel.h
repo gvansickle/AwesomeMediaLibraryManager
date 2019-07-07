@@ -89,5 +89,4 @@ protected:
 
 };
 
-
 #endif // SCANRESULTSTREEMODEL_H

@@ -318,6 +318,9 @@ void XmlSerializer::writeVariantOrderedMapToStream(const QVariant& variant, QXml
 
 	QVariantInsertionOrderedMap omap = variant.value<QVariantInsertionOrderedMap>();
 
+	xmlstream.writeAttribute("metatype_id", toqstr(std::to_string(omap.m_id)));
+	xmlstream.writeAttribute("class", toqstr(omap.m_class));
+
 	auto attrs = omap.get_attrs();
 	for(const auto& it : attrs)
 	{
@@ -630,6 +633,17 @@ QVariant XmlSerializer::readVariantOrderedMapFromStream(std::vector<QXmlStreamAt
 	{
 		map.insert(xmlstream.name().toString(), readVariantFromStream(xmlstream));
 	}
+
+	// What was the derived class that was actually written?
+	int metatype_id = map.value("metatype_id", QVariant()).value<int>();
+	if(metatype_id != 0)
+	{
+		// It was something.
+		auto retvar = QVariant::fromValue(map);
+		///// @todo
+		Q_ASSERT(retvar.canConvert(metatype_id));
+	}
+
 	return QVariant::fromValue(map);
 }
 

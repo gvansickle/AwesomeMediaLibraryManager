@@ -110,6 +110,11 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 	// Defer to the base class for streaming out common data.
 	map = BASE_CLASS::toVariant();
 
+	int id = qMetaTypeId<decltype(*this)>();
+	qDb() << "QMetaType:" << id << QMetaType::typeName(id);// << QVariant(*this).typeName();
+	map.m_id = id;
+	map.m_class = QMetaType::typeName(id);
+
 	/// @todo Will be more fields, justifying the map vs. value?
 	/// @todo Need the parent here too?  Probably needs to be handled by the parent, but maybe for error detection.
 

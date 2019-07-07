@@ -98,6 +98,11 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 	// Call down to base class for writing e.g. children.
 	map = BASE_CLASS::toVariant();
 
+	int id = qMetaTypeId<decltype(*this)>();
+	qDb() << "QMetaType:" << id << QMetaType::typeName(id);// << QVariant(*this).typeName();
+	map.m_id = id;
+	map.m_class = QMetaType::typeName(id);
+
 	// Header info.
 	/// @todo Or is some of this really model info?  Children are.
 	map_insert_or_die(map, XMLTAG_HEADER_NUM_SECTIONS, columnCount());
@@ -113,27 +118,6 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 	}
 	map_insert_or_die(map, "header_section_list", header_section_list);
 
-
-#if 0
-	qDb() << M_NAME_VAL(childCount());
-	map_insert_or_die(map, "num_child_items", childCount());
-
-	// Create a list of our children.
-	auto model = m_model.lock();
-	Q_ASSERT(model);
-	QVariantHomogenousList child_list(XMLTAG_CHILD_NODE_LIST, "child");
-	child_list.clear();
-	for(int i = 0; i < childCount(); ++i)
-	{
-		AbstractTreeModelItem::construct({}, model, false);
-		const std::shared_ptr<AbstractTreeModelItem> child = this->child(i);
-		child_list.push_back(child->toVariant());
-//		list_push_back_or_warn(child_list, "child", child);
-	}
-
-	// Add list of child tree items to our QVariantMap.
-	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, child_list);
-#endif
 	return map;
 }
 

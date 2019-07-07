@@ -81,6 +81,7 @@ public:
 	/// KDEN
 	static std::shared_ptr<AbstractTreeModelItem> construct(const std::vector<QVariant>& data,
 			std::shared_ptr<AbstractTreeModel> model, bool isRoot, UUIncD id = UUIncD::null());
+	AbstractTreeModelItem() {};
 	~AbstractTreeModelItem() override;
 
 //	static AbstractTreeModelItem* AbstractTreeModelItemFactory(QVariant);
@@ -283,6 +284,7 @@ private:
 	bool m_is_root;
 };
 
+Q_DECLARE_METATYPE(AbstractTreeModelItem);
 Q_DECLARE_METATYPE(std::vector<QVariant>);
 Q_DECLARE_METATYPE(std::shared_ptr<AbstractTreeModelItem>);
 
