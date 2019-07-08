@@ -447,6 +447,18 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 	auto model_ptr = m_model.lock();
 	Q_ASSERT(model_ptr);
 
+	// What was the derived class that was actually written?
+	std::string metatype_class_str = map.get_attr("class");
+	if(metatype_class_str.empty())
+	{
+		// Get as much info as we can.
+		auto vartype = variant.type();
+		const char* typename_per_var = variant.typeName();
+		auto metatype = QMetaType::typeName(vartype);
+		qDb() << "Class attr:" << M_ID_VAL(metatype) << M_ID_VAL(vartype) << M_ID_VAL(typename_per_var);
+//		Q_ASSERT(0);
+	}
+
 //	std::vector<std::shared_ptr<AbstractTreeModelItem>> temp_items;
 	for(const QVariant& child : child_list)
 	{

@@ -151,8 +151,6 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 #undef X
 
 	AMLM::map_read_field_or_warn(map, XMLTAG_DIRSCANRESULT, &m_dsr);
-
-	AMLM_ASSERT_GT(m_child_items.size(), 0);
 }
 
 void ScanResultsTreeModelItem::setDirscanResults(const DirScanResult& dsr)
@@ -245,6 +243,19 @@ int SRTMItem_LibEntry::columnCount() const
 	return 2;
 }
 
+#define M_DATASTREAM_FIELDS(X) \
+	/* TAG_IDENTIFIER, tag_string, member_field, var_name */ \
+	X(XMLTAG_LIBRARY_ENTRIES, library_entries, nullptr)
+
+
+/// Strings to use for the tags.
+using strviw_type = QLatin1Literal;
+
+///// Strings to use for the tags.
+#define X(field_tag, tag_string, var_name) static const strviw_type field_tag ( # tag_string );
+	M_DATASTREAM_FIELDS(X);
+#undef X
+
 QVariant SRTMItem_LibEntry::toVariant() const
 {
 	QVariantInsertionOrderedMap map;
@@ -255,24 +266,31 @@ QVariant SRTMItem_LibEntry::toVariant() const
 	// Overwrite any class info added by the above.
 	set_map_class_info(this, &map);
 
-	QVariantHomogenousList list("library_entries", "m_library_entry");
-
-	/// @todo Need the parent here too?  Probably needs to be handled by the parent, but maybe for error detection.
+	QVariantHomogenousList list(XMLTAG_LIBRARY_ENTRIES, "m_library_entry");
 
 	if(auto libentry = m_library_entry.get(); libentry != nullptr)
 	{
 		list_push_back_or_die(list, m_library_entry->toVariant());
 	}
 
-	return list;
+	map_insert_or_die(map, XMLTAG_LIBRARY_ENTRIES, list);
+
+	return map;
 }
 
 void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 {
-	QVariantHomogenousList list = variant.value<QVariantHomogenousList>();
+//	QVariantHomogenousList list = variant.value<QVariantHomogenousList>();
 
-	/// @todo Incomplete.
-	Q_ASSERT(0);
+	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
+
+	BASE_CLASS::fromVariant(variant);
+
+#define X(field_tag, tag_string, var_name) AMLM::map_read_field_or_warn(map, field_tag, var_name);
+	M_DATASTREAM_FIELDS(X);
+#undef X
+
+	AMLM::map_read_field_or_warn(map, XMLTAG_LIBRARY_ENTRIES, &m_library_entry);
 }
 
 /////////// @todo SRTMItem_LibEntry

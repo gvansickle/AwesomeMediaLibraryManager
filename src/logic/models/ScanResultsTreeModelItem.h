@@ -47,12 +47,10 @@ class ScanResultsTreeModelItem : public AbstractTreeModelItem, public enable_sha
 
 protected:
 	/// Create a new model item populated with the passed DirScanResult.
-	explicit ScanResultsTreeModelItem(const DirScanResult& dsr,
-									  std::shared_ptr<ScanResultsTreeModel> model,
+	explicit ScanResultsTreeModelItem(const DirScanResult& dsr, std::shared_ptr<ScanResultsTreeModel> model,
 	                                  bool is_root = false);
 
-	explicit ScanResultsTreeModelItem(std::shared_ptr<ScanResultsTreeModel> model,
-									  bool is_root = false);
+	explicit ScanResultsTreeModelItem(std::shared_ptr<ScanResultsTreeModel> model, bool is_root = false);
 public:
 	/**
 	 * Named constructors.
