@@ -72,12 +72,12 @@ protected:
 
 	/// Sets the model and UUIncD.
 	/// ETM+KDen
-	AbstractTreeModelItem(const std::vector<QVariant>& data, const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id = UUIncD::null());
+	AbstractTreeModelItem(std::vector<QVariant>  data, const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id = UUIncD::null());
 	AbstractTreeModelItem(const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id = UUIncD::null());
 
 public:
 	/**
-	 * Named constructor.
+	 * Named constructors.
 	 */
 	/// KDEN
 	static std::shared_ptr<AbstractTreeModelItem> construct(const std::vector<QVariant>& data,
@@ -245,6 +245,15 @@ protected:
 	 */
 	virtual void updateParent(std::shared_ptr<AbstractTreeModelItem> parent);
 
+	template <class T, class MapType>
+	static void set_map_class_info(const T* self, MapType* map)
+	{
+		int id = qMetaTypeId<T>();
+		qDb() << "QMetaType:" << id << QMetaType::typeName(id);// << QVariant(*this).typeName();
+		map->m_id = id;
+		map->m_class = QMetaType::typeName(id);
+	}
+
 	/// Our guaranteed-to-be unique-to-this-run-of-the-program numeric ID.
 	UUIncD m_uuincid;
 
@@ -260,6 +269,9 @@ protected:
 	std::weak_ptr<AbstractTreeModel> m_model;
 
 	bool m_is_root;
+
+	/// Deque of shared_ptr's to child items.
+	std::deque<std::shared_ptr<AbstractTreeModelItem>> m_child_items;
 
 private:
 
@@ -278,8 +290,7 @@ private:
 	/// be non-null as long as this item is not the invisible root item.
 	std::weak_ptr<AbstractTreeModelItem> m_parent_item;
 
-	/// Deque of shared_ptr's to child items.
-	std::deque<std::shared_ptr<AbstractTreeModelItem>> m_child_items;
+
 
 	int m_depth;
 

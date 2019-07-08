@@ -113,6 +113,7 @@ public:
 		return QVariant::fromValue(*this);
 	}
 
+
 protected:
 	QString m_list_tag {};
 	QString m_list_item_tag {};

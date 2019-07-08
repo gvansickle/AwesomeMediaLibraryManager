@@ -72,7 +72,15 @@ ScanResultsTreeModel::make_item_from_variant(const QVariant& variant)
 
 	// What was the derived class that was actually written?
 	std::string metatype_class_str = map.get_attr("class");
-	Q_ASSERT(!metatype_class_str.empty());
+	if(metatype_class_str.empty())
+	{
+		// Get as much info as we can.
+		auto vartype = variant.type();
+		const char* typename_per_var = variant.typeName();
+		auto metatype = QMetaType::typeName(vartype);
+		qDb() << QString("ERROR: No class attr:") << M_ID_VAL(metatype) << M_ID_VAL(vartype) << M_ID_VAL(typename_per_var);
+		Q_ASSERT(0);
+	}
 	int metatype_id = QMetaType::type(metatype_class_str.c_str());
 
 	std::shared_ptr<AbstractTreeModelItem> retval;

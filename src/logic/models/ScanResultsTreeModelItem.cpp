@@ -36,7 +36,7 @@
 #include <LibraryEntry.h>
 #include <serialization/SerializationHelpers.h>
 
-std::shared_ptr<ScanResultsTreeModelItem> ScanResultsTreeModelItem::construct(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModel> model, bool is_root)
+std::shared_ptr<ScanResultsTreeModelItem> ScanResultsTreeModelItem::construct(const DirScanResult& dsr, const std::shared_ptr<ScanResultsTreeModel> model, bool is_root)
 {
 	std::shared_ptr<ScanResultsTreeModelItem> self(new ScanResultsTreeModelItem(dsr, model, is_root));
 	baseFinishConstruct(self);
@@ -44,20 +44,21 @@ std::shared_ptr<ScanResultsTreeModelItem> ScanResultsTreeModelItem::construct(co
 }
 
 std::shared_ptr<ScanResultsTreeModelItem> ScanResultsTreeModelItem::construct(const QVariant& variant,
-																			  const std::shared_ptr<AbstractTreeModel> model, bool is_root)
+																			  std::shared_ptr<ScanResultsTreeModel> model, bool is_root)
 {
 	std::shared_ptr<ScanResultsTreeModelItem> self(new ScanResultsTreeModelItem(model, is_root));
-	self->fromVariant(variant);
 	baseFinishConstruct(self);
+	self->fromVariant(variant);
+
 	return self;
 }
 
-ScanResultsTreeModelItem::ScanResultsTreeModelItem(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModel> model, bool is_root)
+ScanResultsTreeModelItem::ScanResultsTreeModelItem(const DirScanResult& dsr, const std::shared_ptr<ScanResultsTreeModel> model, bool is_root)
 	: BASE_CLASS(model, is_root), m_dsr(dsr)
 {
 }
 
-ScanResultsTreeModelItem::ScanResultsTreeModelItem(const std::shared_ptr<AbstractTreeModel> model, bool is_root)
+ScanResultsTreeModelItem::ScanResultsTreeModelItem(const std::shared_ptr<ScanResultsTreeModel> model, bool is_root)
 	: BASE_CLASS(model, is_root)
 {
 }
@@ -124,10 +125,8 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 	// Defer to the base class for streaming out common data.
 	map = BASE_CLASS::toVariant();
 
-	int id = qMetaTypeId<decltype(*this)>();
-	qDb() << "QMetaType:" << id << QMetaType::typeName(id);// << QVariant(*this).typeName();
-	map.m_id = id;
-	map.m_class = QMetaType::typeName(id);
+	// Overwrite any class info added by the above.
+	set_map_class_info(this, &map);
 
 	/// @todo Will be more fields, justifying the map vs. value?
 	/// @todo Need the parent here too?  Probably needs to be handled by the parent, but maybe for error detection.
@@ -137,17 +136,7 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 #define X(field_tag, tag_string, var_name) map_insert_or_die(map, field_tag, var_name);
 	M_DATASTREAM_FIELDS(X);
 #undef X
-#if 0
-	// Children to variant list.
-	QVariantHomogenousList child_list(XMLTAG_CHILD_NODE_LIST, "child");
-	for(int i=0; i<childCount(); i++)
-	{
-		auto child_ptr = child(i);
-//		list_push_back_or_die(vl, child_ptr);
-		child_list.push_back(child_ptr->toVariant());
-	}
-	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, child_list);
-#endif
+
 	return map;
 }
 
@@ -155,17 +144,15 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 {
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
+	BASE_CLASS::fromVariant(variant);
+
 #define X(field_tag, tag_string, var_name) AMLM::map_read_field_or_warn(map, field_tag, var_name);
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
-	// Children to variant list.
-	QVariantHomogenousList vl(XMLTAG_CHILD_NODE_LIST, "child");
-	AMLM::map_read_field_or_warn(map, XMLTAG_CHILD_NODE_LIST, &vl);
-//	for(const auto& ch : vl)
-//	{
-//		appendChild(ch.fromVariant());
-//	}
+	AMLM::map_read_field_or_warn(map, XMLTAG_DIRSCANRESULT, &m_dsr);
+
+	AMLM_ASSERT_GT(m_child_items.size(), 0);
 }
 
 void ScanResultsTreeModelItem::setDirscanResults(const DirScanResult& dsr)
@@ -192,13 +179,13 @@ std::shared_ptr<SRTMItem_LibEntry> SRTMItem_LibEntry::construct(const QVariant& 
 }
 
 SRTMItem_LibEntry::SRTMItem_LibEntry(const DirScanResult& dsr, const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root)
-	: BASE_CLASS(dsr, std::static_pointer_cast<AbstractTreeModel>(model), is_root)
+	: BASE_CLASS(dsr, std::static_pointer_cast<ScanResultsTreeModel>(model), is_root)
 {
 
 }
 
 SRTMItem_LibEntry::SRTMItem_LibEntry(const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root)
-	: BASE_CLASS(std::static_pointer_cast<AbstractTreeModel>(model), is_root)
+	: BASE_CLASS(std::static_pointer_cast<ScanResultsTreeModel>(model), is_root)
 {
 
 }
@@ -260,6 +247,14 @@ int SRTMItem_LibEntry::columnCount() const
 
 QVariant SRTMItem_LibEntry::toVariant() const
 {
+	QVariantInsertionOrderedMap map;
+
+	// Defer to the base class for streaming out common data.
+	map = BASE_CLASS::toVariant();
+
+	// Overwrite any class info added by the above.
+	set_map_class_info(this, &map);
+
 	QVariantHomogenousList list("library_entries", "m_library_entry");
 
 	/// @todo Need the parent here too?  Probably needs to be handled by the parent, but maybe for error detection.

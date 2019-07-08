@@ -1,3 +1,5 @@
+#include <utility>
+
 /*
  * Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
@@ -68,16 +70,23 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::construct(const QV
 	return retval;
 }
 
-AbstractTreeModelItem::AbstractTreeModelItem(const std::vector<QVariant>& data,
+AbstractTreeModelItem::AbstractTreeModelItem(std::vector<QVariant>  data,
 		const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id)
-	: m_item_data(data), m_model(model), m_depth(0), m_uuincid(id == UUIncD::null() ? UUIncD::create() : id),
-	  m_is_in_model(false), m_is_root(is_root)
+	: m_item_data(std::move(data)),
+	  m_model(model),
+	  m_depth(0),
+	  m_uuincid(id == UUIncD::null() ? UUIncD::create() : id),
+	  m_is_in_model(false),
+	  m_is_root(is_root)
 {
 }
 
 AbstractTreeModelItem::AbstractTreeModelItem(const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id)
-	: m_model(model), m_depth(0), m_uuincid(id == UUIncD::null() ? UUIncD::create() : id),
-	  m_is_in_model(false), m_is_root(is_root)
+	: m_model(model),
+	  m_depth(0),
+	  m_uuincid(id == UUIncD::null() ? UUIncD::create() : id),
+	  m_is_in_model(false),
+	  m_is_root(is_root)
 {
 }
 
@@ -354,6 +363,9 @@ QVariant AbstractTreeModelItem::toVariant() const
 {
 	QVariantInsertionOrderedMap map;
 
+	// Write class info to the map.
+	set_map_class_info(this, &map);
+
 #define X(field_tag, tag_string, var_name) map_insert_or_die(map, field_tag, var_name);
 	M_DATASTREAM_FIELDS(X);
 #undef X
@@ -415,26 +427,30 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 	qulonglong num_children = 0;
 	AMLM::map_read_field_or_warn(map, XMLTAG_NUM_CHILDREN, &num_children);
 
-	QVariantHomogenousList child_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
+	qDb() << XMLTAG_NUM_CHILDREN << num_children;
+
+//	QVariantHomogenousList child_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
+	QVariantHomogenousList child_list(XMLTAG_CHILD_NODE_LIST, "child");
+	child_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
+	qDb() << M_ID_VAL(child_list.size());
 
 	AMLM_ASSERT_EQ(num_children, child_list.size());
 
 	////////////////////////////////////
 	// Now read in our children.  We need this HeaderItem to be in a model for that to work.
-	Q_ASSERT(isInModel());
+//	Q_ASSERT(isInModel());
 
 	/// @todo This is a QVariantList containing <item>/QVariantMap's, each of which
 	/// contains a single <scan_res_tree_model_item type="QVariantMap">, which in turn
 	/// contains a single <dirscanresult>/QVariantMap.
-//	QVariantHomogenousList child_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
 
 	auto model_ptr = m_model.lock();
 	Q_ASSERT(model_ptr);
 
-	std::vector<std::shared_ptr<AbstractTreeModelItem>> temp_items;
+//	std::vector<std::shared_ptr<AbstractTreeModelItem>> temp_items;
 	for(const QVariant& child : child_list)
 	{
-		qDb() << "READING CHILD ITEM:" << child;
+		qDb() << "READING CHILD ITEM, TYPE:" << child.typeName();
 
 		model_ptr->requestAddTreeModelItem(child, getId());
 	}

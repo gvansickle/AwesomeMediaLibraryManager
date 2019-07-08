@@ -94,15 +94,13 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 {
 	QVariantInsertionOrderedMap map;
 
-	QVariantHomogenousList header_section_list("header_section_list", "section");
-
 	// Call down to base class for writing e.g. children.
 	map = BASE_CLASS::toVariant();
 
-	int id = qMetaTypeId<decltype(*this)>();
-	qDb() << "QMetaType:" << id << QMetaType::typeName(id);// << QVariant(*this).typeName();
-	map.m_id = id;
-	map.m_class = QMetaType::typeName(id);
+	// Overwrite any class info added by the above.
+	set_map_class_info(this, &map);
+
+	QVariantHomogenousList header_section_list("header_section_list", "section");
 
 	// Header info.
 	/// @todo Or is some of this really model info?  Children are.
@@ -168,19 +166,8 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	{
 		qDb() << "READING CHILD ITEM:" << child;
 
-//		std::shared_ptr<AbstractTreeModelItem> new_child = model_ptr->make_item_from_variant(child);
-
 		model_ptr->requestAddTreeModelItem(child, getId());
-
-//		auto child_item = this->appendChild();
-//		child_item->fromVariant(child);
-
-		// Save it off temporarily.
-//		temp_items.push_back(std::move(child_item));
 	}
-
-	// Append the children we read in to our list all in one batch.
-//	this->appendChildren(std::move(temp_items));
 }
 
 std::shared_ptr<AbstractHeaderSection> AbstractTreeModelHeaderItem::getHeaderSection(int column)
