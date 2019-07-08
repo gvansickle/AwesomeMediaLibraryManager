@@ -171,8 +171,8 @@ std::shared_ptr<SRTMItem_LibEntry> SRTMItem_LibEntry::construct(const DirScanRes
 std::shared_ptr<SRTMItem_LibEntry> SRTMItem_LibEntry::construct(const QVariant& variant, const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root)
 {
 	std::shared_ptr<SRTMItem_LibEntry> self(new SRTMItem_LibEntry(model, is_root));
-	self->fromVariant(variant);
 	baseFinishConstruct(self);
+	self->fromVariant(variant);
 	return self;
 }
 

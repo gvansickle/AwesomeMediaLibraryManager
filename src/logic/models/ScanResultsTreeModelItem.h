@@ -141,5 +141,6 @@ private:
 //Q_DECLARE_METATYPE(std::string);
 Q_DECLARE_METATYPE(ScanResultsTreeModelItem);
 Q_DECLARE_METATYPE(SRTMItem_LibEntry);
+//Q_DECLARE_METATYPE(std::shared_ptr<LibraryEntry>);
 
 #endif /* SRC_LOGIC_MODELS_SCANRESULTSTREEMODELITEM_H_ */

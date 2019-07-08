@@ -463,6 +463,9 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 	for(const QVariant& child : child_list)
 	{
 		qDb() << "READING CHILD ITEM, TYPE:" << child.typeName();
+//		const char* typename_per_var = child.typeName();
+		std::string metatype_class_str = child.value<QVariantInsertionOrderedMap>().get_attr("class");
+		qDb() << "Class attr:" << /*M_ID_VAL(metatype) << M_ID_VAL(vartype) <<*/ M_ID_VAL(metatype_class_str);
 
 		model_ptr->requestAddTreeModelItem(child, getId());
 	}
