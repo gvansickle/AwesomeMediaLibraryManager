@@ -144,13 +144,41 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 {
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
-	BASE_CLASS::fromVariant(variant);
-
 #define X(field_tag, tag_string, var_name) AMLM::map_read_field_or_warn(map, field_tag, var_name);
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
 	AMLM::map_read_field_or_warn(map, XMLTAG_DIRSCANRESULT, &m_dsr);
+
+//	if(auto model = getTypedModel()) //std::static_pointer_cast<ScanResultsTreeModel>(m_model.lock()))
+//	{
+//		UUIncD parent_id;
+//		if(auto parent_ptr = parent_item().lock())
+//		{
+//			parent_id = parent_ptr->getId();
+//		}
+//		else
+//		{
+//			// No parent.
+//			Q_ASSERT(0);
+//		}
+////		model->requestAddExistingTreeModelItem(AbstractTreeModelItem::downcasted_shared_from_this<ScanResultsTreeModelItem>(), parent_id);
+//	}
+
+	BASE_CLASS::fromVariant(variant);
+//	qDb() << "READING CHILD ITEM INTO ScanResultsTreeModelItem:" << child->;
+	auto model_ptr = getTypedModel();
+//	std::shared_ptr<AbstractTreeModelItem> new_child_item = model_ptr->make_item_from_variant(map);
+//	bool ok = appendChild(new_child_item);
+//	Q_ASSERT(ok);
+
+	// Overwrite any class info added by the above.
+	set_map_class_info(this, &map);
+}
+
+std::shared_ptr<ScanResultsTreeModel> ScanResultsTreeModelItem::getTypedModel() const
+{
+	return std::dynamic_pointer_cast<ScanResultsTreeModel>(m_model.lock());
 }
 
 void ScanResultsTreeModelItem::setDirscanResults(const DirScanResult& dsr)
@@ -243,6 +271,7 @@ int SRTMItem_LibEntry::columnCount() const
 	return 2;
 }
 
+// Redefined because two classes in one file.
 #define M_DATASTREAM_FIELDS(X) \
 	/* TAG_IDENTIFIER, tag_string, member_field, var_name */ \
 	X(XMLTAG_LIBRARY_ENTRIES, library_entries, nullptr)
@@ -284,13 +313,19 @@ void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
-	BASE_CLASS::fromVariant(variant);
-
 #define X(field_tag, tag_string, var_name) AMLM::map_read_field_or_warn(map, field_tag, var_name);
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
 	AMLM::map_read_field_or_warn(map, XMLTAG_LIBRARY_ENTRIES, &m_library_entry);
+
+	BASE_CLASS::fromVariant(variant);
+
 }
+
+//std::shared_ptr<ScanResultsTreeModel> SRTMItem_LibEntry::getTypedModel()
+//{
+//	return std::dynamic_pointer_cast<ScanResultsTreeModel>(m_model);
+//}
 
 /////////// @todo SRTMItem_LibEntry

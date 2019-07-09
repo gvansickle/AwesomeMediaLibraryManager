@@ -64,8 +64,8 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::construct(const QV
 {
 	std::shared_ptr<AbstractTreeModelItem> retval(new AbstractTreeModelItem(model, isRoot, id));
 
-	retval->fromVariant(variant);
 	baseFinishConstruct(retval);
+	retval->fromVariant(variant);
 
 	return retval;
 }
@@ -437,7 +437,7 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 	AMLM_ASSERT_EQ(num_children, child_list.size());
 
 	////////////////////////////////////
-	// Now read in our children.  We need this HeaderItem to be in a model for that to work.
+	// Now read in our children.  We need this Item to be in a model for that to work.
 //	Q_ASSERT(isInModel());
 
 	/// @todo This is a QVariantList containing <item>/QVariantMap's, each of which
@@ -459,15 +459,19 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 //		Q_ASSERT(0);
 	}
 
-//	std::vector<std::shared_ptr<AbstractTreeModelItem>> temp_items;
 	for(const QVariant& child : child_list)
 	{
-		qDb() << "READING CHILD ITEM, TYPE:" << child.typeName();
+		qDb() << "READING CHILD ITEM IN AbstractTreeModelItem, TYPE:" << child.typeName();
 //		const char* typename_per_var = child.typeName();
 		std::string metatype_class_str = child.value<QVariantInsertionOrderedMap>().get_attr("class");
 		qDb() << "Class attr:" << /*M_ID_VAL(metatype) << M_ID_VAL(vartype) <<*/ M_ID_VAL(metatype_class_str);
 
-		model_ptr->requestAddTreeModelItem(child, getId());
+		std::shared_ptr<AbstractTreeModelItem> new_child_item = model_ptr->make_item_from_variant(child);
+
+		qDb() << "Appending";
+		appendChild(new_child_item);
+		qDb() << "Appended";
+//		model_ptr->requestAddTreeModelItem(child, getId());
 	}
 	////////////////////////
 

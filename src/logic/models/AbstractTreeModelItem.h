@@ -165,6 +165,7 @@ public:
 	// GRVS+KDEN
 	bool appendChildren(std::vector<std::shared_ptr<AbstractTreeModelItem>> new_children);
 	/**
+	 * Append an already-created child item to this item.
 	 * @note this must already have a model or this call will assert.
 	 */
 	// GRVS+KDEN
@@ -289,8 +290,6 @@ private:
 	/// For items in a tree model (i.e. not being copy/pasted or mid-construction), this will always
 	/// be non-null as long as this item is not the invisible root item.
 	std::weak_ptr<AbstractTreeModelItem> m_parent_item;
-
-
 
 	int m_depth;
 

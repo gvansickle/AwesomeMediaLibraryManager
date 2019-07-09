@@ -59,6 +59,23 @@ UUIncD ScanResultsTreeModel::requestAddTreeModelItem(const QVariant& variant, UU
 	return new_item->getId();
 }
 
+UUIncD ScanResultsTreeModel::requestAddExistingTreeModelItem(std::shared_ptr<AbstractTreeModelItem> new_item, UUIncD parent_id, Fun undo, Fun redo)
+{
+	std::unique_lock write_lock(m_rw_mutex);
+
+	// ::construct() a new tree model item from variant.
+//	std::shared_ptr<AbstractTreeModelItem> new_item = make_item_from_variant(variant);
+
+	bool status = addItem(new_item, parent_id, undo, redo);
+
+	if(!status)
+	{
+		// Add failed for some reason, return a null UUIncD.
+		return UUIncD::null();
+	}
+	return new_item->getId();
+}
+
 /// Qt5 ids for the TreeItems it can hold.
 static const int f_atmi_id = qMetaTypeId<AbstractTreeModelItem>();
 static const int f_strmi_id = qMetaTypeId<ScanResultsTreeModelItem>();
@@ -102,6 +119,7 @@ ScanResultsTreeModel::make_item_from_variant(const QVariant& variant)
 	else
 	{
 		qCr() << "Trying to read in unknown class:" << metatype_id << metatype_class_str;
+		Q_ASSERT(0);
 	}
 
 	return retval;
@@ -200,6 +218,7 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 	QVariantInsertionOrderedMap root_item_map;
 	map_read_field_or_warn(map, XMLTAG_SRTM_ROOT_ITEM, &root_item_map);
 	m_root_item->fromVariant(root_item_map);
+//	requestAddTreeModelItem()
 
 
 #warning @todo INCOMPLETE/error handling
