@@ -165,7 +165,10 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 ////		model->requestAddExistingTreeModelItem(AbstractTreeModelItem::downcasted_shared_from_this<ScanResultsTreeModelItem>(), parent_id);
 //	}
 
-	BASE_CLASS::fromVariant(variant);
+//	BASE_CLASS::fromVariant(variant);
+	QVariantHomogenousList child_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
+	/// @todo HERE
+//	childrenFromVariant(child_list);
 //	qDb() << "READING CHILD ITEM INTO ScanResultsTreeModelItem:" << child->;
 	auto model_ptr = getTypedModel();
 //	std::shared_ptr<AbstractTreeModelItem> new_child_item = model_ptr->make_item_from_variant(map);
@@ -199,8 +202,8 @@ std::shared_ptr<SRTMItem_LibEntry> SRTMItem_LibEntry::construct(const DirScanRes
 std::shared_ptr<SRTMItem_LibEntry> SRTMItem_LibEntry::construct(const QVariant& variant, const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root)
 {
 	std::shared_ptr<SRTMItem_LibEntry> self(new SRTMItem_LibEntry(model, is_root));
-	baseFinishConstruct(self);
 	self->fromVariant(variant);
+	baseFinishConstruct(self);
 	return self;
 }
 
@@ -290,10 +293,12 @@ QVariant SRTMItem_LibEntry::toVariant() const
 	QVariantInsertionOrderedMap map;
 
 	// Defer to the base class for streaming out common data.
-	map = BASE_CLASS::toVariant();
+//	map = BASE_CLASS::toVariant();
 
 	// Overwrite any class info added by the above.
 	set_map_class_info(this, &map);
+
+	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, childrenToVariant());
 
 	QVariantHomogenousList list(XMLTAG_LIBRARY_ENTRIES, "m_library_entry");
 
@@ -319,7 +324,7 @@ void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 
 	AMLM::map_read_field_or_warn(map, XMLTAG_LIBRARY_ENTRIES, &m_library_entry);
 
-	BASE_CLASS::fromVariant(variant);
+//	BASE_CLASS::fromVariant(variant);
 
 }
 

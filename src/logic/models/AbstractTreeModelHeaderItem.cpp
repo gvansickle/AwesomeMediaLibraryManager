@@ -164,6 +164,8 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	auto parent_id = getId();
 
 //	std::vector<std::shared_ptr<AbstractTreeModelItem>> temp_items;
+	childrenFromVariant(child_list);
+#if 0
 	for(const QVariant& child : child_list)
 	{
 		qDb() << "READING CHILD ITEM INTO HEADERITEM:" << child;
@@ -173,6 +175,7 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 		Q_ASSERT(ok);
 //		model_ptr->requestAddTreeModelItem(child, parent_id);
 	}
+#endif
 }
 
 std::shared_ptr<AbstractHeaderSection> AbstractTreeModelHeaderItem::getHeaderSection(int column)

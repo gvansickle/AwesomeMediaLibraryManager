@@ -506,7 +506,7 @@ M_WARNING("SHARED PTR");
 				/// Try to load it back in and round-trip it.
 				std::shared_ptr<ScanResultsTreeModel> load_tree = ScanResultsTreeModel::construct();
 				LoadDatabase(load_tree, database_filename);
-				SaveDatabase(load_tree, "/home/gary/AMLMDatabaseRT.xml");
+				SaveDatabase(load_tree, QDir::homePath() +"/AMLMDatabaseRT.xml");
 
 /// @todo EXPERIMENTAL
 #if 0

@@ -233,6 +233,12 @@ UUIncD AbstractTreeModelItem::getId() const
 	return m_uuincid;
 }
 
+void AbstractTreeModelItem::setId(UUIncD id)
+{
+	Q_ASSERT(m_uuincid != UUIncD::null());
+	m_uuincid = id;
+}
+
 bool AbstractTreeModelItem::isInModel() const
 {
 	return m_is_in_model;
@@ -388,19 +394,16 @@ QVariant AbstractTreeModelItem::toVariant() const
 	// Add them to the output map.
 	map_insert_or_die(map, "item_data", list);
 
-	// Child nodes.
-	// Create a list of them.
-	QVariantHomogenousList child_list(XMLTAG_CHILD_NODE_LIST, "child");
-	for(int i=0; i<childCount(); i++)
-	{
-		auto child_ptr = child(i);
-		list_push_back_or_die(child_list, child_ptr->toVariant());
-	}
+	// Serialize out Child nodes.
+	auto child_list = childrenToVariant();
+
 	// Insert the list into the map.
 	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, child_list);
 
 	return map;
 }
+
+
 
 void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 {
@@ -429,6 +432,7 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 
 	qDb() << XMLTAG_NUM_CHILDREN << num_children;
 
+
 //	QVariantHomogenousList child_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
 	QVariantHomogenousList child_list(XMLTAG_CHILD_NODE_LIST, "child");
 	child_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
@@ -436,13 +440,12 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 
 	AMLM_ASSERT_EQ(num_children, child_list.size());
 
+	// Read in our children.
+	childrenFromVariant(child_list);
+
 	////////////////////////////////////
 	// Now read in our children.  We need this Item to be in a model for that to work.
 //	Q_ASSERT(isInModel());
-
-	/// @todo This is a QVariantList containing <item>/QVariantMap's, each of which
-	/// contains a single <scan_res_tree_model_item type="QVariantMap">, which in turn
-	/// contains a single <dirscanresult>/QVariantMap.
 
 	auto model_ptr = m_model.lock();
 	Q_ASSERT(model_ptr);
@@ -459,20 +462,7 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 //		Q_ASSERT(0);
 	}
 
-	for(const QVariant& child : child_list)
-	{
-		qDb() << "READING CHILD ITEM IN AbstractTreeModelItem, TYPE:" << child.typeName();
-//		const char* typename_per_var = child.typeName();
-		std::string metatype_class_str = child.value<QVariantInsertionOrderedMap>().get_attr("class");
-		qDb() << "Class attr:" << /*M_ID_VAL(metatype) << M_ID_VAL(vartype) <<*/ M_ID_VAL(metatype_class_str);
 
-		std::shared_ptr<AbstractTreeModelItem> new_child_item = model_ptr->make_item_from_variant(child);
-
-		qDb() << "Appending";
-		appendChild(new_child_item);
-		qDb() << "Appended";
-//		model_ptr->requestAddTreeModelItem(child, getId());
-	}
 	////////////////////////
 
 #if 0
@@ -500,15 +490,37 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 	AMLM_ASSERT_EQ(num_children, m_child_items.size());
 }
 
-QVariant AbstractTreeModelItem::toVariantGuts() const
+QVariant AbstractTreeModelItem::childrenToVariant() const
 {
-	Q_ASSERT(0);
-	return QVariant();
+	// Create a list of them.
+	QVariantHomogenousList child_list(XMLTAG_CHILD_NODE_LIST, "child");
+	for(int i=0; i<childCount(); i++)
+	{
+		auto child_ptr = child(i);
+		list_push_back_or_die(child_list, child_ptr->toVariant());
+	}
+	return child_list;
 }
 
-void AbstractTreeModelItem::fromVariantGuts(const QVariant& variant) const
+void AbstractTreeModelItem::childrenFromVariant(const QVariantHomogenousList& variant)
 {
+	auto model_ptr = m_model.lock();
+	Q_ASSERT(model_ptr);
 
+	for(const QVariant& child : variant)
+	{
+		qDb() << "READING CHILD ITEM IN AbstractTreeModelItem, TYPE:" << child.typeName();
+//		const char* typename_per_var = child.typeName();
+		std::string metatype_class_str = child.value<QVariantInsertionOrderedMap>().get_attr("class");
+		qDb() << "Class attr:" << /*M_ID_VAL(metatype) << M_ID_VAL(vartype) <<*/ M_ID_VAL(metatype_class_str);
+
+		std::shared_ptr<AbstractTreeModelItem> new_child_item = model_ptr->make_item_from_variant(child);
+
+		qDb() << "Appending";
+		appendChild(new_child_item);
+		qDb() << "Appended";
+//		model_ptr->requestAddTreeModelItem(child, getId());
+	}
 }
 
 

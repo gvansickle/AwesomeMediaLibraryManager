@@ -83,6 +83,10 @@ public:
 	virtual UUIncD requestAddExistingTreeModelItem(std::shared_ptr<AbstractTreeModelItem> item, UUIncD parent_id,
 								   Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
 
+	void toOrm(std::string filename) const override;
+	void fromOrm(std::string filename) override;
+
+
 	QTH_FRIEND_QDATASTREAM_OPS(ScanResultsTreeModel);
 
 	/// @}

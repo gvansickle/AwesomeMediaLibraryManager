@@ -253,6 +253,9 @@ public:
 	                               Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda)
 	                               { Q_ASSERT(0); return UUIncD::null(); };
 
+	virtual void toOrm(std::string filename) const;
+	virtual void fromOrm(std::string filename);
+
 	/// @} // END Serialization
 
 	/// @} // END Extended public model interface.

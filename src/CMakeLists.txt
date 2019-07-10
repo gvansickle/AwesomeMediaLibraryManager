@@ -162,6 +162,7 @@ set(PROJECT_COMMON_INTERNAL_LINK_LIB_TARGETS
 		logic
 		resources
 		utils
+        SQLite::SQLite3
 )
 
 ### @OBSOLETE Models

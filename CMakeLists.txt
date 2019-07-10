@@ -407,6 +407,10 @@ list(APPEND KF5_LINK_LIB_TARGETS KF5::WindowSystem)
 
 ###### EXPERIMENT
 
+# SQLite3
+find_package(SQLite3
+             REQUIRED)
+
 #find_package(BreezeIcons REQUIRED) # Doesn't exist yet.
 ### @todo Need to find a better way than hardcoding the path to the rcc file here.
 set(WITH_BUNDLED_BREEZE_ICONS true)

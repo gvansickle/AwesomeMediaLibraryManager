@@ -138,6 +138,7 @@ public:
 	 */
 	// GRVS
 	UUIncD getId() const;
+	void setId(UUIncD id);
 
 	// KDEN
 	bool isInModel() const;
@@ -212,8 +213,8 @@ public:
 	 /**
 	  * Call from derived classes from within toVariant()/fromVariant() if necessary.
 	  */
-	 virtual QVariant toVariantGuts() const;
-	 virtual void fromVariantGuts(const QVariant& variant) const;
+	 virtual QVariant childrenToVariant() const;
+	 virtual void childrenFromVariant(const QVariantHomogenousList& variant);
 
     /// @}
 
