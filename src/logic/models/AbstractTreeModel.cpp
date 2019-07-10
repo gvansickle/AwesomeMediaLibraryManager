@@ -266,6 +266,16 @@ Fun AbstractTreeModel::moveItem_lambda(UUIncD id, int destRow, bool force)
 	return []() { return false; };
 }
 
+void AbstractTreeModel::toOrm(std::string filename) const
+{
+	Q_ASSERT(0);
+}
+
+void AbstractTreeModel::fromOrm(std::string filename)
+{
+	Q_ASSERT(0);
+}
+
 
 AbstractTreeModel::iterator AbstractTreeModel::begin()
 {
