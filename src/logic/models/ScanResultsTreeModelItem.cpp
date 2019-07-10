@@ -126,9 +126,7 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 //	map = BASE_CLASS::toVariant();
 
 	// Overwrite any class info added by the above.
-//	set_map_class_info(this, &map);
-
-	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, childrenToVariant());
+	set_map_class_info(this, &map);
 
 	/// @todo Will be more fields, justifying the map vs. value?
 	/// @todo Need the parent here too?  Probably needs to be handled by the parent, but maybe for error detection.
@@ -138,6 +136,13 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 #define X(field_tag, tag_string, var_name) map_insert_or_die(map, field_tag, var_name);
 	M_DATASTREAM_FIELDS(X);
 #undef X
+
+	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
+	for(auto& it : m_child_items)
+	{
+		list_push_back_or_die(child_var_list, it->toVariant());
+	}
+	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, child_var_list);
 
 	return map;
 }
@@ -300,7 +305,7 @@ QVariant SRTMItem_LibEntry::toVariant() const
 	// Overwrite any class info added by the above.
 	set_map_class_info(this, &map);
 
-	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, childrenToVariant());
+//	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, childrenToVariant());
 
 	QVariantHomogenousList list(XMLTAG_LIBRARY_ENTRIES, "m_library_entry");
 
@@ -308,8 +313,14 @@ QVariant SRTMItem_LibEntry::toVariant() const
 	{
 		list_push_back_or_die(list, m_library_entry->toVariant());
 	}
-
 	map_insert_or_die(map, XMLTAG_LIBRARY_ENTRIES, list);
+
+	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
+	for(auto& it : m_child_items)
+	{
+		list_push_back_or_die(child_var_list, it->toVariant());
+	}
+	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, child_var_list);
 
 	return map;
 }

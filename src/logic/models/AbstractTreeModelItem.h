@@ -170,7 +170,7 @@ public:
 	 * @note this must already have a model or this call will assert.
 	 */
 	// GRVS+KDEN
-	bool appendChild(const std::shared_ptr<AbstractTreeModelItem>& new_child);
+	bool appendChild(std::shared_ptr<AbstractTreeModelItem> new_child);
 	/**
 	 * Construct and Append a new child item to this item, initializing it from @a data.
 	 */
@@ -210,12 +210,37 @@ public:
 	 QVariant toVariant() const override;
 	 void fromVariant(const QVariant& variant) override;
 
-	 /**
-	  * Call from derived classes from within toVariant()/fromVariant() if necessary.
-	  */
-	 virtual QVariant childrenToVariant() const;
-	 virtual void childrenFromVariant(const QVariantHomogenousList& variant);
+	/**
+	 * Call from derived classes from within toVariant()/fromVariant() if necessary.
+	 */
+	virtual QVariant childrenToVariant() const { Q_ASSERT(0); return QVariant(); };
 
+	virtual void childrenFromVariant(const QVariantHomogenousList& variant) { Q_ASSERT(0); };
+
+	template <class ChildType>
+	std::vector<std::shared_ptr<ChildType>> childrenFromVariant(const QVariantHomogenousList& variant)
+	{
+		auto model_ptr = m_model.lock();
+		Q_ASSERT(model_ptr);
+
+		for(const QVariant& child_variant : variant)
+		{
+			qDb() << "READING CHILD ITEM IN AbstractTreeModelItem, TYPE:" << child_variant.typeName();
+//		const char* typename_per_var = child_variant.typeName();
+			std::string metatype_class_str = child_variant.value<QVariantInsertionOrderedMap>().get_attr("class");
+			qDb() << "Class attr:" << /*M_ID_VAL(metatype) << M_ID_VAL(vartype) <<*/ M_ID_VAL(metatype_class_str);
+
+//			std::shared_ptr<AbstractTreeModelItem> new_child_item = model_ptr->make_item_from_variant(child_variant);
+			// Default construct a new child.
+			auto new_child_item = std::make_shared<ChildType>();
+			// Load it.
+			new_child_item->fromVariant(child_variant);
+			qDb() << "Appending";
+			appendChild(new_child_item);
+			qDb() << "Appended";
+//		model_ptr->requestAddTreeModelItem(child_variant, getId());
+		}
+	}
     /// @}
 
     /**

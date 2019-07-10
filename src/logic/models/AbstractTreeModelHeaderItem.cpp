@@ -95,7 +95,7 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 	QVariantInsertionOrderedMap map;
 
 	// Call down to base class for writing e.g. children.
-	map = BASE_CLASS::toVariant();
+//	map = BASE_CLASS::toVariant();
 
 	// Overwrite any class info added by the above.
 	set_map_class_info(this, &map);
@@ -116,6 +116,13 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 		header_section_list.push_back(section);
 	}
 	map_insert_or_die(map, "header_section_list", header_section_list);
+
+	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
+	for(auto& it : m_child_items)
+	{
+		list_push_back_or_die(child_var_list, it->toVariant());
+	}
+	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, child_var_list);
 
 	return map;
 }
@@ -164,8 +171,8 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	auto parent_id = getId();
 
 //	std::vector<std::shared_ptr<AbstractTreeModelItem>> temp_items;
-	childrenFromVariant(child_list);
-#if 0
+//	childrenFromVariant(child_list);
+#if 1
 	for(const QVariant& child : child_list)
 	{
 		qDb() << "READING CHILD ITEM INTO HEADERITEM:" << child;

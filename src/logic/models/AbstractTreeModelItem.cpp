@@ -490,6 +490,7 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 	AMLM_ASSERT_EQ(num_children, m_child_items.size());
 }
 
+#if 0
 QVariant AbstractTreeModelItem::childrenToVariant() const
 {
 	// Create a list of them.
@@ -522,7 +523,7 @@ void AbstractTreeModelItem::childrenFromVariant(const QVariantHomogenousList& va
 //		model_ptr->requestAddTreeModelItem(child, getId());
 	}
 }
-
+#endif
 
 QVariant AbstractTreeModelItem::data(int column, int role) const
 {
@@ -575,23 +576,6 @@ bool AbstractTreeModelItem::setData(int column, const QVariant &value)
 #endif
 }
 
-bool AbstractTreeModelItem::appendChildren(std::vector<std::shared_ptr<AbstractTreeModelItem>> new_children)
-{
-    /// @todo Support adding new columns if children have them?
-    for(auto& child : new_children)
-    {
-		bool retval = appendChild(child);
-		if(!retval)
-		{
-			/// @todo Recovery?
-			Q_ASSERT(0);
-			return false;
-		}
-    }
-
-	return true;
-}
-
 bool AbstractTreeModelItem::insertChildren(int position, int count, int columns)
 {
 	if (position < 0 || position > m_child_items.size())
@@ -633,7 +617,24 @@ bool AbstractTreeModelItem::insertChildren(int position, int count, int columns)
 	return true;
 }
 
-bool AbstractTreeModelItem::appendChild(const std::shared_ptr<AbstractTreeModelItem>& new_child)
+bool AbstractTreeModelItem::appendChildren(std::vector<std::shared_ptr<AbstractTreeModelItem>> new_children)
+{
+	/// @todo Support adding new columns if children have them?
+	for(auto& child : new_children)
+	{
+		bool retval = appendChild(child);
+		if(!retval)
+		{
+			/// @todo Recovery?
+			Q_ASSERT(0);
+			return false;
+		}
+	}
+
+	return true;
+}
+
+bool AbstractTreeModelItem::appendChild(std::shared_ptr<AbstractTreeModelItem> new_child)
 {
 	if(has_ancestor(new_child->getId()))
 	{
