@@ -123,10 +123,12 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 	QVariantInsertionOrderedMap map;
 
 	// Defer to the base class for streaming out common data.
-	map = BASE_CLASS::toVariant();
+//	map = BASE_CLASS::toVariant();
 
 	// Overwrite any class info added by the above.
-	set_map_class_info(this, &map);
+//	set_map_class_info(this, &map);
+
+	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, childrenToVariant());
 
 	/// @todo Will be more fields, justifying the map vs. value?
 	/// @todo Need the parent here too?  Probably needs to be handled by the parent, but maybe for error detection.
