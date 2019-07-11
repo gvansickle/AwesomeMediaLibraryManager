@@ -41,7 +41,7 @@ AbstractTreeModelHeaderItem::construct(const std::shared_ptr<AbstractTreeModel>&
 	std::shared_ptr<AbstractTreeModelHeaderItem> self(new AbstractTreeModelHeaderItem(model, isRoot, id));
 
 	baseFinishConstruct(self);
-
+	Q_ASSERT(self->isInModel());
 	return self;
 }
 
@@ -93,9 +93,6 @@ using strviw_type = QLatin1Literal;
 QVariant AbstractTreeModelHeaderItem::toVariant() const
 {
 	QVariantInsertionOrderedMap map;
-
-	// Call down to base class for writing e.g. children.
-//	map = BASE_CLASS::toVariant();
 
 	// Overwrite any class info added by the above.
 	set_map_class_info(this, &map);
@@ -165,24 +162,25 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	/// contains a single <dirscanresult>/QVariantMap.
 	QVariantHomogenousList child_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
 
+	// This needs to be in a model before we can requestAddXxx() anything.
+	// By default, this HeaderItem *only* will already be in the model.
 	auto model_ptr = m_model.lock();
 	Q_ASSERT(model_ptr);
 
 	auto parent_id = getId();
+	Q_ASSERT(parent_id != UUIncD::null());
 
 //	std::vector<std::shared_ptr<AbstractTreeModelItem>> temp_items;
 //	childrenFromVariant(child_list);
-#if 1
 	for(const QVariant& child : child_list)
 	{
 		qDb() << "READING CHILD ITEM INTO HEADERITEM:" << child;
 
-		std::shared_ptr<AbstractTreeModelItem> new_child_item = model_ptr->make_item_from_variant(child);
-		bool ok = appendChild(new_child_item);
-		Q_ASSERT(ok);
-//		model_ptr->requestAddTreeModelItem(child, parent_id);
+//		std::shared_ptr<AbstractTreeModelItem> new_child_item = model_ptr->make_item_from_variant(child);
+//		bool ok = appendChild(new_child_item);
+//		Q_ASSERT(ok);
+		model_ptr->requestAddTreeModelItem(child, parent_id);
 	}
-#endif
 }
 
 std::shared_ptr<AbstractHeaderSection> AbstractTreeModelHeaderItem::getHeaderSection(int column)

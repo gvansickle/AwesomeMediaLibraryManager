@@ -166,6 +166,7 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getItem(const QModelIn
 		}
     }
 	/// @todo This might want to be an assert() due to invalid index.
+	Q_ASSERT(0);
 	return m_root_item;
 }
 
@@ -311,7 +312,6 @@ void AbstractTreeModel::register_item(const std::shared_ptr<AbstractTreeModelIte
 void AbstractTreeModel::deregister_item(UUIncD id, AbstractTreeModelItem* item)
 {
 	Q_UNUSED(item);
-//	Q_ASSERT(m_model_item_map.count(id) > 0);
 	AMLM_ASSERT_GT(m_model_item_map.count(id), 0);
 	m_model_item_map.erase(id);
 }

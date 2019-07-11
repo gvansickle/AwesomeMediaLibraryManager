@@ -657,6 +657,8 @@ bool AbstractTreeModelItem::appendChild(std::shared_ptr<AbstractTreeModelItem> n
 	}
 	if (auto ptr = m_model.lock())
 	{
+		std::shared_ptr<AbstractTreeModelItem> sft = shared_from_this();
+		Q_ASSERT(sft);
 		ptr->notifyRowAboutToAppend(shared_from_this());
 		new_child->updateParent(shared_from_this());
 		int id = new_child->getId();

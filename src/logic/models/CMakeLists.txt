@@ -28,6 +28,7 @@ set(SOURCE_FILES_SRC_LOGIC_MODELS
     PlaceholderTreeModelItem.cpp
 	ScanResultsTreeModel.cpp
 	ScanResultsTreeModelItem.cpp
+	SRTMItemLibEntry.cpp
 	ThreadsafeTreeModel.cpp
 	)
 set(HEADER_FILES_SRC_LOGIC_MODELS
@@ -39,6 +40,7 @@ set(HEADER_FILES_SRC_LOGIC_MODELS
         PlaceholderTreeModelItem.h
 		ScanResultsTreeModel.h
 		ScanResultsTreeModelItem.h
+		SRTMItemLibEntry.h
 		ThreadsafeTreeModel.h
 		)
 

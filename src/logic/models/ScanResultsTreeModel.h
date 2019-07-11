@@ -74,14 +74,14 @@ public:
 	/**
 	 * Non-static factory function for creating new, typed tree nodes from QVariantMaps.
 	 */
-	std::shared_ptr<AbstractTreeModelItem>
-	make_item_from_variant(const QVariant& variant) override;
+//	std::shared_ptr<AbstractTreeModelItem>
+//	make_item_from_variant(const QVariant& variant) override;
 
 	UUIncD requestAddTreeModelItem(const QVariant& variant, UUIncD parent_id,
 	                               Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda) override;
 
-	virtual UUIncD requestAddExistingTreeModelItem(std::shared_ptr<AbstractTreeModelItem> item, UUIncD parent_id,
-								   Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
+//	virtual UUIncD requestAddExistingTreeModelItem(std::shared_ptr<AbstractTreeModelItem> item, UUIncD parent_id,
+//								   Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
 
 	void toOrm(std::string filename) const override;
 	void fromOrm(std::string filename) override;

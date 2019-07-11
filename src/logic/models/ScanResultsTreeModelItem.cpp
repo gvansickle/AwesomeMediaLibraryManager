@@ -58,7 +58,7 @@ ScanResultsTreeModelItem::ScanResultsTreeModelItem(const DirScanResult& dsr, con
 {
 }
 
-ScanResultsTreeModelItem::ScanResultsTreeModelItem(const std::shared_ptr<ScanResultsTreeModel> model, bool is_root)
+ScanResultsTreeModelItem::ScanResultsTreeModelItem(std::shared_ptr<ScanResultsTreeModel> model, bool is_root)
 	: BASE_CLASS(model, is_root)
 {
 }
@@ -122,9 +122,6 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 {
 	QVariantInsertionOrderedMap map;
 
-	// Defer to the base class for streaming out common data.
-//	map = BASE_CLASS::toVariant();
-
 	// Overwrite any class info added by the above.
 	set_map_class_info(this, &map);
 
@@ -151,45 +148,59 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 {
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
+	// Overwrite any class info added by the above.
+//	set_map_class_info(this, &map);
+
 #define X(field_tag, tag_string, var_name) AMLM::map_read_field_or_warn(map, field_tag, var_name);
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
 	AMLM::map_read_field_or_warn(map, XMLTAG_DIRSCANRESULT, &m_dsr);
 
-//	if(auto model = getTypedModel()) //std::static_pointer_cast<ScanResultsTreeModel>(m_model.lock()))
-//	{
-//		UUIncD parent_id;
-//		if(auto parent_ptr = parent_item().lock())
-//		{
-//			parent_id = parent_ptr->getId();
-//		}
-//		else
-//		{
-//			// No parent.
-//			Q_ASSERT(0);
-//		}
-////		model->requestAddExistingTreeModelItem(AbstractTreeModelItem::downcasted_shared_from_this<ScanResultsTreeModelItem>(), parent_id);
-//	}
-
-//	BASE_CLASS::fromVariant(variant);
 	QVariantHomogenousList child_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
-	/// @todo HERE
-//	childrenFromVariant(child_list);
-//	qDb() << "READING CHILD ITEM INTO ScanResultsTreeModelItem:" << child->;
+#if 0
 	auto model_ptr = getTypedModel();
-//	std::shared_ptr<AbstractTreeModelItem> new_child_item = model_ptr->make_item_from_variant(map);
-//	bool ok = appendChild(new_child_item);
-//	Q_ASSERT(ok);
+	for(const QVariant& child : child_list)
+	{
+		qDb() << "READING CHILD ITEM INTO ScanResultsTreeModelItem:" << child.typeName();
 
-	// Overwrite any class info added by the above.
-	set_map_class_info(this, &map);
+//		int id = qMetaTypeId(child.type());
+//		qDb() << "...QMetaType:" << id << QMetaType::typeName(id);
+
+		std::shared_ptr<AbstractTreeModelItem> new_child_item = model_ptr->make_item_from_variant(child);
+//		bool ok = appendChild(new_child_item);
+//		Q_ASSERT(ok);
+//		model_ptr->requestAddTreeModelItem(child, getId());
+	}
+#endif
+/////////////
+	auto model_ptr = m_model.lock();
+	Q_ASSERT(model_ptr);
+	auto parent_id = getId();
+	Q_ASSERT(isInModel());
+
+	/// NEEDS TO BE IN MODEL HERE.
+
+	std::vector<std::shared_ptr<AbstractTreeModelItem>> new_child_item_vec;
+	for(const QVariant& child : child_list)
+	{
+		qDb() << "READING CHILD ITEM INTO ScanResultsTreeModelItem:" << child.typeName();
+
+//		std::shared_ptr<AbstractTreeModelItem> new_child_item = model_ptr->make_item_from_variant(child);
+//		new_child_item_vec.push_back(new_child_item);
+//		bool ok = appendChild(new_child_item);
+//		Q_ASSERT(ok);
+		model_ptr->requestAddTreeModelItem(child, parent_id);
+//		std::dynamic_pointer_cast<ScanResultsTreeModel>(model_ptr)->requestAddExistingTreeModelItem(new_child_item, parent_id);
+	}
+	/// @todo WHY DOES THIS ASSERT
+//	appendChildren(new_child_item_vec);
 }
 
-std::shared_ptr<ScanResultsTreeModel> ScanResultsTreeModelItem::getTypedModel() const
-{
-	return std::dynamic_pointer_cast<ScanResultsTreeModel>(m_model.lock());
-}
+//std::shared_ptr<ScanResultsTreeModel> ScanResultsTreeModelItem::getTypedModel() const
+//{
+//	return std::dynamic_pointer_cast<ScanResultsTreeModel>(m_model.lock());
+//}
 
 void ScanResultsTreeModelItem::setDirscanResults(const DirScanResult& dsr)
 {
@@ -197,153 +208,3 @@ void ScanResultsTreeModelItem::setDirscanResults(const DirScanResult& dsr)
 }
 
 
-/////////// @todo SRTMItem_LibEntry
-
-std::shared_ptr<SRTMItem_LibEntry> SRTMItem_LibEntry::construct(const DirScanResult& dsr, const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root)
-{
-	std::shared_ptr<SRTMItem_LibEntry> self(new SRTMItem_LibEntry(dsr, model, is_root));
-	baseFinishConstruct(self);
-	return self;
-}
-
-std::shared_ptr<SRTMItem_LibEntry> SRTMItem_LibEntry::construct(const QVariant& variant, const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root)
-{
-	std::shared_ptr<SRTMItem_LibEntry> self(new SRTMItem_LibEntry(model, is_root));
-	self->fromVariant(variant);
-	baseFinishConstruct(self);
-	return self;
-}
-
-SRTMItem_LibEntry::SRTMItem_LibEntry(const DirScanResult& dsr, const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root)
-	: BASE_CLASS(dsr, std::static_pointer_cast<ScanResultsTreeModel>(model), is_root)
-{
-
-}
-
-SRTMItem_LibEntry::SRTMItem_LibEntry(const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root)
-	: BASE_CLASS(std::static_pointer_cast<ScanResultsTreeModel>(model), is_root)
-{
-
-}
-
-QVariant SRTMItem_LibEntry::data(int column, int role) const
-{
-	if((role != Qt::ItemDataRole::DisplayRole) && (role != Qt::ItemDataRole::EditRole))
-	{
-		return QVariant();
-	}
-
-	// We should have a valid LibraryEntry pointer.
-	Q_ASSERT(m_library_entry);
-
-#if 0
-	switch(column)
-	{
-		case 0:
-			return QVariant::fromValue(toqstr(m_key));
-			break;
-		case 1:
-			return QVariant::fromValue(toqstr(m_val));
-			break;
-		default:
-			return QVariant();
-			break;
-	}
-#else
-
-	if(!m_library_entry->isPopulated())
-	{
-		return QVariant("???");
-	}
-
-	if(role == Qt::DisplayRole /*|| role == Qt::ToolTipRole*/)
-	{
-		switch(column)
-		{
-			case 0:
-				return m_library_entry->getFilename();
-				break;
-			case 1:
-				return m_library_entry->getFileType();
-				break;
-			default:
-				return QVariant();
-				break;
-		}
-	}
-	return QVariant();
-#endif
-
-}
-
-int SRTMItem_LibEntry::columnCount() const
-{
-	return 2;
-}
-
-// Redefined because two classes in one file.
-#define M_DATASTREAM_FIELDS(X) \
-	/* TAG_IDENTIFIER, tag_string, member_field, var_name */ \
-	X(XMLTAG_LIBRARY_ENTRIES, library_entries, nullptr)
-
-
-/// Strings to use for the tags.
-using strviw_type = QLatin1Literal;
-
-///// Strings to use for the tags.
-#define X(field_tag, tag_string, var_name) static const strviw_type field_tag ( # tag_string );
-	M_DATASTREAM_FIELDS(X);
-#undef X
-
-QVariant SRTMItem_LibEntry::toVariant() const
-{
-	QVariantInsertionOrderedMap map;
-
-	// Defer to the base class for streaming out common data.
-//	map = BASE_CLASS::toVariant();
-
-	// Overwrite any class info added by the above.
-	set_map_class_info(this, &map);
-
-//	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, childrenToVariant());
-
-	QVariantHomogenousList list(XMLTAG_LIBRARY_ENTRIES, "m_library_entry");
-
-	if(auto libentry = m_library_entry.get(); libentry != nullptr)
-	{
-		list_push_back_or_die(list, m_library_entry->toVariant());
-	}
-	map_insert_or_die(map, XMLTAG_LIBRARY_ENTRIES, list);
-
-	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
-	for(auto& it : m_child_items)
-	{
-		list_push_back_or_die(child_var_list, it->toVariant());
-	}
-	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, child_var_list);
-
-	return map;
-}
-
-void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
-{
-//	QVariantHomogenousList list = variant.value<QVariantHomogenousList>();
-
-	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
-
-#define X(field_tag, tag_string, var_name) AMLM::map_read_field_or_warn(map, field_tag, var_name);
-	M_DATASTREAM_FIELDS(X);
-#undef X
-
-	AMLM::map_read_field_or_warn(map, XMLTAG_LIBRARY_ENTRIES, &m_library_entry);
-
-//	BASE_CLASS::fromVariant(variant);
-
-}
-
-//std::shared_ptr<ScanResultsTreeModel> SRTMItem_LibEntry::getTypedModel()
-//{
-//	return std::dynamic_pointer_cast<ScanResultsTreeModel>(m_model);
-//}
-
-/////////// @todo SRTMItem_LibEntry

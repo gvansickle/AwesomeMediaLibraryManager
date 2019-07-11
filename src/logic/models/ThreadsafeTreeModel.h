@@ -67,8 +67,8 @@ public:
 	///       KDen doesn't have any of these in this base AbstractTreeModel class.
 	/// @{
 
-	UUIncD requestAddItem(std::vector<QVariant> values, UUIncD parent_id,
-	                      Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
+//	UUIncD requestAddItem(std::vector<QVariant> values, UUIncD parent_id,
+//	                      Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
 
 	/// @}
 

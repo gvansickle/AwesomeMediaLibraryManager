@@ -90,7 +90,7 @@ public:
 
 protected:
 
-	std::shared_ptr<ScanResultsTreeModel> getTypedModel() const;
+//	std::shared_ptr<ScanResultsTreeModel> getTypedModel() const;
 
 	/// The directory scan results corresponding to this entry.
 	/// This is things like the main media URL, sidecar cue sheet URLs, timestamp info, etc.
@@ -98,48 +98,7 @@ protected:
 };
 
 
-class SRTMItem_LibEntry : public ScanResultsTreeModelItem, public enable_shared_from_this_virtual<SRTMItem_LibEntry>
-{
-	using BASE_CLASS = ScanResultsTreeModelItem;
 
-protected:
-	explicit SRTMItem_LibEntry(const DirScanResult& dsr,
-							   const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root);
-	explicit SRTMItem_LibEntry(const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root);
-
-public:
-	static std::shared_ptr<SRTMItem_LibEntry> construct(const DirScanResult& dsr,
-			const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root = false);
-	static std::shared_ptr<SRTMItem_LibEntry> construct(const QVariant& variant,
-			const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root = false);
-	SRTMItem_LibEntry() {};
-	~SRTMItem_LibEntry() override = default;
-
-	QVariant data(int column, int role = Qt::DisplayRole) const override;
-
-	int columnCount() const override;
-
-	void setLibraryEntry(std::shared_ptr<LibraryEntry> libentry) { m_library_entry = libentry; };
-
-	/// @name ISerializable interface
-	/// @{
-
-	/// Serialize item and any children to a QVariant.
-	QVariant toVariant() const override;
-	/// Serialize item and any children from a QVariant.
-	void fromVariant(const QVariant& variant) override;
-
-	/// @} // END Serialization
-	
-protected:
-
-//	std::shared_ptr<ScanResultsTreeModel> getTypedModel();
-
-private:
-	std::string m_key {"key"};
-	std::string m_val {"value"};
-	std::shared_ptr<LibraryEntry> m_library_entry;
-};
 
 /// @todo Need this here for QVariant::fromValue().
 //Q_DECLARE_METATYPE(std::string);

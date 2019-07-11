@@ -246,8 +246,8 @@ public:
 	/**
 	 * Non-static factory function for creating new, typed tree nodes from QVariantMaps.
 	 */
-	virtual std::shared_ptr<AbstractTreeModelItem>
-	make_item_from_variant(const QVariant& variant)	{ Q_ASSERT(0); return nullptr; };
+//	virtual std::shared_ptr<AbstractTreeModelItem>
+//	make_item_from_variant(const QVariant& variant)	{ Q_ASSERT(0); return nullptr; };
 
 	virtual UUIncD requestAddTreeModelItem(const QVariant& variant, UUIncD parent_id,
 	                               Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda)
@@ -273,6 +273,9 @@ public:
 
 protected:
 
+	/**
+	 * Register/deregister an item with the model.  Intended to be called from an AbstractTreeModelItem.
+	 */
 	virtual void register_item(const std::shared_ptr<AbstractTreeModelItem>& item);
 	virtual void deregister_item(UUIncD id, AbstractTreeModelItem* item);
 
