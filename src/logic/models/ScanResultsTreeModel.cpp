@@ -24,6 +24,7 @@
 // Ours
 #include "ScanResultsTreeModelItem.h"
 #include "AbstractTreeModelHeaderItem.h"
+#include "SRTMItemLibEntry.h"
 #include <logic/serialization/SerializationHelpers.h>
 
 

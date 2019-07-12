@@ -20,8 +20,12 @@
 /**
  * @file SRTMItemLibEntry.cpp
  */
-#include <models/SRTMItemLibEntry.h>
+#include "SRTMItemLibEntry.h"
 
+// Ours
+#include <logic/LibraryEntry.h>
+#include <serialization/ISerializable.h>
+#include <serialization/SerializationHelpers.h>
 
 /////////// @todo SRTMItem_LibEntry
 
@@ -110,6 +114,7 @@ int SRTMItem_LibEntry::columnCount() const
 // Redefined because two classes in one file.
 #define M_DATASTREAM_FIELDS(X) \
 	/* TAG_IDENTIFIER, tag_string, member_field, var_name */ \
+	X(XMLTAG_CHILD_NODE_LIST, child_node_list, nullptr) \
 	X(XMLTAG_LIBRARY_ENTRIES, library_entries, nullptr)
 
 
@@ -155,7 +160,7 @@ void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 
 	// Load LibraryEntry's.
 	AMLM::map_read_field_or_warn(map, XMLTAG_LIBRARY_ENTRIES, &m_library_entry);
-
+#if 0
 	QVariantHomogenousList child_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
 
 	auto model_ptr = m_model.lock();
@@ -172,6 +177,7 @@ void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 //		Q_ASSERT(ok);
 		model_ptr->requestAddTreeModelItem(child, parent_id);
 	}
+#endif
 }
 
 //std::shared_ptr<ScanResultsTreeModel> SRTMItem_LibEntry::getTypedModel()

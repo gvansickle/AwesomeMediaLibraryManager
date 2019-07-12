@@ -51,6 +51,7 @@
 #include <gui/MainWindow.h>
 #include <logic/models/AbstractTreeModelItem.h>
 #include <logic/models/ScanResultsTreeModel.h>
+#include <logic/models/SRTMItemLibEntry.h>
 #include <utils/DebugHelpers.h>
 #include <utils/ext_iterators.h>
 

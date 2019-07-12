@@ -24,6 +24,7 @@
 #define SRC_LOGIC_MODELS_SRTMITEMLIBENTRY_H_
 
 // Std C++
+#include <memory>
 
 // Ours
 #include <future/enable_shared_from_this_virtual.h>
@@ -71,5 +72,8 @@ private:
 	std::string m_val {"value"};
 	std::shared_ptr<LibraryEntry> m_library_entry;
 };
+
+Q_DECLARE_METATYPE(SRTMItem_LibEntry);
+
 
 #endif /* SRC_LOGIC_MODELS_SRTMITEMLIBENTRY_H_ */
