@@ -32,7 +32,8 @@
 #include "AbstractHeaderSection.h"
 #include <logic/serialization/SerializationHelpers.h>
 
-
+/// TEMP
+#include "ScanResultsTreeModel.h"
 
 // static
 std::shared_ptr<AbstractTreeModelHeaderItem>
@@ -131,7 +132,7 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 
 	// Read the number of header sections...
 	int header_num_sections = 0;
-	AMLM::map_read_field_or_warn(map, XMLTAG_HEADER_NUM_SECTIONS, &header_num_sections);
+	map_read_field_or_warn(map, XMLTAG_HEADER_NUM_SECTIONS, &header_num_sections);
 	QVariantHomogenousList header_section_list("header_section_list", "section");
 	header_section_list = map.value("header_section_list").value<QVariantHomogenousList>();
 
@@ -164,7 +165,7 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 
 	// This needs to be in a model before we can requestAddXxx() anything.
 	// By default, this HeaderItem *only* will already be in the model.
-	auto model_ptr = m_model.lock();
+	auto model_ptr = std::dynamic_pointer_cast<ScanResultsTreeModel>(m_model.lock());
 	Q_ASSERT(model_ptr);
 
 	auto parent_id = getId();
@@ -182,7 +183,7 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 		auto id = model_ptr->requestAddTreeModelItem(child_variant, parent_id);
 		auto new_child = model_ptr->getItemById(id);
 		Q_ASSERT(new_child);
-		new_child->fromVariant(variant);
+//		new_child->fromVariant(variant);
 	}
 }
 

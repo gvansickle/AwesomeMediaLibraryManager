@@ -29,19 +29,20 @@
 // Ours
 #include <future/enable_shared_from_this_virtual.h>
 #include "ScanResultsTreeModelItem.h"
+class LibraryEntry;
 
 class SRTMItem_LibEntry : public ScanResultsTreeModelItem, public enable_shared_from_this_virtual<SRTMItem_LibEntry>
 {
 	using BASE_CLASS = ScanResultsTreeModelItem;
 
 protected:
-//	explicit SRTMItem_LibEntry(const DirScanResult& dsr,
-//							   const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root);
+	explicit SRTMItem_LibEntry(std::shared_ptr<LibraryEntry> libentry,
+							   const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root);
 	explicit SRTMItem_LibEntry(const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root);
 
 public:
-//	static std::shared_ptr<SRTMItem_LibEntry> construct(const DirScanResult& dsr,
-//			const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root = false);
+	static std::shared_ptr<SRTMItem_LibEntry> construct(std::shared_ptr<LibraryEntry> libentry,
+			const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root = false);
 	static std::shared_ptr<SRTMItem_LibEntry> construct(const QVariant& variant,
 			const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root = false);
 	SRTMItem_LibEntry() {};

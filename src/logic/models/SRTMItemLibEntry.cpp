@@ -29,12 +29,12 @@
 
 /////////// @todo SRTMItem_LibEntry
 
-//std::shared_ptr<SRTMItem_LibEntry> SRTMItem_LibEntry::construct(const DirScanResult& dsr, const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root)
-//{
-//	std::shared_ptr<SRTMItem_LibEntry> self(new SRTMItem_LibEntry(dsr, model, is_root));
-//	baseFinishConstruct(self);
-//	return self;
-//}
+std::shared_ptr<SRTMItem_LibEntry> SRTMItem_LibEntry::construct(std::shared_ptr<LibraryEntry> libentry, const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root)
+{
+	std::shared_ptr<SRTMItem_LibEntry> self(new SRTMItem_LibEntry(libentry, model, is_root));
+	baseFinishConstruct(self);
+	return self;
+}
 
 std::shared_ptr<SRTMItem_LibEntry> SRTMItem_LibEntry::construct(const QVariant& variant, const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root)
 {
@@ -43,11 +43,11 @@ std::shared_ptr<SRTMItem_LibEntry> SRTMItem_LibEntry::construct(const QVariant& 
 	return self;
 }
 
-//SRTMItem_LibEntry::SRTMItem_LibEntry(const DirScanResult& dsr, const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root)
-//	: BASE_CLASS(dsr, std::static_pointer_cast<ScanResultsTreeModel>(model), is_root)
-//{
+SRTMItem_LibEntry::SRTMItem_LibEntry(std::shared_ptr<LibraryEntry> libentry, const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root)
+	: BASE_CLASS(std::static_pointer_cast<ScanResultsTreeModel>(model), is_root)
+{
 
-//}
+}
 
 SRTMItem_LibEntry::SRTMItem_LibEntry(const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root)
 	: BASE_CLASS(std::static_pointer_cast<ScanResultsTreeModel>(model), is_root)
@@ -153,12 +153,12 @@ void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 {
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
-#define X(field_tag, tag_string, var_name) AMLM::map_read_field_or_warn(map, field_tag, var_name);
+#define X(field_tag, tag_string, var_name) map_read_field_or_warn(map, field_tag, var_name);
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
 	// Load LibraryEntry's.
-	AMLM::map_read_field_or_warn(map, XMLTAG_LIBRARY_ENTRIES, &m_library_entry);
+	map_read_field_or_warn(map, XMLTAG_LIBRARY_ENTRIES, &m_library_entry);
 #if 0
 	QVariantHomogenousList child_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
 

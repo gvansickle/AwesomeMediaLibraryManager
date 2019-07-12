@@ -194,7 +194,7 @@ void Library::fromVariant(const QVariant& variant)
 	QVariantInsertionOrderedMap map; // = variant.value<QVariantInsertionOrderedMap>();
 	qviomap_from_qvar_or_die(&map, variant);
 
-#define X(field_tag, member_field)   AMLM::map_read_field_or_warn(map, field_tag, &member_field);
+#define X(field_tag, member_field)   map_read_field_or_warn(map, field_tag, &member_field);
 	M_DATASTREAM_FIELDS(X);
 #undef X
 

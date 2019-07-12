@@ -126,7 +126,7 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 	/// @todo Will be more fields, justifying the map vs. value?
 	/// @todo Need the parent here too?  Probably needs to be handled by the parent, but maybe for error detection.
 
-	map_insert_or_die(map, XMLTAG_DIRSCANRESULT, m_dsr);
+	map_insert_or_die(map, XMLTAG_DIRSCANRESULT, m_dsr.toVariant());
 
 #define X(field_tag, tag_string, var_name) map_insert_or_die(map, field_tag, var_name);
 	M_DATASTREAM_FIELDS(X);
@@ -149,11 +149,11 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 	// Overwrite any class info added by the above.
 //	set_map_class_info(this, &map);
 
-#define X(field_tag, tag_string, var_name) AMLM::map_read_field_or_warn(map, field_tag, var_name);
+#define X(field_tag, tag_string, var_name) map_read_field_or_warn(map, field_tag, var_name);
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
-	AMLM::map_read_field_or_warn(map, XMLTAG_DIRSCANRESULT, &m_dsr);
+	map_read_field_or_warn(map, XMLTAG_DIRSCANRESULT, &m_dsr);
 
 	QVariantHomogenousList child_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
 #if 0

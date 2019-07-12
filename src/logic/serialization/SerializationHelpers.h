@@ -43,6 +43,24 @@ using has_toVariant = future_detection::is_detected<toVariant_t, T>;
 /// @name Some helper templates.
 /// @{
 
+template <class MapType>
+void dump_map(const MapType& map)
+{
+	auto cit = std::cbegin(map);
+	auto end = std::cend(map);
+	for(auto it = cit; it != end; ++it)
+	{
+//		if(std::is_convertible_v<decltype(it->second), MapType>)
+//		{
+//			dump_map(it->second);
+//		}
+//		else
+		{
+			qDb() << "KEY:" << it->first << "VAL:" << it->second;
+		}
+	}
+}
+
 /**
  *
  * @param member  The ISerializer-derived member variable to insert.
@@ -320,10 +338,6 @@ void list_blocking_map_reduce_read_all_entries_or_warn(const InListType& in_list
 }
 
 
-
-namespace AMLM
-{
-
 /// @name Read entries from a maplike type into the apropriate @a member.
 /// @{
 
@@ -334,7 +348,9 @@ void map_read_field_or_warn(const MapType& map, const StringType& key, RawMember
 	QVariant qvar = map.value(key);
 	if(!qvar.isValid())
 	{
-		qWr() << "Couldn't read value of key '" << key << "' from map:" << map;
+		qWr() << "NO SUCH KEY: '" << key << "' from map:" << map;
+		dump_map(map);
+		Q_ASSERT(0);
 		return;
 	}
 
@@ -374,8 +390,5 @@ void map_read_field_or_warn(const MapType& map, const StringType& key, std::null
 	// Do nothing.
 }
 
-/// @}
-
-} /* namespace AMLM */
 
 #endif /* SRC_LOGIC_SERIALIZATION_SERIALIZATIONHELPERS_H_ */

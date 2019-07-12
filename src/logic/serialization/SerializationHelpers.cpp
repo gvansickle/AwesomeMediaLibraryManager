@@ -22,10 +22,3 @@
  */
 #include <serialization/SerializationHelpers.h>
 
-namespace AMLM
-{
-
-
-
-
-} /* namespace AMLM */

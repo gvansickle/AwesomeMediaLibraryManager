@@ -228,8 +228,6 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 	QVariantInsertionOrderedMap map;
 	qviomap_from_qvar_or_die(&map, variant);
 
-	using namespace AMLM;
-
 	/// @todo This should have a list of known base directory paths,
 	///         e.g. the file:// URL and the gvfs /run/... mount point, Windows drive letter paths, etc.
 	map_read_field_or_warn(map, XMLTAG_SRTM_BASE_DIRECTORY, &m_base_directory);

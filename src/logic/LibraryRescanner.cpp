@@ -421,13 +421,13 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 				//std::shared_ptr<SRTMItem_LibEntry> new_child = SRTMItem_LibEntry::construct(entry_dp->getDsr(), tree_model_ptr, /**isRoot*/false);
 				Q_ASSERT(new_child);
 
-				auto new_new_child = SRTMItem_LibEntry::construct(tree_model_ptr);
 
 M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 				std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(entry->data(1).toString());
 				lib_entry->populate(true);
 
 				// Here we're only dealing with the per-file LibraryEntry's.
+				auto new_new_child = SRTMItem_LibEntry::construct(lib_entry, tree_model_ptr);
 				new_new_child->setLibraryEntry(lib_entry);
 
 				/// NEW: Give the incoming entry a parent.

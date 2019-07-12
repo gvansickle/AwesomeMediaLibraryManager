@@ -62,11 +62,11 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::construct(const st
 
 std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::construct(const QVariant& variant, std::shared_ptr<AbstractTreeModel> model, bool isRoot, UUIncD id)
 {
-	std::shared_ptr<AbstractTreeModelItem> retval(new AbstractTreeModelItem(model, isRoot, id));
+	std::shared_ptr<AbstractTreeModelItem> self(new AbstractTreeModelItem(model, isRoot, id));
 
-	baseFinishConstruct(retval);
+	baseFinishConstruct(self);
 
-	return retval;
+	return self;
 }
 
 AbstractTreeModelItem::AbstractTreeModelItem(std::vector<QVariant>  data,
@@ -414,11 +414,11 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 
 	// Get the number of item_data entries.
 	std::vector<QVariant>::size_type item_data_size = 0;
-	AMLM::map_read_field_or_warn(map, XMLTAG_ITEM_DATA_SIZE, &item_data_size);
+	map_read_field_or_warn(map, XMLTAG_ITEM_DATA_SIZE, &item_data_size);
 
 	// This item's data from variant list.
 	QVariantHomogenousList vl("itemdata_list", "m_item_data");
-	AMLM::map_read_field_or_warn(map, "item_data", &vl);
+	map_read_field_or_warn(map, "item_data", &vl);
 	for(const auto& it : vl)
 	{
 		QString itstr = it.toString();
@@ -427,7 +427,7 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 
 	// Get this item's children.
 	qulonglong num_children = 0;
-	AMLM::map_read_field_or_warn(map, XMLTAG_NUM_CHILDREN, &num_children);
+	map_read_field_or_warn(map, XMLTAG_NUM_CHILDREN, &num_children);
 
 	qDb() << XMLTAG_NUM_CHILDREN << num_children;
 

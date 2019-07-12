@@ -326,7 +326,7 @@ void LibraryEntry::fromVariant(const QVariant& variant)
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
 	// Extract all the fields from the map, cast them to their type.
-#define X(field_tag, member_field)   AMLM::map_read_field_or_warn(map, field_tag, &(member_field));
+#define X(field_tag, member_field)   map_read_field_or_warn(map, field_tag, &(member_field));
 	M_DATASTREAM_FIELDS(X);
 #undef X
 

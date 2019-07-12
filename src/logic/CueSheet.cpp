@@ -254,14 +254,14 @@ void CueSheet::fromVariant(const QVariant& variant)
 	qviomap_from_qvar_or_die(&map, variant);
 
 	// CD-level fields.
-#define X(field_tag, member_field) AMLM::map_read_field_or_warn(map, field_tag, &(member_field));
+#define X(field_tag, member_field) map_read_field_or_warn(map, field_tag, &(member_field));
 	M_DATASTREAM_FIELDS_DISC(X);
 #undef X
 
 	// Track-level fields
 	QVariantHomogenousList qvar_track_list("m_tracks", "track");
 
-	AMLM::map_read_field_or_warn(map, XMLTAG_TRACK_METADATA, &qvar_track_list);
+	map_read_field_or_warn(map, XMLTAG_TRACK_METADATA, &qvar_track_list);
 	AMLM_WARNIF(qvar_track_list.empty());
 #if 0
 	list_read_all_fields_or_warn(qvar_track_list, &m_tracks);

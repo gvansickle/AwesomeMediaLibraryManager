@@ -687,16 +687,16 @@ void Metadata::fromVariant(const QVariant& variant)
 	QVariantInsertionOrderedMap map;
 	qviomap_from_qvar_or_die(&map, variant);
 
-#define X(field_tag, member_field)   AMLM::map_read_field_or_warn(map, field_tag, &(member_field));
+#define X(field_tag, member_field)   map_read_field_or_warn(map, field_tag, &(member_field));
 	M_DATASTREAM_FIELDS(X);
 	M_DATASTREAM_FIELDS_MAPS(X);
 #undef X
 
-	AMLM::map_read_field_or_warn(map, XMLTAG_CUESHEET, &m_cuesheet);
+	map_read_field_or_warn(map, XMLTAG_CUESHEET, &m_cuesheet);
 
 	// Read in the track list.
 	QVariantHomogenousList qvar_track_list("m_track", "track");
-	AMLM::map_read_field_or_warn(map, XMLTAG_TRACKS, &qvar_track_list);
+	map_read_field_or_warn(map, XMLTAG_TRACKS, &qvar_track_list);
 #if 0
 	list_read_all_fields_or_warn(qvar_track_list)
 #else
