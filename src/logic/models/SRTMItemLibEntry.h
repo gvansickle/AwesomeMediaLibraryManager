@@ -35,13 +35,13 @@ class SRTMItem_LibEntry : public ScanResultsTreeModelItem, public enable_shared_
 	using BASE_CLASS = ScanResultsTreeModelItem;
 
 protected:
-	explicit SRTMItem_LibEntry(const DirScanResult& dsr,
-							   const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root);
+//	explicit SRTMItem_LibEntry(const DirScanResult& dsr,
+//							   const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root);
 	explicit SRTMItem_LibEntry(const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root);
 
 public:
-	static std::shared_ptr<SRTMItem_LibEntry> construct(const DirScanResult& dsr,
-			const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root = false);
+//	static std::shared_ptr<SRTMItem_LibEntry> construct(const DirScanResult& dsr,
+//			const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root = false);
 	static std::shared_ptr<SRTMItem_LibEntry> construct(const QVariant& variant,
 			const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root = false);
 	SRTMItem_LibEntry() {};

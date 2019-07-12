@@ -179,7 +179,10 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 //		std::shared_ptr<AbstractTreeModelItem> new_child_item = model_ptr->make_item_from_variant(child);
 //		bool ok = appendChild(new_child_item);
 //		Q_ASSERT(ok);
-		model_ptr->requestAddTreeModelItem(child_variant, parent_id);
+		auto id = model_ptr->requestAddTreeModelItem(child_variant, parent_id);
+		auto new_child = model_ptr->getItemById(id);
+		Q_ASSERT(new_child);
+		new_child->fromVariant(variant);
 	}
 }
 
