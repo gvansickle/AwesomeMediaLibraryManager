@@ -428,7 +428,9 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 
 				// Here we're only dealing with the per-file LibraryEntry's.
 				auto new_new_child = SRTMItem_LibEntry::construct(lib_entry, tree_model_ptr);
-				new_new_child->setLibraryEntry(lib_entry);
+//				new_new_child->setLibraryEntry(lib_entry);
+
+				qDb() << "NEW_NEW_CHILD:" <<
 
 				/// NEW: Give the incoming entry a parent.
 				entry->changeParent(tree_model_ptr->getRootItem());
