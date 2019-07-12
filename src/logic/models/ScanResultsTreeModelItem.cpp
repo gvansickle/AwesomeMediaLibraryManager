@@ -117,7 +117,6 @@ using strviw_type = QLatin1Literal;
 #undef X
 
 
-
 QVariant ScanResultsTreeModelItem::toVariant() const
 {
 	QVariantInsertionOrderedMap map;
@@ -182,15 +181,15 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 	/// NEEDS TO BE IN MODEL HERE.
 
 	std::vector<std::shared_ptr<AbstractTreeModelItem>> new_child_item_vec;
-	for(const QVariant& child : child_list)
+	for(const QVariant& child_variant : child_list)
 	{
-		qDb() << "READING CHILD ITEM INTO ScanResultsTreeModelItem:" << child.typeName();
+		qDb() << "READING CHILD ITEM INTO ScanResultsTreeModelItem:" << child_variant.typeName();
 
 //		std::shared_ptr<AbstractTreeModelItem> new_child_item = model_ptr->make_item_from_variant(child);
 //		new_child_item_vec.push_back(new_child_item);
 //		bool ok = appendChild(new_child_item);
 //		Q_ASSERT(ok);
-		model_ptr->requestAddTreeModelItem(child, parent_id);
+		model_ptr->requestAddTreeModelItem(child_variant, parent_id);
 //		std::dynamic_pointer_cast<ScanResultsTreeModel>(model_ptr)->requestAddExistingTreeModelItem(new_child_item, parent_id);
 	}
 	/// @todo WHY DOES THIS ASSERT

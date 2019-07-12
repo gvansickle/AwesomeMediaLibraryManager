@@ -51,14 +51,14 @@
 #include <logic/serialization/SerializationHelpers.h>
 
 
-std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::construct(const std::vector<QVariant>& data,
-		std::shared_ptr<AbstractTreeModel> model, bool isRoot, UUIncD id)
-{
-	/// @note make_shared doesn't have access to the constructor if it's protected, so we have to do this.
-	std::shared_ptr<AbstractTreeModelItem> self(new AbstractTreeModelItem(data, model, isRoot, id));
-	baseFinishConstruct(self);
-	return self;
-}
+//std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::construct(const std::vector<QVariant>& data,
+//		std::shared_ptr<AbstractTreeModel> model, bool isRoot, UUIncD id)
+//{
+//	/// @note make_shared doesn't have access to the constructor if it's protected, so we have to do this.
+//	std::shared_ptr<AbstractTreeModelItem> self(new AbstractTreeModelItem(data, model, isRoot, id));
+//	baseFinishConstruct(self);
+//	return self;
+//}
 
 std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::construct(const QVariant& variant, std::shared_ptr<AbstractTreeModel> model, bool isRoot, UUIncD id)
 {

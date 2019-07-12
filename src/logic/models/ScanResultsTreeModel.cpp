@@ -52,7 +52,7 @@ UUIncD ScanResultsTreeModel::requestAddTreeModelItem(const QVariant& variant, UU
 
 	// ::construct() a new tree model item from variant.
 //	std::shared_ptr<AbstractTreeModelItem> new_item = make_item_from_variant(variant);
-	std::shared_ptr<ScanResultsTreeModelItem> new_item = SRTMItem_LibEntry::construct(variant,
+	std::shared_ptr<ScanResultsTreeModelItem> new_item = ScanResultsTreeModelItem::construct(variant,
 																							 std::static_pointer_cast<ScanResultsTreeModel>(shared_from_this()));
 
 

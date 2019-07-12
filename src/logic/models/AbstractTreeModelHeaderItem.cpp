@@ -172,14 +172,14 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 
 //	std::vector<std::shared_ptr<AbstractTreeModelItem>> temp_items;
 //	childrenFromVariant(child_list);
-	for(const QVariant& child : child_list)
+	for(const QVariant& child_variant : child_list)
 	{
-		qDb() << "READING CHILD ITEM INTO HEADERITEM:" << child;
+		qDb() << "READING CHILD ITEM INTO HEADERITEM:" << child_variant;
 
 //		std::shared_ptr<AbstractTreeModelItem> new_child_item = model_ptr->make_item_from_variant(child);
 //		bool ok = appendChild(new_child_item);
 //		Q_ASSERT(ok);
-		model_ptr->requestAddTreeModelItem(child, parent_id);
+		model_ptr->requestAddTreeModelItem(child_variant, parent_id);
 	}
 }
 
