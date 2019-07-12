@@ -48,7 +48,6 @@ std::shared_ptr<ScanResultsTreeModelItem> ScanResultsTreeModelItem::construct(co
 {
 	std::shared_ptr<ScanResultsTreeModelItem> self(new ScanResultsTreeModelItem(model, is_root));
 	baseFinishConstruct(self);
-	self->fromVariant(variant);
 
 	return self;
 }
@@ -189,7 +188,10 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 //		new_child_item_vec.push_back(new_child_item);
 //		bool ok = appendChild(new_child_item);
 //		Q_ASSERT(ok);
-		model_ptr->requestAddTreeModelItem(child_variant, parent_id);
+		auto id = model_ptr->requestAddTreeModelItem(child_variant, parent_id);
+		auto new_child = model_ptr->getItemById(id);
+		Q_ASSERT(new_child);
+		new_child->fromVariant(variant);
 //		std::dynamic_pointer_cast<ScanResultsTreeModel>(model_ptr)->requestAddExistingTreeModelItem(new_child_item, parent_id);
 	}
 	/// @todo WHY DOES THIS ASSERT
