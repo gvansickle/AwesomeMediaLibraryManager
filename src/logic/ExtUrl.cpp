@@ -74,7 +74,8 @@ QVariant ExtUrl::toVariant() const
 
 void ExtUrl::fromVariant(const QVariant& variant)
 {
-	QVariantInsertionOrderedMap map(variant);
+	QVariantInsertionOrderedMap map;
+	qviomap_from_qvar_or_die(&map, variant);
 
 	// Extract all the fields from the map, cast them to their type.
 #define X(field_tag, field)    map_read_field_or_warn(map, field_tag, &field);
