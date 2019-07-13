@@ -429,16 +429,9 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 				std::shared_ptr<SRTMItem_LibEntry> new_child = SRTMItem_LibEntry::construct(lib_entry, tree_model_sptr, /**isRoot*/false);
 				Q_ASSERT(new_child);
 
-//				auto new_new_child = SRTMItem_LibEntry::construct(lib_entry, tree_model_ptr);
-//				new_new_child->setLibraryEntry(lib_entry);
-
-//				qDb() << "NEW_NEW_CHILD:" << new_new_child;
-
 				/// NEW: Give the incoming ScanResultTreeModelItem entry a parent.
 				entry_dp->changeParent(tree_model_sptr->getRootItem());
 				entry_dp->appendChild(new_child);
-//				new_child->changeParent(entry);
-//				new_child->appendChild(new_new_child);
 			}
 
 			// Finally, move the new model items to their new home.

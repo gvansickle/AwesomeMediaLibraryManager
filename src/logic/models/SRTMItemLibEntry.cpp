@@ -165,6 +165,8 @@ void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 	map_read_field_or_warn(map, XMLTAG_LIBRARY_ENTRIES, &list);
 	for(const QVariant& it : list)
 	{
+		/// @todo First doesn't work for some reason.
+
 //		m_library_entry = std::make_shared<LibraryEntry>(it.value<LibraryEntry>());
 		m_library_entry = std::make_shared<LibraryEntry>();
 		m_library_entry->fromVariant(it);
