@@ -164,7 +164,8 @@ void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 	map_read_field_or_warn(map, XMLTAG_LIBRARY_ENTRIES, &list);
 	if(!list.empty())
 	{
-		for(auto& it : list)
+		Q_ASSERT(list.size() <= 1);
+		for(const QVariant& it : list)
 		{
 			m_library_entry = std::make_shared<LibraryEntry>(it.value<LibraryEntry>());
 		}
