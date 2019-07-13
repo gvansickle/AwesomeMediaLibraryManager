@@ -105,6 +105,9 @@ UUIncD ScanResultsTreeModel::requestAddSRTMLibEntryItem(const QVariant& variant,
 		// Add failed for some reason, return a null UUIncD.
 		return UUIncD::null();
 	}
+
+	new_item->fromVariant(variant);
+
 	return new_item->getId();
 }
 
