@@ -154,23 +154,22 @@ QVariant SRTMItem_LibEntry::toVariant() const
 void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 {
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
+	dump_map(map);
 
 #define X(field_tag, tag_string, var_name) map_read_field_or_warn(map, field_tag, var_name);
-//	M_DATASTREAM_FIELDS(X);
+	M_DATASTREAM_FIELDS(X);
 #undef X
 
 	// Load LibraryEntry's.
 	QVariantHomogenousList list(XMLTAG_LIBRARY_ENTRIES, "m_library_entry");
 	map_read_field_or_warn(map, XMLTAG_LIBRARY_ENTRIES, &list);
-	if(!list.empty())
+	for(const QVariant& it : list)
 	{
-		Q_ASSERT(list.size() <= 1);
-		for(const QVariant& it : list)
-		{
-			m_library_entry = std::make_shared<LibraryEntry>(it.value<LibraryEntry>());
-		}
+//		m_library_entry = std::make_shared<LibraryEntry>(it.value<LibraryEntry>());
+		m_library_entry = std::make_shared<LibraryEntry>();
+		m_library_entry->fromVariant(it);
 	}
-#if 1
+
 	QVariantHomogenousList child_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
 
 	auto model_ptr_base = m_model.lock();
@@ -190,7 +189,6 @@ void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 //		Q_ASSERT(ok);
 		// WRONG: model_ptr->requestAddSRTMLibEntryItem(child, parent_id);
 	}
-#endif
 }
 
 //std::shared_ptr<ScanResultsTreeModel> SRTMItem_LibEntry::getTypedModel()
