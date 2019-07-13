@@ -281,6 +281,15 @@ protected:
 		map->m_class = QMetaType::typeName(id);
 	}
 
+	template <class T, class MapType>
+	static void dump_map_class_info(const T* self, MapType* map)
+	{
+		int id = qMetaTypeId<T>();
+		qDb() << "QMetaType:" << id << QMetaType::typeName(id);
+//		map->m_id = id;
+//		map->m_class = QMetaType::typeName(id);
+	}
+
 	/// Our guaranteed-to-be unique-to-this-run-of-the-program numeric ID.
 	UUIncD m_uuincid;
 

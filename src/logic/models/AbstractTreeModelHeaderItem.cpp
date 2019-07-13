@@ -158,11 +158,6 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	// Now read in our children.  We need this HeaderItem to be in a model for that to work.
 	Q_ASSERT(isInModel());
 
-	/// @todo This is a QVariantList containing <item>/QVariantMap's, each of which
-	/// contains a single <scan_res_tree_model_item type="QVariantMap">, which in turn
-	/// contains a single <dirscanresult>/QVariantMap.
-	QVariantHomogenousList child_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
-
 	// This needs to be in a model before we can requestAddXxx() anything.
 	// By default, this HeaderItem *only* will already be in the model.
 	auto model_ptr = std::dynamic_pointer_cast<ScanResultsTreeModel>(m_model.lock());
@@ -170,6 +165,12 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 
 	auto parent_id = getId();
 	Q_ASSERT(parent_id != UUIncD::null());
+
+	/// @todo This is a QVariantList containing <item>/QVariantMap's, each of which
+	/// contains a single <scan_res_tree_model_item type="QVariantMap">, which in turn
+	/// contains a single <dirscanresult>/QVariantMap.
+	QVariantHomogenousList child_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
+	Q_ASSERT(child_list.size() > 0);
 
 //	std::vector<std::shared_ptr<AbstractTreeModelItem>> temp_items;
 //	childrenFromVariant(child_list);
@@ -181,6 +182,7 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 //		bool ok = appendChild(new_child_item);
 //		Q_ASSERT(ok);
 		auto id = model_ptr->requestAddScanResultsTreeModelItem(child_variant, parent_id);
+		Q_ASSERT(id != UUIncD::null());
 		auto new_child = model_ptr->getItemById(id);
 		Q_ASSERT(new_child);
 //		new_child->fromVariant(variant);

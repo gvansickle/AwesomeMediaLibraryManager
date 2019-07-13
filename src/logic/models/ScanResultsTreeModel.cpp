@@ -85,6 +85,8 @@ UUIncD ScanResultsTreeModel::requestAddScanResultsTreeModelItem(const QVariant& 
 #warning "LOSING LIBENTRY on read"
 	bool status = addItem(new_item, parent_id, undo, redo);
 
+	new_item->fromVariant(variant);
+
 	if(!status)
 	{
 		// Add failed for some reason, return a null UUIncD.

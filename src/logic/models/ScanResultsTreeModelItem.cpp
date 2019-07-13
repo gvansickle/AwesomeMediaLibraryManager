@@ -148,7 +148,7 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
 	// Overwrite any class info added by the above.
-	set_map_class_info(this, &map);
+	dump_map_class_info(this, &map);
 
 #define X(field_tag, tag_string, var_name) map_read_field_or_warn(map, field_tag, var_name);
 	M_DATASTREAM_FIELDS(X);
@@ -157,6 +157,8 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 	map_read_field_or_warn(map, XMLTAG_DIRSCANRESULT, &m_dsr);
 
 	QVariantHomogenousList child_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
+	Q_ASSERT(child_list.size() > 0);
+
 #if 0
 	auto model_ptr = getTypedModel();
 	for(const QVariant& child : child_list)
@@ -177,9 +179,9 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 	Q_ASSERT(model_ptr_base);
 	auto model_ptr = std::dynamic_pointer_cast<ScanResultsTreeModel>(model_ptr_base);
 	auto parent_id = getId();
-	Q_ASSERT(isInModel());
 
 	/// NEEDS TO BE IN MODEL HERE.
+	Q_ASSERT(isInModel());
 
 	std::vector<std::shared_ptr<AbstractTreeModelItem>> new_child_item_vec;
 	for(const QVariant& child_variant : child_list)
@@ -193,7 +195,7 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 		auto id = model_ptr->requestAddSRTMLibEntryItem(child_variant, parent_id);
 		auto new_child = model_ptr->getItemById(id);
 		Q_ASSERT(new_child);
-		new_child->fromVariant(variant);
+//		new_child->fromVariant(variant);
 //		std::dynamic_pointer_cast<ScanResultsTreeModel>(model_ptr)->requestAddExistingTreeModelItem(new_child_item, parent_id);
 	}
 	/// @todo WHY DOES THIS ASSERT
