@@ -78,25 +78,25 @@ UUIncD ScanResultsTreeModel::requestAddScanResultsTreeModelItem(const QVariant& 
 	std::unique_lock write_lock(m_rw_mutex);
 
 	// ::construct() a new tree model item from variant.
-//	std::shared_ptr<AbstractTreeModelItem> new_item = make_item_from_variant(variant);
 	std::shared_ptr<ScanResultsTreeModelItem> new_item = ScanResultsTreeModelItem::construct(variant,
 																							 std::static_pointer_cast<ScanResultsTreeModel>(shared_from_this()));
-
-#warning "LOSING LIBENTRY on read"
 	bool status = addItem(new_item, parent_id, undo, redo);
-
-	new_item->fromVariant(variant);
 
 	if(!status)
 	{
 		// Add failed for some reason, return a null UUIncD.
 		return UUIncD::null();
 	}
+
+	new_item->fromVariant(variant);
+
 	return new_item->getId();
 }
 
 UUIncD ScanResultsTreeModel::requestAddSRTMLibEntryItem(const QVariant& variant, UUIncD parent_id, Fun undo, Fun redo)
 {
+	std::unique_lock write_lock(m_rw_mutex);
+
 	auto new_item = SRTMItem_LibEntry::construct(variant, std::static_pointer_cast<ScanResultsTreeModel>(shared_from_this()));
 	bool status = addItem(new_item, parent_id, undo, redo);
 
@@ -160,49 +160,6 @@ static const int f_atmi_id = qMetaTypeId<AbstractTreeModelItem>();
 static const int f_strmi_id = qMetaTypeId<ScanResultsTreeModelItem>();
 static const int f_strmile_id = qMetaTypeId<SRTMItem_LibEntry>();
 
-
-//std::shared_ptr<AbstractTreeModelItem>
-//ScanResultsTreeModel::make_item_from_variant(const QVariant& variant)
-//{
-//	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
-
-//	// What was the derived class that was actually written?
-//	std::string metatype_class_str = map.get_attr("class");
-//	if(metatype_class_str.empty())
-//	{
-//		// Get as much info as we can.
-//		auto vartype = variant.type();
-//		const char* typename_per_var = variant.typeName();
-//		auto metatype = QMetaType::typeName(vartype);
-//		qDb() << QString("ERROR: No class attr:") << M_ID_VAL(metatype) << M_ID_VAL(vartype) << M_ID_VAL(typename_per_var);
-//		Q_ASSERT(0);
-//	}
-//	int metatype_id = QMetaType::type(metatype_class_str.c_str());
-
-//	std::shared_ptr<AbstractTreeModelItem> retval;
-
-//	auto typed_model_ptr = std::static_pointer_cast<ScanResultsTreeModel>(shared_from_this());
-
-//	if(metatype_id == f_atmi_id)
-//	{
-//		retval = AbstractTreeModelItem::construct(variant, typed_model_ptr, /*is root*/false);
-//	}
-//	else if(metatype_id == f_strmi_id)
-//	{
-//		retval = ScanResultsTreeModelItem::construct(variant, typed_model_ptr);
-//	}
-//	else if(metatype_id == f_strmile_id)
-//	{
-//		retval = SRTMItem_LibEntry::construct(variant, typed_model_ptr);
-//	}
-//	else
-//	{
-//		qCr() << "Trying to read in unknown class:" << metatype_id << metatype_class_str;
-//		Q_ASSERT(0);
-//	}
-
-//	return retval;
-//}
 
 /**
  * ScanResultsTreeModel XML tags.

@@ -26,6 +26,8 @@
 #include <logic/LibraryEntry.h>
 #include <serialization/ISerializable.h>
 #include <serialization/SerializationHelpers.h>
+#include "ScanResultsTreeModel.h"
+
 
 /////////// @todo SRTMItem_LibEntry
 
@@ -154,27 +156,38 @@ void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
 #define X(field_tag, tag_string, var_name) map_read_field_or_warn(map, field_tag, var_name);
-	M_DATASTREAM_FIELDS(X);
+//	M_DATASTREAM_FIELDS(X);
 #undef X
 
 	// Load LibraryEntry's.
-	map_read_field_or_warn(map, XMLTAG_LIBRARY_ENTRIES, &m_library_entry);
-#if 0
+	QVariantHomogenousList list(XMLTAG_LIBRARY_ENTRIES, "m_library_entry");
+	map_read_field_or_warn(map, XMLTAG_LIBRARY_ENTRIES, &list);
+	if(!list.empty())
+	{
+		for(auto& it : list)
+		{
+			m_library_entry = std::make_shared<LibraryEntry>(it.value<LibraryEntry>());
+		}
+	}
+#if 1
 	QVariantHomogenousList child_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
 
-	auto model_ptr = m_model.lock();
-	Q_ASSERT(model_ptr);
-
+	auto model_ptr_base = m_model.lock();
+	Q_ASSERT(model_ptr_base);
+	auto model_ptr = std::dynamic_pointer_cast<ScanResultsTreeModel>(model_ptr_base);
 	auto parent_id = getId();
 
+	/// NEEDS TO BE IN MODEL HERE.
+	Q_ASSERT(isInModel());
+
+	Q_ASSERT(child_list.size() == 0);
 	for(const QVariant& child : child_list)
 	{
 		qDb() << "READING CHILD ITEM INTO SRTMItem_LibEntry:" << child;
 
-//		std::shared_ptr<AbstractTreeModelItem> new_child_item = model_ptr->make_item_from_variant(child);
 //		bool ok = appendChild(new_child_item);
 //		Q_ASSERT(ok);
-		model_ptr->requestAddTreeModelItem(child, parent_id);
+		// WRONG: model_ptr->requestAddSRTMLibEntryItem(child, parent_id);
 	}
 #endif
 }
