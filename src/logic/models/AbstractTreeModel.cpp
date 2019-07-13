@@ -185,6 +185,7 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getItemById(const UUIn
 /// BOTH
 std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getRootItem() const
 {
+	Q_ASSERT(m_root_item);
 	return m_root_item;
 }
 
@@ -271,9 +272,9 @@ Fun AbstractTreeModel::moveItem_lambda(UUIncD id, int destRow, bool force)
 void AbstractTreeModel::toOrm(std::string filename) const
 {
 //	using namespace sqlite_orm;
-//	auto storage = make_storage("db.sqlite",
-//	                            make_table("users",
-//	                                       make_column("id", &User::id, autoincrement(), primary_key()),
+//	auto storage = make_storage(filename + "_db.sqlite",
+//	                            make_table("root_item",
+//	                                       make_column("id", &ISerializable::m_uuid, autoincrement(), primary_key()),
 //	                                       make_column("first_name", &User::firstName),
 //	                                       make_column("last_name", &User::lastName),
 //	                                       make_column("birth_date", &User::birthDate),
