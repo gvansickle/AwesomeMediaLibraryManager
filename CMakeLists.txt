@@ -38,9 +38,9 @@ cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 cmake_policy(SET CMP0053 NEW) # Use new var ref/esc seq eval
 cmake_policy(SET CMP0010 NEW) # Silence warning on CMP0010.
 
-message(STATUS "CMake-time PATH: $ENV{PATH}")
-message(STATUS "CMake-time CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
-message(STATUS "CMake-time CMAKE_MODULE_PATH: ${CMAKE_MODULE_PATH}")
+message(STATUS "CMake-time ENV PATH: $ENV{PATH}")
+message(STATUS "CMake-time ENV CMAKE_PREFIX_PATH: $ENV{CMAKE_PREFIX_PATH}")
+message(STATUS "CMake-time ENV CMAKE_MODULE_PATH: $ENV{CMAKE_MODULE_PATH}")
 include(cmake/GetVersionInfo.cmake)
 
 # Prevent an in-root-of-src-tree build and any accidental build-induced changes to source files.
@@ -117,7 +117,7 @@ set(AUTORCC_SOURCE_GROUP autorcc)
 # "Config mode provides an elaborate interface and search procedure. Much of the interface is provided for completeness
 #  and for use internally by find-modules loaded by Module mode. Most user code should simply call:
 #    find_package(<package> [major[.minor]] [EXACT] [REQUIRED|QUIET])"
-find_package(PkgConfig REQUIRED) # @note I see PkgConfig just before ECM in a few KDE scripts.
+### @todo NO WIN: find_package(PkgConfig REQUIRED) # @note I see PkgConfig just before ECM in a few KDE scripts.
 find_package(ECM ${ECM_MIN_VERSION} REQUIRED NO_MODULE)
 
 # Add dirs where we keep support *.cmake's, ucm, cotire, ECM, etc.
