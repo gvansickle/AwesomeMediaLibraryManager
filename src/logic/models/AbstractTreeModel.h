@@ -249,9 +249,9 @@ public:
 //	virtual std::shared_ptr<AbstractTreeModelItem>
 //	make_item_from_variant(const QVariant& variant)	{ Q_ASSERT(0); return nullptr; };
 
-	virtual UUIncD requestAddTreeModelItem(const QVariant& variant, UUIncD parent_id,
-	                               Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda)
-	                               { Q_ASSERT(0); return UUIncD::null(); };
+//	virtual UUIncD requestAddTreeModelItem(const QVariant& variant, UUIncD parent_id,
+//	                               Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda)
+//	                               { Q_ASSERT(0); return UUIncD::null(); };
 
 	virtual void toOrm(std::string filename) const;
 	virtual void fromOrm(std::string filename);

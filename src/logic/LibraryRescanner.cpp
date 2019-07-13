@@ -63,6 +63,7 @@
 #include <gui/activityprogressmanager/ActivityProgressStatusBarTracker.h>
 #include <logic/serialization/XmlSerializer.h>
 #include <logic/serialization/SerializationExceptions.h>
+#include <logic/serialization/SerializationHelpers.h>
 #include <utils/Stopwatch.h>
 
 #include "LibraryModel.h"
@@ -188,6 +189,7 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
 
 void LibraryRescanner::SaveDatabase(std::shared_ptr<ScanResultsTreeModel> tree_model_ptr, const QString& database_filename)
 {
+	/// MOVED TO SRTIMODEL
 	qIn() << "###### WRITING" << database_filename;
 	qIn() << "###### TREEMODELPTR HAS NUM ROWS:" << tree_model_ptr->rowCount();
 
@@ -200,6 +202,7 @@ void LibraryRescanner::SaveDatabase(std::shared_ptr<ScanResultsTreeModel> tree_m
 
 void LibraryRescanner::LoadDatabase(std::shared_ptr<ScanResultsTreeModel> tree_model_ptr, const QString& database_filename)
 {
+	/// MOVED TO SRTIMODEL
 	qIn() << "###### READING" << database_filename;
 
 	XmlSerializer xmlser;
@@ -273,8 +276,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 		AMLM_ASSERT_NOT_IN_GUITHREAD();
 //		AMLM_ASSERT_IN_GUITHREAD();
 
-        std::shared_ptr<ScanResultsTreeModel> tree_model_ptr = AMLM::Core::self()->getScanResultsTreeModel();
-        Q_ASSERT(tree_model_ptr);
+		std::shared_ptr<ScanResultsTreeModel> tree_model_sptr = AMLM::Core::self()->getScanResultsTreeModel();
+		Q_ASSERT(tree_model_sptr);
 
 		if(begin == 0)
 		{
@@ -297,8 +300,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 			// Add another entry to the vector we'll send to the model.
 //			new_items->emplace_back(std::make_shared<ScanResultsTreeModelItem>(dsr, tree_model));
 			/// @todo This is in a non-GUI thread.
-			Q_ASSERT(tree_model_ptr);
-			auto new_item = ScanResultsTreeModelItem::construct(dsr, tree_model_ptr);
+			Q_ASSERT(tree_model_sptr);
+			auto new_item = ScanResultsTreeModelItem::construct(dsr, tree_model_sptr);
 			new_items->emplace_back(new_item);
 
 			if(i >= end)
@@ -399,8 +402,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 		AMLM_ASSERT_IN_GUITHREAD();
 //		AMLM_ASSERT_NOT_IN_GUITHREAD();
 
-		std::shared_ptr<ScanResultsTreeModel> tree_model_ptr = AMLM::Core::self()->getScanResultsTreeModel();
-		Q_ASSERT(tree_model_ptr);
+		std::shared_ptr<ScanResultsTreeModel> tree_model_sptr = AMLM::Core::self()->getScanResultsTreeModel();
+		Q_ASSERT(tree_model_sptr);
 //		qDb() << "START: tree_model_item_future.stap(), new_items_future count:" << new_items_future.resultCount();
 
 		// For each QList<SharedItemContType> entry.
@@ -409,7 +412,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 			auto result = new_items_future.resultAt(index);
 			const SharedItemContType& new_items_vector_ptr = result;
 
-			// Append ScanResultTreeModelItem entries to the ScanResultsTreeModel.
+			// Append ScanResultsTreeModelItem entries to the ScanResultsTreeModel.
 			for(std::shared_ptr<AbstractTreeModelItem>& entry : *new_items_vector_ptr)
 			{
 				// Make sure the entry wasn't moved from.
@@ -419,11 +422,11 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 				Q_ASSERT(entry_dp);
 
 M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
-				std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(entry->data(1).toString());
+				std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(entry_dp->data(1).toString());
 				lib_entry->populate(true);
 
 //				std::shared_ptr<ScanResultsTreeModelItem> new_child = ScanResultsTreeModelItem::construct(entry_dp->getDsr(), tree_model_ptr, /**isRoot*/false);
-				std::shared_ptr<SRTMItem_LibEntry> new_child = SRTMItem_LibEntry::construct(lib_entry, tree_model_ptr, /**isRoot*/false);
+				std::shared_ptr<SRTMItem_LibEntry> new_child = SRTMItem_LibEntry::construct(lib_entry, tree_model_sptr, /**isRoot*/false);
 				Q_ASSERT(new_child);
 
 				// Here we're only dealing with the per-file LibraryEntry's.
@@ -432,9 +435,9 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 
 //				qDb() << "NEW_NEW_CHILD:" << new_new_child;
 
-				/// NEW: Give the incoming entry a parent.
-				entry->changeParent(tree_model_ptr->getRootItem());
-				entry->appendChild(new_child);
+				/// NEW: Give the incoming ScanResultTreeModelItem entry a parent.
+				entry_dp->changeParent(tree_model_sptr->getRootItem());
+				entry_dp->appendChild(new_child);
 //				new_child->changeParent(entry);
 //				new_child->appendChild(new_new_child);
 			}
@@ -442,13 +445,14 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 			// Finally, move the new model items to their new home.
 			Q_ASSERT(new_items_vector_ptr->at(0));
 #if 1 // signal
-			tree_model_ptr->appendItems(*new_items_vector_ptr);
+			tree_model_sptr->appendItems(*new_items_vector_ptr);
 			/// @temp
-//			bool ok = tree_model_ptr->checkConsistency();
+			bool ok = tree_model_sptr->checkConsistency();
+			Q_ASSERT(ok);
 //			qDb() << "########################### TREE MODEL CHECK checkConsistency:" << ok;
 			/// @temp Check if iterator works.
 			long node_ct = 0;
-			using ittype = map_value_iterator<decltype(tree_model_ptr->begin()->first), decltype(tree_model_ptr->begin()->second)>;
+			using ittype = map_value_iterator<decltype(tree_model_sptr->begin()->first), decltype(tree_model_sptr->begin()->second)>;
 //			for(ittype it = std::begin(*tree_model_ptr); it != std::end(*tree_model_ptr); ++it)
 //			{
 //				node_ct++;
@@ -513,8 +517,10 @@ M_WARNING("SHARED PTR");
 				////////// EXPERIMENTAL
 				/// Try to load it back in and round-trip it.
 				std::shared_ptr<ScanResultsTreeModel> load_tree = ScanResultsTreeModel::construct();
-				LoadDatabase(load_tree, database_filename);
+				load_tree->LoadDatabase(database_filename);
+//				dump_map(load_tree);
 				SaveDatabase(load_tree, QDir::homePath() +"/AMLMDatabaseRT.xml");
+
 
 /// @todo EXPERIMENTAL
 #if 0
@@ -880,7 +886,7 @@ void LibraryRescanner::ExpRunXQuery1(const QString& database_filename, const QSt
 //			throw SerializationException("Couldn't open xquery source file");
 //		}
 		// Try hardcoded XQuery text.
-		const QString query_string(QString::fromLatin1(R"xq(
+		const QString query_string(QLatin1String(R"xq(
 (: http://www.w3.org/2005/xpath-functions :)
 (: The XSPF namespace. :)
 declare default element namespace "http://xspf.org/ns/0/";

@@ -27,6 +27,8 @@
 #include "SRTMItemLibEntry.h"
 #include <logic/serialization/SerializationHelpers.h>
 
+#include <serialization/XmlSerializer.h>
+
 
 ScanResultsTreeModel::ScanResultsTreeModel(QObject *parent)
     : BASE_CLASS(parent)
@@ -46,7 +48,32 @@ void ScanResultsTreeModel::setBaseDirectory(const QUrl &base_directory)
 	m_base_directory = base_directory;
 }
 
-UUIncD ScanResultsTreeModel::requestAddTreeModelItem(const QVariant& variant, UUIncD parent_id, Fun undo, Fun redo)
+void ScanResultsTreeModel::LoadDatabase(const QString& database_filename)
+{
+	qIn() << "###### READING" << database_filename;
+
+	XmlSerializer xmlser;
+	xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
+	xmlser.HACK_skip_extra(false);
+	xmlser.load(*this, QUrl::fromLocalFile(database_filename));
+
+	qIn() << "###### TREEMODELPTR HAS NUM ROWS:" << rowCount();
+	qIn() << "###### READ" << database_filename;
+}
+
+void ScanResultsTreeModel::SaveDatabase(const QString& database_filename)
+{
+	qIn() << "###### WRITING" << database_filename;
+	qIn() << "###### TREEMODELPTR HAS NUM ROWS:" << rowCount();
+
+	XmlSerializer xmlser;
+	xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
+	xmlser.save(*this, QUrl::fromLocalFile(database_filename), "playlist");
+
+	qIn() << "###### WROTE" << database_filename;
+}
+
+UUIncD ScanResultsTreeModel::requestAddScanResultsTreeModelItem(const QVariant& variant, UUIncD parent_id, Fun undo, Fun redo)
 {
 	std::unique_lock write_lock(m_rw_mutex);
 
@@ -55,7 +82,20 @@ UUIncD ScanResultsTreeModel::requestAddTreeModelItem(const QVariant& variant, UU
 	std::shared_ptr<ScanResultsTreeModelItem> new_item = ScanResultsTreeModelItem::construct(variant,
 																							 std::static_pointer_cast<ScanResultsTreeModel>(shared_from_this()));
 
+#warning "LOSING LIBENTRY on read"
+	bool status = addItem(new_item, parent_id, undo, redo);
 
+	if(!status)
+	{
+		// Add failed for some reason, return a null UUIncD.
+		return UUIncD::null();
+	}
+	return new_item->getId();
+}
+
+UUIncD ScanResultsTreeModel::requestAddSRTMLibEntryItem(const QVariant& variant, UUIncD parent_id, Fun undo, Fun redo)
+{
+	auto new_item = SRTMItem_LibEntry::construct(variant, std::static_pointer_cast<ScanResultsTreeModel>(shared_from_this()));
 	bool status = addItem(new_item, parent_id, undo, redo);
 
 	if(!status)
@@ -250,6 +290,7 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 	QVariantInsertionOrderedMap root_item_map;
 	map_read_field_or_warn(map, XMLTAG_SRTM_ROOT_ITEM, &root_item_map);
 	m_root_item->fromVariant(root_item_map);
+	dump_map(map);
 //	requestAddTreeModelItem()
 
 

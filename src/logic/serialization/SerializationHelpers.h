@@ -48,13 +48,17 @@ void dump_map(const MapType& map)
 {
 	auto cit = std::cbegin(map);
 	auto end = std::cend(map);
+	qDb() << "DUMPING MAP:";
 	for(auto it = cit; it != end; ++it)
 	{
-//		if(std::is_convertible_v<decltype(it->second), MapType>)
-//		{
-//			dump_map(it->second);
-//		}
-//		else
+		auto nested_map = QVariant(it->second);
+		if(nested_map.canConvert<MapType>())
+		{
+//			auto nested_map = QVariant(it->second).toMap();
+//			->value<MapType>();
+			dump_map(nested_map.value<MapType>());
+		}
+		else
 		{
 			qDb() << "KEY:" << it->first << "VAL:" << it->second;
 		}

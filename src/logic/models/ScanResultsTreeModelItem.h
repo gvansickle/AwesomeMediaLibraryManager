@@ -59,8 +59,7 @@ public:
 			std::shared_ptr<ScanResultsTreeModel> model,
             bool is_root = false);
 	static std::shared_ptr<ScanResultsTreeModelItem> construct(const QVariant& variant,
-			std::shared_ptr<ScanResultsTreeModel> model,
-			bool is_root = false);
+			std::shared_ptr<ScanResultsTreeModel> model);
 	ScanResultsTreeModelItem() {};
 	~ScanResultsTreeModelItem() override;
 

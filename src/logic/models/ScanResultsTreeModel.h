@@ -65,8 +65,14 @@ public:
      */
     void setBaseDirectory(const QUrl& base_directory);
 
+
 	/// @name Serialization
 	/// @{
+
+	/// Load and save the database to a file.
+	void LoadDatabase(const QString& database_filename);
+	void SaveDatabase(const QString& database_filename);
+
 
 	QVariant toVariant() const override;
 	void fromVariant(const QVariant& variant) override;
@@ -77,8 +83,10 @@ public:
 //	std::shared_ptr<AbstractTreeModelItem>
 //	make_item_from_variant(const QVariant& variant) override;
 
-	UUIncD requestAddTreeModelItem(const QVariant& variant, UUIncD parent_id,
-	                               Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda) override;
+	UUIncD requestAddScanResultsTreeModelItem(const QVariant& variant, UUIncD parent_id,
+								   Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
+	UUIncD requestAddSRTMLibEntryItem(const QVariant& variant, UUIncD parent_id,
+									  Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
 
 //	virtual UUIncD requestAddExistingTreeModelItem(std::shared_ptr<AbstractTreeModelItem> item, UUIncD parent_id,
 //								   Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);

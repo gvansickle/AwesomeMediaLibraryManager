@@ -63,6 +63,9 @@ public:
 	virtual void fromVariant(const QVariant& variant) = 0;
 
 	explicit operator QVariant() const { return toVariant(); };
+
+	/// ORM
+	int m_uuid;
 };
 
 Q_DECLARE_METATYPE(ISerializable*);
