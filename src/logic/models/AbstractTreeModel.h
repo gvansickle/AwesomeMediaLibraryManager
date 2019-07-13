@@ -58,7 +58,8 @@ class AbstractTreeModelHeaderItem;
  */
 class AbstractTreeModel : public QAbstractItemModel,
 		public virtual ISerializable,
-		public enable_shared_from_this_virtual<AbstractTreeModel>
+//		public enable_shared_from_this_virtual<AbstractTreeModel>
+		public std::enable_shared_from_this<AbstractTreeModel>
 {
     Q_OBJECT
 	Q_DISABLE_COPY(AbstractTreeModel);
@@ -123,8 +124,12 @@ public:
     /// BOTH
     QModelIndex index(int row, int column,
                       const QModelIndex &parent = QModelIndex()) const override;
-    QModelIndex parent(const QModelIndex &index) const override;
+	/// BOTH
+	Qt::ItemFlags flags(const QModelIndex &index) const override;
 
+    /// BOTH
+    QModelIndex parent(const QModelIndex &index) const override;
+	/// BOTH
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 
     /**
@@ -132,7 +137,6 @@ public:
      */
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
 
-    Qt::ItemFlags flags(const QModelIndex &index) const override;
 
     /// ETM, KDEN AbsTreeModel doesn't override this.
 	bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
@@ -203,6 +207,8 @@ public:
 	std::shared_ptr<AbstractTreeModelItem> getItem(const QModelIndex &index) const;
 
 
+	/// @name Public interface: Lambda generators for tree structure modification.
+	/// @{
 
 	/// @name Public interface: Lambda generators for tree structure modification.
 	/// @{

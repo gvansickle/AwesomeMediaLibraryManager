@@ -32,15 +32,17 @@
 #include <logic/DirScanResult.h>
 #include <logic/serialization/ISerializable.h>
 #include <future/enable_shared_from_this_virtual.h>
+class AbstractTreeModelHeaderItem;
 class LibraryEntry;
 class ScanResultsTreeModel;
 /// @todo TEMP
 
 
 /**
- * Model of the results of scanning a directory tree.
+ * Tree model item containing the results of a single DirScanResult.
+ * KDEN: ~similar to AbstractProjectItem
  */
-class ScanResultsTreeModelItem : public AbstractTreeModelItem, public enable_shared_from_this_virtual<ScanResultsTreeModelItem>
+class ScanResultsTreeModelItem : public AbstractTreeModelItem//, public enable_shared_from_this_virtual<ScanResultsTreeModelItem>
 
 {
 	using BASE_CLASS = AbstractTreeModelItem;
@@ -76,6 +78,9 @@ public:
 
 	int columnCount() const override;
 
+	/// KDEN::AbsProjItem
+	std::shared_ptr<AbstractTreeModelHeaderItem> parent() const;
+
 	/// @name ISerializable interface
 	/// @{
 
@@ -96,7 +101,9 @@ protected:
 	DirScanResult m_dsr;
 };
 
-
+/**
+ * A ScanResultsTreeModelItem with a LibraryEntry field.
+ */
 
 
 /// @todo Need this here for QVariant::fromValue().

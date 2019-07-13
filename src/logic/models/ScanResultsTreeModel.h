@@ -20,6 +20,9 @@
 #ifndef SCANRESULTSTREEMODEL_H
 #define SCANRESULTSTREEMODEL_H
 
+// Std C++
+#include <shared_mutex>
+
 // Qt5
 #include <QUrl>
 #include <QString>
@@ -32,6 +35,7 @@
 
 class AbstractTreeModelHeaderItem;
 #include <future/enable_shared_from_this_virtual.h>
+#include "UndoRedoHelper.h"
 
 
 /**
@@ -55,6 +59,17 @@ protected:
 	 */
 	explicit ScanResultsTreeModel(QObject *parent = nullptr);
 
+	/**
+	 * Make sig/slot connections.
+	 */
+	void setup();
+
+	/**
+	 * Commit the modification to the model.
+	 * Note that this is really a slot, but not marked as such in KDENLive
+*/
+	void sendModification();
+
 public:
 	static std::shared_ptr<ScanResultsTreeModel> construct(QObject *parent = nullptr);
 	~ScanResultsTreeModel() override = default;
@@ -65,6 +80,18 @@ public:
      */
     void setBaseDirectory(const QUrl& base_directory);
 
+    /**
+     * Threadsafe function which takes a QModelIndex and returns the corresponding model item.
+     */
+	std::shared_ptr<AbstractTreeModelItem> getItemByIndex(const QModelIndex& index);
+	std::shared_ptr<AbstractTreeModelItem> getItemById(const UUIncD &id) const;
+
+	/// @todo Push these down?
+	bool requestAppendItem(const std::shared_ptr<ScanResultsTreeModelItem>& item, UUIncD parent_uuincd, Fun& undo, Fun& redo);
+	bool requestAppendItems(std::vector<std::shared_ptr<ScanResultsTreeModelItem>> items, UUIncD parent_uuincd, Fun& undo, Fun& redo);
+	bool requestAddScanResultsTreeModelItem(const DirScanResult& dsr, UUIncD parent_uuincd, Fun& undo, Fun& redo);
+	bool requestAddSRTMItem_LibEntry(const std::shared_ptr<LibraryEntry>& libentry, const DirScanResult& dsr,
+			UUIncD parent_uuincd, Fun& undo, Fun& redo);
 
 	/// @name Serialization
 	/// @{
@@ -103,12 +130,31 @@ public Q_SLOTS:
 
 
 protected:
+
+	/// Thread-safe overrides.
+	void register_item(const std::shared_ptr<AbstractTreeModelItem>& item) override;
+	void deregister_item(UUIncD id, AbstractTreeModelItem* item) override;
+
+	/**
+	 * Adds @a item to this tree model.
+	 * ~KDenLive
+	 * This is the workhorse threadsafe function which adds all new items to the model.  It should be not be called by clients,
+	 * but rather called by one of the requestAddXxxx() members.
+	 */
+	bool addItem(const std::shared_ptr<ScanResultsTreeModelItem>& item, UUIncD parent_uuincd, Fun& undo, Fun& redo);
+
 	QString getXmlStreamName() const override { return "AMLMScanResults"; };
 	QString getXmlStreamVersion() const override { return "0.1"; };
 
 	// The tree's base directory URL.
     QUrl m_base_directory;
 
+private:
+
+	/// KDEN KeyFrameModel
+	QPersistentModelIndex m_pmindex;
 };
+
+
 
 #endif // SCANRESULTSTREEMODEL_H

@@ -18,7 +18,14 @@
  */
 
 /**
- * @file AbstractTreeModelHeaderItem.cpp
+ * @file AbstractTreeModelItem.cpp
+ * Implementation of AbstractTreeModelItem.
+ *
+ * This class is heavily adapted from at least the following:
+ * - The "Editable Tree Model Example" shipped with Qt5.
+ * - KDenLive's TreeItem class.
+ * - My own original work.
+ * - Hundreds of nuggets of information from all over the Internet.
  */
 
 #include "AbstractTreeModelHeaderItem.h"
@@ -37,17 +44,17 @@
 
 // static
 std::shared_ptr<AbstractTreeModelHeaderItem>
-AbstractTreeModelHeaderItem::construct(const std::shared_ptr<AbstractTreeModel>& model, bool isRoot, UUIncD id)
+AbstractTreeModelHeaderItem::construct(const QVector<QVariant>& data, const std::shared_ptr<AbstractTreeModel>& model, bool isRoot, UUIncD id)
 {
-	std::shared_ptr<AbstractTreeModelHeaderItem> self(new AbstractTreeModelHeaderItem(model, isRoot, id));
+	std::shared_ptr<AbstractTreeModelHeaderItem> self(new AbstractTreeModelHeaderItem(data, model, isRoot, id));
 
 	baseFinishConstruct(self);
 	Q_ASSERT(self->isInModel());
 	return self;
 }
 
-AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(const std::shared_ptr<AbstractTreeModel>& parent_model, bool isRoot, UUIncD id)
-	: BASE_CLASS(parent_model, isRoot, id)
+AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(const QVector<QVariant>& data, const std::shared_ptr<AbstractTreeModel>& parent_model, bool isRoot, UUIncD id)
+	: BASE_CLASS(data, parent_model, isRoot, id)
 {
 
 }

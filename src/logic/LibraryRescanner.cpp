@@ -24,6 +24,13 @@
 /// Std C++
 #include <functional>
 
+/// Linux Callgrind
+/// @link http://www.valgrind.org/docs/manual/manual-core-adv.html#manual-core-adv.clientreq :
+/// "You are encouraged to copy the valgrind/*.h headers into your project's include directory, so your program doesn't
+/// have a compile-time dependency on Valgrind being installed. The Valgrind headers, unlike most of the rest of the
+/// code, are under a BSD-style license so you may include them without worrying about license incompatibility."
+#include <valgrind/callgrind.h>
+
 /// Qt5
 #include <QThread>
 #include <QXmlFormatter>
@@ -216,6 +223,8 @@ void LibraryRescanner::LoadDatabase(std::shared_ptr<ScanResultsTreeModel> tree_m
 
 void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 {
+	CALLGRIND_START_INSTRUMENTATION;
+
     qDb() << "START:" << dir_url;
 
 	expect_and_set(0, 1);
@@ -270,11 +279,11 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 
 	// Attach a streaming tap to the dirscan future.
 	ExtFuture<Unit> tail_future
-			= dirresults_future.stap(/*this,*/[=](ExtFuture<DirScanResult> tap_future, int begin, int end) mutable -> void {
+			= dirresults_future.stap(this, [=](ExtFuture<DirScanResult> tap_future, int begin, int end) mutable -> void {
 
 		// Start of the dirtrav tap callback.  This should be a non-main thread.
-		AMLM_ASSERT_NOT_IN_GUITHREAD();
-//		AMLM_ASSERT_IN_GUITHREAD();
+//		AMLM_ASSERT_NOT_IN_GUITHREAD();
+		AMLM_ASSERT_IN_GUITHREAD();
 
 		std::shared_ptr<ScanResultsTreeModel> tree_model_sptr = AMLM::Core::self()->getScanResultsTreeModel();
 		Q_ASSERT(tree_model_sptr);
@@ -396,7 +405,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	/// Append TreeModelItems to the ScanResultsTreeModel tree_model.
 	Q_ASSERT(tree_model);
 	tree_model_item_future.stap(this,
-								[this/*, tree_model_sptr=tree_model*/](ExtFuture<SharedItemContType> new_items_future,
+								[this/*, tree_model_sptr=tree_model*/](ExtFuture< std::shared_ptr<std::vector<std::shared_ptr<ScanResultsTreeModelItem>>> > new_items_future,
 								                                               int begin_index, int end_index) mutable {
 
 		AMLM_ASSERT_IN_GUITHREAD();
@@ -409,12 +418,14 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 		// For each QList<SharedItemContType> entry.
 		for(int index = begin_index; index < end_index; ++index)
 		{
-			auto result = new_items_future.resultAt(index);
-			const SharedItemContType& new_items_vector_ptr = result;
+			std::shared_ptr<std::vector<std::shared_ptr<ScanResultsTreeModelItem>>> result = new_items_future.resultAt(index);
+			std::shared_ptr<std::vector<std::shared_ptr<ScanResultsTreeModelItem>>>
+			/*const SharedItemContType&*/ new_items_vector_ptr = result;
 
 			// Append ScanResultsTreeModelItem entries to the ScanResultsTreeModel.
-			for(std::shared_ptr<AbstractTreeModelItem>& entry : *new_items_vector_ptr)
+			for(std::shared_ptr<ScanResultsTreeModelItem>& entry : *new_items_vector_ptr)
 			{
+#if 0
 				// Make sure the entry wasn't moved from.
 				Q_ASSERT(bool(entry) == true);
 //				Q_ASSERT(entry->isInModel());
@@ -425,6 +436,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 				std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(entry_dp->data(1).toString());
 				lib_entry->populate(true);
+				tree_model_ptr->requestAddSRTMItem_LibEntry(lib_entry, entry->getDsr(),
+						tree_model_ptr->getRootItem()->getId(), noop_undo_redo_lambda, noop_undo_redo_lambda);
 
 				std::shared_ptr<SRTMItem_LibEntry> new_child = SRTMItem_LibEntry::construct(lib_entry, tree_model_sptr, /**isRoot*/false);
 				Q_ASSERT(new_child);
@@ -450,6 +463,7 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 //				node_ct++;
 //			}
 //			qDb() << "TREE MODEL ITERATOR COUNT:" << node_ct << ", MODEL SAYS:" << tree_model_ptr->get_total_model_node_count();
+			Q_ASSERT(ok);
 #else
 			Q_EMIT SIGNAL_StapToTreeModel(*new_items_vector_ptr);
 #endif
@@ -459,8 +473,10 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 	})
 #endif
 	.then([&](ExtFuture<SharedItemContType> f){
+		Q_ASSERT(f.isFinished());
 		Q_ASSERT(m_model_ready_to_save_to_db == false);
 		m_model_ready_to_save_to_db = true;
+		/// @todo This is happening immediately, and also before "Finished tree_model_item_future" & qurl_future.
 		m_timer.lap("TreeModelItems stap() finished.");
 		return unit;
 	})
@@ -472,16 +488,19 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 
 			AMLM_ASSERT_IN_GUITHREAD();
 
+			/// @note The time between this and the immediately previous "Finished qurl_future" takes all the time
+			///       (about 271 secs atm).
 			m_timer.lap("GUI Thread dirtrav over start.");
 
 			expect_and_set(3, 4);
 
 			qDb() << "DIRTRAV COMPLETE, NOW IN GUI THREAD";
-			if(kjob.isNull())
+			if(0)//kjob.isNull())
 			{
+M_WARNING("kjob is now null here and we fail");
 				Q_ASSERT_X(0, __func__, "Dir scan job was deleted");
 			}
-			if(kjob->error())
+			if(0)//kjob->error())
 			{
 				qWr() << "DIRTRAV FAILED:" << kjob->error() << ":" << kjob->errorText() << ":" << kjob->errorString();
 				auto uidelegate = kjob->uiDelegate();
@@ -615,6 +634,9 @@ M_WARNING("SHARED PTR");
 				// Start the metadata scan.
 				qDb() << "STARTING RESCAN";
 //				lib_rescan_job->start();
+
+				CALLGRIND_STOP_INSTRUMENTATION;
+				CALLGRIND_DUMP_STATS;
 			}
 //            lib_rescan_job->start();
 #endif
@@ -638,7 +660,7 @@ M_WARNING("SHARED PTR");
 	// Hook up future watchers.
 	//
 
-#if 0
+#if 1
 	qurl_future.stap(this, [=](ExtFuture<QString> ef, int begin_index, int end_index) {
 		for(int i = begin_index; i<end_index; ++i)
 		{
@@ -647,9 +669,9 @@ M_WARNING("SHARED PTR");
 			m_current_libmodel->SLOT_onIncomingFilename(url_str);
 		}
 	});
-#elif 1
+#elif 0
 	auto* efw = ManagedExtFutureWatcher_detail::get_managed_qfuture_watcher<QString>();
-	connect_or_die(efw, &QFutureWatcher<QString>::resultReadyAt, efw, [=](int i){
+	connect_or_die(efw, &QFutureWatcher<QString>::resultReadyAt, efw, [this, qurl_future](int i){
 			/// @todo Maybe coming in out of order.
 			QString url_str = qurl_future.resultAt(i);
 			Q_EMIT SIGNAL_FileUrlQString(url_str);
@@ -678,6 +700,7 @@ M_WARNING("SHARED PTR");
 	lib_rescan_future.stap(this, [=](ExtFuture<MetadataReturnVal> ef, int begin, int end){
 		for(int i = begin; i<end; ++i)
 		{
+			qDb() << "LRF STAP:" << i;
 			this->SLOT_processReadyResults(ef.resultAt(i));
 		}
 	});

@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -254,7 +254,7 @@ public:
 protected:
 	/**
 	 * Finish construction of object given its pointer.
-	 * If @a self is root, calls registerSelf() to register it with the model.
+	 * If @a self is root, calls registerSelf() to register it with the model, otherwise does nothing.
 	 * This is a separated function so that it can be called from derived classes
 	 */
 	static void baseFinishConstruct(const std::shared_ptr<AbstractTreeModelItem>& self);
@@ -320,11 +320,6 @@ private:
 	 * @return
 	 */
 	CICTIteratorType get_m_child_items_iterator(UUIncD id);
-
-	/// Pointer to our parent AbstractTreeModelItem.
-	/// For items in a tree model (i.e. not being copy/pasted or mid-construction), this will always
-	/// be non-null as long as this item is not the invisible root item.
-	std::weak_ptr<AbstractTreeModelItem> m_parent_item;
 
 	int m_depth;
 

@@ -59,8 +59,10 @@
  */
 std::shared_ptr<AbstractTreeModel> AbstractTreeModel::construct(QObject* parent)
 {
+	Q_ASSERT(0);
 	std::shared_ptr<AbstractTreeModel> self(new AbstractTreeModel(parent));
-	self->m_root_item = AbstractTreeModelHeaderItem::construct(self, true);
+	self->m_root_item = AbstractTreeModelHeaderItem::construct({}, self, true);
+//	self->m_model_tester = new QAbstractItemModelTester(self.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, self.get());
 //	self->m_model_tester = new QAbstractItemModelTester(self.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, self.get());
 	return self;
 }
@@ -82,10 +84,6 @@ bool AbstractTreeModel::setColumnSpecs(std::initializer_list<QString> column_spe
 
 int AbstractTreeModel::columnCount(const QModelIndex& parent) const
 {
-#if 0
-	Q_ASSERT(m_root_item != nullptr);
-	return m_root_item->columnCount();
-#else /// kden
 	if(!parent.isValid())
 	{
 		// Invalid parent, return root column count.
@@ -95,7 +93,6 @@ int AbstractTreeModel::columnCount(const QModelIndex& parent) const
 	const auto id = UUIncD(parent.internalId());
 	auto item = getItemById(id);
 	return item->columnCount();
-#endif
 }
 
 QVariant AbstractTreeModel::data(const QModelIndex &index, int role) const
@@ -414,7 +411,7 @@ bool AbstractTreeModel::checkConsistency()
 				qDebug() << "ERROR: Invalid tree: duplicate root";
 				return false;
 			}
-			if (auto ptr = currentItem->parent().lock())
+			if (auto ptr = currentItem->parent_item().lock())
 			{
 				if (ptr->getId() != parentId || ptr->child(currentItem->childNumber())->getId() != currentItem->getId())
 				{
@@ -524,7 +521,7 @@ QModelIndex AbstractTreeModel::parent(const QModelIndex &index) const
 	}
 
 	std::shared_ptr<AbstractTreeModelItem> childItem = getItemById(static_cast<UUIncD>(index.internalId()));
-	std::shared_ptr<AbstractTreeModelItem> parentItem = childItem->parent().lock();
+	std::shared_ptr<AbstractTreeModelItem> parentItem = childItem->parent_item().lock();
 
 	Q_ASSERT(parentItem);
 
@@ -582,8 +579,9 @@ bool AbstractTreeModel::moveColumns(const QModelIndex& sourceParent, int sourceC
 	return this->BASE_CLASS::moveColumns(sourceParent, sourceColumn, count, destinationParent, destinationChild);
 }
 
-
-bool AbstractTreeModel::appendItems(std::vector<std::shared_ptr<AbstractTreeModelItem>> new_items, const QModelIndex &parent)
+#if 1
+/// OLD
+bool AbstractTreeModel::appendItems(std::vector<std::shared_ptr<AbstractTreeModelItem>> new_items, const QModelIndex &parent_item_idx)
 {
 	std::shared_ptr<AbstractTreeModelItem> parent_item;
 	if(!parent.isValid())
@@ -609,7 +607,7 @@ bool AbstractTreeModel::appendItems(std::vector<std::shared_ptr<AbstractTreeMode
 	/// @todo These items have data already and aren't default-constructed, do we need to do anything different
 	///       than begin/endInsert rows?
 	// parent, first_row_num_after_insertion, last_row_num_after_insertion.
-	this->beginInsertRows(parent, first_new_row_num_after_insertion, first_new_row_num_after_insertion + new_items.size() - 1);
+	this->beginInsertRows(parent_item_idx, first_new_row_num_after_insertion, first_new_row_num_after_insertion + new_items.size() - 1);
 
     parent_item->appendChildren(std::move(new_items));
 
@@ -626,6 +624,7 @@ bool AbstractTreeModel::appendItems(std::vector<std::shared_ptr<AbstractTreeMode
 //	new_items.emplace_back(std::move(new_item));
 //	return appendItems(std::move(new_items), parent);
 //}
+#endif // old
 
 QModelIndex AbstractTreeModel::getIndexFromItem(const std::shared_ptr<AbstractTreeModelItem>& item) const
 {
@@ -634,7 +633,7 @@ QModelIndex AbstractTreeModel::getIndexFromItem(const std::shared_ptr<AbstractTr
 	{
 		return QModelIndex();
 	}
-	auto parent_index = getIndexFromItem(item->parent().lock());
+	auto parent_index = getIndexFromItem(item->parent_item().lock());
 	return index(item->childNumber(), 0, parent_index);
 }
 

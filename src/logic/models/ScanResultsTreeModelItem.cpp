@@ -32,6 +32,7 @@
 // Ours
 #include <utils/DebugHelpers.h>
 #include <logic/DirScanResult.h>
+#include "AbstractTreeModelHeaderItem.h"
 #include "ScanResultsTreeModel.h"
 #include <LibraryEntry.h>
 #include <serialization/SerializationHelpers.h>

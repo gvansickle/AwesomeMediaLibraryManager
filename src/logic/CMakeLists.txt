@@ -56,6 +56,7 @@ set(logic_subdir_SOURCES
 	ExtUrl.cpp
 	PerfectDeleter.cpp
 	Frames.cpp
+    UndoRedoHelper.cpp
 	UUIncD.cpp
 	)
 
@@ -91,6 +92,7 @@ set(logic_subdir_HEADERS
 	ExtUrl.h
 	PerfectDeleter.h
 	Frames.h
+    UndoRedoHelper.h
     UUIncD.h
 	)
 

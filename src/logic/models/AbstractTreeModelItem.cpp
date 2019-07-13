@@ -138,6 +138,7 @@ int AbstractTreeModelItem::columnCount() const
  */
 int AbstractTreeModelItem::childNumber() const
 {
+#if 0 /// NEW
 	if (auto shpt = m_parent_item.lock())
 	{
 //		auto iter = std::find_if(shpt->m_child_items.cbegin(), shpt->m_child_items.cend(),
@@ -154,6 +155,18 @@ int AbstractTreeModelItem::childNumber() const
 	}
 
     return -1;
+#else
+
+	if (auto strong_parent_item = m_parent_item.lock())
+	{
+//		return stdex::indexOf(m_parent_item->m_child_items, this);
+		auto iter = std::find_if(strong_parent_item->m_child_items.cbegin(), strong_parent_item->m_child_items.cend(),
+				[=](const auto& unptr){ return unptr.get() == this; });
+		return iter - strong_parent_item->m_child_items.cbegin();
+	}
+
+    return 0;
+#endif
 }
 
 //int AbstractTreeModelItem::columnCount() const
@@ -216,7 +229,7 @@ bool AbstractTreeModelItem::removeColumns(int position, int columns)
 	return true;
 }
 
-std::weak_ptr<AbstractTreeModelItem> AbstractTreeModelItem::parent() const
+std::weak_ptr<AbstractTreeModelItem> AbstractTreeModelItem::parent_item() const
 {
 	return m_parent_item;
 }
@@ -640,7 +653,7 @@ bool AbstractTreeModelItem::appendChild(std::shared_ptr<AbstractTreeModelItem> n
 		// Somehow trying to create a cycle in the tree.
 		return false;
 	}
-	if (auto oldParent = new_child->parent().lock())
+	if (auto oldParent = new_child->parent_item().lock())
 	{
 		if (oldParent->getId() == m_uuincid)
 		{
@@ -650,7 +663,8 @@ bool AbstractTreeModelItem::appendChild(std::shared_ptr<AbstractTreeModelItem> n
 		else
 		{
 			// in that case a call to removeChild should have been carried out
-			qDebug() << "ERROR: trying to append a child that already has a parent";
+			qDebug() << "ERROR: trying to append a child that already has a different parent";
+			Q_ASSERT(0);
 			return false;
 		}
 	}

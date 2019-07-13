@@ -22,6 +22,7 @@
 #include <third_party/sqlite_orm/include/sqlite_orm/sqlite_orm.h>
 
 // Ours
+#include "AbstractTreeModel.h"
 #include "ScanResultsTreeModelItem.h"
 #include "AbstractTreeModelHeaderItem.h"
 #include "SRTMItemLibEntry.h"
@@ -33,18 +34,54 @@
 ScanResultsTreeModel::ScanResultsTreeModel(QObject *parent)
     : BASE_CLASS(parent)
 {
+void ScanResultsTreeModel::setup()
+{
+	// We connect the signals of the abstractitemmodel to a more generic one.
+	connect_or_die(this, &ScanResultsTreeModel::columnsMoved, this, &ScanResultsTreeModel::modelChanged);
+	connect_or_die(this, &ScanResultsTreeModel::columnsRemoved, this, &ScanResultsTreeModel::modelChanged);
+	connect_or_die(this, &ScanResultsTreeModel::columnsInserted, this, &ScanResultsTreeModel::modelChanged);
+	connect_or_die(this, &ScanResultsTreeModel::rowsMoved, this, &ScanResultsTreeModel::modelChanged);
+	connect_or_die(this, &ScanResultsTreeModel::rowsRemoved, this, &ScanResultsTreeModel::modelChanged);
+	connect_or_die(this, &ScanResultsTreeModel::rowsInserted, this, &ScanResultsTreeModel::modelChanged);
+	connect_or_die(this, &ScanResultsTreeModel::modelReset, this, &ScanResultsTreeModel::modelChanged);
+	connect_or_die(this, &ScanResultsTreeModel::dataChanged, this, &ScanResultsTreeModel::modelChanged);
+	connect_or_die(this, &ScanResultsTreeModel::modelChanged, this, &ScanResultsTreeModel::sendModification);
+}
+
+void ScanResultsTreeModel::sendModification()
+{
+//	if (auto ptr = this)
+//	{
+//		Q_ASSERT(m_pmindex.isValid());
+//		QString name = ptr->data(m_pmindex, AssetParameterModel::NameRole).toString();
+//		if (m_paramType == ParamType::KeyframeParam || m_paramType == ParamType::AnimatedRect || m_paramType == ParamType::Roto_spline)
+//		{
+//			m_lastData = getAnimProperty();
+//			ptr->setParameter(name, m_lastData, false);
+//		}
+//		else
+//		{
+//			Q_ASSERT(false); // Not implemented, TODO
+//		}
+//	}
 }
 
 // static
 std::shared_ptr<ScanResultsTreeModel> ScanResultsTreeModel::construct(QObject* parent)
 {
 	std::shared_ptr<ScanResultsTreeModel> retval(new ScanResultsTreeModel(parent));
-	retval->m_root_item = AbstractTreeModelHeaderItem::construct(retval);
+	// Create the root item, which is a HeaderItem.
+	Q_ASSERT(retval->m_root_item == nullptr);
+	retval->m_root_item = AbstractTreeModelHeaderItem::construct({}, retval);
+	/// @todo Need on/off, this slows things way down.
+	retval->m_model_tester = new QAbstractItemModelTester(retval.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, retval.get());
 	return retval;
 }
 
 void ScanResultsTreeModel::setBaseDirectory(const QUrl &base_directory)
 {
+	std::unique_lock write_lock(m_rw_mutex);
+
 	m_base_directory = base_directory;
 }
 
@@ -182,6 +219,8 @@ QVariant ScanResultsTreeModel::toVariant() const
 {
 	QVariantInsertionOrderedMap map;
 
+	std::unique_lock write_lock(m_rw_mutex);
+
 #define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
 //	M_DATASTREAM_FIELDS(X)
 #undef X
@@ -227,6 +266,8 @@ QVariant ScanResultsTreeModel::toVariant() const
 
 void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 {
+	std::unique_lock write_lock(m_rw_mutex);
+
 	QVariantInsertionOrderedMap map;
 	qviomap_from_qvar_or_die(&map, variant);
 
