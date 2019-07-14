@@ -24,9 +24,16 @@ project(libcue)
 message(STATUS "Processing third_party/CMakeLists.txt")
 
 if(WIN32)
-    ### NOTE: Make sure CMAKE_PREFIX_PATH has the path to the QtCreator directory, so cmake can find win_flex and win_bison.
+    ### NOTE: Make sure CMAKE_PREFIX_PATH has the path to the directory, so cmake can find win_flex and win_bison.
+    ### On Windows they're in a couple places, e.g.:
+    # C:\Qt\5.12.0\Src\gnuwin32\bin\bison.exe
+    # C:\CraftRoot\build\dev-utils\flexbison\work\win_bison.exe
+    # C:\CraftRoot\build\dev-utils\flexbison\image-Debug-2.5.14\dev-utils\bin\win_bison.exe
+        # We also need png2ico on Windows, which is here:
+        # C:\CraftRoot\dev-utils\bin\png2ico.exe
     set(CMAKE_VERBOSE_MAKEFILE ON)
     set(FLEX_FLAGS_EXTRA --wincompat)
+    set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH};C:/CraftRoot/dev-utils/bin;C:/Qt/5.12.0/Src/gnuwin32/bin)
 endif()
 
 find_package(BISON REQUIRED)

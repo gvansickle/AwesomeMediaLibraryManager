@@ -97,8 +97,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Min versions of Qt5, KF5, KF5/ECM.
 set(QT_MIN_VERSION "5.12.1")
-set(KF5_MIN_VERSION "5.57.0")
-set(ECM_MIN_VERSION "5.57.0")
+set(KF5_MIN_VERSION "5.52.0") ### @win temp: should be 5.57.0
+set(ECM_MIN_VERSION "5.52.0")
 
 ###
 ### IDE helper setup
@@ -243,7 +243,15 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	#ucm_add_flags(-fdelayed-template-parsing -frelaxed-template-template-args)
 endif()
 if(WIN32)
-#ucm_add_flags(/showIncludes)
+	#ucm_add_flags(/showIncludes)
+	### NOTE: Make sure CMAKE_PREFIX_PATH has the path to the directory, so cmake can find win_flex and win_bison.
+	### On Windows they're in a couple places, e.g.:
+	# C:\Qt\5.12.0\Src\gnuwin32\bin\bison.exe
+	# C:\CraftRoot\build\dev-utils\flexbison\work\win_bison.exe
+	# C:\CraftRoot\build\dev-utils\flexbison\image-Debug-2.5.14\dev-utils\bin\win_bison.exe
+	# We also need png2ico on Windows, which is here:
+	# C:\CraftRoot\dev-utils\bin\png2ico.exe
+	set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH};C:/CraftRoot/dev-utils/bin;C:/Qt/5.12.0/Src/gnuwin32/bin)
 endif(WIN32)
 target_link_libraries(cxx_settings INTERFACE cxx_compile_options)
 
@@ -506,6 +514,7 @@ endif()
 endif()
 
 # Boost
+if(FALSE)
 # See @link https://cmake.org/cmake/help/latest/module/FindBoost.html
 #set(BOOST_THREAD_VERSION          5) # Latest in 1.69 as of this writing, defaults to "2".
 #set(BOOST_THREAD_PROVIDES_FUTURE ON)
@@ -540,6 +549,7 @@ if(Boost_FOUND)
 			BOOST_THREAD_VERSION=5)
 	add_definitions(${Boost_LIB_DIAGNOSTIC_DEFINITIONS})
 endif()
+endif() # BOOST
 
 if(FALSE)
 # Ok, we're going to try to pull in just Wt::Dbo.
