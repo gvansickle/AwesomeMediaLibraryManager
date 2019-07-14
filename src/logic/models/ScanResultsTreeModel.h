@@ -81,19 +81,6 @@ public:
      */
     void setBaseDirectory(const QUrl& base_directory);
 
-    /**
-     * Threadsafe function which takes a QModelIndex and returns the corresponding model item.
-     */
-//	std::shared_ptr<AbstractTreeModelItem> getItemByIndex(const QModelIndex& index);
-//	std::shared_ptr<AbstractTreeModelItem> getItemById(const UUIncD &id) const;
-
-	/// @todo Push these down?
-//	bool requestAppendItem(const std::shared_ptr<ScanResultsTreeModelItem>& item, UUIncD parent_uuincd, Fun& undo, Fun& redo);
-//	bool requestAppendItems(std::vector<std::shared_ptr<ScanResultsTreeModelItem>> items, UUIncD parent_uuincd, Fun& undo, Fun& redo);
-//	bool requestAddScanResultsTreeModelItem(const DirScanResult& dsr, UUIncD parent_uuincd, Fun& undo, Fun& redo);
-//	bool requestAddSRTMItem_LibEntry(const std::shared_ptr<LibraryEntry>& libentry, const DirScanResult& dsr,
-//			UUIncD parent_uuincd, Fun& undo, Fun& redo);
-
 	/// @name Serialization
 	/// @{
 
@@ -106,18 +93,12 @@ public:
 	void fromVariant(const QVariant& variant) override;
 
 	/**
-	 * Non-static factory function for creating new, typed tree nodes from QVariantMaps.
+	 * Non-static factory functions for creating new, typed tree nodes from QVariantMaps.
 	 */
-//	std::shared_ptr<AbstractTreeModelItem>
-//	make_item_from_variant(const QVariant& variant) override;
-
 	UUIncD requestAddScanResultsTreeModelItem(const QVariant& variant, UUIncD parent_id,
 								   Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
 	UUIncD requestAddSRTMLibEntryItem(const QVariant& variant, UUIncD parent_id,
 									  Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
-
-//	virtual UUIncD requestAddExistingTreeModelItem(std::shared_ptr<AbstractTreeModelItem> item, UUIncD parent_id,
-//								   Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
 
 	void toOrm(std::string filename) const override;
 	void fromOrm(std::string filename) override;

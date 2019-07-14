@@ -170,17 +170,17 @@ void ScanResultsTreeModel::toOrm(std::string filename) const
 	auto storage = make_storage(filename,
 								make_table("items",
 										   make_column("id",
-													   &ScanResultsTreeModelItem::setId,
-													   &ScanResultsTreeModelItem::getId, /*autoincrement(),*/ primary_key()),
+													   &ScanResultsTreeModelItem::m_uuid, autoincrement(), primary_key()),
 										   make_column("model_item_map", &ScanResultsTreeModel::m_model_item_map),
-										   make_column("m_root_item", &ScanResultsTreeModel::m_root_item)/*,
+										   make_column("m_root_item", &ScanResultsTreeModel::m_root_item)
+										   ,
 										   make_column("last_name", &User::lastName),
 										   make_column("birth_date", &User::birthDate),
 										   make_column("image_url", &User::imageUrl),
 										   make_column("type_id", &User::typeId))*//*,
 								make_table("item_types",
 										   make_column("id", &UserType::id, autoincrement(), primary_key()),
-										   make_column("name", &UserType::name, default_value("name_placeholder"))*/));
+										   make_column("name", &UserType::name, default_value("name_placeholder"))));
 	storage.sync_schema();
 #endif
 }

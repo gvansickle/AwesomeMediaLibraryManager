@@ -64,7 +64,7 @@ public:
 
 	explicit operator QVariant() const { return toVariant(); };
 
-	/// ORM
+	/// EXPERIMENTAL ORM
 	int m_uuid;
 };
 
@@ -103,42 +103,6 @@ Q_DECLARE_METATYPE(IUUIDSerializable*);
 Q_DECLARE_INTERFACE(IUUIDSerializable, "IUUIDSerializable") // define this out of namespace scope
 
 
-#if 0 // REMOVE?
-struct KeyValuePair
-{
-	KeyValuePair(std::string key, std::string value) : m_key(key), m_value(value) {};
-	std::string m_key;
-	std::string m_value;
-};
-
-class AttributedQVariant
-{
-public:
-	M_GH_RULE_OF_FIVE_DEFAULT_C21(AttributedQVariant);
-	AttributedQVariant(const QVariant& var, std::initializer_list<KeyValuePair> kvpairs) : m_variant(var)
-	{
-		for(const auto& it : kvpairs)
-		{
-			m_key_value_pairs.insert({it.m_key, it.m_value});
-		}
-	};
-	explicit AttributedQVariant(const IUUIDSerializable& var) : m_variant(var.toVariant())
-	{
-		if(!var.isUuidNull())
-		{
-			m_key_value_pairs.insert({"xml:id", var.get_prefixed_uuid()});
-		}
-	};
-	virtual ~AttributedQVariant() {};
-
-	/// The attributes as key/value pairs.
-	std::map<std::string, std::string> m_key_value_pairs;
-	QVariant m_variant;
-};
-
-/// So we can use these in QVariant's.
-Q_DECLARE_METATYPE(AttributedQVariant);
-#endif // OBSOLETE
 
 template <class OutMapType>
 void qviomap_from_qvar_or_die(OutMapType* map_out, const QVariant& var_in)
