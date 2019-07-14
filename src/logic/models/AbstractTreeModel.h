@@ -58,8 +58,7 @@ class AbstractTreeModelHeaderItem;
  */
 class AbstractTreeModel : public QAbstractItemModel,
 		public virtual ISerializable,
-//		public enable_shared_from_this_virtual<AbstractTreeModel>
-		public std::enable_shared_from_this<AbstractTreeModel>
+		public enable_shared_from_this_virtual<AbstractTreeModel>
 {
     Q_OBJECT
 	Q_DISABLE_COPY(AbstractTreeModel);
@@ -207,8 +206,6 @@ public:
 	std::shared_ptr<AbstractTreeModelItem> getItem(const QModelIndex &index) const;
 
 
-	/// @name Public interface: Lambda generators for tree structure modification.
-	/// @{
 
 	/// @name Public interface: Lambda generators for tree structure modification.
 	/// @{

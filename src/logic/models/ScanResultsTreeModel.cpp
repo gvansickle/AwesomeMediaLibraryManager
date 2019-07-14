@@ -34,18 +34,20 @@
 ScanResultsTreeModel::ScanResultsTreeModel(QObject *parent)
     : BASE_CLASS(parent)
 {
+}
+
 void ScanResultsTreeModel::setup()
 {
 	// We connect the signals of the abstractitemmodel to a more generic one.
-	connect_or_die(this, &ScanResultsTreeModel::columnsMoved, this, &ScanResultsTreeModel::modelChanged);
-	connect_or_die(this, &ScanResultsTreeModel::columnsRemoved, this, &ScanResultsTreeModel::modelChanged);
-	connect_or_die(this, &ScanResultsTreeModel::columnsInserted, this, &ScanResultsTreeModel::modelChanged);
-	connect_or_die(this, &ScanResultsTreeModel::rowsMoved, this, &ScanResultsTreeModel::modelChanged);
-	connect_or_die(this, &ScanResultsTreeModel::rowsRemoved, this, &ScanResultsTreeModel::modelChanged);
-	connect_or_die(this, &ScanResultsTreeModel::rowsInserted, this, &ScanResultsTreeModel::modelChanged);
-	connect_or_die(this, &ScanResultsTreeModel::modelReset, this, &ScanResultsTreeModel::modelChanged);
-	connect_or_die(this, &ScanResultsTreeModel::dataChanged, this, &ScanResultsTreeModel::modelChanged);
-	connect_or_die(this, &ScanResultsTreeModel::modelChanged, this, &ScanResultsTreeModel::sendModification);
+//	connect_or_die(this, &ScanResultsTreeModel::columnsMoved, this, &ScanResultsTreeModel::modelChanged);
+//	connect_or_die(this, &ScanResultsTreeModel::columnsRemoved, this, &ScanResultsTreeModel::modelChanged);
+//	connect_or_die(this, &ScanResultsTreeModel::columnsInserted, this, &ScanResultsTreeModel::modelChanged);
+//	connect_or_die(this, &ScanResultsTreeModel::rowsMoved, this, &ScanResultsTreeModel::modelChanged);
+//	connect_or_die(this, &ScanResultsTreeModel::rowsRemoved, this, &ScanResultsTreeModel::modelChanged);
+//	connect_or_die(this, &ScanResultsTreeModel::rowsInserted, this, &ScanResultsTreeModel::modelChanged);
+//	connect_or_die(this, &ScanResultsTreeModel::modelReset, this, &ScanResultsTreeModel::modelChanged);
+//	connect_or_die(this, &ScanResultsTreeModel::dataChanged, this, &ScanResultsTreeModel::modelChanged);
+//	connect_or_die(this, &ScanResultsTreeModel::modelChanged, this, &ScanResultsTreeModel::sendModification);
 }
 
 void ScanResultsTreeModel::sendModification()
@@ -70,11 +72,7 @@ void ScanResultsTreeModel::sendModification()
 std::shared_ptr<ScanResultsTreeModel> ScanResultsTreeModel::construct(QObject* parent)
 {
 	std::shared_ptr<ScanResultsTreeModel> retval(new ScanResultsTreeModel(parent));
-	// Create the root item, which is a HeaderItem.
-	Q_ASSERT(retval->m_root_item == nullptr);
-	retval->m_root_item = AbstractTreeModelHeaderItem::construct({}, retval);
-	/// @todo Need on/off, this slows things way down.
-	retval->m_model_tester = new QAbstractItemModelTester(retval.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, retval.get());
+	retval->m_root_item = AbstractTreeModelHeaderItem::construct(retval);
 	return retval;
 }
 

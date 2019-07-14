@@ -97,8 +97,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Min versions of Qt5, KF5, KF5/ECM.
 set(QT_MIN_VERSION "5.12.1")
-set(KF5_MIN_VERSION "5.52.0") ### @win temp: should be 5.57.0
-set(ECM_MIN_VERSION "5.52.0")
+set(KF5_MIN_VERSION "5.57.0") ### @win temp: Only have 5.52.0
+set(ECM_MIN_VERSION "5.57.0")
 
 ###
 ### IDE helper setup
@@ -117,7 +117,8 @@ set(AUTORCC_SOURCE_GROUP autorcc)
 # "Config mode provides an elaborate interface and search procedure. Much of the interface is provided for completeness
 #  and for use internally by find-modules loaded by Module mode. Most user code should simply call:
 #    find_package(<package> [major[.minor]] [EXACT] [REQUIRED|QUIET])"
-### @todo NO WIN: find_package(PkgConfig REQUIRED) # @note I see PkgConfig just before ECM in a few KDE scripts.
+### @todo NO WIN:
+find_package(PkgConfig REQUIRED) # @note I see PkgConfig just before ECM in a few KDE scripts.
 find_package(ECM ${ECM_MIN_VERSION} REQUIRED NO_MODULE)
 
 # Add dirs where we keep support *.cmake's, ucm, cotire, ECM, etc.
@@ -514,7 +515,7 @@ endif()
 endif()
 
 # Boost
-if(FALSE)
+if(TRUE)
 # See @link https://cmake.org/cmake/help/latest/module/FindBoost.html
 #set(BOOST_THREAD_VERSION          5) # Latest in 1.69 as of this writing, defaults to "2".
 #set(BOOST_THREAD_PROVIDES_FUTURE ON)

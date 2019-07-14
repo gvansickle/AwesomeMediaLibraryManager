@@ -279,11 +279,11 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 
 	// Attach a streaming tap to the dirscan future.
 	ExtFuture<Unit> tail_future
-			= dirresults_future.stap(this, [=](ExtFuture<DirScanResult> tap_future, int begin, int end) mutable -> void {
+			= dirresults_future.stap(/*this,*/[=](ExtFuture<DirScanResult> tap_future, int begin, int end) mutable -> void {
 
 		// Start of the dirtrav tap callback.  This should be a non-main thread.
-//		AMLM_ASSERT_NOT_IN_GUITHREAD();
-		AMLM_ASSERT_IN_GUITHREAD();
+		AMLM_ASSERT_NOT_IN_GUITHREAD();
+//		AMLM_ASSERT_IN_GUITHREAD();
 
 		std::shared_ptr<ScanResultsTreeModel> tree_model_sptr = AMLM::Core::self()->getScanResultsTreeModel();
 		Q_ASSERT(tree_model_sptr);
@@ -405,7 +405,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	/// Append TreeModelItems to the ScanResultsTreeModel tree_model.
 	Q_ASSERT(tree_model);
 	tree_model_item_future.stap(this,
-								[this/*, tree_model_sptr=tree_model*/](ExtFuture< std::shared_ptr<std::vector<std::shared_ptr<ScanResultsTreeModelItem>>> > new_items_future,
+								[this/*, tree_model_sptr=tree_model*/](ExtFuture<SharedItemContType> new_items_future,
 								                                               int begin_index, int end_index) mutable {
 
 		AMLM_ASSERT_IN_GUITHREAD();
@@ -418,14 +418,12 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 		// For each QList<SharedItemContType> entry.
 		for(int index = begin_index; index < end_index; ++index)
 		{
-			std::shared_ptr<std::vector<std::shared_ptr<ScanResultsTreeModelItem>>> result = new_items_future.resultAt(index);
-			std::shared_ptr<std::vector<std::shared_ptr<ScanResultsTreeModelItem>>>
-			/*const SharedItemContType&*/ new_items_vector_ptr = result;
+			auto result = new_items_future.resultAt(index);
+			const SharedItemContType& new_items_vector_ptr = result;
 
 			// Append ScanResultsTreeModelItem entries to the ScanResultsTreeModel.
-			for(std::shared_ptr<ScanResultsTreeModelItem>& entry : *new_items_vector_ptr)
+			for(std::shared_ptr<AbstractTreeModelItem>& entry : *new_items_vector_ptr)
 			{
-#if 0
 				// Make sure the entry wasn't moved from.
 				Q_ASSERT(bool(entry) == true);
 //				Q_ASSERT(entry->isInModel());
@@ -436,8 +434,6 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 				std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(entry_dp->data(1).toString());
 				lib_entry->populate(true);
-				tree_model_ptr->requestAddSRTMItem_LibEntry(lib_entry, entry->getDsr(),
-						tree_model_ptr->getRootItem()->getId(), noop_undo_redo_lambda, noop_undo_redo_lambda);
 
 				std::shared_ptr<SRTMItem_LibEntry> new_child = SRTMItem_LibEntry::construct(lib_entry, tree_model_sptr, /**isRoot*/false);
 				Q_ASSERT(new_child);
@@ -449,7 +445,7 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 
 			// Finally, move the new model items to their new home.
 			Q_ASSERT(new_items_vector_ptr->at(0));
-#if 1 // signal
+#if 1 // !signal
 			tree_model_sptr->appendItems(*new_items_vector_ptr);
 			/// @temp
 			bool ok = tree_model_sptr->checkConsistency();
@@ -463,7 +459,6 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 //				node_ct++;
 //			}
 //			qDb() << "TREE MODEL ITERATOR COUNT:" << node_ct << ", MODEL SAYS:" << tree_model_ptr->get_total_model_node_count();
-			Q_ASSERT(ok);
 #else
 			Q_EMIT SIGNAL_StapToTreeModel(*new_items_vector_ptr);
 #endif
@@ -660,7 +655,7 @@ M_WARNING("SHARED PTR");
 	// Hook up future watchers.
 	//
 
-#if 1
+#if 0
 	qurl_future.stap(this, [=](ExtFuture<QString> ef, int begin_index, int end_index) {
 		for(int i = begin_index; i<end_index; ++i)
 		{
@@ -669,7 +664,7 @@ M_WARNING("SHARED PTR");
 			m_current_libmodel->SLOT_onIncomingFilename(url_str);
 		}
 	});
-#elif 0
+#elif 1
 	auto* efw = ManagedExtFutureWatcher_detail::get_managed_qfuture_watcher<QString>();
 	connect_or_die(efw, &QFutureWatcher<QString>::resultReadyAt, efw, [this, qurl_future](int i){
 			/// @todo Maybe coming in out of order.

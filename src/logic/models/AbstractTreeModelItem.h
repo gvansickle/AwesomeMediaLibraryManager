@@ -321,6 +321,11 @@ private:
 	 */
 	CICTIteratorType get_m_child_items_iterator(UUIncD id);
 
+	/// Pointer to our parent AbstractTreeModelItem.
+	/// For items in a tree model (i.e. not being copy/pasted or mid-construction), this will always
+	/// be non-null as long as this item is not the invisible root item.
+	std::weak_ptr<AbstractTreeModelItem> m_parent_item;
+
 	int m_depth;
 
 	bool m_is_in_model;
