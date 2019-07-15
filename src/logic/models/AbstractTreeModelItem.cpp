@@ -38,8 +38,6 @@
 // Qt5
 #include <QBrush>
 #include <QStringList>
-//#include <QXmlStreamWriter>
-//#include <QXmlStreamReader>
 
 // Ours
 #include <utils/DebugHelpers.h>

@@ -117,6 +117,17 @@ public:
 		return m_vector_of_elements.cbegin() + it_index->second;
 	};
 
+	bool contains(const KeyType& key) const
+	{
+		auto it = this->find(key);
+		if(it == m_vector_of_elements.cend())
+		{
+			// Didn't find it.
+			return false;
+		}
+		return true;
+	}
+
 	const ValueType value(const KeyType& key, const ValueType& default_value = ValueType()) const
 	{
 		auto cit = this->find(key);

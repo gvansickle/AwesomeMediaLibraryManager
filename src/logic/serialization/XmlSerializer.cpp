@@ -151,12 +151,18 @@ void XmlSerializer::load(ISerializable& serializable, const QUrl &file_url)
 static const int f_iomap_id = qMetaTypeId<QVariantInsertionOrderedMap>();
 static const int f_qvarlist_id = qMetaTypeId<QVariantHomogenousList>();
 static const int f_serqvarlist_id = qMetaTypeId<SerializableQVariantList>();
-//static const int f_attributed_qvariant_id = qMetaTypeId<AttributedQVariant>();
 
 void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant& variant, QXmlStreamWriter& xmlstream)
 {
 	xmlstream.writeStartElement(nodeName);
 	xmlstream.writeAttribute("type", variant.typeName());
+
+	/// @note not working, stopped here.
+//	if(variant.canConvert<ISerializable>())
+//	{
+//		auto* ptr = variant.value<ISerializable>();
+		xmlstream.writeAttribute("xml:id", "TESTING123");//toqstr(ptr->get_prefixed_uuid()));
+//	}
 
 	InnerWriteVariantToStream(variant, &xmlstream);
 
@@ -240,15 +246,19 @@ void XmlSerializer::InnerWriteVariantToStream(const QVariant& variant, QXmlStrea
 	}
 }
 
-//void XmlSerializer::writeVariantToStream(const QString& nodeName, const ISerializable& variant, QXmlStreamWriter& xmlstream)
-//{
-//	writeVariantToStream(nodeName, variant.toVariant(), xmlstream);
-//}
+#if 0
+void XmlSerializer::writeVariantToStream(const QString& nodeName, const ISerializable& variant, QXmlStreamWriter* xmlstream)
+{
+	Q_ASSERT(0);
+	writeVariantToStream(nodeName, variant.toVariant(), *xmlstream);
+}
 
-//void XmlSerializer::writeVariantToStream(const QString& nodeName, const ISerializable* variant, QXmlStreamWriter& xmlstream)
-//{
-//	writeVariantToStream(nodeName, variant->toVariant(), xmlstream);
-//}
+void XmlSerializer::writeVariantToStream(const QString& nodeName, const ISerializable* variant, QXmlStreamWriter* xmlstream)
+{
+	Q_ASSERT(0);
+	writeVariantToStream(nodeName, variant->toVariant(), *xmlstream);
+}
+#endif
 
 //void XmlSerializer::writeAttributedQVariantToStream(const AttributedQVariant& variant, QXmlStreamWriter& xmlstream)
 //{
@@ -390,7 +400,6 @@ QVariant XmlSerializer::InnerReadVariantFromStream(QString typeString, QXmlStrea
 	std::experimental::erase_if(attributes_cp, [](auto& attr){ return attr.qualifiedName() == "type" ? true : false; });
 
 	/// @todo QVariant::Type returned, switch is on QMetaType::Type.  OK but former is deprecated and clang-tidy warns.
-//	auto metatype_v = QVariant::nameToType(typeString.toStdString().c_str());
 	int metatype = QMetaType::type(typeString.toStdString().c_str());
 
 	if(metatype == f_iomap_id)
@@ -405,10 +414,6 @@ QVariant XmlSerializer::InnerReadVariantFromStream(QString typeString, QXmlStrea
 	{
 		variant = readHomogenousListFromStream(xmlstream);
 	}
-//	else if(metatype == f_attributed_qvariant_id)
-//	{
-//		variant = readAttributedQVariantFromStream(attributes_cp, xmlstream);
-//	}
 	else
 	{
 		switch(metatype)
@@ -636,45 +641,6 @@ QVariant XmlSerializer::readVariantOrderedMapFromStream(std::vector<QXmlStreamAt
 
 	return QVariant::fromValue(map);
 }
-
-#if 0 // REMOVE
-QVariant XmlSerializer::readAttributedQVariantFromStream(std::vector<QXmlStreamAttribute> attributes, QXmlStreamReader& xmlstream)
-{
-	AttributedQVariant retval;
-
-	Q_ASSERT(xmlstream.isStartElement());
-
-	// Thanks Qt5.
-	if(attributes.size() > 0)
-	{
-		qDb() << "Attributes" << attributes[0].name();
-	}
-	else
-	{
-		qDb() << "Attributes EMPTY";
-	}
-	const std::vector<QXmlStreamAttribute> attributes_cp = attributes;
-//	const QXmlStreamAttributes attributes_cp = xmlstream.attributes();
-	decltype(attributes_cp)::const_iterator it;
-	const std::string type = "type";
-	for(it = attributes_cp.cbegin(); it != attributes_cp.cend(); ++it)
-	{
-		// Skip "type"  attribute.
-		std::string qualname = it->qualifiedName().toString().toStdString();
-		std::string value = it->value().toString().toStdString();
-		if(qualname == type)
-		{
-			continue;
-		}
-		retval.m_key_value_pairs.insert({qualname, value});
-	}
-
-	qDb() << "xmlstream tokenString:" << xmlstream.tokenString();
-//	retval.m_variant = readVariantValueFromStream(xmlstream);
-
-	return QVariant::fromValue(retval);
-}
-#endif
 
 void XmlSerializer::check_for_stream_error_and_skip(QXmlStreamReader& xmlstream)
 {

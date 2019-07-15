@@ -30,6 +30,7 @@
 // Qt5
 #include <QMetaType>
 #include <QVariant>
+#include <QUuid>
 #include <QtConcurrent>
 
 // Ours
@@ -50,6 +51,8 @@ class ISerializable
 {
 
 public:
+	explicit ISerializable(/*std::string uuid_prefix = {}*/)
+	: m_uuid_prefix(/*uuid_prefix*/"xmlid_"), m_uuid( /*(!uuid_prefix.empty()) ?*/ QUuid::createUuid() /*: QUuid("null")*/ ) {};
 	virtual ~ISerializable() = default;
 
 	/**
@@ -64,8 +67,38 @@ public:
 
 	explicit operator QVariant() const { return toVariant(); };
 
+	bool isUuidNull() const { return m_uuid.isNull() || m_uuid_prefix.empty(); };
+
+	void set_prefix(std::string prefix)
+	{
+		Q_ASSERT(m_uuid_prefix.empty());
+		m_uuid_prefix = prefix;
+	}
+
+	std::string get_prefix() const
+	{
+		return m_uuid_prefix;
+	}
+
+	std::string get_prefixed_uuid() const
+	{
+		return m_uuid_prefix + m_uuid.toString(QUuid::WithoutBraces).toStdString();
+	}
+
+	void set_prefixed_uuid(std::string uuid_string)
+	{
+		Q_ASSERT(!m_uuid_prefix.empty());
+		m_uuid = QUuid::fromString(toqstr(uuid_string).remove(toqstr(m_uuid_prefix)));
+		Q_ASSERT(m_uuid.isNull());
+	}
+
 	/// EXPERIMENTAL ORM
-	int m_uuid;
+	int m_int_uuid;
+	/// The GUID used to ID this item in the database etc.
+	QUuid m_uuid;
+	/// The prefix to prepend if XML, since xml:id's need to start with a non-digit character.
+	std::string m_uuid_prefix {"xmlid_"};
+
 };
 
 Q_DECLARE_METATYPE(ISerializable*);
@@ -121,7 +154,9 @@ public:
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(SerializableQVariantList);
 	~SerializableQVariantList() override = default;
 
-	SerializableQVariantList(const QString& list_tag, const QString& list_item_tag) : QVariantHomogenousList(list_tag, list_item_tag) {};
+	SerializableQVariantList(const QString& list_tag, const QString& list_item_tag)
+		: QVariantHomogenousList(list_tag, list_item_tag)
+		{};
 
 	QVariant toVariant() const override;
 	void fromVariant(const QVariant& variant) override;
