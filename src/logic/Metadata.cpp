@@ -67,6 +67,7 @@
 #include <utils/DebugHelpers.h>
 #include <utils/RegisterQtMetatypes.h>
 #include "CueSheet.h"
+#include <logic/serialization/SerializationHelpers.h>
 
 
 AMLM_QREG_CALLBACK([](){

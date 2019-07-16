@@ -36,6 +36,8 @@
 // Ours.
 #include <utils/RegisterQtMetatypes.h>
 #include <utils/DebugHelpers.h>
+#include <logic/serialization/SerializationHelpers.h>
+
 
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering AMLMTagMap metatypes";

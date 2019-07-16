@@ -37,13 +37,7 @@
 #include "ExtFuture.h"
 
 /**
- * CRTP class template for wrapping ExtAsync jobs returning an ExtFuture<T>.
- * Use like this:
- * @code
- *      class Derived : public AMLMJobT<ExtFuture<int>>
- *      {
- *      };
- * @endcode
+ * Class template for wrapping ExtAsync jobs returning an ExtFuture<T>.
  */
 template <class ExtFutureT>
 class AMLMJobT : public AMLMJob

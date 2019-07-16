@@ -60,6 +60,8 @@
 
 #endif
 
+// SQLite ORM
+#include <src/third_party/sqlite_orm/include/sqlite_orm/sqlite_orm.h>
 
 enum /*__attribute__((enum_extensibility(closed), flag_enum))*/ BITS
 {
@@ -78,11 +80,56 @@ Experimental::Experimental(QWidget *parent) : QWidget(parent)
 //	setAttribute(Qt::WA_NativeWindow);
 }
 
+static void sqlite_orm_exp()
+{
+	struct User{
+		int id;
+		std::string firstName;
+		std::string lastName;
+		int birthDate;
+		std::shared_ptr<std::string> imageUrl;
+		int typeId;
+	};
+
+	struct UserType {
+		int id;
+		std::string name;
+		std::string comment;
+	};
+
+	using namespace sqlite_orm;
+	auto storage = make_storage(tostdstr(QDir::homePath() + "/AMLM_DBtest.sqlite"),
+	                            make_table("users",
+	                                       make_column("id", &User::id, autoincrement(), primary_key()),
+	                                       make_column("first_name", &User::firstName),
+	                                       make_column("last_name", &User::lastName),
+	                                       make_column("birth_date", &User::birthDate),
+	                                       make_column("image_url", &User::imageUrl),
+	                                       make_column("type_id", &User::typeId)),
+	                            make_table("user_types",
+	                                       make_column("id", &UserType::id, autoincrement(), primary_key()),
+	                                       make_column("name", &UserType::name),
+	                                       make_column("comment", &UserType::comment, default_value("user"))));
+	auto retval = storage.sync_schema(false);
+//	qDb() << retval;
+
+	User user{-1, "Jonh", "Doe", 664416000, std::make_unique<std::string>("url_to_heaven"), 3 };
+
+	auto insertedId = storage.insert(user);
+	std::cout << "insertedId = " << insertedId << std::endl;      //  insertedId = 8
+	user.id = insertedId;
+
+	User secondUser{-1, "Alice", "Inwonder", 831168000, {} , 2};
+	insertedId = storage.insert(secondUser);
+	secondUser.id = insertedId;
+}
+
 void Experimental::DoExperiment()
 {
 	qDebug() << "Starting DoExperiment()";
 
     /// @todo Experiments
+	sqlite_orm_exp();
 //    auto m_cdb_model = new CollectionDatabaseModel(this);
 //    m_cdb_model->InitDb(QUrl("dummyfile.sqlite3"));
 //    auto rel_table_model = m_cdb_model->make_reltable_model(this);

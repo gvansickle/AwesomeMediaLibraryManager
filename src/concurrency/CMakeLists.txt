@@ -37,6 +37,7 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	ThreadsafeMap.h
 	DebugSequence.h
 	WorkerThreadBase.h
+	WorkerThreadControllerBase.h
 	)
 set(PRIVATE_HEADER_FILES_UTILS_CONCURRENCY
 	impl/IExecutor.h
@@ -67,6 +68,7 @@ set(SOURCE_FILES_UTILS_CONCURRENCY
 	ThreadsafeMap.cpp
 	DebugSequence.cpp
 	WorkerThreadBase.cpp
+	WorkerThreadControllerBase.cpp
 	)
 
 target_sources_local(concurrency
@@ -82,6 +84,7 @@ target_link_libraries(concurrency
 		${QT5_LINK_LIB_TARGETS}
 		${KF5_LINK_LIB_TARGETS}
 		#${GTK_LINK_LIB_TARGETS} # == Some utils/*Helpers.h.
+		jobs  ### @note For LibraryEntryLoaderJob.h via LibraryModel.h.
 		)
 target_include_directories(concurrency
 	PUBLIC

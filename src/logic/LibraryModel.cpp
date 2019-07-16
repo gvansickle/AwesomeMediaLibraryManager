@@ -39,19 +39,21 @@
 #include <AMLMApp.h>
 #include <utils/RegisterQtMetatypes.h>
 #include "LibraryRescanner.h"
-#include "LibraryRescannerJob.h"
 #include "LibraryRescannerMapItem.h"
 #include "LibraryEntryMimeData.h"
 #include "utils/StringHelpers.h"
 #include "utils/DebugHelpers.h"
 #include "Library.h"
-#include "LibraryEntryLoaderJob.h"
 #include "LibraryRescanner.h" ///< For MetadataReturnVal
 #include "logic/ModelUserRoles.h"
 #include <logic/dbmodels/CollectionDatabaseModel.h>
 #include <logic/PerfectDeleter.h>
 
 #include <gui/Theme.h>
+#include <jobs/LibraryEntryLoaderJob.h>
+#include <jobs/LibraryRescannerJob.h>
+#include <logic/serialization/SerializationHelpers.h>
+
 
 AMLM_QREG_CALLBACK([](){
     qIn() << "Registering LibraryModel types";
@@ -753,7 +755,7 @@ QMimeData* LibraryModel::mimeData(const QModelIndexList& indexes) const
 void LibraryModel::SLOT_onIncomingFilename(QString filename)
 {
     auto new_entry = LibraryEntry::fromUrl(filename);
-	qDb() << "URL:" << new_entry->getUrl();
+//	qDb() << "URL:" << new_entry->getUrl();
 	appendRow(new_entry);
 }
 

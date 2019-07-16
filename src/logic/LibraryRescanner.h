@@ -28,7 +28,7 @@
 
 /// Qt5
 #include <QObject>
-#include <QElapsedTimer>
+//#include <QElapsedTimer>
 #include <QPersistentModelIndex>
 #include <QFuture>
 #include <QFutureWatcher>
@@ -38,10 +38,12 @@
 #include <concurrency/ExtAsync.h>
 #include "LibraryRescannerMapItem.h"
 #include <logic/models/AbstractTreeModelItem.h>
+#include <utils/Stopwatch.h>
 
 class LibraryModel;
 class LibraryEntry;
 class ScanResultsTreeModel;
+class ScanResultsTreeModelItem;
 class SharedItemContType;
 
 
@@ -85,6 +87,7 @@ class LibraryRescanner : public QObject
 Q_SIGNALS:
 
 //	void SIGNAL_StapToTreeModel(std::vector<std::unique_ptr<AbstractTreeModelItem>> new_items);
+	void SIGNAL_FileUrlQString(QString);
 
 public:
 	explicit LibraryRescanner(LibraryModel* parent);
@@ -92,7 +95,6 @@ public:
 
 	void startAsyncRescan(QVector<VecLibRescannerMapItems> items_to_rescan);
 
-	QElapsedTimer m_timer;
 	qint64 m_last_elapsed_time_dirscan {0};
 
 public Q_SLOTS:
@@ -103,7 +105,7 @@ public Q_SLOTS:
 	/**
 	 * Slot which accepts the incoming metadata.
 	 */
-    void SLOT_processReadyResults(MetadataReturnVal lritem_vec);
+	void SLOT_processReadyResults(MetadataReturnVal lritem_vec);
 
 	/// Slot called by m_rescan_future_watcher when the rescan is complete.
 //    void onRescanFinished();
@@ -116,9 +118,10 @@ protected:
 	/// Experimental: Run XQuery in a separate thread.
 	void ExpRunXQuery1(const QString& database_filename, const QString& in_filename);
 
-	void SaveDatabase(ScanResultsTreeModel* tree_model_ptr, const QString& database_filename);
+	void SaveDatabase(std::shared_ptr<ScanResultsTreeModel> tree_model_ptr, const QString& database_filename);
+	void LoadDatabase(std::shared_ptr<ScanResultsTreeModel> tree_model_ptr, const QString& database_filename);
 
-        
+
 private:
 	Q_DISABLE_COPY(LibraryRescanner)
 
@@ -131,10 +134,14 @@ private:
 
 	QFutureWatcher<QString> m_extfuture_watcher_dirtrav;
 	/// @todo
-	using ItemContType = std::vector<std::unique_ptr<AbstractTreeModelItem>>;
+//	using ItemContType = std::vector<std::shared_ptr<ScanResultsTreeModelItem>>;
+	using ItemContType = std::vector<std::shared_ptr<AbstractTreeModelItem>>;
 	using SharedItemContType = std::shared_ptr<ItemContType>;
 //	QFutureWatcher<SharedItemContType> m_efwatcher_tree_model_append;
 //	QFutureWatcher<MetadataReturnVal> m_extfuture_watcher_metadata;
+
+	Stopwatch m_timer;
+
 };
 
 

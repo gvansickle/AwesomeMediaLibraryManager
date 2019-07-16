@@ -43,20 +43,28 @@
 #include "ActivityProgressStatusBarTracker.h"
 #include <gui/MainWindow.h>
 
-
-BaseActivityProgressStatusBarWidget::BaseActivityProgressStatusBarWidget(QWidget *parent) : BASE_CLASS(parent)
+QPointer<BaseActivityProgressStatusBarWidget>
+BaseActivityProgressStatusBarWidget::construct(KJob* job, ActivityProgressStatusBarTracker* tracker, QWidget* parent)
 {
+	QPointer<BaseActivityProgressStatusBarWidget> retval = new BaseActivityProgressStatusBarWidget(job, tracker, parent);
 
+	// We now have a vtable to the new object.
+	BASE_CLASS_finish_construction(retval);
+
+	return retval;
 }
 
+void BaseActivityProgressStatusBarWidget::BASE_CLASS_finish_construction(BaseActivityProgressStatusBarWidget* self)
+{
+	self->init(self->m_kjob);
+}
+
+
 BaseActivityProgressStatusBarWidget::BaseActivityProgressStatusBarWidget(KJob *job, ActivityProgressStatusBarTracker *tracker, QWidget *parent)
-    : BaseActivityProgressStatusBarWidget(parent)
+	: BASE_CLASS(parent)
 {
     m_tracker = tracker;
     m_kjob = job;
-
-    // We have a vtable to this.
-    this->init(job, parent);
 }
 
 BaseActivityProgressStatusBarWidget::~BaseActivityProgressStatusBarWidget()
@@ -95,7 +103,7 @@ M_WARNING("TODO");
 qWr() << "WARNING:" << text;
 }
 
-void BaseActivityProgressStatusBarWidget::init(KJob* kjob, QWidget *parent)
+void BaseActivityProgressStatusBarWidget::init(KJob* kjob)
 {
     // Create the widget.
     /// @link https://github.com/KDE/kjobwidgets/blob/master/src/kstatusbarjobtracker.cpp
@@ -607,3 +615,5 @@ void BaseActivityProgressStatusBarWidget::speed(KJob *kjob, unsigned long value)
 
     updateMainTooltip();
 }
+
+

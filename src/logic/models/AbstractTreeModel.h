@@ -1,56 +1,32 @@
-/**
- * Adapted from the "Editable Tree Model Example" shipped with Qt5.
+/*
+ * Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ *
+ * This file is part of AwesomeMediaLibraryManager.
+ *
+ * AwesomeMediaLibraryManager is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * AwesomeMediaLibraryManager is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/****************************************************************************
-**
-** Copyright (C) 2016 The Qt Company Ltd.
-** Contact: https://www.qt.io/licensing/
-**
-** This file is part of the examples of the Qt Toolkit.
-**
-** $QT_BEGIN_LICENSE:BSD$
-** Commercial License Usage
-** Licensees holding valid commercial Qt licenses may use this file in
-** accordance with the commercial license agreement provided with the
-** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see https://www.qt.io/terms-conditions. For further
-** information use the contact form at https://www.qt.io/contact-us.
-**
-** BSD License Usage
-** Alternatively, you may use this file under the terms of the BSD license
-** as follows:
-**
-** "Redistribution and use in source and binary forms, with or without
-** modification, are permitted provided that the following conditions are
-** met:
-**   * Redistributions of source code must retain the above copyright
-**     notice, this list of conditions and the following disclaimer.
-**   * Redistributions in binary form must reproduce the above copyright
-**     notice, this list of conditions and the following disclaimer in
-**     the documentation and/or other materials provided with the
-**     distribution.
-**   * Neither the name of The Qt Company Ltd nor the names of its
-**     contributors may be used to endorse or promote products derived
-**     from this software without specific prior written permission.
-**
-**
-** THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-** "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-** LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-** A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-** OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-** SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-** LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-** DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-** THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-** (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-** OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
-**
-** $QT_END_LICENSE$
-**
-****************************************************************************/
+/**
+ * @file AbstractTreeModel.h
+ * Interface of AbstractTreeModel.
+ *
+ * This class is heavily adapted from at least the following:
+ * - The "Editable Tree Model Example" shipped with Qt5.
+ * - KDenLive's AbstractItemModel class.
+ * - My own original work.
+ * - Hundreds of nuggets of information from all over the Internet.
+ */
 
 
 #ifndef ABSTRACTTREEMODEL_H
@@ -59,36 +35,55 @@
 // Std C++
 #include <memory>
 #include <vector>
+#include <map>
 
 // Qt5
 #include <QAbstractItemModel>
 #include <QModelIndex>
 #include <QVariant>
+class QAbstractItemModelTester;
 
 // Ours
 class AbstractTreeModelItem;
 class AbstractHeaderSection;
 class AbstractTreeModelHeaderItem;
 #include <logic/serialization/ISerializable.h>
+#include <logic/UUIncD.h>
+#include <future/enable_shared_from_this_virtual.h>
+#include <logic/UndoRedoHelper.h>
 
 
 /**
  * Abstract tree model base class.  Inherits from QAbstractItemModel and ISerializable.
  */
-class AbstractTreeModel : public QAbstractItemModel, public virtual ISerializable
+class AbstractTreeModel : public QAbstractItemModel,
+		public virtual ISerializable,
+		public enable_shared_from_this_virtual<AbstractTreeModel>
 {
     Q_OBJECT
+	Q_DISABLE_COPY(AbstractTreeModel);
+	Q_INTERFACES(ISerializable);
 
 	using BASE_CLASS = QAbstractItemModel;
 
 public:
+	static std::shared_ptr<AbstractTreeModel> construct(QObject* parent = nullptr);
+
+protected:
 	/**
 	 * Creates a new AbstractTreeModel object.
-	 * This model will have a default constructed AbstractTreeModelHeader with no columns and no children.
+	 * This model will NOT have a root, that's what construct() adds.
+	 * In general, derived constructors don't do much more than pass the @a parent param.
 	 */
 	explicit AbstractTreeModel(QObject *parent = nullptr);
+
+public:
+	/**
+	 * Clears all items in the model, including the root item.
+	 */
 	~AbstractTreeModel() override;
 
+	/// OLD
 	/**
 	 * Set the ColumnSpecs in the model's root item, which holds the info for the horizontal header.
 	 */
@@ -96,6 +91,7 @@ public:
 
 	// bool hasIndex() is not virtual.
 
+	/// BOTH
 	/**
 	 * Calls getItem(index), which returns index.internalPointer() which is an AbstractTreeModelItem*.
 	 * Item then returns the data for this index and role from its @a data(column) function.
@@ -112,8 +108,8 @@ public:
     /// @{
 
     /// Get the header data corresponding to the given section number, orientation, and role.
-    QVariant headerData(int section, Qt::Orientation orientation,
-                        int role = Qt::DisplayRole) const override;
+    /// BOTH
+    QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
 
     /// Set the header data corresponding to the given section number, orientation, and role.
     bool setHeaderData(int section, Qt::Orientation orientation,
@@ -124,17 +120,25 @@ public:
 
     /// @}
 
+    /// BOTH
     QModelIndex index(int row, int column,
                       const QModelIndex &parent = QModelIndex()) const override;
-    QModelIndex parent(const QModelIndex &index) const override;
+	/// BOTH
+	Qt::ItemFlags flags(const QModelIndex &index) const override;
 
+    /// BOTH
+    QModelIndex parent(const QModelIndex &index) const override;
+	/// BOTH
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+
+    /**
+     * Returns the number of columns for the children of the given parent.
+     */
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
 
-    Qt::ItemFlags flags(const QModelIndex &index) const override;
 
-    bool setData(const QModelIndex &index, const QVariant &value,
-                 int role = Qt::EditRole) override;
+    /// ETM, KDEN AbsTreeModel doesn't override this.
+	bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
 
     /// @name Row and column insert, remove, and move operations.
     /// @note Singular insert/remove/move row and column functions are not virtual
@@ -144,13 +148,12 @@ public:
     /**
      * Inserts @a num_columns new columns into the model before column @a insert_before_column.  If
      * @a insert_before_column is 0, columns are still prepended, and if it's columnCount(), they're still prepended
-     * to the non-existent one-past-the-end column;
-     * i.e. they're appended to the list.
+     * to the non-existent one-past-the-end column, i.e. they're appended to the list.
      *
      * @return true on success.
      */
-    bool insertColumns(int insert_before_column, int num_columns,
-                       const QModelIndex& parent_model_index = QModelIndex()) override;
+	bool insertColumns(int insert_before_column, int num_columns,
+					   const QModelIndex& parent_model_index = QModelIndex()) override;
 	/**
 	 * Remove columns.
 	 */
@@ -164,8 +167,8 @@ public:
      *
      * @return true on success.
      */
-    bool insertRows(int insert_before_row, int num_rows,
-                    const QModelIndex& parent_model_index = QModelIndex()) override;
+	bool insertRows(int insert_before_row, int num_rows,
+					const QModelIndex& parent_model_index = QModelIndex()) override;
 
     /**
      * Remove rows [@a remove_start_row, @a remove_start_row + @a num_rows - 1 ].
@@ -189,44 +192,171 @@ public:
 	 * Append a std::vector of AbstractTreeModelItem's as children of @a parent.
 	 * This is effectively the same as insertRows() followed by numerous setData() calls, but the default construction
 	 * of the item objects is skipped since we're passing in the @a new_items.
+	 * @note We're crossing the streams here, smart ptrs and QModelIndex.
 	 */
-	virtual bool appendItems(std::vector<std::unique_ptr<AbstractTreeModelItem>> new_items, const QModelIndex &parent = QModelIndex());
-	virtual bool appendItem(std::unique_ptr<AbstractTreeModelItem> new_items, const QModelIndex &parent = QModelIndex());
+	 /// OLD
+	virtual bool appendItems(std::vector<std::shared_ptr<AbstractTreeModelItem> > new_items, const QModelIndex &parent = QModelIndex());
+//	virtual bool appendItem(std::shared_ptr<AbstractTreeModelItem> new_items, const QModelIndex &parent = QModelIndex());
 
-	AbstractTreeModelItem* getItem(const QModelIndex &index) const;
+	QModelIndex getIndexFromItem(const std::shared_ptr<AbstractTreeModelItem>& item) const;
+	QModelIndex getIndexFromId(UUIncD id) const;
+	std::shared_ptr<AbstractTreeModelItem> getItemById(const UUIncD &id) const;
+	std::shared_ptr<AbstractTreeModelItem> getRootItem() const;
+	// ETM/GRVS
+	std::shared_ptr<AbstractTreeModelItem> getItem(const QModelIndex &index) const;
+
+
+
+	/// @name Public interface: Lambda generators for tree structure modification.
+	/// @{
+
+	/**
+	 * Helper function to generate a lambda that adds an item to the tree.
+	 */
+	Fun addItem_lambda(const std::shared_ptr<AbstractTreeModelItem> &new_item, UUIncD parentId);
+
+	/**
+	 * Helper function to generate a lambda that removes an item from the tree.
+	 */
+	Fun removeItem_lambda(UUIncD id);
+
+	/**
+	 * Helper function to generate a lambda that changes the row of an item.
+	 */
+	Fun moveItem_lambda(UUIncD id, int destRow, bool force = false);
+
+	/// @} // END Lambda generators.
+
+
+	/// @name Cut/Copy/Paste support.
+	/// @{
+
+	bool has_cut_item() const { return false; };
+
+	/// @}
+
 
 	/// @name Serialization, from ISerializable.
 	/// Remember to override these in derived classes.
 	/// @{
 
 	/// Serialize the entire model to a QVariant.
-	///   QVariant toVariant() const override = 0;
+	QVariant toVariant() const override { Q_ASSERT(0); return QVariant(); }; // = 0;
 
 	/// Serialize the entire model from a QVariant.
-	///   void fromVariant(const QVariant& variant) override = 0;
+	void fromVariant(const QVariant& variant) override { Q_ASSERT(0); }; // = 0;
+
+	/**
+	 * Non-static factory function for creating new, typed tree nodes from QVariantMaps.
+	 */
+//	virtual std::shared_ptr<AbstractTreeModelItem>
+//	make_item_from_variant(const QVariant& variant)	{ Q_ASSERT(0); return nullptr; };
+
+//	virtual UUIncD requestAddTreeModelItem(const QVariant& variant, UUIncD parent_id,
+//	                               Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda)
+//	                               { Q_ASSERT(0); return UUIncD::null(); };
+
+	virtual void toOrm(std::string filename) const;
+	virtual void fromOrm(std::string filename);
 
 	/// @} // END Serialization
 
 	/// @} // END Extended public model interface.
 
+	friend class AbstractTreeModelItem;
+
+	long get_total_model_node_count() const { return m_model_item_map.size(); };
+
+	/// @temp?
+	using item_map_type = std::map<UUIncD, std::weak_ptr<AbstractTreeModelItem>>;
+	/// Generic node iterator type.  No order guarantees at all.
+	using iterator = item_map_type::iterator;
+	iterator begin();
+	iterator end();
+
 protected:
 
+	/**
+	 * Register/deregister an item with the model.  Intended to be called from an AbstractTreeModelItem.
+	 */
+	virtual void register_item(const std::shared_ptr<AbstractTreeModelItem>& item);
+	virtual void deregister_item(UUIncD id, AbstractTreeModelItem* item);
+
+	/// @name High-cost operations
+	/// @{
+
+	/// @}
+
+	/**
+	 * Send the appropriate pre-notification related to a row that we are appending.
+	 * @param item is the parent item to which row is about to be appended.
+	 */
+//	void notifyRowsAboutToInsert(const std::shared_ptr<AbstractTreeModelItem>& row, int first, int last);
+
+	/* @brief Send the appropriate notification related to a row that we have appended
+	   @param row is the new element
+	*/
+//	void notifyRowsInserted(const std::shared_ptr<AbstractTreeModelItem>& row);
+
+	void notifyColumnsAboutToInserted(const std::shared_ptr<AbstractTreeModelItem>& parent, int first_column, int last_column);
+	void notifyColumnsInserted();
+
+	/**
+	 * Send the appropriate pre-notification related to a row that we are appending.
+	 * @param item is the parent item to which row is about to be appended.
+	 */
+	void notifyRowAboutToAppend(const std::shared_ptr<AbstractTreeModelItem>& item);
+
+	/* @brief Send the appropriate notification related to a row that we have appended
+       @param row is the new element
+    */
+	void notifyRowAppended(const std::shared_ptr<AbstractTreeModelItem>& row);
+
+	/* @brief Send the appropriate notification related to a row that we are deleting
+	   @param item is the parent of the row being deleted
+	   @param row is the index of the row being deleted
+	*/
+	void notifyRowAboutToDelete(std::shared_ptr<AbstractTreeModelItem> item, int row);
+
+	/* @brief Send the appropriate notification related to a row that we have appended
+	   @param row is the old element
+	*/
+	void notifyRowDeleted();
+
+public:
+	/** This is a convenience function that helps check if the tree is in a valid state */
+	virtual bool checkConsistency();
+
+protected:
 	/// @name Extended protected model interface.
 	/// @{
 
-	/**
-	 * Override in derived classes to return a newly created root/header item node for the model.
-	 */
-//	virtual AbstractTreeModelHeaderItem * make_root_node(QVector<QVariant> rootData) = 0;
-
-	virtual QString getXmlStreamName() const = 0;
-	virtual QString getXmlStreamVersion() const = 0;
+	virtual QString getXmlStreamName() const { return ""; };
+	virtual QString getXmlStreamVersion() const { return ""; };
 
     /// @}
 
+    /// Associated model tester.
+    /// Parented to the model itself.
+    QAbstractItemModelTester* m_model_tester {nullptr};
+
+    /**
+	 * Single writer/multi-reader mutex.
+	 * @todo The KDenLive code has/needs this to be recursive, but we should try to un-recurse it.
+	 */
+//	mutable std::shared_mutex m_rw_mutex;
+	mutable std::recursive_mutex m_rw_mutex;
+
     /// Hidden root node of the tree model.
     /// Pulls double duty as the horizontal header item.
-	AbstractTreeModelHeaderItem* m_root_item;
+	std::shared_ptr<AbstractTreeModelHeaderItem> m_root_item;
+
+	/**
+	 * Map of UUIncD's to AbstractTreeModelItems.
+	 */
+//	std::map<UUIncD, std::weak_ptr<AbstractTreeModelItem>> m_model_item_map;
+	item_map_type m_model_item_map;
+
 };
 
 

@@ -26,6 +26,10 @@
 #ifndef SRC_FUTURE_OVERLOADED_H_
 #define SRC_FUTURE_OVERLOADED_H_
 
+#include <functional>
+#include <variant>
+
+
 /**
  * The "overloaded" trick for lambda dispatch over std::variant<> using std::visit<>.
  *
@@ -33,11 +37,22 @@
  * 		@link https://arne-mertz.de/2018/05/overload-build-a-variant-visitor-on-the-fly/
  * 		It's what's shown here:
  * 		@link https://en.cppreference.com/w/cpp/utility/variant/visit
+ *
+ * @note And these are all broken with C++17:
+ * @link https://github.com/viboes/std-make/issues/16
  */
-template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
+template <class... Fs>
+struct overloaded : Fs... {
+  template <class ...Ts>
+  overloaded(Ts&& ...ts) noexcept : Fs{std::forward<Ts>(ts)}...
+  {}
+
+  using Fs::operator()...;
+};
 
 /// Deduction guide for the above template.
-template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
+template<class... Ts>
+overloaded(Ts&&...) -> overloaded<std::remove_reference_t<Ts>...>;
 
 
 #endif /* SRC_FUTURE_OVERLOADED_H_ */

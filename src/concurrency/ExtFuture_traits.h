@@ -106,13 +106,13 @@ template <class F, class T>
 using has_extfuture_as_first_param_type = decltype(std::declval<F>()(std::declval<ExtFuture<T>>()));
 
 template <class F, class T>
-using has_extfuture_as_first_param = std::is_detected<has_extfuture_as_first_param_type, F, T>;
+using has_extfuture_as_first_param = future_detection::is_detected<has_extfuture_as_first_param_type, F, T>;
 
 template <class F, class T>
 using has_extfuture_ref_as_first_param_type = decltype(std::declval<F>()(std::declval<ExtFuture<T>&>()));
 
 template <class F, class T>
-using has_extfuture_ref_as_first_param = std::is_detected<has_extfuture_ref_as_first_param_type, F, T>;
+using has_extfuture_ref_as_first_param = future_detection::is_detected<has_extfuture_ref_as_first_param_type, F, T>;
 
 /**
  * .then() helper for ExtFuture implicit unwrapping.  Determines the type of the ExtFuture returned by .then().

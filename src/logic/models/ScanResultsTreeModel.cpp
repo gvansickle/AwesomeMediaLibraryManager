@@ -18,26 +18,183 @@
  */
 #include "ScanResultsTreeModel.h"
 
+// sqlite_orm
+#include <third_party/sqlite_orm/include/sqlite_orm/sqlite_orm.h>
+
 // Ours
+#include "AbstractTreeModel.h"
 #include "ScanResultsTreeModelItem.h"
 #include "AbstractTreeModelHeaderItem.h"
+#include "SRTMItemLibEntry.h"
+#include <logic/serialization/SerializationHelpers.h>
+
+#include <serialization/XmlSerializer.h>
+
 
 ScanResultsTreeModel::ScanResultsTreeModel(QObject *parent)
     : BASE_CLASS(parent)
 {
+}
 
+void ScanResultsTreeModel::setup()
+{
+	// We connect the signals of the abstractitemmodel to a more generic one.
+//	connect_or_die(this, &ScanResultsTreeModel::columnsMoved, this, &ScanResultsTreeModel::modelChanged);
+//	connect_or_die(this, &ScanResultsTreeModel::columnsRemoved, this, &ScanResultsTreeModel::modelChanged);
+//	connect_or_die(this, &ScanResultsTreeModel::columnsInserted, this, &ScanResultsTreeModel::modelChanged);
+//	connect_or_die(this, &ScanResultsTreeModel::rowsMoved, this, &ScanResultsTreeModel::modelChanged);
+//	connect_or_die(this, &ScanResultsTreeModel::rowsRemoved, this, &ScanResultsTreeModel::modelChanged);
+//	connect_or_die(this, &ScanResultsTreeModel::rowsInserted, this, &ScanResultsTreeModel::modelChanged);
+//	connect_or_die(this, &ScanResultsTreeModel::modelReset, this, &ScanResultsTreeModel::modelChanged);
+//	connect_or_die(this, &ScanResultsTreeModel::dataChanged, this, &ScanResultsTreeModel::modelChanged);
+//	connect_or_die(this, &ScanResultsTreeModel::modelChanged, this, &ScanResultsTreeModel::sendModification);
+}
+
+void ScanResultsTreeModel::sendModification()
+{
+//	if (auto ptr = this)
+//	{
+//		Q_ASSERT(m_pmindex.isValid());
+//		QString name = ptr->data(m_pmindex, AssetParameterModel::NameRole).toString();
+//		if (m_paramType == ParamType::KeyframeParam || m_paramType == ParamType::AnimatedRect || m_paramType == ParamType::Roto_spline)
+//		{
+//			m_lastData = getAnimProperty();
+//			ptr->setParameter(name, m_lastData, false);
+//		}
+//		else
+//		{
+//			Q_ASSERT(false); // Not implemented, TODO
+//		}
+//	}
+}
+
+// static
+std::shared_ptr<ScanResultsTreeModel> ScanResultsTreeModel::construct(QObject* parent)
+{
+	std::shared_ptr<ScanResultsTreeModel> retval(new ScanResultsTreeModel(parent));
+	retval->m_root_item = AbstractTreeModelHeaderItem::construct(retval);
+	return retval;
 }
 
 void ScanResultsTreeModel::setBaseDirectory(const QUrl &base_directory)
 {
+	std::unique_lock write_lock(m_rw_mutex);
+
 	m_base_directory = base_directory;
 }
 
-
-bool ScanResultsTreeModel::appendItems(std::vector<std::unique_ptr<AbstractTreeModelItem>> new_items, const QModelIndex& parent)
+void ScanResultsTreeModel::LoadDatabase(const QString& database_filename)
 {
-	return BASE_CLASS::appendItems(std::move(new_items), parent);
+	qIn() << "###### READING" << database_filename;
+
+	XmlSerializer xmlser;
+	xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
+	xmlser.HACK_skip_extra(false);
+	xmlser.load(*this, QUrl::fromLocalFile(database_filename));
+
+	qIn() << "###### TREEMODELPTR HAS NUM ROWS:" << rowCount();
+	qIn() << "###### READ" << database_filename;
 }
+
+void ScanResultsTreeModel::SaveDatabase(const QString& database_filename)
+{
+	qIn() << "###### WRITING" << database_filename;
+	qIn() << "###### TREEMODELPTR HAS NUM ROWS:" << rowCount();
+
+	XmlSerializer xmlser;
+	xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
+	xmlser.save(*this, QUrl::fromLocalFile(database_filename), "playlist");
+
+	qIn() << "###### WROTE" << database_filename;
+}
+
+UUIncD ScanResultsTreeModel::requestAddScanResultsTreeModelItem(const QVariant& variant, UUIncD parent_id, Fun undo, Fun redo)
+{
+	std::unique_lock write_lock(m_rw_mutex);
+
+	// ::construct() a new tree model item from variant.
+	std::shared_ptr<ScanResultsTreeModelItem> new_item = ScanResultsTreeModelItem::construct(variant,
+																							 std::static_pointer_cast<ScanResultsTreeModel>(shared_from_this()));
+	bool status = addItem(new_item, parent_id, undo, redo);
+
+	if(!status)
+	{
+		// Add failed for some reason, return a null UUIncD.
+		return UUIncD::null();
+	}
+
+	new_item->fromVariant(variant);
+
+	return new_item->getId();
+}
+
+UUIncD ScanResultsTreeModel::requestAddSRTMLibEntryItem(const QVariant& variant, UUIncD parent_id, Fun undo, Fun redo)
+{
+	std::unique_lock write_lock(m_rw_mutex);
+
+	auto new_item = SRTMItem_LibEntry::construct(variant, std::static_pointer_cast<ScanResultsTreeModel>(shared_from_this()));
+	bool status = addItem(new_item, parent_id, undo, redo);
+
+	if(!status)
+	{
+		// Add failed for some reason, return a null UUIncD.
+		return UUIncD::null();
+	}
+
+	new_item->fromVariant(variant);
+
+	return new_item->getId();
+}
+
+//UUIncD ScanResultsTreeModel::requestAddExistingTreeModelItem(std::shared_ptr<AbstractTreeModelItem> new_item, UUIncD parent_id, Fun undo, Fun redo)
+//{
+//	std::unique_lock write_lock(m_rw_mutex);
+
+//	// ::construct() a new tree model item from variant.
+////	std::shared_ptr<AbstractTreeModelItem> new_item = make_item_from_variant(variant);
+
+//	bool status = addItem(new_item, parent_id, undo, redo);
+
+//	if(!status)
+//	{
+//		// Add failed for some reason, return a null UUIncD.
+//		return UUIncD::null();
+//	}
+//	return new_item->getId();
+//}
+
+void ScanResultsTreeModel::toOrm(std::string filename) const
+{
+#if 0
+	using namespace sqlite_orm;
+	auto storage = make_storage(filename,
+								make_table("items",
+										   make_column("id",
+													   &ScanResultsTreeModelItem::m_uuid, autoincrement(), primary_key()),
+										   make_column("model_item_map", &ScanResultsTreeModel::m_model_item_map),
+										   make_column("m_root_item", &ScanResultsTreeModel::m_root_item)
+										   ,
+										   make_column("last_name", &User::lastName),
+										   make_column("birth_date", &User::birthDate),
+										   make_column("image_url", &User::imageUrl),
+										   make_column("type_id", &User::typeId))*//*,
+								make_table("item_types",
+										   make_column("id", &UserType::id, autoincrement(), primary_key()),
+										   make_column("name", &UserType::name, default_value("name_placeholder"))));
+	storage.sync_schema();
+#endif
+}
+
+void ScanResultsTreeModel::fromOrm(std::string filename)
+{
+
+}
+
+/// Qt5 ids for the TreeItems it can hold.
+static const int f_atmi_id = qMetaTypeId<AbstractTreeModelItem>();
+static const int f_strmi_id = qMetaTypeId<ScanResultsTreeModelItem>();
+static const int f_strmile_id = qMetaTypeId<SRTMItem_LibEntry>();
+
 
 /**
  * ScanResultsTreeModel XML tags.
@@ -59,6 +216,8 @@ bool ScanResultsTreeModel::appendItems(std::vector<std::unique_ptr<AbstractTreeM
 QVariant ScanResultsTreeModel::toVariant() const
 {
 	QVariantInsertionOrderedMap map;
+
+	std::unique_lock write_lock(m_rw_mutex);
 
 #define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
 //	M_DATASTREAM_FIELDS(X)
@@ -90,19 +249,23 @@ QVariant ScanResultsTreeModel::toVariant() const
 	///	A sample date is "2005-01-08T17:10:47-05:00".
 	map_insert_or_die(map, XMLTAG_SRTM_DATE, QDateTime::currentDateTimeUtc().toString(Qt::ISODate));
 
-	// Insert the invisible root item, which will recursively add all children.
-	/// @todo It also serves as the model's header, not sure that's a good overloading.
-	map_insert_or_die(map, XMLTAG_SRTM_ROOT_ITEM, m_root_item->toVariant());
-
 	// Timestamps for the start and end of the last full scan.
 	map_insert_or_die(map, XMLTAG_SRTM_TS_LAST_SCAN_START, QVariant(QDateTime()));
 	map_insert_or_die(map, XMLTAG_SRTM_TS_LAST_SCAN_END, QVariant(QDateTime()));
+
+	// Insert the invisible root item, which will recursively add all children.
+	/// @todo It also serves as the model's header, not sure that's a good overloading.
+	qDb() << "START tree serialize";
+	map_insert_or_die(map, XMLTAG_SRTM_ROOT_ITEM, m_root_item->toVariant());
+	qDb() << "END tree serialize";
 
 	return map;
 }
 
 void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 {
+	std::unique_lock write_lock(m_rw_mutex);
+
 	QVariantInsertionOrderedMap map;
 	qviomap_from_qvar_or_die(&map, variant);
 
@@ -119,20 +282,18 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 	QString creation_date;
 	map_read_field_or_warn(map, XMLTAG_SRTM_DATE, &creation_date);//.toString();
 
-	/// @note This is a QVariantMap, contains abstract_tree_model_header as a QVariantList.
-	if(m_root_item != nullptr)
-	{
-		delete m_root_item;
-	}
-	m_root_item = new AbstractTreeModelHeaderItem();
-//	m_root_item->fromVariant(map.value(SRTMTagToXMLTagMap[SRTMTag::ROOT_ITEM]));
-M_WARNING("TODO: There sometimes isn't a root item in the map.");
-	map_read_field_or_warn(map, XMLTAG_SRTM_ROOT_ITEM, m_root_item);
 	/// @todo Read these in.
-	// SRTMItemTagToXMLTagMap[SRTMItemTag::TS_LAST_SCAN_START]
-	// SRTMItemTagToXMLTagMap[SRTMItemTag::TS_LAST_SCAN_END]
+	QDateTime last_scan_start, last_scan_end;
+	map_read_field_or_warn(map, XMLTAG_SRTM_TS_LAST_SCAN_START, &last_scan_start);
+	map_read_field_or_warn(map, XMLTAG_SRTM_TS_LAST_SCAN_END, &last_scan_end);
+
+	/// @note This is a QVariantMap, contains abstract_tree_model_header as a QVariantList.
+	QVariantInsertionOrderedMap root_item_map;
+	map_read_field_or_warn(map, XMLTAG_SRTM_ROOT_ITEM, &root_item_map);
+	m_root_item->fromVariant(root_item_map);
+	dump_map(map);
+//	requestAddTreeModelItem()
+
 
 #warning @todo INCOMPLETE/error handling
 }
-
-

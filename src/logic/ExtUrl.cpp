@@ -31,7 +31,7 @@
 
 // Ours
 #include <utils/DebugHelpers.h>
-
+#include <logic/serialization/SerializationHelpers.h>
 
 
 AMLM_QREG_CALLBACK([](){
@@ -55,12 +55,17 @@ ExtUrl::ExtUrl(const QUrl& qurl, const QFileInfo* qurl_finfo) : m_url(qurl)
 	X(TS_LAST_MODIFIED, m_last_modified_timestamp) \
 	X(TS_LAST_MODIFIED_METADATA, m_metadata_last_modified_timestamp)
 
+/// Strings to use for the tags.
+#define X(field_tag, member_field) static const QLatin1Literal field_tag ( # member_field );
+	M_DATASTREAM_FIELDS(X);
+#undef X
+
 QVariant ExtUrl::toVariant() const
 {
 	QVariantInsertionOrderedMap map;
 
 	// Add all the fields to the map.
-#define X(field_enum_name, field)   map_insert_or_die(map, # field_enum_name, field );
+#define X(field_tag, field)   map_insert_or_die(map, field_tag, field );
 	M_DATASTREAM_FIELDS(X)
 #undef X
 
@@ -69,10 +74,11 @@ QVariant ExtUrl::toVariant() const
 
 void ExtUrl::fromVariant(const QVariant& variant)
 {
-	QVariantInsertionOrderedMap map(variant);
+	QVariantInsertionOrderedMap map;
+	qviomap_from_qvar_or_die(&map, variant);
 
 	// Extract all the fields from the map, cast them to their type.
-#define X(field_enum_name, field)    map_read_field_or_warn(map, # field_enum_name, &(field));
+#define X(field_tag, field)    map_read_field_or_warn(map, field_tag, &field);
 	M_DATASTREAM_FIELDS(X)
 #undef X
 }

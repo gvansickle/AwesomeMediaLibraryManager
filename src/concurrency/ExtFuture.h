@@ -489,7 +489,7 @@ public:
 		}
 	}
 
-	inline void reportResults(const ExtFuture<T> &ef, int begin_index = -1, int end_index = -1)
+	void reportResults(const ExtFuture<T> &ef, int begin_index = -1, int end_index = -1)
 	{
 		if(begin_index == -1)
 		{
@@ -774,6 +774,7 @@ public:
 	 */
 
 	/// @name std::promise-like functionality.
+	/// @todo I'm thinking all of this should probably be moved to a real ExtPromise class.
 	/// @{
 
 	/**
@@ -803,11 +804,23 @@ public:
 	/**
 	 * Store @a value into shared state and make the state ready.
 	 * @link https://en.cppreference.com/w/cpp/thread/promise/set_value
-	 * @param value
+	 * @note We don't do this: "An exception is thrown if there is no shared state or the shared state already stores a
+	 * 			value or exception."
+	 * 			The call will simply be ignored here.
 	 */
 	void set_value(const T& value)
 	{
 		this->reportFinished(&value);
+	}
+
+	/**
+	 * Not-quite an overload which sets the QFuture<>'s QList<T> from a QVector<T>.
+	 * Avoids having a QList<> with one QVector<> item.
+	 */
+	void set_values(const QVector<T>& values)
+	{
+		this->reportResults(values);
+		this->reportFinished();
 	}
 
 	/**
@@ -1389,28 +1402,6 @@ public:
 
 protected:
 
-#if 0
-	/**
-	 * TapHelper which calls tap_callback whenever there's a new result ready.
-	 * @param guard_qobject
-	 * @param tap_callback   callable with signature void(*)(T)
-	 * @return
-	 */
-	template <typename F,
-		REQUIRES(ct::is_invocable_r_v<void, F, T>)
-		>
-	ExtFuture<T> TapHelper(QObject *guard_qobject, F&& tap_callback)
-	{
-		return StreamingTapHelper(guard_qobject, [=, tap_cb = DECAY_COPY(tap_callback)](ExtFuture<T> f, int begin, int end) {
-			Q_ASSERT(f.isStarted());
-//			Q_ASSERT(!f.isFinished());
-			for(auto i = begin; i < end; ++i)
-			{
-				std::invoke(tap_cb, f.resultAt(i));
-			}
-		});
-	}
-#endif
 	/// @name Additional member variables on top of what QFuture<T> has.
 	/// These will cause us to need to worry about slicing, additional copy construction/assignment work
 	/// which needs to be synchronized somehow, etc etc.
@@ -1534,6 +1525,7 @@ extern template class ExtFuture<bool>;
 extern template class ExtFuture<int>;
 extern template class ExtFuture<long>;
 extern template class ExtFuture<long long>;
+extern template class ExtFuture<unsigned int>;
 extern template class ExtFuture<unsigned long>;
 extern template class ExtFuture<unsigned long long>;
 extern template class ExtFuture<std::string>;

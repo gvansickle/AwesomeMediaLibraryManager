@@ -27,7 +27,7 @@
 // Std C++
 #include <functional>
 #include <variant>
-
+#include <vector>
 
 // Qt5
 #include <QXmlStreamWriter>
@@ -39,6 +39,7 @@ class QVariantHomogenousList;
 
 // Ours
 #include "ISerializer.h"
+class AttributedQVariant;
 
 /**
  * Concrete ISerializer class for serializing ISerializables as XML.
@@ -64,6 +65,8 @@ public:
 
 	void load(ISerializable& serializable, const QUrl& file_url) override;
 
+	void HACK_skip_extra(bool hack_skip) { m_HACK_SKIP = hack_skip; };
+
 	/**
 	 * Call this before save() to set the default XML namespace.
 	 * @param default_ns
@@ -74,6 +77,7 @@ public:
 protected:
 
 	void save_extra_start_info(QXmlStreamWriter& xmlstream);
+	void load_extra_start_info(QXmlStreamReader* xmlstream);
 
 private:
 
@@ -82,11 +86,17 @@ private:
 
 	void writeVariantToStream(const QString& nodeName,
 	                          const QVariant& variant, QXmlStreamWriter& xmlstream);
+	void InnerWriteVariantToStream(const QVariant& variant, QXmlStreamWriter* xmlstream);
+//	void writeVariantToStream(const QString& nodeName,
+//							  const ISerializable& variant, QXmlStreamWriter* xmlstream);
+//	void writeVariantToStream(const QString& nodeName,
+//							  const ISerializable* variant, QXmlStreamWriter* xmlstream);
 
 	void writeQVariantHomogenousListToStream(const QVariant& variant, QXmlStreamWriter& xmlstream);
 	void writeVariantListToStream(const QVariant &variant, QXmlStreamWriter& xmlstream);
 	void writeVariantMapToStream(const QVariant& variant, QXmlStreamWriter& xmlstream);
 	void writeVariantOrderedMapToStream(const QVariant& variant, QXmlStreamWriter& xmlstream);
+
 	void writeVariantValueToStream(const QVariant& variant, QXmlStreamWriter& xmlstream);
 
 	/// @}
@@ -95,11 +105,15 @@ private:
 	/// @{
 
 	QVariant readVariantFromStream(QXmlStreamReader& xmlstream);
+	QVariant InnerReadVariantFromStream(QString typeString, QXmlStreamAttributes attributes, QXmlStreamReader& xmlstream);
+
 
 	QVariant readHomogenousListFromStream(QXmlStreamReader& xmlstream);
 	QVariant readVariantListFromStream(QXmlStreamReader& xmlstream);
 	QVariant readVariantMapFromStream(QXmlStreamReader& xmlstream);
-	QVariant readVariantOrderedMapFromStream(QXmlStreamReader& xmlstream);
+	QVariant readVariantOrderedMapFromStream(std::vector<QXmlStreamAttribute> attributes, QXmlStreamReader& xmlstream);
+//	QVariant readAttributedQVariantFromStream(std::vector<QXmlStreamAttribute> attributes, QXmlStreamReader& xmlstream);
+
 	QVariant readVariantValueFromStream(QXmlStreamReader& xmlstream);
 
 	/// @}
@@ -115,16 +129,19 @@ private:
 
 	void log_current_node(QXmlStreamReader& xmlstream);
 
-	using QXmlStreamRWRef = std::variant<std::reference_wrapper<QXmlStreamReader>, std::reference_wrapper<QXmlStreamWriter>>;
+//	using QXmlStreamRWRef = std::variant<std::reference_wrapper<QXmlStreamReader>, std::reference_wrapper<QXmlStreamWriter>>;
+	using QXmlStreamRWRef = std::variant<QXmlStreamReader*, QXmlStreamWriter*>;
 	/**
 	 * If the given QXmlStreamReader/Writer has an error, returns the error string.
 	 * @return
 	 */
-	QString error_string(QXmlStreamRWRef xmlstream) const;
+	QString error_string(QXmlStreamReader& xmlstream) const;
+	QString error_string(QXmlStreamWriter& xmlstream) const;
 
 	QString m_root_name;
 	QString m_default_ns;
 	QString m_default_ns_version;
+	bool m_HACK_SKIP {true};
 };
 
 #endif /* SRC_LOGIC_SERIALIZATION_XMLSERIALIZER_H_ */

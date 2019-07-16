@@ -77,7 +77,8 @@ SettingsDialog::SettingsDialog(QWidget *parent, const char* name, KConfigSkeleto
 //        fmcombo->addItem(txt);
 //    }
 
-    parseWidgetsThatKDEForgotAbout();
+	M_TODO("VIRTUAL CALL IN CONSTRUCTOR");
+	parseWidgetsThatKDEForgotAbout();
 }
 
 SettingsDialog::~SettingsDialog()

@@ -23,6 +23,7 @@ set(serialization_subdir_SOURCES
 		ExtEnum.cpp
 		ISerializable.cpp
 		SerializationExceptions.cpp
+		SerializationHelpers.cpp
 		XmlObjects.cpp
 		XmlSerializer.cpp
 		XSPFSerializer.cpp
@@ -31,6 +32,7 @@ set(serialization_subdir_SOURCES
 set(serialization_subdir_HEADERS
 		ExtEnum.h
 		SerializationExceptions.h
+		SerializationHelpers.h
 		XmlObjects.h
 		XmlSerializer.h
 		ISerializable.h

@@ -30,14 +30,24 @@
 #include <utils/DebugHelpers.h>
 #include <utils/ConnectHelpers.h>
 
-
-
-QThread* ManagedExtFutureWatcher_detail::BackpropThreadManager::get_backprop_qthread()
+namespace ManagedExtFutureWatcher_detail
 {
-	return priv_instance();
+
+QThread* BackpropThreadManager::get_backprop_qthread()
+{
+	auto retval = priv_instance();
+	return retval;
 }
 
-QThread* ManagedExtFutureWatcher_detail::BackpropThreadManager::priv_instance()
+FutureWatcherParent* BackpropThreadManager::getFutureWatcherParent()
+{
+	/// This is semi-gross, it's the QObject which will be the parent of all managed future watchers.
+	static FutureWatcherParent* ms_the_managed_fw_parent = new FutureWatcherParent();
+	return ms_the_managed_fw_parent;
+}
+
+// Static
+QThread* BackpropThreadManager::priv_instance()
 {
 	static QThread* backprop_thread = []{
 		QThread* new_thread = new QThread;
@@ -47,7 +57,7 @@ QThread* ManagedExtFutureWatcher_detail::BackpropThreadManager::priv_instance()
 				, [](QThread* the_qthread){
 			// Call exit(0) on the QThread.  We use Qt's invokeMethod() here.
 			ExtAsync::detail::run_in_event_loop(the_qthread, [the_qthread](){
-				qDb() << "Calling quit()+wait() on managed FutureWatcher QThread, FWParent has num children:" << f_the_managed_fw_parent->children().size();
+				qDb() << "Calling quit()+wait() on managed FutureWatcher QThread, FWParent has num children:" << ms_the_managed_fw_parent->children().size();
 				the_qthread->quit();
 				the_qthread->wait();
 				qDb() << "Finished quit()+wait() on managed FutureWatcher QThread";
@@ -55,11 +65,12 @@ QThread* ManagedExtFutureWatcher_detail::BackpropThreadManager::priv_instance()
 		});
 #endif
 		// No parent, this will be eventually deleted by the signal below.
-		f_the_managed_fw_parent = new FutureWatcherParent();
+		FutureWatcherParent* the_managed_fw_parent = get_future_watcher_parent();
+		Q_ASSERT(the_managed_fw_parent != nullptr);
 		// Create and push the future watcher parent object into the new thread.
-		f_the_managed_fw_parent->moveToThread(new_thread);
+		the_managed_fw_parent->moveToThread(new_thread);
 		// Connect QThread::finished to QObject::deleteLater.
-		connect_or_die(new_thread, &QThread::finished, f_the_managed_fw_parent, &QObject::deleteLater);
+		connect_or_die(new_thread, &QThread::finished, the_managed_fw_parent, &QObject::deleteLater);
 
 		// Start the thread.
 		new_thread->start();
@@ -69,10 +80,25 @@ QThread* ManagedExtFutureWatcher_detail::BackpropThreadManager::priv_instance()
 	return backprop_thread;
 }
 
-/// Returns the pointer to the QThread which is to be used for running QFutureWatchers which
-/// implement inter-future status propagation (cancellation and exceptions).
-QThread* ManagedExtFutureWatcher_detail::get_backprop_qthread()
+
+BackpropThreadManager* get_backprop_thread_manager()
 {
 	static BackpropThreadManager* btm = new BackpropThreadManager();
+	return btm;
+}
+
+/// Returns the pointer to the QThread which is to be used for running QFutureWatchers which
+/// implement inter-future status propagation (cancellation and exceptions).
+QThread* get_backprop_qthread()
+{
+	BackpropThreadManager* btm = get_backprop_thread_manager();
 	return btm->get_backprop_qthread();
 }
+
+FutureWatcherParent* get_future_watcher_parent()
+{
+	BackpropThreadManager* btm = get_backprop_thread_manager();
+	return btm->getFutureWatcherParent();
+}
+
+}; // END ns

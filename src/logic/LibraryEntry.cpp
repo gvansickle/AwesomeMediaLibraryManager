@@ -43,6 +43,7 @@
 #include "utils/DebugHelpers.h"
 #include "TrackMetadata.h"
 #include "ntp.h"
+#include <logic/serialization/SerializationHelpers.h>
 
 #define LIBRARY_ENTRY_MAGIC_NUMBER 0x98542123
 #define LIBRARY_ENTRY_VERSION 0x01

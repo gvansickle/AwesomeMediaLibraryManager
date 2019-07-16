@@ -35,9 +35,12 @@
 // Ours
 #include "models/ScanResultsTreeModel.h"
 #include <utils/EnumFlagHelpers.h>
+#include <logic/serialization/SerializationHelpers.h>
+
 
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering DirScanResult";
+	qRegisterMetaType<DirScanResult>();
 	qRegisterMetaType<DirScanResult::DirPropFlags>("DirScanResult::DirPropFlags");
 	AMLMRegisterQFlagQStringConverters<DirScanResult::DirPropFlags>();
 });
@@ -45,7 +48,7 @@ AMLM_QREG_CALLBACK([](){
 
 
 DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_finfo)
-	: m_exturl_media(found_url, &found_url_finfo)
+	: /*IUUIDSerializable("id_dsr_"),*/ m_exturl_media(found_url, &found_url_finfo)
 {
 	determineDirProps(found_url_finfo);
 }
@@ -70,13 +73,27 @@ QVariant DirScanResult::toVariant() const
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
-	return map;
+#if 0
+//	return map;
+	Q_ASSERT(!isUuidNull());
+	// Insert the map and a unique ID into the AttQVar.
+	map.insert_attributes({
+							  {"xml:id", get_prefixed_uuid()}
+						  });
+//	AttributedQVariant retval = AttributedQVariant(map, {
+//													   {"xml:id", get_prefixed_uuid()}
+//												   });
+#endif
+	return map;// QVariant::fromValue(retval);
 }
 
 void DirScanResult::fromVariant(const QVariant& variant)
 {
-	QVariantInsertionOrderedMap map(variant);
-
+	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
+#if 0
+	auto idval = map.get_attr("xml:id");
+	set_prefixed_uuid(idval);
+#endif
 	// Extract all the fields from the map.
 #define X(field_tag, member_field) map_read_field_or_warn(map, field_tag, &(member_field));
 	M_DATASTREAM_FIELDS(X);

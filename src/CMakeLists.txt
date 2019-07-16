@@ -1,5 +1,5 @@
 #
-# Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -118,12 +118,14 @@ set(PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS
 # Main program header files.
 set(HEADER_FILES
 	AMLMApp.h
+    Core.h
 	${PROJECT_SOURCE_DIR}/resources/VersionInfo.h    ### @todo
     )
 
 # Source file list.
 set(SOURCE_FILES
 	AMLMApp.cpp
+    Core.cpp
 	)
 
 # NoMoc files.
@@ -160,10 +162,11 @@ set(PROJECT_COMMON_INTERNAL_LINK_LIB_TARGETS
 		logic
 		resources
 		utils
+        SQLite::SQLite3
 )
 
-# Models
-list(APPEND SOURCE_FILES ${SOURCE_FILES_LOGIC_MODELS})
+### @OBSOLETE Models
+#list(APPEND SOURCE_FILES ${SOURCE_FILES_LOGIC_MODELS})
 
 # QT5_LOGGING_CATEGORY_SOURCE_FILES
 list(APPEND SOURCE_FILES ${QT5_LOGGING_CATEGORY_SOURCE_FILES})
@@ -182,7 +185,9 @@ list(APPEND amlm_SRCS ${SOURCE_FILES} ${HEADER_FILES}
 # @link https://api.kde.org/ecm/module/ECMAddAppIcon.html
 # @link http://kfunk.org/2017/12/20/tips-streamlining-kde-application-for-deployment-microsoft-windows/
 target_link_libraries(src
-	PUBLIC 
+	PUBLIC
+		logic
+	PRIVATE
 		resources
 		# Boost
 		Boost::boost					# Target for header-only dependencies
@@ -267,6 +272,8 @@ target_link_libraries(${PROJECT_NAME}
 		cxx_settings
 		cxx_definitions_qt
 		#wt-target-dbo
+		src
+		logic
 	PRIVATE
 		${PROJECT_COMMON_LINK_LIBS})
 

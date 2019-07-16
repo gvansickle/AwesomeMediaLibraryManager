@@ -17,8 +17,8 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SRC_LOGIC_COVERARTJOB_H_
-#define SRC_LOGIC_COVERARTJOB_H_
+#ifndef SRC_LOGIC_JOBS_COVERARTJOB_H_
+#define SRC_LOGIC_JOBS_COVERARTJOB_H_
 
 #include <config.h>
 
@@ -77,4 +77,4 @@ private:
     QUrl m_audio_file_url;
 };
 
-#endif /* SRC_LOGIC_COVERARTJOB_H_ */
+#endif /* SRC_LOGIC_JOBS_COVERARTJOB_H_ */

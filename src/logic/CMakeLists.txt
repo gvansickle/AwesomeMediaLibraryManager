@@ -26,11 +26,12 @@ add_subdir_lib(proxymodels EXCLUDE_FROM_ALL)
 add_subdir_lib(serialization EXCLUDE_FROM_ALL)
 
 set(logic_subdir_SOURCES
+	AMLMCompoundTrack.cpp
+	AMLMTrack.cpp
 	AMLMTagMap.cpp
 	AudioFileType.cpp
 	Library.cpp
 	LibraryEntry.cpp
-	LibraryEntryLoaderJob.cpp
 	LibraryEntryMimeData.cpp
 	LibraryModel.cpp
 	Metadata.cpp
@@ -46,25 +47,26 @@ set(logic_subdir_SOURCES
 	TrackMetadata.cpp
 	CueSheetParser.cpp
 	CueSheet.cpp
-	CoverArtJob.cpp
 	ModelUserRoles.cpp
 	ColumnSpec.cpp
 	LibraryRescannerMapItem.cpp
-	LibraryRescannerJob.cpp
 	DirScanResult.cpp
 	ExtMimeType.cpp
 	LibraryRescanner.cpp
 	ExtUrl.cpp
 	PerfectDeleter.cpp
 	Frames.cpp
+    UndoRedoHelper.cpp
+	UUIncD.cpp
 	)
 
 set(logic_subdir_HEADERS
+	AMLMCompoundTrack.h
+	AMLMTrack.h
 	AMLMTagMap.h
 	AudioFileType.h
 	Library.h
 	LibraryEntry.h
-	LibraryEntryLoaderJob.h
 	LibraryEntryMimeData.h
 	LibraryModel.h
 	Metadata.h
@@ -81,17 +83,17 @@ set(logic_subdir_HEADERS
 	LibraryRescanner.h
 	CueSheetParser.h
 	CueSheet.h
-	CoverArtJob.h
 	TagLibHelpers.h
 	ModelUserRoles.h
 	ColumnSpec.h
 	LibraryRescannerMapItem.h
-	LibraryRescannerJob.h
 	DirScanResult.h
 	ExtMimeType.h
 	ExtUrl.h
 	PerfectDeleter.h
 	Frames.h
+    UndoRedoHelper.h
+    UUIncD.h
 	)
 
 target_sources_local(logic
@@ -102,22 +104,26 @@ target_sources_local(logic
 	)
 target_link_libraries(logic
 	PUBLIC
+		concurrency
+		dbmodels
+		jobs
+		models
+		proxymodels
+		serialization
+	PRIVATE
 	    #${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS} ### @todo "logic_subdir links to itself".
 		${QT5_LINK_LIB_TARGETS}
 		${KF5_LINK_LIB_TARGETS}
 		${GTK_LINK_LIB_TARGETS}
 		${AMLM_TAGLIB_TARGET}
 		${AMLM_LIBCUE_TARGET}
-		dbmodels
-		jobs
-		models
-		proxymodels
-		serialization
+
 	)
 target_include_directories(logic
 	PUBLIC
 	    # For config.h
 		${PROJECT_BINARY_DIR}/src
+	PRIVATE
 		${PROJECT_SOURCE_DIR}/src
 	)
 

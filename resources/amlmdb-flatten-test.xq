@@ -8,8 +8,9 @@ declare default element namespace "http://xspf.org/ns/0/";
 
 (: Path to the AMLM database, will be passed in as a bound variable. :)
 declare variable $input_file_path as xs:anyURI external;
+declare variable $input_doc_node as document-node() := doc($input_file_path);
 
-let $doc := fn:doc($input_file_path)/amlm_database
+let $doc := $input_doc_node/amlm_database
 
 for $libentry in $doc//m_library_entry
 for $summary_tags in $libentry//m_tm_generic

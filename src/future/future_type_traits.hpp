@@ -26,14 +26,26 @@
 
 #include <type_traits>
 /// @todo GCC's libstdc++ has this now...
-//#if __has_include(<experimental/type_traits>)
-//#include <experimental/type_traits>
-//#if __cpp_lib_experimental_detect >= 201505
-//////using namespace ns_detection = namespace std::experimental::fundamentals_v2;
-//#endif
-//#else
-//////using ns_detection = namespace std;
-//#endif
+#if __has_include(<experimental/type_traits>)
+#include <experimental/type_traits>
+
+// Detection idiom?
+#if __cpp_lib_experimental_detect >= 201505
+////using namespace ns_detection = namespace std::experimental::fundamentals_v2;
+namespace future_detection = std::experimental::fundamentals_v2;
+#endif
+#else
+#define BACKFILL_DETECTION 1
+////using ns_detection = namespace std;
+#endif
+
+// Logical traits?
+#if __cpp_lib_experimental_logical_traits >= 201511
+namespace future_logic_traits = std::experimental::fundamentals_v2;
+#else
+#define BACKFILL_LOGIC_TRAITS 1
+#endif
+
 #include <tuple>
 #include <functional> // For std::invoke<>().
 
@@ -206,6 +218,7 @@ namespace std
 
 
 /// Template variable wrappers.
+/// These are pseudo-concept templates.
 /// @{
 
 template <bool... Bs>
@@ -218,13 +231,13 @@ template <bool... Bs>
 constexpr bool disallow = !require<Bs...>;
 
 template <template <class...> class Op, class... Args>
-constexpr bool exists = std::is_detected<Op, Args...>::value;
+constexpr bool exists = future_detection::is_detected<Op, Args...>::value;
 
 template <class To, template <class...> class Op, class... Args>
-constexpr bool converts_to = std::is_detected_convertible<To, Op, Args...>::value;
+constexpr bool converts_to = future_detection::is_detected_convertible<To, Op, Args...>::value;
 
 template <class Exact, template <class...> class Op, class... Args>
-constexpr bool identical_to = std::is_detected_exact<Exact, Op, Args...>::value;
+constexpr bool identical_to = future_detection::is_detected_exact<Exact, Op, Args...>::value;
 
 /// @}
 

@@ -44,8 +44,7 @@ extern "C" {
 
 /// Ours
 #include "TrackMetadata.h"  ///< Per-track cue sheet info
-
-//Q_DECLARE_METATYPE(std::string);
+#include <logic/serialization/SerializationHelpers.h>
 
 
 /**
@@ -241,7 +240,7 @@ QVariant CueSheet::toVariant() const
 		list_push_back_or_die(qvar_track_list, tm);
 	}
 
-	// Warn if our num tracks down't match or don't make sense.
+	// Warn if our num tracks don't match or don't make sense.
 	AMLM_WARNIF(m_tracks.size() != m_num_tracks_on_media && m_tracks.size() != 1);
 
 	map_insert_or_die(map, XMLTAG_TRACK_METADATA, qvar_track_list);

@@ -38,9 +38,9 @@ cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 cmake_policy(SET CMP0053 NEW) # Use new var ref/esc seq eval
 cmake_policy(SET CMP0010 NEW) # Silence warning on CMP0010.
 
-message(STATUS "CMake-time PATH: $ENV{PATH}")
-message(STATUS "CMake-time CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
-message(STATUS "CMake-time CMAKE_MODULE_PATH: ${CMAKE_MODULE_PATH}")
+message(STATUS "CMake-time ENV PATH: $ENV{PATH}")
+message(STATUS "CMake-time ENV CMAKE_PREFIX_PATH: $ENV{CMAKE_PREFIX_PATH}")
+message(STATUS "CMake-time ENV CMAKE_MODULE_PATH: $ENV{CMAKE_MODULE_PATH}")
 include(cmake/GetVersionInfo.cmake)
 
 # Prevent an in-root-of-src-tree build and any accidental build-induced changes to source files.
@@ -97,7 +97,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Min versions of Qt5, KF5, KF5/ECM.
 set(QT_MIN_VERSION "5.12.1")
-set(KF5_MIN_VERSION "5.57.0")
+set(KF5_MIN_VERSION "5.57.0") ### @win temp: Only have 5.52.0
 set(ECM_MIN_VERSION "5.57.0")
 
 ###
@@ -117,6 +117,7 @@ set(AUTORCC_SOURCE_GROUP autorcc)
 # "Config mode provides an elaborate interface and search procedure. Much of the interface is provided for completeness
 #  and for use internally by find-modules loaded by Module mode. Most user code should simply call:
 #    find_package(<package> [major[.minor]] [EXACT] [REQUIRED|QUIET])"
+### @todo NO WIN:
 find_package(PkgConfig REQUIRED) # @note I see PkgConfig just before ECM in a few KDE scripts.
 find_package(ECM ${ECM_MIN_VERSION} REQUIRED NO_MODULE)
 
@@ -137,7 +138,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake
 # @link https://api.kde.org/ecm/kde-module/KDECMakeSettings.html#runtime-paths
 include(KDEInstallDirs)  ##< Replaces/uses GNUInstallDirs.
 #set(APPLE_FORCE_X11 ON) # This applies to KDECMakeSettings.
-set(ENABLE_CLAZY OFF) # This applies to KDECMakeSettings.
+set(ENABLE_CLAZY ON) # This applies to KDECMakeSettings.
 include(KDECMakeSettings NO_POLICY_SCOPE)
 
 # CMake macros.
@@ -201,9 +202,13 @@ add_library(cxx_settings INTERFACE)
 target_compile_features(cxx_settings INTERFACE cxx_std_17)
 add_library(cxx_definitions_qt INTERFACE)
 target_compile_definitions(cxx_definitions_qt INTERFACE)
+add_library(cxx_compile_options INTERFACE)
+target_compile_options(cxx_compile_options INTERFACE)
 if(UNIX)
-	ucm_add_flags(-fmessage-length=0 -pthread -Werror=return-type -fno-omit-frame-pointer)
-	ucm_add_flags(-Og -ggdb3)
+	target_compile_options(cxx_compile_options
+		INTERFACE
+			-Og -ggdb3 -fno-omit-frame-pointer -fmessage-length=0 -pthread -Werror=return-type)
+	ucm_add_flags(-Og -ggdb3 -fno-omit-frame-pointer -fmessage-length=0 -pthread -Werror=return-type)
 # Flags for GNU libstdc++
 ### @todo Detect that we're actually using GNU libstdc++
 # "compiles user code using the debug mode. When defined, _GLIBCXX_ASSERTIONS is defined automatically"
@@ -213,7 +218,14 @@ endif(UNIX)
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	message(STATUS "C++ Compiler is GCC")
 	ucm_add_flags(-fvar-tracking -fvar-tracking-assignments -gpubnames -ggnu-pubnames)
-	ucm_add_flags(-grecord-gcc-switches -gas-loc-support -gstatement-frontiers -ginline-points -femit-struct-debug-detailed=any)
+	# Max debug flags
+	target_compile_options(cxx_compile_options
+		INTERFACE
+			-gvariable-location-views
+			-gas-loc-support -gstatement-frontiers -ginline-points -femit-struct-debug-detailed=any
+		)
+	#ucm_add_flags(-gvariable-location-views)
+	ucm_add_flags(-grecord-gcc-switches)
 	ucm_add_flags(-fno-eliminate-unused-debug-types -fno-inline)
 	ucm_add_flags(-Wmaybe-uninitialized -Werror=maybe-uninitialized -fdiagnostics-show-template-tree -fdiagnostics-show-option)
 	ucm_add_flags(-fuse-ld=gold) # Let's try the gold linker.
@@ -224,12 +236,26 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	target_link_libraries(cxx_settings INTERFACE cxx_suggestions)
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	message(STATUS "C++ Compiler is Clang")
-	ucm_add_flags(-Wthread-safety -fdebug-macro -fdiagnostics-show-template-tree)
+	target_compile_options(cxx_compile_options
+		INTERFACE
+			-fforce-emit-vtables
+			)
+	ucm_add_flags(-Wthread-safety -fdebug-macro -fdiagnostics-show-template-tree -mno-omit-leaf-frame-pointer)
 	#ucm_add_flags(-fdelayed-template-parsing -frelaxed-template-template-args)
 endif()
 if(WIN32)
-#ucm_add_flags(/showIncludes)
+	#ucm_add_flags(/showIncludes)
+	### NOTE: Make sure CMAKE_PREFIX_PATH has the path to the directory, so cmake can find win_flex and win_bison.
+	### On Windows they're in a couple places, e.g.:
+	# C:\Qt\5.12.0\Src\gnuwin32\bin\bison.exe
+	# C:\CraftRoot\build\dev-utils\flexbison\work\win_bison.exe
+	# C:\CraftRoot\build\dev-utils\flexbison\image-Debug-2.5.14\dev-utils\bin\win_bison.exe
+	# We also need png2ico on Windows, which is here:
+	# C:\CraftRoot\dev-utils\bin\png2ico.exe
+	set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH};C:/CraftRoot/dev-utils/bin;C:/Qt/5.12.0/Src/gnuwin32/bin)
 endif(WIN32)
+target_link_libraries(cxx_settings INTERFACE cxx_compile_options)
+
 message(STATUS "C compiler supported features = ${CMAKE_C_COMPILE_FEATURES}")
 message(STATUS "C++ compiler supported features = ${CMAKE_CXX_COMPILE_FEATURES}")
 message(STATUS "C++ CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS}")
@@ -346,8 +372,9 @@ find_package(Qt5 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
 	Multimedia
 	XmlPatterns
 	Concurrent
+	Test # For Q...ModelTester.
 	)
-set(QT5_LINK_LIB_TARGETS Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::XmlPatterns Qt5::Concurrent)
+set(QT5_LINK_LIB_TARGETS Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::XmlPatterns Qt5::Concurrent Qt5::Test)
 
 # Unix-only
 if(UNIX)
@@ -355,6 +382,10 @@ if(UNIX)
         X11Extras)
     list(APPEND QT5_LINK_LIB_TARGETS Qt5::X11Extras)
 endif(UNIX)
+# Windows only
+if(WIN32)
+	list(APPEND QT5_LINK_LIB_TARGETS Qt5::WinMain)
+endif(WIN32)
 
 print_qtinfo()
 
@@ -386,6 +417,10 @@ list(APPEND KF5_LINK_LIB_TARGETS KF5::WidgetsAddons KF5::XmlGui KF5::GuiAddons K
 list(APPEND KF5_LINK_LIB_TARGETS KF5::WindowSystem)
 
 ###### EXPERIMENT
+
+# SQLite3
+find_package(SQLite3
+             REQUIRED)
 
 #find_package(BreezeIcons REQUIRED) # Doesn't exist yet.
 ### @todo Need to find a better way than hardcoding the path to the rcc file here.
@@ -480,6 +515,7 @@ endif()
 endif()
 
 # Boost
+if(TRUE)
 # See @link https://cmake.org/cmake/help/latest/module/FindBoost.html
 #set(BOOST_THREAD_VERSION          5) # Latest in 1.69 as of this writing, defaults to "2".
 #set(BOOST_THREAD_PROVIDES_FUTURE ON)
@@ -514,6 +550,7 @@ if(Boost_FOUND)
 			BOOST_THREAD_VERSION=5)
 	add_definitions(${Boost_LIB_DIAGNOSTIC_DEFINITIONS})
 endif()
+endif() # BOOST
 
 if(FALSE)
 # Ok, we're going to try to pull in just Wt::Dbo.

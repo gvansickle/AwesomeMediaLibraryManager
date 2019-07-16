@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -29,31 +29,43 @@
 #include <QStringLiteral>
 
 // Ours
-#include "../DirScanResult.h"
+#include <logic/DirScanResult.h>
 #include <logic/serialization/ISerializable.h>
+#include <future/enable_shared_from_this_virtual.h>
+class AbstractTreeModelHeaderItem;
 class LibraryEntry;
+class ScanResultsTreeModel;
 /// @todo TEMP
 
 
 /**
- * Model of the results of scanning a directory tree.
+ * Tree model item containing the results of a single DirScanResult.
+ * KDEN: ~similar to AbstractProjectItem
  */
-class ScanResultsTreeModelItem :
-		public AbstractTreeModelItem
-//		public clone_inherit<abstract_method<ScanResultsTreeModelItem>, virtual_inherit_from<AbstractTreeModelItem>>
-//		public clone_inherit<ScanResultsTreeModelItem, AbstractTreeModelItem>
+class ScanResultsTreeModelItem : public AbstractTreeModelItem//, public enable_shared_from_this_virtual<ScanResultsTreeModelItem>
 
 {
 	using BASE_CLASS = AbstractTreeModelItem;
 
-public:
-	M_GH_RULE_OF_FIVE_DEFAULT_C21(ScanResultsTreeModelItem);
-
-	/// Create a default-constructed (i.e. "blank") ScanResultsTreeModelItem, possibly with a given parent.
-	explicit ScanResultsTreeModelItem(AbstractTreeModelItem *parent = nullptr) : BASE_CLASS(parent) {};
+protected:
 	/// Create a new model item populated with the passed DirScanResult.
-	explicit ScanResultsTreeModelItem(const DirScanResult& dsr, AbstractTreeModelItem *parent = nullptr);
+	explicit ScanResultsTreeModelItem(const DirScanResult& dsr, std::shared_ptr<ScanResultsTreeModel> model,
+	                                  bool is_root = false);
+
+	explicit ScanResultsTreeModelItem(std::shared_ptr<ScanResultsTreeModel> model, bool is_root = false);
+public:
+	/**
+	 * Named constructors.
+	 */
+	static std::shared_ptr<ScanResultsTreeModelItem> construct(const DirScanResult& dsr,
+			std::shared_ptr<ScanResultsTreeModel> model,
+            bool is_root = false);
+	static std::shared_ptr<ScanResultsTreeModelItem> construct(const QVariant& variant,
+			std::shared_ptr<ScanResultsTreeModel> model);
+	ScanResultsTreeModelItem() {};
 	~ScanResultsTreeModelItem() override;
+
+	void setDirscanResults(const DirScanResult& dsr);
 
 	/**
 	 * Column data override.
@@ -62,7 +74,12 @@ public:
 	 */
 	QVariant data(int column, int role = Qt::DisplayRole) const override;
 
+	DirScanResult getDsr() const { return m_dsr; };
+
 	int columnCount() const override;
+
+	/// KDEN::AbsProjItem
+	std::shared_ptr<AbstractTreeModelHeaderItem> parent() const;
 
 	/// @name ISerializable interface
 	/// @{
@@ -77,72 +94,21 @@ public:
 
 protected:
 
-	/**
-	 * Factory function for creating default-constructed nodes.
-	 * Used by insertChildren().  Override in derived classes.
-	 * @todo Convert to smart pointer (std::unique_ptr<AbstractTreeModelItem>) return type, retain covariant return.
-	 */
-	AbstractTreeModelItem*
-	do_create_default_constructed_child_item(AbstractTreeModelItem *parent = nullptr, int num_columns = 0) override;
-
-	/// @name Virtual functions called by the base class to complete certain operations.
-	///       The base class will have error-checked function parameters.
-	/// @{
-	bool derivedClassSetData(int column, const QVariant &value) override;
-	bool derivedClassInsertColumns(int insert_before_column, int num_columns) override;
-	bool derivedClassRemoveColumns(int first_column_to_remove, int num_columns) override;
-	/// @}
+//	std::shared_ptr<ScanResultsTreeModel> getTypedModel() const;
 
 	/// The directory scan results corresponding to this entry.
 	/// This is things like the main media URL, sidecar cue sheet URLs, timestamp info, etc.
 	DirScanResult m_dsr;
-
-
 };
 
+/**
+ * A ScanResultsTreeModelItem with a LibraryEntry field.
+ */
 
-class SRTMItem_LibEntry :
-		public ScanResultsTreeModelItem
-//		public clone_inherit<SRTMItem_LibEntry, virtual_inherit_from<ScanResultsTreeModelItem>>
-{
-	using BASE_CLASS = ScanResultsTreeModelItem;
-
-public:
-	explicit SRTMItem_LibEntry(AbstractTreeModelItem *parent = nullptr) : BASE_CLASS(parent) {};
-	~SRTMItem_LibEntry() override = default;
-
-	QVariant data(int column, int role = Qt::DisplayRole) const override;
-
-	int columnCount() const override;
-
-	void setLibraryEntry(std::shared_ptr<LibraryEntry> libentry) { m_library_entry = libentry; };
-
-	/// @name ISerializable interface
-	/// @{
-
-	/// Serialize item and any children to a QVariant.
-	QVariant toVariant() const override;
-	/// Serialize item and any children from a QVariant.
-	void fromVariant(const QVariant& variant) override;
-
-	/// @} // END Serialization
-	
-protected:
-	/// @name Virtual functions called by the base class to complete certain operations.
-	///       The base class will have error-checked function parameters.
-	/// @{
-	bool derivedClassSetData(int column, const QVariant &value) override;
-	bool derivedClassInsertColumns(int insert_before_column, int num_columns) override;
-	bool derivedClassRemoveColumns(int first_column_to_remove, int num_columns) override;
-	/// @}
-
-private:
-	std::string m_key {"key"};
-	std::string m_val {"value"};
-	std::shared_ptr<LibraryEntry> m_library_entry;
-};
 
 /// @todo Need this here for QVariant::fromValue().
 //Q_DECLARE_METATYPE(std::string);
+Q_DECLARE_METATYPE(ScanResultsTreeModelItem);
+//Q_DECLARE_METATYPE(std::shared_ptr<LibraryEntry>);
 
 #endif /* SRC_LOGIC_MODELS_SCANRESULTSTREEMODELITEM_H_ */

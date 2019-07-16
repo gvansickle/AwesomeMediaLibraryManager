@@ -23,6 +23,9 @@
 #include <QObject>
 #include <QThread>
 
+namespace ExtAsync
+{
+
 /**
  * Class which tries to encapsulate some of the rather complex Qt5 threading issues into a single
  * base class, which can then be more conveniently subclassed.
@@ -36,25 +39,34 @@ Q_SIGNALS:
 	/// Signal we will emit when all work is complete and we should be destroyed.
 	void finished();
 
+	void resultReady(const QString& result);
 
 public:
-    explicit WorkerThreadBase(QObject *parent = 0);
-    ~WorkerThreadBase() override;
+	explicit WorkerThreadBase(/*QObject *parent = 0*/) {};
+	~WorkerThreadBase() override {};
 
-	void moveToThread(QThread* targetThread);
+//	void moveToThread(QThread* targetThread);
 
 public Q_SLOTS:
 	/// Signaled when the QThread is started.  Override.
-	virtual void WorkerStarted() = 0;
-	virtual void WorkerFinished() = 0;
+//	virtual void WorkerStarted();
+
+	void doWork(const QString &parameter)
+	{
+		QString result;
+		/* ... here is the expensive or blocking operation ... */
+		Q_EMIT resultReady(result);
+	}
+
+//	virtual void WorkerFinished() = 0;
 
 	/// By default, emits finished signal.
 	virtual void quit();
 
 private:
-//	Q_DISABLE_COPY(WorkerThreadBase)
-
-	void connectDefaultSignals(QThread* targetThread);
+	Q_DISABLE_COPY(WorkerThreadBase)
 };
+
+} // namespace ExtAsync
 
 #endif // WORKERTHREADBASE_H

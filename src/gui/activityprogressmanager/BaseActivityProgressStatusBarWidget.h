@@ -60,13 +60,21 @@ Q_SIGNALS:
     /// Signal to the tracker: resume the job.
     void resume_job(KJob* job);
 
+	// A bit of a dance here to work around the C++ "no virtual function calls in the constructor" rule.
+public:
+	/**
+	 * Virtual constructor.
+	 */
+	static QPointer<BaseActivityProgressStatusBarWidget> construct(KJob* job, ActivityProgressStatusBarTracker* tracker, QWidget *parent);
+
 protected:
-    /// Private constructor to get us a fully-constructed vtable so we can
-    /// call virtual functions in the non-default constructor.
-    explicit BaseActivityProgressStatusBarWidget(QWidget *parent);
+	/// Proteced constructor to get us a fully-constructed vtable.
+	/// Client code should call construct().
+	explicit BaseActivityProgressStatusBarWidget(KJob* job, ActivityProgressStatusBarTracker* tracker, QWidget *parent);
+
+	static void BASE_CLASS_finish_construction(BaseActivityProgressStatusBarWidget* self);
 
 public:
-    explicit BaseActivityProgressStatusBarWidget(KJob* job, ActivityProgressStatusBarTracker* tracker, QWidget *parent);
     ~BaseActivityProgressStatusBarWidget() override;
 
     /// Add buttons to the rhs of the layout.
@@ -140,7 +148,7 @@ protected:
 
     /// Create the widget.
     /// Called by the public constructor.
-    virtual void init(KJob* job, QWidget *parent);
+	virtual void init(KJob* job);
 
     virtual void showTotals();
 

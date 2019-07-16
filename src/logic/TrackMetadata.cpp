@@ -37,6 +37,7 @@ extern "C" {
 #include <utils/RegisterQtMetatypes.h>
 
 #include "AMLMTagMap.h"
+#include <logic/serialization/SerializationHelpers.h>
 
 
 

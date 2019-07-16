@@ -205,11 +205,10 @@ namespace detail
 			/// @note Unconditional finish here.
 			retfuture_copy.reportFinished();
 		});
-		// When the worker QObject is finished, tell the thread to quit, and register the worker to be deleted.
+		// When the worker QObject is finished, tell the thread to quit, and register the worker and QThread to be deleted.
 		connect_or_die(worker, &WorkerQObject::finished, thread, &QThread::quit);
 		connect_or_die(worker, &WorkerQObject::finished, worker, &QObject::deleteLater);
 		// Connect the QThread's finished signal to the deleteLater() slot so that it gets scheduled for deletion.
-		/// @note I think this connection allows us to ignore the thread once we've started it, and it won't leak.
 		connect_or_die(thread, &QThread::finished, thread, &QThread::deleteLater);
 
 		// Start the new thread.

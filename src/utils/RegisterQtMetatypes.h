@@ -25,18 +25,24 @@
 #include <vector>
 #include <iostream>
 #include <cstdint>
+#include <memory>
+#include <deque>
 
 // Qt5
 #include <QObject>
 
 // Qt5 metatype declarations for some std containers.
 Q_DECLARE_METATYPE(std::string);
+Q_DECLARE_SMART_POINTER_METATYPE(std::shared_ptr);
+Q_DECLARE_SMART_POINTER_METATYPE(std::weak_ptr);
+Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE(std::deque);
 // Qt5 metatype declarations for metatypes for <cstdint>.
 Q_DECLARE_METATYPE(std::int32_t);
 Q_DECLARE_METATYPE(std::uint32_t);
 Q_DECLARE_METATYPE(std::int64_t);
 Q_DECLARE_METATYPE(std::uint64_t);
-
+//Q_DECLARE_METATYPE(std::size_t);
+//Q_DECLARE_METATYPE(std::ssize_t);
 
 void RegisterQtMetatypes();
 
@@ -103,6 +109,10 @@ struct StaticInitBase : public StaticInitBaseBase<T>
 	}
 };
 
+/**
+ * This is me trying to avoid using Q_GLOBAL_STATIC().
+ * @link https://doc.qt.io/qt-5/qglobalstatic.html#Q_GLOBAL_STATIC.
+ */
 #define AMLM_QREG_CALLBACK(...) static auto TOKEN_PASTE(dummy, __COUNTER__) = (reginstance().register_callback(__VA_ARGS__), rand())
 
 

@@ -29,7 +29,6 @@
 #include <utils/TheSimplestThings.h>
 #include <logic/DirScanResult.h>
 #include <concurrency/ExtAsync.h>
-//#include <concurrency/AMLMJob.h>
 
 
 void DirScanFunction(ExtFuture<DirScanResult> ext_future, AMLMJob* /*amlmJob*/,

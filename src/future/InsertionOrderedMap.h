@@ -57,6 +57,9 @@ public:
 	using iterator = typename underlying_container_type::iterator;
 	/// @}
 
+	int m_id = 0;
+	std::string m_class;
+
 private:
 	using uc_size_type = typename underlying_container_type::size_type;
 
@@ -114,6 +117,17 @@ public:
 		return m_vector_of_elements.cbegin() + it_index->second;
 	};
 
+	bool contains(const KeyType& key) const
+	{
+		auto it = this->find(key);
+		if(it == m_vector_of_elements.cend())
+		{
+			// Didn't find it.
+			return false;
+		}
+		return true;
+	}
+
 	const ValueType value(const KeyType& key, const ValueType& default_value = ValueType()) const
 	{
 		auto cit = this->find(key);
@@ -124,6 +138,47 @@ public:
 		}
 		return cit->second;
 	}
+
+	/// @name Attribute access
+	/// @{
+
+	template <class VectorLike>
+	void insert_attributes(const VectorLike& attr_list)
+	{
+		for(const auto& it : attr_list)
+		{
+			m_attribute_map[it.qualifiedName().toString().toStdString()] = it.value().toString().toStdString();
+		}
+	}
+
+	void insert_attributes(std::initializer_list<std::pair<std::string,std::string>> attr_list)
+	{
+		for(const auto& it : attr_list)
+		{
+			m_attribute_map[it.first] = it.second;
+		}
+	}
+
+	std::string get_attr(const std::string& key) const
+	{
+		auto it = m_attribute_map.find(key);
+		if(it == m_attribute_map.end())
+		{
+			return std::string();
+		}
+		else
+		{
+			return it->second;
+		}
+	}
+
+	using attr_map_type = std::map<std::string, std::string>;
+	attr_map_type get_attrs() const
+	{
+		return m_attribute_map;
+	}
+
+	/// @}
 
 	const_iterator cbegin() const { return std::cbegin(m_vector_of_elements); };
 	const_iterator begin() const { return this->cbegin(); }
@@ -154,6 +209,8 @@ protected:
 	// Map of keys to indexes in the vector.
 	std::map<KeyType, uc_size_type> m_map_of_keys_to_vector_indices;
 
+	std::map<std::string, std::string> m_attribute_map;
+
 };
 
 #if 1 // Qt5
@@ -163,7 +220,7 @@ Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(InsertionOrderedMap);
 
 using QVariantInsertionOrderedMap = InsertionOrderedMap<QString, QVariant>;
 Q_DECLARE_METATYPE(QVariantInsertionOrderedMap);
-
+//Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(InsertionOrderedMap<QString, QVariant>);
 
 #endif // Qt5
 
