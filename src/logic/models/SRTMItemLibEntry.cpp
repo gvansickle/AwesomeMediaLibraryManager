@@ -29,7 +29,6 @@
 #include "ScanResultsTreeModel.h"
 
 
-/////////// @todo SRTMItem_LibEntry
 
 std::shared_ptr<SRTMItem_LibEntry> SRTMItem_LibEntry::construct(std::shared_ptr<LibraryEntry> libentry, const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root)
 {

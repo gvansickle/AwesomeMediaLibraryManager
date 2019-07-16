@@ -78,7 +78,7 @@ void ThreadsafeTreeModel::register_item(const std::shared_ptr<AbstractTreeModelI
 {
 	std::unique_lock write_lock(m_rw_mutex);
 
-	AbstractTreeModel::register_item(item);
+	BASE_CLASS::register_item(item);
 }
 
 void ThreadsafeTreeModel::deregister_item(UUIncD id, AbstractTreeModelItem* item)
@@ -88,7 +88,7 @@ void ThreadsafeTreeModel::deregister_item(UUIncD id, AbstractTreeModelItem* item
 	// Per KdenLive:
 	// "here, we should suspend jobs belonging to the item we delete. They can be restarted if the item is reinserted by undo"
 
-	AbstractTreeModel::deregister_item(id, item);
+	BASE_CLASS::deregister_item(id, item);
 
 }
 

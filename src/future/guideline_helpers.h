@@ -43,6 +43,12 @@
 	/** Copy assignment. */ \
 	classname& operator=(const classname&) = default_or_delete;
 
+#define M_GH_IMPL_DEFAULT_OR_DELETE_MOVE_WITH_NOEXCEPT(classname, default_or_delete, def_noexcept) \
+	/** Copy constructor. */ \
+	classname(const classname&&) def_noexcept = default_or_delete; \
+	/** Copy assignment. */ \
+	classname& operator=(const classname&&) def_noexcept = default_or_delete;
+
 #define M_GH_IMPL_DEFAULT_OR_DELETE_COPY_AND_MOVE(classname, default_or_delete) \
 	/** Copy constructor. */ \
 	classname(const classname&) = default_or_delete; \

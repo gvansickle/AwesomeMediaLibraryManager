@@ -442,7 +442,7 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 
 	////////////////////////////////////
 	// Now read in our children.  We need this Item to be in a model for that to work.
-//	Q_ASSERT(isInModel());
+	Q_ASSERT(isInModel());
 
 	auto model_ptr = m_model.lock();
 	Q_ASSERT(model_ptr);
@@ -459,68 +459,8 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 //		Q_ASSERT(0);
 	}
 
-
-	////////////////////////
-
-#if 0
-	std::vector<std::shared_ptr<AbstractTreeModelItem>> temp_items;
-	for(const QVariant& child : child_list)
-	{
-		// Get a strong model ptr.
-		auto model = m_model.lock();
-		Q_ASSERT(model);
-
-		qDb() << "READING CHILD ITEM of type:" << child.typeName();
-
-//		auto child_item = child.value<child.type()>();
-//				std::static_pointer_cast<AbstractTreeModelItem>(child);
-		auto child_item = this->appendChild();
-		child_item->fromVariant(child);
-
-		// Save it off temporarily.
-		temp_items.push_back(std::move(child_item));
-	}
-
-	// Append the children we read in to our list all in one batch.
-	this->appendChildren(std::move(temp_items));
-#endif
 	AMLM_ASSERT_EQ(num_children, m_child_items.size());
 }
-
-#if 0
-QVariant AbstractTreeModelItem::childrenToVariant() const
-{
-	// Create a list of them.
-	QVariantHomogenousList child_list(XMLTAG_CHILD_NODE_LIST, "child");
-	for(int i=0; i<childCount(); i++)
-	{
-		auto child_ptr = child(i);
-		list_push_back_or_die(child_list, child_ptr->toVariant());
-	}
-	return child_list;
-}
-
-void AbstractTreeModelItem::childrenFromVariant(const QVariantHomogenousList& variant)
-{
-	auto model_ptr = m_model.lock();
-	Q_ASSERT(model_ptr);
-
-	for(const QVariant& child : variant)
-	{
-		qDb() << "READING CHILD ITEM IN AbstractTreeModelItem, TYPE:" << child.typeName();
-//		const char* typename_per_var = child.typeName();
-		std::string metatype_class_str = child.value<QVariantInsertionOrderedMap>().get_attr("class");
-		qDb() << "Class attr:" << /*M_ID_VAL(metatype) << M_ID_VAL(vartype) <<*/ M_ID_VAL(metatype_class_str);
-
-		std::shared_ptr<AbstractTreeModelItem> new_child_item = model_ptr->make_item_from_variant(child);
-
-		qDb() << "Appending";
-		appendChild(new_child_item);
-		qDb() << "Appended";
-//		model_ptr->requestAddTreeModelItem(child, getId());
-	}
-}
-#endif
 
 QVariant AbstractTreeModelItem::data(int column, int role) const
 {
