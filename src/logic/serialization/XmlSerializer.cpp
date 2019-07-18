@@ -157,24 +157,29 @@ void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant
 	xmlstream.writeStartElement(nodeName);
 	xmlstream.writeAttribute("type", variant.typeName());
 
-	if(variant.canConvert<QVariantInsertionOrderedMap>())
-	{
-		// It's a map, see if it has an xml:id attribute.
-		auto map = variant.value<QVariantInsertionOrderedMap>();
-		std::string id;
-		try
-		{
-			id = map.at("xml:id").value<std::string>();
-			xmlstream.writeAttribute("xml:id", toqstr(id)); //toqstr(ptr->get_prefixed_uuid()));
-			// Remove the attribute.
-			map.erase("xml:id");
-		}
-		catch(...)
-		{
-			// No xml:id.
-			//Q_ASSERT(0);
-		}
-	}
+//	if(variant.canConvert<QVariantInsertionOrderedMap>())
+//	{
+//		// It's a map, see if it has an xml:id attribute.
+//		QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
+//		std::string id;
+//		try
+//		{
+//			decltype(map)::mapped_type xmlid_mt = map.at(toqstr("xml:id"));
+//			Q_ASSERT(!xmlid_mt.isNull());
+//			Q_ASSERT(xmlid_mt.canConvert<std::string>());
+//			std::string uuid = xmlid_mt.value<std::string>();
+//			id = uuid;
+////			id = map.at(QString("xml:id")).value<std::string>();
+//			xmlstream.writeAttribute("xml:id", toqstr(id)); //toqstr(ptr->get_prefixed_uuid()));
+//			// Remove the attribute.
+//			map.erase("xml:id");
+//		}
+//		catch(...)
+//		{
+//			qDb() << "No xml:id," << id << map;
+//			//Q_ASSERT(0);
+//		}
+//	}
 
 	InnerWriteVariantToStream(variant, &xmlstream);
 

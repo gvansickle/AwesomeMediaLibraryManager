@@ -125,6 +125,9 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 	// Overwrite any class info added by the above.
 	set_map_class_info(this, &map);
 
+	// Set the xml:id.
+	map.insert_attributes({{"xml:id", get_prefixed_uuid()}});
+
 	/// @todo Will be more fields, justifying the map vs. value?
 	/// @todo Need the parent here too?  Probably needs to be handled by the parent, but maybe for error detection.
 

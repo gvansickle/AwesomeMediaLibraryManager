@@ -37,6 +37,14 @@
 #include <utils/QtHelpers.h>
 #include <future/guideline_helpers.h>
 #include <future/future_algorithms.h>
+#include <utils/DebugHelpers.h>
+
+//template <typename KeyType, typename ValueType>
+//struct value_type_grvs
+//{
+//	const KeyType first;
+//	ValueType second;
+//};
 
 
 /**
@@ -53,7 +61,8 @@ public:
 	/// @{
 	using key_type = KeyType;
 	using mapped_type = ValueType;
-	using value_type = std::pair<const KeyType, ValueType>;
+	using value_type = std::pair</*const*/ KeyType, ValueType>;
+//	using value_type = value_type_grvs<KeyType, ValueType>;
 	using underlying_container_type = std::deque<value_type>;
 	using const_iterator = typename underlying_container_type::const_iterator;
 	using iterator = typename underlying_container_type::iterator;
@@ -107,6 +116,10 @@ public:
 		{
 			this->m_vector_of_elements.erase(it);
 		}
+		else
+		{
+			qWr() << "NO KEY FOUND TO ERASE:" << key;
+		}
 //		this->m_vector_of_elements.erase();
 //				(std::remove_if(
 //											 this->m_vector_of_elements.begin(),
@@ -114,7 +127,11 @@ public:
 //										 this->m_vector_of_elements.end());
 		// Remove/erase from map.
 //		std::experimental::erase_if(this->m_map_of_keys_to_vector_indices, [=](const auto& it){ return it.first == key; });
-		this->m_map_of_keys_to_vector_indices.erase(key);
+		auto removed_ct = this->m_map_of_keys_to_vector_indices.erase(key);
+		if(removed_ct < 1)
+		{
+			qWr() << "NO MAP KEY FOUND TO ERASE:" << key;
+		}
 	}
 
 	const mapped_type& at(const KeyType& key) const
@@ -178,7 +195,7 @@ public:
 		}
 	}
 
-	void insert_attributes(std::initializer_list<std::pair<std::string,std::string>> attr_list)
+	void insert_attributes(std::initializer_list<std::pair<std::string, std::string>> attr_list)
 	{
 		for(const auto& it : attr_list)
 		{
@@ -243,7 +260,7 @@ protected:
 #if 1 // Qt5
 
 
-Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(InsertionOrderedMap);
+//Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(InsertionOrderedMap);
 
 using QVariantInsertionOrderedMap = InsertionOrderedMap<QString, QVariant>;
 Q_DECLARE_METATYPE(QVariantInsertionOrderedMap);

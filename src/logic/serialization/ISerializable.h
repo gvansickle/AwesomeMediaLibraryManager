@@ -66,24 +66,24 @@ public:
 	virtual void fromVariant(const QVariant& variant) = 0;
 
 	/// Sort of clumsy way to deal with this it seems.
-	template <class MapType>
-	void AddUUIDToVariantMap(MapType* map) const
-	{
-		auto uuid = get_prefixed_uuid();
-		map->insert(QString("xml:id"), QVariant::fromValue(uuid));
-	}
+//	template <class MapType>
+//	void AddUUIDToVariantMap(MapType* map) const
+//	{
+//		auto uuid = get_prefixed_uuid();
+//		map->insert(QString("xml:id"), QVariant::fromValue(uuid));
+//	}
 
 	/**
 	 * Remove any UUID from the @a map and set this's uuid with it.
 	 * @tparam MapType
 	 * @param map
 	 */
-	template <class MapType>
-	void GetUUIDFromVariantMap(const MapType& map)
-	{
-		auto uuid = map.take("xml:id");
-		set_prefixed_uuid(uuid);
-	}
+//	template <class MapType>
+//	void GetUUIDFromVariantMap(const MapType& map)
+//	{
+//		auto uuid = map.take("xml:id");
+//		set_prefixed_uuid(uuid);
+//	}
 
 	explicit operator QVariant() const { return toVariant(); };
 
