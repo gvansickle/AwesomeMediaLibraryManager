@@ -48,6 +48,7 @@ class ThreadsafeTreeModel : public AbstractTreeModel//, public virtual enable_sh
 {
 	Q_OBJECT
 	Q_DISABLE_COPY(ThreadsafeTreeModel);
+	Q_INTERFACES(ISerializable);
 
 	using BASE_CLASS = AbstractTreeModel;
 

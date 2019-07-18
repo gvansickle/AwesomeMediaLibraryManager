@@ -279,6 +279,10 @@ protected:
 		qDb() << "QMetaType:" << id << QMetaType::typeName(id);// << QVariant(*this).typeName();
 		map->m_id = id;
 		map->m_class = QMetaType::typeName(id);
+		if constexpr (std::is_base_of_v<ISerializable, T>)
+		{
+			self->AddUUIDToVariantMap(map);
+		}
 	}
 
 	template <class T, class MapType>

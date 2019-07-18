@@ -66,6 +66,7 @@ Q_DECLARE_METATYPE(VecOfPMIs);
 class LibraryModel : public QAbstractItemModel, public virtual ISerializable
 {
     Q_OBJECT
+	Q_INTERFACES(ISerializable);
 
 	using BASE_CLASS = QAbstractItemModel;
 

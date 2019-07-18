@@ -36,6 +36,8 @@
 // Ours
 #include <utils/QtHelpers.h>
 #include <future/guideline_helpers.h>
+#include <future/future_algorithms.h>
+
 
 /**
  * A map which maintains the insertion order of its keys.  The only operational difference between this and
@@ -95,6 +97,26 @@ public:
 		}
 	}
 
+	void erase(const key_type& key)
+	{
+		// Remove/erase from vector/deque.
+//		std::experimental::erase_if(this->m_vector_of_elements, [=](const auto& it){ return it->first == key; });
+		auto it = std::find_if(this->m_vector_of_elements.begin(), this->m_vector_of_elements.end(),
+											   [=](const auto& val){ return val.first == key; });
+		if(it != this->m_vector_of_elements.end())
+		{
+			this->m_vector_of_elements.erase(it);
+		}
+//		this->m_vector_of_elements.erase();
+//				(std::remove_if(
+//											 this->m_vector_of_elements.begin(),
+//											 this->m_vector_of_elements.end(), [=](const key_type& key){ return ;}),
+//										 this->m_vector_of_elements.end());
+		// Remove/erase from map.
+//		std::experimental::erase_if(this->m_map_of_keys_to_vector_indices, [=](const auto& it){ return it.first == key; });
+		this->m_map_of_keys_to_vector_indices.erase(key);
+	}
+
 	const mapped_type& at(const KeyType& key) const
 	{
 		auto it = this->find(key);
@@ -105,7 +127,7 @@ public:
 		return it->second;
 	}
 
-	const_iterator find( const KeyType& key ) const
+	const_iterator find( const key_type& key ) const
 	{
 		auto it_index = m_map_of_keys_to_vector_indices.find(key);
 		if(it_index == m_map_of_keys_to_vector_indices.end())
@@ -115,7 +137,12 @@ public:
 
 		Q_ASSERT(it_index->first == m_vector_of_elements[it_index->second].first);
 		return m_vector_of_elements.cbegin() + it_index->second;
-	};
+	}
+
+//	const_iterator find( const KeyType& key ) const
+//	{
+//		return m_vector_of_elements.find(key);
+//	}
 
 	bool contains(const KeyType& key) const
 	{

@@ -402,14 +402,22 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	});
 
 #if 1
+
+#define TREE_ITEM_MODEL_POP_NON_GUI_THREAD 1
+
 	/// Append TreeModelItems to the ScanResultsTreeModel tree_model.
 	Q_ASSERT(tree_model);
-	tree_model_item_future.stap(this,
+	tree_model_item_future.stap(
+#if TREE_ITEM_MODEL_POP_NON_GUI_THREAD != 1
+				this,
+#endif
 								[this/*, tree_model_sptr=tree_model*/](ExtFuture<SharedItemContType> new_items_future,
 								                                               int begin_index, int end_index) mutable {
-
+#if TREE_ITEM_MODEL_POP_NON_GUI_THREAD != 1
 		AMLM_ASSERT_IN_GUITHREAD();
-//		AMLM_ASSERT_NOT_IN_GUITHREAD();
+#else
+		AMLM_ASSERT_NOT_IN_GUITHREAD();
+#endif
 
 		std::shared_ptr<ScanResultsTreeModel> tree_model_sptr = AMLM::Core::self()->getScanResultsTreeModel();
 		Q_ASSERT(tree_model_sptr);

@@ -1,4 +1,3 @@
-#include <utility>
 
 /*
  * Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
@@ -34,6 +33,7 @@
 
 // Std C++
 #include <memory>
+#include <utility>
 
 // Qt5
 #include <QBrush>

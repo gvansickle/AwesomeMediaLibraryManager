@@ -65,7 +65,7 @@ void SerializableQVariantList::fromVariant(const QVariant& variant)
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
 	Q_ASSERT(map.contains(m_list_tag));
-	qDb() << M_ID_VAL(m_list_tag);
+//	qDb() << M_ID_VAL(m_list_tag);
 	Q_ASSERT(map.value(m_list_tag).canConvert<QVariantHomogenousList>());
 
 	QVariantHomogenousList qvl = map.value(m_list_tag).value<QVariantHomogenousList>();

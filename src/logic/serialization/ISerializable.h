@@ -65,6 +65,26 @@ public:
 	 */
 	virtual void fromVariant(const QVariant& variant) = 0;
 
+	/// Sort of clumsy way to deal with this it seems.
+	template <class MapType>
+	void AddUUIDToVariantMap(MapType* map) const
+	{
+		auto uuid = get_prefixed_uuid();
+		map->insert(QString("xml:id"), QVariant::fromValue(uuid));
+	}
+
+	/**
+	 * Remove any UUID from the @a map and set this's uuid with it.
+	 * @tparam MapType
+	 * @param map
+	 */
+	template <class MapType>
+	void GetUUIDFromVariantMap(const MapType& map)
+	{
+		auto uuid = map.take("xml:id");
+		set_prefixed_uuid(uuid);
+	}
+
 	explicit operator QVariant() const { return toVariant(); };
 
 	bool isUuidNull() const { return m_uuid.isNull() || m_uuid_prefix.empty(); };
@@ -80,15 +100,30 @@ public:
 		return m_uuid_prefix;
 	}
 
+	/**
+	 * Returns the prefix + UUID of this node.
+	 * @return
+	 */
 	std::string get_prefixed_uuid() const
 	{
+		if(m_uuid.isNull())
+		{
+			// No valid prefix + UUID set.
+			return std::string();
+		}
 		return m_uuid_prefix + m_uuid.toString(QUuid::WithoutBraces).toStdString();
 	}
 
+	/**
+	 * Split the incoming string into prefix and UUID.
+	 * @param uuid_string
+	 */
 	void set_prefixed_uuid(std::string uuid_string)
 	{
+		/// @todo I think we don't care about this here?
 		Q_ASSERT(!m_uuid_prefix.empty());
 		m_uuid = QUuid::fromString(toqstr(uuid_string).remove(toqstr(m_uuid_prefix)));
+		/// @???
 		Q_ASSERT(m_uuid.isNull());
 	}
 
@@ -102,6 +137,7 @@ public:
 };
 
 Q_DECLARE_METATYPE(ISerializable*);
+//Q_DECLARE_METATYPE(ISerializable&);
 Q_DECLARE_INTERFACE(ISerializable, "ISerializable") // define this out of namespace scope
 
 class IUUIDSerializable : public virtual ISerializable

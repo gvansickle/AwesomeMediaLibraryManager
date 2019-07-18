@@ -55,9 +55,9 @@
 	/** Copy assignment. */ \
 	classname& operator=(const classname&) = default_or_delete; \
 	/** Move constructor. */ \
-	classname(classname&&) noexcept = default_or_delete; \
+	classname(classname&&) = default_or_delete; \
 	/** Move assignment. */ \
-	classname& operator=(classname&&) noexcept = default_or_delete;
+	classname& operator=(classname&&) = default_or_delete;
 
 #define IMPL_RULE_OF_FIVE(classname, default_or_delete) \
 	/** Default constructor. */ \
@@ -67,9 +67,9 @@
 	/** Copy assignment. */ \
 	classname& operator=(const classname&) = default_or_delete; \
 	/** Move constructor. */ \
-	classname(classname &&) noexcept = default_or_delete; \
+	classname(classname &&) = default_or_delete; \
 	/** Move assignment. */ \
-	classname& operator=(classname &&) noexcept = default_or_delete;
+	classname& operator=(classname &&) = default_or_delete;
 
 ///
 

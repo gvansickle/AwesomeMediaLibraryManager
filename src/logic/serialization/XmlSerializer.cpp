@@ -157,12 +157,24 @@ void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant
 	xmlstream.writeStartElement(nodeName);
 	xmlstream.writeAttribute("type", variant.typeName());
 
-	/// @note not working, stopped here.
-//	if(variant.canConvert<ISerializable>())
-//	{
-//		auto* ptr = variant.value<ISerializable>();
-		xmlstream.writeAttribute("xml:id", "TESTING123");//toqstr(ptr->get_prefixed_uuid()));
-//	}
+	if(variant.canConvert<QVariantInsertionOrderedMap>())
+	{
+		// It's a map, see if it has an xml:id attribute.
+		auto map = variant.value<QVariantInsertionOrderedMap>();
+		std::string id;
+		try
+		{
+			id = map.at("xml:id").value<std::string>();
+			xmlstream.writeAttribute("xml:id", toqstr(id)); //toqstr(ptr->get_prefixed_uuid()));
+			// Remove the attribute.
+			map.erase("xml:id");
+		}
+		catch(...)
+		{
+			// No xml:id.
+			//Q_ASSERT(0);
+		}
+	}
 
 	InnerWriteVariantToStream(variant, &xmlstream);
 
@@ -347,7 +359,7 @@ void XmlSerializer::writeVariantValueToStream(const QVariant &variant, QXmlStrea
 {
 	Q_ASSERT(variant.isValid());
 
-	Q_ASSERT(!variant.canConvert<ISerializable*>());
+//	Q_ASSERT(!variant.canConvert<ISerializable*>());
 //	Q_ASSERT(!variant.canConvert<ISerializable&>());
 
 	// variant must be convertible to a string.
