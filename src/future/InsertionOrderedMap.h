@@ -191,7 +191,8 @@ public:
 	{
 		for(const auto& it : attr_list)
 		{
-			m_attribute_map[it.qualifiedName().toString().toStdString()] = it.value().toString().toStdString();
+			// Dup attributes get replaced.
+			m_attribute_map.insert_or_assign(it.qualifiedName().toString().toStdString(), it.value().toString().toStdString());
 		}
 	}
 
@@ -199,7 +200,7 @@ public:
 	{
 		for(const auto& it : attr_list)
 		{
-			m_attribute_map[it.first] = it.second;
+			m_attribute_map.insert_or_assign(it.first, it.second);
 		}
 	}
 

@@ -370,11 +370,11 @@ QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 	return variant;
 }
 
-QVariant XmlSerializer::InnerReadVariantFromStream(QString typeString, QXmlStreamAttributes attributes, QXmlStreamReader& xmlstream)
+QVariant XmlSerializer::InnerReadVariantFromStream(QString typeString, const QXmlStreamAttributes& attributes, QXmlStreamReader& xmlstream)
 {
 	QVariant variant;
 
-	// Copy the attributes, removing "type".
+	// Copy the attributes, removing only "type".
 	std::vector<QXmlStreamAttribute> attributes_cp = attributes.toStdVector();
 	std::experimental::erase_if(attributes_cp, [](auto& attr){ return attr.qualifiedName() == "type" ? true : false; });
 
@@ -605,7 +605,6 @@ QVariant XmlSerializer::readVariantMapFromStream(QXmlStreamReader& xmlstream)
 
 QVariant XmlSerializer::readVariantOrderedMapFromStream(std::vector<QXmlStreamAttribute> attributes, QXmlStreamReader& xmlstream)
 {
-	// Only difference from readVariantMapFromStream() is the local map type we use.
 	QVariantInsertionOrderedMap map;
 
 	Q_ASSERT(xmlstream.isStartElement());
@@ -625,7 +624,6 @@ void XmlSerializer::check_for_stream_error_and_skip(QXmlStreamReader& xmlstream)
 {
 	if(xmlstream.hasError())
 	{
-//		QXmlStreamReader::Error err = xmlstream.error();
 		auto estr = error_string(xmlstream);
 
 		qWr() << "### XML STREAM READ ERROR:" << estr << ", skipping current element";

@@ -115,7 +115,7 @@ UUIncD ScanResultsTreeModel::requestAddScanResultsTreeModelItem(const QVariant& 
 	// ::construct() a new tree model item from variant.
 	std::shared_ptr<ScanResultsTreeModelItem> new_item = ScanResultsTreeModelItem::construct(variant,
 																							 std::static_pointer_cast<ScanResultsTreeModel>(shared_from_this()));
-	bool status = addItem(new_item, parent_id, undo, redo);
+	bool status = addItem(std::static_pointer_cast<AbstractTreeModelItem>(new_item), parent_id, undo, redo);
 
 	if(!status)
 	{

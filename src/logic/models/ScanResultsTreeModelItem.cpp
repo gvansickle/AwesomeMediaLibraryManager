@@ -158,6 +158,16 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
+	try
+	{
+		auto uuid = map.at("xml:id").value<std::string>();
+		set_prefixed_uuid(uuid);
+	}
+	catch(...)
+	{
+
+	}
+
 	map_read_field_or_warn(map, XMLTAG_DIRSCANRESULT, &m_dsr);
 
 	QVariantHomogenousList child_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();

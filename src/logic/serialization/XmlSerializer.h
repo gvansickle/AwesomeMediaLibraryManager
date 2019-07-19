@@ -105,7 +105,7 @@ private:
 	/// @{
 
 	QVariant readVariantFromStream(QXmlStreamReader& xmlstream);
-	QVariant InnerReadVariantFromStream(QString typeString, QXmlStreamAttributes attributes, QXmlStreamReader& xmlstream);
+	QVariant InnerReadVariantFromStream(QString typeString, const QXmlStreamAttributes& attributes, QXmlStreamReader& xmlstream);
 
 
 	QVariant readHomogenousListFromStream(QXmlStreamReader& xmlstream);
