@@ -157,30 +157,6 @@ void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant
 	xmlstream.writeStartElement(nodeName);
 	xmlstream.writeAttribute("type", variant.typeName());
 
-//	if(variant.canConvert<QVariantInsertionOrderedMap>())
-//	{
-//		// It's a map, see if it has an xml:id attribute.
-//		QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
-//		std::string id;
-//		try
-//		{
-//			decltype(map)::mapped_type xmlid_mt = map.at(toqstr("xml:id"));
-//			Q_ASSERT(!xmlid_mt.isNull());
-//			Q_ASSERT(xmlid_mt.canConvert<std::string>());
-//			std::string uuid = xmlid_mt.value<std::string>();
-//			id = uuid;
-////			id = map.at(QString("xml:id")).value<std::string>();
-//			xmlstream.writeAttribute("xml:id", toqstr(id)); //toqstr(ptr->get_prefixed_uuid()));
-//			// Remove the attribute.
-//			map.erase("xml:id");
-//		}
-//		catch(...)
-//		{
-//			qDb() << "No xml:id," << id << map;
-//			//Q_ASSERT(0);
-//		}
-//	}
-
 	InnerWriteVariantToStream(variant, &xmlstream);
 
 	xmlstream.writeEndElement();
@@ -277,17 +253,6 @@ void XmlSerializer::writeVariantToStream(const QString& nodeName, const ISeriali
 }
 #endif
 
-//void XmlSerializer::writeAttributedQVariantToStream(const AttributedQVariant& variant, QXmlStreamWriter& xmlstream)
-//{
-//	// Add the attributes to the XML tag's attributes list.
-//	for(const auto& it : variant.m_key_value_pairs)
-//	{
-//		xmlstream.writeAttribute(toqstr(it.first), toqstr(it.second));
-//	}
-//
-//	InnerWriteVariantToStream(variant.m_variant, &xmlstream);
-//}
-
 void XmlSerializer::writeQVariantHomogenousListToStream(const QVariant& variant, QXmlStreamWriter& xmlstream)
 {
 	Q_ASSERT(variant.isValid());
@@ -363,9 +328,6 @@ void XmlSerializer::writeVariantOrderedMapToStream(const QVariant& variant, QXml
 void XmlSerializer::writeVariantValueToStream(const QVariant &variant, QXmlStreamWriter& xmlstream)
 {
 	Q_ASSERT(variant.isValid());
-
-//	Q_ASSERT(!variant.canConvert<ISerializable*>());
-//	Q_ASSERT(!variant.canConvert<ISerializable&>());
 
 	// variant must be convertible to a string.
 	if(!variant.canConvert<QString>())

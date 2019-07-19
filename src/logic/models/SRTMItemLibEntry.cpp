@@ -133,6 +133,9 @@ QVariant SRTMItem_LibEntry::toVariant() const
 	// Overwrite any class info added by the above.
 	set_map_class_info(this, &map);
 
+	// Set the xml:id.
+	map.insert_attributes({{"xml:id", get_prefixed_uuid()}});
+
 	QVariantHomogenousList list(XMLTAG_LIBRARY_ENTRIES, "m_library_entry");
 	if(auto libentry = m_library_entry.get(); libentry != nullptr)
 	{

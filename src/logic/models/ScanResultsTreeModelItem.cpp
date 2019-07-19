@@ -163,22 +163,6 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 	QVariantHomogenousList child_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
 	Q_ASSERT(child_list.size() > 0);
 
-#if 0
-	auto model_ptr = getTypedModel();
-	for(const QVariant& child : child_list)
-	{
-		qDb() << "READING CHILD ITEM INTO ScanResultsTreeModelItem:" << child.typeName();
-
-//		int id = qMetaTypeId(child.type());
-//		qDb() << "...QMetaType:" << id << QMetaType::typeName(id);
-
-		std::shared_ptr<AbstractTreeModelItem> new_child_item = model_ptr->make_item_from_variant(child);
-//		bool ok = appendChild(new_child_item);
-//		Q_ASSERT(ok);
-//		model_ptr->requestAddTreeModelItem(child, getId());
-	}
-#endif
-/////////////
 	auto model_ptr_base = m_model.lock();
 	Q_ASSERT(model_ptr_base);
 	auto model_ptr = std::dynamic_pointer_cast<ScanResultsTreeModel>(model_ptr_base);
@@ -192,18 +176,10 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 	{
 		qDb() << "READING CHILD ITEM INTO ScanResultsTreeModelItem:" << child_variant.typeName();
 
-//		std::shared_ptr<AbstractTreeModelItem> new_child_item = model_ptr->make_item_from_variant(child);
-//		new_child_item_vec.push_back(new_child_item);
-//		bool ok = appendChild(new_child_item);
-//		Q_ASSERT(ok);
 		auto id = model_ptr->requestAddSRTMLibEntryItem(child_variant, parent_id);
 		auto new_child = model_ptr->getItemById(id);
 		Q_ASSERT(new_child);
-//		new_child->fromVariant(variant);
-//		std::dynamic_pointer_cast<ScanResultsTreeModel>(model_ptr)->requestAddExistingTreeModelItem(new_child_item, parent_id);
 	}
-	/// @todo WHY DOES THIS ASSERT
-//	appendChildren(new_child_item_vec);
 }
 
 //std::shared_ptr<ScanResultsTreeModel> ScanResultsTreeModelItem::getTypedModel() const
