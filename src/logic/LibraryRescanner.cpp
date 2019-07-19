@@ -196,29 +196,14 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
 
 void LibraryRescanner::SaveDatabase(std::shared_ptr<ScanResultsTreeModel> tree_model_ptr, const QString& database_filename)
 {
-	/// MOVED TO SRTIMODEL
-	qIn() << "###### WRITING" << database_filename;
-	qIn() << "###### TREEMODELPTR HAS NUM ROWS:" << tree_model_ptr->rowCount();
-
-	XmlSerializer xmlser;
-	xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
-	xmlser.save(*tree_model_ptr, QUrl::fromLocalFile(database_filename), "playlist");
-
-	qIn() << "###### WROTE" << database_filename;
+	/// @todo Stub
+	tree_model_ptr->SaveDatabase(database_filename);
 }
 
 void LibraryRescanner::LoadDatabase(std::shared_ptr<ScanResultsTreeModel> tree_model_ptr, const QString& database_filename)
 {
-	/// MOVED TO SRTIMODEL
-	qIn() << "###### READING" << database_filename;
-
-	XmlSerializer xmlser;
-	xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
-	xmlser.HACK_skip_extra(false);
-	xmlser.load(*tree_model_ptr, QUrl::fromLocalFile(database_filename));
-
-	qIn() << "###### TREEMODELPTR HAS NUM ROWS:" << tree_model_ptr->rowCount();
-	qIn() << "###### READ" << database_filename;
+	/// @todo Stub
+	tree_model_ptr->LoadDatabase(database_filename);
 }
 
 void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
