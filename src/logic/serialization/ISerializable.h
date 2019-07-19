@@ -51,8 +51,11 @@ class ISerializable
 {
 
 public:
-	explicit ISerializable(/*std::string uuid_prefix = {}*/)
-	: m_uuid_prefix(/*uuid_prefix*/"xmlid_"), m_uuid( /*(!uuid_prefix.empty()) ?*/ QUuid::createUuid() /*: QUuid("null")*/ ) {};
+	/**
+	 * Default constructor creates a new UUID.
+	 */
+	explicit ISerializable()
+		: m_uuid_prefix("xmlid_"), m_uuid( QUuid::createUuid() ) {};
 	virtual ~ISerializable() = default;
 
 	/**
@@ -89,11 +92,11 @@ public:
 
 	bool isUuidNull() const { return m_uuid.isNull() || m_uuid_prefix.empty(); };
 
-	void set_prefix(std::string prefix)
-	{
-		Q_ASSERT(m_uuid_prefix.empty());
-		m_uuid_prefix = prefix;
-	}
+//	void set_prefix(std::string prefix)
+//	{
+//		Q_ASSERT(m_uuid_prefix.empty());
+//		m_uuid_prefix = prefix;
+//	}
 
 	std::string get_prefix() const
 	{
@@ -101,7 +104,7 @@ public:
 	}
 
 	/**
-	 * Returns the prefix + UUID of this node.
+	 * Returns the prefix + UUID of this node as a string.
 	 * @return
 	 */
 	std::string get_prefixed_uuid() const
@@ -115,20 +118,18 @@ public:
 	}
 
 	/**
-	 * Split the incoming string into prefix and UUID.
+	 * Split the incoming string into prefix and UUID, and sets it to the incoming value.
 	 * @param uuid_string
 	 */
-	void set_prefixed_uuid(std::string uuid_string)
+	void set_prefixed_uuid(const std::string& uuid_string)
 	{
-		/// @todo I think we don't care about this here?
-		Q_ASSERT(!m_uuid_prefix.empty());
+		m_uuid_prefix = "xmlid_"; ///< @todo
 		m_uuid = QUuid::fromString(toqstr(uuid_string).remove(toqstr(m_uuid_prefix)));
-		/// @???
-		Q_ASSERT(m_uuid.isNull());
+		Q_ASSERT(!m_uuid.isNull());
 	}
 
 	/// EXPERIMENTAL ORM
-	int m_int_uuid;
+//	int m_int_uuid;
 	/// The GUID used to ID this item in the database etc.
 	QUuid m_uuid;
 	/// The prefix to prepend if XML, since xml:id's need to start with a non-digit character.
@@ -150,17 +151,17 @@ public:
 
 	bool isUuidNull() const { return m_uuid.isNull() || m_uuid_prefix.empty(); };
 
-	std::string get_prefixed_uuid() const
-	{
-		return m_uuid_prefix + m_uuid.toString(QUuid::WithoutBraces).toStdString();
-	}
+//	std::string get_prefixed_uuid() const
+//	{
+//		return m_uuid_prefix + m_uuid.toString(QUuid::WithoutBraces).toStdString();
+//	}
 
-	void set_prefixed_uuid(std::string uuid_string)
-	{
-		Q_ASSERT(!m_uuid_prefix.empty());
-		m_uuid = QUuid::fromString(toqstr(uuid_string).remove(toqstr(m_uuid_prefix)));
-		Q_ASSERT(m_uuid.isNull());
-	}
+//	void set_prefixed_uuid(std::string uuid_string)
+//	{
+//		Q_ASSERT(!m_uuid_prefix.empty());
+//		m_uuid = QUuid::fromString(toqstr(uuid_string).remove(toqstr(m_uuid_prefix)));
+//		Q_ASSERT(m_uuid.isNull());
+//	}
 
 protected:
 

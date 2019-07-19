@@ -158,6 +158,16 @@ void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 //	dump_map(map);
 
+	try
+	{
+		auto uuid = map.get_attr("xml:id");
+		set_prefixed_uuid(uuid);
+	}
+	catch(...)
+	{
+		qWr() << "NO XML:ID:";
+	}
+
 #define X(field_tag, tag_string, var_name) map_read_field_or_warn(map, field_tag, var_name);
 	M_DATASTREAM_FIELDS(X);
 #undef X

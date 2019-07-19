@@ -160,12 +160,12 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 
 	try
 	{
-		auto uuid = map.at("xml:id").value<std::string>();
+		auto uuid = map.get_attr("xml:id");
 		set_prefixed_uuid(uuid);
 	}
 	catch(...)
 	{
-
+		qWr() << "NO XML:ID:";
 	}
 
 	map_read_field_or_warn(map, XMLTAG_DIRSCANRESULT, &m_dsr);
