@@ -358,7 +358,7 @@ M_WARNING("BUG: Pulls data from bad cuesheet embeds in FLAC, such as some produc
 	//
 	// Cuesheet handling, using libcue.
 	//
-	std::unique_ptr<CueSheet> cuesheet;
+	std::shared_ptr<CueSheet> cuesheet;
 	cuesheet.reset();
 
 	// Did we find an embedded cue sheet?

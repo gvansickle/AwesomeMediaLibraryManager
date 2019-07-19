@@ -131,9 +131,9 @@ using strviw_type = QLatin1Literal;
 #undef X
 //static const QLatin1String XMLTAG_DISC_NUM_TRACKS_ON_MEDIA("m_num_tracks_on_media");
 
-std::unique_ptr<CueSheet> CueSheet::read_associated_cuesheet(const QUrl &url, uint64_t total_length_in_ms)
+std::shared_ptr<CueSheet> CueSheet::read_associated_cuesheet(const QUrl &url, uint64_t total_length_in_ms)
 {
-    auto retval = std::make_unique<CueSheet>();
+	auto retval = std::make_shared<CueSheet>();
     retval.reset();
 
     // Determine if we have a cue sheet embedded in the given file's metadata,
@@ -170,7 +170,7 @@ std::unique_ptr<CueSheet> CueSheet::read_associated_cuesheet(const QUrl &url, ui
     return retval;
 }
 
-std::unique_ptr<CueSheet> CueSheet::TEMP_parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t total_length_in_ms)
+std::shared_ptr<CueSheet> CueSheet::TEMP_parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t total_length_in_ms)
 {
     auto retval = std::make_unique<CueSheet>();
 
