@@ -48,13 +48,14 @@ AMLM_QREG_CALLBACK([](){
 
 
 DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_finfo)
-	: /*IUUIDSerializable("id_dsr_"),*/ m_exturl_media(found_url, &found_url_finfo)
+	: m_exturl_media(found_url, &found_url_finfo)
 {
 	determineDirProps(found_url_finfo);
 }
 
 #define M_DATASTREAM_FIELDS(X) \
 	X(XMLTAG_FLAGS_DIRPROPS, m_flags_dirprops) \
+	X(XMLTAG_HAS_SIDECAR_CUESHEET, m_has_sidecar_cuesheet) \
 	X(XMLTAG_EXTURL_DIR, m_exturl_dir_url) \
 	X(XMLTAG_EXTURL_MEDIA, m_exturl_media) \
 	X(XMLTAG_EXTURL_CUESHEET, m_exturl_cuesheet)
@@ -83,15 +84,8 @@ void DirScanResult::fromVariant(const QVariant& variant)
 {
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
-	try
-	{
-		auto uuid = map.get_attr("xml:id");
-		set_prefixed_uuid(uuid);
-	}
-	catch(...)
-	{
-		qWr() << "NO XML:ID:";
-	}
+	auto uuid = map.get_attr("xml:id", "");
+	set_prefixed_uuid(uuid);
 
 	// Extract all the fields from the map.
 #define X(field_tag, member_field) map_read_field_or_warn(map, field_tag, &(member_field));
@@ -128,6 +122,11 @@ void DirScanResult::determineDirProps(const QFileInfo &found_url_finfo)
 			// Set the flag and the path relative to the directory (should be just the filename).
 			m_exturl_cuesheet = ExtUrl(possible_cue_url.m_url, &fi);
 			m_flags_dirprops |= HasSidecarCueSheet;
+	        m_has_sidecar_cuesheet = true;
+        }
+        else
+        {
+        	m_has_sidecar_cuesheet = false;
         }
     }
     else
@@ -143,6 +142,13 @@ QVector<ExtUrl> DirScanResult::otherMediaFilesInDir(const QFileInfo& finfo)
 Q_ASSERT(0);
 M_WARNING("TODO");
     return QVector<ExtUrl>();
+}
+
+template <class stream>
+stream operator<<(stream s, std::optional<bool> val)
+{
+	s << val.value_or("unknown");
+	return s;
 }
 
 QDebug operator<<(QDebug dbg, const DirScanResult & obj) // NOLINT(performance-unnecessary-value-param)

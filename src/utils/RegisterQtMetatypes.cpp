@@ -99,6 +99,45 @@ AMLM_QREG_CALLBACK([](){
 	QMetaType::registerConverter<std::string, QString>([](const std::string& str){ return toqstr(str); });
 	QMetaType::registerConverter<QString, std::string>([](const QString& str){ return tostdstr(str); });
 
+	qIn() << "Registering std::optional<bool><->QString converters";
+	QMetaType::registerConverter<std::optional<bool>, QString>([](const std::optional<bool>& optbool)
+			{
+				if(optbool.has_value())
+				{
+					return optbool.value() ? "true" : "false";
+				}
+				else
+				{
+					return "(unknown)";
+				}
+			});
+	QMetaType::registerConverter<QString, std::optional<bool>>([](const QString& str)
+			{
+				std::optional<bool> retval;
+				if(!str.isEmpty())
+				{
+					if(str == "true")
+					{
+						retval = true;
+					}
+					else if(str == "false")
+					{
+						retval = false;
+					}
+					else if(str == "(unknown)")
+					{
+						// Indeterminate.
+						retval.reset();
+					}
+					else
+					{
+						// Invaid string for an optional<bool>.
+						throw QException();
+					}
+				}
+				return retval;
+			});
+
 	qIn() << "Registering <cstdint> metatypes";
 
 #define RMT(full_type) qRegisterMetaType< full_type >( # full_type );

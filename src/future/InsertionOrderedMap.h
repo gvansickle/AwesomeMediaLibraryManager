@@ -217,6 +217,22 @@ public:
 		}
 	}
 
+	std::string get_attr(const std::string& key, const std::string& default_val) const
+	{
+		std::string retval = default_val;
+
+		try
+		{
+			retval = this->get_attr(key);
+		}
+		catch(...)
+		{
+			retval = default_val;
+		}
+		return retval;
+	}
+
+
 	using attr_map_type = std::map<std::string, std::string>;
 	attr_map_type get_attrs() const
 	{
