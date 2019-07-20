@@ -68,32 +68,31 @@ QVariant DirScanResult::toVariant() const
 {
 	QVariantInsertionOrderedMap map;
 
+	// Set the xml:id.
+	map.insert_attributes({{"xml:id", get_prefixed_uuid()}});
+
 	// Add all the fields to the map.
 #define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
-#if 0
-//	return map;
-	Q_ASSERT(!isUuidNull());
-	// Insert the map and a unique ID into the AttQVar.
-	map.insert_attributes({
-							  {"xml:id", get_prefixed_uuid()}
-						  });
-//	AttributedQVariant retval = AttributedQVariant(map, {
-//													   {"xml:id", get_prefixed_uuid()}
-//												   });
-#endif
 	return map;// QVariant::fromValue(retval);
 }
 
 void DirScanResult::fromVariant(const QVariant& variant)
 {
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
-#if 0
-	auto idval = map.get_attr("xml:id");
-	set_prefixed_uuid(idval);
-#endif
+
+	try
+	{
+		auto uuid = map.get_attr("xml:id");
+		set_prefixed_uuid(uuid);
+	}
+	catch(...)
+	{
+		qWr() << "NO XML:ID:";
+	}
+
 	// Extract all the fields from the map.
 #define X(field_tag, member_field) map_read_field_or_warn(map, field_tag, &(member_field));
 	M_DATASTREAM_FIELDS(X);

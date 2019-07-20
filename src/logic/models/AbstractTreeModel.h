@@ -195,7 +195,7 @@ public:
 	 * @note We're crossing the streams here, smart ptrs and QModelIndex.
 	 */
 	 /// OLD
-	virtual bool appendItems(std::vector<std::shared_ptr<AbstractTreeModelItem> > new_items, const QModelIndex &parent = QModelIndex());
+	virtual bool appendItems(std::vector<std::shared_ptr<AbstractTreeModelItem>> new_items, const QModelIndex &parent = QModelIndex());
 //	virtual bool appendItem(std::shared_ptr<AbstractTreeModelItem> new_items, const QModelIndex &parent = QModelIndex());
 
 	QModelIndex getIndexFromItem(const std::shared_ptr<AbstractTreeModelItem>& item) const;

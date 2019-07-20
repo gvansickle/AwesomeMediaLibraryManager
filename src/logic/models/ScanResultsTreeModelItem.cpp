@@ -154,10 +154,6 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 	// Overwrite any class info added by the above.
 	dump_map_class_info(this, &map);
 
-#define X(field_tag, tag_string, var_name) map_read_field_or_warn(map, field_tag, var_name);
-	M_DATASTREAM_FIELDS(X);
-#undef X
-
 	try
 	{
 		auto uuid = map.get_attr("xml:id");
@@ -167,6 +163,10 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 	{
 		qWr() << "NO XML:ID:";
 	}
+
+#define X(field_tag, tag_string, var_name) map_read_field_or_warn(map, field_tag, var_name);
+	M_DATASTREAM_FIELDS(X);
+#undef X
 
 	map_read_field_or_warn(map, XMLTAG_DIRSCANRESULT, &m_dsr);
 

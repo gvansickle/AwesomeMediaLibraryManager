@@ -643,12 +643,16 @@ using strviw_type = QLatin1Literal;
 	X(XMLTAG_TM_GENERIC, m_tm_generic) \
 	X(XMLTAG_DISC_CUESHEET, m_tm_cuesheet_disc)
 
+#define M_DATASTREAM_FIELDS_LISTS(X) \
+	X(XMLTAG_TRACKS, m_tracks)
+
 /// Strings to use for the tags.
 #define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
 	M_DATASTREAM_FIELDS(X);
 	M_DATASTREAM_FIELDS_MAPS(X);
+	M_DATASTREAM_FIELDS_LISTS(X);
 #undef X
-static const strviw_type XMLTAG_TRACKS("m_tracks");
+//static const strviw_type XMLTAG_TRACKS("m_tracks");
 static const strviw_type XMLTAG_CUESHEET("m_cuesheet");
 
 
