@@ -9,6 +9,15 @@ declare default element namespace "http://xspf.org/ns/0/";
 (:declare namespace xlink = "http://www.w3.org/1999/xlink";:)
 (:declare namespace fn = "http://www.w3.org/2005/xpath-functions";:)
 
+
+declare namespace functx = "http://www.functx.com";
+declare function functx:id-from-element
+  ( $element as element()? )  as xs:string? {
+
+  data(($element/@*[id(.) is ..])[1])
+ } ;
+
+
 (: Path to the playlist, will be passed in. :)
 declare variable $input_playlist as xs:anyURI external;
 declare variable $doc_node_playlist as document-node() := doc($input_playlist);
@@ -32,21 +41,24 @@ let $doc_playlist := $doc_node_playlist/amlm_playlist
 (:}:)
 
 
-(:</body>:)
 
-(::)
-(:for $trackRefs in $doc_playlist//track_ref:)
-	for $track in $doc_database//track[@xml:id="xmlid_02991e09-4058-43ab-8dfd-6c9911438923"]
-(:	for $libentry in $doc_database//m_library_entry:)
+	for $trackID in $doc_playlist//track_ref
+	(:for $track in $doc_database//track:)
+	(:[@xml:id="xmlid_02991e09-4058-43ab-8dfd-6c9911438923"]:)
+	for $track in $doc_database//track
+	(:	for $libentry in $doc_database//m_library_entry:)
+	where $track[@xml:id = "xmlid_02991e09-4058-43ab-8dfd-6c9911438923"]
+	(:where $track/@xml:id("xmlid_02991e09-4058-43ab-8dfd-6c9911438923"):)
 	return
-	<list>
-	{$track//entry}
-	</list>
+	<tracklist>
+	{"Track Title: '", $track//key[text() = "TITLE"]/..//value/text(), "'"}
+	</tracklist>
 
-(:	:)(: order by $x/title :)
-(:	:)(:return <list>:)
-(:	:)(:		<a>{$x/books/book[fn:id($x//book//@xml:idref)]/description[text()]}</a>:)
-(:	:)(:		<b>{$x//title[text()]}</b>:)
-(:	:)(:		<c>{$x//title[text()]}</c>:)
-(:	:)(:	</list>:)
-(:	:)
+	(:	:)(: order by $x/title :)
+	(:	:)(:return <list>:)
+	(:	:)(:		<a>{$x/books/book[fn:id($x//book//@xml:idref)]/description[text()]}</a>:)
+	(:	:)(:		<b>{$x//title[text()]}</b>:)
+	(:	:)(:		<c>{$x//title[text()]}</c>:)
+	(:	:)(:	</list>:)
+	(:	:)
+
