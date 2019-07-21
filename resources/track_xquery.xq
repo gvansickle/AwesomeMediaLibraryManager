@@ -42,17 +42,25 @@ let $doc_playlist := $doc_node_playlist/amlm_playlist
 
 
 
-	for $trackID in $doc_playlist//track_ref
+for $trackIDREF in $doc_playlist//track_ref[@xml:idref]
 	(:for $track in $doc_database//track:)
 	(:[@xml:id="xmlid_02991e09-4058-43ab-8dfd-6c9911438923"]:)
-	for $track in $doc_database//track
-	(:	for $libentry in $doc_database//m_library_entry:)
-	where $track[@xml:id = "xmlid_02991e09-4058-43ab-8dfd-6c9911438923"]
+(:for $track in $doc_database//track[@xml:id = "xmlid_02991e09-4058-43ab-8dfd-6c9911438923"]:)
+for $track in $doc_database//track[@xml:id = $trackIDREF/@xml:idref]
+(:	where $track[@xml:id = "xmlid_02991e09-4058-43ab-8dfd-6c9911438923"]:)
 	(:where $track/@xml:id("xmlid_02991e09-4058-43ab-8dfd-6c9911438923"):)
 	return
-	<tracklist>
-	{"Track Title: '", $track//key[text() = "TITLE"]/..//value/text(), "'"}
-	</tracklist>
+  <html>
+  <head/>
+  <body>
+  <p><h1>{"Track Title: '", $track//key[text() = "TITLE"]/..//value/text(), "'"}</h1>
+	<h2>{"Track Performer: '", $track//key[text() = "PERFORMER"]/..//value/text(), "'"}</h2>
+  </p>
+  <p>
+	{"TrackIDRef cont:'", $trackIDREF[@xml:idref], "'"}
+  </p>
+  </body>
+  </html>
 
 	(:	:)(: order by $x/title :)
 	(:	:)(:return <list>:)
