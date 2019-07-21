@@ -264,37 +264,3 @@ QDebug operator<<(QDebug dbg, const TrackMetadata &tm)
 	M_TRACK_INDEX_DATASTREAM_FIELDS(X);
 #undef X
 
-//struct MapEntry
-//{
-//	template <class T>
-//	MapEntry(const char* str, T m_ptr_to_member);
-//	const char* m_str;
-////	const std::any m_ptr_to_member;
-//	const T m_ptr_to_member;
-
-//	auto get_ptr_to_member() -> decltype(m_ptr_to_member) { return std::any_cast<decltype(m_ptr_to_member)>(m_ptr_to_member); };
-//};
-
-//static const MapEntry f_map[] = {
-//	{"index_num", &TrackIndex::m_index_num},
-//	{"index_frames", &TrackIndex::m_index_frames}
-//};
-
-QVariant TrackIndex::toVariant() const
-{
-	QVariantInsertionOrderedMap map;
-
-	map_insert_or_die(map, XMLTAG_TRACK_INDEX_NUM, m_index_num);
-	map_insert_or_die(map, XMLTAG_TRACK_INDEX_FRAMES, m_index_frames);
-
-	return map;
-}
-
-void TrackIndex::fromVariant(const QVariant& variant)
-{
-	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
-
-	map_read_field_or_warn(map, XMLTAG_TRACK_INDEX_NUM, &m_index_num);
-	map_read_field_or_warn(map, XMLTAG_TRACK_INDEX_FRAMES, &m_index_frames);
-
-}

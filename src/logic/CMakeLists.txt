@@ -44,6 +44,7 @@ set(logic_subdir_SOURCES
 	PlaylistModelItem.cpp
 	PlaylistSortFilterProxyModel.cpp
 	SupportedMimeTypes.cpp
+    TrackIndex.cpp
 	TrackMetadata.cpp
 	CueSheetParser.cpp
 	CueSheet.cpp
@@ -79,6 +80,7 @@ set(logic_subdir_HEADERS
 	PlaylistModelItem.h
 	PlaylistSortFilterProxyModel.h
 	SupportedMimeTypes.h
+    TrackIndex.h
 	TrackMetadata.h
 	LibraryRescanner.h
 	CueSheetParser.h
