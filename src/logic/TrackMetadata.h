@@ -26,6 +26,7 @@
 
 // Qt5
 #include <QtCore>
+#include <QVariant>
 
 // Libcue.
 struct Cdtext;
@@ -37,10 +38,10 @@ using Frames = qint64;
 #include <future/guideline_helpers.h>
 #include <third_party/libcue/libcue.h>
 #include "AMLMTagMap.h"
+
 #include "TrackIndex.h"
 
 
-Q_DECLARE_METATYPE(TrackIndex);
 
 /**
  * Metadata which applies to a single track on a possibly multi-track media.
@@ -193,7 +194,6 @@ This information is always ASCII encoded. */ \
 };
 
 Q_DECLARE_METATYPE(TrackMetadata);
-Q_DECLARE_METATYPE(std::vector<TrackIndex>);
 // Qt5 already declares this.
 //Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE(std::vector);
 

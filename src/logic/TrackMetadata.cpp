@@ -255,12 +255,3 @@ QDebug operator<<(QDebug dbg, const TrackMetadata &tm)
     return dbg;
 }
 
-#define M_TRACK_INDEX_DATASTREAM_FIELDS(X) \
-	X(XMLTAG_TRACK_INDEX_NUM, "index_num", m_index_num) \
-	X(XMLTAG_TRACK_INDEX_FRAMES, "index_frames", m_index_frames)
-
-/// Strings to use for the tags.
-#define X(field_tag, field_tag_str, member_field) static const strviw_type field_tag ( field_tag_str );
-	M_TRACK_INDEX_DATASTREAM_FIELDS(X);
-#undef X
-
