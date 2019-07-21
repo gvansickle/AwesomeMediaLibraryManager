@@ -52,25 +52,6 @@ AMLM_QREG_CALLBACK([](){
 
 using strviw_type = QLatin1Literal;
 
-#define M_DATASTREAM_FIELDS(X) \
-	X(XMLTAG_TRACK_META_TRACK_NUM, m_track_number) \
-	X(XMLTAG_TRACK_META_LEN_PREGAP, m_length_pre_gap) \
-	X(XMLTAG_TRACK_META_START_FRAMES, m_start_frames) \
-	X(XMLTAG_TRACK_META_LENGTH_FRAMES, m_length_frames) \
-	X(XMLTAG_TRACK_META_LENGTH_POST_GAP, m_length_post_gap) \
-	X(XMLTAG_TRACK_META_ISRC, m_isrc) \
-	X(XMLTAG_TRACK_META_IS_PART_OF_GAPLESS_SET, m_is_part_of_gapless_set) \
-	X(XMLTAG_TRACK_PTI_VALUES, m_tm_track_pti)
-
-#define M_DATASTREAM_FIELDS_SPECIAL_HANDLING(X) \
-	X(XMLTAG_TRACK_META_INDEXES, m_indexes)
-
-/// Strings to use for the tags.
-#define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
-	M_DATASTREAM_FIELDS(X);
-	M_DATASTREAM_FIELDS_SPECIAL_HANDLING(X);
-#undef X
-
 
 std::unique_ptr<TrackMetadata> TrackMetadata::make_track_metadata(const Track* track_ptr, int track_number)
 {
@@ -170,10 +151,35 @@ std::string TrackMetadata::toStdString() const
 	return retval;
 }
 
+#define M_DATASTREAM_FIELDS(X) \
+	X(XMLTAG_TRACK_META_TRACK_NUM, m_track_number) \
+	X(XMLTAG_TRACK_META_LEN_PREGAP, m_length_pre_gap) \
+	X(XMLTAG_TRACK_META_START_FRAMES, m_start_frames) \
+	X(XMLTAG_TRACK_META_LENGTH_FRAMES, m_length_frames) \
+	X(XMLTAG_TRACK_META_LENGTH_POST_GAP, m_length_post_gap) \
+	X(XMLTAG_TRACK_META_ISRC, m_isrc) \
+	X(XMLTAG_TRACK_META_IS_PART_OF_GAPLESS_SET, m_is_part_of_gapless_set) \
+	X(XMLTAG_TRACK_PTI_VALUES, m_tm_track_pti)
+
+#define M_DATASTREAM_FIELDS_SPECIAL_HANDLING(X) \
+	X(XMLTAG_TRACK_META_INDEXES, m_indexes)
+
+/// Strings to use for the tags.
+#define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
+	M_DATASTREAM_FIELDS(X);
+	M_DATASTREAM_FIELDS_SPECIAL_HANDLING(X);
+#undef X
+
 
 QVariant TrackMetadata::toVariant() const
 {
 	QVariantInsertionOrderedMap map;
+
+	// Set some extra class info to the attributes.
+//	set_map_class_info(this, &map);
+
+	// Set the xml:id.
+	map.insert_attributes({{"xml:id", get_prefixed_uuid()}});
 
 #define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
 	M_DATASTREAM_FIELDS(X);
@@ -194,6 +200,16 @@ QVariant TrackMetadata::toVariant() const
 void TrackMetadata::fromVariant(const QVariant& variant)
 {
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
+
+	auto uuid = map.get_attr("xml:id", {});
+	if(uuid.empty())
+	{
+		qWr() << "UUID EMPTY";
+	}
+	else
+	{
+		set_prefixed_uuid(uuid);
+	}
 
 #define X(field_tag, member_field) map_read_field_or_warn(map, field_tag, & (member_field) );
 	M_DATASTREAM_FIELDS(X);

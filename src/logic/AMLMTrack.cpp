@@ -22,6 +22,8 @@
  */
 #include <AMLMTrack.h>
 
+namespace AMLM
+{
 
 AMLM::Track::Track()
 {
@@ -32,3 +34,5 @@ AMLM::Track::~Track()
 {
 
 }
+
+}; // END namespace AMLM
