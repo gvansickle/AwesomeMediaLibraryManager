@@ -667,7 +667,8 @@ QVariant Metadata::toVariant() const
 #undef X
 
 	// Track-level fields.
-
+#warning "FIX TRACK DUPS"
+#if 0 /// @todo This info gets duplicated (complete with should-be-unique xml:id's)	in the CueSheet.
 	// Add the track list to the return map.
 	QVariantHomogenousList qvar_track_map("m_track", "track");
 
@@ -679,6 +680,7 @@ QVariant Metadata::toVariant() const
 
 	// All tracks on the disc.
 	map_insert_or_die(map, XMLTAG_TRACKS, qvar_track_map);
+#endif
 	// The cuesheet, which will duplicate the track list.
 	/// @todo Somehow eliminate duplication here.
 	map_insert_or_die(map, XMLTAG_CUESHEET, m_cuesheet);
@@ -698,6 +700,8 @@ void Metadata::fromVariant(const QVariant& variant)
 
 	map_read_field_or_warn(map, XMLTAG_CUESHEET, &m_cuesheet);
 
+#warning "FIX TRACK DUPS"
+#if 0 /// @todo This info gets duplicated (complete with should-be-unique xml:id's)	in the CueSheet.
 	// Read in the track list.
 	QVariantHomogenousList qvar_track_list("m_track", "track");
 	map_read_field_or_warn(map, XMLTAG_TRACKS, &qvar_track_list);
@@ -715,6 +719,7 @@ void Metadata::fromVariant(const QVariant& variant)
 
 		m_tracks.insert(std::make_pair(track_num, tm));
 	}
+#endif
 #endif
 	m_read_has_been_attempted = true;
 	m_is_error = false;
