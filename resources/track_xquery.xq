@@ -40,7 +40,7 @@ let $doc_playlist := $doc_node_playlist/amlm_playlist
 (:	for $libentry in $doc_database//m_library_entry:)
 	return
 	<list>
-	{$track}
+	{$track//entry}
 	</list>
 
 (:	:)(: order by $x/title :)
