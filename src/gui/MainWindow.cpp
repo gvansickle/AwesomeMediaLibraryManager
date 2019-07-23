@@ -312,6 +312,7 @@ void MainWindow::onStartup()
 
     /// @experimental
     // Create a new Collection view.
+	/// @note This is atm the view onto the AMLMDatabase model.
     newCollectionView();
 
     // Load any files which were opened at the time the last session was closed.
@@ -1431,12 +1432,17 @@ void MainWindow::readLibSettings(QSettings& settings)
 {
 	int num_libs;
 
-	auto* prog = new QProgressDialog("Opening database...", "Abort open", 0, 0, this);
+	// Throw up a progress dialog indicating that we're loading the database.
+	auto* prog = new QProgressDialog(tr("Opening database..."), tr("Abort open"), 0, 0, this);
 
 //	prog.setWindowModality(Qt::WindowModal);
 	prog->setValue(1);
 	prog->setValue(2);
 	prog->show();
+
+	// Load the primary database.
+	AMLM::Core::self()->getScanResultsTreeModel()->LoadDatabase(QDir::homePath() + "/AMLMDatabase.xml");
+
 
 	QString database_filename = QDir::homePath() + "/AMLMDatabaseSerDes.xml";
 
@@ -1477,7 +1483,7 @@ void MainWindow::readLibSettings(QSettings& settings)
 
 			if(!lmp)
 			{
-				QMessageBox::critical(this, qApp->applicationDisplayName(), "Failed to open library",
+				QMessageBox::critical(this, qApp->applicationDisplayName(), tr("Failed to open library"),
 									  QMessageBox::Ok);
 			}
 			else
