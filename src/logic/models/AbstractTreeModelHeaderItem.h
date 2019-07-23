@@ -37,7 +37,7 @@
 #include "AbstractHeaderSection.h"
 #include "ScanResultsTreeModelItem.h"
 class AbstractTreeModel;
-#include <logic/ColumnSpec.h>
+#include <models/ColumnSpec.h>
 
 
 /**

@@ -46,7 +46,7 @@
 // Ours
 #include "AbstractTreeModelItem.h"
 #include "AbstractTreeModelHeaderItem.h"
-#include <logic/ColumnSpec.h>
+#include "ColumnSpec.h"
 #include <utils/DebugHelpers.h>
 #include <logic/serialization/XmlSerializer.h>
 //#include "ScanResultsTreeModel.h"

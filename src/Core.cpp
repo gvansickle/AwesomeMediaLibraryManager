@@ -24,10 +24,10 @@
 
 // Std C++
 #include <memory>
-#include "AMLMApp.h"
 
 // Ours
-#include <ColumnSpec.h>
+#include "AMLMApp.h"
+#include <logic/models/ColumnSpec.h>
 
 
 namespace AMLM

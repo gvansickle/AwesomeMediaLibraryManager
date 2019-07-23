@@ -17,7 +17,7 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <logic/ColumnSpec.h>
+#include <models/ColumnSpec.h>
 
 
 

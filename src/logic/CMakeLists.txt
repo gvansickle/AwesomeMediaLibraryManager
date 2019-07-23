@@ -49,7 +49,6 @@ set(logic_subdir_SOURCES
 	CueSheetParser.cpp
 	CueSheet.cpp
 	ModelUserRoles.cpp
-	ColumnSpec.cpp
 	LibraryRescannerMapItem.cpp
 	DirScanResult.cpp
 	ExtMimeType.cpp
@@ -87,7 +86,6 @@ set(logic_subdir_HEADERS
 	CueSheet.h
 	TagLibHelpers.h
 	ModelUserRoles.h
-	ColumnSpec.h
 	LibraryRescannerMapItem.h
 	DirScanResult.h
 	ExtMimeType.h
