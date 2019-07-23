@@ -213,9 +213,23 @@ public:
 	/**
 	 * Call from derived classes from within toVariant()/fromVariant() if necessary.
 	 */
-	virtual QVariant childrenToVariant() const { Q_ASSERT(0); return QVariant(); };
+//	virtual QVariant childrenToVariant() const { Q_ASSERT(0); return QVariant(); };
 
-	virtual void childrenFromVariant(const QVariantHomogenousList& variant) { Q_ASSERT(0); };
+//	virtual void childrenFromVariant(const QVariantHomogenousList& variant) { Q_ASSERT(0); };
+
+	/// KDEN
+	/**
+	 *
+	 * @tparam T
+	 * @tparam BinOp
+	 * @param init
+	 * @param op      Operation applied to each subtree item.  Signature: T BinOp(T, std::shared_ptr<AbstractTreeModelItem>)
+	 * @return
+	 */
+	template <class T, class BinOp>
+	T accumulate(T init, BinOp op);
+	template <class T, class BinOp>
+	T accumulate_const(T init, BinOp op) const;
 
 	template <class ChildType>
 	std::vector<std::shared_ptr<ChildType>> childrenFromVariant(const QVariantHomogenousList& variant)
@@ -337,6 +351,29 @@ Q_DECLARE_METATYPE(std::shared_ptr<AbstractTreeModelItem>);
 
 // Debug stream op free func declaration.
 QTH_DECLARE_QDEBUG_OP(AbstractTreeModelItem);
+
+
+template <class T, class BinOp>
+T AbstractTreeModelItem::accumulate(T init, BinOp op)
+{
+	T res = op(init, shared_from_this());
+	for (const auto &c : m_child_items)
+	{
+		res = c->accumulate(res, op);
+	}
+	return res;
+}
+template <class T, class BinOp>
+T AbstractTreeModelItem::accumulate_const(T init, BinOp op) const
+{
+	T res = op(init, shared_from_this());
+	for (const auto &c : m_child_items)
+	{
+		res = c->accumulate_const(res, op);
+	}
+	return res;
+}
+
 
 //////////////////
 /// DO NOT USE, THIS DOES NOT WORK YET.

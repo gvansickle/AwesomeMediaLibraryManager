@@ -8,7 +8,7 @@
 <!--	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"-->
 <!--	xsi:noNamespaceSchemaLocation="schema.xsd">-->
 <amlm_playlist xmlns="http://xspf.org/ns/0/" version="1" xmlns:amlm="http://amlm/ns/0/">
-	<track_ref xml:idref="xmlid_02991e09-4058-43ab-8dfd-6c9911438923">
+	<track_ref xml:idref="xmlid_61dee461-963c-420a-ab77-3e3758493bbd">
 		<cont>Dummy Text</cont>
 <!-- Ringo Starr / With a little help from my friends -->
 <!--		<trackref>-->

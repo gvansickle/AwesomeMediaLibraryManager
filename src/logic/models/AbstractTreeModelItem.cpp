@@ -392,10 +392,11 @@ QVariant AbstractTreeModelItem::toVariant() const
 	map_insert_or_die(map, "item_data", list);
 
 	// Serialize out Child nodes.
-	auto child_list = childrenToVariant();
+	/// @todo ???
+//	auto child_list = childrenToVariant();
 
 	// Insert the list into the map.
-	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, child_list);
+//	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, child_list);
 
 	return map;
 }
@@ -438,7 +439,8 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 	AMLM_ASSERT_EQ(num_children, child_list.size());
 
 	// Read in our children.
-	childrenFromVariant(child_list);
+	/// @todo ???
+//	childrenFromVariant(child_list);
 
 	////////////////////////////////////
 	// Now read in our children.  We need this Item to be in a model for that to work.
