@@ -46,6 +46,7 @@
 // Ours
 #include "AbstractTreeModelItem.h"
 #include "AbstractTreeModelHeaderItem.h"
+#include <logic/ColumnSpec.h>
 #include <utils/DebugHelpers.h>
 #include <logic/serialization/XmlSerializer.h>
 //#include "ScanResultsTreeModel.h"
@@ -75,7 +76,7 @@ AbstractTreeModel::~AbstractTreeModel()
 	m_root_item.reset();
 }
 
-bool AbstractTreeModel::setColumnSpecs(std::initializer_list<QString> column_specs)
+bool AbstractTreeModel::setColumnSpecs(std::initializer_list<ColumnSpec> column_specs)
 {
 	return m_root_item->setColumnSpecs(column_specs);
 }

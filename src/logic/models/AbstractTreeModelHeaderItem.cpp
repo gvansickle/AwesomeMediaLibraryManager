@@ -63,12 +63,16 @@ AbstractTreeModelHeaderItem::~AbstractTreeModelHeaderItem()
 {
 }
 
-bool AbstractTreeModelHeaderItem::setColumnSpecs(std::initializer_list<QString> column_specs)
+bool AbstractTreeModelHeaderItem::setColumnSpecs(std::initializer_list<ColumnSpec> column_specs)
 {
 	M_WARNING("TODO This should take a list of ColumnSpecs, NEEDS TO INSERT COLUMNS");
 	Q_ASSERT_X(childCount() == 0, __PRETTY_FUNCTION__, "Model has children already");
 #warning "INSERT COLUMNS"
-	std::copy(column_specs.begin(), column_specs.end(), std::back_inserter(m_item_data));
+	std::copy(column_specs.begin(), column_specs.end(), std::back_inserter(m_column_specs));
+	for(auto& it : m_column_specs)
+	{
+		m_item_data.push_back(it.m_display_name);
+	}
 	return true;
 }
 

@@ -25,11 +25,11 @@
 
 // Std C++
 #include <vector>
+#include <deque>
 
 // Qt5
 #include <QVector>
 #include <QVariant>
-#include <logic/ColumnSpec.h>
 
 // Ours
 #include <future/enable_shared_from_this_virtual.h>
@@ -37,6 +37,8 @@
 #include "AbstractHeaderSection.h"
 #include "ScanResultsTreeModelItem.h"
 class AbstractTreeModel;
+#include <logic/ColumnSpec.h>
+
 
 /**
  * Type representing a tree model's invisible root item which also doubles as the model's header item.
@@ -62,7 +64,7 @@ public:
 	  * @param column_specs
 	  * @return
 	  */
-	virtual bool setColumnSpecs(std::initializer_list<QString> column_specs);
+	virtual bool setColumnSpecs(std::initializer_list<ColumnSpec> column_specs);
 
 	QVariant data(int column, int role = Qt::DisplayRole) const override;
 
@@ -85,6 +87,10 @@ public:
 protected:
 
 	std::shared_ptr<AbstractHeaderSection> getHeaderSection(int column);
+
+private:
+
+	std::deque<ColumnSpec> m_column_specs;
 
 };
 

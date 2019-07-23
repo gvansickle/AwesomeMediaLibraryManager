@@ -34,13 +34,14 @@
 
 // Ours
 #include <future/guideline_helpers.h>
+#include <future/enable_shared_from_this_virtual.h>
 #include "ExtMimeType.h"
 #include "Metadata.h"
 #include <utils/Fraction.h>
 #include "serialization/ISerializable.h"
 
 
-class LibraryEntry : public std::enable_shared_from_this<LibraryEntry>, public ISerializable
+class LibraryEntry : /*public std::enable_shared_from_this<LibraryEntry>,*/ public virtual ISerializable, public virtual enable_shared_from_this_virtual<LibraryEntry>
 {
 public:
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(LibraryEntry);

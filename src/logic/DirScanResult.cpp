@@ -56,6 +56,7 @@ DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_f
 #define M_DATASTREAM_FIELDS(X) \
 	X(XMLTAG_FLAGS_DIRPROPS, m_flags_dirprops) \
 	X(XMLTAG_HAS_SIDECAR_CUESHEET, m_has_sidecar_cuesheet) \
+	X(XMLTAG_HAS_EMBEDDED_CUESHEET, m_has_embedded_cuesheet) \
 	X(XMLTAG_EXTURL_DIR, m_exturl_dir_url) \
 	X(XMLTAG_EXTURL_MEDIA, m_exturl_media) \
 	X(XMLTAG_EXTURL_CUESHEET, m_exturl_cuesheet)

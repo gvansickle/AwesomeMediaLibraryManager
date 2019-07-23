@@ -47,6 +47,7 @@ class QAbstractItemModelTester;
 class AbstractTreeModelItem;
 class AbstractHeaderSection;
 class AbstractTreeModelHeaderItem;
+class ColumnSpec;
 #include <logic/serialization/ISerializable.h>
 #include <logic/UUIncD.h>
 #include <future/enable_shared_from_this_virtual.h>
@@ -87,7 +88,7 @@ public:
 	/**
 	 * Set the ColumnSpecs in the model's root item, which holds the info for the horizontal header.
 	 */
-	virtual bool setColumnSpecs(std::initializer_list<QString> column_specs);
+	virtual bool setColumnSpecs(std::initializer_list<ColumnSpec> column_specs);
 
 	// bool hasIndex() is not virtual.
 

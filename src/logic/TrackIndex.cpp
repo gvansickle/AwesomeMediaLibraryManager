@@ -25,6 +25,9 @@
 #include <memory>
 #include <string>
 
+// Qt5
+#include <QString>
+
 // Libcue
 extern "C" {
 #include <libcue/cdtext.h>
@@ -38,7 +41,6 @@ extern "C" {
 #include "AMLMTagMap.h"
 #include <utils/RegisterQtMetatypes.h>
 #include <future/InsertionOrderedMap.h>
-//#include "TrackMetadata.h"
 
 
 using strviw_type = QLatin1Literal;

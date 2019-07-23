@@ -30,7 +30,7 @@ namespace AMLM
 {
 
 /**
- *
+ * Entity which refers to an individual Track.
  */
 class Track
 {

@@ -414,12 +414,12 @@ QVariant LibraryModel::headerData(int section, Qt::Orientation orientation, int 
 			{
 				return QVariant();
 			}
-			auto dn = m_columnSpecs[section].display_name;
+			auto dn = m_columnSpecs[section].m_display_name;
 			return QVariant(dn);
 		}
 		case ModelUserRoles::HeaderViewSectionID:
 		{
-			return QVariant::fromValue(m_columnSpecs[section].section_id);
+			return QVariant::fromValue(m_columnSpecs[section].m_section_id);
 		}
 		case ModelUserRoles::HeaderViewSectionShouldFitWidthToContents:
 		{
@@ -615,7 +615,7 @@ int LibraryModel::getColFromSection(SectionID section_id) const
 {
 	for(size_t i = 0; i<m_columnSpecs.size(); ++i)
 	{
-		if(m_columnSpecs[i].section_id == section_id)
+		if(m_columnSpecs[i].m_section_id == section_id)
 		{
 			return i;
 		}
@@ -626,7 +626,7 @@ int LibraryModel::getColFromSection(SectionID section_id) const
 
 SectionID LibraryModel::getSectionFromCol(int col) const
 {
-	return m_columnSpecs[col].section_id;
+	return m_columnSpecs[col].m_section_id;
 }
 
 QUrl LibraryModel::getLibRootDir() const
