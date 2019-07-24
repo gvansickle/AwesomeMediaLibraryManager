@@ -1440,22 +1440,32 @@ void MainWindow::readLibSettings(QSettings& settings)
 	prog->setValue(2);
 	prog->show();
 
-	// Load the primary database.
-	AMLM::Core::self()->getScanResultsTreeModel()->LoadDatabase(QDir::homePath() + "/AMLMDatabase.xml");
+	// The primary database file.
+	QString database_filename = QDir::homePath() + "/AMLMDatabase.xml";
 
+	// Load it async.
+	auto fut_load_db = ExtAsync::qthread_async_with_cnr_future([=](ExtFuture<Unit> fut_cnr, QString overlay_filename){
+			// Load the primary database.
+			AMLM::Core::self()->getScanResultsTreeModel()->LoadDatabase(database_filename);
+			// Complete.
+			fut_cnr.reportFinished();
+	}, database_filename);
 
-	QString database_filename = QDir::homePath() + "/AMLMDatabaseSerDes.xml";
+	PerfectDeleter::instance().addExtFuture(fut_load_db);
+
+	/// @todo The playlist overlay.
+	QString overlay_filename = QDir::homePath() + "/AMLMDatabaseSerDes.xml";
 
 	auto extfuture_initial_lib_load = ExtAsync::qthread_async_with_cnr_future([=](ExtFuture<SerializableQVariantList> ef) {
 
-		qIn() << "###### READING XML DB:" << database_filename;
+		qIn() << "###### READING XML DB:" << overlay_filename;
 		SerializableQVariantList list("library_list", "library_list_item");
 		{
-			Stopwatch library_list_read(tostdstr(QString("############## READ OF ") + database_filename));
+			Stopwatch library_list_read(tostdstr(QString("############## READ OF ") + overlay_filename));
 			XmlSerializer xmlser;
 			xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
 			/// @todo This takes ~10 secs at the moment with a 300MB XML file.
-			xmlser.load(list, QUrl::fromLocalFile(database_filename));
+			xmlser.load(list, QUrl::fromLocalFile(overlay_filename));
 		}
 		ef.reportResult(list);
 		ef.reportFinished();
@@ -1464,7 +1474,7 @@ void MainWindow::readLibSettings(QSettings& settings)
 
 		SerializableQVariantList list = ef.get_first();
 
-		qIn() << "###### READ" << list.size() << " libraries from XML DB:" << database_filename;
+		qIn() << "###### READ" << list.size() << " libraries from XML DB:" << overlay_filename;
 
 		for(const auto& list_entry : list)
 		{
@@ -1495,13 +1505,15 @@ void MainWindow::readLibSettings(QSettings& settings)
 				addChildMDIModelViewPair_Library(mvpair);
 			}
 		}
-		qIn() << "###### READ AND CONVERTED XML DB:" << database_filename;
+		qIn() << "###### READ AND CONVERTED XML DB:" << overlay_filename;
 
 		prog->hide();
 		prog->deleteLater();
 	});
 
-	/// @todo Set extfuture_initial_lib_load to some manager.
+	// Set extfuture_initial_lib_load to the PerfectDeleter.
+	PerfectDeleter::instance().addExtFuture(extfuture_initial_lib_load);
+
 }
 
 void MainWindow::writeSettings()

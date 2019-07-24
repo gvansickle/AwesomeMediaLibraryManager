@@ -76,7 +76,7 @@ namespace detail
 	 * Common QThread-based async() executor.
 	 *
 	 * Runs @a callback(args...) in a new QThread.  If return type is not void, it will be reported to
-	 * the returned future as a result.
+	 * the returned future as the result.
 	 *
 	 * @param retfuture  The future which will be both copied to the first-level callback as the first parameter,
 	 *                   and immediately returned to the caller.
@@ -240,7 +240,7 @@ namespace detail
 		ExtFuture<R> retfuture = make_started_only_future<R>();
 		retfuture.setName("qthread_asyncRetFuture");
 
-		return detail::qthread_async(retfuture, FWD_DECAY_COPY(CallbackType, callback), args...);
+		return detail::qthread_async(retfuture, FWD_DECAY_COPY(CallbackType, callback), std::forward<Args>(args)...);
 	}
 
 

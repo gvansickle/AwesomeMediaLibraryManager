@@ -43,7 +43,8 @@ class AMLMJob;
 
 // Ours
 #include <utils/DebugHelpers.h>
-
+//#include <concurrency/ExtFuture.h>
+template <class T> class ExtFuture;
 
 class PerfectDeleter;
 
@@ -190,6 +191,9 @@ public:
 	 * to track finished-ness, but we should have a way to do a global cancel() of all outstanding futures.
 	 */
 	void addQFuture(QFuture<void> f);
+
+	template <class T>
+	void addExtFuture(ExtFuture<T>& f) { addQFuture(qToVoidFuture(f)); };
 
 	void addKJob(KJob* kjob);
 
