@@ -242,6 +242,8 @@ public:
 	/// @{
 
 	/// Load and save the database to a file.
+	/// @note The idea is that these shouldn't need to be overridden in derived classes, but just in case we make
+	/// them virtual.
 	virtual void LoadDatabase(const QString& database_filename);
 	virtual void SaveDatabase(const QString& database_filename);
 
@@ -281,8 +283,10 @@ protected:
 	virtual void register_item(const std::shared_ptr<AbstractTreeModelItem>& item);
 	virtual void deregister_item(UUIncD id, AbstractTreeModelItem* item);
 
-	/// @name High-cost operations
+	/// @name Derived-class serialization info.
 	/// @{
+
+	virtual std::tuple<QXmlStreamNamespaceDeclaration, std::string> get_default_namespace();
 
 	/// @}
 

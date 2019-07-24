@@ -270,7 +270,9 @@ void AbstractTreeModel::LoadDatabase(const QString& database_filename)
 	qIn() << "###### READING AbstractTreeModel from:" << database_filename;
 
 	XmlSerializer xmlser;
-	xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
+	auto [def_ns, def_ns_version] = get_default_namespace();
+//	xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
+	xmlser.set_default_namespace(def_ns.namespaceUri(), def_ns_version);
 	xmlser.HACK_skip_extra(false);
 	xmlser.load(*this, QUrl::fromLocalFile(database_filename));
 
@@ -336,6 +338,11 @@ void AbstractTreeModel::deregister_item(UUIncD id, AbstractTreeModelItem* item)
 	Q_UNUSED(item);
 	AMLM_ASSERT_GT(m_model_item_map.count(id), 0);
 	m_model_item_map.erase(id);
+}
+
+void AbstractTreeModel::set_default_namespace()
+{
+
 }
 
 void AbstractTreeModel::notifyColumnsAboutToInserted(const std::shared_ptr<AbstractTreeModelItem>& parent, int first_column, int last_column)
@@ -754,6 +761,8 @@ bool AbstractTreeModel::setHeaderData(int section, const AbstractHeaderSection& 
 //	for()
 	return true;
 }
+
+
 
 
 
