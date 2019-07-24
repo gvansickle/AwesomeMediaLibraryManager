@@ -241,6 +241,10 @@ public:
 	/// Remember to override these in derived classes.
 	/// @{
 
+	/// Load and save the database to a file.
+	virtual void LoadDatabase(const QString& database_filename);
+	virtual void SaveDatabase(const QString& database_filename);
+
 	/// Serialize the entire model to a QVariant.
 	QVariant toVariant() const override { Q_ASSERT(0); return QVariant(); }; // = 0;
 

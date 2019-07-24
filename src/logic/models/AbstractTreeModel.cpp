@@ -265,6 +265,31 @@ Fun AbstractTreeModel::moveItem_lambda(UUIncD id, int destRow, bool force)
 	return []() { return false; };
 }
 
+void AbstractTreeModel::LoadDatabase(const QString& database_filename)
+{
+	qIn() << "###### READING AbstractTreeModel from:" << database_filename;
+
+	XmlSerializer xmlser;
+	xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
+	xmlser.HACK_skip_extra(false);
+	xmlser.load(*this, QUrl::fromLocalFile(database_filename));
+
+	qIn() << "###### TREEMODELPTR HAS NUM ROWS:" << rowCount();
+	qIn() << "###### FINISHED READING AbstractTreeModel from:" << database_filename;
+}
+
+void AbstractTreeModel::SaveDatabase(const QString& database_filename)
+{
+	qIn() << "###### WRITING AbstractTreeModel to:" << database_filename;
+	qIn() << "###### TREEMODELPTR HAS NUM ROWS:" << rowCount();
+
+	XmlSerializer xmlser;
+	xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
+	xmlser.save(*this, QUrl::fromLocalFile(database_filename), "playlist");
+
+	qIn() << "###### FINISHED WRITING AbstractTreeModel to:" << database_filename;
+}
+
 void AbstractTreeModel::toOrm(std::string filename) const
 {
 //	using namespace sqlite_orm;

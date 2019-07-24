@@ -83,6 +83,7 @@ void ScanResultsTreeModel::setBaseDirectory(const QUrl &base_directory)
 	m_base_directory = base_directory;
 }
 
+#if 0
 void ScanResultsTreeModel::LoadDatabase(const QString& database_filename)
 {
 	qIn() << "###### READING" << database_filename;
@@ -107,6 +108,7 @@ void ScanResultsTreeModel::SaveDatabase(const QString& database_filename)
 
 	qIn() << "###### WROTE" << database_filename;
 }
+#endif
 
 UUIncD ScanResultsTreeModel::requestAddScanResultsTreeModelItem(const QVariant& variant, UUIncD parent_id, Fun undo, Fun redo)
 {

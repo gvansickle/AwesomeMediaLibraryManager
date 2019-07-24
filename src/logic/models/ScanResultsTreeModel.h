@@ -85,8 +85,8 @@ public:
 	/// @{
 
 	/// Load and save the database to a file.
-	void LoadDatabase(const QString& database_filename);
-	void SaveDatabase(const QString& database_filename);
+//	void LoadDatabase(const QString& database_filename);
+//	void SaveDatabase(const QString& database_filename);
 
 
 	QVariant toVariant() const override;
