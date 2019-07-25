@@ -286,7 +286,7 @@ protected:
 	/// @name Derived-class serialization info.
 	/// @{
 
-	virtual void DERIVED_set_default_namespace(std::string nsdecl, std::string version) {};
+	virtual void DERIVED_set_default_namespace() {};
 
 	/// @}
 

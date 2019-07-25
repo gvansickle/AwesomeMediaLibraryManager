@@ -102,7 +102,7 @@ protected:
 	/// @name Derived-class serialization info.
 	/// @{
 
-	void DERIVED_set_default_namespace(std::string nsdecl, std::string version) override;
+	void DERIVED_set_default_namespace() override;
 
 	/// @}
 

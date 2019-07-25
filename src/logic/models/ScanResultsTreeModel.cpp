@@ -192,7 +192,7 @@ void ScanResultsTreeModel::fromOrm(std::string filename)
 
 }
 
-void ScanResultsTreeModel::DERIVED_set_default_namespace(std::string nsdecl, std::string version)
+void ScanResultsTreeModel::DERIVED_set_default_namespace()
 {
 	/// @todo Not right.
 	m_default_namespace_decl = "http://xspf.org/ns/0/";

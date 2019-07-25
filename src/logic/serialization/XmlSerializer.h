@@ -39,7 +39,7 @@ class QVariantHomogenousList;
 
 // Ours
 #include "ISerializer.h"
-class AttributedQVariant;
+
 
 /**
  * Concrete ISerializer class for serializing ISerializables as XML.

@@ -270,8 +270,8 @@ void AbstractTreeModel::LoadDatabase(const QString& database_filename)
 	qIn() << "###### READING AbstractTreeModel from:" << database_filename;
 
 	XmlSerializer xmlser;
-	/// @todo Remove
-//	xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
+	/// @todo Better name
+	DERIVED_set_default_namespace();
 	if(!m_default_namespace_decl.empty())
 	{
 		xmlser.set_default_namespace(m_default_namespace_decl, m_default_namespace_version);
@@ -290,7 +290,7 @@ void AbstractTreeModel::SaveDatabase(const QString& database_filename)
 
 	XmlSerializer xmlser;
 
-	//	xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
+	DERIVED_set_default_namespace();
 	if(!m_default_namespace_decl.empty())
 	{
 		xmlser.set_default_namespace(m_default_namespace_decl, m_default_namespace_version);
