@@ -286,8 +286,7 @@ protected:
 	/// @name Derived-class serialization info.
 	/// @{
 
-	virtual void set_default_namespace(QXmlStreamNamespaceDeclaration nsdecl, std::string version);
-	virtual std::tuple<QXmlStreamNamespaceDeclaration, std::string /*version*/> get_default_namespace() const;
+	virtual void DERIVED_set_default_namespace(std::string nsdecl, std::string version) {};
 
 	/// @}
 
@@ -338,8 +337,8 @@ protected:
 	virtual QString getXmlStreamName() const { return ""; };
 	virtual QString getXmlStreamVersion() const { return ""; };
 
-	QXmlStreamNamespaceDeclaration m_default_namespace_decl {};
-	std::string m_default_namespace_version {};
+	std::string m_default_namespace_decl {"XXXBROKENXXX"};
+	std::string m_default_namespace_version {"XXXBROKENXXX"};
 
     /// @}
 

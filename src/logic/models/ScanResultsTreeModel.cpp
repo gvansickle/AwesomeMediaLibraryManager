@@ -192,6 +192,13 @@ void ScanResultsTreeModel::fromOrm(std::string filename)
 
 }
 
+void ScanResultsTreeModel::DERIVED_set_default_namespace(std::string nsdecl, std::string version)
+{
+	/// @todo Not right.
+	m_default_namespace_decl = "http://xspf.org/ns/0/";
+	m_default_namespace_version = "1";
+}
+
 /// Qt5 ids for the TreeItems it can hold.
 static const int f_atmi_id = qMetaTypeId<AbstractTreeModelItem>();
 static const int f_strmi_id = qMetaTypeId<ScanResultsTreeModelItem>();

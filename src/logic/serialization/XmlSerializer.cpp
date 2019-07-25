@@ -636,7 +636,7 @@ void XmlSerializer::log_current_node(QXmlStreamReader& xmlstream)
 	qIn() << "#### Current node:" << xmlstream.lineNumber() << ":" << xmlstream.columnNumber() << ":" << xmlstream.qualifiedName();
 }
 
-void XmlSerializer::set_default_namespace(const QString& default_ns, const QString& default_ns_version)
+void XmlSerializer::set_default_namespace(const std::string& default_ns, const std::string& default_ns_version)
 {
 	m_default_ns = default_ns;
 	m_default_ns_version = default_ns_version;
@@ -673,8 +673,10 @@ void XmlSerializer::save_extra_start_info(QXmlStreamWriter& xmlstream)
 
 	// Write Start Element, default namespace and version.
 	xmlstream.writeStartElement("amlm_database");
-	xmlstream.writeDefaultNamespace(m_default_ns);
-	xmlstream.writeAttribute("version", m_default_ns_version);
+	qDb() << M_ID_VAL(m_default_ns);
+	qDb() << M_ID_VAL(m_default_ns_version);
+	xmlstream.writeDefaultNamespace(toqstr(m_default_ns));
+	xmlstream.writeAttribute("version", toqstr(m_default_ns_version));
 	xmlstream.writeNamespace("http://amlm/ns/0/", "amlm");
 
 #if 0 /// @note This was moved out of the old writer.  It's XSPF stuff, but we need a generally applicable solution.

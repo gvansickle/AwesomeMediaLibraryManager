@@ -72,7 +72,7 @@ public:
 	 * @param default_ns
 	 * @param default_ns_version
 	 */
-	void set_default_namespace(const QString& default_ns, const QString& default_ns_version);
+	void set_default_namespace(const std::string& default_ns, const std::string& default_ns_version);
 
 protected:
 
@@ -139,8 +139,10 @@ private:
 	QString error_string(QXmlStreamWriter& xmlstream) const;
 
 	QString m_root_name;
-	QString m_default_ns;
-	QString m_default_ns_version;
+
+	std::string m_default_ns;
+	std::string m_default_ns_version;
+
 	bool m_HACK_SKIP {true};
 };
 

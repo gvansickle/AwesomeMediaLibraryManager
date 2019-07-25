@@ -84,11 +84,6 @@ public:
 	/// @name Serialization
 	/// @{
 
-	/// Load and save the database to a file.
-//	void LoadDatabase(const QString& database_filename);
-//	void SaveDatabase(const QString& database_filename);
-
-
 	QVariant toVariant() const override;
 	void fromVariant(const QVariant& variant) override;
 
@@ -102,6 +97,14 @@ public:
 
 	void toOrm(std::string filename) const override;
 	void fromOrm(std::string filename) override;
+
+protected:
+	/// @name Derived-class serialization info.
+	/// @{
+
+	void DERIVED_set_default_namespace(std::string nsdecl, std::string version) override;
+
+	/// @}
 
 
 	QTH_FRIEND_QDATASTREAM_OPS(ScanResultsTreeModel);
