@@ -270,9 +270,10 @@ void AbstractTreeModel::LoadDatabase(const QString& database_filename)
 	qIn() << "###### READING AbstractTreeModel from:" << database_filename;
 
 	XmlSerializer xmlser;
-	auto [def_ns, def_ns_version] = get_default_namespace();
+	/// @todo Remove
 //	xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
-	xmlser.set_default_namespace(def_ns.namespaceUri(), def_ns_version);
+	auto [def_ns, def_ns_version] = get_default_namespace();
+	xmlser.set_default_namespace(def_ns.namespaceUri().toString(), toqstr(def_ns_version));
 	xmlser.HACK_skip_extra(false);
 	xmlser.load(*this, QUrl::fromLocalFile(database_filename));
 
@@ -286,7 +287,9 @@ void AbstractTreeModel::SaveDatabase(const QString& database_filename)
 	qIn() << "###### TREEMODELPTR HAS NUM ROWS:" << rowCount();
 
 	XmlSerializer xmlser;
-	xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
+	auto [def_ns, def_ns_version] = get_default_namespace();
+//	xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
+	xmlser.set_default_namespace(def_ns.namespaceUri().toString(), toqstr(def_ns_version));
 	xmlser.save(*this, QUrl::fromLocalFile(database_filename), "playlist");
 
 	qIn() << "###### FINISHED WRITING AbstractTreeModel to:" << database_filename;
@@ -340,9 +343,15 @@ void AbstractTreeModel::deregister_item(UUIncD id, AbstractTreeModelItem* item)
 	m_model_item_map.erase(id);
 }
 
-void AbstractTreeModel::set_default_namespace()
+void AbstractTreeModel::set_default_namespace(QXmlStreamNamespaceDeclaration nsdecl, std::string version)
 {
+	m_default_namespace_decl = nsdecl;
+	m_default_namespace_version = version;
+}
 
+std::tuple<QXmlStreamNamespaceDeclaration, std::string> AbstractTreeModel::get_default_namespace() const
+{
+	return std::make_tuple(m_default_namespace_decl, m_default_namespace_version);
 }
 
 void AbstractTreeModel::notifyColumnsAboutToInserted(const std::shared_ptr<AbstractTreeModelItem>& parent, int first_column, int last_column)
