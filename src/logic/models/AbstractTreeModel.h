@@ -96,6 +96,7 @@ public:
 	/// OLD
 	/**
 	 * Set the ColumnSpecs in the model's root item, which holds the info for the horizontal header.
+	 * @todo setHeaderData() enough?
 	 */
 	virtual bool setColumnSpecs(std::initializer_list<ColumnSpec> column_specs);
 

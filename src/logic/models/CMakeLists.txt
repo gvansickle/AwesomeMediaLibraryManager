@@ -26,6 +26,7 @@ set(SOURCE_FILES_SRC_LOGIC_MODELS
 	AbstractTreeModelItem.cpp
 	AbstractTreeModelHeaderItem.cpp
 	ColumnSpec.cpp
+	ModelIterators.cpp
     PlaceholderTreeModelItem.cpp
 	ScanResultsTreeModel.cpp
 	ScanResultsTreeModelItem.cpp
@@ -39,6 +40,7 @@ set(HEADER_FILES_SRC_LOGIC_MODELS
 		AbstractTreeModelItem.h
 		AbstractTreeModelHeaderItem.h
 		ColumnSpec.h
+		ModelIterators.h
         PlaceholderTreeModelItem.h
 		ScanResultsTreeModel.h
 		ScanResultsTreeModelItem.h

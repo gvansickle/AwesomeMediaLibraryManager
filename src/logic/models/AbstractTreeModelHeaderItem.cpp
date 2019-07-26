@@ -70,6 +70,7 @@ bool AbstractTreeModelHeaderItem::setColumnSpecs(std::initializer_list<ColumnSpe
 	M_WARNING("TODO This should take a list of ColumnSpecs, NEEDS TO INSERT COLUMNS");
 	Q_ASSERT_X(childCount() == 0, __PRETTY_FUNCTION__, "Model has children already");
 #warning "INSERT COLUMNS"
+	m_column_specs.clear();
 	std::copy(column_specs.begin(), column_specs.end(), std::back_inserter(m_column_specs));
 	for(auto& it : m_column_specs)
 	{
@@ -102,6 +103,7 @@ using strviw_type = QLatin1Literal;
 #define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
 	M_DATASTREAM_FIELDS(X);
 #undef X
+static const strviw_type XMLTAG_HEADER_SECTION_LIST ("header_section_list");
 
 
 QVariant AbstractTreeModelHeaderItem::toVariant() const
@@ -111,7 +113,7 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 	// Overwrite any class info added by the above.
 	set_map_class_info(this, &map);
 
-	QVariantHomogenousList header_section_list("header_section_list", "section");
+	QVariantHomogenousList header_section_list(XMLTAG_HEADER_SECTION_LIST, "section");
 
 	// Header info.
 	/// @todo Or is some of this really model info?  Children are.
@@ -126,7 +128,7 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 		}
 		header_section_list.push_back(section);
 	}
-	map_insert_or_die(map, "header_section_list", header_section_list);
+	map_insert_or_die(map, XMLTAG_HEADER_SECTION_LIST, header_section_list);
 
 	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
 	for(auto& it : m_child_items)
@@ -146,8 +148,8 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	// Read the number of header sections...
 	int header_num_sections = 0;
 	map_read_field_or_warn(map, XMLTAG_HEADER_NUM_SECTIONS, &header_num_sections);
-	QVariantHomogenousList header_section_list("header_section_list", "section");
-	header_section_list = map.value("header_section_list").value<QVariantHomogenousList>();
+	QVariantHomogenousList header_section_list(XMLTAG_HEADER_SECTION_LIST, "section");
+	header_section_list = map.value(XMLTAG_HEADER_SECTION_LIST).value<QVariantHomogenousList>();
 
 	AMLM_ASSERT_EQ(header_num_sections, header_section_list.size());
 

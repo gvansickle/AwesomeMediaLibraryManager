@@ -66,7 +66,7 @@ public:
 	// Ok, now we're gonna burn all kinds of blood, toil, tears, and sweat trying to make both a BFS
 	// and DFS iterator for AbstractTreeModelItem trees.
 //	template<class ItemType = AbstractTreeModelItem>
-	class bfs_iterator;
+//	class bfs_iterator;
 
 protected:
 
@@ -117,8 +117,9 @@ public:
 	bool setData(int column, const QVariant &value);
 
 	/**
-	 * Insert default-constructed columns into this item/row.
+	 * Insert new default-constructed columns into this item/row.
 	 */
+M_WARNING("NEED TO BE OVERRIDDEN IN HeaderItem");
 	 // ETM, no KDEN
 	virtual bool insertColumns(int insert_before_column, int num_columns);
 	// ETM, no KDEN
@@ -191,10 +192,6 @@ public:
 	 */
 	// KDEN, ETM no singular.
 	void removeChild(const std::shared_ptr<AbstractTreeModelItem>& child);
-
-	/// DO NOT USE
-	bfs_iterator begin_bfs();
-	bfs_iterator end_bfs();
 
 	/**
 	 * Change the parent of the current item. Structures are modified accordingly
@@ -318,7 +315,7 @@ protected:
 
 	std::weak_ptr<AbstractTreeModel> m_model;
 
-	bool m_is_root;
+	bool m_is_root {false};
 
 	/// Deque of shared_ptr's to child items.
 	std::deque<std::shared_ptr<AbstractTreeModelItem>> m_child_items;
@@ -342,7 +339,7 @@ private:
 
 	int m_depth;
 
-	bool m_is_in_model;
+	bool m_is_in_model {false};
 };
 
 Q_DECLARE_METATYPE(AbstractTreeModelItem);
@@ -373,8 +370,5 @@ T AbstractTreeModelItem::accumulate_const(T init, BinOp op) const
 	}
 	return res;
 }
-
-
-
 
 #endif // ABSTRACTTREEMODELITEM_H

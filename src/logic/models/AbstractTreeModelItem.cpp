@@ -116,18 +116,6 @@ int AbstractTreeModelItem::childCount() const
 
 int AbstractTreeModelItem::columnCount() const
 {
-#if 0 /// @todo Move to model.
-	// Do this the slow, painful way.
-	/// @todo Add some caching.
-	int max_columns = 0;
-	for(auto it : m_child_items)
-	{
-		int child_column_max = it->columnCount();
-		max_columns = std::max(max_columns, child_column_max);
-	}
-
-	return max_columns;
-#endif
 	return m_item_data.size();
 }
 
@@ -166,20 +154,14 @@ int AbstractTreeModelItem::childNumber() const
 
 bool AbstractTreeModelItem::insertColumns(int insert_before_column, int num_columns)
 {
-	/// @todo Force this to only be called at the root level?
-	Q_ASSERT(m_is_root);
-
+	// Check if caller is trying to inser a column out of bounds.
 	if (insert_before_column < 0 || insert_before_column > m_item_data.size())
 	{
-		// Check if we're out of bounds.
-		/// @todo Probably assert here?
-		Q_ASSERT_X(0, __PRETTY_FUNCTION__, "Bad insert_before_column");
+		qWr() << "Ignoring insertColumns() with bad insert_before_column:" << insert_before_column;
         return false;
 	}
 
 	// Insert new, empty columns in this.
-	// Note that we're really doing a sort of "push_back_from_middle()" here by not taking the column var into account
-	// when we do the actual insert.
 	for (int column = 0; column < num_columns; ++column)
 	{
 		m_item_data.insert(m_item_data.begin() + insert_before_column, QVariant("???"));
@@ -202,10 +184,11 @@ bool AbstractTreeModelItem::removeColumns(int position, int columns)
 		return false;
 	}
 
-	/// @note Don't need a remove() here, items will be deleted.
+	// Remove the columns from the m_item_data.
+	// Erase works ~differently for vector<> and deque<>, we don't need a remove() here, items will be removed and deleted.
 	m_item_data.erase(m_item_data.begin()+position, m_item_data.begin()+position+columns);
 
-	// Remove columns from all children.
+	// Recursively remove columns from all children.
 	for(auto& child : m_child_items)
 	{
 		child->removeColumns(position, columns);
@@ -300,18 +283,6 @@ void AbstractTreeModelItem::removeChild(const std::shared_ptr<AbstractTreeModelI
 		qCr() << "ERROR: Something went wrong when removing child in TreeItem. Model is not available anymore";
 		Q_ASSERT(false);
 	}
-}
-
-AbstractTreeModelItem::bfs_iterator AbstractTreeModelItem::begin_bfs()
-{
-	Q_ASSERT(0);
-	return bfs_iterator(shared_from_this());
-}
-
-AbstractTreeModelItem::bfs_iterator AbstractTreeModelItem::end_bfs()
-{
-	Q_ASSERT(0);
-	return bfs_iterator();
 }
 
 bool AbstractTreeModelItem::changeParent(std::shared_ptr<AbstractTreeModelItem> newParent)
@@ -751,95 +722,3 @@ AbstractTreeModelItem::CICTIteratorType AbstractTreeModelItem::get_m_child_items
 	return retval;
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-///
-/// AbstractTreeModelItem::bfs_iterator
-///
-
-AbstractTreeModelItem::bfs_iterator::bfs_iterator() { }
-
-AbstractTreeModelItem::bfs_iterator::bfs_iterator(std::shared_ptr<AbstractTreeModelItem> root_node)
-	: m_root_node(root_node), m_current_node(root_node),
-	  m_child_list_it(root_node->m_child_items.begin())
-{
-	m_child_bfs_it = std::make_shared<bfs_iterator>(root_node->begin_bfs());
-}
-
-AbstractTreeModelItem::bfs_iterator AbstractTreeModelItem::bfs_iterator::operator++(int)
-{
-	auto retval = *this;
-	++(*this);
-	return retval;
-}
-
-bool AbstractTreeModelItem::bfs_iterator::operator==(const AbstractTreeModelItem::bfs_iterator& other) const
-{
-	return (m_current_node == other.m_current_node);
-}
-
-bool AbstractTreeModelItem::bfs_iterator::operator!=(const AbstractTreeModelItem::bfs_iterator& other) const
-{
-	return !(*this == other);
-}
-
-AbstractTreeModelItem::bfs_iterator::reference AbstractTreeModelItem::bfs_iterator::operator*() const
-{
-	return *m_current_node;
-}
-
-AbstractTreeModelItem::bfs_iterator& AbstractTreeModelItem::bfs_iterator::operator++()
-{
-	// Steps of a DFS at each node:
-	// Perform pre-order operation.
-	// For each i from 1 to the number of children do:
-	//     Visit i-th, if present.
-	//     Perform in-order operation.
-	// Perform post-order operation.
-
-	// Are we already at the end?
-	if(m_current_node == nullptr || m_is_at_end)
-	{
-		// end() iterator doesn't increment.
-		return *this;
-	}
-
-	/// Preorder return here?
-
-	// Lock our weak parent ptr.  We should have a parent unless we're the true root.
-//	auto parent = m_current_node->parent_item().lock();
-
-//	if(parent == nullptr || parent == m_root_node) /// Handle no-parent differently?
-//	{
-//		// We hit the node we started at on the way up, next state is end().
-
-//		/// Post-order return here?
-
-//		m_current_node = nullptr;
-//		m_is_at_end = true;
-//		return *this;
-//	}
-
-	// Else we should have a valid m_current_node and it's parent, which should be us?
-	// So we visit all children of this node in-order.
-//	m_current_node = *m_child_list_it;
-	if(m_child_list_it == m_current_node->m_child_items.end())
-	{
-		// Reached the end of the current node's child list.
-		// Now we go back to the parent of m_current_node.
-		auto parent = m_current_node->parent_item().lock();
-		if(parent != m_root_node)
-		{
-			m_current_node = m_current_node->parent_item().lock();
-		}
-	}
-	else
-	{
-		// Still iterating over the child items.
-		++m_child_list_it;
-		// Recurse on this node as a new root node.
-		(*m_child_bfs_it)++;
-	}
-
-	return *this;
-}

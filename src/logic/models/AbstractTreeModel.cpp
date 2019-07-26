@@ -93,9 +93,11 @@ bool AbstractTreeModel::setColumnSpecs(std::initializer_list<ColumnSpec> column_
 
 int AbstractTreeModel::columnCount(const QModelIndex& parent) const
 {
+	/// @note ETM does this differently, simply always returning m_root_item->columnCount().
+	
 	if(!parent.isValid())
 	{
-		// Invalid parent, return root column count.
+		// Invalid index, return root column count.
 		return m_root_item->columnCount();
 	}
 	// Else look up the item and return it's column count.
@@ -506,7 +508,7 @@ QModelIndex AbstractTreeModel::index(int row, int column, const QModelIndex &par
 {
 	std::shared_ptr<AbstractTreeModelItem> parent_item;
 
-	// Get the parent item.
+	// Get the parent item QMI parent is pointing to.
 	if(!parent.isValid())
 	{
 		parent_item = m_root_item;
@@ -541,8 +543,10 @@ bool AbstractTreeModel::insertColumns(int insert_before_column, int num_columns,
 	bool success;
 
 	beginInsertColumns(parent_model_index, insert_before_column, insert_before_column + num_columns - 1);
-M_WARNING("TODO: This should be the parent_model_index, not the root_item.");
+
+M_WARNING("TODO: This is what ETM has.  Should it be the parent_model_index, not the m_root_item?");
 	success = m_root_item->insertColumns(insert_before_column, num_columns);
+
 	endInsertColumns();
 
 	return success;
