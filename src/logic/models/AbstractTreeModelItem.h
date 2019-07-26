@@ -375,44 +375,6 @@ T AbstractTreeModelItem::accumulate_const(T init, BinOp op) const
 }
 
 
-//////////////////
-/// DO NOT USE, THIS DOES NOT WORK YET.
-//////////////////////////////////////
-class AbstractTreeModelItem::bfs_iterator : public std::iterator<
-														// Category: bfs will be a LegacyInputIterator (can only be incremented, may invalidate all copies of prev value).
-														/// @link https://en.cppreference.com/w/cpp/named_req/InputIterator
-														std::input_iterator_tag,
-														//ItemType,
-														AbstractTreeModelItem,
-														// Distance is meaningless
-														void,
-														// Pointer and Reference need to be smart.
-														std::shared_ptr<AbstractTreeModelItem>,
-														AbstractTreeModelItem&
-														>
-{
-public:
-	using iterator_concept = std::input_iterator_tag;
 
-	bfs_iterator();
-	explicit bfs_iterator(std::shared_ptr<AbstractTreeModelItem> root_node);
-
-	bfs_iterator& operator++();
-
-	bfs_iterator operator++(int);
-
-	bool operator==(const bfs_iterator& other) const;
-
-	bool operator!=(const bfs_iterator& other) const;
-
-	reference operator*() const;
-
-private:
-	std::shared_ptr<AbstractTreeModelItem> m_root_node;
-	std::shared_ptr<AbstractTreeModelItem> m_current_node;
-	std::shared_ptr<bfs_iterator> m_child_bfs_it;
-	CICTIteratorType m_child_list_it;
-	bool m_is_at_end {false};
-};
 
 #endif // ABSTRACTTREEMODELITEM_H
