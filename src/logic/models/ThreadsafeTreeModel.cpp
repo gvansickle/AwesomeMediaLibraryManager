@@ -41,15 +41,17 @@
 #include "AbstractTreeModel.h"
 
 
-ThreadsafeTreeModel::ThreadsafeTreeModel(QObject* parent) : AbstractTreeModel(parent)
+ThreadsafeTreeModel::ThreadsafeTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent)
+	: AbstractTreeModel(column_specs, parent)
 {
 
 }
 
-std::shared_ptr<ThreadsafeTreeModel> ThreadsafeTreeModel::construct(QObject* parent)
+std::shared_ptr<ThreadsafeTreeModel> ThreadsafeTreeModel::construct(std::initializer_list<ColumnSpec> column_specs,
+		QObject* parent)
 {
-	std::shared_ptr<ThreadsafeTreeModel> self(new ThreadsafeTreeModel(parent));
-	self->m_root_item = AbstractTreeModelHeaderItem::construct(self);
+	std::shared_ptr<ThreadsafeTreeModel> self(new ThreadsafeTreeModel(column_specs, parent));
+	self->m_root_item = AbstractTreeModelHeaderItem::construct(column_specs, self);
 	return self;
 }
 

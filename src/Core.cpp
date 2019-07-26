@@ -59,12 +59,12 @@ void Core::build()
 
 	// Create the single (at this point) ScanResultsTreeModel.
 	/// @note In KDenLive, this is the same, no parent QObject given to ProjectItemModel::construct();
-	m_self->m_srtm_instance = ScanResultsTreeModel::construct();
+M_TODO("Improve ColumnSpecs, not sure I like how we do this and then need to erase it on a LoadModel().");
+	m_self->m_srtm_instance = ScanResultsTreeModel::construct({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
 	// Create and set the root item / headers
-	M_TODO("Needs to be ColumnSpecs");
-	m_self->m_srtm_instance->setColumnSpecs({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
+//	m_self->m_srtm_instance->setColumnSpecs({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
 	// Let's add two more columns
-	m_self->m_srtm_instance->insertColumns(3, 2);
+//	m_self->m_srtm_instance->insertColumns(3, 2);
 
 	/// @todo experimental
 //	UUIncD new_id = m_self->m_srtm_instance->requestAddItem({"Artist1", "B", "C", "D"}, m_self->m_srtm_instance->getRootItem()->getId());

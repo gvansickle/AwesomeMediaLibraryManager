@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -42,19 +42,22 @@ class AbstractTreeModel;
 
 /**
  * Type representing a tree model's invisible root item which also doubles as the model's header item.
+ * KDEN doesn't use a special derived class for this, just the base class.
  */
 class AbstractTreeModelHeaderItem: public AbstractTreeModelItem, public enable_shared_from_this_virtual<AbstractTreeModelHeaderItem>
 {
 	using BASE_CLASS = AbstractTreeModelItem;
 
 protected:
-	explicit AbstractTreeModelHeaderItem(const std::shared_ptr<AbstractTreeModel>& parent_model, bool isRoot, UUIncD id = UUIncD::null());
+	explicit AbstractTreeModelHeaderItem(std::initializer_list<ColumnSpec> column_specs,
+			const std::shared_ptr<AbstractTreeModel>& parent_model, bool isRoot, UUIncD id = UUIncD::null());
 
 public:
 	/**
 	 * Named constructor.
 	 */
-	static std::shared_ptr<AbstractTreeModelHeaderItem> construct(const std::shared_ptr<AbstractTreeModel>& model, bool isRoot = true,
+	static std::shared_ptr<AbstractTreeModelHeaderItem> construct(std::initializer_list<ColumnSpec> column_specs,
+			const std::shared_ptr<AbstractTreeModel>& model, bool isRoot = true,
 	                                                              UUIncD id = UUIncD::null());
 	AbstractTreeModelHeaderItem() {};
 	~AbstractTreeModelHeaderItem() override;
@@ -90,6 +93,9 @@ protected:
 
 private:
 
+	/**
+	 * This header's (and hence the model's) ColumnSpecs.
+	 */
 	std::deque<ColumnSpec> m_column_specs;
 
 };

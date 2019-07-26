@@ -32,7 +32,7 @@
 
 
 ScanResultsTreeModel::ScanResultsTreeModel(QObject *parent)
-    : BASE_CLASS(parent)
+	: BASE_CLASS({}, parent)
 {
 }
 
@@ -69,10 +69,10 @@ void ScanResultsTreeModel::sendModification()
 }
 
 // static
-std::shared_ptr<ScanResultsTreeModel> ScanResultsTreeModel::construct(QObject* parent)
+std::shared_ptr<ScanResultsTreeModel> ScanResultsTreeModel::construct(std::initializer_list<ColumnSpec> column_specs, QObject* parent)
 {
 	std::shared_ptr<ScanResultsTreeModel> retval(new ScanResultsTreeModel(parent));
-	retval->m_root_item = AbstractTreeModelHeaderItem::construct(retval);
+	retval->m_root_item = AbstractTreeModelHeaderItem::construct(column_specs, retval);
 	return retval;
 }
 
@@ -165,6 +165,7 @@ UUIncD ScanResultsTreeModel::requestAddSRTMLibEntryItem(const QVariant& variant,
 //	return new_item->getId();
 //}
 
+#if 0
 void ScanResultsTreeModel::toOrm(std::string filename) const
 {
 #if 0
@@ -191,12 +192,20 @@ void ScanResultsTreeModel::fromOrm(std::string filename)
 {
 
 }
+#endif
 
 void ScanResultsTreeModel::DERIVED_set_default_namespace()
 {
 	/// @todo Not right.
 	m_default_namespace_decl = "http://xspf.org/ns/0/";
 	m_default_namespace_version = "1";
+}
+
+void ScanResultsTreeModel::DERIVED_clean()
+{
+	/// @todo Lock? Somewhere else?
+	qDb() << "CLEANING";
+
 }
 
 /// Qt5 ids for the TreeItems it can hold.

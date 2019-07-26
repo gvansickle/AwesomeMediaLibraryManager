@@ -515,7 +515,7 @@ M_WARNING("SHARED PTR");
 
 				////////// EXPERIMENTAL
 				/// Try to load it back in and round-trip it.
-				std::shared_ptr<ScanResultsTreeModel> load_tree = ScanResultsTreeModel::construct();
+				std::shared_ptr<ScanResultsTreeModel> load_tree = ScanResultsTreeModel::construct({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
 				load_tree->LoadDatabase(database_filename);
 //				dump_map(load_tree);
 				SaveDatabase(load_tree, QDir::homePath() +"/AMLMDatabaseRT.xml");

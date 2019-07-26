@@ -68,7 +68,8 @@ class AbstractTreeModel : public QAbstractItemModel,
 	using BASE_CLASS = QAbstractItemModel;
 
 public:
-	static std::shared_ptr<AbstractTreeModel> construct(QObject* parent = nullptr);
+	static std::shared_ptr<AbstractTreeModel> construct(std::initializer_list<ColumnSpec> column_specs,
+			QObject* parent = nullptr);
 
 protected:
 	/**
@@ -76,13 +77,21 @@ protected:
 	 * This model will NOT have a root, that's what construct() adds.
 	 * In general, derived constructors don't do much more than pass the @a parent param.
 	 */
-	explicit AbstractTreeModel(QObject *parent = nullptr);
+	explicit AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs,
+			QObject *parent = nullptr);
 
 public:
 	/**
 	 * Clears all items in the model, including the root item.
 	 */
 	~AbstractTreeModel() override;
+
+	/// GRVS/KDEN's is ProjItemModel::clean().
+	/**
+	 * Clears all data from the model.
+	 * May need to be overridded in derived classes.
+	 */
+	void clear();
 
 	/// OLD
 	/**
@@ -257,8 +266,10 @@ public:
 //	                               Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda)
 //	                               { Q_ASSERT(0); return UUIncD::null(); };
 
+#if 0
 	virtual void toOrm(std::string filename) const;
 	virtual void fromOrm(std::string filename);
+#endif
 
 	/// @} // END Serialization
 
@@ -287,6 +298,8 @@ protected:
 	/// @{
 
 	virtual void DERIVED_set_default_namespace() {};
+
+	virtual void DERIVED_clean() {};
 
 	/// @}
 

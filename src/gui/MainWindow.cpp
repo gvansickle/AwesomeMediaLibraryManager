@@ -1446,6 +1446,7 @@ void MainWindow::readLibSettings(QSettings& settings)
 	// Load it async.
 	auto fut_load_db = ExtAsync::qthread_async_with_cnr_future([=](ExtFuture<Unit> fut_cnr, QString overlay_filename){
 			// Load the primary database.
+//		AMLM::Core::self()->getScanResultsTreeModel()->clear();
 			AMLM::Core::self()->getScanResultsTreeModel()->LoadDatabase(database_filename);
 			// Complete.
 			fut_cnr.reportFinished();

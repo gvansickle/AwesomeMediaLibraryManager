@@ -673,8 +673,6 @@ void XmlSerializer::save_extra_start_info(QXmlStreamWriter& xmlstream)
 
 	// Write Start Element, default namespace and version.
 	xmlstream.writeStartElement("amlm_database");
-	qDb() << M_ID_VAL(m_default_ns);
-	qDb() << M_ID_VAL(m_default_ns_version);
 	xmlstream.writeDefaultNamespace(toqstr(m_default_ns));
 	xmlstream.writeAttribute("version", toqstr(m_default_ns_version));
 	xmlstream.writeNamespace("http://amlm/ns/0/", "amlm");

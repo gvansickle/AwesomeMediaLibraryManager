@@ -53,13 +53,13 @@ class ThreadsafeTreeModel : public AbstractTreeModel//, public virtual enable_sh
 	using BASE_CLASS = AbstractTreeModel;
 
 protected:
-	explicit ThreadsafeTreeModel(QObject* parent);
+	explicit ThreadsafeTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent);
 
 public:
 	/**
 	 * Named constructor.
 	 */
-	static std::shared_ptr<ThreadsafeTreeModel> construct(QObject* parent = nullptr);
+	static std::shared_ptr<ThreadsafeTreeModel> construct(std::initializer_list<ColumnSpec> column_specs, QObject* parent = nullptr);
 	~ThreadsafeTreeModel() override;
 
 	/// @name The requestXxxx() interface.

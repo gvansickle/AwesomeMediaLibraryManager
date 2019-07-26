@@ -72,7 +72,11 @@ protected:
 	void sendModification();
 
 public:
-	static std::shared_ptr<ScanResultsTreeModel> construct(QObject *parent = nullptr);
+	/**
+	 * Named constructors.
+	 */
+	static std::shared_ptr<ScanResultsTreeModel> construct(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
+
 	~ScanResultsTreeModel() override = default;
 
     /**
@@ -94,15 +98,18 @@ public:
 								   Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
 	UUIncD requestAddSRTMLibEntryItem(const QVariant& variant, UUIncD parent_id,
 									  Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
-
+#if 0
 	void toOrm(std::string filename) const override;
 	void fromOrm(std::string filename) override;
+#endif
 
 protected:
 	/// @name Derived-class serialization info.
 	/// @{
 
 	void DERIVED_set_default_namespace() override;
+
+	void DERIVED_clean() override;
 
 	/// @}
 

@@ -18,8 +18,8 @@
  */
 
 /**
- * @file AbstractTreeModelItem.cpp
- * Implementation of AbstractTreeModelItem.
+ * @file AbstractTreeModelHeaderItem.cpp
+ * Implementation of AbstractTreeModelHeaderItem.
  *
  * This class is heavily adapted from at least the following:
  * - The "Editable Tree Model Example" shipped with Qt5.
@@ -44,19 +44,21 @@
 
 // static
 std::shared_ptr<AbstractTreeModelHeaderItem>
-AbstractTreeModelHeaderItem::construct(const std::shared_ptr<AbstractTreeModel>& model, bool isRoot, UUIncD id)
+AbstractTreeModelHeaderItem::construct(std::initializer_list<ColumnSpec> column_specs,
+		const std::shared_ptr<AbstractTreeModel>& model, bool isRoot, UUIncD id)
 {
-	std::shared_ptr<AbstractTreeModelHeaderItem> self(new AbstractTreeModelHeaderItem(model, isRoot, id));
+	std::shared_ptr<AbstractTreeModelHeaderItem> self(new AbstractTreeModelHeaderItem(column_specs, model, isRoot, id));
 
 	baseFinishConstruct(self);
 	Q_ASSERT(self->isInModel());
 	return self;
 }
 
-AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(const std::shared_ptr<AbstractTreeModel>& parent_model, bool isRoot, UUIncD id)
-	: BASE_CLASS(parent_model, isRoot, id)
+AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(std::initializer_list<ColumnSpec> column_specs,
+		const std::shared_ptr<AbstractTreeModel>& parent_model, bool isRoot, UUIncD id)
+	: BASE_CLASS(parent_model, isRoot, id)//, m_column_specs(column_specs)
 {
-
+	setColumnSpecs(column_specs);
 }
 
 AbstractTreeModelHeaderItem::~AbstractTreeModelHeaderItem()

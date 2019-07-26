@@ -58,21 +58,31 @@
  * @param parent
  * @return
  */
-std::shared_ptr<AbstractTreeModel> AbstractTreeModel::construct(QObject* parent)
+std::shared_ptr<AbstractTreeModel> AbstractTreeModel::construct(std::initializer_list<ColumnSpec> column_specs,
+		QObject* parent)
 {
-	std::shared_ptr<AbstractTreeModel> self(new AbstractTreeModel(parent));
-	self->m_root_item = AbstractTreeModelHeaderItem::construct(self, true);
+	std::shared_ptr<AbstractTreeModel> self(new AbstractTreeModel(column_specs, parent));
+	self->m_root_item = AbstractTreeModelHeaderItem::construct(column_specs, self, true);
 //	self->m_model_tester = new QAbstractItemModelTester(self.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, self.get());
 	return self;
 }
 
-AbstractTreeModel::AbstractTreeModel(QObject* parent) : QAbstractItemModel(parent)
+AbstractTreeModel::AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs,
+		QObject* parent) : QAbstractItemModel(parent)
 {
 }
 
 AbstractTreeModel::~AbstractTreeModel()
 {
 	m_model_item_map.clear();
+	m_root_item.reset();
+}
+
+void AbstractTreeModel::clear()
+{
+	// Clear all items from the model.
+	m_model_item_map.clear();
+	// Release our hold on the root item, let the smart ptr delete it.
 	m_root_item.reset();
 }
 
@@ -269,6 +279,12 @@ void AbstractTreeModel::LoadDatabase(const QString& database_filename)
 {
 	qIn() << "###### READING AbstractTreeModel from:" << database_filename;
 
+	/// @todo This is unworkable I think.
+	/// @note Not sure if this is the best place for this, but we need to clear everything before reloading it.
+M_WARNING("Not right, this needs ColumnSpecs added initially from somewhere");
+	std::unique_lock write_lock(m_rw_mutex);
+//	m_root_item = AbstractTreeModelHeaderItem::construct({}, shared_from_this());
+
 	XmlSerializer xmlser;
 	/// @todo Better name
 	DERIVED_set_default_namespace();
@@ -300,6 +316,7 @@ void AbstractTreeModel::SaveDatabase(const QString& database_filename)
 	qIn() << "###### FINISHED WRITING AbstractTreeModel to:" << database_filename;
 }
 
+#if 0
 void AbstractTreeModel::toOrm(std::string filename) const
 {
 //	using namespace sqlite_orm;
@@ -322,7 +339,7 @@ void AbstractTreeModel::fromOrm(std::string filename)
 {
 	Q_ASSERT(0);
 }
-
+#endif
 
 AbstractTreeModel::iterator AbstractTreeModel::begin()
 {
@@ -347,12 +364,6 @@ void AbstractTreeModel::deregister_item(UUIncD id, AbstractTreeModelItem* item)
 	AMLM_ASSERT_GT(m_model_item_map.count(id), 0);
 	m_model_item_map.erase(id);
 }
-
-//void AbstractTreeModel::DERIVED_set_default_namespace(std::string nsdecl, std::string version)
-//{
-//	m_default_namespace_decl = nsdecl;
-//	m_default_namespace_version = version;
-//}
 
 void AbstractTreeModel::notifyColumnsAboutToInserted(const std::shared_ptr<AbstractTreeModelItem>& parent, int first_column, int last_column)
 {
