@@ -34,8 +34,8 @@
 
 // Ours
 #include <logic/serialization/XmlSerializer.h>
+#include <models/UndoRedoHelper.h>
 #include <utils/DebugHelpers.h>
-#include <logic/UndoRedoHelper.h>
 #include "AbstractTreeModelHeaderItem.h"
 #include "AbstractTreeModelItem.h"
 #include "AbstractTreeModel.h"

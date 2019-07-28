@@ -37,7 +37,7 @@
 #include <logic/serialization/ISerializable.h>
 #include <logic/UUIncD.h>
 #include <future/enable_shared_from_this_virtual.h>
-#include <logic/UndoRedoHelper.h>
+#include <models/UndoRedoHelper.h>
 #include "AbstractTreeModel.h"
 
 /**

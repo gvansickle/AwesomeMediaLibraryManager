@@ -45,7 +45,7 @@
 #include <future/enable_shared_from_this_virtual.h>
 #include <logic/UUIncD.h>
 #include <logic/serialization/ISerializable.h>
-#include <logic/UndoRedoHelper.h>
+#include "UndoRedoHelper.h"
 class AbstractTreeModel;
 
 /**

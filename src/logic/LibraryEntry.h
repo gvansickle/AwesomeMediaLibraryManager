@@ -41,7 +41,7 @@
 #include "serialization/ISerializable.h"
 
 
-class LibraryEntry : /*public std::enable_shared_from_this<LibraryEntry>,*/ public virtual ISerializable, public virtual enable_shared_from_this_virtual<LibraryEntry>
+class LibraryEntry : public virtual ISerializable, public virtual enable_shared_from_this_virtual<LibraryEntry>
 {
 public:
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(LibraryEntry);

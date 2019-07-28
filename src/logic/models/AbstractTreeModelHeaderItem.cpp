@@ -66,8 +66,6 @@ AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(std::initializer_list<C
 
 AbstractTreeModelHeaderItem::~AbstractTreeModelHeaderItem()
 {
-
-
 }
 
 void AbstractTreeModelHeaderItem::clear()
@@ -89,6 +87,7 @@ bool AbstractTreeModelHeaderItem::setColumnSpecs(std::initializer_list<ColumnSpe
 	Q_ASSERT_X(childCount() == 0, __PRETTY_FUNCTION__, "Model has children already");
 #warning "INSERT COLUMNS"
 	m_column_specs.clear();
+	m_item_data.clear();
 	std::copy(column_specs.begin(), column_specs.end(), std::back_inserter(m_column_specs));
 	for(auto& it : m_column_specs)
 	{

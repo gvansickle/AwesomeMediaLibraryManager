@@ -59,7 +59,6 @@ set(logic_subdir_SOURCES
 	ExtUrl.cpp
 	PerfectDeleter.cpp
 	Frames.cpp
-    UndoRedoHelper.cpp
 	UUIncD.cpp
 	)
 
@@ -95,7 +94,6 @@ set(logic_subdir_HEADERS
 	ExtUrl.h
 	PerfectDeleter.h
 	Frames.h
-    UndoRedoHelper.h
     UUIncD.h
 	)
 
@@ -113,7 +111,7 @@ target_link_libraries(logic
 		models
 		proxymodels
 		serialization
-		tree_model
+		#tree_model
 	PRIVATE
 	    #${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS} ### @todo "logic_subdir links to itself".
 		${QT5_LINK_LIB_TARGETS}
@@ -127,7 +125,7 @@ target_include_directories(logic
 	PUBLIC
 	    # For config.h
 		${PROJECT_BINARY_DIR}/src
-		gsauthof_tree_model/tree_model
+		#gsauthof_tree_model/tree_model
 	PRIVATE
 		${PROJECT_SOURCE_DIR}/src
 	)
