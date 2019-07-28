@@ -20,12 +20,6 @@
 /**
  * @file AbstractTreeModel.h
  * Interface of AbstractTreeModel.
- *
- * This class is heavily adapted from at least the following:
- * - The "Editable Tree Model Example" shipped with Qt5.
- * - KDenLive's AbstractItemModel class.
- * - My own original work.
- * - Hundreds of nuggets of information from all over the Internet.
  */
 
 
@@ -56,6 +50,11 @@ class ColumnSpec;
 
 /**
  * Abstract tree model base class.  Inherits from QAbstractItemModel and ISerializable.
+ * This class is heavily adapted from at least the following:
+ * - The "Editable Tree Model Example" shipped with Qt5.
+ * - KDenLive's AbstractItemModel class.
+ * - My own original work.
+ * - Hundreds of nuggets of information from all over the Internet.
  */
 class AbstractTreeModel : public QAbstractItemModel,
 		public virtual ISerializable,
@@ -84,7 +83,7 @@ public:
 			QObject* parent = nullptr);
 
 	/**
-	 * Clears all items in the model, including the root item.
+	 * Destructor.  Clears all items in the model, including the root item.
 	 */
 	~AbstractTreeModel() override;
 
@@ -93,7 +92,7 @@ public:
 	 * Clears all data from the model.
 	 * May need to be overridded in derived classes.
 	 */
-	void clear();
+	virtual void clear();
 
 	/// OLD
 	/**

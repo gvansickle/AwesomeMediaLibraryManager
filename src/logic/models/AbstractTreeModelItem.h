@@ -20,12 +20,6 @@
 /**
  * @file AbstractTreeModelItem.cpp
  * Implementation of AbstractTreeModelItem.
- *
- * This class is heavily adapted from at least the following:
- * - The "Editable Tree Model Example" shipped with Qt5.
- * - KDenLive's TreeItem class.
- * - My own original work.
- * - Hundreds of nuggets of information from all over the Internet.
  */
 
 #ifndef ABSTRACTTREEMODELITEM_H
@@ -51,10 +45,16 @@
 #include <future/enable_shared_from_this_virtual.h>
 #include <logic/UUIncD.h>
 #include <logic/serialization/ISerializable.h>
+#include <logic/UndoRedoHelper.h>
 class AbstractTreeModel;
 
 /**
  * Base class for AbstractItemTreeModel items.
+ * This class is heavily influenced and adapted from at least the following:
+ * - The "Editable Tree Model Example" shipped with Qt5.
+ * - KDenLive's TreeItem and AbstractProjectItem classes.
+ * - My own original work.
+ * - Hundreds of nuggets of information from all over the Internet.
  * @note Not derived from QObject.
  */
 class AbstractTreeModelItem : public virtual ISerializable, public enable_shared_from_this_virtual<AbstractTreeModelItem>
@@ -87,7 +87,21 @@ public:
 	AbstractTreeModelItem() {};
 	~AbstractTreeModelItem() override;
 
+	/**
+	 * Because we have a mutex member.
+	 */
+	AbstractTreeModelItem(const AbstractTreeModelItem& other);
+
 	virtual void clear();
+
+	/**
+	 * From KDenLive:
+	 * "This function executes what should be done when the item is deleted but without deleting effectively.
+	 * For example, the item will deregister itself from the model and delete the clips from the timeline.
+	 * However, the object is NOT actually deleted, and the tree structure is preserved.
+	 * @param Undo,Redo are the lambdas accumulating the update.
+	 */
+	virtual bool selfSoftDelete(Fun &undo, Fun &redo);
 
     /// Return a pointer to the number'th child of this item.
     /// @returns If @a number is not valid, a pointer to a default constructed AbstractTreeModelItem,
@@ -127,10 +141,12 @@ M_WARNING("NEED TO BE OVERRIDDEN IN HeaderItem");
 	// ETM, no KDEN
 	virtual bool removeColumns(int position, int columns);
 
-	/// Returns a pointer to this item's parent.
+	/// Returns a weak pointer to this item's parent.
 	/// ETM+KDEN
-	std::weak_ptr<AbstractTreeModelItem> parent() const;
-	std::weak_ptr<AbstractTreeModelItem> parent_item() const { return parent(); };
+	std::weak_ptr<AbstractTreeModelItem> parent_item() const;
+	/// Returns a shared_ptr to the parent item.
+	std::shared_ptr<AbstractTreeModelItem> parent() const;
+
 
 	// KDEN, seems unused.
 	int depth() const;
@@ -303,6 +319,15 @@ protected:
 //		map->m_class = QMetaType::typeName(id);
 	}
 
+
+	/**
+	 * Mutex in support of undo/redo, specifically in selfSoftDelete().
+	 * Note that this is separate from the mutex in the model.
+	 * @todo The KDenLive code has/needs this to be recursive, but we should try to un-recurse it.
+	 */
+//	mutable std::shared_mutex m_rw_mutex;
+//	mutable std::recursive_mutex m_rw_mutex;
+
 	/// Our guaranteed-to-be unique-to-this-run-of-the-program numeric ID.
 	UUIncD m_uuincid;
 
@@ -317,7 +342,7 @@ protected:
 
 	std::weak_ptr<AbstractTreeModel> m_model;
 
-	bool m_is_root {false};
+	bool m_is_root{false};
 
 	/// Deque of shared_ptr's to child items.
 	std::deque<std::shared_ptr<AbstractTreeModelItem>> m_child_items;
@@ -346,6 +371,7 @@ private:
 
 Q_DECLARE_METATYPE(AbstractTreeModelItem);
 Q_DECLARE_METATYPE(std::vector<QVariant>);
+Q_DECLARE_METATYPE(std::weak_ptr<AbstractTreeModelItem>);
 Q_DECLARE_METATYPE(std::shared_ptr<AbstractTreeModelItem>);
 
 // Debug stream op free func declaration.

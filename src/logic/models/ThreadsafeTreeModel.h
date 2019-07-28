@@ -43,6 +43,8 @@
 /**
  * Don't know how threadsafe this really is, all indications are that QT5's model/view cannot be made threadsafe.
  * Borrowing requestXxx() concept from KDenLive's ProjectItemModel.
+ * This class lives at about the same inheritance level as KDenLive's ProjectItemModel (->AbstractTreeModel->0),
+ * but some work is also split into ScanResultsTreeModel.
  */
 class ThreadsafeTreeModel : public AbstractTreeModel//, public virtual enable_shared_from_this_virtual<ThreadsafeTreeModel>
 {
@@ -62,6 +64,8 @@ public:
 	static std::shared_ptr<ThreadsafeTreeModel> construct(std::initializer_list<ColumnSpec> column_specs, QObject* parent = nullptr);
 	~ThreadsafeTreeModel() override;
 
+	void clear() override;
+
 	/// @name The requestXxxx() interface.
 	///       Borrowed from KDenLive.  Admittedly not 100% clear on why KDenLive makes model operations even more
 	///       circuitous than stock Qt5 does, I think it's an attempt at threadsafety, but also undo/redo are involved.
@@ -70,6 +74,11 @@ public:
 
 //	UUIncD requestAddItem(std::vector<QVariant> values, UUIncD parent_id,
 //	                      Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
+
+	/**
+	 * Request the removal and deletion of @a item from the model.
+	 */
+	bool requestDeleteItem(const std::shared_ptr<AbstractTreeModelItem>& item, Fun &undo, Fun &redo);
 
 	/// @}
 
@@ -80,7 +89,11 @@ protected:
 	void register_item(const std::shared_ptr<AbstractTreeModelItem>& item) override;
 	void deregister_item(UUIncD id, AbstractTreeModelItem* item) override;
 
-	/// Final function which adds the @a item to the model as a child of @a parent_id.
+	/**
+	 * Adds @a item to this tree model as a child of @a parent_id.
+	 * This is the workhorse threadsafe function which adds all new items to the model.  It should be not be called by clients,
+	 * but rather called by one of the requestAddXxxx() members.
+	 */
 	bool addItem(const std::shared_ptr<AbstractTreeModelItem> &item, UUIncD parent_id, Fun &undo, Fun &redo);
 
 };

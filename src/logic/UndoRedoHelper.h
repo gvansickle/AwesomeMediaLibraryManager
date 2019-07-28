@@ -113,6 +113,9 @@ reading a Read-protected property. In that case, we try to write lock it first (
 	LOCK_IN_LAMBDA(mutex, reverse)                                                                                                                                    \
 	UPDATE_UNDO_REDO_NOLOCK(operation, reverse, undo, redo)
 
+/**
+ * No-op lambda which just returns true.  For use when a real undo or redo operation isn't needed.
+ */
 inline static Fun noop_undo_redo_lambda = [](){ return true; };
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_UNDOREDOHELPER_H

@@ -57,7 +57,72 @@ std::shared_ptr<ThreadsafeTreeModel> ThreadsafeTreeModel::construct(std::initial
 
 ThreadsafeTreeModel::~ThreadsafeTreeModel()
 {
+	// Same as KdenLive's ProjectModelItem, it's destructor is defaulted.
+}
 
+void ThreadsafeTreeModel::clear()
+{
+	std::unique_lock write_lock(m_rw_mutex);
+
+	std::vector<std::shared_ptr<AbstractTreeModelItem>> items_to_delete;
+
+	items_to_delete.reserve(m_root_item->childCount());
+
+	for (int i = 0; i < m_root_item->childCount(); ++i)
+	{
+		items_to_delete.push_back(std::static_pointer_cast<AbstractTreeModelItem>(m_root_item->child(i)));
+	}
+	Fun undo = []() { return true; };
+	Fun redo = []() { return true; };
+	for (const auto &child : items_to_delete)
+	{
+		qDb() << "clearing" << items_to_delete.size() << "items, current:" << child->m_uuid;
+		requestDeleteItem(child, undo, redo);
+	}
+	Q_ASSERT(m_root_item->childCount() == 0);
+	//	m_fileWatcher->clear();
+}
+
+bool ThreadsafeTreeModel::requestDeleteItem(const std::shared_ptr<AbstractTreeModelItem>& item, Fun& undo, Fun& redo)
+{
+	std::unique_lock write_locker(m_rw_mutex);
+	Q_ASSERT(item);
+	if (!item)
+	{
+		return false;
+	}
+	UUIncD parentId = UUIncD::null();
+	QString binId;
+	if (std::shared_ptr<AbstractTreeModelItem> ptr = item->parent_item().lock())
+	{
+		parentId = ptr->getId();
+//		binId = ptr->clipId();
+	}
+//	bool isSubClip = item->itemType() == AbstractProjectItem::SubClipItem;
+	item->selfSoftDelete(undo, redo);
+	UUIncD id = item->getId();
+	Fun operation = removeItem_lambda(id);
+	Fun reverse = addItem_lambda(item, parentId);
+	bool request_was_successful = operation();
+	if (request_was_successful)
+	{
+//		if (isSubClip)
+//		{
+//			Fun update_doc = [this, binId]() {
+//				std::shared_ptr<AbstractProjectItem> parentItem = getItemByBinId(binId);
+//				if (parentItem && parentItem->itemType() == AbstractProjectItem::ClipItem) {
+//					auto clipItem = std::static_pointer_cast<ProjectClip>(parentItem);
+//					clipItem->updateZones();
+//				}
+//				return true;
+//			};
+//			update_doc();
+//			PUSH_LAMBDA(update_doc, operation);
+//			PUSH_LAMBDA(update_doc, reverse);
+//		}
+		UPDATE_UNDO_REDO(m_rw_mutex, operation, reverse, undo, redo);
+	}
+	return request_was_successful;
 }
 
 //UUIncD ThreadsafeTreeModel::requestAddItem(std::vector<QVariant> values, UUIncD parent_id, Fun undo, Fun redo)

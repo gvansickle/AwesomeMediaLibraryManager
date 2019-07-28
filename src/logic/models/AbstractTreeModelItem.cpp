@@ -92,6 +92,11 @@ AbstractTreeModelItem::~AbstractTreeModelItem()
 	deregisterSelf();
 }
 
+AbstractTreeModelItem::AbstractTreeModelItem(const AbstractTreeModelItem& other)
+{
+	Q_ASSERT("TODO");
+}
+
 void AbstractTreeModelItem::clear()
 {
 	// Reset this item to completely empty, except for its place in the model.
@@ -99,6 +104,28 @@ void AbstractTreeModelItem::clear()
 	m_item_data.clear();
 	m_num_columns = 0;
 	m_num_parent_columns = -1;
+}
+
+bool AbstractTreeModelItem::selfSoftDelete(Fun& undo, Fun& redo)
+{
+	Fun local_undo = []() { return true; };
+	Fun local_redo = []() { return true; };
+
+	// Recursively "soft delete" child objects.
+	for(const auto& child : m_child_items)
+	{
+		bool status = std::static_pointer_cast<AbstractTreeModelItem>(child)->selfSoftDelete(local_undo, local_redo);
+		if(!status)
+		{
+			// something went wrong with the child soft delete, recusively back out.
+			bool undone = local_undo();
+			Q_ASSERT(undone);
+			return false;
+		}
+	}
+M_WARNING("TODO, NEEDS MUTEX MEMBER");
+//	UPDATE_UNDO_REDO(m_rw_mutex, local_redo, local_undo, undo, redo);
+	return true;
 }
 
 QDebug operator<<(QDebug dbg, const AbstractTreeModelItem& obj)
@@ -206,9 +233,14 @@ bool AbstractTreeModelItem::removeColumns(int position, int columns)
 	return true;
 }
 
-std::weak_ptr<AbstractTreeModelItem> AbstractTreeModelItem::parent() const
+std::weak_ptr<AbstractTreeModelItem> AbstractTreeModelItem::parent_item() const
 {
 	return m_parent_item;
+}
+
+std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::parent() const
+{
+	return std::static_pointer_cast<AbstractTreeModelItem>(m_parent_item.lock());
 }
 
 int AbstractTreeModelItem::depth() const
@@ -560,7 +592,7 @@ bool AbstractTreeModelItem::appendChild(std::shared_ptr<AbstractTreeModelItem> n
 		// Somehow trying to create a cycle in the tree.
 		return false;
 	}
-	if (auto oldParent = new_child->parent().lock())
+	if (auto oldParent = new_child->parent_item().lock())
 	{
 		if (oldParent->getId() == m_uuincid)
 		{
@@ -699,9 +731,11 @@ void AbstractTreeModelItem::deregisterSelf()
 	{
 		child->deregisterSelf();
 	}
+	// Potentially deregister ourself.
 	if (m_is_in_model)
 	{
-		Q_ASSERT(!m_model.expired());
+		/// This is from KDenLive's TreeItem.  Looks like they're trying to keep the model
+		/// in memory until all children are deleted.
 
 		// We're in a model, deregister ourself from it.
 		if (auto ptr = m_model.lock())

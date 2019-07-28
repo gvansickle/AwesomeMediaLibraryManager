@@ -75,22 +75,24 @@ AbstractTreeModel::AbstractTreeModel(std::initializer_list<ColumnSpec> column_sp
 
 AbstractTreeModel::~AbstractTreeModel()
 {
+	// KDEN does exactly this in its ~AbstractTreeModel().
 	m_model_item_map.clear();
 	m_root_item.reset();
 }
 
 void AbstractTreeModel::clear()
 {
+	Q_ASSERT(0);
 	// Clear all items from the model.
-	m_model_item_map.clear();
-	// Release our hold on the root item, let the smart ptr delete it.
-#warning "RESET == CRASH"
-	m_root_item->clear();
+//	m_model_item_map.clear();
+//	// Release our hold on the root item, let the smart ptr delete it.
+//#warning "RESET == CRASH"
+//	m_root_item->clear();
 }
 
 bool AbstractTreeModel::setColumnSpecs(std::initializer_list<ColumnSpec> column_specs)
 {
-#warning "ROOT IS NULL"
+	Q_CHECK_PTR(m_root_item);
 	return m_root_item->setColumnSpecs(column_specs);
 }
 
@@ -121,9 +123,9 @@ QVariant AbstractTreeModel::data(const QModelIndex &index, int role) const
 	}
 
 	/// @todo ###
-#if 0 // TEMP?
+#if 1 // TEMP?
 	// Color invalid model indexes.
-	if(index.column() > columnCount())
+	if(index.column() >= columnCount())
 	{
 		switch(role)
 		{
@@ -131,6 +133,7 @@ QVariant AbstractTreeModel::data(const QModelIndex &index, int role) const
 				return QVariant::fromValue(QBrush(Qt::lightGray));
 				break;
 			default:
+				return QVariant();
 				break;
 		}
 	}
@@ -222,8 +225,8 @@ Fun AbstractTreeModel::addItem_lambda(const std::shared_ptr<AbstractTreeModelIte
 Fun AbstractTreeModel::removeItem_lambda(UUIncD id)
 {
 	return [this, id]() {
-		/* Deletion simply deregister clip and remove it from parent.
-		   The actual object is not actually deleted, because a shared_pointer to it
+		/* Deletion simply deregister the item and remove it from parent.
+		   The item object is not actually deleted, because a shared_pointer to it
 		   is captured by the reverse operation.
 		   Actual deletions occurs when the undo object is destroyed.
 		*/
@@ -467,7 +470,7 @@ bool AbstractTreeModel::checkConsistency()
 				qDebug() << "ERROR: Invalid tree: duplicate root";
 				return false;
 			}
-			if (auto ptr = currentItem->parent().lock())
+			if (auto ptr = currentItem->parent_item().lock())
 			{
 				if (ptr->getId() != parentId || ptr->child(currentItem->childNumber())->getId() != currentItem->getId())
 				{
@@ -573,7 +576,8 @@ QModelIndex AbstractTreeModel::parent(const QModelIndex &index) const
 {
 	// Check index but don't touch parent, since per Qt5 docs that would make this go recursive.
 	Q_ASSERT(checkIndex(index, CheckIndexOption::IndexIsValid | CheckIndexOption::DoNotUseParent));
-    if (!index.isValid())
+    // Return invalid parent index for invalid index.
+	if (!index.isValid())
 	{
         return QModelIndex();
 	}
