@@ -79,7 +79,7 @@ public:
 	int columnCount() const override;
 
 	/// KDEN::AbsProjItem
-	std::shared_ptr<AbstractTreeModelHeaderItem> parent() const;
+//	std::shared_ptr<AbstractTreeModelHeaderItem> parent() const;
 
 	/// @name ISerializable interface
 	/// @{
@@ -98,11 +98,6 @@ protected:
 	/// This is things like the main media URL, sidecar cue sheet URLs, timestamp info, etc.
 	DirScanResult m_dsr;
 };
-
-/**
- * A ScanResultsTreeModelItem with a LibraryEntry field.
- */
-
 
 /// @todo Need this here for QVariant::fromValue().
 //Q_DECLARE_METATYPE(std::string);

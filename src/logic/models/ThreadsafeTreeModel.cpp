@@ -80,7 +80,9 @@ void ThreadsafeTreeModel::clear()
 		requestDeleteItem(child, undo, redo);
 	}
 	Q_ASSERT(m_root_item->childCount() == 0);
-	//	m_fileWatcher->clear();
+
+	// One last thing, our hidden root node / header node still has ColumnSpecs.
+	m_root_item->clear();
 }
 
 bool ThreadsafeTreeModel::requestDeleteItem(const std::shared_ptr<AbstractTreeModelItem>& item, Fun& undo, Fun& redo)

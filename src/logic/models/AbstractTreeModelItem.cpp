@@ -100,10 +100,10 @@ AbstractTreeModelItem::AbstractTreeModelItem(const AbstractTreeModelItem& other)
 void AbstractTreeModelItem::clear()
 {
 	// Reset this item to completely empty, except for its place in the model.
-	m_child_items.clear();
-	m_item_data.clear();
-	m_num_columns = 0;
-	m_num_parent_columns = -1;
+//	m_child_items.clear();
+//	m_item_data.clear();
+//	m_num_columns = 0;
+//	m_num_parent_columns = -1;
 }
 
 bool AbstractTreeModelItem::selfSoftDelete(Fun& undo, Fun& redo)

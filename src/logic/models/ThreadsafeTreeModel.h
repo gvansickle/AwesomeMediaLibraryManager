@@ -64,6 +64,9 @@ public:
 	static std::shared_ptr<ThreadsafeTreeModel> construct(std::initializer_list<ColumnSpec> column_specs, QObject* parent = nullptr);
 	~ThreadsafeTreeModel() override;
 
+	/**
+	 * Clear out the contents of this model, including all header info etc.
+	 */
 	void clear() override;
 
 	/// @name The requestXxxx() interface.

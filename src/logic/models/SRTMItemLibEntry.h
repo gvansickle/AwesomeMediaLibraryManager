@@ -31,6 +31,9 @@
 #include "ScanResultsTreeModelItem.h"
 class LibraryEntry;
 
+/**
+ * A ScanResultsTreeModelItem with a LibraryEntry field.
+ */
 class SRTMItem_LibEntry : public ScanResultsTreeModelItem, public enable_shared_from_this_virtual<SRTMItem_LibEntry>
 {
 	using BASE_CLASS = ScanResultsTreeModelItem;
