@@ -57,7 +57,7 @@ protected:
 	/**
 	 * The constructed model will NOT have a root, that's what construct() adds.
 	 */
-	explicit ScanResultsTreeModel(QObject *parent = nullptr);
+	explicit ScanResultsTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
 
 	/**
 	 * Make sig/slot connections.

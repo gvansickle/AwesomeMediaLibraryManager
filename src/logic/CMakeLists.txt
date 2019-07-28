@@ -1,5 +1,5 @@
 #
-# Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -24,6 +24,9 @@ add_subdir_lib(jobs EXCLUDE_FROM_ALL)
 add_subdir_lib(models EXCLUDE_FROM_ALL)
 add_subdir_lib(proxymodels EXCLUDE_FROM_ALL)
 add_subdir_lib(serialization EXCLUDE_FROM_ALL)
+
+# The Tree Model from gsauthof.
+add_subdirectory(gsauthof_tree_model EXCLUDE_FROM_ALL)
 
 set(logic_subdir_SOURCES
 	AMLMCompoundTrack.cpp
@@ -110,6 +113,7 @@ target_link_libraries(logic
 		models
 		proxymodels
 		serialization
+		tree_model
 	PRIVATE
 	    #${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS} ### @todo "logic_subdir links to itself".
 		${QT5_LINK_LIB_TARGETS}
@@ -123,6 +127,7 @@ target_include_directories(logic
 	PUBLIC
 	    # For config.h
 		${PROJECT_BINARY_DIR}/src
+		gsauthof_tree_model/tree_model
 	PRIVATE
 		${PROJECT_SOURCE_DIR}/src
 	)

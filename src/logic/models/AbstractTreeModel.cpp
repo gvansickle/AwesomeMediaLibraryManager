@@ -55,8 +55,6 @@
 
 /**
  * This really should never get called, since AbstractTreeModel is abstract.  Mostly here for an example for derived classes.
- * @param parent
- * @return
  */
 std::shared_ptr<AbstractTreeModel> AbstractTreeModel::construct(std::initializer_list<ColumnSpec> column_specs,
 		QObject* parent)
@@ -70,6 +68,9 @@ std::shared_ptr<AbstractTreeModel> AbstractTreeModel::construct(std::initializer
 AbstractTreeModel::AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs,
 		QObject* parent) : QAbstractItemModel(parent)
 {
+	/// Can't call this here since it hasn't been created yet.
+//	setColumnSpecs(column_specs);
+
 }
 
 AbstractTreeModel::~AbstractTreeModel()
@@ -83,11 +84,13 @@ void AbstractTreeModel::clear()
 	// Clear all items from the model.
 	m_model_item_map.clear();
 	// Release our hold on the root item, let the smart ptr delete it.
-	m_root_item.reset();
+#warning "RESET == CRASH"
+	m_root_item->clear();
 }
 
 bool AbstractTreeModel::setColumnSpecs(std::initializer_list<ColumnSpec> column_specs)
 {
+#warning "ROOT IS NULL"
 	return m_root_item->setColumnSpecs(column_specs);
 }
 

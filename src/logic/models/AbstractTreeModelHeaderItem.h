@@ -62,17 +62,15 @@ public:
 	AbstractTreeModelHeaderItem() {};
 	~AbstractTreeModelHeaderItem() override;
 
+	void clear() override;
+
 	 /**
+	  * Replaces any existing column_specs with the given @a column_specs.
 	  * @warning This must be called before any child items are added to the model.
-	  * @param column_specs
-	  * @return
 	  */
 	virtual bool setColumnSpecs(std::initializer_list<ColumnSpec> column_specs);
 
 	QVariant data(int column, int role = Qt::DisplayRole) const override;
-
-//	int columnCount() const override;
-
 
 	/// @name Serialization
 	/// @{

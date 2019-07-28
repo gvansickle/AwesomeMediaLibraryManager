@@ -67,10 +67,6 @@ class AbstractTreeModel : public QAbstractItemModel,
 
 	using BASE_CLASS = QAbstractItemModel;
 
-public:
-	static std::shared_ptr<AbstractTreeModel> construct(std::initializer_list<ColumnSpec> column_specs,
-			QObject* parent = nullptr);
-
 protected:
 	/**
 	 * Creates a new AbstractTreeModel object.
@@ -78,9 +74,15 @@ protected:
 	 * In general, derived constructors don't do much more than pass the @a parent param.
 	 */
 	explicit AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs,
-			QObject *parent = nullptr);
+	                           QObject *parent = nullptr);
 
 public:
+	/**
+	 * Named constructor.
+	 */
+	static std::shared_ptr<AbstractTreeModel> construct(std::initializer_list<ColumnSpec> column_specs,
+			QObject* parent = nullptr);
+
 	/**
 	 * Clears all items in the model, including the root item.
 	 */

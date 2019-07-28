@@ -31,8 +31,8 @@
 #include <serialization/XmlSerializer.h>
 
 
-ScanResultsTreeModel::ScanResultsTreeModel(QObject *parent)
-	: BASE_CLASS({}, parent)
+ScanResultsTreeModel::ScanResultsTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject *parent)
+	: BASE_CLASS(column_specs, parent)
 {
 }
 
@@ -71,7 +71,7 @@ void ScanResultsTreeModel::sendModification()
 // static
 std::shared_ptr<ScanResultsTreeModel> ScanResultsTreeModel::construct(std::initializer_list<ColumnSpec> column_specs, QObject* parent)
 {
-	std::shared_ptr<ScanResultsTreeModel> retval(new ScanResultsTreeModel(parent));
+	std::shared_ptr<ScanResultsTreeModel> retval(new ScanResultsTreeModel(column_specs, parent));
 	retval->m_root_item = AbstractTreeModelHeaderItem::construct(column_specs, retval);
 	return retval;
 }

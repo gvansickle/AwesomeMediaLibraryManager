@@ -37,6 +37,7 @@
 #include <logic/serialization/XmlObjects.h>
 #include "AbstractTreeModel.h"
 #include "AbstractHeaderSection.h"
+#include <serialization/QVariantHomogenousList.h>
 #include <logic/serialization/SerializationHelpers.h>
 
 /// TEMP
@@ -49,6 +50,8 @@ AbstractTreeModelHeaderItem::construct(std::initializer_list<ColumnSpec> column_
 {
 	std::shared_ptr<AbstractTreeModelHeaderItem> self(new AbstractTreeModelHeaderItem(column_specs, model, isRoot, id));
 
+	self->setColumnSpecs(column_specs);
+
 	baseFinishConstruct(self);
 	Q_ASSERT(self->isInModel());
 	return self;
@@ -58,11 +61,19 @@ AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(std::initializer_list<C
 		const std::shared_ptr<AbstractTreeModel>& parent_model, bool isRoot, UUIncD id)
 	: BASE_CLASS(parent_model, isRoot, id)//, m_column_specs(column_specs)
 {
-	setColumnSpecs(column_specs);
+//	setColumnSpecs(column_specs);
 }
 
 AbstractTreeModelHeaderItem::~AbstractTreeModelHeaderItem()
 {
+
+
+}
+
+void AbstractTreeModelHeaderItem::clear()
+{
+	m_column_specs.clear();
+	BASE_CLASS::clear();
 }
 
 bool AbstractTreeModelHeaderItem::setColumnSpecs(std::initializer_list<ColumnSpec> column_specs)
@@ -116,7 +127,6 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 	QVariantHomogenousList header_section_list(XMLTAG_HEADER_SECTION_LIST, "section");
 
 	// Header info.
-	/// @todo Or is some of this really model info?  Children are.
 	map_insert_or_die(map, XMLTAG_HEADER_NUM_SECTIONS, columnCount());
 	for(int i = 0; i < columnCount(); ++i)
 	{
@@ -130,6 +140,7 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 	}
 	map_insert_or_die(map, XMLTAG_HEADER_SECTION_LIST, header_section_list);
 
+	// Child nodes.
 	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
 	for(auto& it : m_child_items)
 	{
@@ -148,6 +159,8 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	// Read the number of header sections...
 	int header_num_sections = 0;
 	map_read_field_or_warn(map, XMLTAG_HEADER_NUM_SECTIONS, &header_num_sections);
+
+	// Read the header sections.
 	QVariantHomogenousList header_section_list(XMLTAG_HEADER_SECTION_LIST, "section");
 	header_section_list = map.value(XMLTAG_HEADER_SECTION_LIST).value<QVariantHomogenousList>();
 

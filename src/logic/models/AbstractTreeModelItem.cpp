@@ -92,6 +92,15 @@ AbstractTreeModelItem::~AbstractTreeModelItem()
 	deregisterSelf();
 }
 
+void AbstractTreeModelItem::clear()
+{
+	// Reset this item to completely empty, except for its place in the model.
+	m_child_items.clear();
+	m_item_data.clear();
+	m_num_columns = 0;
+	m_num_parent_columns = -1;
+}
+
 QDebug operator<<(QDebug dbg, const AbstractTreeModelItem& obj)
 {
 	QDebugStateSaver saver(dbg);
@@ -264,12 +273,12 @@ void AbstractTreeModelItem::removeChild(const std::shared_ptr<AbstractTreeModelI
 	if (auto ptr = m_model.lock())
 	{
 		ptr->notifyRowAboutToDelete(shared_from_this(), child->childNumber());
-		// get iterator corresponding to child
+		// Get iterator corresponding to child
 		auto it = get_m_child_items_iterator(child->getId());
 		Q_ASSERT(it != m_child_items.end());
 //		Q_ASSERT(m_iteratorTable.count(child->getId()) > 0);
 //		auto it = m_iteratorTable[child->getId()];
-		// deletion of child
+		// Delete the child.
 		m_child_items.erase(it);
 		// clean iterator table
 //		m_iteratorTable.erase(child->getId());
@@ -692,6 +701,8 @@ void AbstractTreeModelItem::deregisterSelf()
 	}
 	if (m_is_in_model)
 	{
+		Q_ASSERT(!m_model.expired());
+
 		// We're in a model, deregister ourself from it.
 		if (auto ptr = m_model.lock())
 		{

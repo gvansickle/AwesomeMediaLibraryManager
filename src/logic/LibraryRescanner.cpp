@@ -23,6 +23,7 @@
 
 /// Std C++
 #include <functional>
+#include <memory>
 
 /// Linux Callgrind
 /// @link http://www.valgrind.org/docs/manual/manual-core-adv.html#manual-core-adv.clientreq :
@@ -403,9 +404,10 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 #else
 		AMLM_ASSERT_NOT_IN_GUITHREAD();
 #endif
-
+		// Get the current ScanResultsTreeModel.
 		std::shared_ptr<ScanResultsTreeModel> tree_model_sptr = AMLM::Core::self()->getScanResultsTreeModel();
 		Q_ASSERT(tree_model_sptr);
+		tree_model_sptr->clear();
 //		qDb() << "START: tree_model_item_future.stap(), new_items_future count:" << new_items_future.resultCount();
 
 		// For each QList<SharedItemContType> entry.
