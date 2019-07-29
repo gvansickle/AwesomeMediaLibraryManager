@@ -94,11 +94,10 @@ bool ThreadsafeTreeModel::requestDeleteItem(const std::shared_ptr<AbstractTreeMo
 		return false;
 	}
 	UUIncD parentId = UUIncD::null();
-	QString binId;
+
 	if (std::shared_ptr<AbstractTreeModelItem> ptr = item->parent_item().lock())
 	{
 		parentId = ptr->getId();
-//		binId = ptr->clipId();
 	}
 //	bool isSubClip = item->itemType() == AbstractProjectItem::SubClipItem;
 	item->selfSoftDelete(undo, redo);
@@ -127,21 +126,21 @@ bool ThreadsafeTreeModel::requestDeleteItem(const std::shared_ptr<AbstractTreeMo
 	return request_was_successful;
 }
 
-//UUIncD ThreadsafeTreeModel::requestAddItem(std::vector<QVariant> values, UUIncD parent_id, Fun undo, Fun redo)
-//{
-//	std::unique_lock write_lock(m_rw_mutex);
+UUIncD ThreadsafeTreeModel::requestAddItem(std::vector<QVariant> values, UUIncD parent_id, Fun undo, Fun redo)
+{
+	std::unique_lock write_lock(m_rw_mutex);
 
-//	auto new_item = AbstractTreeModelItem::construct(values, std::static_pointer_cast<ThreadsafeTreeModel>(shared_from_this()), /*not root*/false);
+	auto new_item = AbstractTreeModelItem::construct(values, std::static_pointer_cast<ThreadsafeTreeModel>(shared_from_this()), /*root?*/false);
 
-//	bool status = addItem(new_item, parent_id, undo, redo);
+	bool status = addItem(new_item, parent_id, undo, redo);
 
-//	if(!status)
-//	{
-//		// Add failed for some reason, return a null UUIncD.
-//		return UUIncD::null();
-//	}
-//	return new_item->getId();
-//}
+	if(!status)
+	{
+		// Add failed for some reason, return a null UUIncD.
+		return UUIncD::null();
+	}
+	return new_item->getId();
+}
 
 void ThreadsafeTreeModel::register_item(const std::shared_ptr<AbstractTreeModelItem>& item)
 {

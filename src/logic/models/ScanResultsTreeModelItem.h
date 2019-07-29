@@ -78,9 +78,6 @@ public:
 
 	int columnCount() const override;
 
-	/// KDEN::AbsProjItem
-//	std::shared_ptr<AbstractTreeModelHeaderItem> parent() const;
-
 	/// @name ISerializable interface
 	/// @{
 

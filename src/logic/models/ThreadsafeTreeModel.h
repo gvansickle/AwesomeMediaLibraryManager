@@ -75,8 +75,11 @@ public:
 	///       KDen doesn't have any of these in this base AbstractTreeModel class.
 	/// @{
 
-//	UUIncD requestAddItem(std::vector<QVariant> values, UUIncD parent_id,
-//	                      Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
+	/**
+	 * Add a new AbstractTreeModelItem with the given @a values to the tree.
+	 */
+	UUIncD requestAddItem(std::vector<QVariant> values, UUIncD parent_id,
+						  Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
 
 	/**
 	 * Request the removal and deletion of @a item from the model.

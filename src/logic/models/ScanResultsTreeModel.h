@@ -98,6 +98,9 @@ public:
 								   Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
 	UUIncD requestAddSRTMLibEntryItem(const QVariant& variant, UUIncD parent_id,
 									  Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
+	UUIncD requestAddExistingTreeModelItem(std::shared_ptr<AbstractTreeModelItem> new_item, UUIncD parent_id,
+										   Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
+
 #if 0
 	void toOrm(std::string filename) const override;
 	void fromOrm(std::string filename) override;
@@ -108,8 +111,6 @@ protected:
 	/// @{
 
 	void DERIVED_set_default_namespace() override;
-
-	void DERIVED_clean() override;
 
 	/// @}
 

@@ -148,22 +148,22 @@ UUIncD ScanResultsTreeModel::requestAddSRTMLibEntryItem(const QVariant& variant,
 	return new_item->getId();
 }
 
-//UUIncD ScanResultsTreeModel::requestAddExistingTreeModelItem(std::shared_ptr<AbstractTreeModelItem> new_item, UUIncD parent_id, Fun undo, Fun redo)
-//{
-//	std::unique_lock write_lock(m_rw_mutex);
+UUIncD ScanResultsTreeModel::requestAddExistingTreeModelItem(std::shared_ptr<AbstractTreeModelItem> new_item, UUIncD parent_id, Fun undo, Fun redo)
+{
+	std::unique_lock write_lock(m_rw_mutex);
 
-//	// ::construct() a new tree model item from variant.
-////	std::shared_ptr<AbstractTreeModelItem> new_item = make_item_from_variant(variant);
+	// ::construct() a new tree model item from variant.
+//	std::shared_ptr<AbstractTreeModelItem> new_item = make_item_from_variant(variant);
 
-//	bool status = addItem(new_item, parent_id, undo, redo);
+	bool status = addItem(new_item, parent_id, undo, redo);
 
-//	if(!status)
-//	{
-//		// Add failed for some reason, return a null UUIncD.
-//		return UUIncD::null();
-//	}
-//	return new_item->getId();
-//}
+	if(!status)
+	{
+		// Add failed for some reason, return a null UUIncD.
+		return UUIncD::null();
+	}
+	return new_item->getId();
+}
 
 #if 0
 void ScanResultsTreeModel::toOrm(std::string filename) const
@@ -199,13 +199,6 @@ void ScanResultsTreeModel::DERIVED_set_default_namespace()
 	/// @todo Not right.
 	m_default_namespace_decl = "http://xspf.org/ns/0/";
 	m_default_namespace_version = "1";
-}
-
-void ScanResultsTreeModel::DERIVED_clean()
-{
-	/// @todo Lock? Somewhere else?
-	qDb() << "CLEANING";
-
 }
 
 /// Qt5 ids for the TreeItems it can hold.

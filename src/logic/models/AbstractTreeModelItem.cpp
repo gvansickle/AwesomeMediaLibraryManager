@@ -44,7 +44,6 @@
 #include <utils/VectorHelpers.h>
 #include <logic/UUIncD.h>
 #include "AbstractTreeModel.h"
-//#include "PlaceholderTreeModelItem.h"
 #include <utils/ext_iterators.h>
 #include <logic/serialization/SerializationHelpers.h>
 
@@ -157,14 +156,12 @@ int AbstractTreeModelItem::columnCount() const
 
 /**
  * Find our index in the parent's child list.
+ * KDEN calls this ::row().
  */
 int AbstractTreeModelItem::childNumber() const
 {
 	if (auto shpt = m_parent_item.lock())
 	{
-//		auto iter = std::find_if(shpt->m_child_items.cbegin(), shpt->m_child_items.cend(),
-//				[=](const auto& unptr){ return unptr.get() == this; });
-//		return iter - shpt->m_child_items.cbegin();
 		// We compute the distance in the parent's children list
 		auto it = shpt->m_child_items.begin();
 		return (int)std::distance(it, (decltype(it))shpt->get_m_child_items_iterator(m_uuincid));
@@ -172,21 +169,13 @@ int AbstractTreeModelItem::childNumber() const
 	else
 	{
 		/// @note Expired parent item. KDenLive doesn't do this.
-		Q_ASSERT(0);
+		qWr() << "EXPIRED PARENT ITEM";
+//		Q_ASSERT(0);
 	}
 
     return -1;
 }
 
-//int AbstractTreeModelItem::columnCount() const
-//{
-//	return m_item_data.count();
-//}
-//
-//QVariant AbstractTreeModelItem::data(int column) const
-//{
-//	return m_item_data.value(column);
-//}
 
 bool AbstractTreeModelItem::insertColumns(int insert_before_column, int num_columns)
 {
@@ -585,7 +574,7 @@ bool AbstractTreeModelItem::appendChildren(std::vector<std::shared_ptr<AbstractT
 	return true;
 }
 
-bool AbstractTreeModelItem::appendChild(std::shared_ptr<AbstractTreeModelItem> new_child)
+bool AbstractTreeModelItem::appendChild(const std::shared_ptr<AbstractTreeModelItem>& new_child)
 {
 	if(has_ancestor(new_child->getId()))
 	{
@@ -612,7 +601,7 @@ bool AbstractTreeModelItem::appendChild(std::shared_ptr<AbstractTreeModelItem> n
 		Q_ASSERT(sft);
 		ptr->notifyRowAboutToAppend(shared_from_this());
 		new_child->updateParent(shared_from_this());
-		int id = new_child->getId();
+		UUIncD id = new_child->getId();
 		auto it = m_child_items.insert(m_child_items.end(), new_child);
 //		m_iteratorTable[id] = it;
 		registerSelf(new_child);
