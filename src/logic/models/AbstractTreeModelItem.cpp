@@ -66,7 +66,7 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::construct(const QV
 	return self;
 }
 
-AbstractTreeModelItem::AbstractTreeModelItem(std::vector<QVariant>  data,
+AbstractTreeModelItem::AbstractTreeModelItem(std::vector<QVariant> data,
 		const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id)
 	: m_item_data(std::move(data)),
 	  m_model(model),
@@ -614,11 +614,12 @@ bool AbstractTreeModelItem::appendChild(const std::shared_ptr<AbstractTreeModelI
 }
 
 /// Append a child item created from @a data.
-/// @todo
 std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::appendChild(const std::vector<QVariant>& data)
 {
 	if (auto ptr = m_model.lock())
 	{
+		// Create the new child with this item's model as the model.
+		// Not that by definition, this will not be the root item.
 		auto child = AbstractTreeModelItem::construct(data, ptr, false);
 		appendChild(child);
 		return child;
@@ -639,14 +640,14 @@ void AbstractTreeModelItem::moveChild(int ix, const std::shared_ptr<AbstractTree
 		}
 		else
 		{
-			// deletion of child
+			// Deletion of child.
 //			auto it = m_iteratorTable[child->getId()];
 			auto it = get_m_child_items_iterator(child->getId());
 			m_child_items.erase(it);
 		}
 		ptr->notifyRowAboutToAppend(shared_from_this());
 		child->updateParent(shared_from_this());
-		int id = child->getId();
+		UUIncD id = child->getId();
 		auto pos = m_child_items.begin();
 		std::advance(pos, ix);
 		auto it = m_child_items.insert(pos, child);
