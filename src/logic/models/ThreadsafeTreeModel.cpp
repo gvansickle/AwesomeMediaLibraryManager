@@ -130,7 +130,7 @@ UUIncD ThreadsafeTreeModel::requestAddItem(std::vector<QVariant> values, UUIncD 
 {
 	std::unique_lock write_lock(m_rw_mutex);
 
-	auto new_item = AbstractTreeModelItem::construct(values, std::static_pointer_cast<ThreadsafeTreeModel>(shared_from_this()), /*root?*/false);
+	std::shared_ptr<AbstractTreeModelItem> new_item = AbstractTreeModelItem::construct(values, std::static_pointer_cast<ThreadsafeTreeModel>(shared_from_this()), /*root?*/false);
 
 	bool status = addItem(new_item, parent_id, undo, redo);
 
@@ -164,8 +164,13 @@ bool ThreadsafeTreeModel::addItem(const std::shared_ptr<AbstractTreeModelItem>& 
 {
 	std::unique_lock write_lock(m_rw_mutex);
 
-	auto parent_item = getItemById(parent_id);
-	Q_CHECK_PTR(parent_item);
+	std::shared_ptr<AbstractTreeModelItem> parent_item = getItemById(parent_id);
+
+	if(!parent_item)
+	{
+		qCr() << "ERROR, BAD PARENT ITEM with ID:" << parent_id;// << "," << item;
+		return false;
+	}
 
 	Fun operation = addItem_lambda(item, parent_item->getId());
 

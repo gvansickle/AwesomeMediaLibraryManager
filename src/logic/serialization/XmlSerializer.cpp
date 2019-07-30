@@ -82,7 +82,7 @@ void XmlSerializer::save(const ISerializable &serializable, const QUrl &file_url
 	savefile.commit();
 }
 
-void XmlSerializer::load(ISerializable& serializable, const QUrl &file_url)
+bool XmlSerializer::load(ISerializable& serializable, const QUrl &file_url)
 {
 	Stopwatch sw("###################### XmlSerializer::load()");
 
@@ -146,6 +146,8 @@ void XmlSerializer::load(ISerializable& serializable, const QUrl &file_url)
 	{
 		qWr() << "#### XML READ ERROR:" << error_string(xmlstream);
 	}
+
+	return !xmlstream.error();
 }
 
 static const int f_iomap_id = qMetaTypeId<QVariantInsertionOrderedMap>();

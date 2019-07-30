@@ -99,7 +99,8 @@ bool AbstractTreeModel::setColumnSpecs(std::initializer_list<ColumnSpec> column_
 int AbstractTreeModel::columnCount(const QModelIndex& parent) const
 {
 	/// @note ETM does this differently, simply always returning m_root_item->columnCount().
-	
+	std::unique_lock read_lock(m_rw_mutex);
+
 	if(!parent.isValid())
 	{
 		// Invalid index, return root column count.
@@ -171,6 +172,8 @@ Qt::ItemFlags AbstractTreeModel::flags(const QModelIndex &index) const
 
 std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getItem(const QModelIndex &index) const
 {
+	std::unique_lock read_lock(m_rw_mutex);
+
 	if (index.isValid())
 	{
 		std::shared_ptr<AbstractTreeModelItem> item = getItemById(UUIncD(index.internalId()));
@@ -187,11 +190,16 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getItem(const QModelIn
 /// NEW: KDEN:
 std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getItemById(const UUIncD& id) const
 {
+	std::unique_lock read_lock(m_rw_mutex);
+
+	Q_ASSERT(m_root_item);
+
 	Q_ASSERT(id != UUIncD::null());
 	if(id == m_root_item->getId())
 	{
 		return m_root_item;
 	}
+
 	Q_ASSERT(m_model_item_map.count(id) > 0);
 	return m_model_item_map.at(id).lock();
 }
@@ -199,6 +207,8 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getItemById(const UUIn
 /// BOTH
 std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getRootItem() const
 {
+	std::unique_lock read_lock(m_rw_mutex);
+
 	Q_ASSERT(m_root_item);
 	return m_root_item;
 }
@@ -582,7 +592,9 @@ QModelIndex AbstractTreeModel::parent(const QModelIndex &index) const
         return QModelIndex();
 	}
 
-	std::shared_ptr<AbstractTreeModelItem> childItem = getItemById(static_cast<UUIncD>(index.internalId()));
+	auto child_uuincd = index.internalId();
+
+	std::shared_ptr<AbstractTreeModelItem> childItem = getItemById(static_cast<UUIncD>(child_uuincd));
 	std::shared_ptr<AbstractTreeModelItem> parentItem = childItem->parent_item().lock();
 
 	Q_ASSERT(parentItem);

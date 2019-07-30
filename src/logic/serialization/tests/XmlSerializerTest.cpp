@@ -76,7 +76,7 @@ public:
 			std::function<void(void)> extra_save_actions = nullptr
 			) override;
 
-	void load(ISerializable& serializable, const QUrl& file_url) override;
+	bool load(ISerializable& serializable, const QUrl& file_url) override;
 
 };
 

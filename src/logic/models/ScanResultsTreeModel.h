@@ -124,18 +124,6 @@ public Q_SLOTS:
 
 protected:
 
-	/// Thread-safe overrides.
-//	void register_item(const std::shared_ptr<AbstractTreeModelItem>& item) override;
-//	void deregister_item(UUIncD id, AbstractTreeModelItem* item) override;
-
-	/**
-	 * Adds @a item to this tree model.
-	 * ~KDenLive
-	 * This is the workhorse threadsafe function which adds all new items to the model.  It should be not be called by clients,
-	 * but rather called by one of the requestAddXxxx() members.
-	 */
-//	bool addItem(const std::shared_ptr<ScanResultsTreeModelItem>& item, UUIncD parent_uuincd, Fun& undo, Fun& redo);
-
 	QString getXmlStreamName() const override { return "AMLMScanResults"; };
 	QString getXmlStreamVersion() const override { return "0.1"; };
 

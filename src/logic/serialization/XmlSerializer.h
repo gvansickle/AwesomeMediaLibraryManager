@@ -63,7 +63,7 @@ public:
 			std::function<void(void)> extra_save_actions = nullptr
 			) override;
 
-	void load(ISerializable& serializable, const QUrl& file_url) override;
+	bool load(ISerializable& serializable, const QUrl& file_url) override;
 
 	void HACK_skip_extra(bool hack_skip) { m_HACK_SKIP = hack_skip; };
 
