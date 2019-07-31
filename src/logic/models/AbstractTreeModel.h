@@ -301,7 +301,7 @@ protected:
 
 	virtual void DERIVED_set_default_namespace() {};
 
-	virtual void DERIVED_clean() {};
+//	virtual void DERIVED_clean() {};
 
 	/// @}
 

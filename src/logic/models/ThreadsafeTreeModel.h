@@ -37,7 +37,7 @@
 #include <logic/serialization/ISerializable.h>
 #include <logic/UUIncD.h>
 #include <future/enable_shared_from_this_virtual.h>
-#include <models/UndoRedoHelper.h>
+#include "UndoRedoHelper.h"
 #include "AbstractTreeModel.h"
 
 /**
@@ -87,6 +87,8 @@ public:
 	bool requestDeleteItem(const std::shared_ptr<AbstractTreeModelItem>& item, Fun &undo, Fun &redo);
 
 	/// @}
+
+	QVariant data(const QModelIndex &index, int role) const override;
 
 protected:
 

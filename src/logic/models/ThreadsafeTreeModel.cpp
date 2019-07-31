@@ -126,6 +126,12 @@ bool ThreadsafeTreeModel::requestDeleteItem(const std::shared_ptr<AbstractTreeMo
 	return request_was_successful;
 }
 
+QVariant ThreadsafeTreeModel::data(const QModelIndex& index, int role) const
+{
+	std::unique_lock read_lock(m_rw_mutex);
+	return BASE_CLASS::data(index, role);
+}
+
 UUIncD ThreadsafeTreeModel::requestAddItem(std::vector<QVariant> values, UUIncD parent_id, Fun undo, Fun redo)
 {
 	std::unique_lock write_lock(m_rw_mutex);

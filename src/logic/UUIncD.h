@@ -47,6 +47,8 @@ public:
 	// User-defined conversion to uin64_t.
 	operator uint64_t() const;
 
+	bool isValid() const { return *this != null(); };
+
 	bool operator==(const UUIncD& rhs) const { return m_my_id == rhs.m_my_id; };
 	bool operator<(const UUIncD& rhs) const { return m_my_id < rhs.m_my_id; };
 

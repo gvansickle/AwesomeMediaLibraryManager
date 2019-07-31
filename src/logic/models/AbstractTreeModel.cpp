@@ -92,6 +92,8 @@ void AbstractTreeModel::clear()
 
 bool AbstractTreeModel::setColumnSpecs(std::initializer_list<ColumnSpec> column_specs)
 {
+	std::unique_lock write_lock(m_rw_mutex);
+
 	Q_CHECK_PTR(m_root_item);
 	return m_root_item->setColumnSpecs(column_specs);
 }
@@ -114,6 +116,8 @@ int AbstractTreeModel::columnCount(const QModelIndex& parent) const
 
 QVariant AbstractTreeModel::data(const QModelIndex &index, int role) const
 {
+	std::unique_lock read_lock(m_rw_mutex);
+
 	// data() expects a valid index, except it won't get one for data() calls for the root item info.
 //	Q_ASSERT(checkIndex(index, CheckIndexOption::IndexIsValid));
 
@@ -153,7 +157,9 @@ QVariant AbstractTreeModel::data(const QModelIndex &index, int role) const
 
 Qt::ItemFlags AbstractTreeModel::flags(const QModelIndex &index) const
 {
-    if (!index.isValid())
+	std::unique_lock read_lock(m_rw_mutex);
+
+	if (!index.isValid())
 	{
 		return Qt::NoItemFlags;
 	}
@@ -193,14 +199,14 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getItemById(const UUIn
 	std::unique_lock read_lock(m_rw_mutex);
 
 	Q_ASSERT(m_root_item);
-
 	Q_ASSERT(id != UUIncD::null());
+
 	if(id == m_root_item->getId())
 	{
 		return m_root_item;
 	}
-
-	Q_ASSERT(m_model_item_map.count(id) > 0);
+//#error "An empty model dies here in the view, via parent()"
+	AMLM_ASSERT_GT(m_model_item_map.count(id), 0);
 	return m_model_item_map.at(id).lock();
 }
 
@@ -319,6 +325,8 @@ M_WARNING("Not right, this needs ColumnSpecs added initially from somewhere");
 
 void AbstractTreeModel::SaveDatabase(const QString& database_filename)
 {
+	std::unique_lock read_lock(m_rw_mutex);
+
 	qIn() << "###### WRITING AbstractTreeModel to:" << database_filename;
 	qIn() << "###### TREEMODELPTR HAS NUM ROWS:" << rowCount();
 
@@ -371,13 +379,18 @@ AbstractTreeModel::iterator AbstractTreeModel::end()
 
 void AbstractTreeModel::register_item(const std::shared_ptr<AbstractTreeModelItem>& item)
 {
+	std::unique_lock write_lock(m_rw_mutex);
+
 	UUIncD id = item->getId();
+	Q_ASSERT(id.isValid());
 	Q_ASSERT(m_model_item_map.count(id) == 0);
 	m_model_item_map[id] = item;
 }
 
 void AbstractTreeModel::deregister_item(UUIncD id, AbstractTreeModelItem* item)
 {
+	std::unique_lock write_lock(m_rw_mutex);
+
 	Q_UNUSED(item);
 	AMLM_ASSERT_GT(m_model_item_map.count(id), 0);
 	m_model_item_map.erase(id);
@@ -511,6 +524,8 @@ bool AbstractTreeModel::checkConsistency()
 
 QVariant AbstractTreeModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
+	std::unique_lock read_lock(m_rw_mutex);
+
 	// Both ETM and KDEN are the same here.
     if (orientation == Qt::Horizontal && role == Qt::DisplayRole)
 	{
@@ -584,6 +599,8 @@ bool AbstractTreeModel::insertRows(int insert_before_row, int num_rows, const QM
 
 QModelIndex AbstractTreeModel::parent(const QModelIndex &index) const
 {
+	std::unique_lock write_lock(m_rw_mutex);
+
 	// Check index but don't touch parent, since per Qt5 docs that would make this go recursive.
 	Q_ASSERT(checkIndex(index, CheckIndexOption::IndexIsValid | CheckIndexOption::DoNotUseParent));
     // Return invalid parent index for invalid index.
@@ -592,9 +609,10 @@ QModelIndex AbstractTreeModel::parent(const QModelIndex &index) const
         return QModelIndex();
 	}
 
-	auto child_uuincd = index.internalId();
+	auto child_uuincd_int = index.internalId();
+	UUIncD child_uuincd = UUIncD(child_uuincd_int);
 
-	std::shared_ptr<AbstractTreeModelItem> childItem = getItemById(static_cast<UUIncD>(child_uuincd));
+	std::shared_ptr<AbstractTreeModelItem> childItem = getItemById(child_uuincd);
 	std::shared_ptr<AbstractTreeModelItem> parentItem = childItem->parent_item().lock();
 
 	Q_ASSERT(parentItem);
@@ -700,6 +718,8 @@ bool AbstractTreeModel::appendItems(std::vector<std::shared_ptr<AbstractTreeMode
 
 QModelIndex AbstractTreeModel::getIndexFromItem(const std::shared_ptr<AbstractTreeModelItem>& item) const
 {
+	std::unique_lock read_lock(m_rw_mutex);
+
 	Q_CHECK_PTR(item);
 	if(item == m_root_item)
 	{
@@ -711,6 +731,8 @@ QModelIndex AbstractTreeModel::getIndexFromItem(const std::shared_ptr<AbstractTr
 
 QModelIndex AbstractTreeModel::getIndexFromId(UUIncD id) const
 {
+	std::unique_lock read_lock(m_rw_mutex);
+
 	if(id == m_root_item->getId())
 	{
 		return QModelIndex();
@@ -726,6 +748,8 @@ QModelIndex AbstractTreeModel::getIndexFromId(UUIncD id) const
 
 int AbstractTreeModel::rowCount(const QModelIndex &parent) const
 {
+	std::unique_lock read_lock(m_rw_mutex);
+
 	// Only the hidden parent item has row count info.
 	/// @todo Is this right?
 	if(parent.column() > 0)
@@ -748,6 +772,8 @@ int AbstractTreeModel::rowCount(const QModelIndex &parent) const
 
 bool AbstractTreeModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
+	std::unique_lock write_lock(m_rw_mutex);
+
 	// setData() expects a valid index.
 	// From Qt5 docs:
 	/// "A legal model index is either an invalid model index, or a valid model index for which all the following holds:

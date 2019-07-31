@@ -122,6 +122,7 @@ bool AbstractTreeModelItem::selfSoftDelete(Fun& undo, Fun& redo)
 			return false;
 		}
 	}
+	qWr() << "###################### SELFSOFTDELETE()";
 M_WARNING("TODO, NEEDS MUTEX MEMBER");
 //	UPDATE_UNDO_REDO(m_rw_mutex, local_redo, local_undo, undo, redo);
 	return true;
