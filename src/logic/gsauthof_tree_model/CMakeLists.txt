@@ -82,7 +82,7 @@ set(HEADERS_EDITOR
    editor/tree_widget.hh
 #   editor/slider_bar.hh
 #   editor/child_dialog.hh
-#   editor/command/new.hh
+   editor/command/new.hh
 #   editor/command/open.hh
 #   editor/command/async_open.hh
 #   editor/command/save.hh
@@ -103,8 +103,8 @@ set(HEADERS_EDITOR
 #   editor/gui_command/display_subtree.hh
 #   editor/gui_command/write_aci.hh
 #   editor/gui_command/search.hh
-#   editor/controller.hh
-#   editor/gui_controller.hh
+   editor/controller.hh
+   editor/gui_controller.hh
 #   editor/arguments.hh
 #   editor/preview_file_dialog.hh
 #   editor/preview.hh
@@ -144,11 +144,11 @@ set(EDITOR_CC
    editor/tree_widget.cc
 #   editor/slider_bar.cc
 #   editor/child_dialog.cc
-#   editor/controller.cc
-#   editor/gui_controller.cc
+   editor/controller.cc
+   editor/gui_controller.cc
 #   editor/vc_matchmaker.cc
 #   editor/recent_menu.cc
-#   editor/command/new.cc
+   editor/command/new.cc
 #   editor/command/open.cc
 #   editor/command/open_xml.cc
 #   editor/command/open_ber.cc

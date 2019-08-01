@@ -70,6 +70,8 @@ public:
 
 	std::shared_ptr<ScanResultsTreeModel> getScanResultsTreeModel();
 
+	std::shared_ptr<> getExpTreeModel();
+
 	/// @}
 
 private:
@@ -79,6 +81,9 @@ private:
 
 	// Shared ptr to the scan results tree model.  Will be deleted in the destructor.
 	std::shared_ptr<ScanResultsTreeModel> m_srtm_instance;
+
+	std::shared_ptr<ScanResultsTreeModel> m_exptreemodel_instance;
+
 };
 
 } /* namespace AMLM */
