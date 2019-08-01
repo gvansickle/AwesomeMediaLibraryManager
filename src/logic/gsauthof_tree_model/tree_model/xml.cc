@@ -20,8 +20,17 @@
 }}} */
 #include "xml.hh"
 
-#include <xxxml/xxxml.hh>
-#include <xxxml/util.hh>
+//#include <xxxml/xxxml.hh>
+//#include <xxxml/util.hh>
+/// GRVS STUBS
+struct _xmlNode
+{
+	int type;
+	int children;
+	_xmlNode* parent;
+};
+constexpr int XML_ELEMENT_NODE = 5;
+/// GRVS STUBS
 
 #include <QMimeData>
 #include <QDebug>
@@ -35,7 +44,7 @@ namespace tree_model {
 
   void XML::save(const QString &filename)
   {
-    xxxml::save_format_file_enc(filename.toUtf8().data(), doc_);
+//    xxxml::save_format_file_enc(filename.toUtf8().data(), doc_);
   }
   const xxxml::doc::Ptr &XML::doc() const
   {
@@ -54,8 +63,8 @@ namespace tree_model {
   }
   XML::XML(QObject *parent)
     :
-      Base(parent),
-      doc_(xxxml::read_memory(""))
+	  Base(parent)/**,
+	  doc_(xxxml::read_memory(""))*/
   {
   }
 
@@ -69,7 +78,7 @@ namespace tree_model {
           switch (role) {
             case Qt::EditRole:
             case Qt::DisplayRole:
-              return QVariant(QString(xxxml::name(node)));
+//              return QVariant(QString(xxxml::name(node)));
               break;
             default:
               break;
@@ -80,7 +89,7 @@ namespace tree_model {
             case Qt::EditRole:
             case Qt::DisplayRole:
               if (!has_children(attribute(index, 0)) && node->children)
-                return QVariant(QString(xxxml::content(node->children)));
+//                return QVariant(QString(xxxml::content(node->children)));
               break;
             default:
               break;
@@ -106,13 +115,13 @@ namespace tree_model {
         switch (index.column()) {
           case 0:
             emit data_about_to_be_changed(index);
-            xxxml::node_set_name(node, value.toString().toUtf8().data());
+//            xxxml::node_set_name(node, value.toString().toUtf8().data());
             r = true;
             break;
           case 1:
             if (!has_children(attribute(index, 0))) {
               emit data_about_to_be_changed(index);
-              xxxml::util::set_content(node, value.toString().toUtf8().data());
+//              xxxml::util::set_content(node, value.toString().toUtf8().data());
               r = true;
             }
             break;
@@ -148,10 +157,10 @@ namespace tree_model {
       return false;
     if (index.is_valid()) {
       const xmlNode *node = static_cast<const xmlNode*>(index.internal_pointer());
-      const xmlNode *child = xxxml::first_element_child(node);
+	  const xmlNode *child = nullptr;///xxxml::first_element_child(node);
       return child;
     } else {
-      return xxxml::util::has_root(doc_);
+	  return true; ///xxxml::util::has_root(doc_);
     }
   }
 
@@ -161,11 +170,11 @@ namespace tree_model {
       return Index();
     if (index.is_valid()) {
       const xmlNode *node = static_cast<const xmlNode*>(index.internal_pointer());
-      const xmlNode *child = xxxml::first_element_child(node);
+	  const xmlNode *child = nullptr; ///xxxml::first_element_child(node);
       return create_index(0, child);
     } else {
       if (has_children(index))
-        return create_index(0, xxxml::doc::get_root_element(doc_));
+		return create_index(0, nullptr);///xxxml::doc::get_root_element(doc_));
       else
         return Index();
     }
@@ -177,11 +186,11 @@ namespace tree_model {
       return Index();
     if (index.is_valid()) {
       const xmlNode *node = static_cast<const xmlNode*>(index.internal_pointer());
-      const xmlNode *child = xxxml::last_element_child(node);
+	  const xmlNode *child = nullptr; ///xxxml::last_element_child(node);
       return create_index(0, child);
     } else {
       if (has_children(index))
-        return create_index(0, xxxml::doc::get_root_element(doc_));
+		return create_index(0, nullptr);///xxxml::doc::get_root_element(doc_));
       else
         return Index();
     }
@@ -191,7 +200,7 @@ namespace tree_model {
   {
     if (index.is_valid() && !index.column()) {
       const xmlNode *node = static_cast<const xmlNode*>(index.internal_pointer());
-      const xmlNode *e = xxxml::previous_element_sibling(node);
+	  const xmlNode *e = nullptr;///xxxml::previous_element_sibling(node);
       return create_index(0, e);
     } else {
       return Index();
@@ -202,7 +211,7 @@ namespace tree_model {
   {
     if (index.is_valid() && !index.column()) {
       const xmlNode *node = static_cast<const xmlNode*>(index.internal_pointer());
-      const xmlNode *e = xxxml::next_element_sibling(node);
+	  const xmlNode *e = nullptr;///xxxml::next_element_sibling(node);
       return create_index(0, e);
     } else {
       return Index();
@@ -236,11 +245,11 @@ namespace tree_model {
       begin_remove_index(index);
       xmlNode *node = static_cast<xmlNode*>(index.internal_pointer());
       xmlNode *parent = node->parent;
-      xxxml::unlink_node(node);
+//      xxxml::unlink_node(node);
       if (parent) {
         // otherwise, whitespace is left over ...
-        if (!xxxml::first_element_child(parent))
-          xxxml::util::set_content(parent, std::string());
+//        if (!xxxml::first_element_child(parent))
+//          xxxml::util::set_content(parent, std::string());
       }
       end_remove_index(index);
       return true;
@@ -258,12 +267,12 @@ namespace tree_model {
       return Index();
     try {
       begin_insert_index(index, position);
-      xmlNode *new_node = xxxml::new_doc_node(doc_, "NEW NODE");
+	  xmlNode *new_node = nullptr;///xxxml::new_doc_node(doc_, "NEW NODE");
       if (index.is_valid()) {
         xmlNode *node = static_cast<xmlNode*>(index.internal_pointer());
-        xxxml::util::insert(doc_, node, new_node, position);
+//        xxxml::util::insert(doc_, node, new_node, position);
       } else {
-        xxxml::doc::set_root_element(doc_, new_node);
+//        xxxml::doc::set_root_element(doc_, new_node);
       }
       auto new_index = create_index(0, new_node);
       end_insert_index(new_index);
@@ -286,16 +295,16 @@ namespace tree_model {
       return std::unique_ptr<QMimeData>();
     auto r = std::make_unique<QMimeData>();
     if (indexes.size() == 1 && !indexes.front().is_valid()) {
-      auto p = xxxml::doc::dump_format_memory(doc_);
-      r->setData("text/xml", QByteArray(p.first.get(), p.second));
+	  auto p = nullptr;///xxxml::doc::dump_format_memory(doc_);
+//      r->setData("text/xml", QByteArray(p.first.get(), p.second));
     } else {
       QByteArray b;
       for (auto &i : indexes) {
         if (!i.is_valid() || i.column())
           continue;
         const xmlNode *node = static_cast<const xmlNode*>(i.internal_pointer());
-        auto x = xxxml::util::dump(doc_, node);
-        b.append(x.first.first, x.first.second - x.first.first);
+		auto x = nullptr;///xxxml::util::dump(doc_, node);
+//        b.append(x.first.first, x.first.second - x.first.first);
       }
       r->setData("text/xml", b);
     }
@@ -319,22 +328,22 @@ namespace tree_model {
       data.append("<root>");
       data.append(a.data(), a.size());
       data.append("</root>");
-      auto new_node = xxxml::util::create_node(doc_,
-          data.data(), data.data() + data.size());
+	  auto new_node = nullptr;///xxxml::util::create_node(doc_,
+//          data.data(), data.data() + data.size());
       std::deque<xxxml::Node_Ptr> children;
       if (position < 0)
-        while (auto c = xxxml::first_element_child(new_node.get()))
-          children.push_back(xxxml::unlink_node(c));
+		while (auto c = nullptr)///xxxml::first_element_child(new_node.get()))
+		  children.push_back(nullptr);///xxxml::unlink_node(c));
       else
-        while (auto c = xxxml::first_element_child(new_node.get()))
-          children.push_front(xxxml::unlink_node(c));
+		while (auto c = nullptr)///xxxml::first_element_child(new_node.get()))
+		  children.push_front(nullptr);///xxxml::unlink_node(c));
       for (auto &c : children) {
         begin_insert_index(i, position);
-        auto x = c.release();
-        xxxml::util::insert(doc_, node, x, position);
+		auto x = nullptr;///c.release();
+//        xxxml::util::insert(doc_, node, x, position);
         end_insert_index(create_index(0, x));
       }
-    } catch (const xxxml::Parse_Error &e) {
+	} catch (/**const xxxml::Parse_Error &e*/...) {
       return false;
     }
     return true;

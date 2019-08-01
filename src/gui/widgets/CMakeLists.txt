@@ -18,6 +18,7 @@
 #
 
 set(gui_widgets_HEADER_FILES
+	ExpTreeView.h
 		ExperimentalKDEView1.h
 		CollectionStatsWidget.h
 		CollectionView.h
@@ -25,6 +26,7 @@ set(gui_widgets_HEADER_FILES
 		PlayerControls.h
 	)
 set(gui_widgets_SOURCE_FILES
+	ExpTreeView.cpp
 		ExperimentalKDEView1.cpp
 		CollectionStatsWidget.cpp
 		CollectionView.cpp
@@ -32,6 +34,7 @@ set(gui_widgets_SOURCE_FILES
 		PlayerControls.cpp
 	)
 set(gui_widgets_UI_FILES
+	ExpTreeView.ui
 		ExperimentalKDEView1.ui
 		CollectionView.ui
  	)

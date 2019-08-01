@@ -91,8 +91,12 @@
 #include <AMLMSettings.h>
 #include <gui/actions/ActionHelpers.h>
 #include <gui/settings/SettingsDialog.h>
+
+// Ours, Experimental views, etc.
 #include <gui/widgets/CollectionStatsWidget.h>
 #include <gui/widgets/CollectionView.h>
+#include <gui/widgets/ExpTreeView.h>
+//#include <logic/gsauthof_tree_model/editor/tree_widget.hh>
 
 #include <logic/LibraryModel.h>
 #include <logic/PlaylistModel.h>
@@ -1784,8 +1788,14 @@ M_WARNING("SHARED PTR");
 M_WARNING("SHARED PTR");
 	second_child->setModel(AMLM::Core::self()->getScanResultsTreeModel().get());
 
+	/// 3
+	auto third_child = new ExpTreeView(this);
+	auto third_mdi_child = m_mdi_area->addSubWindow(third_child);
+	/// 3
+
     mdi_child->show();
 	second_mdi_child->show();
+	third_mdi_child->show();
 }
 
 /**

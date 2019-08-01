@@ -66,18 +66,20 @@ set(BUILD_SHARED_LIBS false)
 
 ### GRVS
 # qt5_wrap_ui(EDITOR_UI
+set(EDITOR_UI
 #   editor/main_window.ui
 #   editor/subtree_window.ui
-#   editor/tree_widget.ui
+   editor/tree_widget.ui
 #   editor/slider_bar.ui
 #   editor/child_dialog.ui
 #   editor/result_window.ui
-#   )
+   )
 # 
 # qt5_wrap_cpp(EDITOR_MOC
+set(HEADERS_EDITOR
 #   editor/main_window.hh
 #   editor/subtree_window.hh
-#   editor/tree_widget.hh
+   editor/tree_widget.hh
 #   editor/slider_bar.hh
 #   editor/child_dialog.hh
 #   editor/command/new.hh
@@ -107,15 +109,15 @@ set(BUILD_SHARED_LIBS false)
 #   editor/preview_file_dialog.hh
 #   editor/preview.hh
 #   editor/progress_dialog.hh
-#   editor/tree_view.hh
+  editor/tree_view.hh
 #   editor/recent_menu.hh
 #   editor/instance.hh
 #   editor/instance_manager.hh
-#   editor/delegate/tag.hh
-#   editor/delegate/value.hh
-#   editor/delegate/editor/local_time.hh
+  # editor/delegate/tag.hh
+ #  editor/delegate/value.hh
+ #  editor/delegate/editor/local_time.hh
 #   editor/table_view.hh
-#   )
+  )
 
 ### GRVS
 ### Modernize QT integration.
@@ -136,10 +138,10 @@ set(TREE_MODEL_MOC
 #   QtAwesome/QtAwesome/QtAwesome.qrc
 #   )
 
-# set(EDITOR_CC
+set(EDITOR_CC
 #   editor/main_window.cc
 #   editor/subtree_window.cc
-#   editor/tree_widget.cc
+   editor/tree_widget.cc
 #   editor/slider_bar.cc
 #   editor/child_dialog.cc
 #   editor/controller.cc
@@ -175,29 +177,29 @@ set(TREE_MODEL_MOC
 #   editor/preview_file_dialog.cc
 #   editor/preview.cc
 #   editor/progress_dialog.cc
-#   editor/tree_view.cc
+   editor/tree_view.cc
 #   editor/absolute_slider_style.cc
 #   editor/instance.cc
 #   editor/instance_manager.cc
-#   editor/file_type.cc
+   editor/file_type.cc
 #   editor/delegate/tag.cc
 #   editor/delegate/value.cc
-#   editor/delegate/model_validator.cc
-#   editor/delegate/int64_validator.cc
+   editor/delegate/model_validator.cc
+   editor/delegate/int64_validator.cc
 #   editor/typed_model.cc
-#   editor/delegate/value/local_time.cc
-#   editor/delegate/editor/local_time.cc
-#   editor/delegate/factory.cc
+   editor/delegate/value/local_time.cc
+   editor/delegate/editor/local_time.cc
+   editor/delegate/factory.cc
 #   editor/setup.cc
 #   editor/result_window.cc
 #   editor/table_view.cc
-#   )
+   )
  
 set(TREE_MODEL_CC
   tree_model/index.cc
   tree_model/base.cc
   tree_model/item_adaptor.cc
-#  tree_model/xml.cc
+  tree_model/xml.cc
   tree_model/deep_model_index.cc
   tree_model/recorder.cc
   tree_model/operation/base.cc
@@ -212,14 +214,34 @@ set(TREE_MODEL_CC
   tree_model/qpmi_vector_model.cc
   )
 
+# GRVS: Probably temp
+set(QT_AWESOME_CC
+    #   QtAwesome/QtAwesome/QtAwesomeAnim.cpp
+    #   QtAwesome/QtAwesome/QtAwesome.cpp
+    #
+#    editor/qt_awesome.cc
+    )
+# qt5_wrap_cpp(QT_AWESOME_MOC
+set(QT_AWESOME_MOC
+#   QtAwesome/QtAwesome/QtAwesomeAnim.h
+#   QtAwesome/QtAwesome/QtAwesome.h
+   )
+
 ### GRVS
 add_library(tree_model STATIC)
 	
 target_sources(tree_model
 	PUBLIC
 		${TREE_MODEL_MOC}
+		list/ranked_list.hh
+		${HEADERS_EDITOR}
+		${SOURCE_EDITOR}
+		#${QT_AWESOME_MOC}
+		${EDITOR_UI}
 	PRIVATE
 		${TREE_MODEL_CC}
+		${EDITOR_CC}
+		#${QT_AWESOME_CC}
 	) 
 set_target_properties(tree_model
     PROPERTIES
@@ -231,17 +253,7 @@ target_link_libraries(tree_model
 		${QT5_LINK_LIB_TARGETS}	
 	)
        
-# GRVS
-# set(QT_AWESOME_CC
-#   QtAwesome/QtAwesome/QtAwesomeAnim.cpp
-#   QtAwesome/QtAwesome/QtAwesome.cpp
-# 
-#   editor/qt_awesome.cc
-#   )
-# qt5_wrap_cpp(QT_AWESOME_MOC
-#   QtAwesome/QtAwesome/QtAwesomeAnim.h
-#   QtAwesome/QtAwesome/QtAwesome.h
-#   )
+
 
 ### GRVS
 # add_executable(main

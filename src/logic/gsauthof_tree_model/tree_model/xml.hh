@@ -21,28 +21,45 @@
 #ifndef TREE_MODEL_XML_HH
 #define TREE_MODEL_XML_HH
 
+/**
+ * GRVS: This is an example Base tree model implementation from upstream.
+ */
+
 #include "base.hh"
 
-#include <xxxml/xxxml.hh>
+//#include <xxxml/xxxml.hh>
 
 
 struct _xmlNode;
 typedef struct _xmlNode xmlNode;
 
+/// GRVS STUB
+namespace xxxml
+{
+namespace doc
+{
+using Ptr = const char*;
+
+};
+using Node_Ptr = _xmlNode*;
+};
+
+
 namespace tree_model {
+
 
   class XML : public Base
   {
     private:
-      xxxml::doc::Ptr doc_;
+	  xxxml::doc::Ptr doc_;
     protected:
       Index create_index(unsigned column, const xmlNode *ptr = 0) const;
     public:
       XML(QObject *parent = nullptr);
-      XML(xxxml::doc::Ptr &&doc, QObject *parent = nullptr);
+	  XML(xxxml::doc::Ptr &&doc, QObject *parent = nullptr);
 
       void save(const QString &filename) override;
-      const xxxml::doc::Ptr &doc() const;
+	  const xxxml::doc::Ptr &doc() const;
 
       QVariant data(const Index &index, int role = Qt::DisplayRole) const override;
       bool set_data(const Index &index, const QVariant & value,
