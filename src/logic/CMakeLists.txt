@@ -126,11 +126,11 @@ target_include_directories(logic
 	PUBLIC
 	    # For config.h
 		${PROJECT_BINARY_DIR}/src
-		                   ${CMAKE_CURRENT_LIST_DIR}/gsauthof_tree_model
-		${CMAKE_CURRENT_LIST_DIR}/gsauthof_tree_model/tree_model
-		                   ${CMAKE_CURRENT_LIST_DIR}/gsauthof_tree_model/tree_model/editor
+		#                   ${CMAKE_CURRENT_LIST_DIR}/gsauthof_tree_model
+		#${CMAKE_CURRENT_LIST_DIR}/gsauthof_tree_model/tree_model
+		#                   ${CMAKE_CURRENT_LIST_DIR}/gsauthof_tree_model/tree_model/editor
 
-                           PRIVATE
+	PRIVATE
 		${PROJECT_SOURCE_DIR}/src
 	)
 

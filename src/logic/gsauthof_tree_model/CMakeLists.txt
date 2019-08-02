@@ -262,9 +262,10 @@ target_link_libraries(gsauthof_tree_model
 	)
 target_include_directories(gsauthof_tree_model
 	PUBLIC
-		${CMAKE_SOURCE_DIR}/list
+	                       ${CMAKE_CURRENT_LIST_DIR}
+		${CMAKE_CURRENT_LIST_DIR}/list
         ${CMAKE_CURRENT_LIST_DIR}/tree_model
-		${CMAKE_SOURCE_DIR}/tree_model/operation
+                           ${CMAKE_CURRENT_LIST_DIR}/tree_model/operation
        # For config.h
        ${CMAKE_BINARY_DIR}/src
 #	PRIVATE
