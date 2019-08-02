@@ -47,14 +47,15 @@
 #include <logic/serialization/SerializationHelpers.h>
 
 
-//std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::construct(const std::vector<QVariant>& data,
-//		std::shared_ptr<AbstractTreeModel> model, bool isRoot, UUIncD id)
-//{
-//	/// @note make_shared doesn't have access to the constructor if it's protected, so we have to do this.
-//	std::shared_ptr<AbstractTreeModelItem> self(new AbstractTreeModelItem(data, model, isRoot, id));
-//	baseFinishConstruct(self);
-//	return self;
-//}
+std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::construct(const std::vector<QVariant>& data,
+                                                                        const std::shared_ptr<AbstractTreeModelItem>& parent_item,
+                                                                        UUIncD id)
+{
+	/// @note make_shared doesn't have access to the constructor if it's protected, so we have to do this.
+	std::shared_ptr<AbstractTreeModelItem> self(new AbstractTreeModelItem(data, parent_item, id));
+	self->postConstructorFinalization();
+	return self;
+}
 
 //std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::construct(const QVariant& variant, std::shared_ptr<AbstractTreeModel> model, bool isRoot, UUIncD id)
 //{
@@ -540,8 +541,8 @@ bool AbstractTreeModelItem::insertChildren(int position, int count, int columns)
 
 			// Create a new default-constructed item.
 //			std::shared_ptr<PlaceholderTreeModelItem> item = PlaceholderTreeModelItem::construct(data, model_ptr);
-//			std::shared_ptr<AbstractTreeModelItem> item = AbstractTreeModelItem::construct(data, model_ptr, false);
-			std::shared_ptr<AbstractTreeModelItem> item = std::make_shared<AbstractTreeModelItem>(data, this->shared_from_this());
+			std::shared_ptr<AbstractTreeModelItem> item = AbstractTreeModelItem::construct(data, this->shared_from_this());
+//			std::shared_ptr<AbstractTreeModelItem> item = std::make_shared<AbstractTreeModelItem>(data, this->shared_from_this());
 			// Set us as the new item's parent.
 			/// NOW MOVED ABOVE
 //			item->updateParent(shared_from_this());
@@ -623,7 +624,7 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::appendChild(const 
 		// Create the new child with this item's model as the model.
 		// Not that by definition, this will not be the root item.
 //		auto child = AbstractTreeModelItem::construct(data, ptr, false);
-		auto child = std::make_shared<AbstractTreeModelItem>(data, this->shared_from_this());
+		auto child = AbstractTreeModelItem::construct(data, this->shared_from_this());
 		appendChild(child);
 		return child;
 	}
@@ -682,22 +683,24 @@ bool AbstractTreeModelItem::has_ancestor(UUIncD id)
 }
 
 
-void AbstractTreeModelItem::postConstructorFinalization(/*const std::shared_ptr<AbstractTreeModelItem>& self*/)
+void AbstractTreeModelItem::postConstructorFinalization()
 {
 	if(m_is_root)
 	{
+//		Q_ASSERT_X(m_model.lock(), __PRETTY_FUNCTION__, "Can't lock this's model");
 		registerSelf(this->shared_from_this());
 	}
 }
 
 /**
- * Static function which registers @a self and its children with the model self is already registered with.
+ * Static function which registers @a self and its children with the model @a self is already registered with.
  * @warning Will assert if @a self doesn't already know its model.
  * @param self
  */
 void AbstractTreeModelItem::registerSelf(const std::shared_ptr<AbstractTreeModelItem>& self)
 {
-	Q_ASSERT(!self->m_model.expired());
+//	Q_ASSERT_X(self->m_model.);
+//	Q_ASSERT(!self->m_model.expired());
 
 	// Register children.
 	for (const auto& child : self->m_child_items)

@@ -54,24 +54,18 @@ AbstractTreeModelHeaderItem::construct(std::initializer_list<ColumnSpec> column_
 
 //	baseFinishConstruct(self);
 	self->postConstructorFinalization();
+	Q_ASSERT(self->m_model.lock());// = parent_model;
 
-	Q_ASSERT(self->isInModel());
+//	Q_ASSERT(self->isInModel());
 	return self;
 }
 
 AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(std::initializer_list<ColumnSpec> column_specs,
                                                          const std::shared_ptr<AbstractTreeModel>& parent_model, UUIncD id)
-	: BASE_CLASS({}/*[column_specs, parent_model]() -> std::vector<QVariant> {
-		// We need to convert the initializer list of ColumnSpecs to vector<QVariant>.
-		std::vector<QVariant> retval;
-		for(const auto& colspec : column_specs)
-		{
-			retval.push_back(QVariant::fromValue<ColumnSpec>(colspec));
-		}
-		return retval;
-	}*/)//, m_column_specs(column_specs)
+	: BASE_CLASS({}, nullptr, id) //, m_column_specs(column_specs)
 {
 //	setColumnSpecs(column_specs);
+	m_model = parent_model;
 }
 
 AbstractTreeModelHeaderItem::~AbstractTreeModelHeaderItem()

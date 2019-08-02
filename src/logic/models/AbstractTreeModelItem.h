@@ -69,25 +69,27 @@ protected:
 //	AbstractTreeModelItem(const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id = UUIncD::null());
 
 public:
-//	/**
-//	 * Named constructors.
-//	 */
-//	/// KDEN
-//	static std::shared_ptr<AbstractTreeModelItem> construct(const std::vector<QVariant>& data,
-//			std::shared_ptr<AbstractTreeModel> model, bool isRoot, UUIncD id = UUIncD::null());
+	/**
+	 * Named constructors.
+	 */
+	/// KDEN
+	static std::shared_ptr<AbstractTreeModelItem> construct(const std::vector<QVariant>& data,
+	                                                        const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr,
+	                                                        UUIncD id = UUIncD::null());
 //	static std::shared_ptr<AbstractTreeModelItem> construct(const QVariant& variant,
 //			std::shared_ptr<AbstractTreeModel> model, bool isRoot, UUIncD id = UUIncD::null());
+protected:
 //	AbstractTreeModelItem() {};
 	explicit AbstractTreeModelItem(const std::vector<QVariant>& data, const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr, UUIncD id = UUIncD::null());
+public:
 	~AbstractTreeModelItem() override;
 
 	/**
 	 * Do any post-constructor work necessary to fully form the object.  Called by the Named Constructors/Factory Functions
 	 * to handle any virtual function call work.
 	 * If @a self is root, calls registerSelf() to register it with the model, otherwise does nothing.
-	 * This is a separated function so that it can be called from derived classes
 	 */
-	virtual void postConstructorFinalization(/*const std::shared_ptr<AbstractTreeModelItem>& self*/);
+	virtual void postConstructorFinalization();
 
 	/**
 	 * Because we have a mutex member.
@@ -321,7 +323,7 @@ protected:
 
 	std::weak_ptr<AbstractTreeModel> m_model;
 
-	bool m_is_root{false};
+	bool m_is_root {false};
 
 	/// Deque of shared_ptr's to child items.
 	std::deque<std::shared_ptr<AbstractTreeModelItem>> m_child_items;
@@ -343,7 +345,7 @@ private:
 	/// be non-null as long as this item is not the invisible root item.
 	std::weak_ptr<AbstractTreeModelItem> m_parent_item;
 
-	int m_depth;
+	int m_depth {-1};
 
 	bool m_is_in_model {false};
 };

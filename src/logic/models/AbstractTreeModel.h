@@ -70,8 +70,7 @@ public:
 	 * We only use this to work around the "no virtual calls in con/destructors" issue C++ and all other languages have,
 	 * here specifically with the construction of the root item, which fails in shared_from_this() due to this (AFAICT).
 	 */
-	static std::shared_ptr<AbstractTreeModel> construct(std::initializer_list<ColumnSpec> column_specs,
-			QObject* parent = nullptr);
+	static std::shared_ptr<AbstractTreeModel> construct(std::initializer_list<ColumnSpec> column_specs,	QObject* parent = nullptr);
 protected:
 
 	/**
