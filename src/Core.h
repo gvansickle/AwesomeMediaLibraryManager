@@ -25,6 +25,7 @@
 
 // Std C++
 #include <memory>
+#include <deque>
 
 // Qt5
 #include <QObject>
@@ -36,6 +37,35 @@
 
 namespace AMLM
 {
+
+#if 0
+class Instance;
+
+  class Instance_Manager : public QObject {
+	Q_OBJECT
+
+	public:
+	  Instance_Manager(QObject *parent = nullptr);
+
+	  Instance *create_instance();
+	public slots:
+	  void do_create_instance();
+	  void quit();
+
+	  void open_urls_in_new_instances(const QList<QUrl> &urls);
+
+	signals:
+	  void first_open_requested(const QString &filename);
+
+	private:
+	  std::deque<Instance*> instances_;
+
+
+
+  };
+#endif
+
+class Instance;
 
 /**
  *
@@ -70,7 +100,8 @@ public:
 
 	std::shared_ptr<ScanResultsTreeModel> getScanResultsTreeModel();
 
-	std::shared_ptr<> getExpTreeModel();
+	////
+	std::shared_ptr<Instance> getExpTreeModel();
 
 	/// @}
 
@@ -83,6 +114,9 @@ private:
 	std::shared_ptr<ScanResultsTreeModel> m_srtm_instance;
 
 	std::shared_ptr<ScanResultsTreeModel> m_exptreemodel_instance;
+
+	/// tree-model
+	std::deque<Instance*> instances_;
 
 };
 

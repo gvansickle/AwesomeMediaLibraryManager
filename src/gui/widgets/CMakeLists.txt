@@ -42,7 +42,7 @@ set(gui_widgets_UI_FILES
 target_sources_local(widgets
 	PUBLIC
 		${gui_widgets_HEADER_FILES}
-	#PRIVATE
+#	PRIVATE
 		${gui_widgets_SOURCE_FILES}
 		${gui_widgets_UI_FILES}
 	)
@@ -65,6 +65,8 @@ target_include_directories(widgets
 		${PROJECT_BINARY_DIR}/src
 		# For nomoc.
 		${PROJECT_SOURCE_DIR}/src/utils/nomoc
+		# For generated ui headers
+		${CMAKE_CURRENT_BINARY_DIR}
 	PUBLIC
 		# For anything in <root>/src: utils, logic, future, gui.
 		${PROJECT_SOURCE_DIR}/src

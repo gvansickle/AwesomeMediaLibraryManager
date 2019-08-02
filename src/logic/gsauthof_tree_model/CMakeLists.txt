@@ -234,7 +234,6 @@ set(QT_AWESOME_MOC
 target_sources_local(gsauthof_tree_model
 	PUBLIC
 		${TREE_MODEL_MOC}
-		list/ranked_list.hh
 		${HEADERS_EDITOR}
 		${SOURCE_EDITOR}
 		#${QT_AWESOME_MOC}
@@ -263,8 +262,9 @@ target_link_libraries(gsauthof_tree_model
 	)
 target_include_directories(gsauthof_tree_model
 	PUBLIC
-		${CMAKE_CURRENT_SOURCE_DIR}/tree_model
-		${CMAKE_CURRENT_SOURCE_DIR}/tree_model/operation
+		${CMAKE_SOURCE_DIR}/list
+        ${CMAKE_CURRENT_LIST_DIR}/tree_model
+		${CMAKE_SOURCE_DIR}/tree_model/operation
        # For config.h
        ${CMAKE_BINARY_DIR}/src
 #	PRIVATE

@@ -59,6 +59,7 @@ target_sources_local(models
 
 target_link_libraries(models
 	PUBLIC
+		gsauthof_tree_model
 		${QT5_LINK_LIB_TARGETS}
 		${KF5_LINK_LIB_TARGETS}
 #		${GTK_LINK_LIB_TARGETS}

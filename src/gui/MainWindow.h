@@ -72,7 +72,6 @@ using ToolBarClass = QToolBar;
 #endif
 
 /// Ours
-
 #include <logic/MP2.h>
 #include "mdi/MDIModelViewPair.h"
 
@@ -93,6 +92,13 @@ class PlaylistModel;
 
 class LibraryEntry;
 class LibraryEntryMimeData;
+
+///GRVS tree-model
+namespace editor
+{
+class Tree_Widget;
+}
+
 
 /**
  * Awesome Media Library Manager's MainWindow class.
@@ -532,6 +538,17 @@ private:
 
     /// The Settings (AKA Preferences, AKA Config) dialog.
     QSharedPointer<SettingsDialog> m_settings_dlg;
+
+#if 1 /// tree-model
+    ///   class Main_Window : public QMainWindow
+Q_SIGNALS:
+	void new_triggered();
+	void quit_triggered();
+public:
+
+	editor::Tree_Widget& tree_widget();
+
+#endif
 };
 
 #endif // AWESOMEMEDIALIBRARYMANAGER_SRC_GUI_MAINWINDOW_H
