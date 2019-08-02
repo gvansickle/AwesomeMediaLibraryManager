@@ -43,19 +43,21 @@
 /// TEMP
 #include "ScanResultsTreeModel.h"
 
-//// static
-//std::shared_ptr<AbstractTreeModelHeaderItem>
-//AbstractTreeModelHeaderItem::construct(std::initializer_list<ColumnSpec> column_specs,
-//		const std::shared_ptr<AbstractTreeModel>& model, bool isRoot, UUIncD id)
-//{
-//	std::shared_ptr<AbstractTreeModelHeaderItem> self(new AbstractTreeModelHeaderItem(column_specs, model, isRoot, id));
-//
-//	self->setColumnSpecs(column_specs);
-//
+// static
+std::shared_ptr<AbstractTreeModelHeaderItem>
+AbstractTreeModelHeaderItem::construct(std::initializer_list<ColumnSpec> column_specs,
+									   const std::shared_ptr<AbstractTreeModel>& parent_model, UUIncD id)
+{
+	std::shared_ptr<AbstractTreeModelHeaderItem> self(new AbstractTreeModelHeaderItem(column_specs, parent_model, id));
+
+	self->setColumnSpecs(column_specs);
+
 //	baseFinishConstruct(self);
-//	Q_ASSERT(self->isInModel());
-//	return self;
-//}
+	self->postConstructorFinalization();
+
+	Q_ASSERT(self->isInModel());
+	return self;
+}
 
 AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(std::initializer_list<ColumnSpec> column_specs,
                                                          const std::shared_ptr<AbstractTreeModel>& parent_model, UUIncD id)
@@ -69,12 +71,12 @@ AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(std::initializer_list<C
 		return retval;
 	}*/)//, m_column_specs(column_specs)
 {
-	setColumnSpecs(column_specs);
+//	setColumnSpecs(column_specs);
 }
 
-//AbstractTreeModelHeaderItem::~AbstractTreeModelHeaderItem()
-//{
-//}
+AbstractTreeModelHeaderItem::~AbstractTreeModelHeaderItem()
+{
+}
 
 void AbstractTreeModelHeaderItem::clear()
 {

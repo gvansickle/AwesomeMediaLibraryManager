@@ -59,16 +59,9 @@ class AbstractTreeModel;
  */
 class AbstractTreeModelItem : public virtual ISerializable, public enable_shared_from_this_virtual<AbstractTreeModelItem>
 {
-public:
+protected:
 
 	friend class AbstractTreeModel;
-
-	// Ok, now we're gonna burn all kinds of blood, toil, tears, and sweat trying to make both a BFS
-	// and DFS iterator for AbstractTreeModelItem trees.
-//	template<class ItemType = AbstractTreeModelItem>
-//	class bfs_iterator;
-
-protected:
 
 //	/// Sets the model and UUIncD.
 //	/// ETM+KDen
@@ -87,6 +80,14 @@ public:
 //	AbstractTreeModelItem() {};
 	explicit AbstractTreeModelItem(const std::vector<QVariant>& data, const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr, UUIncD id = UUIncD::null());
 	~AbstractTreeModelItem() override;
+
+	/**
+	 * Do any post-constructor work necessary to fully form the object.  Called by the Named Constructors/Factory Functions
+	 * to handle any virtual function call work.
+	 * If @a self is root, calls registerSelf() to register it with the model, otherwise does nothing.
+	 * This is a separated function so that it can be called from derived classes
+	 */
+	virtual void postConstructorFinalization(/*const std::shared_ptr<AbstractTreeModelItem>& self*/);
 
 	/**
 	 * Because we have a mutex member.
@@ -252,12 +253,7 @@ M_WARNING("NEED TO BE OVERRIDDEN IN HeaderItem");
     QTH_DECLARE_FRIEND_QDEBUG_OP(AbstractTreeModelItem);
 
 protected:
-	/**
-	 * Finish construction of object given its pointer.
-	 * If @a self is root, calls registerSelf() to register it with the model, otherwise does nothing.
-	 * This is a separated function so that it can be called from derived classes
-	 */
-	static void baseFinishConstruct(const std::shared_ptr<AbstractTreeModelItem>& self);
+
 
 	/**
 	 * Helper functions to handle registration / deregistration to the model.

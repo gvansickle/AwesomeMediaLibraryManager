@@ -682,11 +682,11 @@ bool AbstractTreeModelItem::has_ancestor(UUIncD id)
 }
 
 
-void AbstractTreeModelItem::baseFinishConstruct(const std::shared_ptr<AbstractTreeModelItem>& self)
+void AbstractTreeModelItem::postConstructorFinalization(/*const std::shared_ptr<AbstractTreeModelItem>& self*/)
 {
-	if(self->m_is_root)
+	if(m_is_root)
 	{
-		registerSelf(self);
+		registerSelf(this->shared_from_this());
 	}
 }
 

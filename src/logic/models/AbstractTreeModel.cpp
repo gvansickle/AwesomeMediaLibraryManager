@@ -56,20 +56,22 @@
 ///**
 // * This really should never get called, since AbstractTreeModel is abstract.  Mostly here for an example for derived classes.
 // */
-//std::shared_ptr<AbstractTreeModel> AbstractTreeModel::construct(std::initializer_list<ColumnSpec> column_specs,
-//		QObject* parent)
-//{
-//	std::shared_ptr<AbstractTreeModel> self(new AbstractTreeModel(column_specs, parent));
-//	self->m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs, self);
-////	self->m_model_tester = new QAbstractItemModelTester(self.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, self.get());
-//	return self;
-//}
-
-AbstractTreeModel::AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs,
-		QObject* parent) : QAbstractItemModel(parent)
+std::shared_ptr<AbstractTreeModel> AbstractTreeModel::construct(std::initializer_list<ColumnSpec> column_specs,
+		QObject* parent)
 {
-	/// Can't call this here since it hasn't been created yet.
+	std::shared_ptr<AbstractTreeModel> self(new AbstractTreeModel(column_specs, parent));
+	self->postConstructorFinalization(column_specs);
+//	self->m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs, self);
+//	self->m_model_tester = new QAbstractItemModelTester(self.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, self.get());
+	return self;
+}
+
+AbstractTreeModel::AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent)
+	: QAbstractItemModel(parent)
+{
+	/// Can't virtual functions in here, which makes our life more difficult.
 //	setColumnSpecs(column_specs);
+//	m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs, std::static_pointer_cast<AbstractTreeModel>(shared_from_this()));
 
 }
 
@@ -78,6 +80,13 @@ AbstractTreeModel::~AbstractTreeModel()
 	// KDEN does exactly this in its ~AbstractTreeModel().
 	m_model_item_map.clear();
 	m_root_item.reset();
+}
+
+void AbstractTreeModel::postConstructorFinalization(std::initializer_list<ColumnSpec> column_specs)
+{
+//	m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs, this->shared_from_this());
+	m_root_item = AbstractTreeModelHeaderItem::construct(column_specs, this->shared_from_this());
+//	self->m_model_tester = new QAbstractItemModelTester(self.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, self.get());
 }
 
 void AbstractTreeModel::clear()
@@ -94,7 +103,10 @@ bool AbstractTreeModel::setColumnSpecs(std::initializer_list<ColumnSpec> column_
 {
 	std::unique_lock write_lock(m_rw_mutex);
 
-	Q_CHECK_PTR(m_root_item);
+//	if(!m_root_item)
+//	{
+//		m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs, this->shared_from_this());
+//	}
 	return m_root_item->setColumnSpecs(column_specs);
 }
 

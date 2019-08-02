@@ -35,11 +35,11 @@ ScanResultsTreeModel::ScanResultsTreeModel(std::initializer_list<ColumnSpec> col
 	: BASE_CLASS(column_specs, parent)
 {
 }
-ScanResultsTreeModel::ScanResultsTreeModel(QObject *parent)
-	: BASE_CLASS({}, parent)
-{
 
-}
+//ScanResultsTreeModel::ScanResultsTreeModel(QObject *parent)
+//	: BASE_CLASS({}, parent)
+//{
+//}
 
 
 void ScanResultsTreeModel::setup()
@@ -74,13 +74,15 @@ void ScanResultsTreeModel::sendModification()
 //	}
 }
 
-//// static
-//std::shared_ptr<ScanResultsTreeModel> ScanResultsTreeModel::construct(std::initializer_list<ColumnSpec> column_specs, QObject* parent)
-//{
-//	std::shared_ptr<ScanResultsTreeModel> retval(new ScanResultsTreeModel(column_specs, parent));
+// static
+std::shared_ptr<ScanResultsTreeModel> ScanResultsTreeModel::construct(std::initializer_list<ColumnSpec> column_specs, QObject* parent)
+{
+	std::shared_ptr<ScanResultsTreeModel> retval(new ScanResultsTreeModel(column_specs, parent));
+
+	retval->postConstructorFinalization(column_specs);
 //	retval->m_root_item = AbstractTreeModelHeaderItem::construct(column_specs, retval);
-//	return retval;
-//}
+	return retval;
+}
 
 void ScanResultsTreeModel::setBaseDirectory(const QUrl &base_directory)
 {

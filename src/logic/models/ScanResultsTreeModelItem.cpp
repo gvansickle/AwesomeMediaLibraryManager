@@ -59,6 +59,11 @@ ScanResultsTreeModelItem::ScanResultsTreeModelItem(const DirScanResult& dsr, con
 {
 }
 
+ScanResultsTreeModelItem::ScanResultsTreeModelItem(const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id)
+	: BASE_CLASS({}, parent, id)
+{
+}
+
 ScanResultsTreeModelItem::ScanResultsTreeModelItem(const QVariant& variant, const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id)
 	: BASE_CLASS({}, parent, id)
 {

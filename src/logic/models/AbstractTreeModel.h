@@ -56,9 +56,7 @@ class ColumnSpec;
  * - My own original work.
  * - Hundreds of nuggets of information from all over the Internet.
  */
-class AbstractTreeModel : public QAbstractItemModel,
-		public virtual ISerializable,
-		public enable_shared_from_this_virtual<AbstractTreeModel>
+class AbstractTreeModel : public QAbstractItemModel, public virtual ISerializable, public enable_shared_from_this_virtual<AbstractTreeModel>
 {
     Q_OBJECT
 	Q_DISABLE_COPY(AbstractTreeModel);
@@ -66,31 +64,38 @@ class AbstractTreeModel : public QAbstractItemModel,
 
 	using BASE_CLASS = QAbstractItemModel;
 
-protected:
-//	/**
-//	 * Creates a new AbstractTreeModel object.
-//	 * This model will NOT have a root, that's what construct() adds.
-//	 * In general, derived constructors don't do much more than pass the @a parent param.
-//	 */
-//	explicit AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs,
-//	                           QObject *parent = nullptr);
-
 public:
-//	/**
-//	 * Named constructor.
-//	 */
-//	static std::shared_ptr<AbstractTreeModel> construct(std::initializer_list<ColumnSpec> column_specs,
-//			QObject* parent = nullptr);
+	/**
+	 * Named constructor.
+	 * We only use this to work around the "no virtual calls in con/destructors" issue C++ and all other languages have,
+	 * here specifically with the construction of the root item, which fails in shared_from_this() due to this (AFAICT).
+	 */
+	static std::shared_ptr<AbstractTreeModel> construct(std::initializer_list<ColumnSpec> column_specs,
+			QObject* parent = nullptr);
+protected:
+
 	/**
 	 * Creates a new AbstractTreeModel object.
-	 * @todo >>>>>>>>>>> This model will NOT have a root, that's what construct() adds.
+	 * @warning This model will NOT have a root item because virtual.  See setColumnSpecs(), which you should
+	 *          call immediately after creating a new model.
 	 * In general, derived constructors don't do much more than pass the @a parent param.
 	 */
 	explicit AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
+
+public:
 	/**
 	 * Destructor.  Clears all items in the model, including the root item.
 	 */
 	~AbstractTreeModel() override;
+
+	/**
+	 * Do any post-constructor work necessary to fully form the object.  Called by the Named Constructors/Factory Functions
+	 * to handle any virtual function call work.
+	 * If @a self is root, calls registerSelf() to register it with the model, otherwise does nothing.
+	 * This is a separated function so that it can be called from derived classes
+	 */
+	virtual void postConstructorFinalization(std::initializer_list<ColumnSpec> column_specs);
+
 
 	/// GRVS/KDEN's is ProjItemModel::clean().
 	/**
@@ -101,7 +106,7 @@ public:
 
 	/// OLD
 	/**
-	 * Set the ColumnSpecs in the model's root item, which holds the info for the horizontal header.
+	 * Creates the root item of this tree model, then sets the ColumnSpecs which hold the info for the horizontal header.
 	 * @todo setHeaderData() enough?
 	 */
 	virtual bool setColumnSpecs(std::initializer_list<ColumnSpec> column_specs);

@@ -67,6 +67,7 @@ public:
 //	ScanResultsTreeModelItem() {};
 	/// Create a new model item populated with the passed DirScanResult.
 	explicit ScanResultsTreeModelItem(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr, UUIncD id = UUIncD::null());
+	explicit ScanResultsTreeModelItem(const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr, UUIncD id = UUIncD::null());
 	explicit ScanResultsTreeModelItem(const QVariant& variant, const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr, UUIncD id = UUIncD::null());
 	~ScanResultsTreeModelItem() override;
 

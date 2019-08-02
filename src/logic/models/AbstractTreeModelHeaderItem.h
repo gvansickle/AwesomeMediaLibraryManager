@@ -51,8 +51,7 @@ class AbstractTreeModelHeaderItem: public AbstractTreeModelItem, public enable_s
 protected:
 //	explicit AbstractTreeModelHeaderItem(std::initializer_list<ColumnSpec> column_specs,
 //			const std::shared_ptr<AbstractTreeModel>& parent_model, bool isRoot, UUIncD id = UUIncD::null());
-
-public:
+	friend class AbstractTreeModel;
 	/**
 	 * Note: This is always the root item of a tree model, no parent item.
 	 * @param column_specs
@@ -62,12 +61,12 @@ public:
 	explicit AbstractTreeModelHeaderItem(std::initializer_list<ColumnSpec> column_specs,
 	                                     const std::shared_ptr<AbstractTreeModel>& parent_model = nullptr, UUIncD id = UUIncD::null());
 
-//	/**
-//	 * Named constructor.
-//	 */
-//	static std::shared_ptr<AbstractTreeModelHeaderItem> construct(std::initializer_list<ColumnSpec> column_specs,
-//			const std::shared_ptr<AbstractTreeModel>& model, bool isRoot = true,
-//	                                                              UUIncD id = UUIncD::null());
+public:
+	/**
+	 * Named constructor.
+	 */
+	static std::shared_ptr<AbstractTreeModelHeaderItem> construct(std::initializer_list<ColumnSpec> column_specs,
+																  const std::shared_ptr<AbstractTreeModel>& parent_model = nullptr, UUIncD id = UUIncD::null());
 ////	AbstractTreeModelHeaderItem() {};
 	~AbstractTreeModelHeaderItem() override;
 

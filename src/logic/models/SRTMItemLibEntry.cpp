@@ -44,17 +44,17 @@
 //	return self;
 //}
 
-//SRTMItem_LibEntry::SRTMItem_LibEntry(std::shared_ptr<LibraryEntry> libentry, const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root)
-//	: BASE_CLASS(std::static_pointer_cast<ScanResultsTreeModel>(model), is_root), m_library_entry(libentry)
-//{
-//
-//}
-//
-//SRTMItem_LibEntry::SRTMItem_LibEntry(const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root)
-//	: BASE_CLASS(std::static_pointer_cast<ScanResultsTreeModel>(model), is_root)
-//{
-//
-//}
+SRTMItem_LibEntry::SRTMItem_LibEntry(std::shared_ptr<LibraryEntry> libentry, const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id)
+	: BASE_CLASS(parent, id), m_library_entry(libentry)
+{
+
+}
+
+SRTMItem_LibEntry::SRTMItem_LibEntry(const QVariant& variant, const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id)
+	: BASE_CLASS(parent, id)
+{
+
+}
 
 QVariant SRTMItem_LibEntry::data(int column, int role) const
 {

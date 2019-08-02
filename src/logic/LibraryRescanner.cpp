@@ -520,7 +520,8 @@ M_WARNING("SHARED PTR");
 				std::initializer_list<ColumnSpec> temp_initlist = {ColumnSpec(SectionID(0), "DirProps"), {SectionID(0), "MediaURL"}, {SectionID(0), "SidecarCueURL"}};
 //				std::shared_ptr<ScanResultsTreeModel> load_tree = ScanResultsTreeModel::construct({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
 				std::shared_ptr<ScanResultsTreeModel> load_tree
-						= std::make_shared<ScanResultsTreeModel>(temp_initlist, this);
+						= ScanResultsTreeModel::construct(temp_initlist, this);
+//						= std::make_shared<ScanResultsTreeModel>(temp_initlist, this);
 //						= std::make_shared<ScanResultsTreeModel>();
 				load_tree->LoadDatabase(database_filename);
 				load_tree->clear();
