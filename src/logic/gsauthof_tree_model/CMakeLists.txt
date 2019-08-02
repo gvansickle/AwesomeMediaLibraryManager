@@ -4,15 +4,15 @@
 #
 
 #cmake_minimum_required(VERSION 2.8)
-cmake_minimum_required(VERSION 3.14.0)
+#cmake_minimum_required(VERSION 3.14.0)
 
-set(CMAKE_DISABLE_SOURCE_CHANGES ON)
-set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
+#set(CMAKE_DISABLE_SOURCE_CHANGES ON)
+#set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
-project(tree_model
-	LANGUAGES
-		CXX
-	)
+#project(tree_model
+#	LANGUAGES
+#		CXX
+#	)
 
 # C++17
 set(CMAKE_CXX_STANDARD 17)
@@ -29,9 +29,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # yields collisions:
 # http://public.kitware.com/Bug/view.php?id=12873
 # -> using qt5_wrap_cpp() instead ...
-#set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOMOC ON)
 # same goes for autouic ...
-#set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTOUIC ON)
 find_package(Qt5 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
 	Core
 	Gui
@@ -111,12 +111,13 @@ set(HEADERS_EDITOR
 #   editor/progress_dialog.hh
   editor/tree_view.hh
 #   editor/recent_menu.hh
-#   editor/instance.hh
+   editor/instance.hh
 #   editor/instance_manager.hh
   # editor/delegate/tag.hh
  #  editor/delegate/value.hh
  #  editor/delegate/editor/local_time.hh
 #   editor/table_view.hh
+    editor/vc_matchmaker.hh
   )
 
 ### GRVS
@@ -146,7 +147,7 @@ set(EDITOR_CC
 #   editor/child_dialog.cc
    editor/controller.cc
    editor/gui_controller.cc
-#   editor/vc_matchmaker.cc
+   editor/vc_matchmaker.cc
 #   editor/recent_menu.cc
    editor/command/new.cc
 #   editor/command/open.cc
@@ -179,7 +180,7 @@ set(EDITOR_CC
 #   editor/progress_dialog.cc
    editor/tree_view.cc
 #   editor/absolute_slider_style.cc
-#   editor/instance.cc
+   editor/instance.cc
 #   editor/instance_manager.cc
    editor/file_type.cc
 #   editor/delegate/tag.cc
@@ -228,9 +229,9 @@ set(QT_AWESOME_MOC
    )
 
 ### GRVS
-add_library(tree_model STATIC)
-	
-target_sources(tree_model
+#add_library(tree_model STATIC)
+
+target_sources_local(gsauthof_tree_model
 	PUBLIC
 		${TREE_MODEL_MOC}
 		list/ranked_list.hh
@@ -238,22 +239,37 @@ target_sources(tree_model
 		${SOURCE_EDITOR}
 		#${QT_AWESOME_MOC}
 		${EDITOR_UI}
-	PRIVATE
+		# For config.h
+		#${CMAKE_BINARY_DIR}/src/config.h
+#	PRIVATE
 		${TREE_MODEL_CC}
 		${EDITOR_CC}
 		#${QT_AWESOME_CC}
 	) 
-set_target_properties(tree_model
+set_target_properties(gsauthof_tree_model
     PROPERTIES
         AUTOMOC ON
         AUTOUIC ON
+		AUTORCC ON
         )
-target_link_libraries(tree_model
+target_link_libraries(gsauthof_tree_model
 	PUBLIC
-		${QT5_LINK_LIB_TARGETS}	
+		src
+		gui # For MainWindow etc
+#		widgets
+		${QT5_LINK_LIB_TARGETS}
+		${KF5_LINK_LIB_TARGETS}
+#		${GTK_LINK_LIB_TARGETS}
 	)
-       
-
+target_include_directories(gsauthof_tree_model
+	PUBLIC
+		${CMAKE_CURRENT_SOURCE_DIR}/tree_model
+		${CMAKE_CURRENT_SOURCE_DIR}/tree_model/operation
+       # For config.h
+       ${CMAKE_BINARY_DIR}/src
+#	PRIVATE
+		${CMAKE_CURRENT_BINARY_DIR}/editor
+	)
 
 ### GRVS
 # add_executable(main
