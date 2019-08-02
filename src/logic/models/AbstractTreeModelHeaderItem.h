@@ -49,17 +49,26 @@ class AbstractTreeModelHeaderItem: public AbstractTreeModelItem, public enable_s
 	using BASE_CLASS = AbstractTreeModelItem;
 
 protected:
-	explicit AbstractTreeModelHeaderItem(std::initializer_list<ColumnSpec> column_specs,
-			const std::shared_ptr<AbstractTreeModel>& parent_model, bool isRoot, UUIncD id = UUIncD::null());
+//	explicit AbstractTreeModelHeaderItem(std::initializer_list<ColumnSpec> column_specs,
+//			const std::shared_ptr<AbstractTreeModel>& parent_model, bool isRoot, UUIncD id = UUIncD::null());
 
 public:
 	/**
-	 * Named constructor.
+	 * Note: This is always the root item of a tree model, no parent item.
+	 * @param column_specs
+	 * @param parent_model
+	 * @param id
 	 */
-	static std::shared_ptr<AbstractTreeModelHeaderItem> construct(std::initializer_list<ColumnSpec> column_specs,
-			const std::shared_ptr<AbstractTreeModel>& model, bool isRoot = true,
-	                                                              UUIncD id = UUIncD::null());
-	AbstractTreeModelHeaderItem() {};
+	explicit AbstractTreeModelHeaderItem(std::initializer_list<ColumnSpec> column_specs,
+	                                     const std::shared_ptr<AbstractTreeModel>& parent_model = nullptr, UUIncD id = UUIncD::null());
+
+//	/**
+//	 * Named constructor.
+//	 */
+//	static std::shared_ptr<AbstractTreeModelHeaderItem> construct(std::initializer_list<ColumnSpec> column_specs,
+//			const std::shared_ptr<AbstractTreeModel>& model, bool isRoot = true,
+//	                                                              UUIncD id = UUIncD::null());
+////	AbstractTreeModelHeaderItem() {};
 	~AbstractTreeModelHeaderItem() override;
 
 	void clear() override;
@@ -94,11 +103,11 @@ private:
 	/**
 	 * This header's (and hence the model's) ColumnSpecs.
 	 */
-	std::deque<ColumnSpec> m_column_specs;
+	std::vector<ColumnSpec> m_column_specs;
 
 };
 
-Q_DECLARE_METATYPE(AbstractTreeModelHeaderItem);
+//Q_DECLARE_METATYPE(AbstractTreeModelHeaderItem);
 Q_DECLARE_METATYPE(std::shared_ptr<AbstractTreeModelHeaderItem>)
 
 #endif /* SRC_LOGIC_MODELS_ABSTRACTTREEMODELHEADERITEM_H_ */

@@ -47,13 +47,13 @@ ThreadsafeTreeModel::ThreadsafeTreeModel(std::initializer_list<ColumnSpec> colum
 
 }
 
-std::shared_ptr<ThreadsafeTreeModel> ThreadsafeTreeModel::construct(std::initializer_list<ColumnSpec> column_specs,
-		QObject* parent)
-{
-	std::shared_ptr<ThreadsafeTreeModel> self(new ThreadsafeTreeModel(column_specs, parent));
-	self->m_root_item = AbstractTreeModelHeaderItem::construct(column_specs, self);
-	return self;
-}
+//std::shared_ptr<ThreadsafeTreeModel> ThreadsafeTreeModel::construct(std::initializer_list<ColumnSpec> column_specs,
+//		QObject* parent)
+//{
+//	std::shared_ptr<ThreadsafeTreeModel> self(new ThreadsafeTreeModel(column_specs, parent));
+//	self->m_root_item = AbstractTreeModelHeaderItem::construct(column_specs, self);
+//	return self;
+//}
 
 ThreadsafeTreeModel::~ThreadsafeTreeModel()
 {
@@ -132,21 +132,21 @@ QVariant ThreadsafeTreeModel::data(const QModelIndex& index, int role) const
 	return BASE_CLASS::data(index, role);
 }
 
-UUIncD ThreadsafeTreeModel::requestAddItem(std::vector<QVariant> values, UUIncD parent_id, Fun undo, Fun redo)
-{
-	std::unique_lock write_lock(m_rw_mutex);
-
-	std::shared_ptr<AbstractTreeModelItem> new_item = AbstractTreeModelItem::construct(values, std::static_pointer_cast<ThreadsafeTreeModel>(shared_from_this()), /*root?*/false);
-
-	bool status = addItem(new_item, parent_id, undo, redo);
-
-	if(!status)
-	{
-		// Add failed for some reason, return a null UUIncD.
-		return UUIncD::null();
-	}
-	return new_item->getId();
-}
+//UUIncD ThreadsafeTreeModel::requestAddItem(std::vector<QVariant> values, UUIncD parent_id, Fun undo, Fun redo)
+//{
+//	std::unique_lock write_lock(m_rw_mutex);
+//
+//	std::shared_ptr<AbstractTreeModelItem> new_item = AbstractTreeModelItem::construct(values, std::static_pointer_cast<ThreadsafeTreeModel>(shared_from_this()), /*root?*/false);
+//
+//	bool status = addItem(new_item, parent_id, undo, redo);
+//
+//	if(!status)
+//	{
+//		// Add failed for some reason, return a null UUIncD.
+//		return UUIncD::null();
+//	}
+//	return new_item->getId();
+//}
 
 void ThreadsafeTreeModel::register_item(const std::shared_ptr<AbstractTreeModelItem>& item)
 {

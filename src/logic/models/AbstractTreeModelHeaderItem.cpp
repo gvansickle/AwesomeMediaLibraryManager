@@ -43,30 +43,38 @@
 /// TEMP
 #include "ScanResultsTreeModel.h"
 
-// static
-std::shared_ptr<AbstractTreeModelHeaderItem>
-AbstractTreeModelHeaderItem::construct(std::initializer_list<ColumnSpec> column_specs,
-		const std::shared_ptr<AbstractTreeModel>& model, bool isRoot, UUIncD id)
-{
-	std::shared_ptr<AbstractTreeModelHeaderItem> self(new AbstractTreeModelHeaderItem(column_specs, model, isRoot, id));
-
-	self->setColumnSpecs(column_specs);
-
-	baseFinishConstruct(self);
-	Q_ASSERT(self->isInModel());
-	return self;
-}
+//// static
+//std::shared_ptr<AbstractTreeModelHeaderItem>
+//AbstractTreeModelHeaderItem::construct(std::initializer_list<ColumnSpec> column_specs,
+//		const std::shared_ptr<AbstractTreeModel>& model, bool isRoot, UUIncD id)
+//{
+//	std::shared_ptr<AbstractTreeModelHeaderItem> self(new AbstractTreeModelHeaderItem(column_specs, model, isRoot, id));
+//
+//	self->setColumnSpecs(column_specs);
+//
+//	baseFinishConstruct(self);
+//	Q_ASSERT(self->isInModel());
+//	return self;
+//}
 
 AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(std::initializer_list<ColumnSpec> column_specs,
-		const std::shared_ptr<AbstractTreeModel>& parent_model, bool isRoot, UUIncD id)
-	: BASE_CLASS(parent_model, isRoot, id)//, m_column_specs(column_specs)
+                                                         const std::shared_ptr<AbstractTreeModel>& parent_model, UUIncD id)
+	: BASE_CLASS({}/*[column_specs, parent_model]() -> std::vector<QVariant> {
+		// We need to convert the initializer list of ColumnSpecs to vector<QVariant>.
+		std::vector<QVariant> retval;
+		for(const auto& colspec : column_specs)
+		{
+			retval.push_back(QVariant::fromValue<ColumnSpec>(colspec));
+		}
+		return retval;
+	}*/)//, m_column_specs(column_specs)
 {
-//	setColumnSpecs(column_specs);
+	setColumnSpecs(column_specs);
 }
 
-AbstractTreeModelHeaderItem::~AbstractTreeModelHeaderItem()
-{
-}
+//AbstractTreeModelHeaderItem::~AbstractTreeModelHeaderItem()
+//{
+//}
 
 void AbstractTreeModelHeaderItem::clear()
 {
@@ -127,8 +135,9 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 {
 	QVariantInsertionOrderedMap map;
 
-	// Overwrite any class info added by the above.
-	set_map_class_info(this, &map);
+	// Set some class meta-info.
+//	set_map_class_info(this, &map);
+	set_map_class_info(std::string("AbstractTreeModelHeaderItem"), &map);
 
 	QVariantHomogenousList header_section_list(XMLTAG_HEADER_SECTION_LIST, "section");
 

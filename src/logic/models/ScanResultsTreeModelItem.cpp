@@ -37,30 +37,30 @@
 #include <LibraryEntry.h>
 #include <serialization/SerializationHelpers.h>
 
-std::shared_ptr<ScanResultsTreeModelItem> ScanResultsTreeModelItem::construct(const DirScanResult& dsr, std::shared_ptr<ScanResultsTreeModel> model, bool is_root)
+//std::shared_ptr<ScanResultsTreeModelItem> ScanResultsTreeModelItem::construct(const DirScanResult& dsr, std::shared_ptr<ScanResultsTreeModel> model, bool is_root)
+//{
+//	std::shared_ptr<ScanResultsTreeModelItem> self(new ScanResultsTreeModelItem(dsr, model, is_root));
+//	baseFinishConstruct(self);
+//	return self;
+//}
+//
+//std::shared_ptr<ScanResultsTreeModelItem> ScanResultsTreeModelItem::construct(const QVariant& variant,
+//																			  std::shared_ptr<ScanResultsTreeModel> model)
+//{
+//	std::shared_ptr<ScanResultsTreeModelItem> self(new ScanResultsTreeModelItem(model, false));
+//	baseFinishConstruct(self);
+//	/// @note Can't call fromVariant() here, for some reason self still isn't in the model here.
+////	self->fromVariant(variant);
+//	return self;
+//}
+
+ScanResultsTreeModelItem::ScanResultsTreeModelItem(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id)
+	: BASE_CLASS({}, parent, id), m_dsr(dsr)
 {
-	std::shared_ptr<ScanResultsTreeModelItem> self(new ScanResultsTreeModelItem(dsr, model, is_root));
-	baseFinishConstruct(self);
-	return self;
 }
 
-std::shared_ptr<ScanResultsTreeModelItem> ScanResultsTreeModelItem::construct(const QVariant& variant,
-																			  std::shared_ptr<ScanResultsTreeModel> model)
-{
-	std::shared_ptr<ScanResultsTreeModelItem> self(new ScanResultsTreeModelItem(model, false));
-	baseFinishConstruct(self);
-	/// @note Can't call fromVariant() here, for some reason self still isn't in the model here.
-//	self->fromVariant(variant);
-	return self;
-}
-
-ScanResultsTreeModelItem::ScanResultsTreeModelItem(const DirScanResult& dsr, const std::shared_ptr<ScanResultsTreeModel> model, bool is_root)
-	: BASE_CLASS(model, is_root), m_dsr(dsr)
-{
-}
-
-ScanResultsTreeModelItem::ScanResultsTreeModelItem(std::shared_ptr<ScanResultsTreeModel> model, bool is_root)
-	: BASE_CLASS(model, is_root)
+ScanResultsTreeModelItem::ScanResultsTreeModelItem(const QVariant& variant, const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id)
+	: BASE_CLASS({}, parent, id)
 {
 }
 
@@ -123,7 +123,8 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 	QVariantInsertionOrderedMap map;
 
 	// Overwrite any class info added by the above.
-	set_map_class_info(this, &map);
+//	set_map_class_info(this, &map);
+	set_map_class_info(std::string("ScanResultsTreeModelItem"), &map);
 
 	// Set the xml:id.
 	map.insert_attributes({{"xml:id", get_prefixed_uuid()}});
@@ -152,7 +153,7 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
 	// Overwrite any class info added by the above.
-	dump_map_class_info(this, &map);
+//	dump_map_class_info(this, &map);
 
 	auto uuid = map.get_attr("xml:id", "");
 	set_prefixed_uuid(uuid);

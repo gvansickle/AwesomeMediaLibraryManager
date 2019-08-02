@@ -53,17 +53,17 @@
 //#include "ThreadsafeTreeModel.h"
 #include <third_party/sqlite_orm/include/sqlite_orm/sqlite_orm.h>
 
-/**
- * This really should never get called, since AbstractTreeModel is abstract.  Mostly here for an example for derived classes.
- */
-std::shared_ptr<AbstractTreeModel> AbstractTreeModel::construct(std::initializer_list<ColumnSpec> column_specs,
-		QObject* parent)
-{
-	std::shared_ptr<AbstractTreeModel> self(new AbstractTreeModel(column_specs, parent));
-	self->m_root_item = AbstractTreeModelHeaderItem::construct(column_specs, self, true);
-//	self->m_model_tester = new QAbstractItemModelTester(self.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, self.get());
-	return self;
-}
+///**
+// * This really should never get called, since AbstractTreeModel is abstract.  Mostly here for an example for derived classes.
+// */
+//std::shared_ptr<AbstractTreeModel> AbstractTreeModel::construct(std::initializer_list<ColumnSpec> column_specs,
+//		QObject* parent)
+//{
+//	std::shared_ptr<AbstractTreeModel> self(new AbstractTreeModel(column_specs, parent));
+//	self->m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs, self);
+////	self->m_model_tester = new QAbstractItemModelTester(self.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, self.get());
+//	return self;
+//}
 
 AbstractTreeModel::AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs,
 		QObject* parent) : QAbstractItemModel(parent)

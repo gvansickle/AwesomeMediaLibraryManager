@@ -39,6 +39,7 @@
 #include <future/enable_shared_from_this_virtual.h>
 #include "UndoRedoHelper.h"
 #include "AbstractTreeModel.h"
+#include "ColumnSpec.h"
 
 /**
  * Don't know how threadsafe this really is, all indications are that QT5's model/view cannot be made threadsafe.
@@ -46,7 +47,7 @@
  * This class lives at about the same inheritance level as KDenLive's ProjectItemModel (->AbstractTreeModel->0),
  * but some work is also split into ScanResultsTreeModel.
  */
-class ThreadsafeTreeModel : public AbstractTreeModel//, public virtual enable_shared_from_this_virtual<ThreadsafeTreeModel>
+class ThreadsafeTreeModel : public AbstractTreeModel, public virtual ISerializable//, public virtual enable_shared_from_this_virtual<ThreadsafeTreeModel>
 {
 	Q_OBJECT
 	Q_DISABLE_COPY(ThreadsafeTreeModel);
@@ -55,13 +56,14 @@ class ThreadsafeTreeModel : public AbstractTreeModel//, public virtual enable_sh
 	using BASE_CLASS = AbstractTreeModel;
 
 protected:
-	explicit ThreadsafeTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent);
+//	explicit ThreadsafeTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent);
 
 public:
-	/**
-	 * Named constructor.
-	 */
-	static std::shared_ptr<ThreadsafeTreeModel> construct(std::initializer_list<ColumnSpec> column_specs, QObject* parent = nullptr);
+//	/**
+//	 * Named constructor.
+//	 */
+//	static std::shared_ptr<ThreadsafeTreeModel> construct(std::initializer_list<ColumnSpec> column_specs, QObject* parent = nullptr);
+	explicit ThreadsafeTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent);
 	~ThreadsafeTreeModel() override;
 
 	/**

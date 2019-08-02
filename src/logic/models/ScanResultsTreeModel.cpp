@@ -35,6 +35,12 @@ ScanResultsTreeModel::ScanResultsTreeModel(std::initializer_list<ColumnSpec> col
 	: BASE_CLASS(column_specs, parent)
 {
 }
+ScanResultsTreeModel::ScanResultsTreeModel(QObject *parent)
+	: BASE_CLASS({}, parent)
+{
+
+}
+
 
 void ScanResultsTreeModel::setup()
 {
@@ -68,13 +74,13 @@ void ScanResultsTreeModel::sendModification()
 //	}
 }
 
-// static
-std::shared_ptr<ScanResultsTreeModel> ScanResultsTreeModel::construct(std::initializer_list<ColumnSpec> column_specs, QObject* parent)
-{
-	std::shared_ptr<ScanResultsTreeModel> retval(new ScanResultsTreeModel(column_specs, parent));
-	retval->m_root_item = AbstractTreeModelHeaderItem::construct(column_specs, retval);
-	return retval;
-}
+//// static
+//std::shared_ptr<ScanResultsTreeModel> ScanResultsTreeModel::construct(std::initializer_list<ColumnSpec> column_specs, QObject* parent)
+//{
+//	std::shared_ptr<ScanResultsTreeModel> retval(new ScanResultsTreeModel(column_specs, parent));
+//	retval->m_root_item = AbstractTreeModelHeaderItem::construct(column_specs, retval);
+//	return retval;
+//}
 
 void ScanResultsTreeModel::setBaseDirectory(const QUrl &base_directory)
 {
@@ -115,8 +121,10 @@ UUIncD ScanResultsTreeModel::requestAddScanResultsTreeModelItem(const QVariant& 
 	std::unique_lock write_lock(m_rw_mutex);
 
 	// ::construct() a new tree model item from variant.
-	std::shared_ptr<ScanResultsTreeModelItem> new_item = ScanResultsTreeModelItem::construct(variant,
-																							 std::static_pointer_cast<ScanResultsTreeModel>(shared_from_this()));
+//	std::shared_ptr<ScanResultsTreeModelItem> new_item = ScanResultsTreeModelItem::construct(variant,
+//																							 std::static_pointer_cast<ScanResultsTreeModel>(shared_from_this()));
+	std::shared_ptr<ScanResultsTreeModelItem> new_item = std::make_shared<ScanResultsTreeModelItem>(variant);
+
 	bool status = addItem(std::static_pointer_cast<AbstractTreeModelItem>(new_item), parent_id, undo, redo);
 
 	if(!status)
@@ -134,7 +142,8 @@ UUIncD ScanResultsTreeModel::requestAddSRTMLibEntryItem(const QVariant& variant,
 {
 	std::unique_lock write_lock(m_rw_mutex);
 
-	auto new_item = SRTMItem_LibEntry::construct(variant, std::static_pointer_cast<ScanResultsTreeModel>(shared_from_this()));
+//	auto new_item = SRTMItem_LibEntry::construct(variant, std::static_pointer_cast<ScanResultsTreeModel>(shared_from_this()));
+	auto new_item = std::make_shared<SRTMItem_LibEntry>(variant);//, std::static_pointer_cast<ScanResultsTreeModel>(shared_from_this()));
 	bool status = addItem(new_item, parent_id, undo, redo);
 
 	if(!status)
@@ -202,9 +211,9 @@ void ScanResultsTreeModel::DERIVED_set_default_namespace()
 }
 
 /// Qt5 ids for the TreeItems it can hold.
-static const int f_atmi_id = qMetaTypeId<AbstractTreeModelItem>();
-static const int f_strmi_id = qMetaTypeId<ScanResultsTreeModelItem>();
-static const int f_strmile_id = qMetaTypeId<SRTMItem_LibEntry>();
+//static const int f_atmi_id = qMetaTypeId<AbstractTreeModelItem>();
+//static const int f_strmi_id = qMetaTypeId<ScanResultsTreeModelItem>();
+//static const int f_strmile_id = qMetaTypeId<SRTMItem_LibEntry>();
 
 
 /**

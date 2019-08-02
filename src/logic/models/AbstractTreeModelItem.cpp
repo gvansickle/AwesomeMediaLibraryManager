@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
@@ -48,43 +47,42 @@
 #include <logic/serialization/SerializationHelpers.h>
 
 
-std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::construct(const std::vector<QVariant>& data,
-		std::shared_ptr<AbstractTreeModel> model, bool isRoot, UUIncD id)
-{
-	/// @note make_shared doesn't have access to the constructor if it's protected, so we have to do this.
-	std::shared_ptr<AbstractTreeModelItem> self(new AbstractTreeModelItem(data, model, isRoot, id));
-	baseFinishConstruct(self);
-	return self;
-}
+//std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::construct(const std::vector<QVariant>& data,
+//		std::shared_ptr<AbstractTreeModel> model, bool isRoot, UUIncD id)
+//{
+//	/// @note make_shared doesn't have access to the constructor if it's protected, so we have to do this.
+//	std::shared_ptr<AbstractTreeModelItem> self(new AbstractTreeModelItem(data, model, isRoot, id));
+//	baseFinishConstruct(self);
+//	return self;
+//}
 
-std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::construct(const QVariant& variant, std::shared_ptr<AbstractTreeModel> model, bool isRoot, UUIncD id)
-{
-	std::shared_ptr<AbstractTreeModelItem> self(new AbstractTreeModelItem(model, isRoot, id));
+//std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::construct(const QVariant& variant, std::shared_ptr<AbstractTreeModel> model, bool isRoot, UUIncD id)
+//{
+//	std::shared_ptr<AbstractTreeModelItem> self(new AbstractTreeModelItem(model, isRoot, id));
 
-	baseFinishConstruct(self);
+//	baseFinishConstruct(self);
 
-	return self;
-}
+//	return self;
+//}
 
-AbstractTreeModelItem::AbstractTreeModelItem(std::vector<QVariant> data,
-		const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id)
+AbstractTreeModelItem::AbstractTreeModelItem(const std::vector<QVariant>& data, const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id)
 	: m_item_data(std::move(data)),
-	  m_model(model),
+//	  m_model(model),
 	  m_depth(0),
 	  m_uuincid(id == UUIncD::null() ? UUIncD::create() : id),
-	  m_is_in_model(false),
-	  m_is_root(is_root)
+	  m_is_in_model(false)//,
+//	  m_is_root(is_root)
 {
 }
 
-AbstractTreeModelItem::AbstractTreeModelItem(const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id)
-	: m_model(model),
-	  m_depth(0),
-	  m_uuincid(id == UUIncD::null() ? UUIncD::create() : id),
-	  m_is_in_model(false),
-	  m_is_root(is_root)
-{
-}
+//AbstractTreeModelItem::AbstractTreeModelItem(const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id)
+//	: m_model(model),
+//	  m_depth(0),
+//	  m_uuincid(id == UUIncD::null() ? UUIncD::create() : id),
+//	  m_is_in_model(false),
+//	  m_is_root(is_root)
+//{
+//}
 
 AbstractTreeModelItem::~AbstractTreeModelItem()
 {
@@ -369,7 +367,8 @@ QVariant AbstractTreeModelItem::toVariant() const
 	QVariantInsertionOrderedMap map;
 
 	// Write class info to the map.
-	set_map_class_info(this, &map);
+//	set_map_class_info(this, &map);
+	set_map_class_info(std::string("AbstractTreeModelItem"), &map);
 
 #define X(field_tag, tag_string, var_name) map_insert_or_die(map, field_tag, var_name);
 	M_DATASTREAM_FIELDS(X);
@@ -541,9 +540,11 @@ bool AbstractTreeModelItem::insertChildren(int position, int count, int columns)
 
 			// Create a new default-constructed item.
 //			std::shared_ptr<PlaceholderTreeModelItem> item = PlaceholderTreeModelItem::construct(data, model_ptr);
-			std::shared_ptr<AbstractTreeModelItem> item = AbstractTreeModelItem::construct(data, model_ptr, false);
+//			std::shared_ptr<AbstractTreeModelItem> item = AbstractTreeModelItem::construct(data, model_ptr, false);
+			std::shared_ptr<AbstractTreeModelItem> item = std::make_shared<AbstractTreeModelItem>(data, this->shared_from_this());
 			// Set us as the new item's parent.
-			item->updateParent(shared_from_this());
+			/// NOW MOVED ABOVE
+//			item->updateParent(shared_from_this());
 			UUIncD id = item->getId();
 			Q_ASSERT(id != UUIncD::null());
 			pos_iterator = m_child_items.insert(pos_iterator, item);
@@ -621,7 +622,8 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::appendChild(const 
 	{
 		// Create the new child with this item's model as the model.
 		// Not that by definition, this will not be the root item.
-		auto child = AbstractTreeModelItem::construct(data, ptr, false);
+//		auto child = AbstractTreeModelItem::construct(data, ptr, false);
+		auto child = std::make_shared<AbstractTreeModelItem>(data, this->shared_from_this());
 		appendChild(child);
 		return child;
 	}

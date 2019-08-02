@@ -22,6 +22,7 @@
 
 // Std C++
 #include <shared_mutex>
+#include <initializer_list>
 
 // Qt5
 #include <QUrl>
@@ -29,6 +30,7 @@
 
 // Ours
 #include <utils/QtHelpers.h>
+#include "ColumnSpec.h"
 #include "ScanResultsTreeModelItem.h"
 //#include "AbstractTreeModel.h"
 #include "ThreadsafeTreeModel.h"
@@ -45,7 +47,7 @@ class AbstractTreeModelHeaderItem;
  * - Contains 1 or more tracks.
  * - May have a sidecar or embedded cue sheet.
  */
-class ScanResultsTreeModel : public ThreadsafeTreeModel//, public virtual enable_shared_from_this_virtual<ScanResultsTreeModel>
+class ScanResultsTreeModel : public ThreadsafeTreeModel, public virtual ISerializable//, public virtual enable_shared_from_this_virtual<ScanResultsTreeModel>
 {
 	Q_OBJECT
 	Q_DISABLE_COPY(ScanResultsTreeModel);
@@ -54,10 +56,10 @@ class ScanResultsTreeModel : public ThreadsafeTreeModel//, public virtual enable
 	using BASE_CLASS = ThreadsafeTreeModel;
 
 protected:
-	/**
-	 * The constructed model will NOT have a root, that's what construct() adds.
-	 */
-	explicit ScanResultsTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
+//	/**
+//	 * The constructed model will NOT have a root, that's what construct() adds.
+//	 */
+//	explicit ScanResultsTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
 
 	/**
 	 * Make sig/slot connections.
@@ -72,10 +74,15 @@ protected:
 	void sendModification();
 
 public:
+//	/**
+//	 * Named constructors.
+//	 */
+//	static std::shared_ptr<ScanResultsTreeModel> construct(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
 	/**
-	 * Named constructors.
+	 * The constructed model will NOT have a root, that's what construct() adds.
 	 */
-	static std::shared_ptr<ScanResultsTreeModel> construct(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
+	explicit ScanResultsTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
+	explicit ScanResultsTreeModel(QObject *parent = nullptr);
 
 	~ScanResultsTreeModel() override = default;
 

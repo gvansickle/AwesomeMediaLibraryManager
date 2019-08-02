@@ -23,19 +23,25 @@
 #include "PlaceholderTreeModelItem.h"
 
 
-std::shared_ptr<PlaceholderTreeModelItem> PlaceholderTreeModelItem::construct(std::vector<QVariant> data, std::shared_ptr<AbstractTreeModel> model, bool isRoot, UUIncD id)
-{
-	std::shared_ptr<PlaceholderTreeModelItem> self(new PlaceholderTreeModelItem(data, model));
-
-	baseFinishConstruct(self);
-	return self;
-}
-
-PlaceholderTreeModelItem::PlaceholderTreeModelItem(std::vector<QVariant> data, const std::shared_ptr<AbstractTreeModel>& model,
-                                                   bool is_root, UUIncD id)
-	: AbstractTreeModelItem(data, model, is_root, id)
+//std::shared_ptr<PlaceholderTreeModelItem> PlaceholderTreeModelItem::construct(std::vector<QVariant> data, std::shared_ptr<AbstractTreeModel> model, bool isRoot, UUIncD id)
+//{
+//	std::shared_ptr<PlaceholderTreeModelItem> self(new PlaceholderTreeModelItem(data, model));
+//
+//	baseFinishConstruct(self);
+//	return self;
+//}
+PlaceholderTreeModelItem::PlaceholderTreeModelItem(const std::vector<QVariant>& data, const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id)
+	: AbstractTreeModelItem(data, parent, id)
 {
 
 }
+
+//PlaceholderTreeModelItem::PlaceholderTreeModelItem(std::vector<QVariant> data, const std::shared_ptr<AbstractTreeModel>& model,
+//                                                   bool is_root, UUIncD id)
+//	: AbstractTreeModelItem(data, model, is_root, id)
+//{
+//
+//}
+
 
 

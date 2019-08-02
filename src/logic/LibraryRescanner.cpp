@@ -246,7 +246,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 
     // Get a pointer to the Scan Results Tree model.
     /// @note This ptr will go away when we exit the function, so we can't copy it into any stap() lambdas.
-    M_WARNING("THIS SHOULD BE ::construct");
+//    M_WARNING("THIS SHOULD BE ::construct");
 //	std::shared_ptr<ScanResultsTreeModel> tree_model = AMLMApp::IScanResultsTreeModel();
 	std::shared_ptr<ScanResultsTreeModel> tree_model = AMLM::Core::self()->getScanResultsTreeModel();
 	Q_ASSERT(tree_model);
@@ -296,7 +296,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 //			new_items->emplace_back(std::make_shared<ScanResultsTreeModelItem>(dsr, tree_model));
 			/// @todo This is in a non-GUI thread.
 			Q_ASSERT(tree_model_sptr);
-			auto new_item = ScanResultsTreeModelItem::construct(dsr, tree_model_sptr);
+			auto new_item = std::make_shared<ScanResultsTreeModelItem>(dsr);
 			new_items->emplace_back(new_item);
 
 			if(i >= end)
@@ -430,7 +430,7 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 				std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(entry_dp->data(1).toString());
 				lib_entry->populate(true);
 
-				std::shared_ptr<SRTMItem_LibEntry> new_child = SRTMItem_LibEntry::construct(lib_entry, tree_model_sptr, /**isRoot*/false);
+				std::shared_ptr<SRTMItem_LibEntry> new_child = std::make_shared<SRTMItem_LibEntry>(lib_entry);
 				Q_ASSERT(new_child);
 
 				/// NEW: Give the incoming ScanResultTreeModelItem entry a parent.
@@ -517,8 +517,11 @@ M_WARNING("SHARED PTR");
 
 				////////// EXPERIMENTAL
 				/// Try to load it back in and round-trip it.
+				std::initializer_list<ColumnSpec> temp_initlist = {ColumnSpec(SectionID(0), "DirProps"), {SectionID(0), "MediaURL"}, {SectionID(0), "SidecarCueURL"}};
 //				std::shared_ptr<ScanResultsTreeModel> load_tree = ScanResultsTreeModel::construct({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
-				std::shared_ptr<ScanResultsTreeModel> load_tree = ScanResultsTreeModel::construct({});
+				std::shared_ptr<ScanResultsTreeModel> load_tree
+						= std::make_shared<ScanResultsTreeModel>(temp_initlist, this);
+//						= std::make_shared<ScanResultsTreeModel>();
 				load_tree->LoadDatabase(database_filename);
 				load_tree->clear();
 //				dump_map(load_tree);

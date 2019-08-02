@@ -70,21 +70,22 @@ public:
 
 protected:
 
-	/// Sets the model and UUIncD.
-	/// ETM+KDen
-	AbstractTreeModelItem(std::vector<QVariant>  data, const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id = UUIncD::null());
-	AbstractTreeModelItem(const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id = UUIncD::null());
+//	/// Sets the model and UUIncD.
+//	/// ETM+KDen
+//	AbstractTreeModelItem(std::vector<QVariant>  data, const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id = UUIncD::null());
+//	AbstractTreeModelItem(const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id = UUIncD::null());
 
 public:
-	/**
-	 * Named constructors.
-	 */
-	/// KDEN
-	static std::shared_ptr<AbstractTreeModelItem> construct(const std::vector<QVariant>& data,
-			std::shared_ptr<AbstractTreeModel> model, bool isRoot, UUIncD id = UUIncD::null());
-	static std::shared_ptr<AbstractTreeModelItem> construct(const QVariant& variant,
-			std::shared_ptr<AbstractTreeModel> model, bool isRoot, UUIncD id = UUIncD::null());
-	AbstractTreeModelItem() {};
+//	/**
+//	 * Named constructors.
+//	 */
+//	/// KDEN
+//	static std::shared_ptr<AbstractTreeModelItem> construct(const std::vector<QVariant>& data,
+//			std::shared_ptr<AbstractTreeModel> model, bool isRoot, UUIncD id = UUIncD::null());
+//	static std::shared_ptr<AbstractTreeModelItem> construct(const QVariant& variant,
+//			std::shared_ptr<AbstractTreeModel> model, bool isRoot, UUIncD id = UUIncD::null());
+//	AbstractTreeModelItem() {};
+	explicit AbstractTreeModelItem(const std::vector<QVariant>& data, const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr, UUIncD id = UUIncD::null());
 	~AbstractTreeModelItem() override;
 
 	/**
@@ -280,6 +281,18 @@ protected:
 		map->m_class = QMetaType::typeName(id);
 	}
 
+	template <class MapType>
+	static void set_map_class_info(const std::string& classname, MapType* map)
+	{
+//		int id = qMetaTypeId<T>();
+		int id = 0;
+//		qDb() << "QMetaType:" << id << QMetaType::typeName(id);// << QVariant(*this).typeName();
+		qDb() << "No QMetatype, class:" << classname << "id:" << id;
+		map->m_id = id;
+//		map->m_class = QMetaType::typeName(id);
+		map->m_class = classname;
+	}
+
 	template <class T, class MapType>
 	static void dump_map_class_info(const T* self, MapType* map)
 	{
@@ -339,7 +352,7 @@ private:
 	bool m_is_in_model {false};
 };
 
-Q_DECLARE_METATYPE(AbstractTreeModelItem);
+//Q_DECLARE_METATYPE(AbstractTreeModelItem);
 Q_DECLARE_METATYPE(std::vector<QVariant>);
 Q_DECLARE_METATYPE(std::weak_ptr<AbstractTreeModelItem>);
 Q_DECLARE_METATYPE(std::shared_ptr<AbstractTreeModelItem>);

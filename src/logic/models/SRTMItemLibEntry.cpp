@@ -30,31 +30,31 @@
 
 
 
-std::shared_ptr<SRTMItem_LibEntry> SRTMItem_LibEntry::construct(std::shared_ptr<LibraryEntry> libentry, const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root)
-{
-	std::shared_ptr<SRTMItem_LibEntry> self(new SRTMItem_LibEntry(libentry, model, is_root));
-	baseFinishConstruct(self);
-	return self;
-}
+//std::shared_ptr<SRTMItem_LibEntry> SRTMItem_LibEntry::construct(std::shared_ptr<LibraryEntry> libentry, const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root)
+//{
+//	std::shared_ptr<SRTMItem_LibEntry> self(new SRTMItem_LibEntry(libentry, model, is_root));
+//	baseFinishConstruct(self);
+//	return self;
+//}
+//
+//std::shared_ptr<SRTMItem_LibEntry> SRTMItem_LibEntry::construct(const QVariant& variant, const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root)
+//{
+//	std::shared_ptr<SRTMItem_LibEntry> self(new SRTMItem_LibEntry(model, is_root));
+//	baseFinishConstruct(self);
+//	return self;
+//}
 
-std::shared_ptr<SRTMItem_LibEntry> SRTMItem_LibEntry::construct(const QVariant& variant, const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root)
-{
-	std::shared_ptr<SRTMItem_LibEntry> self(new SRTMItem_LibEntry(model, is_root));
-	baseFinishConstruct(self);
-	return self;
-}
-
-SRTMItem_LibEntry::SRTMItem_LibEntry(std::shared_ptr<LibraryEntry> libentry, const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root)
-	: BASE_CLASS(std::static_pointer_cast<ScanResultsTreeModel>(model), is_root), m_library_entry(libentry)
-{
-
-}
-
-SRTMItem_LibEntry::SRTMItem_LibEntry(const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root)
-	: BASE_CLASS(std::static_pointer_cast<ScanResultsTreeModel>(model), is_root)
-{
-
-}
+//SRTMItem_LibEntry::SRTMItem_LibEntry(std::shared_ptr<LibraryEntry> libentry, const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root)
+//	: BASE_CLASS(std::static_pointer_cast<ScanResultsTreeModel>(model), is_root), m_library_entry(libentry)
+//{
+//
+//}
+//
+//SRTMItem_LibEntry::SRTMItem_LibEntry(const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root)
+//	: BASE_CLASS(std::static_pointer_cast<ScanResultsTreeModel>(model), is_root)
+//{
+//
+//}
 
 QVariant SRTMItem_LibEntry::data(int column, int role) const
 {
@@ -131,7 +131,8 @@ QVariant SRTMItem_LibEntry::toVariant() const
 	QVariantInsertionOrderedMap map;
 
 	// Overwrite any class info added by the above.
-	set_map_class_info(this, &map);
+//	set_map_class_info(this, &map);
+	set_map_class_info(std::string("SRTMItem_LibEntry"), &map);
 
 	// Set the xml:id.
 	map.insert_attributes({{"xml:id", get_prefixed_uuid()}});

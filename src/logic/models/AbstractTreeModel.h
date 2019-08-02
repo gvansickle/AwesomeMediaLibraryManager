@@ -67,21 +67,26 @@ class AbstractTreeModel : public QAbstractItemModel,
 	using BASE_CLASS = QAbstractItemModel;
 
 protected:
-	/**
-	 * Creates a new AbstractTreeModel object.
-	 * This model will NOT have a root, that's what construct() adds.
-	 * In general, derived constructors don't do much more than pass the @a parent param.
-	 */
-	explicit AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs,
-	                           QObject *parent = nullptr);
+//	/**
+//	 * Creates a new AbstractTreeModel object.
+//	 * This model will NOT have a root, that's what construct() adds.
+//	 * In general, derived constructors don't do much more than pass the @a parent param.
+//	 */
+//	explicit AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs,
+//	                           QObject *parent = nullptr);
 
 public:
+//	/**
+//	 * Named constructor.
+//	 */
+//	static std::shared_ptr<AbstractTreeModel> construct(std::initializer_list<ColumnSpec> column_specs,
+//			QObject* parent = nullptr);
 	/**
-	 * Named constructor.
+	 * Creates a new AbstractTreeModel object.
+	 * @todo >>>>>>>>>>> This model will NOT have a root, that's what construct() adds.
+	 * In general, derived constructors don't do much more than pass the @a parent param.
 	 */
-	static std::shared_ptr<AbstractTreeModel> construct(std::initializer_list<ColumnSpec> column_specs,
-			QObject* parent = nullptr);
-
+	explicit AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
 	/**
 	 * Destructor.  Clears all items in the model, including the root item.
 	 */
