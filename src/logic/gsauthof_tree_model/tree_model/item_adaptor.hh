@@ -27,7 +27,8 @@
 #include <unordered_set>
 #include <deque>
 
-#include <list/ranked_list.hh>
+//#include <list/ranked_list.hh>
+#include "../list/ranked_list.hh"
 
 #include "index.hh"
 

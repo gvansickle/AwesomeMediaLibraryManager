@@ -25,8 +25,10 @@
 #include <QVariant>
 #include <QVector>
 #include <QMap>
-#include <tree_model/operation/base.hh>
-#include <tree_model/deep_model_index.hh>
+//#include <tree_model/operation/base.hh>
+//#include <tree_model/deep_model_index.hh>
+#include "base.hh"
+#include "deep_model_index.hh"
 
 class QAbstractItemModel;
 class QModelIndex;

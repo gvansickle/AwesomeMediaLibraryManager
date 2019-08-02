@@ -21,8 +21,8 @@
 #ifndef TREE_MODEL_OPERATION_REMOVE_ROWS_HH
 #define TREE_MODEL_OPERATION_REMOVE_ROWS_HH
 
-#include <tree_model/operation/base.hh>
-#include <tree_model/deep_model_index.hh>
+#include "base.hh"
+#include "deep_model_index.hh"
 
 #include <memory>
 #include <deque>
