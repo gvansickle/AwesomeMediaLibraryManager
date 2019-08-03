@@ -29,20 +29,20 @@
 #include "ScanResultsTreeModel.h"
 
 
-std::shared_ptr<SRTMItem_LibEntry> SRTMItem_LibEntry::construct(std::shared_ptr<LibraryEntry> libentry,
-                                                                const std::shared_ptr<AbstractTreeModelItem>& parent_item, UUIncD id)
-{
-	std::shared_ptr<SRTMItem_LibEntry> self(new SRTMItem_LibEntry(libentry, parent_item, id));
-	self->postConstructorFinalization();
-	return self;
-}
+//std::shared_ptr<SRTMItem_LibEntry> SRTMItem_LibEntry::construct(std::shared_ptr<LibraryEntry> libentry,
+//                                                                const std::shared_ptr<AbstractTreeModelItem>& parent_item, UUIncD id)
+//{
+//	std::shared_ptr<SRTMItem_LibEntry> self(new SRTMItem_LibEntry(libentry, parent_item, id));
+//	self->postConstructorFinalization();
+//	return self;
+//}
 
-std::shared_ptr<SRTMItem_LibEntry> SRTMItem_LibEntry::construct(const QVariant& variant, const std::shared_ptr<AbstractTreeModelItem>& parent_item, UUIncD id)
-{
-	std::shared_ptr<SRTMItem_LibEntry> self(new SRTMItem_LibEntry(variant, parent_item, id));
-	self->postConstructorFinalization();
-	return self;
-}
+//std::shared_ptr<SRTMItem_LibEntry> SRTMItem_LibEntry::construct(const QVariant& variant, const std::shared_ptr<AbstractTreeModelItem>& parent_item, UUIncD id)
+//{
+//	std::shared_ptr<SRTMItem_LibEntry> self(new SRTMItem_LibEntry(variant, parent_item, id));
+//	self->postConstructorFinalization();
+//	return self;
+//}
 
 SRTMItem_LibEntry::SRTMItem_LibEntry(std::shared_ptr<LibraryEntry> libentry, const std::shared_ptr<AbstractTreeModelItem>& parent_item, UUIncD id)
 	: BASE_CLASS(parent_item, id), m_library_entry(libentry)
@@ -186,7 +186,7 @@ void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 	}
 
 	QVariantHomogenousList child_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
-
+#if 0///
 	auto model_ptr_base = m_model.lock();
 	Q_ASSERT(model_ptr_base);
 	auto model_ptr = std::dynamic_pointer_cast<ScanResultsTreeModel>(model_ptr_base);
@@ -204,6 +204,7 @@ void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 //		Q_ASSERT(ok);
 		// WRONG: model_ptr->requestAddSRTMLibEntryItem(child, parent_id);
 	}
+#endif
 }
 
 //std::shared_ptr<ScanResultsTreeModel> SRTMItem_LibEntry::getTypedModel()

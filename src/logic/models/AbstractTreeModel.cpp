@@ -60,12 +60,12 @@ std::shared_ptr<AbstractTreeModel> AbstractTreeModel::construct(std::initializer
 		QObject* parent)
 {
 	std::shared_ptr<AbstractTreeModel> self(new AbstractTreeModel(column_specs, parent));
-	self->postConstructorFinalization(column_specs);
+//	self->postConstructorFinalization(column_specs);
 //	self->m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs, self);
 //	self->m_model_tester = new QAbstractItemModelTester(self.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, self.get());
 
 	Q_ASSERT(self->m_root_item != nullptr);
-	Q_ASSERT(self->m_root_item->isInModel());
+//	Q_ASSERT(self->m_root_item->isInModel());
 
 	return self;
 }
@@ -86,15 +86,15 @@ AbstractTreeModel::~AbstractTreeModel()
 	m_root_item.reset();
 }
 
-void AbstractTreeModel::postConstructorFinalization(std::initializer_list<ColumnSpec> column_specs)
-{
-//	m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs, this->shared_from_this());
-	m_root_item = AbstractTreeModelHeaderItem::construct(column_specs, this->shared_from_this());
-	Q_ASSERT(m_root_item->m_is_root == true);
-	Q_ASSERT(m_root_item->m_is_in_model == true);
-//	self->m_model_tester = new QAbstractItemModelTester(self.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, self.get());
-	AMLM_ASSERT_X(this->checkConsistency(), "MODEL INCONSISTENT");
-}
+//void AbstractTreeModel::postConstructorFinalization(std::initializer_list<ColumnSpec> column_specs)
+//{
+////	m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs, this->shared_from_this());
+//	m_root_item = AbstractTreeModelHeaderItem::construct(column_specs, this->shared_from_this());
+//	Q_ASSERT(m_root_item->m_is_root == true);
+//	Q_ASSERT(m_root_item->m_is_in_model == true);
+////	self->m_model_tester = new QAbstractItemModelTester(self.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, self.get());
+//	AMLM_ASSERT_X(this->checkConsistency(), "MODEL INCONSISTENT");
+//}
 
 void AbstractTreeModel::clear()
 {
@@ -110,10 +110,10 @@ bool AbstractTreeModel::setColumnSpecs(std::initializer_list<ColumnSpec> column_
 {
 	std::unique_lock write_lock(m_rw_mutex);
 
-//	if(!m_root_item)
-//	{
-//		m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs, this->shared_from_this());
-//	}
+	if(!m_root_item)
+	{
+		m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs, this->shared_from_this());
+	}
 	return m_root_item->setColumnSpecs(column_specs);
 }
 
@@ -238,85 +238,85 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getRootItem() const
 	return m_root_item;
 }
 
-Fun AbstractTreeModel::addItem_lambda(const std::shared_ptr<AbstractTreeModelItem>& new_item, UUIncD parentId)
-{
-	return [this, new_item, parentId]() {
-		// Insertion is simply setting the parent of the item...
-		std::shared_ptr<AbstractTreeModelItem> parent;
-		if (parentId != UUIncD::null())
-		{
-			parent = getItemById(parentId);
-			if (!parent)
-			{
-				Q_ASSERT(parent);
-				return false;
-			}
-		}
-		// ...and fixing up the parent.
-		return new_item->changeParent(parent);
-	};
-}
+//Fun AbstractTreeModel::addItem_lambda(const std::shared_ptr<AbstractTreeModelItem>& new_item, UUIncD parentId)
+//{
+//	return [this, new_item, parentId]() {
+//		// Insertion is simply setting the parent of the item...
+//		std::shared_ptr<AbstractTreeModelItem> parent;
+//		if (parentId != UUIncD::null())
+//		{
+//			parent = getItemById(parentId);
+//			if (!parent)
+//			{
+//				Q_ASSERT(parent);
+//				return false;
+//			}
+//		}
+//		// ...and fixing up the parent.
+//		return new_item->changeParent(parent);
+//	};
+//}
 
-Fun AbstractTreeModel::removeItem_lambda(UUIncD id)
-{
-	return [this, id]() {
-		/* Deletion simply deregister the item and remove it from parent.
-		   The item object is not actually deleted, because a shared_pointer to it
-		   is captured by the reverse operation.
-		   Actual deletions occurs when the undo object is destroyed.
-		*/
-		auto item = m_model_item_map[id].lock();
-		Q_ASSERT(item);
-		if (!item)
-		{
-			return false;
-		}
-		auto parent = item->parent_item().lock();
-		parent->removeChild(item);
-		return true;
-	};
-}
+//Fun AbstractTreeModel::removeItem_lambda(UUIncD id)
+//{
+//	return [this, id]() {
+//		/* Deletion simply deregister the item and remove it from parent.
+//		   The item object is not actually deleted, because a shared_pointer to it
+//		   is captured by the reverse operation.
+//		   Actual deletions occurs when the undo object is destroyed.
+//		*/
+//		auto item = m_model_item_map[id].lock();
+//		Q_ASSERT(item);
+//		if (!item)
+//		{
+//			return false;
+//		}
+//		auto parent = item->parent_item().lock();
+//		parent->removeChild(item);
+//		return true;
+//	};
+//}
 
-Fun AbstractTreeModel::moveItem_lambda(UUIncD id, int destRow, bool force)
-{
-	Fun lambda = []() { return true; };
+//Fun AbstractTreeModel::moveItem_lambda(UUIncD id, int destRow, bool force)
+//{
+//	Fun lambda = []() { return true; };
 
-	std::vector<std::shared_ptr<AbstractTreeModelItem>> oldStack;
-	auto item = getItemById(id);
-	if (!force && item->childNumber() == destRow)
-	{
-		// nothing to do
-		return lambda;
-	}
-	if (auto parent = item->parent_item().lock())
-	{
-		if (destRow > parent->childCount() || destRow < 0)
-		{
-			return []() { return false; };
-		}
-		UUIncD parentId = parent->getId();
-		// remove the element to move
-		oldStack.push_back(item);
-		Fun oper = removeItem_lambda(id);
-		PUSH_LAMBDA(oper, lambda);
-		// remove the tail of the stack
-		for (int i = destRow; i < parent->childCount(); ++i) {
-			auto current = parent->child(i);
-			if (current->getId() != id) {
-				oldStack.push_back(current);
-				oper = removeItem_lambda(current->getId());
-				PUSH_LAMBDA(oper, lambda);
-			}
-		}
-		// insert back in order
-		for (const auto &elem : oldStack) {
-			oper = addItem_lambda(elem, parentId);
-			PUSH_LAMBDA(oper, lambda);
-		}
-		return lambda;
-	}
-	return []() { return false; };
-}
+//	std::vector<std::shared_ptr<AbstractTreeModelItem>> oldStack;
+//	auto item = getItemById(id);
+//	if (!force && item->childNumber() == destRow)
+//	{
+//		// nothing to do
+//		return lambda;
+//	}
+//	if (auto parent = item->parent_item().lock())
+//	{
+//		if (destRow > parent->childCount() || destRow < 0)
+//		{
+//			return []() { return false; };
+//		}
+//		UUIncD parentId = parent->getId();
+//		// remove the element to move
+//		oldStack.push_back(item);
+//		Fun oper = removeItem_lambda(id);
+//		PUSH_LAMBDA(oper, lambda);
+//		// remove the tail of the stack
+//		for (int i = destRow; i < parent->childCount(); ++i) {
+//			auto current = parent->child(i);
+//			if (current->getId() != id) {
+//				oldStack.push_back(current);
+//				oper = removeItem_lambda(current->getId());
+//				PUSH_LAMBDA(oper, lambda);
+//			}
+//		}
+//		// insert back in order
+//		for (const auto &elem : oldStack) {
+//			oper = addItem_lambda(elem, parentId);
+//			PUSH_LAMBDA(oper, lambda);
+//		}
+//		return lambda;
+//	}
+//	return []() { return false; };
+//}
 
 void AbstractTreeModel::LoadDatabase(const QString& database_filename)
 {
@@ -462,9 +462,11 @@ void AbstractTreeModel::notifyRowDeleted()
 	endRemoveRows();
 }
 
+
 /// NEW: KDEN:
 bool AbstractTreeModel::checkConsistency()
 {
+#if 0///
 // first check that the root is all good
 	if (!m_root_item || !m_root_item->m_is_root || !m_root_item->isInModel() || m_model_item_map.count(m_root_item->getId()) == 0)
 	{
@@ -538,6 +540,8 @@ bool AbstractTreeModel::checkConsistency()
 			i++;
 		}
 	}
+#endif///
+
 	return true;
 }
 

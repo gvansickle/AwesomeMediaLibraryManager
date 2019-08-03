@@ -43,6 +43,7 @@
 /// TEMP
 #include "ScanResultsTreeModel.h"
 
+#if 0
 // static
 std::shared_ptr<AbstractTreeModelHeaderItem>
 AbstractTreeModelHeaderItem::construct(std::initializer_list<ColumnSpec> column_specs,
@@ -65,6 +66,7 @@ AbstractTreeModelHeaderItem::construct(std::initializer_list<ColumnSpec> column_
 	Q_ASSERT(self->isInModel());
 	return self;
 }
+#endif
 
 AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(std::initializer_list<ColumnSpec> column_specs,
                                                          const std::shared_ptr<AbstractTreeModel>& parent_model, UUIncD id)
@@ -186,12 +188,14 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 
 	AMLM_ASSERT_EQ(header_num_sections, header_section_list.size());
 
+#if 0 ///
 	// ... and insert that many default-constructed columns to this HeaderItem.
 	// Note that the AbstractTreeModel forwards it's insertColumns() call to here, but it handles the begin/end signaling.
 	// So... I think we need to go through that mechanism if we're already in a model.
 	// But... we're being deserialized here, so will we have a model yet?
 	Q_ASSERT(isInModel());
 	Q_ASSERT(!m_model.expired());
+
 
 //	insertColumns(0, header_num_sections);
 
@@ -235,6 +239,8 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 		Q_ASSERT(new_child);
 //		new_child->fromVariant(variant);
 	}
+#else
+#endif
 }
 
 std::shared_ptr<AbstractHeaderSection> AbstractTreeModelHeaderItem::getHeaderSection(int column)

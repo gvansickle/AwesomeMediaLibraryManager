@@ -73,28 +73,28 @@ public:
 	 * Named constructors.
 	 */
 	/// KDEN
-	static std::shared_ptr<AbstractTreeModelItem> construct(const std::vector<QVariant>& data,
-	                                                        const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr,
-	                                                        UUIncD id = UUIncD::null());
+//	static std::shared_ptr<AbstractTreeModelItem> construct(const std::vector<QVariant>& data,
+//	                                                        const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr,
+//	                                                        UUIncD id = UUIncD::null());
 //	static std::shared_ptr<AbstractTreeModelItem> construct(const QVariant& variant,
 //			std::shared_ptr<AbstractTreeModel> model, bool isRoot, UUIncD id = UUIncD::null());
-protected:
+//protected:
 //	AbstractTreeModelItem() {};
 	explicit AbstractTreeModelItem(const std::vector<QVariant>& data, const std::shared_ptr<AbstractTreeModelItem>& parent_item = nullptr, UUIncD id = UUIncD::null());
 public:
 	~AbstractTreeModelItem() override;
 
-	/**
-	 * Do any post-constructor work necessary to fully form the object.  Called by the Named Constructors/Factory Functions
-	 * to handle any virtual function call work.
-	 * If @a self is root, calls registerSelf() to register it with the model, otherwise does nothing.
-	 */
-	virtual void postConstructorFinalization();
+//	/**
+//	 * Do any post-constructor work necessary to fully form the object.  Called by the Named Constructors/Factory Functions
+//	 * to handle any virtual function call work.
+//	 * If @a self is root, calls registerSelf() to register it with the model, otherwise does nothing.
+//	 */
+//	virtual void postConstructorFinalization();
 
 	/**
 	 * Because we have a mutex member.
 	 */
-	AbstractTreeModelItem(const AbstractTreeModelItem& other);
+//	AbstractTreeModelItem(const AbstractTreeModelItem& other);
 
 	virtual void clear();
 
@@ -219,7 +219,7 @@ M_WARNING("NEED TO BE OVERRIDDEN IN HeaderItem");
 	 * Change the parent of the current item. Structures are modified accordingly
 	 */
 	// KDEN
-	virtual bool changeParent(std::shared_ptr<AbstractTreeModelItem> newParent);
+//	virtual bool changeParent(std::shared_ptr<AbstractTreeModelItem> newParent);
 
 	/// @name Serialization
 	/// These are from the ISerializable interface.
@@ -268,7 +268,7 @@ protected:
      * This is called on the child when (re)parented, and meant to be overridden in derived classes.
      * @param ptr is the pointer to the new parent
 	 */
-	virtual void updateParent(std::shared_ptr<AbstractTreeModelItem> parent);
+//	virtual void updateParent(std::shared_ptr<AbstractTreeModelItem> parent);
 
 	template <class T, class MapType>
 	static void set_map_class_info(const T* self, MapType* map)
@@ -321,11 +321,11 @@ protected:
 	/// The data for each column of this row.
 	std::vector<QVariant> m_item_data;
 
-	std::weak_ptr<AbstractTreeModel> m_model;
-	bool m_is_in_model {false};
+//	std::weak_ptr<AbstractTreeModel> m_model;
+//	bool m_is_in_model {false};
 
 
-	bool m_is_root {false};
+//	bool m_is_root {false};
 
 	/// Deque of shared_ptr's to child items.
 	std::deque<std::shared_ptr<AbstractTreeModelItem>> m_child_items;
@@ -347,7 +347,7 @@ private:
 	/// be non-null as long as this item is not the invisible root item.
 	std::weak_ptr<AbstractTreeModelItem> m_parent_item;
 
-	int m_depth {-1};
+//	int m_depth {-1};
 };
 
 //Q_DECLARE_METATYPE(AbstractTreeModelItem);

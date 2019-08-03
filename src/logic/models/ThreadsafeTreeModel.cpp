@@ -85,8 +85,10 @@ void ThreadsafeTreeModel::clear()
 	m_root_item->clear();
 }
 
+
 bool ThreadsafeTreeModel::requestDeleteItem(const std::shared_ptr<AbstractTreeModelItem>& item, Fun& undo, Fun& redo)
 {
+	#if 0///
 	std::unique_lock write_locker(m_rw_mutex);
 	Q_ASSERT(item);
 	if (!item)
@@ -123,7 +125,10 @@ bool ThreadsafeTreeModel::requestDeleteItem(const std::shared_ptr<AbstractTreeMo
 //		}
 		UPDATE_UNDO_REDO(m_rw_mutex, operation, reverse, undo, redo);
 	}
+
 	return request_was_successful;
+#endif///
+	return false;
 }
 
 QVariant ThreadsafeTreeModel::data(const QModelIndex& index, int role) const
@@ -168,6 +173,8 @@ void ThreadsafeTreeModel::deregister_item(UUIncD id, AbstractTreeModelItem* item
 
 bool ThreadsafeTreeModel::addItem(const std::shared_ptr<AbstractTreeModelItem>& item, UUIncD parent_id, Fun& undo, Fun& redo)
 {
+	Q_ASSERT(0);
+#if 0/// GRVS
 	std::unique_lock write_lock(m_rw_mutex);
 
 	std::shared_ptr<AbstractTreeModelItem> parent_item = getItemById(parent_id);
@@ -189,4 +196,6 @@ bool ThreadsafeTreeModel::addItem(const std::shared_ptr<AbstractTreeModelItem>& 
 		UPDATE_UNDO_REDO(m_rw_mutex, operation, reverse, undo, redo);
 	}
 	return res;
+#endif
+	return true;
 }

@@ -74,18 +74,21 @@ void ScanResultsTreeModel::sendModification()
 //	}
 }
 
+#if 0///
 // static
 std::shared_ptr<ScanResultsTreeModel> ScanResultsTreeModel::construct(std::initializer_list<ColumnSpec> column_specs, QObject* parent)
 {
 	std::shared_ptr<ScanResultsTreeModel> retval(new ScanResultsTreeModel(column_specs, parent));
 
-	retval->postConstructorFinalization(column_specs);
+//	retval->postConstructorFinalization(column_specs);
 //	retval->m_root_item = AbstractTreeModelHeaderItem::construct(column_specs, retval);
 	Q_ASSERT(retval->m_root_item);
-	Q_ASSERT(retval->m_root_item->isInModel());
+//	Q_ASSERT(retval->m_root_item->isInModel());
 	qWr() << retval->m_root_item->columnCount();
 	return retval;
 }
+#endif///
+
 
 void ScanResultsTreeModel::setBaseDirectory(const QUrl &base_directory)
 {
@@ -126,8 +129,8 @@ UUIncD ScanResultsTreeModel::requestAddScanResultsTreeModelItem(const QVariant& 
 	std::unique_lock write_lock(m_rw_mutex);
 
 	// ::construct() a new tree model item from variant.
-	std::shared_ptr<ScanResultsTreeModelItem> new_item = ScanResultsTreeModelItem::construct(variant);
-//	std::shared_ptr<ScanResultsTreeModelItem> new_item = std::make_shared<ScanResultsTreeModelItem>(variant);
+//	std::shared_ptr<ScanResultsTreeModelItem> new_item = ScanResultsTreeModelItem::construct(variant);
+	std::shared_ptr<ScanResultsTreeModelItem> new_item = std::make_shared<ScanResultsTreeModelItem>(variant);
 
 	bool status = addItem(std::static_pointer_cast<AbstractTreeModelItem>(new_item), parent_id, undo, redo);
 
@@ -147,7 +150,8 @@ UUIncD ScanResultsTreeModel::requestAddSRTMLibEntryItem(const QVariant& variant,
 	std::unique_lock write_lock(m_rw_mutex);
 
 //	auto new_item = SRTMItem_LibEntry::construct(variant, std::static_pointer_cast<ScanResultsTreeModel>(shared_from_this()));
-	auto new_item = SRTMItem_LibEntry::construct(variant);//, std::static_pointer_cast<ScanResultsTreeModel>(shared_from_this()));
+//	auto new_item = SRTMItem_LibEntry::construct(variant);//, std::static_pointer_cast<ScanResultsTreeModel>(shared_from_this()));
+	auto new_item = std::make_shared<SRTMItem_LibEntry>(variant);//, std::static_pointer_cast<ScanResultsTreeModel>(shared_from_this()));
 	bool status = addItem(new_item, parent_id, undo, redo);
 
 	if(!status)

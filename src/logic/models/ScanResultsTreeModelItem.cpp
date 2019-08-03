@@ -38,21 +38,21 @@
 #include <serialization/SerializationHelpers.h>
 
 
-std::shared_ptr<ScanResultsTreeModelItem> ScanResultsTreeModelItem::construct(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id)
-{
-	std::shared_ptr<ScanResultsTreeModelItem> self(new ScanResultsTreeModelItem(dsr, parent, id));
-	self->postConstructorFinalization();
-	return self;
-}
+//std::shared_ptr<ScanResultsTreeModelItem> ScanResultsTreeModelItem::construct(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id)
+//{
+//	std::shared_ptr<ScanResultsTreeModelItem> self(new ScanResultsTreeModelItem(dsr, parent, id));
+//	self->postConstructorFinalization();
+//	return self;
+//}
 
-std::shared_ptr<ScanResultsTreeModelItem> ScanResultsTreeModelItem::construct(const QVariant& variant, const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id)
-{
-	std::shared_ptr<ScanResultsTreeModelItem> self(new ScanResultsTreeModelItem(variant, parent, id));
-	self->postConstructorFinalization();
-	/// @note Can't call fromVariant() here, for some reason self still isn't in the model here.
-//	self->fromVariant(variant);
-	return self;
-}
+//std::shared_ptr<ScanResultsTreeModelItem> ScanResultsTreeModelItem::construct(const QVariant& variant, const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id)
+//{
+//	std::shared_ptr<ScanResultsTreeModelItem> self(new ScanResultsTreeModelItem(variant, parent, id));
+//	self->postConstructorFinalization();
+//	/// @note Can't call fromVariant() here, for some reason self still isn't in the model here.
+////	self->fromVariant(variant);
+//	return self;
+//}
 
 ScanResultsTreeModelItem::ScanResultsTreeModelItem(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id)
 	: BASE_CLASS({}, parent, id), m_dsr(dsr)
@@ -172,7 +172,7 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 
 	QVariantHomogenousList child_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
 	Q_ASSERT(child_list.size() > 0);
-
+#if 0////
 	auto model_ptr_base = m_model.lock();
 	Q_ASSERT(model_ptr_base);
 	auto model_ptr = std::dynamic_pointer_cast<ScanResultsTreeModel>(model_ptr_base);
@@ -190,6 +190,7 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 		auto new_child = model_ptr->getItemById(id);
 		Q_ASSERT(new_child);
 	}
+#endif
 }
 
 //std::shared_ptr<ScanResultsTreeModel> ScanResultsTreeModelItem::getTypedModel() const

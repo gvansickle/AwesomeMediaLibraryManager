@@ -93,7 +93,7 @@ public:
 	 * If @a self is root, calls registerSelf() to register it with the model, otherwise does nothing.
 	 * This is a separated function so that it can be called from derived classes
 	 */
-	virtual void postConstructorFinalization(std::initializer_list<ColumnSpec> column_specs);
+//	virtual void postConstructorFinalization(std::initializer_list<ColumnSpec> column_specs);
 
 
 	/// GRVS/KDEN's is ProjItemModel::clean().

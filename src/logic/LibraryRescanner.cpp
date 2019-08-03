@@ -296,7 +296,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 //			new_items->emplace_back(std::make_shared<ScanResultsTreeModelItem>(dsr, tree_model));
 			/// @todo This is in a non-GUI thread.
 			Q_ASSERT(tree_model_sptr);
-			auto new_item = ScanResultsTreeModelItem::construct(dsr);
+//			auto new_item = ScanResultsTreeModelItem::construct(dsr);
+			auto new_item = std::make_shared<ScanResultsTreeModelItem>(dsr);
 			new_items->emplace_back(new_item);
 
 			if(i >= end)
@@ -431,12 +432,13 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 				std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(entry_dp->data(1).toString());
 				lib_entry->populate(true);
 
-//				std::shared_ptr<SRTMItem_LibEntry> new_child = std::make_shared<SRTMItem_LibEntry>(lib_entry);
-				std::shared_ptr<SRTMItem_LibEntry> new_child = SRTMItem_LibEntry::construct(lib_entry, entry_dp);
+				std::shared_ptr<SRTMItem_LibEntry> new_child = std::make_shared<SRTMItem_LibEntry>(lib_entry);
+//				std::shared_ptr<SRTMItem_LibEntry> new_child = SRTMItem_LibEntry::construct(lib_entry, entry_dp);
 				Q_ASSERT(new_child);
 
 				/// NEW: Give the incoming ScanResultTreeModelItem entry a parent.
-				entry_dp->changeParent(tree_model_sptr->getRootItem());
+M_WARNING("TODO: This needs rework.");
+//				entry_dp->changeParent(tree_model_sptr->getRootItem());
 				entry_dp->appendChild(new_child);
 			}
 
@@ -522,8 +524,8 @@ M_WARNING("SHARED PTR");
 				std::initializer_list<ColumnSpec> temp_initlist = {ColumnSpec(SectionID(0), "DirProps"), {SectionID(0), "MediaURL"}, {SectionID(0), "SidecarCueURL"}};
 //				std::shared_ptr<ScanResultsTreeModel> load_tree = ScanResultsTreeModel::construct({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
 				std::shared_ptr<ScanResultsTreeModel> load_tree
-						= ScanResultsTreeModel::construct(temp_initlist, this);
-//						= std::make_shared<ScanResultsTreeModel>(temp_initlist, this);
+//						= ScanResultsTreeModel::construct(temp_initlist, this);
+						= std::make_shared<ScanResultsTreeModel>(temp_initlist, this);
 //						= std::make_shared<ScanResultsTreeModel>();
 				load_tree->LoadDatabase(database_filename);
 				load_tree->clear();
