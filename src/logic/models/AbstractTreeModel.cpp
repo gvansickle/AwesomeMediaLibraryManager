@@ -63,13 +63,17 @@ std::shared_ptr<AbstractTreeModel> AbstractTreeModel::construct(std::initializer
 	self->postConstructorFinalization(column_specs);
 //	self->m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs, self);
 //	self->m_model_tester = new QAbstractItemModelTester(self.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, self.get());
+
+	Q_ASSERT(self->m_root_item != nullptr);
+	Q_ASSERT(self->m_root_item->isInModel());
+
 	return self;
 }
 
 AbstractTreeModel::AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent)
 	: QAbstractItemModel(parent)
 {
-	/// Can't virtual functions in here, which makes our life more difficult.
+	/// Can't call virtual functions in here, which makes our life more difficult.
 //	setColumnSpecs(column_specs);
 //	m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs, std::static_pointer_cast<AbstractTreeModel>(shared_from_this()));
 
@@ -89,6 +93,7 @@ void AbstractTreeModel::postConstructorFinalization(std::initializer_list<Column
 	m_root_item->m_is_root = true;
 	m_root_item->m_is_in_model = true;
 //	self->m_model_tester = new QAbstractItemModelTester(self.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, self.get());
+	AMLM_ASSERT_X(this->checkConsistency(), "MODEL INCONSISTENT");
 }
 
 void AbstractTreeModel::clear()

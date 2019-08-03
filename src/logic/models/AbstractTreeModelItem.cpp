@@ -57,23 +57,40 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::construct(const st
 	return self;
 }
 
-//std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::construct(const QVariant& variant, std::shared_ptr<AbstractTreeModel> model, bool isRoot, UUIncD id)
+//std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::construct(const QVariant& variant, const std::shared_ptr<AbstractTreeModelItem>& parent_item,
+//        UUIncD id)
 //{
-//	std::shared_ptr<AbstractTreeModelItem> self(new AbstractTreeModelItem(model, isRoot, id));
+//	std::shared_ptr<AbstractTreeModelItem> self(new AbstractTreeModelItem(variant, parent_item, id));
 
 //	baseFinishConstruct(self);
 
 //	return self;
 //}
 
-AbstractTreeModelItem::AbstractTreeModelItem(const std::vector<QVariant>& data, const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id)
-	: m_item_data(std::move(data)),
-//	  m_model(model),
+AbstractTreeModelItem::AbstractTreeModelItem(const std::vector<QVariant>& data, const std::shared_ptr<AbstractTreeModelItem>& parent_item, UUIncD id)
+	: m_item_data(data),
+	  m_parent_item(parent_item),
+//	  m_model((parent_item != nullptr) ? parent_item->m_model.lock() ###),
 	  m_depth(0),
 	  m_uuincid(id == UUIncD::null() ? UUIncD::create() : id),
 	  m_is_in_model(false)//,
 //	  m_is_root(is_root)
 {
+	/// @todo m_model handling should be done in postConstructorFinalization().
+//	if(parent_item)
+//	{
+//		// Parent item isn't null, may have a model.
+//		if(auto model_sptr = parent_item->m_model.lock())
+//		{
+//			// We have a valid model, ...
+//			m_model = model_sptr;
+//		}
+//		else
+//		{
+//			// No model.
+//			qWr() << "NO MODEL AT CONSTRUCTION:";
+//		}
+//	}
 }
 
 //AbstractTreeModelItem::AbstractTreeModelItem(const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id)
@@ -699,8 +716,8 @@ void AbstractTreeModelItem::postConstructorFinalization()
  */
 void AbstractTreeModelItem::registerSelf(const std::shared_ptr<AbstractTreeModelItem>& self)
 {
-//	Q_ASSERT_X(self->m_model.);
-//	Q_ASSERT(!self->m_model.expired());
+//	Q_ASSERT_X(self->m_model);
+	Q_ASSERT(!self->m_model.expired());
 
 	// Register children.
 	for (const auto& child : self->m_child_items)
@@ -715,8 +732,8 @@ void AbstractTreeModelItem::registerSelf(const std::shared_ptr<AbstractTreeModel
 	}
 	else
 	{
-		qDebug() << "Error : construction of AbstractTreeModelItem failed because parent model is not available anymore";
-		Q_ASSERT(false);
+		qWr() << M_ID_VAL(self->m_is_in_model);// << M_ID_VAL(self->m_model);
+		AMLM_ASSERT_X(false, "Error : construction of AbstractTreeModelItem failed because parent model is not available anymore");
 	}
 }
 

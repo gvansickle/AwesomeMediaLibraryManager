@@ -73,9 +73,12 @@ inline static QDebug& operator<<(QDebug& d, const std::string& s)
 
 /// Stream out a warning of @a cond holds true.
 #define AMLM_WARNIF(cond) if((cond)) { qWr() << #cond << (cond); }
+#define AMLM_WARNIF_NOT(cond) if(!(cond)) { qWr() << #cond << (cond); }
 
 /// @name Assert helpers which should come as std equipment in the 21st century, but inexplicably don't.
 /// @{
+
+#define AMLM_ASSERT_X(cond, string) Q_ASSERT_X((cond), __PRETTY_FUNCTION__, string)
 
 #define AMLM_ASSERT_BASE(a, b, false_comp) \
 	do { auto la = (a); auto lb = (b); \

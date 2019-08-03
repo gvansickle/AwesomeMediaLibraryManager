@@ -37,22 +37,22 @@
 #include <LibraryEntry.h>
 #include <serialization/SerializationHelpers.h>
 
-//std::shared_ptr<ScanResultsTreeModelItem> ScanResultsTreeModelItem::construct(const DirScanResult& dsr, std::shared_ptr<ScanResultsTreeModel> model, bool is_root)
-//{
-//	std::shared_ptr<ScanResultsTreeModelItem> self(new ScanResultsTreeModelItem(dsr, model, is_root));
-//	baseFinishConstruct(self);
-//	return self;
-//}
-//
-//std::shared_ptr<ScanResultsTreeModelItem> ScanResultsTreeModelItem::construct(const QVariant& variant,
-//																			  std::shared_ptr<ScanResultsTreeModel> model)
-//{
-//	std::shared_ptr<ScanResultsTreeModelItem> self(new ScanResultsTreeModelItem(model, false));
-//	baseFinishConstruct(self);
-//	/// @note Can't call fromVariant() here, for some reason self still isn't in the model here.
-////	self->fromVariant(variant);
-//	return self;
-//}
+
+std::shared_ptr<ScanResultsTreeModelItem> ScanResultsTreeModelItem::construct(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id)
+{
+	std::shared_ptr<ScanResultsTreeModelItem> self(new ScanResultsTreeModelItem(dsr, parent, id));
+	self->postConstructorFinalization();
+	return self;
+}
+
+std::shared_ptr<ScanResultsTreeModelItem> ScanResultsTreeModelItem::construct(const QVariant& variant, const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id)
+{
+	std::shared_ptr<ScanResultsTreeModelItem> self(new ScanResultsTreeModelItem(variant, parent, id));
+	self->postConstructorFinalization();
+	/// @note Can't call fromVariant() here, for some reason self still isn't in the model here.
+//	self->fromVariant(variant);
+	return self;
+}
 
 ScanResultsTreeModelItem::ScanResultsTreeModelItem(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id)
 	: BASE_CLASS({}, parent, id), m_dsr(dsr)
@@ -67,6 +67,7 @@ ScanResultsTreeModelItem::ScanResultsTreeModelItem(const std::shared_ptr<Abstrac
 ScanResultsTreeModelItem::ScanResultsTreeModelItem(const QVariant& variant, const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id)
 	: BASE_CLASS({}, parent, id)
 {
+	M_WARNING("TODO: DECODE VARIANT");
 }
 
 ScanResultsTreeModelItem::~ScanResultsTreeModelItem()

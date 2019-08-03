@@ -81,6 +81,9 @@ std::shared_ptr<ScanResultsTreeModel> ScanResultsTreeModel::construct(std::initi
 
 	retval->postConstructorFinalization(column_specs);
 //	retval->m_root_item = AbstractTreeModelHeaderItem::construct(column_specs, retval);
+	Q_ASSERT(retval->m_root_item);
+	Q_ASSERT(retval->m_root_item->isInModel());
+	qWr() << retval->m_root_item->columnCount();
 	return retval;
 }
 
@@ -123,9 +126,8 @@ UUIncD ScanResultsTreeModel::requestAddScanResultsTreeModelItem(const QVariant& 
 	std::unique_lock write_lock(m_rw_mutex);
 
 	// ::construct() a new tree model item from variant.
-//	std::shared_ptr<ScanResultsTreeModelItem> new_item = ScanResultsTreeModelItem::construct(variant,
-//																							 std::static_pointer_cast<ScanResultsTreeModel>(shared_from_this()));
-	std::shared_ptr<ScanResultsTreeModelItem> new_item = std::make_shared<ScanResultsTreeModelItem>(variant);
+	std::shared_ptr<ScanResultsTreeModelItem> new_item = ScanResultsTreeModelItem::construct(variant);
+//	std::shared_ptr<ScanResultsTreeModelItem> new_item = std::make_shared<ScanResultsTreeModelItem>(variant);
 
 	bool status = addItem(std::static_pointer_cast<AbstractTreeModelItem>(new_item), parent_id, undo, redo);
 
@@ -145,7 +147,7 @@ UUIncD ScanResultsTreeModel::requestAddSRTMLibEntryItem(const QVariant& variant,
 	std::unique_lock write_lock(m_rw_mutex);
 
 //	auto new_item = SRTMItem_LibEntry::construct(variant, std::static_pointer_cast<ScanResultsTreeModel>(shared_from_this()));
-	auto new_item = std::make_shared<SRTMItem_LibEntry>(variant);//, std::static_pointer_cast<ScanResultsTreeModel>(shared_from_this()));
+	auto new_item = SRTMItem_LibEntry::construct(variant);//, std::static_pointer_cast<ScanResultsTreeModel>(shared_from_this()));
 	bool status = addItem(new_item, parent_id, undo, redo);
 
 	if(!status)

@@ -80,7 +80,7 @@ public:
 //			std::shared_ptr<AbstractTreeModel> model, bool isRoot, UUIncD id = UUIncD::null());
 protected:
 //	AbstractTreeModelItem() {};
-	explicit AbstractTreeModelItem(const std::vector<QVariant>& data, const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr, UUIncD id = UUIncD::null());
+	explicit AbstractTreeModelItem(const std::vector<QVariant>& data, const std::shared_ptr<AbstractTreeModelItem>& parent_item = nullptr, UUIncD id = UUIncD::null());
 public:
 	~AbstractTreeModelItem() override;
 
@@ -313,15 +313,17 @@ protected:
 	UUIncD m_uuincid;
 
 	/// The actual number of columns this item (row) has.
-	int m_num_columns {0};
+//	int m_num_columns {0};
 	/// The number of columns this item's parent has, and hence the maximum (column-1) we should
 	/// ever see in a model index.  -1 if unknown.
-	int m_num_parent_columns {-1};
+//	int m_num_parent_columns {-1};
 
 	/// The data for each column of this row.
 	std::vector<QVariant> m_item_data;
 
 	std::weak_ptr<AbstractTreeModel> m_model;
+	bool m_is_in_model {false};
+
 
 	bool m_is_root {false};
 
@@ -346,8 +348,6 @@ private:
 	std::weak_ptr<AbstractTreeModelItem> m_parent_item;
 
 	int m_depth {-1};
-
-	bool m_is_in_model {false};
 };
 
 //Q_DECLARE_METATYPE(AbstractTreeModelItem);
@@ -379,5 +379,18 @@ T AbstractTreeModelItem::accumulate_const(T init, BinOp op) const
 	}
 	return res;
 }
+
+/**
+ * Attempt to use The Power Of Templates(tm) to make a factory factory.
+ */
+template <class T, class... Args>
+std::shared_ptr<T> TreeItemFactory(Args... args)
+{
+	std::shared_ptr<T> retval = std::make_shared<T>(std::forward<Args>(args)...);
+	retval->postConstructorFinalization();
+
+  return retval;
+}
+
 
 #endif // ABSTRACTTREEMODELITEM_H

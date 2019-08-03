@@ -52,7 +52,9 @@ AbstractTreeModelHeaderItem::construct(std::initializer_list<ColumnSpec> column_
 
 	self->setColumnSpecs(column_specs);
 
-//	baseFinishConstruct(self);
+	self->m_is_root = true;
+	self->m_model = parent_model;
+//	self->m_is_in_model = true;
 	self->postConstructorFinalization();
 	Q_ASSERT(self->m_model.lock());// = parent_model;
 
@@ -62,10 +64,12 @@ AbstractTreeModelHeaderItem::construct(std::initializer_list<ColumnSpec> column_
 
 AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(std::initializer_list<ColumnSpec> column_specs,
                                                          const std::shared_ptr<AbstractTreeModel>& parent_model, UUIncD id)
-	: BASE_CLASS({}, nullptr, id) //, m_column_specs(column_specs)
+	: BASE_CLASS({}, nullptr, id)//, //m_is_root(true) //, m_column_specs(column_specs)
 {
 //	setColumnSpecs(column_specs);
 	m_model = parent_model;
+	m_is_root = true;
+	m_is_in_model = true;
 }
 
 AbstractTreeModelHeaderItem::~AbstractTreeModelHeaderItem()
@@ -81,8 +85,8 @@ void AbstractTreeModelHeaderItem::clear()
 	m_column_specs.clear();
 //	BASE_CLASS::clear();
 	m_item_data.clear();
-	m_num_columns = 0;
-	m_num_parent_columns = -1;
+//	m_num_columns = 0;
+//	m_num_parent_columns = -1;
 }
 
 bool AbstractTreeModelHeaderItem::setColumnSpecs(std::initializer_list<ColumnSpec> column_specs)

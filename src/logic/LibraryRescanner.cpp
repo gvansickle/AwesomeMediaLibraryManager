@@ -296,7 +296,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 //			new_items->emplace_back(std::make_shared<ScanResultsTreeModelItem>(dsr, tree_model));
 			/// @todo This is in a non-GUI thread.
 			Q_ASSERT(tree_model_sptr);
-			auto new_item = std::make_shared<ScanResultsTreeModelItem>(dsr);
+			auto new_item = ScanResultsTreeModelItem::construct(dsr);
 			new_items->emplace_back(new_item);
 
 			if(i >= end)
@@ -389,7 +389,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 
 #if 1
 
-#define TREE_ITEM_MODEL_POP_NON_GUI_THREAD 1
+#define TREE_ITEM_MODEL_POP_NON_GUI_THREAD 0
 
 	/// Append TreeModelItems to the ScanResultsTreeModel tree_model.
 	Q_ASSERT(tree_model);
@@ -430,7 +430,8 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 				std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(entry_dp->data(1).toString());
 				lib_entry->populate(true);
 
-				std::shared_ptr<SRTMItem_LibEntry> new_child = std::make_shared<SRTMItem_LibEntry>(lib_entry);
+//				std::shared_ptr<SRTMItem_LibEntry> new_child = std::make_shared<SRTMItem_LibEntry>(lib_entry);
+				std::shared_ptr<SRTMItem_LibEntry> new_child = SRTMItem_LibEntry::construct(lib_entry);
 				Q_ASSERT(new_child);
 
 				/// NEW: Give the incoming ScanResultTreeModelItem entry a parent.
