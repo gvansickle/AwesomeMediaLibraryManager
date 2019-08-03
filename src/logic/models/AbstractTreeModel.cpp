@@ -90,8 +90,8 @@ void AbstractTreeModel::postConstructorFinalization(std::initializer_list<Column
 {
 //	m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs, this->shared_from_this());
 	m_root_item = AbstractTreeModelHeaderItem::construct(column_specs, this->shared_from_this());
-	m_root_item->m_is_root = true;
-	m_root_item->m_is_in_model = true;
+	Q_ASSERT(m_root_item->m_is_root == true);
+	Q_ASSERT(m_root_item->m_is_in_model == true);
 //	self->m_model_tester = new QAbstractItemModelTester(self.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, self.get());
 	AMLM_ASSERT_X(this->checkConsistency(), "MODEL INCONSISTENT");
 }

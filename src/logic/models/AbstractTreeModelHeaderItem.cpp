@@ -52,13 +52,17 @@ AbstractTreeModelHeaderItem::construct(std::initializer_list<ColumnSpec> column_
 
 	self->setColumnSpecs(column_specs);
 
-	self->m_is_root = true;
-	self->m_model = parent_model;
-//	self->m_is_in_model = true;
-	self->postConstructorFinalization();
-	Q_ASSERT(self->m_model.lock());// = parent_model;
+	auto lambda = parent_model->addItem_lambda(self, UUIncD::null());
+	lambda();
 
-//	Q_ASSERT(self->isInModel());
+	self->m_is_root = true;
+//	self->m_model = parent_model;
+//	self->m_is_in_model = true;
+	// This should add the HeaderItem to the model.
+	self->postConstructorFinalization();
+//	Q_ASSERT(self->m_model.lock());// = parent_model;
+
+	Q_ASSERT(self->isInModel());
 	return self;
 }
 
@@ -67,9 +71,10 @@ AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(std::initializer_list<C
 	: BASE_CLASS({}, nullptr, id)//, //m_is_root(true) //, m_column_specs(column_specs)
 {
 //	setColumnSpecs(column_specs);
-	m_model = parent_model;
-	m_is_root = true;
-	m_is_in_model = true;
+//	m_model = parent_model;
+//	m_model->
+//	m_is_root = true;
+//	m_is_in_model = true;
 }
 
 AbstractTreeModelHeaderItem::~AbstractTreeModelHeaderItem()

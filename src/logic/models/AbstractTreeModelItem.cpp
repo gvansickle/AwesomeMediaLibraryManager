@@ -716,8 +716,8 @@ void AbstractTreeModelItem::postConstructorFinalization()
  */
 void AbstractTreeModelItem::registerSelf(const std::shared_ptr<AbstractTreeModelItem>& self)
 {
-//	Q_ASSERT_X(self->m_model);
-	Q_ASSERT(!self->m_model.expired());
+//	Q_ASSERT(self->m_model);
+//	Q_ASSERT(!self->m_model.expired());
 
 	// Register children.
 	for (const auto& child : self->m_child_items)
