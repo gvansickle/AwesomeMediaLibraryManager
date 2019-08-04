@@ -28,6 +28,7 @@
 // Ours
 #include "AMLMApp.h"
 #include <logic/models/ColumnSpec.h>
+#include <logic/models/treeitem.h>
 
 
 namespace AMLM
@@ -69,6 +70,17 @@ M_TODO("Improve ColumnSpecs, not sure I like how we do this and then need to era
 	// Let's add two more columns
 	m_self->m_srtm_instance->insertColumns(3, 2);
 
+	/// ETM
+	QStringList headers;
+	headers << tr("Title") << tr("Description");
+	m_self->m_etm_instance = std::make_shared<TreeModel>(headers);
+
+	TreeItem* new_child = m_self->getEditableTreeModel()->insertChild();
+//	auto root_item = m_self->getEditableTreeModel()->getItem(QModelIndex());
+//	QVector<QVariant> fields({QString("ABC"), QString("DEF")});
+//	TreeItem* new_item = new TreeItem(fields, root_item);
+//	root_item->insertChildren();
+
 	/// @todo experimental
 //	UUIncD new_id = m_self->m_srtm_instance->requestAddItem({"Artist1", "B", "C", "D"}, m_self->m_srtm_instance->getRootItem()->getId());
 //	auto new_child_id_1 = m_self->m_srtm_instance->requestAddItem({"Album1", "F", "GHI", "J"}, new_id);
@@ -99,6 +111,13 @@ std::shared_ptr<ScanResultsTreeModel> Core::getScanResultsTreeModel()
 	Q_CHECK_PTR(m_srtm_instance);
 	return m_srtm_instance;
 };
+
+std::shared_ptr<TreeModel> Core::getEditableTreeModel()
+{
+	Q_CHECK_PTR(m_etm_instance);
+	return m_etm_instance;
+}
+
 
 void Core::clean()
 {

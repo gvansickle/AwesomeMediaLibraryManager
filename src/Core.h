@@ -33,6 +33,7 @@
 #include <future/guideline_helpers.h>
 #include <logic/models/ScanResultsTreeModel.h>
 #include <models/ScanResultsTreeModel.h>
+#include <logic/models/treemodel.h>
 
 namespace AMLM
 {
@@ -70,6 +71,8 @@ public:
 
 	std::shared_ptr<ScanResultsTreeModel> getScanResultsTreeModel();
 
+	std::shared_ptr<TreeModel> getEditableTreeModel();
+
 	/// @}
 
 private:
@@ -79,6 +82,9 @@ private:
 
 	// Shared ptr to the scan results tree model.  Will be deleted in the destructor.
 	std::shared_ptr<ScanResultsTreeModel> m_srtm_instance;
+
+	std::shared_ptr<TreeModel> m_etm_instance;
+
 };
 
 } /* namespace AMLM */

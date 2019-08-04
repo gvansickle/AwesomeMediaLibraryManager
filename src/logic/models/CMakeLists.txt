@@ -33,6 +33,9 @@ set(SOURCE_FILES_SRC_LOGIC_MODELS
 	SRTMItemLibEntry.cpp
 	ThreadsafeTreeModel.cpp
     UndoRedoHelper.cpp
+	# ETM
+	treeitem.cpp
+	treemodel.cpp
 	)
 set(HEADER_FILES_SRC_LOGIC_MODELS
 		AbstractHeaderSection.h
@@ -48,6 +51,9 @@ set(HEADER_FILES_SRC_LOGIC_MODELS
 		SRTMItemLibEntry.h
 		ThreadsafeTreeModel.h
 		UndoRedoHelper.h
+		# ETM
+		treeitem.h
+		treemodel.h
 		)
 
 target_sources_local(models

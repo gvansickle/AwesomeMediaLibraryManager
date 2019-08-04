@@ -518,7 +518,7 @@ public:
 
 private:
 
-    /// The MainWindow signleton.
+    /// The MainWindow singleton.
     static QPointer<MainWindow> m_instance;
 
 #if HAVE_KF501

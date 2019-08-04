@@ -1,7 +1,8 @@
 #include "CollectionView.h"
 #include "ui_CollectionView.h"
 
-#include <logic/models/AbstractTreeModel.h>
+//#include <logic/models/AbstractTreeModel.h>
+#include <logic/models/treemodel.h>
 
 #include <QTimer>
 #include <QDebug>
@@ -24,7 +25,7 @@ void CollectionView::setMainModel2(ScanResultsTableModel* model)
 	view->setModel(model);
 }
 
-void CollectionView::setPane2Model(AbstractTreeModel* model)
+void CollectionView::setPane2Model(TreeModel* model)
 {
 	auto view = ui->treeView_exp;
 	view->setModel(model);
