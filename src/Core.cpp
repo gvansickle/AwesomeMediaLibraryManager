@@ -75,7 +75,7 @@ M_TODO("Improve ColumnSpecs, not sure I like how we do this and then need to era
 	headers << tr("Title") << tr("Description");
 	m_self->m_etm_instance = std::make_shared<TreeModel>(headers);
 
-	TreeItem* new_child = m_self->getEditableTreeModel()->insertChild();
+	std::shared_ptr<TreeItem> new_child = m_self->getEditableTreeModel()->insertChild();
 //	auto root_item = m_self->getEditableTreeModel()->getItem(QModelIndex());
 //	QVector<QVariant> fields({QString("ABC"), QString("DEF")});
 //	TreeItem* new_item = new TreeItem(fields, root_item);
