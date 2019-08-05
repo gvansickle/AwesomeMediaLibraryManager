@@ -63,33 +63,9 @@ protected:
 
 	friend class AbstractTreeModel;
 
-//	/// Sets the model and UUIncD.
-//	/// ETM+KDen
-//	AbstractTreeModelItem(std::vector<QVariant>  data, const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id = UUIncD::null());
-//	AbstractTreeModelItem(const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id = UUIncD::null());
-
 public:
-	/**
-	 * Named constructors.
-	 */
-	/// KDEN
-//	static std::shared_ptr<AbstractTreeModelItem> construct(const std::vector<QVariant>& data,
-//	                                                        const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr,
-//	                                                        UUIncD id = UUIncD::null());
-//	static std::shared_ptr<AbstractTreeModelItem> construct(const QVariant& variant,
-//			std::shared_ptr<AbstractTreeModel> model, bool isRoot, UUIncD id = UUIncD::null());
-//protected:
-//	AbstractTreeModelItem() {};
 	explicit AbstractTreeModelItem(const std::vector<QVariant>& data, const std::shared_ptr<AbstractTreeModelItem>& parent_item = nullptr, UUIncD id = UUIncD::null());
-public:
 	~AbstractTreeModelItem() override;
-
-//	/**
-//	 * Do any post-constructor work necessary to fully form the object.  Called by the Named Constructors/Factory Functions
-//	 * to handle any virtual function call work.
-//	 * If @a self is root, calls registerSelf() to register it with the model, otherwise does nothing.
-//	 */
-//	virtual void postConstructorFinalization();
 
 	/**
 	 * Because we have a mutex member.

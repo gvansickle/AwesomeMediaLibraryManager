@@ -68,29 +68,28 @@
 //}
 
 AbstractTreeModelItem::AbstractTreeModelItem(const std::vector<QVariant>& data, const std::shared_ptr<AbstractTreeModelItem>& parent_item, UUIncD id)
-	: m_item_data(data),
-	  m_parent_item(parent_item),
-//	  m_model((parent_item != nullptr) ? parent_item->m_model.lock() ###),
-//	  m_depth(0),
-	  m_uuincid(id == UUIncD::null() ? UUIncD::create() : id)//,
-//	  m_is_in_model(false)//,
-//	  m_is_root(is_root)
 {
-	/// @todo m_model handling should be done in postConstructorFinalization().
-//	if(parent_item)
+// Generate or set the UUIncD.
+	if(!m_uuincid.isValid())
+	{
+		if(id.isValid())
+		{
+			m_uuincid = id;
+		}
+		else
+		{
+			m_uuincid = UUIncD::create();
+		}
+	}
+
+	// AQT
+//	if(auto strptr = parentItem.lock())
 //	{
-//		// Parent item isn't null, may have a model.
-//		if(auto model_sptr = parent_item->m_model.lock())
-//		{
-//			// We have a valid model, ...
-//			m_model = model_sptr;
-//		}
-//		else
-//		{
-//			// No model.
-//			qWr() << "NO MODEL AT CONSTRUCTION:";
-//		}
+//		strptr->addChild()
 //	}
+
+	m_parent_item = parent_item;
+    m_item_data = data;
 }
 
 //AbstractTreeModelItem::AbstractTreeModelItem(const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id)
