@@ -185,6 +185,25 @@ QModelIndex TreeModel::index(int row, int column, const QModelIndex &parent) con
 #endif
 }
 
+///GRVS
+void TreeModel::register_item(const std::shared_ptr<TreeItem>& child)
+{
+	UUIncD id = child->getId();
+	Q_ASSERT(id.isValid());
+//	AMLM_ASSERT_X(m_model_item_map.count(id) == 0, "Model already has an entry for child");
+	m_model_item_map[id] = child;
+}
+
+void TreeModel::deregister_item(UUIncD id, TreeItem* item)
+{
+//	std::unique_lock write_lock(m_rw_mutex);
+
+	Q_UNUSED(item);
+	AMLM_ASSERT_GT(m_model_item_map.count(id), 0);
+	m_model_item_map.erase(id);
+}
+///GRVS
+
 bool TreeModel::insertColumns(int position, int columns, const QModelIndex &parent)
 {
     bool success;
@@ -547,13 +566,5 @@ std::shared_ptr<TreeItem> TreeModel::append_child(const QVector<QVariant> &data,
 //	}
 //}
 
-///GRVS
-void TreeModel::register_item(const std::shared_ptr<TreeItem>& child)
-{
-	UUIncD id = child->getId();
-	Q_ASSERT(id.isValid());
-//	AMLM_ASSERT_X(m_model_item_map.count(id) == 0, "Model already has an entry for child");
-	m_model_item_map[id] = child;
-}
-///GRVS
+
 

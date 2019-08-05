@@ -120,7 +120,8 @@ protected:
 	 * Must be called so this model knows about @a child.
 	 * @param child
 	 */
-	void register_item(const std::shared_ptr<TreeItem>& child);
+	virtual void register_item(const std::shared_ptr<TreeItem>& child);
+	virtual void deregister_item(UUIncD id, TreeItem* item);
 
 private:
     std::shared_ptr<TreeItem> m_root_item;

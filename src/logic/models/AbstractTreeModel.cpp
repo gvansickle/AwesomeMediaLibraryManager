@@ -198,7 +198,11 @@ Qt::ItemFlags AbstractTreeModel::flags(const QModelIndex &index) const
 std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getItem(const QModelIndex &index) const
 {
 	std::unique_lock read_lock(m_rw_mutex);
-
+	/**
+	 * There's a fail here.  Trying to do a mapping from QModelIndex->TreeItem*, but we're going through
+	 * getItemById() to do it (index.internalId() -> TreeItem*).  In e.g. insertChild(), this results in the
+	 * second lookup being done before the item is in the map, == error.
+	 */
 	if (index.isValid())
 	{
 		std::shared_ptr<AbstractTreeModelItem> item = getItemById(UUIncD(index.internalId()));
