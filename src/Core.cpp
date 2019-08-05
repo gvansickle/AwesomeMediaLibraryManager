@@ -81,7 +81,10 @@ M_TODO("Improve ColumnSpecs, not sure I like how we do this and then need to era
 	QVector<QVariant> fields({QString("ABC"), QString("DEF")});
 //	std::shared_ptr<TreeItem> new_grandchild = std::make_shared<TreeItem>(fields, new_child);
 //	/*auto new_grandchild =*/ new_child->insertChild(0, new_grandchild);
-	m_self->getEditableTreeModel()->append_child(fields, new_child);
+	auto new_grandchild = m_self->getEditableTreeModel()->append_child(fields, new_child);
+	fields.clear();
+	fields << QString("GHI") << QString("JKL");
+	m_self->getEditableTreeModel()->append_child(fields, new_grandchild);
 
 //	QVector<QVariant> fields2({QString("First"), QString("Second")});
 //	auto new_unparented_child = std::make_shared<TreeItem>(fields2);
