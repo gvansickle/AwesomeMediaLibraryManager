@@ -433,7 +433,6 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 				lib_entry->populate(true);
 
 				std::shared_ptr<SRTMItem_LibEntry> new_child = std::make_shared<SRTMItem_LibEntry>(lib_entry);
-//				std::shared_ptr<SRTMItem_LibEntry> new_child = SRTMItem_LibEntry::construct(lib_entry, entry_dp);
 				Q_ASSERT(new_child);
 
 				/// NEW: Give the incoming ScanResultTreeModelItem entry a parent.
@@ -446,6 +445,10 @@ M_WARNING("TODO: This needs rework.");
 			Q_ASSERT(new_items_vector_ptr->at(0));
 #if 1 // !signal
 			tree_model_sptr->appendItems(*new_items_vector_ptr);
+//			for(auto it : new_items_vector_ptr)
+//			{
+//				std::shared_ptr<AbstractTreeModelItem> new_child = the_etm->insertChild();
+//			}
 			/// @temp
 			bool ok = tree_model_sptr->checkConsistency();
 			Q_ASSERT(ok);

@@ -47,29 +47,10 @@
 #include <logic/serialization/SerializationHelpers.h>
 
 
-//std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::construct(const std::vector<QVariant>& data,
-//                                                                        const std::shared_ptr<AbstractTreeModelItem>& parent_item,
-//                                                                        UUIncD id)
-//{
-//	/// @note make_shared doesn't have access to the constructor if it's protected, so we have to do this.
-//	std::shared_ptr<AbstractTreeModelItem> self(new AbstractTreeModelItem(data, parent_item, id));
-//	self->postConstructorFinalization();
-//	return self;
-//}
-
-//std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::construct(const QVariant& variant, const std::shared_ptr<AbstractTreeModelItem>& parent_item,
-//        UUIncD id)
-//{
-//	std::shared_ptr<AbstractTreeModelItem> self(new AbstractTreeModelItem(variant, parent_item, id));
-
-//	baseFinishConstruct(self);
-
-//	return self;
-//}
 
 AbstractTreeModelItem::AbstractTreeModelItem(const std::vector<QVariant>& data, const std::shared_ptr<AbstractTreeModelItem>& parent_item, UUIncD id)
 {
-// Generate or set the UUIncD.
+	// Generate or set the UUIncD.
 	if(!m_uuincid.isValid())
 	{
 		if(id.isValid())
@@ -92,24 +73,10 @@ AbstractTreeModelItem::AbstractTreeModelItem(const std::vector<QVariant>& data, 
     m_item_data = data;
 }
 
-//AbstractTreeModelItem::AbstractTreeModelItem(const std::shared_ptr<AbstractTreeModel>& model, bool is_root, UUIncD id)
-//	: m_model(model),
-//	  m_depth(0),
-//	  m_uuincid(id == UUIncD::null() ? UUIncD::create() : id),
-//	  m_is_in_model(false),
-//	  m_is_root(is_root)
-//{
-//}
-
 AbstractTreeModelItem::~AbstractTreeModelItem()
 {
 //	deregisterSelf();
 }
-
-//AbstractTreeModelItem::AbstractTreeModelItem(const AbstractTreeModelItem& other)
-//{
-//	Q_ASSERT("TODO");
-//}
 
 void AbstractTreeModelItem::clear()
 {
@@ -150,7 +117,7 @@ QDebug operator<<(QDebug dbg, const AbstractTreeModelItem& obj)
 	return dbg;
 }
 
-std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::child(int row) const
+std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::child(int row)
 {
 	Q_ASSERT_X(row >= 0 && row < m_child_items.size(), __func__, "Child row out of range.");
 
@@ -176,6 +143,7 @@ int AbstractTreeModelItem::columnCount() const
  */
 int AbstractTreeModelItem::childNumber() const
 {
+#if 0
 	if (auto shpt = m_parent_item.lock())
 	{
 		// We compute the distance in the parent's children list
@@ -190,6 +158,24 @@ int AbstractTreeModelItem::childNumber() const
 	}
 
     return -1;
+#endif
+	if(auto par = m_parent_item.lock())
+	{
+		std::shared_ptr<AbstractTreeModelItem> this_cast = std::const_pointer_cast<AbstractTreeModelItem>(this->shared_from_this());
+		auto cit = std::find(par->m_child_items.cbegin(), par->m_child_items.cend(), this_cast);
+		if(cit != par->m_child_items.cend())
+		{
+			return std::distance(par->m_child_items.cbegin(), cit);
+		}
+		else
+		{
+			qCr() << "Can't find ourselves in parent's list";
+			return -1;
+		}
+	}
+
+	// No parent, ETM returns 0 here.
+    return 0;
 }
 
 
@@ -265,10 +251,6 @@ void AbstractTreeModelItem::setId(UUIncD id)
 	m_uuincid = id;
 }
 
-//bool AbstractTreeModelItem::isInModel() const
-//{
-//	return m_is_in_model;
-//}
 
 bool AbstractTreeModelItem::operator==(const AbstractTreeModelItem& other) const
 {
@@ -537,47 +519,42 @@ bool AbstractTreeModelItem::setData(int column, const QVariant &value)
 #endif
 }
 
-bool AbstractTreeModelItem::insertChildren(int position, int count, int columns)
+std::vector<std::shared_ptr<AbstractTreeModelItem>> AbstractTreeModelItem::insertChildren(int position, int count, int columns)
 {
+	std::vector<std::shared_ptr<AbstractTreeModelItem>> retval;
+
 	if (position < 0 || position > m_child_items.size())
 	{
-		// Insertion point out of range of existing children.
-		qWr() << "INVALID INSERT POSITION:" << position << ", balking.";
-		return false;
+		// Trying to insert children at an invalid position.
+		// Empty vector == fail.
+		return retval;
 	}
 
-	// No ancestor cycle or existing parent check needed, rows will be new.
-#if 0///
-	if(auto model_ptr = m_model.lock())
+	for (int row = 0; row < count; ++row)
 	{
-		// Currently model handles the notifications in insertRows().
-//		ptr->notifyRowsAboutToInsert()
-
-		decltype(m_child_items)::iterator pos_iterator = m_child_items.begin() + position;
-
-		for (int row = 0; row < count; ++row)
-		{
-			std::vector<QVariant> data(columns);
-
-			// Create a new default-constructed item.
-//			std::shared_ptr<PlaceholderTreeModelItem> item = PlaceholderTreeModelItem::construct(data, model_ptr);
-			std::shared_ptr<AbstractTreeModelItem> item = AbstractTreeModelItem::construct(data, this->shared_from_this());
-//			std::shared_ptr<AbstractTreeModelItem> item = std::make_shared<AbstractTreeModelItem>(data, this->shared_from_this());
-			// Set us as the new item's parent.
-			/// NOW MOVED ABOVE
-//			item->updateParent(shared_from_this());
-			UUIncD id = item->getId();
-			Q_ASSERT(id != UUIncD::null());
-			pos_iterator = m_child_items.insert(pos_iterator, item);
-			Q_ASSERT(pos_iterator != m_child_items.end());
-			registerSelf(item);
-			++pos_iterator;
-		}
-
-//		ptr->notifyRowsInserted();
+		// Create the new TreeItem.
+		/// @note The new item needs to know its parent, which we give it here, and then it needs to be
+		/// added to a model such that it can be looked up via its UUIncD.
+		std::vector<QVariant> data(columns);
+		std::shared_ptr<AbstractTreeModelItem> item = std::make_shared<AbstractTreeModelItem>(data, this->shared_from_this());
+		m_child_items[position] = item;
+		retval.push_back(item);
 	}
-#endif///
-	return true;
+
+	return retval;
+}
+
+std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::insertChild(int row, std::shared_ptr<AbstractTreeModelItem> item)
+{
+#if 0 /// AQP
+	//	return insertChildren(row, 1, )
+	item->parentItem = this->shared_from_this();
+	m_child_items.insert(row, item);
+#else // ETM
+	M_WARNING("Something's wrong here, item is unused.");
+	auto retval = insertChildren(row, 1, this->columnCount());
+	return retval[0];
+#endif
 }
 
 bool AbstractTreeModelItem::appendChildren(std::vector<std::shared_ptr<AbstractTreeModelItem>> new_children)
@@ -588,8 +565,8 @@ bool AbstractTreeModelItem::appendChildren(std::vector<std::shared_ptr<AbstractT
 		bool retval = appendChild(child);
 		if(!retval)
 		{
-			/// @todo Recovery?
-			Q_ASSERT(0);
+M_TODO("CRASHING HERE");/// @todo Recovery?
+Q_ASSERT(0);
 			return false;
 		}
 	}

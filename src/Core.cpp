@@ -62,7 +62,7 @@ void Core::build()
 	/// @note In KDenLive, this is the same, no parent QObject given to ProjectItemModel::construct();
 M_TODO("Improve ColumnSpecs, not sure I like how we do this and then need to erase it on a LoadModel().");
 	std::initializer_list<ColumnSpec> column_specs = {ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}};
-	m_self->m_srtm_instance = std::make_shared<ScanResultsTreeModel>(column_specs, nullptr);
+	m_self->m_srtm_instance = std::make_shared</*ScanResultsTreeModel*/AbstractTreeModel>(column_specs, nullptr);
 //	m_self->m_srtm_instance = std::make_shared<ScanResultsTreeModel>();
 //	m_self->m_srtm_instance = ScanResultsTreeModel::construct({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
 	// Create and set the root item / headers
@@ -74,20 +74,21 @@ M_TODO("Improve ColumnSpecs, not sure I like how we do this and then need to era
 	QStringList headers;
 	headers << tr("Title") << tr("Description");
 	m_self->m_etm_instance = std::make_shared<TreeModel>(headers);
+	auto the_etm = m_self->m_etm_instance;
 
-	auto root_item = m_self->getEditableTreeModel()->getItem(QModelIndex());
-	std::shared_ptr<TreeItem> new_child = m_self->getEditableTreeModel()->insertChild();
+	auto root_item = the_etm->getItem(QModelIndex());
+	std::shared_ptr<TreeItem> new_child = the_etm->insertChild();
 
 	QVector<QVariant> fields({QString("ABC"), QString("DEF")});
 //	std::shared_ptr<TreeItem> new_grandchild = std::make_shared<TreeItem>(fields, new_child);
 //	/*auto new_grandchild =*/ new_child->insertChild(0, new_grandchild);
-	auto new_grandchild = m_self->getEditableTreeModel()->append_child(fields, new_child);
+	auto new_grandchild = the_etm->append_child(fields, new_child);
 	fields.clear();
 	fields << QString("GHI") << QString("JKL");
-	m_self->getEditableTreeModel()->append_child(fields, new_grandchild);
+	the_etm->append_child(fields, new_grandchild);
 
-//	QVector<QVariant> fields2({QString("First"), QString("Second")});
-//	auto new_unparented_child = std::make_shared<TreeItem>(fields2);
+	QVector<QVariant> fields2({QString("First"), QString("Second")});
+	auto new_unparented_child = std::make_shared<TreeItem>(fields2);
 
 
 //	new_child->setData(0, fields[0]);

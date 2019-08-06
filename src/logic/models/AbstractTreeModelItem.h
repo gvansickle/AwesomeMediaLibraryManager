@@ -64,7 +64,8 @@ protected:
 	friend class AbstractTreeModel;
 
 public:
-	explicit AbstractTreeModelItem(const std::vector<QVariant>& data, const std::shared_ptr<AbstractTreeModelItem>& parent_item = nullptr, UUIncD id = UUIncD::null());
+	explicit AbstractTreeModelItem(const std::vector<QVariant>& data,
+			const std::shared_ptr<AbstractTreeModelItem>& parent_item = nullptr, UUIncD id = UUIncD::null());
 	~AbstractTreeModelItem() override;
 
 	/**
@@ -87,7 +88,7 @@ public:
     /// @returns If @a number is not valid, a pointer to a default constructed AbstractTreeModelItem,
     /// 			which is not added to the QVector.
     // ETM+KDEN
-	std::shared_ptr<AbstractTreeModelItem> child(int number) const;
+	std::shared_ptr<AbstractTreeModelItem> child(int number);
 
     /// ETM+KDEN
     /// @returns The number of children this item has.
@@ -149,11 +150,11 @@ M_WARNING("NEED TO BE OVERRIDDEN IN HeaderItem");
 	bool operator==(const AbstractTreeModelItem& other) const;
 
 	/**
-	 * Insert @a count default-constructed (i.e. empty) child items (rows), starting after child index @a position.
-	 * @return true if successful.
+	 * @note This is where all(?) children are ultimately created.
 	 */
-	// ETM, KDEN only has appendChild().
-	virtual bool insertChildren(int position, int count, int columns);
+	std::vector<std::shared_ptr<AbstractTreeModelItem>> insertChildren(int position, int count, int columns);
+	///AQP, ETM has something like this in MainWindow which just inserts a new default child and returns void.
+	std::shared_ptr<AbstractTreeModelItem> insertChild(int row, std::shared_ptr<AbstractTreeModelItem> item);
 
     /// The row number of this item in its parent's list of children.
     // ETM+KDEN (row())

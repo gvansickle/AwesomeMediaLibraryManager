@@ -103,7 +103,7 @@ public:
 private:
 	QList<std::shared_ptr<TreeItem>> m_child_items;
     QVector<QVariant> m_item_data;
-	std::weak_ptr<TreeItem> parentItem;
+	std::weak_ptr<TreeItem> m_parent_item;
 
 	/// GRVS
 	/// Our guaranteed-to-be unique-to-this-run-of-the-program numeric ID.

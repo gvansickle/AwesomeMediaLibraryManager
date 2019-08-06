@@ -40,9 +40,6 @@
 #include <QtWidgets>
 #include <QAbstractItemModelTester>
 
-// KF5
-//#include <KItemViews/KCategorizedSortFilterProxyModel>
-
 // Ours
 #include "AbstractTreeModelItem.h"
 #include "AbstractTreeModelHeaderItem.h"
@@ -53,30 +50,16 @@
 //#include "ThreadsafeTreeModel.h"
 #include <third_party/sqlite_orm/include/sqlite_orm/sqlite_orm.h>
 
-///**
-// * This really should never get called, since AbstractTreeModel is abstract.  Mostly here for an example for derived classes.
-// */
-std::shared_ptr<AbstractTreeModel> AbstractTreeModel::construct(std::initializer_list<ColumnSpec> column_specs,
-		QObject* parent)
-{
-	std::shared_ptr<AbstractTreeModel> self(new AbstractTreeModel(column_specs, parent));
-//	self->postConstructorFinalization(column_specs);
-//	self->m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs, self);
-//	self->m_model_tester = new QAbstractItemModelTester(self.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, self.get());
-
-	Q_ASSERT(self->m_root_item != nullptr);
-//	Q_ASSERT(self->m_root_item->isInModel());
-
-	return self;
-}
 
 AbstractTreeModel::AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent)
 	: QAbstractItemModel(parent)
 {
 	/// Can't call virtual functions in here, which makes our life more difficult.
 //	setColumnSpecs(column_specs);
-//	m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs, std::static_pointer_cast<AbstractTreeModel>(shared_from_this()));
+	m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs, std::static_pointer_cast<AbstractTreeModel>(shared_from_this()));
 
+	/// This seems sort of maybe right/maybe wrong.
+    register_item(m_root_item);
 }
 
 AbstractTreeModel::~AbstractTreeModel()
@@ -162,13 +145,14 @@ QVariant AbstractTreeModel::data(const QModelIndex &index, int role) const
 		}
 	}
 #endif
-    if (role != Qt::DisplayRole) /// @todo Not in KDen AbstTreeModel: && role != Qt::EditRole)
+    if (role != Qt::DisplayRole && role != Qt::EditRole) /// @todo Not in KDen AbstTreeModel: && role != Qt::EditRole)
 	{
         return QVariant();
 	}
 
     // Get a pointer to the indexed item.
-	auto item = getItemById(UUIncD(index.internalId()));
+	//auto item = getItemById(UUIncD(index.internalId()));
+	std::shared_ptr<AbstractTreeModelItem> item = getItem(index);
 
 	// Return the requested [column,role] data from the item.
     return item->data(index.column(), role);
@@ -211,8 +195,7 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getItem(const QModelIn
             return item;
 		}
     }
-	/// @todo This might want to be an assert() due to invalid index.
-	Q_ASSERT(0);
+	// Invalid index, return the root item.
 	return m_root_item;
 }
 
@@ -240,6 +223,76 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getRootItem() const
 
 	Q_ASSERT(m_root_item);
 	return m_root_item;
+}
+
+/**
+ * Insert an empty new child under @a parent and returns a shared_ptr to it.
+ * ETM: From MainWindow, where parent is always currentIndex() from a selection model.
+ * @param parent
+ * @return
+ */
+std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::insertChild(const QModelIndex& parent)
+{
+	const QModelIndex index = parent;
+	std::shared_ptr<AbstractTreeModel> model = this->shared_from_this();
+
+	// Is there no such parent?
+	if(model->columnCount(index) == 0)
+	{
+		// No parent with a column 0, so create it by inserting a column 0.
+		/// GRVS Seems a bit odd.
+		if(!model->insertColumn(0, index))
+		{
+			return nullptr;
+		}
+	}
+
+	if(!model->insertRow(0, index))
+	{
+		return nullptr;
+	}
+
+	// Ok, at this point we should have a new default-constructed child in parent's child list.
+	// We need to add it to this model's UUIncD<->TreeItem map.
+	//	register_item();
+
+	QModelIndex child;
+	for (int column = 0; column < model->columnCount(index); ++column)
+	{
+		child = model->index(0, column, index);
+		//#error /// This fails because the TreeItem backing child hasn't been added to the model map yet, so circular dependency.
+		auto shpt = getItem(child);
+		model->register_item(shpt);
+		model->setData(child, QVariant("[No data]"), Qt::EditRole);
+		if (!model->headerData(column, Qt::Horizontal).isValid())
+		{
+			model->setHeaderData(column, Qt::Horizontal, QVariant("[No header]"), Qt::EditRole);
+		}
+	}
+
+	return getItem(child);
+}
+
+std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::append_child(const QVector<QVariant>& data, std::shared_ptr<AbstractTreeModelItem> parent)
+{
+	// Append a new item to the given parent's list of children.
+	parent->insertChildren(parent->childCount(), 1, m_root_item->columnCount());
+	QVector<QVariant> columnData;
+	for(int column = 0; column < data.size(); ++column)
+	{
+		columnData << data[column];
+	}
+	std::shared_ptr<AbstractTreeModelItem> new_child = parent->child(parent->childCount()-1);
+
+	// Register the new child with this model.
+	register_item(new_child);
+
+	for(int column = 0; column < columnData.size(); ++column)
+	{
+		new_child->setData(column, columnData[column]);
+	}
+
+	return new_child;
 }
 
 //Fun AbstractTreeModel::addItem_lambda(const std::shared_ptr<AbstractTreeModelItem>& new_item, UUIncD parentId)
@@ -612,16 +665,58 @@ M_WARNING("TODO: This is what ETM has.  Should it be the parent_model_index, not
 
 bool AbstractTreeModel::insertRows(int insert_before_row, int num_rows, const QModelIndex& parent_model_index)
 {
-	Q_CHECK_PTR(m_root_item);
+#if 1 //ETM
+	qDb() << "Trying to insert:" << insert_before_row << num_rows << parent_model_index;
 
-	std::shared_ptr<AbstractTreeModelItem> parent_item = getItemById(UUIncD(parent_model_index.internalId()));
+	std::shared_ptr<AbstractTreeModelItem> parentItem = getItem(parent_model_index);
 	bool success;
 
 	beginInsertRows(parent_model_index, insert_before_row, insert_before_row + num_rows - 1);
-	success = parent_item->insertChildren(insert_before_row, num_rows, m_root_item->columnCount());
+
+	// Create @a rows default-constructed children of parent.
+	auto new_children = parentItem->insertChildren(insert_before_row, num_rows, m_root_item->columnCount());
+
+	// Add the new children to the UUID lookup map.
+	for(const auto& item : new_children)
+	{
+		qDb() << "Adding UUIncD:" << item->getId() << item->columnCount();
+		m_model_item_map.insert({item->getId(), item});
+	}
+
+	success = !new_children.empty();
+
 	endInsertRows();
 
 	return success;
+#else
+	///AQP
+    if(!m_root_item)
+    {
+    	// No root item yet, create it.
+	    QVector<QVariant> data;
+	    data << "[header a]" << "[header b]";
+    	m_root_item = std::make_shared<TreeItem>(data, nullptr);
+    }
+
+    std::shared_ptr<TreeItem> parent_item = parent.isValid() ? getItem(parent) : m_root_item;
+
+	beginInsertRows(parent, position, position + rows - 1);
+
+	for (int i = 0; i < rows; ++i)
+	{
+		QVector<QVariant> data;
+		for(int col=0; col != columnCount(); ++i)
+		{
+			data << "[No data]";
+		}
+		std::shared_ptr<TreeItem> item = std::make_shared<TreeItem>(data, parent_item);
+		parent_item->insertChild(position, item);
+	}
+
+	endInsertRows();
+
+	return true;
+#endif
 }
 
 QModelIndex AbstractTreeModel::parent(const QModelIndex &index) const
@@ -698,50 +793,6 @@ bool AbstractTreeModel::moveColumns(const QModelIndex& sourceParent, int sourceC
 	return this->BASE_CLASS::moveColumns(sourceParent, sourceColumn, count, destinationParent, destinationChild);
 }
 
-
-bool AbstractTreeModel::appendItems(std::vector<std::shared_ptr<AbstractTreeModelItem>> new_items, const QModelIndex &parent)
-{
-	std::shared_ptr<AbstractTreeModelItem> parent_item;
-	if(!parent.isValid())
-	{
-		parent_item = m_root_item;
-	}
-	else
-	{
-		parent_item = getItemById(static_cast<UUIncD>(parent.internalId()));
-	}
-
-	Q_CHECK_PTR(parent_item);
-
-    if(new_items.empty())
-    {
-    	qWr() << "Attempt to append zero items.";
-    	return false;
-    }
-
-    auto first_new_row_num_after_insertion = parent_item->childCount();
-
-    /// @todo What do we need to do to support/handle different num of columns?
-	/// @todo These items have data already and aren't default-constructed, do we need to do anything different
-	///       than begin/endInsert rows?
-	// parent, first_row_num_after_insertion, last_row_num_after_insertion.
-	this->beginInsertRows(parent, first_new_row_num_after_insertion, first_new_row_num_after_insertion + new_items.size() - 1);
-
-    parent_item->appendChildren(std::move(new_items));
-
-    this->endInsertRows();
-
-    return true;
-}
-
-//bool AbstractTreeModel::appendItem(std::shared_ptr<AbstractTreeModelItem> new_item, const QModelIndex& parent)
-//{
-//	Q_ASSERT(0/*NOT IMPL*/);
-//	std::vector<std::shared_ptr<AbstractTreeModelItem>> new_items;
-
-//	new_items.emplace_back(std::move(new_item));
-//	return appendItems(std::move(new_items), parent);
-//}
 
 QModelIndex AbstractTreeModel::getIndexFromItem(const std::shared_ptr<AbstractTreeModelItem>& item) const
 {

@@ -81,7 +81,7 @@ private:
 	static std::unique_ptr<Core> m_self;
 
 	// Shared ptr to the scan results tree model.  Will be deleted in the destructor.
-	std::shared_ptr<ScanResultsTreeModel> m_srtm_instance;
+	std::shared_ptr</*ScanResultsTreeModel*/AbstractTreeModel> m_srtm_instance;
 
 	std::shared_ptr<TreeModel> m_etm_instance;
 

@@ -66,14 +66,6 @@ class AbstractTreeModel : public QAbstractItemModel, public virtual ISerializabl
 
 public:
 	/**
-	 * Named constructor.
-	 * We only use this to work around the "no virtual calls in con/destructors" issue C++ and all other languages have,
-	 * here specifically with the construction of the root item, which fails in shared_from_this() due to this (AFAICT).
-	 */
-	static std::shared_ptr<AbstractTreeModel> construct(std::initializer_list<ColumnSpec> column_specs,	QObject* parent = nullptr);
-protected:
-
-	/**
 	 * Creates a new AbstractTreeModel object.
 	 * @warning This model will NOT have a root item because virtual.  See setColumnSpecs(), which you should
 	 *          call immediately after creating a new model.
@@ -81,20 +73,10 @@ protected:
 	 */
 	explicit AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
 
-public:
 	/**
 	 * Destructor.  Clears all items in the model, including the root item.
 	 */
 	~AbstractTreeModel() override;
-
-	/**
-	 * Do any post-constructor work necessary to fully form the object.  Called by the Named Constructors/Factory Functions
-	 * to handle any virtual function call work.
-	 * If @a self is root, calls registerSelf() to register it with the model, otherwise does nothing.
-	 * This is a separated function so that it can be called from derived classes
-	 */
-//	virtual void postConstructorFinalization(std::initializer_list<ColumnSpec> column_specs);
-
 
 	/// GRVS/KDEN's is ProjItemModel::clean().
 	/**
@@ -209,15 +191,13 @@ public:
 	/// @name Extended public model interface.
     /// @{
 
-	/**
-	 * Append a std::vector of AbstractTreeModelItem's as children of @a parent.
-	 * This is effectively the same as insertRows() followed by numerous setData() calls, but the default construction
-	 * of the item objects is skipped since we're passing in the @a new_items.
-	 * @note We're crossing the streams here, smart ptrs and QModelIndex.
-	 */
-	 /// OLD
-	virtual bool appendItems(std::vector<std::shared_ptr<AbstractTreeModelItem>> new_items, const QModelIndex &parent = QModelIndex());
-//	virtual bool appendItem(std::shared_ptr<AbstractTreeModelItem> new_items, const QModelIndex &parent = QModelIndex());
+	/// GRVS
+	/// Insert an empty new child under @a parent and returns a shared_ptr to it.
+	/// ETM: From MainWindow, where parent is always currentIndex() from a selection model.
+	std::shared_ptr<AbstractTreeModelItem> insertChild(const QModelIndex &parent = QModelIndex());
+	/// GRVS
+	/// ETM-inspired append function.  Based on setupModelData().
+	std::shared_ptr<AbstractTreeModelItem> append_child(const QVector<QVariant> &data, std::shared_ptr<AbstractTreeModelItem> parent);
 
 	QModelIndex getIndexFromItem(const std::shared_ptr<AbstractTreeModelItem>& item) const;
 	QModelIndex getIndexFromId(UUIncD id) const;
@@ -231,28 +211,11 @@ public:
 	/// @name Public interface: Lambda generators for tree structure modification.
 	/// @{
 
-	/**
-	 * Helper function to generate a lambda that adds an item to the tree.
-	 */
-	Fun addItem_lambda(const std::shared_ptr<AbstractTreeModelItem> &new_item, UUIncD parentId);
-
-	/**
-	 * Helper function to generate a lambda that removes an item from the tree.
-	 */
-	Fun removeItem_lambda(UUIncD id);
-
-	/**
-	 * Helper function to generate a lambda that changes the row of an item.
-	 */
-	Fun moveItem_lambda(UUIncD id, int destRow, bool force = false);
-
 	/// @} // END Lambda generators.
 
 
 	/// @name Cut/Copy/Paste support.
 	/// @{
-
-	bool has_cut_item() const { return false; };
 
 	/// @}
 
@@ -272,10 +235,6 @@ public:
 
 	/// Serialize the entire model from a QVariant.
 	void fromVariant(const QVariant& variant) override { Q_ASSERT(0); }; // = 0;
-
-//	virtual UUIncD requestAddTreeModelItem(const QVariant& variant, UUIncD parent_id,
-//	                               Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda)
-//	                               { Q_ASSERT(0); return UUIncD::null(); };
 
 #if 0
 	virtual void toOrm(std::string filename) const;

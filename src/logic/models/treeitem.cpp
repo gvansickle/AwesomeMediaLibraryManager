@@ -80,7 +80,7 @@ TreeItem::TreeItem(const QVector<QVariant> &data, const std::shared_ptr<TreeItem
 //		strptr->addChild()
 //	}
 
-    parentItem = parent;
+    m_parent_item = parent;
     m_item_data = data;
 }
 
@@ -118,16 +118,14 @@ int TreeItem::childNumber() const
 
     return -1;
 #endif
-	if(auto par = parentItem.lock())
+	if(auto par = m_parent_item.lock())
 	{
 		return par->m_child_items.indexOf(std::const_pointer_cast<TreeItem>(this->shared_from_this()));
 	}
 
     return 0;
 }
-//! [4]
 
-//! [5]
 int TreeItem::columnCount() const
 {
     return m_item_data.count();
@@ -195,12 +193,12 @@ bool TreeItem::insertColumns(int position, int columns)
 
 std::shared_ptr<TreeItem> TreeItem::parent()
 {
-	return parentItem.lock();
+	return m_parent_item.lock();
 }
 
 std::weak_ptr<TreeItem> TreeItem::parent_item() const
 {
-	return parentItem;
+	return m_parent_item;
 }
 
 
