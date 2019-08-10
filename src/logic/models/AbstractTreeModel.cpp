@@ -50,16 +50,36 @@
 //#include "ThreadsafeTreeModel.h"
 #include <third_party/sqlite_orm/include/sqlite_orm/sqlite_orm.h>
 
+std::shared_ptr<AbstractTreeModel>
+AbstractTreeModel::make_AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent)
+{
+//	auto retval = std::make_shared<AbstractTreeModel>(column_specs, parent);
+	auto retval = std::shared_ptr<AbstractTreeModel>(new AbstractTreeModel(column_specs, parent));
+	retval->m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs,
+			std::dynamic_pointer_cast<AbstractTreeModel>(retval->shared_from_this()));
+	return retval;
+}
+
+
+AbstractTreeModel::AbstractTreeModel(QObject* parent) : QAbstractItemModel(parent), ISerializable()
+{
+	// Delegate to this constructor, then you'll have a vtable and should be able to call virtual functions in the other constructor.
+	qDb() << "Done, this:" << this;
+}
 
 AbstractTreeModel::AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent)
-	: QAbstractItemModel(parent)
+	: AbstractTreeModel(parent)
 {
 	/// Can't call virtual functions in here, which makes our life more difficult.
+	/// Actually, it's the "shared_from_this() requires this to already be a shared_ptr<>" that's tripping me up. I think.
+//	std::shared_ptr<AbstractTreeModel> temp_shared_this(this);
+	qDb() << "############### THIS:" << this;
 //	setColumnSpecs(column_specs);
-	m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs, std::static_pointer_cast<AbstractTreeModel>(shared_from_this()));
+//	m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs, nullptr);//std::static_pointer_cast<AbstractTreeModel>(shared_from_this()));
+//	m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs, std::dynamic_pointer_cast<AbstractTreeModel>(shared_from_this()));
 
 	/// This seems sort of maybe right/maybe wrong.
-    register_item(m_root_item);
+//    register_item(m_root_item);
 }
 
 AbstractTreeModel::~AbstractTreeModel()
@@ -81,7 +101,7 @@ AbstractTreeModel::~AbstractTreeModel()
 
 void AbstractTreeModel::clear()
 {
-	Q_ASSERT(0);
+//	Q_ASSERT(0);
 	// Clear all items from the model.
 //	m_model_item_map.clear();
 //	// Release our hold on the root item, let the smart ptr delete it.
@@ -197,6 +217,13 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getItem(const QModelIn
     }
 	// Invalid index, return the root item.
 	return m_root_item;
+}
+
+void AbstractTreeModel::setBaseDirectory(const QUrl& base_directory)
+{
+	std::unique_lock write_lock(m_rw_mutex);
+
+	m_base_directory = base_directory;
 }
 
 /// NEW: KDEN:
@@ -908,6 +935,7 @@ bool AbstractTreeModel::setHeaderData(int section, const AbstractHeaderSection& 
 //	for()
 	return true;
 }
+
 
 
 

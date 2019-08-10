@@ -62,9 +62,10 @@ void Core::build()
 	/// @note In KDenLive, this is the same, no parent QObject given to ProjectItemModel::construct();
 M_TODO("Improve ColumnSpecs, not sure I like how we do this and then need to erase it on a LoadModel().");
 	std::initializer_list<ColumnSpec> column_specs = {ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}};
-	m_self->m_srtm_instance = std::make_shared</*ScanResultsTreeModel*/AbstractTreeModel>(column_specs, nullptr);
+//	m_self->m_srtm_instance = std::make_shared</*ScanResultsTreeModel*/AbstractTreeModel>(column_specs, nullptr);
 //	m_self->m_srtm_instance = std::make_shared<ScanResultsTreeModel>();
 //	m_self->m_srtm_instance = ScanResultsTreeModel::construct({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
+	m_self->m_srtm_instance = AbstractTreeModel::make_AbstractTreeModel({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
 	// Create and set the root item / headers
 	m_self->m_srtm_instance->setColumnSpecs({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
 	// Let's add two more columns
@@ -90,6 +91,10 @@ M_TODO("Improve ColumnSpecs, not sure I like how we do this and then need to era
 	QVector<QVariant> fields2({QString("First"), QString("Second")});
 	auto new_unparented_child = std::make_shared<TreeItem>(fields2);
 
+
+	/// std::shared_ptr<AbstractTreeModel> m_atm_instance;
+//	m_self->m_atm_instance = std::make_shared<AbstractTreeModel>(column_specs);
+	m_self->m_atm_instance = AbstractTreeModel::make_AbstractTreeModel(column_specs);
 
 //	new_child->setData(0, fields[0]);
 //	new_child->setData(1, fields[1]);
@@ -121,7 +126,7 @@ std::unique_ptr<Core>& Core::self()
 	return m_self;
 }
 
-std::shared_ptr<ScanResultsTreeModel> Core::getScanResultsTreeModel()
+std::shared_ptr<AbstractTreeModel> Core::getScanResultsTreeModel()
 {
 	Q_CHECK_PTR(m_srtm_instance);
 	return m_srtm_instance;

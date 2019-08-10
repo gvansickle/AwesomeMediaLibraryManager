@@ -248,7 +248,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
     /// @note This ptr will go away when we exit the function, so we can't copy it into any stap() lambdas.
 //    M_WARNING("THIS SHOULD BE ::construct");
 //	std::shared_ptr<ScanResultsTreeModel> tree_model = AMLMApp::IScanResultsTreeModel();
-	std::shared_ptr<ScanResultsTreeModel> tree_model = AMLM::Core::self()->getScanResultsTreeModel();
+//	std::shared_ptr<ScanResultsTreeModel> tree_model = AMLM::Core::self()->getScanResultsTreeModel();
+	std::shared_ptr<AbstractTreeModel> tree_model = AMLM::Core::self()->getScanResultsTreeModel();
 	Q_ASSERT(tree_model);
     // Set the root URL of the scan results model.
     /// @todo Should this really be done here, or somewhere else?
@@ -271,7 +272,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 		AMLM_ASSERT_NOT_IN_GUITHREAD();
 //		AMLM_ASSERT_IN_GUITHREAD();
 
-		std::shared_ptr<ScanResultsTreeModel> tree_model_sptr = AMLM::Core::self()->getScanResultsTreeModel();
+//		std::shared_ptr<ScanResultsTreeModel> tree_model_sptr = AMLM::Core::self()->getScanResultsTreeModel();
+        std::shared_ptr<AbstractTreeModel> tree_model_sptr = AMLM::Core::self()->getScanResultsTreeModel();
 		Q_ASSERT(tree_model_sptr);
 
 		if(begin == 0)
@@ -406,7 +408,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 		AMLM_ASSERT_NOT_IN_GUITHREAD();
 #endif
 		// Get the current ScanResultsTreeModel.
-		std::shared_ptr<ScanResultsTreeModel> tree_model_sptr = AMLM::Core::self()->getScanResultsTreeModel();
+//		std::shared_ptr<ScanResultsTreeModel> tree_model_sptr = AMLM::Core::self()->getScanResultsTreeModel();
+		std::shared_ptr<AbstractTreeModel> tree_model_sptr = AMLM::Core::self()->getScanResultsTreeModel();
 		Q_ASSERT(tree_model_sptr);
 //		tree_model_sptr->clear();
 //		qDb() << "START: tree_model_item_future.stap(), new_items_future count:" << new_items_future.resultCount();
@@ -444,7 +447,8 @@ M_WARNING("TODO: This needs rework.");
 			// Finally, move the new model items to their new home.
 			Q_ASSERT(new_items_vector_ptr->at(0));
 #if 1 // !signal
-			tree_model_sptr->appendItems(*new_items_vector_ptr);
+M_WARNING("PUT THIS BACK");
+/////			tree_model_sptr->appendItems(*new_items_vector_ptr);
 //			for(auto it : new_items_vector_ptr)
 //			{
 //				std::shared_ptr<AbstractTreeModelItem> new_child = the_etm->insertChild();
@@ -518,11 +522,12 @@ M_WARNING("kjob is now null here and we fail");
 		        Q_ASSERT(m_model_ready_to_save_to_db == true);
 		        m_model_ready_to_save_to_db = false;
 				m_timer.lap("Start of SaveDatabase");
-M_WARNING("SHARED PTR");
-				SaveDatabase(tree_model_ptr, database_filename);
+M_WARNING("PUT THIS BACK");
+//				SaveDatabase(tree_model_ptr, database_filename);
 				m_timer.lap("End of SaveDatabase");
 
 				////////// EXPERIMENTAL
+#if 0 //// PUT BACK
 				/// Try to load it back in and round-trip it.
 				std::initializer_list<ColumnSpec> temp_initlist = {ColumnSpec(SectionID(0), "DirProps"), {SectionID(0), "MediaURL"}, {SectionID(0), "SidecarCueURL"}};
 //				std::shared_ptr<ScanResultsTreeModel> load_tree = ScanResultsTreeModel::construct({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
@@ -534,7 +539,7 @@ M_WARNING("SHARED PTR");
 				load_tree->clear();
 //				dump_map(load_tree);
 				SaveDatabase(load_tree, QDir::homePath() +"/AMLMDatabaseRT.xml");
-
+#endif /////
 
 /// @todo EXPERIMENTAL
 #if 0

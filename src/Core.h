@@ -69,7 +69,7 @@ public:
 	/// @name Accessors for the singletons.
 	/// @{
 
-	std::shared_ptr<ScanResultsTreeModel> getScanResultsTreeModel();
+	std::shared_ptr<AbstractTreeModel> getScanResultsTreeModel();
 
 	std::shared_ptr<TreeModel> getEditableTreeModel();
 
@@ -84,6 +84,7 @@ private:
 	std::shared_ptr</*ScanResultsTreeModel*/AbstractTreeModel> m_srtm_instance;
 
 	std::shared_ptr<TreeModel> m_etm_instance;
+	std::shared_ptr<AbstractTreeModel> m_atm_instance;
 
 };
 

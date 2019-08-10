@@ -64,15 +64,27 @@ class AbstractTreeModel : public QAbstractItemModel, public virtual ISerializabl
 
 	using BASE_CLASS = QAbstractItemModel;
 
-public:
+private:
+	/**
+	 * My bright idea here is to defer to this constructor from other constructors which need to call virtual functions on this.
+	 * I have no idea if that really works like I think it does.
+	 * Wait, yes I do: @link https://docs.microsoft.com/en-us/cpp/cpp/constructors-cpp?view=vs-2019#delegating_constructors
+	 * "The object created by the constructors is fully initialized as soon as any constructor is finished."
+	 */
+	explicit AbstractTreeModel(QObject* parent = nullptr);
+protected:
 	/**
 	 * Creates a new AbstractTreeModel object.
 	 * @warning This model will NOT have a root item because virtual.  See setColumnSpecs(), which you should
 	 *          call immediately after creating a new model.
 	 * In general, derived constructors don't do much more than pass the @a parent param.
 	 */
-	explicit AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
-
+	AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
+public:
+	/**
+	 * Named constructor.
+	 */
+	static std::shared_ptr<AbstractTreeModel> make_AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
 	/**
 	 * Destructor.  Clears all items in the model, including the root item.
 	 */
@@ -224,6 +236,12 @@ public:
 	/// Remember to override these in derived classes.
 	/// @{
 
+	/**
+	 * Sets the base directory of the model.
+	 * @todo TEMP.
+	 */
+	void setBaseDirectory(const QUrl& base_directory);
+
 	/// Load and save the database to a file.
 	/// @note The idea is that these shouldn't need to be overridden in derived classes, but just in case we make
 	/// them virtual.
@@ -345,6 +363,10 @@ protected:
 	 */
 //	std::map<UUIncD, std::weak_ptr<AbstractTreeModelItem>> m_model_item_map;
 	item_map_type m_model_item_map;
+
+	/// TEMP
+	// The tree's base directory URL.
+	QUrl m_base_directory;
 
 };
 

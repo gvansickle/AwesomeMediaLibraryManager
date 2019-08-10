@@ -15,7 +15,7 @@ ExperimentalKDEView1::~ExperimentalKDEView1()
 	delete ui;
 }
 
-bool ExperimentalKDEView1::setModel(ScanResultsTreeModel* model)
+bool ExperimentalKDEView1::setModel(AbstractTreeModel* model)
 {
 	auto view = ui->m_top_level_tree_view;
 

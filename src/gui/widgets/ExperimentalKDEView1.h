@@ -12,6 +12,7 @@
 
 // Ours.
 #include <logic/models/ScanResultsTreeModel.h>
+#include <logic/models/AbstractTreeModel.h>
 
 
 namespace Ui
@@ -27,7 +28,9 @@ public:
 	explicit ExperimentalKDEView1(QWidget *parent = nullptr);
 	~ExperimentalKDEView1() override;
 
-	bool setModel(ScanResultsTreeModel* model);
+//	bool setModel(ScanResultsTreeModel* model);
+	bool setModel(AbstractTreeModel* model);
+
 
 private:
 	Ui::ExperimentalKDEView1 *ui;
