@@ -56,10 +56,10 @@ class ScanResultsTreeModel : public ThreadsafeTreeModel, public virtual ISeriali
 	using BASE_CLASS = ThreadsafeTreeModel;
 
 protected:
-//	/**
-//	 * The constructed model will NOT have a root, that's what construct() adds.
-//	 */
-//	explicit ScanResultsTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
+	/**
+	 * The constructed model will NOT have a root, that's what construct() adds.
+	 */
+	explicit ScanResultsTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
 
 	/**
 	 * Make sig/slot connections.
@@ -74,15 +74,15 @@ protected:
 	void sendModification();
 
 public:
-//	/**
-//	 * Named constructors.
-//	 */
+	/**
+	 * Named constructors.
+	 */
 //	static std::shared_ptr<ScanResultsTreeModel> construct(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
 //	/**
 //	 * The constructed model will NOT have a root, that's what construct() adds.
 //	 */
-	explicit ScanResultsTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
-	static std::shared_ptr<AbstractTreeModel> make_ScanResultsTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent);
+//	explicit ScanResultsTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
+	static std::shared_ptr<ScanResultsTreeModel> make_ScanResultsTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent = nullptr);
 //	explicit ScanResultsTreeModel(QObject *parent = nullptr);
 	ScanResultsTreeModel() = delete;
 

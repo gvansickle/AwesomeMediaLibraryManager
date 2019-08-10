@@ -250,7 +250,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 //	std::shared_ptr<ScanResultsTreeModel> tree_model = AMLMApp::IScanResultsTreeModel();
 	std::shared_ptr<ScanResultsTreeModel> tree_model = AMLM::Core::self()->getScanResultsTreeModel();
 //	std::shared_ptr<AbstractTreeModel> tree_model = AMLM::Core::self()->getScanResultsTreeModel();
-	Q_ASSERT(tree_model);
+	Q_CHECK_PTR(tree_model);
     // Set the root URL of the scan results model.
     /// @todo Should this really be done here, or somewhere else?
     tree_model->setBaseDirectory(dir_url);
@@ -272,8 +272,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 		AMLM_ASSERT_NOT_IN_GUITHREAD();
 //		AMLM_ASSERT_IN_GUITHREAD();
 
-//		std::shared_ptr<ScanResultsTreeModel> tree_model_sptr = AMLM::Core::self()->getScanResultsTreeModel();
-        std::shared_ptr<AbstractTreeModel> tree_model_sptr = AMLM::Core::self()->getScanResultsTreeModel();
+		std::shared_ptr<ScanResultsTreeModel> tree_model_sptr = AMLM::Core::self()->getScanResultsTreeModel();
+//        std::shared_ptr<AbstractTreeModel> tree_model_sptr = AMLM::Core::self()->getScanResultsTreeModel();
 		Q_ASSERT(tree_model_sptr);
 
 		if(begin == 0)
@@ -442,13 +442,14 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 M_WARNING("TODO: This needs rework.");
 //				entry_dp->changeParent(tree_model_sptr->getRootItem());
 				entry_dp->appendChild(new_child);
+				tree_model_sptr->getRootItem()->appendChild(entry_dp);
 			}
 
 			// Finally, move the new model items to their new home.
 			Q_ASSERT(new_items_vector_ptr->at(0));
 #if 1 // !signal
 M_WARNING("PUT THIS BACK");
-/////			tree_model_sptr->appendItems(*new_items_vector_ptr);
+//			tree_model_sptr->appendItems(*new_items_vector_ptr);
 //			for(auto it : new_items_vector_ptr)
 //			{
 //				std::shared_ptr<AbstractTreeModelItem> new_child = the_etm->insertChild();

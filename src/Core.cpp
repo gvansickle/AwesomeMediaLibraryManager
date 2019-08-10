@@ -65,7 +65,7 @@ M_TODO("Improve ColumnSpecs, not sure I like how we do this and then need to era
 //	m_self->m_srtm_instance = std::make_shared</*ScanResultsTreeModel*/AbstractTreeModel>(column_specs, nullptr);
 //	m_self->m_srtm_instance = std::make_shared<ScanResultsTreeModel>();
 //	m_self->m_srtm_instance = ScanResultsTreeModel::construct({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
-	m_self->m_srtm_instance = AbstractTreeModel::make_AbstractTreeModel({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
+	m_self->m_srtm_instance = ScanResultsTreeModel::make_ScanResultsTreeModel({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
 	// Create and set the root item / headers
 	m_self->m_srtm_instance->setColumnSpecs({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
 	// Let's add two more columns

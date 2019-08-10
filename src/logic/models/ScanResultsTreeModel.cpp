@@ -88,12 +88,14 @@ std::shared_ptr<ScanResultsTreeModel> ScanResultsTreeModel::construct(std::initi
 	return retval;
 }
 #endif///
-std::shared_ptr<AbstractTreeModel>
+
+// static
+std::shared_ptr<ScanResultsTreeModel>
 ScanResultsTreeModel::make_ScanResultsTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent)
 {
 //	AbstractTreeModel::make_AbstractTreeModel(column_specs, parent);
 //	auto retval = std::make_shared<AbstractTreeModel>(column_specs, parent);
-	auto retval = std::shared_ptr<AbstractTreeModel>(new ScanResultsTreeModel(column_specs, parent));
+	auto retval = std::shared_ptr<ScanResultsTreeModel>(new ScanResultsTreeModel(column_specs, parent));
 	auto root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs,
 	                                                                    std::dynamic_pointer_cast<AbstractTreeModel>(retval->shared_from_this()));
 	retval->INIT_set_root_item(root_item);

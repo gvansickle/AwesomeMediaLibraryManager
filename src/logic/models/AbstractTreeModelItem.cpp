@@ -314,13 +314,16 @@ void AbstractTreeModelItem::removeChild(const std::shared_ptr<AbstractTreeModelI
 	}
 }
 
-bool AbstractTreeModelItem::changeParent(std::shared_ptr<AbstractTreeModelItem> newParent)
+void AbstractTreeModelItem::changeParent(std::shared_ptr<AbstractTreeModelItem> newParent)
 {
-	Q_ASSERT(!m_is_root);
-	if (m_is_root)
-	{
-		return false;
-	}
+	/// TODO
+	Q_ASSERT(0);
+
+//	Q_ASSERT(!m_is_root);
+//	if (m_is_root)
+//	{
+//		return false;
+//	}
 	std::shared_ptr<AbstractTreeModelItem> oldParent;
 	if ((oldParent = m_parent_item.lock()))
 	{
@@ -341,7 +344,6 @@ bool AbstractTreeModelItem::changeParent(std::shared_ptr<AbstractTreeModelItem> 
 			Q_ASSERT(reverse);
 		}
 	}
-	return res;
 }
 #endif///
 
@@ -544,12 +546,19 @@ std::vector<std::shared_ptr<AbstractTreeModelItem>> AbstractTreeModelItem::inser
 	return retval;
 }
 
-std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::insertChild(int row, std::shared_ptr<AbstractTreeModelItem> item)
+void AbstractTreeModelItem::insertChild(int row, std::shared_ptr<AbstractTreeModelItem> item)
 {
-#if 0 /// AQP
-	//	return insertChildren(row, 1, )
-	item->parentItem = this->shared_from_this();
-	m_child_items.insert(row, item);
+#if 1 /// AQP
+	item->m_parent_item = this->shared_from_this();
+
+	// Need an iterator to insert before.
+	auto ins_it = m_child_items.begin();
+	std::advance(ins_it, row);
+
+	m_child_items.insert(ins_it, item);
+
+	verify_post_add_ins_child(item);
+
 #else // ETM
 	M_WARNING("Something's wrong here, item is unused.");
 	auto retval = insertChildren(row, 1, this->columnCount());
@@ -563,6 +572,9 @@ bool AbstractTreeModelItem::appendChildren(std::vector<std::shared_ptr<AbstractT
 	for(auto& child : new_children)
 	{
 		bool retval = appendChild(child);
+
+		verify_post_add_ins_child(child);
+
 		if(!retval)
 		{
 M_TODO("CRASHING HERE");/// @todo Recovery?
@@ -576,7 +588,13 @@ Q_ASSERT(0);
 
 bool AbstractTreeModelItem::appendChild(const std::shared_ptr<AbstractTreeModelItem>& new_child)
 {
-#if 0///
+#if 1
+	this->insertChild(childCount(), new_child);
+
+	verify_post_add_ins_child(new_child);
+
+	return true;
+#else ///
 	if(has_ancestor(new_child->getId()))
 	{
 		// Somehow trying to create a cycle in the tree.
@@ -611,13 +629,16 @@ bool AbstractTreeModelItem::appendChild(const std::shared_ptr<AbstractTreeModelI
 	}
 	qDebug() << "ERROR: Something went wrong when appending child in TreeItem. Model is not available anymore";
 	Q_ASSERT(false);
-#endif///
 	return false;
+#endif///
 }
 
 /// Append a child item created from @a data.
 std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::appendChild(const std::vector<QVariant>& data)
 {
+
+Q_ASSERT(0);
+
 #if 0///
 	if (auto ptr = m_model.lock())
 	{
@@ -681,6 +702,12 @@ bool AbstractTreeModelItem::has_ancestor(UUIncD id)
 		return ptr->has_ancestor(id);
 	}
 	return false;
+}
+
+void AbstractTreeModelItem::verify_post_add_ins_child(const std::shared_ptr<AbstractTreeModelItem>& inserted_child)
+{
+	AMLM_ASSERT_X(inserted_child->has_ancestor(m_uuincid), "");
+	AMLM_ASSERT_X(inserted_child->m_parent_item.lock() == this->shared_from_this(), "");
 }
 
 

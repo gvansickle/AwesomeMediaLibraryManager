@@ -149,16 +149,20 @@ M_WARNING("NEED TO BE OVERRIDDEN IN HeaderItem");
 	// GRVS
 	bool operator==(const AbstractTreeModelItem& other) const;
 
+	/// The row number of this item in its parent's list of children.
+	// ETM+KDEN (row())
+	int childNumber() const;
+
+	/// @name Child append/insert functions.
+	/// @{
+
 	/**
 	 * @note This is where all(?) children are ultimately created.
 	 */
 	std::vector<std::shared_ptr<AbstractTreeModelItem>> insertChildren(int position, int count, int columns);
-	///AQP, ETM has something like this in MainWindow which just inserts a new default child and returns void.
-	std::shared_ptr<AbstractTreeModelItem> insertChild(int row, std::shared_ptr<AbstractTreeModelItem> item);
 
-    /// The row number of this item in its parent's list of children.
-    // ETM+KDEN (row())
-    int childNumber() const;
+	///AQP, ETM has something like this in MainWindow which just inserts a new default child and returns void.
+	void insertChild(int row, std::shared_ptr<AbstractTreeModelItem> item);
 
 	/**
 	 * Append the given @a new_children to this item.
@@ -167,15 +171,17 @@ M_WARNING("NEED TO BE OVERRIDDEN IN HeaderItem");
 	bool appendChildren(std::vector<std::shared_ptr<AbstractTreeModelItem>> new_children);
 	/**
 	 * Append an already-created child item to this item.
-	 * @note this must already have a model or this call will assert.
 	 */
-	// GRVS+KDEN
+	// GRVS+KDEN,AQP has this as addChild().
 	bool appendChild(const std::shared_ptr<AbstractTreeModelItem>& new_child);
 	/**
 	 * Construct and Append a new child item to this item, initializing it from @a data.
 	 */
 	// KDEN
 	std::shared_ptr<AbstractTreeModelItem> appendChild(const std::vector<QVariant>& data = {});
+
+	/// @} // END Child append/insert functions.
+
 
 	// KDEN
 	void moveChild(int ix, const std::shared_ptr<AbstractTreeModelItem> &child);
@@ -195,8 +201,8 @@ M_WARNING("NEED TO BE OVERRIDDEN IN HeaderItem");
 	/**
 	 * Change the parent of the current item. Structures are modified accordingly
 	 */
-	// KDEN
-//	virtual bool changeParent(std::shared_ptr<AbstractTreeModelItem> newParent);
+	// KDEN/GRVS
+//	virtual void changeParent(std::shared_ptr<AbstractTreeModelItem> newParent);
 
 	/// @name Serialization
 	/// These are from the ISerializable interface.
@@ -246,6 +252,17 @@ protected:
      * @param ptr is the pointer to the new parent
 	 */
 //	virtual void updateParent(std::shared_ptr<AbstractTreeModelItem> parent);
+
+	/// @name Pre/Post-condition checks
+	/// @{
+
+	/**
+	 * After a child item is added or inserted to this item.
+	 * @param inserted_child
+	 */
+	void verify_post_add_ins_child(const std::shared_ptr<AbstractTreeModelItem>& inserted_child);
+
+	/// @}
 
 	template <class T, class MapType>
 	static void set_map_class_info(const T* self, MapType* map)

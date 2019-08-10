@@ -19,6 +19,8 @@ bool ExperimentalKDEView1::setModel(AbstractTreeModel* model)
 {
 	auto view = ui->m_top_level_tree_view;
 
+	Q_CHECK_PTR(model);
+
 	// Put the URLs in column 0.
 	m_column_remapper_proxy = QSharedPointer<KRearrangeColumnsProxyModel>::create(this);
 	m_column_remapper_proxy->setSourceModel(model);

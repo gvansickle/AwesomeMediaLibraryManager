@@ -1783,7 +1783,8 @@ M_WARNING("SHARED PTR");
 	auto second_child = new ExperimentalKDEView1(this);
 	auto second_mdi_child = m_mdi_area->addSubWindow(second_child);
 M_WARNING("SHARED PTR");
-	second_child->setModel(AMLM::Core::self()->getScanResultsTreeModel().get());
+auto srtmodel = AMLM::Core::self()->getScanResultsTreeModel().get();
+	second_child->setModel(srtmodel);
 
     mdi_child->show();
 	second_mdi_child->show();
