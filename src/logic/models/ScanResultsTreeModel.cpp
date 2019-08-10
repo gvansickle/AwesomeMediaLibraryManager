@@ -93,13 +93,17 @@ std::shared_ptr<ScanResultsTreeModel> ScanResultsTreeModel::construct(std::initi
 std::shared_ptr<ScanResultsTreeModel>
 ScanResultsTreeModel::make_ScanResultsTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent)
 {
-//	AbstractTreeModel::make_AbstractTreeModel(column_specs, parent);
-//	auto retval = std::make_shared<AbstractTreeModel>(column_specs, parent);
-	auto retval = std::shared_ptr<ScanResultsTreeModel>(new ScanResultsTreeModel(column_specs, parent));
-	auto root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs,
-	                                                                    std::dynamic_pointer_cast<AbstractTreeModel>(retval->shared_from_this()));
-	retval->INIT_set_root_item(root_item);
-	return retval;
+	auto retval_shptr = std::shared_ptr<ScanResultsTreeModel>(new ScanResultsTreeModel(column_specs, parent));
+//	auto root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs,
+//	                                                               retval_shptr);
+////	                                                                    std::dynamic_pointer_cast<AbstractTreeModel>(retval_shptr));
+//	retval->INIT_set_root_item(root_item);
+
+	retval_shptr->m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs, retval_shptr);
+	retval_shptr->register_item(retval_shptr->m_root_item);
+//	AMLM_ASSERT_X(retval_shptr->columnCount() > 0,"NO COLUMNS");
+
+	return retval_shptr;
 }
 
 void ScanResultsTreeModel::setBaseDirectory(const QUrl &base_directory)

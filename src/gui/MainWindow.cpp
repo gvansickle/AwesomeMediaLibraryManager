@@ -1443,16 +1443,50 @@ void MainWindow::readLibSettings(QSettings& settings)
 	// The primary database file.
 	QString database_filename = QDir::homePath() + "/AMLMDatabase.xml";
 
-	// Load it async.
-	auto fut_load_db = ExtAsync::qthread_async_with_cnr_future([=](ExtFuture<Unit> fut_cnr, QString overlay_filename){
+	// Try to Load it asyncronously into a new model.
+	/// AMLM::Core::self()->getDefaultColumnSpecs()
+	auto temp_load_srtm_instance = ScanResultsTreeModel::make_ScanResultsTreeModel({});
+	bool success = temp_load_srtm_instance->LoadDatabase(database_filename);
+	if(success)
+	{
+		// Swap in the new model.
+		qDb() << "Load succeeded, swapping in the new model.";
+#warning "TODO"
+	}
+	else
+	{
+		qWr() << "Load failed";
+//				auto default_columnspecs = AMLM::Core::self()->getDefaultColumnSpecs();
+//				AMLM::Core::self()->getScanResultsTreeModel()->setColumnSpecs(default_columnspecs);
+	}
+
+#if 0///
+	auto fut_load_db = ExtAsync::qthread_async_with_cnr_future([=, &temp_load_srtm_instance](ExtFuture<Unit> fut_cnr, QString overlay_filename){
 			// Load the primary database.
-		AMLM::Core::self()->getScanResultsTreeModel()->clear();
-			AMLM::Core::self()->getScanResultsTreeModel()->LoadDatabase(database_filename);
+//		AMLM::Core::self()->getScanResultsTreeModel()->clear();
+//			bool success = AMLM::Core::self()->getScanResultsTreeModel()->LoadDatabase(database_filename);
+//			bool success = temp_load_srtm_instance->LoadDatabase(database_filename);
+//			// Re-set default columnspecs if load failed.
+//			M_TODO("We should be loading a new model instead here.");
+			if(success)
+			{
+				// Swap in the new model.
+				qDb() << "Load succeeded, swapping in the new model.";
+#warning "TODO"
+			}
+			else
+			{
+				qWr() << "Load failed";
+//				auto default_columnspecs = AMLM::Core::self()->getDefaultColumnSpecs();
+//				AMLM::Core::self()->getScanResultsTreeModel()->setColumnSpecs(default_columnspecs);
+			}
+			Q_ASSERT(AMLM::Core::self()->getScanResultsTreeModel()->columnCount() > 0);
 			// Complete.
 			fut_cnr.reportFinished();
 	}, database_filename);
 
 	PerfectDeleter::instance().addExtFuture(fut_load_db);
+#endif
 
 	/// @todo The playlist overlay.
 	QString overlay_filename = QDir::homePath() + "/AMLMDatabaseSerDes.xml";

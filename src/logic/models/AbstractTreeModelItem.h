@@ -63,6 +63,8 @@ protected:
 
 	friend class AbstractTreeModel;
 
+	AbstractTreeModelItem();
+
 public:
 	explicit AbstractTreeModelItem(const std::vector<QVariant>& data,
 			const std::shared_ptr<AbstractTreeModelItem>& parent_item = nullptr, UUIncD id = UUIncD::null());
@@ -243,15 +245,15 @@ protected:
 	/**
 	 * Helper functions to handle registration / deregistration to the model.
 	 */
-	static void registerSelf(const std::shared_ptr<AbstractTreeModelItem>& self);
-	void deregisterSelf();
+	static void register_self(const std::shared_ptr<AbstractTreeModelItem>& self);
+	void deregister_self();
 
 	/**
 	 * Reflect update of the parent ptr (for example set this's correct depth).
      * This is called on the child when (re)parented, and meant to be overridden in derived classes.
      * @param ptr is the pointer to the new parent
 	 */
-//	virtual void updateParent(std::shared_ptr<AbstractTreeModelItem> parent);
+	virtual void updateParent(std::shared_ptr<AbstractTreeModelItem> parent);
 
 	/// @name Pre/Post-condition checks
 	/// @{
@@ -315,7 +317,7 @@ protected:
 	/// The data for each column of this row.
 	std::vector<QVariant> m_item_data;
 
-//	std::weak_ptr<AbstractTreeModel> m_model;
+	std::weak_ptr<AbstractTreeModel> m_model;
 //	bool m_is_in_model {false};
 
 

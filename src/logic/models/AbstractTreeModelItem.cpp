@@ -48,7 +48,13 @@
 
 
 
+AbstractTreeModelItem::AbstractTreeModelItem()
+{
+	// Just to get a vptr.
+}
+
 AbstractTreeModelItem::AbstractTreeModelItem(const std::vector<QVariant>& data, const std::shared_ptr<AbstractTreeModelItem>& parent_item, UUIncD id)
+	: AbstractTreeModelItem()
 {
 	// Generate or set the UUIncD.
 	if(!m_uuincid.isValid())
@@ -64,10 +70,10 @@ AbstractTreeModelItem::AbstractTreeModelItem(const std::vector<QVariant>& data, 
 	}
 
 	// AQT
-//	if(auto strptr = parentItem.lock())
-//	{
-//		strptr->addChild()
-//	}
+	if(parent_item)
+	{
+		parent_item->appendChild(this->shared_from_this());
+	}
 
 	m_parent_item = parent_item;
     m_item_data = data;
@@ -75,7 +81,7 @@ AbstractTreeModelItem::AbstractTreeModelItem(const std::vector<QVariant>& data, 
 
 AbstractTreeModelItem::~AbstractTreeModelItem()
 {
-//	deregisterSelf();
+	deregister_self();
 }
 
 void AbstractTreeModelItem::clear()
@@ -251,6 +257,18 @@ void AbstractTreeModelItem::setId(UUIncD id)
 	m_uuincid = id;
 }
 
+bool AbstractTreeModelItem::isInModel() const
+{
+	if(auto temp = m_model.lock())
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
 
 bool AbstractTreeModelItem::operator==(const AbstractTreeModelItem& other) const
 {
@@ -304,7 +322,7 @@ void AbstractTreeModelItem::removeChild(const std::shared_ptr<AbstractTreeModelI
 //		m_iteratorTable.erase(child->getId());
 		child->m_depth = 0;
 		child->m_parent_item.reset();
-		child->deregisterSelf();
+		child->deregister_self();
 		ptr->notifyRowDeleted();
 	}
 	else
@@ -623,7 +641,7 @@ bool AbstractTreeModelItem::appendChild(const std::shared_ptr<AbstractTreeModelI
 		UUIncD id = new_child->getId();
 		auto it = m_child_items.insert(m_child_items.end(), new_child);
 //		m_iteratorTable[id] = it;
-		registerSelf(new_child);
+		register_self(new_child);
 		ptr->notifyRowAppended(new_child);
 		return true;
 	}
@@ -716,7 +734,7 @@ void AbstractTreeModelItem::verify_post_add_ins_child(const std::shared_ptr<Abst
 //	if(m_is_root)
 //	{
 ////		Q_ASSERT_X(m_model.lock(), __PRETTY_FUNCTION__, "Can't lock this's model");
-//		registerSelf(this->shared_from_this());
+//		register_self(this->shared_from_this());
 //	}
 //}
 
@@ -725,50 +743,51 @@ void AbstractTreeModelItem::verify_post_add_ins_child(const std::shared_ptr<Abst
  * @warning Will assert if @a self doesn't already know its model.
  * @param self
  */
-//void AbstractTreeModelItem::registerSelf(const std::shared_ptr<AbstractTreeModelItem>& self)
-//{
-////	Q_ASSERT(self->m_model);
-////	Q_ASSERT(!self->m_model.expired());
+void AbstractTreeModelItem::register_self(const std::shared_ptr<AbstractTreeModelItem>& self)
+{
+//	Q_ASSERT(self->m_model);
+//	Q_ASSERT(!self->m_model.expired());
 
-//	// Register children.
-//	for (const auto& child : self->m_child_items)
-//	{
-//		registerSelf(child);
-//	}
-//	// If we still have a model, register with it.
-//	if (auto ptr = self->m_model.lock())
-//	{
-//		ptr->register_item(self);
-//		self->m_is_in_model = true;
-//	}
-//	else
-//	{
-//		qWr() << M_ID_VAL(self->m_is_in_model);// << M_ID_VAL(self->m_model);
-//		AMLM_ASSERT_X(false, "Error : construction of AbstractTreeModelItem failed because parent model is not available anymore");
-//	}
-//}
+	// Register children.
+	for (const auto& child : self->m_child_items)
+	{
+		register_self(child);
+	}
+	// If we still have a model, register with it.
+	if (auto ptr = self->m_model.lock())
+	{
+		ptr->register_item(self);
+//		self->isInModel() = true;
+		AMLM_ASSERT_EQ(self->isInModel(), true);
+	}
+	else
+	{
+		qWr() << "COULDN'T LOCK MODEL:";// << M_ID_VAL(self->m_model);// << M_ID_VAL(self->m_model);
+		AMLM_ASSERT_X(false, "Error : construction of AbstractTreeModelItem failed because parent model is not available anymore");
+	}
+}
 
-//void AbstractTreeModelItem::deregisterSelf()
-//{
-//	// Deregister our child items.
-//	for (const auto &child : m_child_items)
-//	{
-//		child->deregisterSelf();
-//	}
-//	// Potentially deregister ourself.
-//	if (m_is_in_model)
-//	{
-//		/// This is from KDenLive's TreeItem.  Looks like they're trying to keep the model
-//		/// in memory until all children are deleted.
+void AbstractTreeModelItem::deregister_self()
+{
+	// Deregister our child items.
+	for (const auto &child : m_child_items)
+	{
+		child->deregister_self();
+	}
+	// Potentially deregister ourself.
+	if (isInModel())
+	{
+		/// This is from KDenLive's TreeItem.  Looks like they're trying to keep the model
+		/// in memory until all children are deleted.
 
-//		// We're in a model, deregister ourself from it.
-//		if (auto ptr = m_model.lock())
-//		{
-//			ptr->deregister_item(m_uuincid, this);
-//			m_is_in_model = false;
-//		}
-//	}
-//}
+		// We're in a model, deregister ourself from it.
+		if (auto ptr = m_model.lock())
+		{
+			ptr->deregister_item(m_uuincid, this);
+//			isInModel() = false;
+		}
+	}
+}
 
 //void AbstractTreeModelItem::updateParent(std::shared_ptr<AbstractTreeModelItem> parent)
 //{

@@ -103,7 +103,7 @@ private:
 	/**
 	 * This header's (and hence the model's) ColumnSpecs.
 	 */
-	std::vector<ColumnSpec> m_column_specs;
+//	std::vector<ColumnSpec> m_column_specs;
 
 };
 

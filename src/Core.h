@@ -71,6 +71,8 @@ public:
 
 //	std::shared_ptr<AbstractTreeModel> getScanResultsTreeModel();
 	std::shared_ptr<ScanResultsTreeModel> getScanResultsTreeModel();
+	/// Really don't like this here.
+	std::initializer_list<ColumnSpec> getDefaultColumnSpecs();
 
 	std::shared_ptr<TreeModel> getEditableTreeModel();
 

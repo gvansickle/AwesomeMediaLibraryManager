@@ -60,6 +60,7 @@ ThreadsafeTreeModel::~ThreadsafeTreeModel()
 	// Same as KdenLive's ProjectModelItem, it's destructor is defaulted.
 }
 
+#if 1
 void ThreadsafeTreeModel::clear()
 {
 	std::unique_lock write_lock(m_rw_mutex);
@@ -84,7 +85,7 @@ void ThreadsafeTreeModel::clear()
 	// One last thing, our hidden root node / header node still has ColumnSpecs.
 	m_root_item->clear();
 }
-
+#endif
 
 bool ThreadsafeTreeModel::requestDeleteItem(const std::shared_ptr<AbstractTreeModelItem>& item, Fun& undo, Fun& redo)
 {

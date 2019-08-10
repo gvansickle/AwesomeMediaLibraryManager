@@ -81,7 +81,7 @@ protected:
 	 */
 	AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
 public: ///TEMP?
-	virtual void INIT_set_root_item(std::shared_ptr<AbstractTreeModelHeaderItem> root_item) final;
+//	virtual void INIT_set_root_item(std::shared_ptr<AbstractTreeModelHeaderItem> root_item) final;
 public:
 	/**
 	 * Named constructor.
@@ -208,7 +208,7 @@ public:
 	/// GRVS
 	/// Insert an empty new child under @a parent and returns a shared_ptr to it.
 	/// ETM: From MainWindow, where parent is always currentIndex() from a selection model.
-	std::shared_ptr<AbstractTreeModelItem> insertChild(const QModelIndex &parent = QModelIndex());
+//	std::shared_ptr<AbstractTreeModelItem> insertChild(const QModelIndex &parent = QModelIndex());
 	/// GRVS
 	/// ETM-inspired append function.  Based on setupModelData().
 	std::shared_ptr<AbstractTreeModelItem> append_child(const QVector<QVariant> &data, std::shared_ptr<AbstractTreeModelItem> parent);
@@ -217,7 +217,7 @@ public:
 	QModelIndex getIndexFromId(UUIncD id) const;
 	std::shared_ptr<AbstractTreeModelItem> getItemById(const UUIncD &id) const;
 	std::shared_ptr<AbstractTreeModelItem> getRootItem() const;
-	// ETM/GRVS
+	// ETM/GRVS/AQP(itemForIndex)
 	std::shared_ptr<AbstractTreeModelItem> getItem(const QModelIndex &index) const;
 
 
@@ -247,7 +247,7 @@ public:
 	/// Load and save the database to a file.
 	/// @note The idea is that these shouldn't need to be overridden in derived classes, but just in case we make
 	/// them virtual.
-	virtual void LoadDatabase(const QString& database_filename);
+	virtual bool LoadDatabase(const QString& database_filename);
 	virtual void SaveDatabase(const QString& database_filename);
 
 	/// Serialize the entire model to a QVariant.

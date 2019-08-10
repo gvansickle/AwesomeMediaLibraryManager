@@ -67,9 +67,10 @@ M_TODO("Improve ColumnSpecs, not sure I like how we do this and then need to era
 //	m_self->m_srtm_instance = ScanResultsTreeModel::construct({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
 	m_self->m_srtm_instance = ScanResultsTreeModel::make_ScanResultsTreeModel({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
 	// Create and set the root item / headers
-	m_self->m_srtm_instance->setColumnSpecs({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
+//	m_self->m_srtm_instance->setColumnSpecs({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
 	// Let's add two more columns
 	m_self->m_srtm_instance->insertColumns(3, 2);
+
 
 	/// ETM
 	QStringList headers;
@@ -131,6 +132,12 @@ std::shared_ptr<ScanResultsTreeModel> Core::getScanResultsTreeModel()
 	Q_CHECK_PTR(m_srtm_instance);
 
 	return std::dynamic_pointer_cast<ScanResultsTreeModel>(m_srtm_instance);
+}
+
+std::initializer_list<ColumnSpec> Core::getDefaultColumnSpecs()
+{
+	std::initializer_list<ColumnSpec> column_specs = {ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}};
+	return column_specs;
 };
 
 std::shared_ptr<TreeModel> Core::getEditableTreeModel()
