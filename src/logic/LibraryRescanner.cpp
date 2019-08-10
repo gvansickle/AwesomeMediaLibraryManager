@@ -248,8 +248,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
     /// @note This ptr will go away when we exit the function, so we can't copy it into any stap() lambdas.
 //    M_WARNING("THIS SHOULD BE ::construct");
 //	std::shared_ptr<ScanResultsTreeModel> tree_model = AMLMApp::IScanResultsTreeModel();
-//	std::shared_ptr<ScanResultsTreeModel> tree_model = AMLM::Core::self()->getScanResultsTreeModel();
-	std::shared_ptr<AbstractTreeModel> tree_model = AMLM::Core::self()->getScanResultsTreeModel();
+	std::shared_ptr<ScanResultsTreeModel> tree_model = AMLM::Core::self()->getScanResultsTreeModel();
+//	std::shared_ptr<AbstractTreeModel> tree_model = AMLM::Core::self()->getScanResultsTreeModel();
 	Q_ASSERT(tree_model);
     // Set the root URL of the scan results model.
     /// @todo Should this really be done here, or somewhere else?
@@ -524,6 +524,7 @@ M_WARNING("kjob is now null here and we fail");
 				m_timer.lap("Start of SaveDatabase");
 M_WARNING("PUT THIS BACK");
 //				SaveDatabase(tree_model_ptr, database_filename);
+				tree_model_ptr->SaveDatabase(database_filename);
 				m_timer.lap("End of SaveDatabase");
 
 				////////// EXPERIMENTAL

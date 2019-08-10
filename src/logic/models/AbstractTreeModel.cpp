@@ -82,6 +82,12 @@ AbstractTreeModel::AbstractTreeModel(std::initializer_list<ColumnSpec> column_sp
 //    register_item(m_root_item);
 }
 
+void AbstractTreeModel::INIT_set_root_item(std::shared_ptr<AbstractTreeModelHeaderItem> root_item)
+{
+	m_root_item = root_item;
+}
+
+
 AbstractTreeModel::~AbstractTreeModel()
 {
 	// KDEN does exactly this in its ~AbstractTreeModel().

@@ -126,10 +126,11 @@ std::unique_ptr<Core>& Core::self()
 	return m_self;
 }
 
-std::shared_ptr<AbstractTreeModel> Core::getScanResultsTreeModel()
+std::shared_ptr<ScanResultsTreeModel> Core::getScanResultsTreeModel()
 {
 	Q_CHECK_PTR(m_srtm_instance);
-	return m_srtm_instance;
+
+	return std::dynamic_pointer_cast<ScanResultsTreeModel>(m_srtm_instance);
 };
 
 std::shared_ptr<TreeModel> Core::getEditableTreeModel()
