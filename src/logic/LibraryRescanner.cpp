@@ -441,8 +441,9 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 				/// NEW: Give the incoming ScanResultTreeModelItem entry a parent.
 M_WARNING("TODO: This needs rework.");
 //				entry_dp->changeParent(tree_model_sptr->getRootItem());
-				entry_dp->appendChild(new_child);
 				tree_model_sptr->getRootItem()->appendChild(entry_dp);
+				entry_dp->appendChild(new_child);
+//				tree_model_sptr->getRootItem()->appendChild(entry_dp);
 			}
 
 			// Finally, move the new model items to their new home.

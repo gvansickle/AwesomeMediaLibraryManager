@@ -564,13 +564,26 @@ std::vector<std::shared_ptr<AbstractTreeModelItem>> AbstractTreeModelItem::inser
 void AbstractTreeModelItem::insertChild(int row, std::shared_ptr<AbstractTreeModelItem> item)
 {
 #if 1 /// AQP
+
+	AMLM_ASSERT_X(!item->isInModel(), "TODO: ITEM ALREADY IN MODEL, MOVE ITEMS BETWEEN MODELS");
+	AMLM_ASSERT_X(isInModel(), "TODO: PARENT ITEM NOT IN MODEL");
+
 	item->m_parent_item = this->shared_from_this();
+
+//	item->changeParent(this->shared_from_this());
 
 	// Need an iterator to insert before.
 	auto ins_it = m_child_items.begin();
 	std::advance(ins_it, row);
 
 	m_child_items.insert(ins_it, item);
+
+	// If the parent is in a model, add the child item to the same model.
+	if(auto model = m_model.lock())
+	{
+		item->m_model = m_model;
+		register_self(item);
+	}
 
 	verify_post_add_ins_child(item);
 
@@ -603,13 +616,13 @@ Q_ASSERT(0);
 
 bool AbstractTreeModelItem::appendChild(const std::shared_ptr<AbstractTreeModelItem>& new_child)
 {
-#if 1
+#if 1///
 	this->insertChild(childCount(), new_child);
 
 	verify_post_add_ins_child(new_child);
 
 	return true;
-#else ///
+#else /// KDEN
 	if(has_ancestor(new_child->getId()))
 	{
 		// Somehow trying to create a cycle in the tree.
@@ -640,6 +653,10 @@ bool AbstractTreeModelItem::appendChild(const std::shared_ptr<AbstractTreeModelI
 //		m_iteratorTable[id] = it;
 		register_self(new_child);
 		ptr->notifyRowAppended(new_child);
+
+		verify_post_add_ins_child(new_child);
+
+
 		return true;
 	}
 	qDebug() << "ERROR: Something went wrong when appending child in TreeItem. Model is not available anymore";
@@ -734,7 +751,7 @@ void AbstractTreeModelItem::verify_post_add_ins_child(const std::shared_ptr<Abst
 	if(isInModel())
 	{
 		AMLM_ASSERT_X(inserted_child->isInModel(), "PARENT IN MODEL, CHILD ISN'T");
-		AMLM_ASSERT_X(child_par_model != m_model.lock(), "PARENT AND CHILD ARE IN DIFFERENT MODELS");
+		AMLM_ASSERT_X(child_par_model == m_model.lock(), "PARENT AND CHILD ARE IN DIFFERENT MODELS");
 	}
 	else
 	{
@@ -798,7 +815,7 @@ void AbstractTreeModelItem::deregister_self()
 		if (auto ptr = m_model.lock())
 		{
 			ptr->deregister_item(m_uuincid, this);
-			AMLM_ASSERT_X(isInModel() == false, "");
+			AMLM_ASSERT_X(isInModel() == false, "ITEM STILL IN MODEL");
 		}
 		else
 		{
@@ -813,7 +830,6 @@ void AbstractTreeModelItem::updateParent(std::shared_ptr<AbstractTreeModelItem> 
 	m_parent_item = parent;
 	if(parent)
 	{
-		qWr() << "PARENT SET TO NULL";
 		// Keep depth up to date.
 //		m_depth = parent->m_depth + 1;
 		// Keep max column count up to date.

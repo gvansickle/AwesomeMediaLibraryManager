@@ -529,7 +529,6 @@ void AbstractTreeModel::deregister_item(UUIncD id, AbstractTreeModelItem* item)
 
 bool AbstractTreeModel::addItem(const std::shared_ptr<AbstractTreeModelItem>& item, UUIncD parent_id, Fun& undo, Fun& redo)
 {
-#if 1/// GRVS
 	std::unique_lock write_lock(m_rw_mutex);
 
 	std::shared_ptr<AbstractTreeModelItem> parent_item = getItemById(parent_id);
@@ -551,9 +550,6 @@ bool AbstractTreeModel::addItem(const std::shared_ptr<AbstractTreeModelItem>& it
 		UPDATE_UNDO_REDO(m_rw_mutex, operation, reverse, undo, redo);
 	}
 	return res;
-#else
-	return true;
-#endif
 }
 
 void AbstractTreeModel::notifyColumnsAboutToInserted(const std::shared_ptr<AbstractTreeModelItem>& parent, int first_column, int last_column)
