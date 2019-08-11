@@ -99,13 +99,7 @@ ScanResultsTreeModel::make_ScanResultsTreeModel(std::initializer_list<ColumnSpec
 {
 	auto retval_shptr = std::shared_ptr<ScanResultsTreeModel>(new ScanResultsTreeModel(column_specs, parent));
 
-M_TODO("TODO: MAKE THIS A BASE CLASS FUNCTION");
-	retval_shptr->m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs, retval_shptr);
-	retval_shptr->register_item(retval_shptr->m_root_item);
-
-	AMLM_ASSERT_X(retval_shptr->m_root_item->isInModel(),"ROOT ITEM NOT IN MODEL");
-//	retval_shptr->m_model_tester = new QAbstractItemModelTester(retval_shptr.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, retval_shptr.get());
-	AMLM_ASSERT_X(retval_shptr->checkConsistency(), "MODEL INCONSISTENT");
+	retval_shptr->postConstructorFinalization(retval_shptr, column_specs);
 
 	return retval_shptr;
 }

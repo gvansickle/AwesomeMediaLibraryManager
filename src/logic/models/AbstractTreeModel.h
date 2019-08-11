@@ -81,6 +81,13 @@ protected:
 	 */
 	AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
 
+	/**
+	 * Creates and adds the root item to the model, etc., just prior to the new model pointer being returned by the named constructor.
+	 * @param retval_shptr
+	 * @param column_specs
+	 */
+	virtual void postConstructorFinalization(const std::shared_ptr<AbstractTreeModel>& retval_shptr, std::initializer_list<ColumnSpec> column_specs);
+
 public:
 	/**
 	 * Named constructor.
@@ -382,7 +389,7 @@ protected:
 
 	/// TEMP
 	// The tree's base directory URL.
-	QUrl m_base_directory;
+//	QUrl m_base_directory;
 
 };
 
