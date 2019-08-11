@@ -18,6 +18,10 @@
  */
 #include "ScanResultsTreeModel.h"
 
+// Qt5
+#include <QAbstractItemModelTester>
+
+
 // sqlite_orm
 #include <third_party/sqlite_orm/include/sqlite_orm/sqlite_orm.h>
 
@@ -95,11 +99,13 @@ ScanResultsTreeModel::make_ScanResultsTreeModel(std::initializer_list<ColumnSpec
 {
 	auto retval_shptr = std::shared_ptr<ScanResultsTreeModel>(new ScanResultsTreeModel(column_specs, parent));
 
+M_TODO("TODO: MAKE THIS A BASE CLASS FUNCTION");
 	retval_shptr->m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs, retval_shptr);
 	retval_shptr->register_item(retval_shptr->m_root_item);
 
-//	AMLM_ASSERT_X(retval_shptr->columnCount() > 0,"NO COLUMNS");
 	AMLM_ASSERT_X(retval_shptr->m_root_item->isInModel(),"ROOT ITEM NOT IN MODEL");
+//	retval_shptr->m_model_tester = new QAbstractItemModelTester(retval_shptr.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, retval_shptr.get());
+	AMLM_ASSERT_X(retval_shptr->checkConsistency(), "MODEL INCONSISTENT");
 
 	return retval_shptr;
 }

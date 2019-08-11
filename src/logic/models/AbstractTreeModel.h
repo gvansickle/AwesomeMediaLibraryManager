@@ -80,8 +80,7 @@ protected:
 	 * In general, derived constructors don't do much more than pass the @a parent param.
 	 */
 	AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
-public: ///TEMP?
-//	virtual void INIT_set_root_item(std::shared_ptr<AbstractTreeModelHeaderItem> root_item) final;
+
 public:
 	/**
 	 * Named constructor.

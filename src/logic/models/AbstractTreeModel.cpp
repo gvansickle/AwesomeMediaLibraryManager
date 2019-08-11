@@ -50,13 +50,18 @@
 //#include "ThreadsafeTreeModel.h"
 #include <third_party/sqlite_orm/include/sqlite_orm/sqlite_orm.h>
 
+// static
 std::shared_ptr<AbstractTreeModel>
 AbstractTreeModel::make_AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent)
 {
 	auto retval_shptr = std::shared_ptr<AbstractTreeModel>(new AbstractTreeModel(column_specs, parent));
 
+M_TODO("TODO: MAKE THIS A BASE CLASS FUNCTION");
 	retval_shptr->m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs, retval_shptr);
 	retval_shptr->register_item(retval_shptr->m_root_item);
+
+//	retval_shptr->m_model_tester = new QAbstractItemModelTester(retval_shptr.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, retval_shptr.get());
+	AMLM_ASSERT_X(retval_shptr->checkConsistency(), "MODEL INCONSISTENT");
 
 	return retval_shptr;
 }
@@ -83,13 +88,6 @@ AbstractTreeModel::AbstractTreeModel(std::initializer_list<ColumnSpec> column_sp
 //    register_item(m_root_item);
 }
 
-//void AbstractTreeModel::INIT_set_root_item(std::shared_ptr<AbstractTreeModelHeaderItem> root_item)
-//{
-//	m_root_item = root_item;
-//	register_item(m_root_item);
-//}
-
-
 AbstractTreeModel::~AbstractTreeModel()
 {
 	// KDEN does exactly this in its ~AbstractTreeModel().
@@ -103,8 +101,7 @@ AbstractTreeModel::~AbstractTreeModel()
 //	m_root_item = AbstractTreeModelHeaderItem::construct(column_specs, this->shared_from_this());
 //	Q_ASSERT(m_root_item->m_is_root == true);
 //	Q_ASSERT(m_root_item->m_is_in_model == true);
-////	self->m_model_tester = new QAbstractItemModelTester(self.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, self.get());
-//	AMLM_ASSERT_X(this->checkConsistency(), "MODEL INCONSISTENT");
+
 //}
 
 void AbstractTreeModel::clear()
@@ -410,7 +407,8 @@ Fun AbstractTreeModel::moveItem_lambda(UUIncD id, int destRow, bool force)
 			}
 		}
 		// insert back in order
-		for (const auto &elem : oldStack) {
+		for (const auto &elem : oldStack)
+		{
 			oper = addItem_lambda(elem, parentId);
 			PUSH_LAMBDA(oper, lambda);
 		}
