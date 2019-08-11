@@ -269,7 +269,6 @@ bool AbstractTreeModelItem::isInModel() const
 	}
 }
 
-
 bool AbstractTreeModelItem::operator==(const AbstractTreeModelItem& other) const
 {
 	return m_uuincid == other.m_uuincid;
@@ -305,7 +304,7 @@ bool AbstractTreeModelItem::removeChildren(int position, int count)
 	return true;
 }
 
-#if 0///
+#if 1///
 void AbstractTreeModelItem::removeChild(const std::shared_ptr<AbstractTreeModelItem>& child)
 {
 	if (auto ptr = m_model.lock())
@@ -320,7 +319,7 @@ void AbstractTreeModelItem::removeChild(const std::shared_ptr<AbstractTreeModelI
 		m_child_items.erase(it);
 		// clean iterator table
 //		m_iteratorTable.erase(child->getId());
-		child->m_depth = 0;
+//		child->m_depth = 0;
 		child->m_parent_item.reset();
 		child->deregister_self();
 		ptr->notifyRowDeleted();
@@ -332,16 +331,13 @@ void AbstractTreeModelItem::removeChild(const std::shared_ptr<AbstractTreeModelI
 	}
 }
 
-void AbstractTreeModelItem::changeParent(std::shared_ptr<AbstractTreeModelItem> newParent)
+bool AbstractTreeModelItem::changeParent(std::shared_ptr<AbstractTreeModelItem> newParent)
 {
-	/// TODO
-	Q_ASSERT(0);
-
-//	Q_ASSERT(!m_is_root);
-//	if (m_is_root)
-//	{
-//		return false;
-//	}
+	Q_ASSERT(!m_is_root);
+	if (m_is_root)
+	{
+		return false;
+	}
 	std::shared_ptr<AbstractTreeModelItem> oldParent;
 	if ((oldParent = m_parent_item.lock()))
 	{
@@ -362,6 +358,7 @@ void AbstractTreeModelItem::changeParent(std::shared_ptr<AbstractTreeModelItem> 
 			Q_ASSERT(reverse);
 		}
 	}
+	return res;
 }
 #endif///
 
@@ -722,10 +719,27 @@ bool AbstractTreeModelItem::has_ancestor(UUIncD id)
 	return false;
 }
 
+bool AbstractTreeModelItem::isRoot() const
+{
+	return m_is_root;
+}
+
 void AbstractTreeModelItem::verify_post_add_ins_child(const std::shared_ptr<AbstractTreeModelItem>& inserted_child)
 {
-	AMLM_ASSERT_X(inserted_child->has_ancestor(m_uuincid), "");
-	AMLM_ASSERT_X(inserted_child->m_parent_item.lock() == this->shared_from_this(), "");
+	AMLM_ASSERT_X(inserted_child->has_ancestor(m_uuincid), "UUID of the parent not an ancestor of child.");
+	auto child_locked_par_item = inserted_child->m_parent_item.lock();
+	AMLM_ASSERT_X(child_locked_par_item == this->shared_from_this(), "CHILD'S PARENT IS NOT THIS");
+	// If parent is in a model, child is in the same model.
+	auto child_par_model = child_locked_par_item->m_model.lock();
+	if(isInModel())
+	{
+		AMLM_ASSERT_X(inserted_child->isInModel(), "PARENT IN MODEL, CHILD ISN'T");
+		AMLM_ASSERT_X(child_par_model != m_model.lock(), "PARENT AND CHILD ARE IN DIFFERENT MODELS");
+	}
+	else
+	{
+		AMLM_ASSERT_X(!child_par_model, "This is not in a model but child is");
+	}
 }
 
 
@@ -784,24 +798,29 @@ void AbstractTreeModelItem::deregister_self()
 		if (auto ptr = m_model.lock())
 		{
 			ptr->deregister_item(m_uuincid, this);
-//			isInModel() = false;
+			AMLM_ASSERT_X(isInModel() == false, "");
+		}
+		else
+		{
+			Q_ASSERT(0);
 		}
 	}
 }
 
-//void AbstractTreeModelItem::updateParent(std::shared_ptr<AbstractTreeModelItem> parent)
-//{
-//	// New parent.
-//	m_parent_item = parent;
-//	if(parent)
-//	{
-//		// Keep depth up to date.
+void AbstractTreeModelItem::updateParent(std::shared_ptr<AbstractTreeModelItem> parent)
+{
+	// New parent, possibly null.
+	m_parent_item = parent;
+	if(parent)
+	{
+		qWr() << "PARENT SET TO NULL";
+		// Keep depth up to date.
 //		m_depth = parent->m_depth + 1;
-//		// Keep max column count up to date.
-//		/// @todo
-////		m_num_parent_columns = parent->columnCount();
-//	}
-//}
+		// Keep max column count up to date.
+		/// @todo
+//		m_num_parent_columns = parent->columnCount();
+	}
+}
 
 AbstractTreeModelItem::CICTIteratorType AbstractTreeModelItem::get_m_child_items_iterator(UUIncD id)
 {

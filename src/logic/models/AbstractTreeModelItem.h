@@ -204,7 +204,7 @@ M_WARNING("NEED TO BE OVERRIDDEN IN HeaderItem");
 	 * Change the parent of the current item. Structures are modified accordingly
 	 */
 	// KDEN/GRVS
-//	virtual void changeParent(std::shared_ptr<AbstractTreeModelItem> newParent);
+	virtual bool changeParent(std::shared_ptr<AbstractTreeModelItem> newParent);
 
 	/// @name Serialization
 	/// These are from the ISerializable interface.
@@ -236,6 +236,11 @@ M_WARNING("NEED TO BE OVERRIDDEN IN HeaderItem");
      */
     bool has_ancestor(UUIncD id);
 
+	/* @brief Return true if the item thinks it is a root.
+   Note that it should be consistent with what the model thinks, but it may have been
+   messed up at some point if someone wrongly constructed the object with isRoot = true */
+	bool isRoot() const;
+
     // Debug stream op free func friender.
     QTH_DECLARE_FRIEND_QDEBUG_OP(AbstractTreeModelItem);
 
@@ -259,7 +264,7 @@ protected:
 	/// @{
 
 	/**
-	 * After a child item is added or inserted to this item.
+	 * Verify postconditions after a child item is added or inserted to this item.
 	 * @param inserted_child
 	 */
 	void verify_post_add_ins_child(const std::shared_ptr<AbstractTreeModelItem>& inserted_child);
@@ -320,8 +325,7 @@ protected:
 	std::weak_ptr<AbstractTreeModel> m_model;
 //	bool m_is_in_model {false};
 
-
-//	bool m_is_root {false};
+	bool m_is_root {false};
 
 	/// Deque of shared_ptr's to child items.
 	std::deque<std::shared_ptr<AbstractTreeModelItem>> m_child_items;

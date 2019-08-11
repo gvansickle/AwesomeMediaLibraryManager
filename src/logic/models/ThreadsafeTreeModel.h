@@ -56,14 +56,14 @@ class ThreadsafeTreeModel : public AbstractTreeModel, public virtual ISerializab
 	using BASE_CLASS = AbstractTreeModel;
 
 protected:
-//	explicit ThreadsafeTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent);
+	explicit ThreadsafeTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent);
 
 public:
 //	/**
 //	 * Named constructor.
 //	 */
 //	static std::shared_ptr<ThreadsafeTreeModel> construct(std::initializer_list<ColumnSpec> column_specs, QObject* parent = nullptr);
-	explicit ThreadsafeTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent);
+//	explicit ThreadsafeTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent);
 	~ThreadsafeTreeModel() override;
 
 	/**
@@ -96,15 +96,15 @@ protected:
 
 	/// KDEN/ProjItemModel.
 
-	void register_item(const std::shared_ptr<AbstractTreeModelItem>& item) override;
-	void deregister_item(UUIncD id, AbstractTreeModelItem* item) override;
+//	void register_item(const std::shared_ptr<AbstractTreeModelItem>& item) override;
+//	void deregister_item(UUIncD id, AbstractTreeModelItem* item) override;
 
-	/**
-	 * Adds @a item to this tree model as a child of @a parent_id.
-	 * This is the workhorse threadsafe function which adds all new items to the model.  It should be not be called by clients,
-	 * but rather called by one of the requestAddXxxx() members.
-	 */
-	bool addItem(const std::shared_ptr<AbstractTreeModelItem> &item, UUIncD parent_id, Fun &undo, Fun &redo);
+//	/**
+//	 * Adds @a item to this tree model as a child of @a parent_id.
+//	 * This is the workhorse threadsafe function which adds all new items to the model.  It should be not be called by clients,
+//	 * but rather called by one of the requestAddXxxx() members.
+//	 */
+//	bool addItem(const std::shared_ptr<AbstractTreeModelItem> &item, UUIncD parent_id, Fun &undo, Fun &redo);
 
 };
 

@@ -221,9 +221,17 @@ public:
 	std::shared_ptr<AbstractTreeModelItem> getItem(const QModelIndex &index) const;
 
 
-
 	/// @name Public interface: Lambda generators for tree structure modification.
 	/// @{
+
+	/* @brief Helper function to generate a lambda that adds an item to the tree */
+	Fun addItem_lambda(const std::shared_ptr<AbstractTreeModelItem> &new_item, UUIncD parentId);
+
+	/* @brief Helper function to generate a lambda that removes an item from the tree */
+	Fun removeItem_lambda(UUIncD id);
+
+	/* @brief Helper function to generate a lambda that changes the row of an item */
+	Fun moveItem_lambda(UUIncD id, int destRow, bool force = false);
 
 	/// @} // END Lambda generators.
 
@@ -283,6 +291,13 @@ protected:
 	 */
 	virtual void register_item(const std::shared_ptr<AbstractTreeModelItem>& item);
 	virtual void deregister_item(UUIncD id, AbstractTreeModelItem* item);
+
+	/**
+	 * Adds @a item to this tree model as a child of @a parent_id.
+	 * This is the workhorse threadsafe function which adds all new items to the model.  It should be not be called by clients,
+	 * but rather called by one of the requestAddXxxx() members.
+	 */
+	bool addItem(const std::shared_ptr<AbstractTreeModelItem> &item, UUIncD parent_id, Fun &undo, Fun &redo);
 
 	/// @name Derived-class serialization info.
 	/// @{

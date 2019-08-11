@@ -94,14 +94,12 @@ std::shared_ptr<ScanResultsTreeModel>
 ScanResultsTreeModel::make_ScanResultsTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent)
 {
 	auto retval_shptr = std::shared_ptr<ScanResultsTreeModel>(new ScanResultsTreeModel(column_specs, parent));
-//	auto root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs,
-//	                                                               retval_shptr);
-////	                                                                    std::dynamic_pointer_cast<AbstractTreeModel>(retval_shptr));
-//	retval->INIT_set_root_item(root_item);
 
 	retval_shptr->m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs, retval_shptr);
 	retval_shptr->register_item(retval_shptr->m_root_item);
+
 //	AMLM_ASSERT_X(retval_shptr->columnCount() > 0,"NO COLUMNS");
+	AMLM_ASSERT_X(retval_shptr->m_root_item->isInModel(),"ROOT ITEM NOT IN MODEL");
 
 	return retval_shptr;
 }
@@ -181,6 +179,7 @@ UUIncD ScanResultsTreeModel::requestAddSRTMLibEntryItem(const QVariant& variant,
 	return new_item->getId();
 }
 
+#if 0///
 UUIncD ScanResultsTreeModel::requestAddExistingTreeModelItem(std::shared_ptr<AbstractTreeModelItem> new_item, UUIncD parent_id, Fun undo, Fun redo)
 {
 	std::unique_lock write_lock(m_rw_mutex);
@@ -197,6 +196,7 @@ UUIncD ScanResultsTreeModel::requestAddExistingTreeModelItem(std::shared_ptr<Abs
 	}
 	return new_item->getId();
 }
+#endif///
 
 #if 0
 void ScanResultsTreeModel::toOrm(std::string filename) const

@@ -70,10 +70,11 @@ AbstractTreeModelHeaderItem::construct(std::initializer_list<ColumnSpec> column_
 
 AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(std::initializer_list<ColumnSpec> column_specs,
                                                          const std::shared_ptr<AbstractTreeModel>& parent_model, UUIncD id)
-	: BASE_CLASS({}, nullptr, id)//, //m_is_root(true) //, m_column_specs(column_specs)
+	: BASE_CLASS({}, nullptr, id)//, m_is_root(true) //, m_column_specs(column_specs)
 {
+	m_is_root = true;
+	m_model = parent_model;
 	setColumnSpecs(column_specs);
-//	m_model = parent_model;
 //	m_model->
 //	m_is_root = true;
 //	m_is_in_model = true;
