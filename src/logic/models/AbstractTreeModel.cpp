@@ -46,8 +46,6 @@
 #include "ColumnSpec.h"
 #include <utils/DebugHelpers.h>
 #include <logic/serialization/XmlSerializer.h>
-//#include "ScanResultsTreeModel.h"
-//#include "ThreadsafeTreeModel.h"
 #include <third_party/sqlite_orm/include/sqlite_orm/sqlite_orm.h>
 
 // static
@@ -56,12 +54,6 @@ AbstractTreeModel::make_AbstractTreeModel(std::initializer_list<ColumnSpec> colu
 {
 	auto retval_shptr = std::shared_ptr<AbstractTreeModel>(new AbstractTreeModel(column_specs, parent));
 
-//M_TODO("TODO: MAKE THIS A BASE CLASS FUNCTION");
-//	retval_shptr->m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs, retval_shptr);
-//	retval_shptr->register_item(retval_shptr->m_root_item);
-
-////	retval_shptr->m_model_tester = new QAbstractItemModelTester(retval_shptr.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, retval_shptr.get());
-//	AMLM_ASSERT_X(retval_shptr->checkConsistency(), "MODEL INCONSISTENT");
 	retval_shptr->postConstructorFinalization(retval_shptr, column_specs);
 
 	return retval_shptr;
@@ -79,14 +71,7 @@ AbstractTreeModel::AbstractTreeModel(std::initializer_list<ColumnSpec> column_sp
 {
 	/// Can't call virtual functions in here, which makes our life more difficult.
 	/// Actually, it's the "shared_from_this() requires this to already be a shared_ptr<>" that's tripping me up. I think.
-//	std::shared_ptr<AbstractTreeModel> temp_shared_this(this);
-	qDb() << "############### THIS:" << this;
-//	setColumnSpecs(column_specs);
-//	m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs, nullptr);//std::static_pointer_cast<AbstractTreeModel>(shared_from_this()));
-//	m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs, std::dynamic_pointer_cast<AbstractTreeModel>(shared_from_this()));
-
-	/// This seems sort of maybe right/maybe wrong.
-	//    register_item(m_root_item);
+	/// Regardless, the named constructor is working well now, so we're good.
 }
 
 void AbstractTreeModel::postConstructorFinalization(const std::shared_ptr<AbstractTreeModel>& retval_shptr, std::initializer_list<ColumnSpec> column_specs)

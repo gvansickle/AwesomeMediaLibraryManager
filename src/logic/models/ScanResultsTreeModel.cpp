@@ -78,21 +78,6 @@ void ScanResultsTreeModel::sendModification()
 //	}
 }
 
-#if 0///
-// static
-std::shared_ptr<ScanResultsTreeModel> ScanResultsTreeModel::construct(std::initializer_list<ColumnSpec> column_specs, QObject* parent)
-{
-	std::shared_ptr<ScanResultsTreeModel> retval(new ScanResultsTreeModel(column_specs, parent));
-
-//	retval->postConstructorFinalization(column_specs);
-//	retval->m_root_item = AbstractTreeModelHeaderItem::construct(column_specs, retval);
-	Q_ASSERT(retval->m_root_item);
-//	Q_ASSERT(retval->m_root_item->isInModel());
-	qWr() << retval->m_root_item->columnCount();
-	return retval;
-}
-#endif///
-
 // static
 std::shared_ptr<ScanResultsTreeModel>
 ScanResultsTreeModel::make_ScanResultsTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent)
