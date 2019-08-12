@@ -132,7 +132,7 @@ M_WARNING("NEED TO BE OVERRIDDEN IN HeaderItem");
 	std::shared_ptr<AbstractTreeModelItem> parent() const;
 
 
-	// KDEN, seems unused.
+	/// KDEN, used in checkConsistency().
 	int depth() const;
 
 	/**
@@ -164,7 +164,14 @@ M_WARNING("NEED TO BE OVERRIDDEN IN HeaderItem");
 	 */
 	std::vector<std::shared_ptr<AbstractTreeModelItem>> insertChildren(int position, int count, int columns);
 
-	///AQP, ETM has something like this in MainWindow which just inserts a new default child and returns void.
+	/**
+	 * Insert an already-existing item into this's child list before @a row.
+	 * @note This is a little bit of each of AQP, ETM, KDEN, and my own.
+	 * - ETM has something like this in MainWindow which just inserts a new default child and returns void.
+	 * - AQP has this interface, but all it does is: { item->m_parent = this; m_children.insert(row, item); }
+	 * - KDEN's closest equivalent is TreeItem::appendChild(), which does a lot of work, and is closest to what I'm
+	 *   doing here.
+	 */
 	void insertChild(int row, std::shared_ptr<AbstractTreeModelItem> item);
 
 	/**
@@ -174,14 +181,9 @@ M_WARNING("NEED TO BE OVERRIDDEN IN HeaderItem");
 	bool appendChildren(std::vector<std::shared_ptr<AbstractTreeModelItem>> new_children);
 	/**
 	 * Append an already-created child item to this item.
+	 * @note GRVS+KDEN,AQP has this as addChild().
 	 */
-	// GRVS+KDEN,AQP has this as addChild().
 	bool appendChild(const std::shared_ptr<AbstractTreeModelItem>& new_child);
-	/**
-	 * Construct and Append a new child item to this item, initializing it from @a data.
-	 */
-	// KDEN
-	std::shared_ptr<AbstractTreeModelItem> appendChild(const std::vector<QVariant>& data = {});
 
 	/// @} // END Child append/insert functions.
 
@@ -255,6 +257,8 @@ protected:
 	void deregister_self();
 
 	/**
+	 * KDEN
+	 * GRVS: Sets this item's parent item and updates its depth.
 	 * Reflect update of the parent ptr (for example set this's correct depth).
      * This is called on the child when (re)parented, and meant to be overridden in derived classes.
      * @param ptr is the pointer to the new parent
@@ -348,7 +352,9 @@ private:
 	/// be non-null as long as this item is not the invisible root item.
 	std::weak_ptr<AbstractTreeModelItem> m_parent_item;
 
-//	int m_depth {-1};
+	/// The depth of this item in its tree.
+	///KDEN
+	int m_depth {0};
 };
 
 //Q_DECLARE_METATYPE(AbstractTreeModelItem);
@@ -403,6 +409,7 @@ std::shared_ptr<T> TreeItemFactory(Args... args)
 template <class ChildItemType, class ParentItemType = AbstractTreeModelItem>
 void append_children_from_variant(ParentItemType* parent_item, const QVariantHomogenousList& child_var_list)
 {
+	/// @todo Currently we need the parent_item to already be in a model when we appendChild() to it.
 	Q_ASSERT(parent_item->isInModel());
 	auto starting_childcount = parent_item->childCount();
 
@@ -410,14 +417,16 @@ void append_children_from_variant(ParentItemType* parent_item, const QVariantHom
 	{
 		qDb() << "READING CHILD ITEM:" << child_variant << " INTO PARENT ITEM:" << parent_item;
 
+		// Default constructed child ite,
 		auto new_child = std::make_shared<ChildItemType>();
 		Q_ASSERT(new_child);
 
-		/// @note Cuurently we need to add the empty item to the model before reading it in, so that
+		/// @note Currently we need to add the empty item to the model before reading it in, so that
 		/// its children will be set up correctly model-wise.  This is almost certainly more efficient anyway.
 		bool append_success = parent_item->appendChild(new_child);
 		AMLM_ASSERT_X(append_success, "FAILED TO APPEND NEW ITEM TO PARENT");
 
+		// Now load the default-constructed child's data into it.
 		new_child->fromVariant(child_variant);
 	}
 

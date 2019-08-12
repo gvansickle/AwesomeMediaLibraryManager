@@ -520,23 +520,21 @@ M_WARNING("kjob is now null here and we fail");
 
 		        Q_ASSERT(m_model_ready_to_save_to_db == true);
 		        m_model_ready_to_save_to_db = false;
-				m_timer.lap("Start of SaveDatabase");
-M_WARNING("PUT THIS BACK");
-//				SaveDatabase(tree_model_ptr, database_filename);
-				tree_model_ptr->SaveDatabase(database_filename);
+
+				// Save the database.
+		        m_timer.lap("Start of SaveDatabase");
+		        tree_model_ptr->SaveDatabase(database_filename);
 				m_timer.lap("End of SaveDatabase");
 
 				////////// EXPERIMENTAL
 #if 1 //// PUT BACK
 				/// Try to load it back in and round-trip it.
 //				std::initializer_list<ColumnSpec> temp_initlist = {ColumnSpec(SectionID(0), "DirProps"), {SectionID(0), "MediaURL"}, {SectionID(0), "SidecarCueURL"}};
-//				std::shared_ptr<ScanResultsTreeModel> load_tree = ScanResultsTreeModel::construct({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
-				std::shared_ptr<ScanResultsTreeModel> load_tree	= ScanResultsTreeModel::make_ScanResultsTreeModel({});//temp_initlist);
+				std::shared_ptr<ScanResultsTreeModel> load_tree	= ScanResultsTreeModel::make_ScanResultsTreeModel({});
 
 				load_tree->LoadDatabase(database_filename);
 //				load_tree->clear();
 //				dump_map(load_tree);
-//				SaveDatabase(load_tree, QDir::homePath() +"/AMLMDatabaseRT.xml");
 				load_tree->SaveDatabase(QDir::homePath() +"/AMLMDatabaseRT.xml");
 #endif /////
 

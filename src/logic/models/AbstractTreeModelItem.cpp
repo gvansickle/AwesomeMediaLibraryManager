@@ -240,10 +240,10 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::parent() const
 	return std::static_pointer_cast<AbstractTreeModelItem>(m_parent_item.lock());
 }
 
-//int AbstractTreeModelItem::depth() const
-//{
-//	return m_depth;
-//}
+int AbstractTreeModelItem::depth() const
+{
+	return m_depth;
+}
 
 UUIncD AbstractTreeModelItem::getId() const
 {
@@ -319,7 +319,7 @@ void AbstractTreeModelItem::removeChild(const std::shared_ptr<AbstractTreeModelI
 		m_child_items.erase(it);
 		// clean iterator table
 //		m_iteratorTable.erase(child->getId());
-//		child->m_depth = 0;
+		child->m_depth = 0;
 		child->m_parent_item.reset();
 		child->deregister_self();
 		ptr->notifyRowDeleted();
@@ -333,19 +333,23 @@ void AbstractTreeModelItem::removeChild(const std::shared_ptr<AbstractTreeModelI
 
 bool AbstractTreeModelItem::changeParent(std::shared_ptr<AbstractTreeModelItem> newParent)
 {
-	Q_ASSERT(!m_is_root);
+	AMLM_ASSERT_X(!m_is_root, "ATTEMPTED TO CHANGE ROOT ITEM PARENT");
 	if (m_is_root)
 	{
 		return false;
 	}
+
 	std::shared_ptr<AbstractTreeModelItem> oldParent;
 	if ((oldParent = m_parent_item.lock()))
 	{
+		// Remove this item from the old parent.
 		oldParent->removeChild(shared_from_this());
 	}
 	bool res = true;
 	if (newParent)
 	{
+		// Append this as a child of the new parent.
+		/// @todo Does always appending make sense here?
 		res = newParent->appendChild(shared_from_this());
 		if (res)
 		{
@@ -563,14 +567,12 @@ std::vector<std::shared_ptr<AbstractTreeModelItem>> AbstractTreeModelItem::inser
 
 void AbstractTreeModelItem::insertChild(int row, std::shared_ptr<AbstractTreeModelItem> item)
 {
-#if 1 /// AQP
-
 	AMLM_ASSERT_X(!item->isInModel(), "TODO: ITEM ALREADY IN MODEL, MOVE ITEMS BETWEEN MODELS");
 	AMLM_ASSERT_X(isInModel(), "TODO: PARENT ITEM NOT IN MODEL");
-
-	item->m_parent_item = this->shared_from_this();
-
+#if 0 ///GRVS+++
+//	item->m_parent_item = this->shared_from_this();
 //	item->changeParent(this->shared_from_this());
+	item->updateParent(this->shared_from_this());
 
 	// Need an iterator to insert before.
 	auto ins_it = m_child_items.begin();
@@ -584,14 +586,71 @@ void AbstractTreeModelItem::insertChild(int row, std::shared_ptr<AbstractTreeMod
 		item->m_model = m_model;
 		register_self(item);
 	}
+#elif 1 /// Adapted from KDEN/appendChild().
 
-	verify_post_add_ins_child(item);
+	if(has_ancestor(item->getId()))
+	{
+		// Somehow trying to create a cycle in the tree.
+		qCr() << "ATTEMPTED CREATION OF CYCLE";
+		return;
+	}
 
-#else // ETM
-	M_WARNING("Something's wrong here, item is unused.");
-	auto retval = insertChildren(row, 1, this->columnCount());
-	return retval[0];
+	// Does the new item already have a parent?
+	if (auto oldParent = item->parent_item().lock())
+	{
+		// Yes, is it this?
+		if (oldParent->getId() == m_uuincid)
+		{
+			// new item has this as current parent, no change needed.
+			qWr() << "OLD AND NEW PARENTS ARE THE SAME";
+			return;
+		}
+		else
+		{
+			// in that case a call to removeChild should have been carried out
+			/// @todo GRVS: I think this may be a valid case, probably can be made to work.
+			qCr() << "ERROR: trying to append a child that already has a parent";
+			return;
+		}
+	}
+
+	// If the parent (this) is in a model, add the child item to the same model.
+	if (auto ptr = m_model.lock())
+	{
+		std::shared_ptr<AbstractTreeModelItem> sft = shared_from_this();
+		Q_ASSERT(sft);
+		ptr->notifyRowAboutToAppend(shared_from_this());
+
+		// Set the item's parent to this.
+		item->updateParent(shared_from_this());
+
+		// Insert the item into this's child list before the given row.
+#if 0/// KDEN
+//		auto it = m_child_items.insert(m_child_items.end(), item);
 #endif
+		// Get an iterator to insert before.
+		auto ins_it = m_child_items.begin();
+		std::advance(ins_it, row);
+		m_child_items.insert(ins_it, item);
+
+#if 0// unneeded, we don't keep an iterator table.
+//		UUIncD id = item->getId();
+//		m_iteratorTable[id] = it;
+#endif
+		/// @todo: The model doesn't know this happened....
+		item->m_model = ptr;//m_model;
+
+		register_self(item);
+		ptr->notifyRowAppended(item);
+
+		verify_post_add_ins_child(item);
+
+		return;
+	}
+	qDebug() << "ERROR: Something went wrong when appending child in TreeItem. Model is not available anymore";
+	Q_ASSERT(false);
+#endif
+	verify_post_add_ins_child(item);
 }
 
 bool AbstractTreeModelItem::appendChildren(std::vector<std::shared_ptr<AbstractTreeModelItem>> new_children)
@@ -665,13 +724,14 @@ bool AbstractTreeModelItem::appendChild(const std::shared_ptr<AbstractTreeModelI
 #endif///
 }
 
+#if 0///
 /// Append a child item created from @a data.
 std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::appendChild(const std::vector<QVariant>& data)
 {
 
 Q_ASSERT(0);
 
-#if 0///
+
 	if (auto ptr = m_model.lock())
 	{
 		// Create the new child with this item's model as the model.
@@ -683,9 +743,10 @@ Q_ASSERT(0);
 	}
 	qDebug() << "ERROR: Something went wrong when appending child to AbstractTreeModelItem. Model is not available anymore";
 	Q_ASSERT(false);
-#endif///
+
 	return std::shared_ptr<AbstractTreeModelItem>();
 }
+#endif///
 
 //void AbstractTreeModelItem::moveChild(int ix, const std::shared_ptr<AbstractTreeModelItem>& child)
 //{
@@ -816,16 +877,23 @@ void AbstractTreeModelItem::deregister_self()
 
 void AbstractTreeModelItem::updateParent(std::shared_ptr<AbstractTreeModelItem> parent)
 {
+#if 1 ///KDEN TreeItem
 	// New parent, possibly null.
 	m_parent_item = parent;
 	if(parent)
 	{
 		// Keep depth up to date.
-//		m_depth = parent->m_depth + 1;
-		// Keep max column count up to date.
-		/// @todo
-//		m_num_parent_columns = parent->columnCount();
+		m_depth = parent->m_depth + 1;
 	}
+#elif 0 /// KDEN AbstractProjectItem.  Not clear what the last parent thing is all about.
+	// bool reload = !m_lastParentId.isEmpty();
+    m_lastParentId.clear();
+    if (newParent)
+    {
+        m_lastParentId = std::static_pointer_cast<AbstractProjectItem>(newParent)->clipId();
+    }
+    TreeItem::updateParent(newParent);
+#endif
 }
 
 AbstractTreeModelItem::CICTIteratorType AbstractTreeModelItem::get_m_child_items_iterator(UUIncD id)

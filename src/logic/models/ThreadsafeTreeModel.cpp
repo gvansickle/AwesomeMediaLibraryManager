@@ -87,6 +87,7 @@ void ThreadsafeTreeModel::clear()
 }
 #endif
 
+#if 0///
 bool ThreadsafeTreeModel::requestDeleteItem(const std::shared_ptr<AbstractTreeModelItem>& item, Fun& undo, Fun& redo)
 {
 	#if 0///
@@ -131,6 +132,7 @@ bool ThreadsafeTreeModel::requestDeleteItem(const std::shared_ptr<AbstractTreeMo
 #endif///
 	return false;
 }
+#endif///
 
 QVariant ThreadsafeTreeModel::data(const QModelIndex& index, int role) const
 {

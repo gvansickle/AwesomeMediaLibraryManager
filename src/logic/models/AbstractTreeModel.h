@@ -51,8 +51,9 @@ class ColumnSpec;
 /**
  * Abstract tree model base class.  Inherits from QAbstractItemModel and ISerializable.
  * This class is heavily adapted from at least the following:
- * - The "Editable Tree Model Example" shipped with Qt5.
- * - KDenLive's AbstractItemModel class.
+ * - The "Editable Tree Model Example" shipped with Qt5. (ETM)
+ * - KDenLive's AbstractItemModel class. (KDEN)
+ * - The tree models in Summerfield's "Advanced Qt Programming" (AQP)
  * - My own original work.
  * - Hundreds of nuggets of information from all over the Internet.
  */
@@ -75,8 +76,7 @@ private:
 protected:
 	/**
 	 * Creates a new AbstractTreeModel object.
-	 * @warning This model will NOT have a root item because virtual.  See setColumnSpecs(), which you should
-	 *          call immediately after creating a new model.
+	 * @warning This model will NOT have a root item because virtual.  The named constructor will create it.
 	 * In general, derived constructors don't do much more than pass the @a parent param.
 	 */
 	AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
@@ -102,7 +102,7 @@ public:
 	/// GRVS/KDEN's is ProjItemModel::clean().
 	/**
 	 * Clears all data from the model.
-	 * May need to be overridded in derived classes.
+	 * May need to be overridden in derived classes.
 	 */
 	virtual void clear();
 
@@ -128,7 +128,7 @@ public:
 //	QMap<int, QVariant> itemData(const QModelIndex &index) const override;
 //	bool setItemData(const QModelIndex &index, const QMap<int, QVariant> &roles) override;
 
-    /// Header data interface
+    /// @name Header data interface
     /// @{
 
     /// Get the header data corresponding to the given section number, orientation, and role.
@@ -220,15 +220,18 @@ public:
 	/// ETM-inspired append function.  Based on setupModelData().
 	std::shared_ptr<AbstractTreeModelItem> append_child(const QVector<QVariant> &data, std::shared_ptr<AbstractTreeModelItem> parent);
 
+	/// @name Item getters/converters from/to indexes, UUIncD's, pointer to the item, etc.
+	/// @{
 	QModelIndex getIndexFromItem(const std::shared_ptr<AbstractTreeModelItem>& item) const;
 	QModelIndex getIndexFromId(UUIncD id) const;
 	std::shared_ptr<AbstractTreeModelItem> getItemById(const UUIncD &id) const;
 	std::shared_ptr<AbstractTreeModelItem> getRootItem() const;
 	// ETM/GRVS/AQP(itemForIndex)
 	std::shared_ptr<AbstractTreeModelItem> getItem(const QModelIndex &index) const;
-
+	/// @}
 
 	/// @name Public interface: Lambda generators for tree structure modification.
+	///KDEN
 	/// @{
 
 	/* @brief Helper function to generate a lambda that adds an item to the tree */
@@ -301,7 +304,7 @@ public:
 protected:
 
 	/**
-	 * Register/deregister an item with the model.  Intended to be called from an AbstractTreeModelItem.
+	 * Register/deregister an item with the model.  Intended to be called from AbstractTreeModelItem and derived classes.
 	 */
 	virtual void register_item(const std::shared_ptr<AbstractTreeModelItem>& item);
 	virtual void deregister_item(UUIncD id, AbstractTreeModelItem* item);
@@ -363,6 +366,7 @@ public:
 	virtual bool checkConsistency();
 
 protected:
+
 	/// @name Extended protected model interface.
 	/// @{
 
@@ -394,11 +398,6 @@ protected:
 	 */
 //	std::map<UUIncD, std::weak_ptr<AbstractTreeModelItem>> m_model_item_map;
 	item_map_type m_model_item_map;
-
-	/// TEMP
-	// The tree's base directory URL.
-//	QUrl m_base_directory;
-
 };
 
 

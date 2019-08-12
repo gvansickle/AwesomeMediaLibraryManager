@@ -95,15 +95,6 @@ AbstractTreeModel::~AbstractTreeModel()
 	m_root_item.reset();
 }
 
-//void AbstractTreeModel::postConstructorFinalization(std::initializer_list<ColumnSpec> column_specs)
-//{
-////	m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs, this->shared_from_this());
-//	m_root_item = AbstractTreeModelHeaderItem::construct(column_specs, this->shared_from_this());
-//	Q_ASSERT(m_root_item->m_is_root == true);
-//	Q_ASSERT(m_root_item->m_is_in_model == true);
-
-//}
-
 void AbstractTreeModel::clear()
 {
 	std::unique_lock write_lock(m_rw_mutex);
@@ -448,11 +439,7 @@ bool AbstractTreeModel::LoadDatabase(const QString& database_filename)
 {
 	qIn() << "###### READING AbstractTreeModel from:" << database_filename;
 
-	/// @todo This is unworkable I think.
-	/// @note Not sure if this is the best place for this, but we need to clear everything before reloading it.
-M_WARNING("Not right, this needs ColumnSpecs added initially from somewhere");
 	std::unique_lock write_lock(m_rw_mutex);
-//	m_root_item = AbstractTreeModelHeaderItem::construct({}, shared_from_this());
 
 	XmlSerializer xmlser;
 	/// @todo Better name
@@ -464,12 +451,16 @@ M_WARNING("Not right, this needs ColumnSpecs added initially from somewhere");
 	xmlser.HACK_skip_extra(false);
 
 	beginResetModel();
+	/// Clear the model before reloading it.
 	clear();
 
 	bool success = xmlser.load(*this, QUrl::fromLocalFile(database_filename));
 
 	qIn() << "###### TREEMODELPTR HAS NUM ROWS:" << rowCount();
 	qIn() << "###### FINISHED READING AbstractTreeModel from:" << database_filename << "STATUS:" << success;
+
+	/// @todo Should we do this even on fail?  AQP's load() doesn't.
+	endResetModel();
 
 	return success;
 }
@@ -638,7 +629,7 @@ void AbstractTreeModel::notifyRowDeleted()
 /// NEW: KDEN:
 bool AbstractTreeModel::checkConsistency()
 {
-#if 0///
+#if 1///
 // first check that the root is all good
 	if (!m_root_item || !m_root_item->m_is_root || !m_root_item->isInModel() || m_model_item_map.count(m_root_item->getId()) == 0)
 	{
@@ -783,13 +774,13 @@ bool AbstractTreeModel::insertRows(int insert_before_row, int num_rows, const QM
 #if 1 //ETM
 	qDb() << "Trying to insert:" << insert_before_row << num_rows << parent_model_index;
 
-	std::shared_ptr<AbstractTreeModelItem> parentItem = getItem(parent_model_index);
+	std::shared_ptr<AbstractTreeModelItem> parent_item = getItem(parent_model_index);
 	bool success;
 
 	beginInsertRows(parent_model_index, insert_before_row, insert_before_row + num_rows - 1);
 
 	// Create @a rows default-constructed children of parent.
-	auto new_children = parentItem->insertChildren(insert_before_row, num_rows, m_root_item->columnCount());
+	auto new_children = parent_item->insertChildren(insert_before_row, num_rows, m_root_item->columnCount());
 
 	// Add the new children to the UUID lookup map.
 	for(const auto& item : new_children)

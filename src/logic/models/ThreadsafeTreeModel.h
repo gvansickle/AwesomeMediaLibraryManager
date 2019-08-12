@@ -83,10 +83,10 @@ public:
 //	UUIncD requestAddItem(std::vector<QVariant> values, UUIncD parent_id,
 //						  Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
 
-	/**
-	 * Request the removal and deletion of @a item from the model.
-	 */
-	bool requestDeleteItem(const std::shared_ptr<AbstractTreeModelItem>& item, Fun &undo, Fun &redo);
+//	/**
+//	 * Request the removal and deletion of @a item from the model.
+//	 */
+//	bool requestDeleteItem(const std::shared_ptr<AbstractTreeModelItem>& item, Fun &undo, Fun &redo);
 
 	/// @}
 
