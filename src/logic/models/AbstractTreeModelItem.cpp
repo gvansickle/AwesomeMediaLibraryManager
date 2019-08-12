@@ -759,16 +759,6 @@ void AbstractTreeModelItem::verify_post_add_ins_child(const std::shared_ptr<Abst
 	}
 }
 
-
-//void AbstractTreeModelItem::postConstructorFinalization()
-//{
-//	if(m_is_root)
-//	{
-////		Q_ASSERT_X(m_model.lock(), __PRETTY_FUNCTION__, "Can't lock this's model");
-//		register_self(this->shared_from_this());
-//	}
-//}
-
 /**
  * Static function which registers @a self and its children with the model @a self is already registered with.
  * @warning Will assert if @a self doesn't already know its model.

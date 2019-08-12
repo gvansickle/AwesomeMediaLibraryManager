@@ -40,12 +40,6 @@ ScanResultsTreeModel::ScanResultsTreeModel(std::initializer_list<ColumnSpec> col
 {
 }
 
-//ScanResultsTreeModel::ScanResultsTreeModel(QObject *parent)
-//	: BASE_CLASS({}, parent)
-//{
-//}
-
-
 void ScanResultsTreeModel::setup()
 {
 	// We connect the signals of the abstractitemmodel to a more generic one.
@@ -123,6 +117,7 @@ void ScanResultsTreeModel::SaveDatabase(const QString& database_filename)
 }
 #endif
 
+#if 0////
 UUIncD ScanResultsTreeModel::requestAddScanResultsTreeModelItem(const QVariant& variant, UUIncD parent_id, Fun undo, Fun redo)
 {
 	std::unique_lock write_lock(m_rw_mutex);
@@ -163,6 +158,7 @@ UUIncD ScanResultsTreeModel::requestAddSRTMLibEntryItem(const QVariant& variant,
 
 	return new_item->getId();
 }
+#endif////
 
 #if 0///
 UUIncD ScanResultsTreeModel::requestAddExistingTreeModelItem(std::shared_ptr<AbstractTreeModelItem> new_item, UUIncD parent_id, Fun undo, Fun redo)
@@ -301,15 +297,14 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 	/// @todo This should have a list of known base directory paths,
 	///         e.g. the file:// URL and the gvfs /run/... mount point, Windows drive letter paths, etc.
 	map_read_field_or_warn(map, XMLTAG_SRTM_BASE_DIRECTORY, &m_base_directory);
-//	m_base_directory = map.value(SRTMTagToXMLTagMap[SRTMTag::BASE_DIRECTORY]).toUrl();
 
 	QString title, creator;
-	map_read_field_or_warn(map, XMLTAG_SRTM_TITLE, &title);//.toString();
-	map_read_field_or_warn(map, XMLTAG_SRTM_CREATOR, &creator);//.toString();
+	map_read_field_or_warn(map, XMLTAG_SRTM_TITLE, &title);
+	map_read_field_or_warn(map, XMLTAG_SRTM_CREATOR, &creator);
 
 	/// @todo This is a QDateTime
 	QString creation_date;
-	map_read_field_or_warn(map, XMLTAG_SRTM_DATE, &creation_date);//.toString();
+	map_read_field_or_warn(map, XMLTAG_SRTM_DATE, &creation_date);
 
 	/// @todo Read these in.
 	QDateTime last_scan_start, last_scan_end;

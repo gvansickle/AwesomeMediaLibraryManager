@@ -245,9 +245,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	AMLMJobT<ExtFuture<MetadataReturnVal>>* lib_rescan_job = make_async_AMLMJobT(lib_rescan_future, "LibRescanJob", AMLMApp::instance());
 
     // Get a pointer to the Scan Results Tree model.
-    /// @note This ptr will go away when we exit the function, so we can't copy it into any stap() lambdas.
-//    M_WARNING("THIS SHOULD BE ::construct");
-//	std::shared_ptr<ScanResultsTreeModel> tree_model = AMLMApp::IScanResultsTreeModel();
+    /// @note IS THIS STILL VALID?: This ptr will go away when we exit the function, so we can't copy it into any stap() lambdas.
 	std::shared_ptr<ScanResultsTreeModel> tree_model = AMLM::Core::self()->getScanResultsTreeModel();
 //	std::shared_ptr<AbstractTreeModel> tree_model = AMLM::Core::self()->getScanResultsTreeModel();
 	Q_CHECK_PTR(tree_model);
@@ -358,7 +356,6 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 		}
 
 		/// @note This could also be a signal emit.
-//		auto new_items_upcast = std::static_pointer_cast<std::shared_ptr<std::vector<std::shared_ptr<AbstractTreeModelItem> > >(new_items);
 		Q_ASSERT(new_items->size() == 1);
 		tree_model_item_future.reportResult(new_items);
 
@@ -530,18 +527,17 @@ M_WARNING("PUT THIS BACK");
 				m_timer.lap("End of SaveDatabase");
 
 				////////// EXPERIMENTAL
-#if 0 //// PUT BACK
+#if 1 //// PUT BACK
 				/// Try to load it back in and round-trip it.
 				std::initializer_list<ColumnSpec> temp_initlist = {ColumnSpec(SectionID(0), "DirProps"), {SectionID(0), "MediaURL"}, {SectionID(0), "SidecarCueURL"}};
 //				std::shared_ptr<ScanResultsTreeModel> load_tree = ScanResultsTreeModel::construct({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
-				std::shared_ptr<ScanResultsTreeModel> load_tree
-//						= ScanResultsTreeModel::construct(temp_initlist, this);
-						= std::make_shared<ScanResultsTreeModel>(temp_initlist, this);
-//						= std::make_shared<ScanResultsTreeModel>();
+				std::shared_ptr<ScanResultsTreeModel> load_tree	= ScanResultsTreeModel::make_ScanResultsTreeModel(temp_initlist);
+
 				load_tree->LoadDatabase(database_filename);
-				load_tree->clear();
+//				load_tree->clear();
 //				dump_map(load_tree);
-				SaveDatabase(load_tree, QDir::homePath() +"/AMLMDatabaseRT.xml");
+//				SaveDatabase(load_tree, QDir::homePath() +"/AMLMDatabaseRT.xml");
+				load_tree->SaveDatabase(QDir::homePath() +"/AMLMDatabaseRT.xml");
 #endif /////
 
 /// @todo EXPERIMENTAL

@@ -189,7 +189,6 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 
 	AMLM_ASSERT_EQ(header_num_sections, header_section_list.size());
 
-#if 0 ///
 	// ... and insert that many default-constructed columns to this HeaderItem.
 	// Note that the AbstractTreeModel forwards it's insertColumns() call to here, but it handles the begin/end signaling.
 	// So... I think we need to go through that mechanism if we're already in a model.
@@ -222,25 +221,38 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	/// @todo This is a QVariantList containing <item>/QVariantMap's, each of which
 	/// contains a single <scan_res_tree_model_item type="QVariantMap">, which in turn
 	/// contains a single <dirscanresult>/QVariantMap.
-	QVariantHomogenousList child_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
-	Q_ASSERT(child_list.size() > 0);
+	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
+	child_var_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
+	Q_ASSERT(child_var_list.size() > 0);
+	qDb() << "Number of children read:" << child_var_list.size();
 
-//	std::vector<std::shared_ptr<AbstractTreeModelItem>> temp_items;
-//	childrenFromVariant(child_list);
-	for(const QVariant& child_variant : child_list)
+#if 1///
+	append_children_from_variant<ScanResultsTreeModelItem, AbstractTreeModelHeaderItem>(this, child_var_list);
+#else
+	auto starting_childcount = childCount();
+
+	for(const QVariant& child_variant : child_var_list)
 	{
 		qDb() << "READING CHILD ITEM INTO HEADERITEM:" << child_variant;
+
+		auto new_child = std::make_shared<ScanResultsTreeModelItem>();
+		Q_ASSERT(new_child);
+		/// @note Cuurently we need to add the empty item to the model before reading it in, so that
+		/// its children will be set up correctly model-wise.  This is almost certainly more efficient anyway.
+		this->appendChild(new_child);
+		new_child->fromVariant(child_variant);
 
 //		std::shared_ptr<AbstractTreeModelItem> new_child_item = model_ptr->make_item_from_variant(child);
 //		bool ok = appendChild(new_child_item);
 //		Q_ASSERT(ok);
-		auto id = model_ptr->requestAddScanResultsTreeModelItem(child_variant, parent_id);
-		Q_ASSERT(id != UUIncD::null());
-		auto new_child = model_ptr->getItemById(id);
-		Q_ASSERT(new_child);
+//		auto id = model_ptr->requestAddScanResultsTreeModelItem(child_variant, parent_id);
+//		Q_ASSERT(id != UUIncD::null());
+//		auto new_child = model_ptr->getItemById(id);
+//		Q_ASSERT(new_child);
 //		new_child->fromVariant(variant);
 	}
-#else
+
+	AMLM_ASSERT_EQ(starting_childcount+child_var_list.size(),childCount());
 #endif
 }
 

@@ -40,9 +40,7 @@ class SRTMItem_LibEntry : public ScanResultsTreeModelItem, public enable_shared_
 
 public:
 //protected:
-//	explicit SRTMItem_LibEntry(std::shared_ptr<LibraryEntry> libentry,
-//							   const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root);
-//	explicit SRTMItem_LibEntry(const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root);
+	explicit SRTMItem_LibEntry(const std::shared_ptr<AbstractTreeModelItem>& parent_item = nullptr, UUIncD id = UUIncD::null());
 	explicit SRTMItem_LibEntry(std::shared_ptr<LibraryEntry> libentry, const std::shared_ptr<AbstractTreeModelItem>& parent_item = nullptr, UUIncD id = UUIncD::null());
 	explicit SRTMItem_LibEntry(const QVariant& variant, const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr, UUIncD id = UUIncD::null());
 

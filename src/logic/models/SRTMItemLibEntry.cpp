@@ -44,6 +44,12 @@
 //	return self;
 //}
 
+SRTMItem_LibEntry::SRTMItem_LibEntry(const std::shared_ptr<AbstractTreeModelItem>& parent_item, UUIncD id)
+	: BASE_CLASS(parent_item, id)
+{
+
+}
+
 SRTMItem_LibEntry::SRTMItem_LibEntry(std::shared_ptr<LibraryEntry> libentry, const std::shared_ptr<AbstractTreeModelItem>& parent_item, UUIncD id)
 	: BASE_CLASS(parent_item, id), m_library_entry(libentry)
 {

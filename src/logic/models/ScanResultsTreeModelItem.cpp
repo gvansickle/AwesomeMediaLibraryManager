@@ -34,6 +34,7 @@
 #include <logic/DirScanResult.h>
 #include "AbstractTreeModelHeaderItem.h"
 #include "ScanResultsTreeModel.h"
+#include "SRTMItemLibEntry.h"
 #include <LibraryEntry.h>
 #include <serialization/SerializationHelpers.h>
 
@@ -67,7 +68,7 @@ ScanResultsTreeModelItem::ScanResultsTreeModelItem(const std::shared_ptr<Abstrac
 ScanResultsTreeModelItem::ScanResultsTreeModelItem(const QVariant& variant, const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id)
 	: BASE_CLASS({}, parent, id)
 {
-	M_WARNING("TODO: DECODE VARIANT");
+//	M_WARNING("TODO: DECODE VARIANT");
 }
 
 ScanResultsTreeModelItem::~ScanResultsTreeModelItem()
@@ -172,6 +173,9 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 
 	QVariantHomogenousList child_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
 	Q_ASSERT(child_list.size() > 0);
+
+	append_children_from_variant<SRTMItem_LibEntry>/*, ScanResultsTreeModelItem>*/(this, child_list);
+
 #if 0////
 	auto model_ptr_base = m_model.lock();
 	Q_ASSERT(model_ptr_base);

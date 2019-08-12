@@ -47,7 +47,7 @@ class AbstractTreeModelHeaderItem;
  * - Contains 1 or more tracks.
  * - May have a sidecar or embedded cue sheet.
  */
-class ScanResultsTreeModel : public ThreadsafeTreeModel, public virtual ISerializable//, public virtual enable_shared_from_this_virtual<ScanResultsTreeModel>
+class ScanResultsTreeModel : public ThreadsafeTreeModel, public virtual ISerializable, public virtual enable_shared_from_this_virtual<ScanResultsTreeModel>
 {
 	Q_OBJECT
 	Q_DISABLE_COPY(ScanResultsTreeModel);
@@ -57,7 +57,7 @@ class ScanResultsTreeModel : public ThreadsafeTreeModel, public virtual ISeriali
 
 protected:
 	/**
-	 * The constructed model will NOT have a root, that's what construct() adds.
+	 * Use the public named constructor.
 	 */
 	explicit ScanResultsTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
 
@@ -77,15 +77,9 @@ public:
 	/**
 	 * Named constructors.
 	 */
-//	static std::shared_ptr<ScanResultsTreeModel> construct(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
-//	/**
-//	 * The constructed model will NOT have a root, that's what construct() adds.
-//	 */
-//	explicit ScanResultsTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
 	static std::shared_ptr<ScanResultsTreeModel> make_ScanResultsTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent = nullptr);
-//	explicit ScanResultsTreeModel(QObject *parent = nullptr);
-	ScanResultsTreeModel() = delete;
 
+	ScanResultsTreeModel() = delete;
 	~ScanResultsTreeModel() override = default;
 
     /**
@@ -103,10 +97,10 @@ public:
 	/**
 	 * Non-static factory functions for creating new, typed tree nodes from QVariantMaps.
 	 */
-	UUIncD requestAddScanResultsTreeModelItem(const QVariant& variant, UUIncD parent_id,
-								   Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
-	UUIncD requestAddSRTMLibEntryItem(const QVariant& variant, UUIncD parent_id,
-									  Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
+//	UUIncD requestAddScanResultsTreeModelItem(const QVariant& variant, UUIncD parent_id,
+//								   Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
+//	UUIncD requestAddSRTMLibEntryItem(const QVariant& variant, UUIncD parent_id,
+//									  Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
 //	UUIncD requestAddExistingTreeModelItem(std::shared_ptr<AbstractTreeModelItem> new_item, UUIncD parent_id,
 //										   Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
 
