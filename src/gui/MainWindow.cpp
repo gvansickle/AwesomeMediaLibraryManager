@@ -1443,8 +1443,7 @@ void MainWindow::readLibSettings(QSettings& settings)
 	// The primary database file.
 	QString database_filename = QDir::homePath() + "/AMLMDatabase.xml";
 
-	// Try to Load it asyncronously into a new model.
-	/// AMLM::Core::self()->getDefaultColumnSpecs()
+	// Try to Load it asynchronously into a new model.
 	auto temp_load_srtm_instance = ScanResultsTreeModel::make_ScanResultsTreeModel({});
 	bool success = temp_load_srtm_instance->LoadDatabase(database_filename);
 	if(success)

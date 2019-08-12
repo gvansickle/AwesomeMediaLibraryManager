@@ -29,21 +29,6 @@
 #include "ScanResultsTreeModel.h"
 
 
-//std::shared_ptr<SRTMItem_LibEntry> SRTMItem_LibEntry::construct(std::shared_ptr<LibraryEntry> libentry,
-//                                                                const std::shared_ptr<AbstractTreeModelItem>& parent_item, UUIncD id)
-//{
-//	std::shared_ptr<SRTMItem_LibEntry> self(new SRTMItem_LibEntry(libentry, parent_item, id));
-//	self->postConstructorFinalization();
-//	return self;
-//}
-
-//std::shared_ptr<SRTMItem_LibEntry> SRTMItem_LibEntry::construct(const QVariant& variant, const std::shared_ptr<AbstractTreeModelItem>& parent_item, UUIncD id)
-//{
-//	std::shared_ptr<SRTMItem_LibEntry> self(new SRTMItem_LibEntry(variant, parent_item, id));
-//	self->postConstructorFinalization();
-//	return self;
-//}
-
 SRTMItem_LibEntry::SRTMItem_LibEntry(const std::shared_ptr<AbstractTreeModelItem>& parent_item, UUIncD id)
 	: BASE_CLASS(parent_item, id)
 {
@@ -112,12 +97,6 @@ QVariant SRTMItem_LibEntry::data(int column, int role) const
 
 }
 
-int SRTMItem_LibEntry::columnCount() const
-{
-	return 2;
-}
-
-// Redefined because two classes in one file.
 #define M_DATASTREAM_FIELDS(X) \
 	/* TAG_IDENTIFIER, tag_string, member_field, var_name */ \
 	X(XMLTAG_CHILD_NODE_LIST, child_node_list, nullptr) \

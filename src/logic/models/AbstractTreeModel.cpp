@@ -35,6 +35,7 @@
 #include <functional>
 #include <unordered_set>
 #include <queue>
+#include <algorithm>
 
 // Qt5
 #include <QtWidgets>
@@ -124,15 +125,16 @@ void AbstractTreeModel::clear()
 
 	// Clear the root item, which will get us 99% of the way to cleared.
 	m_root_item->clear();
+	Q_ASSERT(m_root_item->childCount() == 0);
 	// Clear all items out of the model item id->weakptr map.
 	m_model_item_map.clear();
 	// Important: Re-add the root item to the map.
 	// Register it with this model.
 	/*retval_shptr->*/register_item(m_root_item);
+	Q_ASSERT(m_model_item_map.count(m_root_item->getId()) == 1);
 
 	AMLM_ASSERT_X(m_root_item->isInModel(), "ROOT ITEM NOT IN MODEL AFTER CLEAR");
-#warning "GRVS"
-//	AMLM_ASSERT_X(getItemById(m_root_item->getId())->isInModel(), "MODEL DOES NOT CONTAIN ROOT ITEM AFTER CLEAR");
+	AMLM_ASSERT_X(getItemById(m_root_item->getId())->isInModel(), "MODEL DOES NOT CONTAIN ROOT ITEM AFTER CLEAR");
 
 	/// TODO ???
 //	retval_shptr->m_model_tester = new QAbstractItemModelTester(retval_shptr.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, retval_shptr.get());

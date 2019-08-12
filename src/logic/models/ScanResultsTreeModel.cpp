@@ -83,6 +83,11 @@ ScanResultsTreeModel::make_ScanResultsTreeModel(std::initializer_list<ColumnSpec
 	return retval_shptr;
 }
 
+ScanResultsTreeModel::~ScanResultsTreeModel()
+{
+	/// @todo Need to do anything here?
+}
+
 void ScanResultsTreeModel::setBaseDirectory(const QUrl &base_directory)
 {
 	std::unique_lock write_lock(m_rw_mutex);

@@ -49,12 +49,6 @@ ScanResultsTreeModelItem::ScanResultsTreeModelItem(const std::shared_ptr<Abstrac
 {
 }
 
-ScanResultsTreeModelItem::ScanResultsTreeModelItem(const QVariant& variant, const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id)
-	: BASE_CLASS({}, parent, id)
-{
-//	M_WARNING("TODO: DECODE VARIANT");
-}
-
 ScanResultsTreeModelItem::~ScanResultsTreeModelItem()
 {
 }

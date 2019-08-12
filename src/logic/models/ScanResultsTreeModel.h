@@ -32,9 +32,7 @@
 #include <utils/QtHelpers.h>
 #include "ColumnSpec.h"
 #include "ScanResultsTreeModelItem.h"
-//#include "AbstractTreeModel.h"
-#include "ThreadsafeTreeModel.h"
-
+#include "AbstractTreeModel.h"
 class AbstractTreeModelHeaderItem;
 #include <future/enable_shared_from_this_virtual.h>
 #include <models/UndoRedoHelper.h>
@@ -47,13 +45,12 @@ class AbstractTreeModelHeaderItem;
  * - Contains 1 or more tracks.
  * - May have a sidecar or embedded cue sheet.
  */
-class ScanResultsTreeModel : public /*ThreadsafeTreeModel*/AbstractTreeModel, public virtual ISerializable, public virtual enable_shared_from_this_virtual<ScanResultsTreeModel>
+class ScanResultsTreeModel : public AbstractTreeModel, public virtual ISerializable, public virtual enable_shared_from_this_virtual<ScanResultsTreeModel>
 {
 	Q_OBJECT
 	Q_DISABLE_COPY(ScanResultsTreeModel);
 	Q_INTERFACES(ISerializable);
 
-//	using BASE_CLASS = ThreadsafeTreeModel;
 	using BASE_CLASS = AbstractTreeModel;
 
 protected:
@@ -81,7 +78,7 @@ public:
 	static std::shared_ptr<ScanResultsTreeModel> make_ScanResultsTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent = nullptr);
 
 	ScanResultsTreeModel() = delete;
-	~ScanResultsTreeModel() override = default;
+	~ScanResultsTreeModel() override;
 
     /**
      * Sets the base directory of the model.
