@@ -131,7 +131,8 @@ void AbstractTreeModel::clear()
 	/*retval_shptr->*/register_item(m_root_item);
 
 	AMLM_ASSERT_X(m_root_item->isInModel(), "ROOT ITEM NOT IN MODEL AFTER CLEAR");
-	AMLM_ASSERT_X(getItemById(m_root_item->getId())->isInModel(), "MODEL DOES NOT CONTAIN ROOT ITEM AFTER CLEAR");
+#warning "GRVS"
+//	AMLM_ASSERT_X(getItemById(m_root_item->getId())->isInModel(), "MODEL DOES NOT CONTAIN ROOT ITEM AFTER CLEAR");
 
 	/// TODO ???
 //	retval_shptr->m_model_tester = new QAbstractItemModelTester(retval_shptr.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, retval_shptr.get());
@@ -461,7 +462,8 @@ bool AbstractTreeModel::LoadDatabase(const QString& database_filename)
 	/// @todo Should we do this even on fail?  AQP's load() doesn't.
 	endResetModel();
 
-	Q_ASSERT(checkConsistency());
+M_TODO("DEBUG")
+//	Q_ASSERT(checkConsistency());
 
 	return success;
 }
@@ -473,7 +475,8 @@ void AbstractTreeModel::SaveDatabase(const QString& database_filename)
 	qIn() << "###### WRITING AbstractTreeModel to:" << database_filename;
 	qIn() << "###### TREEMODELPTR HAS NUM ROWS:" << rowCount();
 
-	Q_ASSERT(checkConsistency());
+M_TODO("DEBUG")
+//	Q_ASSERT(checkConsistency());
 
 	XmlSerializer xmlser;
 
@@ -942,7 +945,9 @@ int AbstractTreeModel::rowCount(const QModelIndex &parent) const
 	// This is what KDEN does.
 
 	// Only column 0 has children, and hence a non-zero rowCount().
-	if(/*parent.isValid() &&*/ parent.column() != 0)
+M_TODO("The firts one causes the model to not get read in or displayed correctly")
+//	if(/*parent.isValid() &&*/ parent.column() != 0)
+	if(parent.isValid() && parent.column() != 0)
 	{
 		return 0;
 	}
