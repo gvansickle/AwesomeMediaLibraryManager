@@ -316,8 +316,4 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 	map_read_field_or_warn(map, XMLTAG_SRTM_ROOT_ITEM, &root_item_map);
 	m_root_item->fromVariant(root_item_map);
 	dump_map(map);
-//	requestAddTreeModelItem()
-
-
-#warning @todo INCOMPLETE/error handling
 }

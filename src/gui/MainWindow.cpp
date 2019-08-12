@@ -1450,7 +1450,8 @@ void MainWindow::readLibSettings(QSettings& settings)
 	if(success)
 	{
 		// Swap in the new model.
-		qDb() << "Load succeeded, swapping in the new model.";
+		qDb() << "!!!!!!!!!!!!!!!!!!!!!!! TODO: Load succeeded, swapping in the new model.";
+		temp_load_srtm_instance->dump_model_info();
 #warning "TODO"
 	}
 	else

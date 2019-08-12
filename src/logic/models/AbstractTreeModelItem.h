@@ -63,6 +63,7 @@ protected:
 
 	friend class AbstractTreeModel;
 
+public:
 	AbstractTreeModelItem();
 
 public:
@@ -402,6 +403,7 @@ std::shared_ptr<T> TreeItemFactory(Args... args)
 template <class ChildItemType, class ParentItemType = AbstractTreeModelItem>
 void append_children_from_variant(ParentItemType* parent_item, const QVariantHomogenousList& child_var_list)
 {
+	Q_ASSERT(parent_item->isInModel());
 	auto starting_childcount = parent_item->childCount();
 
 	for(const QVariant& child_variant : child_var_list)

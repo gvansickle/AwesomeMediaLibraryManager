@@ -462,6 +462,12 @@ void AbstractTreeModel::SaveDatabase(const QString& database_filename)
 	qIn() << "###### FINISHED WRITING AbstractTreeModel to:" << database_filename;
 }
 
+void AbstractTreeModel::dump_model_info() const
+{
+	qDb() << "------------------------ MODEL INFO -----------------------------------------";
+	qDb() << "Total items in m_model_item_map:" << m_model_item_map.size();
+}
+
 #if 0
 void AbstractTreeModel::toOrm(std::string filename) const
 {

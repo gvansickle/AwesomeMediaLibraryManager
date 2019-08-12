@@ -61,12 +61,6 @@ public:
 //
 //	explicit ScanResultsTreeModelItem(std::shared_ptr<ScanResultsTreeModel> model, bool is_root = false);
 public:
-//	/**
-//	 * Named constructors.
-//	 */
-//	/// Create a new model item populated with the passed DirScanResult.
-//	static std::shared_ptr<ScanResultsTreeModelItem> construct(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr, UUIncD id = UUIncD::null());
-//	static std::shared_ptr<ScanResultsTreeModelItem> construct(const QVariant& variant, const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr, UUIncD id = UUIncD::null());
 //	ScanResultsTreeModelItem() {};
 //	explicit ScanResultsTreeModelItem(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr, UUIncD id = UUIncD::null());
 	~ScanResultsTreeModelItem() override;

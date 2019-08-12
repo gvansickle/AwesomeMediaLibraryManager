@@ -227,7 +227,7 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	qDb() << "Number of children read:" << child_var_list.size();
 
 #if 1///
-	append_children_from_variant<ScanResultsTreeModelItem, AbstractTreeModelHeaderItem>(this, child_var_list);
+	append_children_from_variant<ScanResultsTreeModelItem/*, AbstractTreeModelHeaderItem*/>(this, child_var_list);
 #else
 	auto starting_childcount = childCount();
 

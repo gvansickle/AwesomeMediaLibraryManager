@@ -282,7 +282,14 @@ public:
 
 	friend class AbstractTreeModelItem;
 
+	/// @name Debug
+	/// @{
+
 	long get_total_model_node_count() const { return m_model_item_map.size(); };
+
+	void dump_model_info() const;
+
+	/// @}
 
 	/// @temp?
 	using item_map_type = std::map<UUIncD, std::weak_ptr<AbstractTreeModelItem>>;

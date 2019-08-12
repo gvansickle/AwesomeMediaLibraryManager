@@ -39,22 +39,6 @@
 #include <serialization/SerializationHelpers.h>
 
 
-//std::shared_ptr<ScanResultsTreeModelItem> ScanResultsTreeModelItem::construct(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id)
-//{
-//	std::shared_ptr<ScanResultsTreeModelItem> self(new ScanResultsTreeModelItem(dsr, parent, id));
-//	self->postConstructorFinalization();
-//	return self;
-//}
-
-//std::shared_ptr<ScanResultsTreeModelItem> ScanResultsTreeModelItem::construct(const QVariant& variant, const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id)
-//{
-//	std::shared_ptr<ScanResultsTreeModelItem> self(new ScanResultsTreeModelItem(variant, parent, id));
-//	self->postConstructorFinalization();
-//	/// @note Can't call fromVariant() here, for some reason self still isn't in the model here.
-////	self->fromVariant(variant);
-//	return self;
-//}
-
 ScanResultsTreeModelItem::ScanResultsTreeModelItem(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id)
 	: BASE_CLASS({}, parent, id), m_dsr(dsr)
 {
@@ -171,10 +155,11 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 
 	map_read_field_or_warn(map, XMLTAG_DIRSCANRESULT, &m_dsr);
 
-	QVariantHomogenousList child_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
-	Q_ASSERT(child_list.size() > 0);
+	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
+	child_var_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
+	Q_ASSERT(child_var_list.size() > 0);
 
-	append_children_from_variant<SRTMItem_LibEntry>/*, ScanResultsTreeModelItem>*/(this, child_list);
+	append_children_from_variant<SRTMItem_LibEntry>(this, child_var_list);
 
 #if 0////
 	auto model_ptr_base = m_model.lock();

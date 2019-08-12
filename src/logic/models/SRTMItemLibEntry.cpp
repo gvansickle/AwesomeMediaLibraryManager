@@ -56,11 +56,11 @@ SRTMItem_LibEntry::SRTMItem_LibEntry(std::shared_ptr<LibraryEntry> libentry, con
 
 }
 
-SRTMItem_LibEntry::SRTMItem_LibEntry(const QVariant& variant, const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id)
-	: BASE_CLASS(parent, id)
-{
-
-}
+//SRTMItem_LibEntry::SRTMItem_LibEntry(const QVariant& variant, const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id)
+//	: BASE_CLASS(parent, id)
+//{
+//
+//}
 
 QVariant SRTMItem_LibEntry::data(int column, int role) const
 {
@@ -182,6 +182,13 @@ void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 	// Load LibraryEntry's.
 	QVariantHomogenousList list(XMLTAG_LIBRARY_ENTRIES, "m_library_entry");
 	map_read_field_or_warn(map, XMLTAG_LIBRARY_ENTRIES, &list);
+
+	/// There should only be one I think....
+	AMLM_ASSERT_EQ(list.size(), 1);
+
+#if 0///
+	append_children_from_variant<LibraryEntry>(this, list);
+#else///old
 	for(const QVariant& it : list)
 	{
 		/// @todo First doesn't work for some reason.
@@ -190,8 +197,14 @@ void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 		m_library_entry = std::make_shared<LibraryEntry>();
 		m_library_entry->fromVariant(it);
 	}
+#endif
 
-	QVariantHomogenousList child_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
+	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
+	child_var_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
+
+	append_children_from_variant<AbstractTreeModelItem>(this, child_var_list);
+
+
 #if 0///
 	auto model_ptr_base = m_model.lock();
 	Q_ASSERT(model_ptr_base);
