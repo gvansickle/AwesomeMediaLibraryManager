@@ -570,14 +570,11 @@ void AbstractTreeModelItem::insertChild(int row, std::shared_ptr<AbstractTreeMod
 	AMLM_ASSERT_X(!item->isInModel(), "TODO: ITEM ALREADY IN MODEL, MOVE ITEMS BETWEEN MODELS");
 	AMLM_ASSERT_X(isInModel(), "TODO: PARENT ITEM NOT IN MODEL");
 #if 0 ///GRVS+++
-//	item->m_parent_item = this->shared_from_this();
-//	item->changeParent(this->shared_from_this());
 	item->updateParent(this->shared_from_this());
 
 	// Need an iterator to insert before.
 	auto ins_it = m_child_items.begin();
 	std::advance(ins_it, row);
-
 	m_child_items.insert(ins_it, item);
 
 	// If the parent is in a model, add the child item to the same model.
@@ -615,33 +612,27 @@ void AbstractTreeModelItem::insertChild(int row, std::shared_ptr<AbstractTreeMod
 	}
 
 	// If the parent (this) is in a model, add the child item to the same model.
-	if (auto ptr = m_model.lock())
+	if (auto model_shptr = m_model.lock())
 	{
 		std::shared_ptr<AbstractTreeModelItem> sft = shared_from_this();
 		Q_ASSERT(sft);
-		ptr->notifyRowAboutToAppend(shared_from_this());
+		model_shptr->notifyRowAboutToAppend(shared_from_this());
 
 		// Set the item's parent to this.
 		item->updateParent(shared_from_this());
 
-		// Insert the item into this's child list before the given row.
-#if 0/// KDEN
-//		auto it = m_child_items.insert(m_child_items.end(), item);
-#endif
+		// Insert the item into this's child list, before the given row.
 		// Get an iterator to insert before.
 		auto ins_it = m_child_items.begin();
 		std::advance(ins_it, row);
 		m_child_items.insert(ins_it, item);
 
-#if 0// unneeded, we don't keep an iterator table.
-//		UUIncD id = item->getId();
-//		m_iteratorTable[id] = it;
-#endif
-		/// @todo: The model doesn't know this happened....
-		item->m_model = ptr;//m_model;
-
+		/// @todo: The model doesn't know this happened....?
+		item->m_model = model_shptr;
+		// Register the new child item with the model.
 		register_self(item);
-		ptr->notifyRowAppended(item);
+
+		model_shptr->notifyRowAppended(item);
 
 		verify_post_add_ins_child(item);
 
