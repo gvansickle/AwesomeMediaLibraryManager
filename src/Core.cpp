@@ -134,6 +134,15 @@ std::shared_ptr<ScanResultsTreeModel> Core::getScanResultsTreeModel()
 	return std::dynamic_pointer_cast<ScanResultsTreeModel>(m_srtm_instance);
 }
 
+std::shared_ptr<ScanResultsTreeModel> Core::swapScanResultsTreeModel(const std::shared_ptr<ScanResultsTreeModel>& new_model)
+{
+	auto old_model = m_srtm_instance;
+
+	m_srtm_instance = new_model;
+
+	return old_model;
+}
+
 std::initializer_list<ColumnSpec> Core::getDefaultColumnSpecs()
 {
 	std::initializer_list<ColumnSpec> column_specs = {ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}};

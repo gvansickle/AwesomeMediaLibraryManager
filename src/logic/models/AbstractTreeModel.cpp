@@ -106,12 +106,39 @@ AbstractTreeModel::~AbstractTreeModel()
 
 void AbstractTreeModel::clear()
 {
-//	Q_ASSERT(0);
-	// Clear all items from the model.
-//	m_model_item_map.clear();
-//	// Release our hold on the root item, let the smart ptr delete it.
-//#warning "RESET == CRASH"
-//	m_root_item->clear();
+	std::unique_lock write_lock(m_rw_mutex);
+
+#if 0///KDEN
+	std::vector<std::shared_ptr<AbstractTreeModelItem>> items_to_delete;
+
+	items_to_delete.reserve(m_root_item->childCount());
+
+	for (int i = 0; i < m_root_item->childCount(); ++i)
+	{
+		items_to_delete.push_back(std::static_pointer_cast<AbstractTreeModelItem>(m_root_item->child(i)));
+	}
+	Fun undo = []() { return true; };
+	Fun redo = []() { return true; };
+	for (const auto &child : items_to_delete)
+	{
+		qDb() << "clearing" << items_to_delete.size() << "items, current:" << child->m_uuid;
+		requestDeleteItem(child, undo, redo);
+	}
+	Q_ASSERT(m_root_item->childCount() == 0);
+
+	// One last thing, our hidden root node / header node still has ColumnSpecs.
+	m_root_item->clear();
+#elif 0
+	beginResetModel();
+#error "TODO"
+	// Delete the root item, which will get us 99% of the way to cleared.
+//	m_root_item.reset();
+
+	// One last thing, our hidden root node / header node still has ColumnSpecs.
+	m_root_item->clear();
+
+	endResetModel();
+#endif
 }
 
 bool AbstractTreeModel::setColumnSpecs(std::initializer_list<ColumnSpec> column_specs)
@@ -435,6 +462,10 @@ M_WARNING("Not right, this needs ColumnSpecs added initially from somewhere");
 		xmlser.set_default_namespace(m_default_namespace_decl, m_default_namespace_version);
 	}
 	xmlser.HACK_skip_extra(false);
+
+	beginResetModel();
+	clear();
+
 	bool success = xmlser.load(*this, QUrl::fromLocalFile(database_filename));
 
 	qIn() << "###### TREEMODELPTR HAS NUM ROWS:" << rowCount();

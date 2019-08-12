@@ -66,10 +66,10 @@ public:
 //	explicit ThreadsafeTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent);
 	~ThreadsafeTreeModel() override;
 
-	/**
-	 * Clear out the contents of this model, including all header info etc.
-	 */
-	void clear() override;
+//	/**
+//	 * Clear out the contents of this model, including all header info etc.
+//	 */
+//	void clear() override;
 
 	/// @name The requestXxxx() interface.
 	///       Borrowed from KDenLive.  Admittedly not 100% clear on why KDenLive makes model operations even more

@@ -50,8 +50,7 @@ class AbstractTreeModelHeaderItem: public AbstractTreeModelItem, public enable_s
 
 //protected:
 public:
-//	explicit AbstractTreeModelHeaderItem(std::initializer_list<ColumnSpec> column_specs,
-//			const std::shared_ptr<AbstractTreeModel>& parent_model, bool isRoot, UUIncD id = UUIncD::null());
+
 	friend class AbstractTreeModel;
 	/**
 	 * Note: This is always the root item of a tree model, no parent item.

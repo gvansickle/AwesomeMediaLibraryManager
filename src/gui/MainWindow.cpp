@@ -1453,6 +1453,16 @@ void MainWindow::readLibSettings(QSettings& settings)
 		qDb() << "!!!!!!!!!!!!!!!!!!!!!!! TODO: Load succeeded, swapping in the new model.";
 		temp_load_srtm_instance->dump_model_info();
 #warning "TODO"
+		qDb() << "Detaching old model from view";
+
+//		auto oldselmodel = m_exp_second_child_view->selectionModel();
+
+		AMLM::Core::self()->swapScanResultsTreeModel(temp_load_srtm_instance);
+
+		auto srtmodel = AMLM::Core::self()->getScanResultsTreeModel().get();
+		m_exp_second_child_view->setModel(srtmodel);
+
+//		oldselmodel->deleteLater();
 	}
 	else
 	{
@@ -1815,11 +1825,11 @@ M_WARNING("SHARED PTR");
 //	child->setPane2Model(AMLM::Core::self()->getScanResultsTreeModel().get());
 	child->setPane2Model(AMLM::Core::self()->getEditableTreeModel().get());
 
-	auto second_child = new ExperimentalKDEView1(this);
-	auto second_mdi_child = m_mdi_area->addSubWindow(second_child);
+	m_exp_second_child_view = new ExperimentalKDEView1(this);
+	auto second_mdi_child = m_mdi_area->addSubWindow(m_exp_second_child_view);
 M_WARNING("SHARED PTR");
 auto srtmodel = AMLM::Core::self()->getScanResultsTreeModel().get();
-	second_child->setModel(srtmodel);
+	m_exp_second_child_view->setModel(srtmodel);
 
     mdi_child->show();
 	second_mdi_child->show();
