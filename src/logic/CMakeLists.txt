@@ -1,5 +1,5 @@
 #
-# Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -25,6 +25,9 @@ add_subdir_lib(models EXCLUDE_FROM_ALL)
 add_subdir_lib(proxymodels EXCLUDE_FROM_ALL)
 add_subdir_lib(serialization EXCLUDE_FROM_ALL)
 
+# The Tree Model from gsauthof.
+add_subdirectory(gsauthof_tree_model EXCLUDE_FROM_ALL)
+
 set(logic_subdir_SOURCES
 	AMLMCompoundTrack.cpp
 	AMLMTrack.cpp
@@ -44,11 +47,11 @@ set(logic_subdir_SOURCES
 	PlaylistModelItem.cpp
 	PlaylistSortFilterProxyModel.cpp
 	SupportedMimeTypes.cpp
+    TrackIndex.cpp
 	TrackMetadata.cpp
 	CueSheetParser.cpp
 	CueSheet.cpp
 	ModelUserRoles.cpp
-	ColumnSpec.cpp
 	LibraryRescannerMapItem.cpp
 	DirScanResult.cpp
 	ExtMimeType.cpp
@@ -56,7 +59,6 @@ set(logic_subdir_SOURCES
 	ExtUrl.cpp
 	PerfectDeleter.cpp
 	Frames.cpp
-    UndoRedoHelper.cpp
 	UUIncD.cpp
 	)
 
@@ -79,20 +81,19 @@ set(logic_subdir_HEADERS
 	PlaylistModelItem.h
 	PlaylistSortFilterProxyModel.h
 	SupportedMimeTypes.h
+    TrackIndex.h
 	TrackMetadata.h
 	LibraryRescanner.h
 	CueSheetParser.h
 	CueSheet.h
 	TagLibHelpers.h
 	ModelUserRoles.h
-	ColumnSpec.h
 	LibraryRescannerMapItem.h
 	DirScanResult.h
 	ExtMimeType.h
 	ExtUrl.h
 	PerfectDeleter.h
 	Frames.h
-    UndoRedoHelper.h
     UUIncD.h
 	)
 
@@ -110,6 +111,7 @@ target_link_libraries(logic
 		models
 		proxymodels
 		serialization
+		#tree_model
 	PRIVATE
 	    #${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS} ### @todo "logic_subdir links to itself".
 		${QT5_LINK_LIB_TARGETS}
@@ -123,6 +125,7 @@ target_include_directories(logic
 	PUBLIC
 	    # For config.h
 		${PROJECT_BINARY_DIR}/src
+		#gsauthof_tree_model/tree_model
 	PRIVATE
 		${PROJECT_SOURCE_DIR}/src
 	)

@@ -312,6 +312,7 @@ void MainWindow::onStartup()
 
     /// @experimental
     // Create a new Collection view.
+	/// @note This is atm the view onto the AMLMDatabase model.
     newCollectionView();
 
     // Load any files which were opened at the time the last session was closed.
@@ -1431,25 +1432,86 @@ void MainWindow::readLibSettings(QSettings& settings)
 {
 	int num_libs;
 
-	auto* prog = new QProgressDialog("Opening database...", "Abort open", 0, 0, this);
+	// Throw up a progress dialog indicating that we're loading the database.
+	auto* prog = new QProgressDialog(tr("Opening database..."), tr("Abort open"), 0, 0, this);
 
 //	prog.setWindowModality(Qt::WindowModal);
 	prog->setValue(1);
 	prog->setValue(2);
 	prog->show();
 
-	QString database_filename = QDir::homePath() + "/AMLMDatabaseSerDes.xml";
+	// The primary database file.
+	QString database_filename = QDir::homePath() + "/AMLMDatabase.xml";
+
+	// Try to Load it asyncronously into a new model.
+	/// AMLM::Core::self()->getDefaultColumnSpecs()
+	auto temp_load_srtm_instance = ScanResultsTreeModel::make_ScanResultsTreeModel({});
+	bool success = temp_load_srtm_instance->LoadDatabase(database_filename);
+	if(success)
+	{
+		// Swap in the new model.
+		qDb() << "!!!!!!!!!!!!!!!!!!!!!!! TODO: Load succeeded, swapping in the new model.";
+		temp_load_srtm_instance->dump_model_info();
+#warning "TODO"
+		qDb() << "Detaching old model from view";
+
+//		auto oldselmodel = m_exp_second_child_view->selectionModel();
+
+		AMLM::Core::self()->swapScanResultsTreeModel(temp_load_srtm_instance);
+
+		auto srtmodel = AMLM::Core::self()->getScanResultsTreeModel().get();
+		m_exp_second_child_view->setModel(srtmodel);
+
+//		oldselmodel->deleteLater();
+	}
+	else
+	{
+		qWr() << "Load failed";
+//				auto default_columnspecs = AMLM::Core::self()->getDefaultColumnSpecs();
+//				AMLM::Core::self()->getScanResultsTreeModel()->setColumnSpecs(default_columnspecs);
+	}
+
+#if 0///
+	auto fut_load_db = ExtAsync::qthread_async_with_cnr_future([=, &temp_load_srtm_instance](ExtFuture<Unit> fut_cnr, QString overlay_filename){
+			// Load the primary database.
+//		AMLM::Core::self()->getScanResultsTreeModel()->clear();
+//			bool success = AMLM::Core::self()->getScanResultsTreeModel()->LoadDatabase(database_filename);
+//			bool success = temp_load_srtm_instance->LoadDatabase(database_filename);
+//			// Re-set default columnspecs if load failed.
+//			M_TODO("We should be loading a new model instead here.");
+			if(success)
+			{
+				// Swap in the new model.
+				qDb() << "Load succeeded, swapping in the new model.";
+#warning "TODO"
+			}
+			else
+			{
+				qWr() << "Load failed";
+//				auto default_columnspecs = AMLM::Core::self()->getDefaultColumnSpecs();
+//				AMLM::Core::self()->getScanResultsTreeModel()->setColumnSpecs(default_columnspecs);
+			}
+			Q_ASSERT(AMLM::Core::self()->getScanResultsTreeModel()->columnCount() > 0);
+			// Complete.
+			fut_cnr.reportFinished();
+	}, database_filename);
+
+	PerfectDeleter::instance().addExtFuture(fut_load_db);
+#endif
+
+	/// @todo The playlist overlay.
+	QString overlay_filename = QDir::homePath() + "/AMLMDatabaseSerDes.xml";
 
 	auto extfuture_initial_lib_load = ExtAsync::qthread_async_with_cnr_future([=](ExtFuture<SerializableQVariantList> ef) {
 
-		qIn() << "###### READING XML DB:" << database_filename;
+		qIn() << "###### READING XML DB:" << overlay_filename;
 		SerializableQVariantList list("library_list", "library_list_item");
 		{
-			Stopwatch library_list_read(tostdstr(QString("############## READ OF ") + database_filename));
+			Stopwatch library_list_read(tostdstr(QString("############## READ OF ") + overlay_filename));
 			XmlSerializer xmlser;
 			xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
 			/// @todo This takes ~10 secs at the moment with a 300MB XML file.
-			xmlser.load(list, QUrl::fromLocalFile(database_filename));
+			xmlser.load(list, QUrl::fromLocalFile(overlay_filename));
 		}
 		ef.reportResult(list);
 		ef.reportFinished();
@@ -1458,7 +1520,7 @@ void MainWindow::readLibSettings(QSettings& settings)
 
 		SerializableQVariantList list = ef.get_first();
 
-		qIn() << "###### READ" << list.size() << " libraries from XML DB:" << database_filename;
+		qIn() << "###### READ" << list.size() << " libraries from XML DB:" << overlay_filename;
 
 		for(const auto& list_entry : list)
 		{
@@ -1477,7 +1539,7 @@ void MainWindow::readLibSettings(QSettings& settings)
 
 			if(!lmp)
 			{
-				QMessageBox::critical(this, qApp->applicationDisplayName(), "Failed to open library",
+				QMessageBox::critical(this, qApp->applicationDisplayName(), tr("Failed to open library"),
 									  QMessageBox::Ok);
 			}
 			else
@@ -1489,13 +1551,15 @@ void MainWindow::readLibSettings(QSettings& settings)
 				addChildMDIModelViewPair_Library(mvpair);
 			}
 		}
-		qIn() << "###### READ AND CONVERTED XML DB:" << database_filename;
+		qIn() << "###### READ AND CONVERTED XML DB:" << overlay_filename;
 
 		prog->hide();
 		prog->deleteLater();
 	});
 
-	/// @todo Set extfuture_initial_lib_load to some manager.
+	// Set extfuture_initial_lib_load to the PerfectDeleter.
+	PerfectDeleter::instance().addExtFuture(extfuture_initial_lib_load);
+
 }
 
 void MainWindow::writeSettings()
@@ -1758,12 +1822,14 @@ void MainWindow::newCollectionView()
 //    child->setPane2Model(AMLMApp::instance()->cdb2_model_instance());
 M_WARNING("SHARED PTR");
 //	child->setPane2Model(AMLMApp::instance()->IScanResultsTreeModel().get());
-	child->setPane2Model(AMLM::Core::self()->getScanResultsTreeModel().get());
+//	child->setPane2Model(AMLM::Core::self()->getScanResultsTreeModel().get());
+	child->setPane2Model(AMLM::Core::self()->getEditableTreeModel().get());
 
-	auto second_child = new ExperimentalKDEView1(this);
-	auto second_mdi_child = m_mdi_area->addSubWindow(second_child);
+	m_exp_second_child_view = new ExperimentalKDEView1(this);
+	auto second_mdi_child = m_mdi_area->addSubWindow(m_exp_second_child_view);
 M_WARNING("SHARED PTR");
-	second_child->setModel(AMLM::Core::self()->getScanResultsTreeModel().get());
+auto srtmodel = AMLM::Core::self()->getScanResultsTreeModel().get();
+	m_exp_second_child_view->setModel(srtmodel);
 
     mdi_child->show();
 	second_mdi_child->show();

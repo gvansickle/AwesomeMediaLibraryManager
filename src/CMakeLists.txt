@@ -162,6 +162,7 @@ set(PROJECT_COMMON_INTERNAL_LINK_LIB_TARGETS
 		logic
 		resources
 		utils
+		${AMLM_WT_LIBRARIES}
         SQLite::SQLite3
 )
 
@@ -252,6 +253,7 @@ target_compile_definitions(${PROJECT_NAME}
 	)
 target_include_directories(${PROJECT_NAME}
 	PUBLIC 
+		${Wt_INCLUDE_DIRS}
 		"utils/nomoc"
 		${INCLUDE_DIR_VERDIGRIS}
 		${PROJECT_SOURCE_DIR}/src ### @todo For <future/...>
@@ -271,7 +273,6 @@ target_link_libraries(${PROJECT_NAME}
 		# Targetized C++ compile settings.
 		cxx_settings
 		cxx_definitions_qt
-		#wt-target-dbo
 		src
 		logic
 	PRIVATE

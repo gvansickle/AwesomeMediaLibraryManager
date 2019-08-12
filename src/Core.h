@@ -33,6 +33,7 @@
 #include <future/guideline_helpers.h>
 #include <logic/models/ScanResultsTreeModel.h>
 #include <models/ScanResultsTreeModel.h>
+#include <logic/models/treemodel.h>
 
 namespace AMLM
 {
@@ -68,7 +69,13 @@ public:
 	/// @name Accessors for the singletons.
 	/// @{
 
+//	std::shared_ptr<AbstractTreeModel> getScanResultsTreeModel();
 	std::shared_ptr<ScanResultsTreeModel> getScanResultsTreeModel();
+	std::shared_ptr<ScanResultsTreeModel> swapScanResultsTreeModel(const std::shared_ptr<ScanResultsTreeModel>& new_model);
+	/// Really don't like this here.
+	std::initializer_list<ColumnSpec> getDefaultColumnSpecs();
+
+	std::shared_ptr<TreeModel> getEditableTreeModel();
 
 	/// @}
 
@@ -78,7 +85,12 @@ private:
 	static std::unique_ptr<Core> m_self;
 
 	// Shared ptr to the scan results tree model.  Will be deleted in the destructor.
-	std::shared_ptr<ScanResultsTreeModel> m_srtm_instance;
+	std::shared_ptr<ScanResultsTreeModel/*AbstractTreeModel*/> m_srtm_instance;
+//	std::shared_ptr</*ScanResultsTreeModel*/AbstractTreeModel> m_srtm_instance;
+
+	std::shared_ptr<TreeModel> m_etm_instance;
+	std::shared_ptr<AbstractTreeModel> m_atm_instance;
+
 };
 
 } /* namespace AMLM */

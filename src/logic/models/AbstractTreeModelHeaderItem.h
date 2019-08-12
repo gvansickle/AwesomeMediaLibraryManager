@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -25,11 +25,11 @@
 
 // Std C++
 #include <vector>
+#include <deque>
 
 // Qt5
 #include <QVector>
 #include <QVariant>
-#include <logic/ColumnSpec.h>
 
 // Ours
 #include <future/enable_shared_from_this_virtual.h>
@@ -37,37 +37,48 @@
 #include "AbstractHeaderSection.h"
 #include "ScanResultsTreeModelItem.h"
 class AbstractTreeModel;
+#include <models/ColumnSpec.h>
+
 
 /**
  * Type representing a tree model's invisible root item which also doubles as the model's header item.
+ * KDEN doesn't use a special derived class for this, just the base class.
  */
 class AbstractTreeModelHeaderItem: public AbstractTreeModelItem, public enable_shared_from_this_virtual<AbstractTreeModelHeaderItem>
 {
 	using BASE_CLASS = AbstractTreeModelItem;
 
-protected:
-	explicit AbstractTreeModelHeaderItem(const std::shared_ptr<AbstractTreeModel>& parent_model, bool isRoot, UUIncD id = UUIncD::null());
+//protected:
+public:
+
+	friend class AbstractTreeModel;
+	/**
+	 * Note: This is always the root item of a tree model, no parent item.
+	 * @param column_specs
+	 * @param parent_model
+	 * @param id
+	 */
+	AbstractTreeModelHeaderItem(std::initializer_list<ColumnSpec> column_specs,
+	                                     const std::shared_ptr<AbstractTreeModel>& parent_model = nullptr, UUIncD id = UUIncD::null());
 
 public:
-	/**
-	 * Named constructor.
-	 */
-	static std::shared_ptr<AbstractTreeModelHeaderItem> construct(const std::shared_ptr<AbstractTreeModel>& model, bool isRoot = true,
-	                                                              UUIncD id = UUIncD::null());
-	AbstractTreeModelHeaderItem() {};
+//	/**
+//	 * Named constructor.
+//	 */
+//	static std::shared_ptr<AbstractTreeModelHeaderItem> construct(std::initializer_list<ColumnSpec> column_specs,
+//																  const std::shared_ptr<AbstractTreeModel>& parent_model = nullptr, UUIncD id = UUIncD::null());
+////	AbstractTreeModelHeaderItem() {};
 	~AbstractTreeModelHeaderItem() override;
 
+	void clear() override;
+
 	 /**
+	  * Replaces any existing column_specs with the given @a column_specs.
 	  * @warning This must be called before any child items are added to the model.
-	  * @param column_specs
-	  * @return
 	  */
-	virtual bool setColumnSpecs(std::initializer_list<QString> column_specs);
+	virtual bool setColumnSpecs(std::initializer_list<ColumnSpec> column_specs);
 
 	QVariant data(int column, int role = Qt::DisplayRole) const override;
-
-//	int columnCount() const override;
-
 
 	/// @name Serialization
 	/// @{
@@ -86,9 +97,16 @@ protected:
 
 	std::shared_ptr<AbstractHeaderSection> getHeaderSection(int column);
 
+private:
+
+	/**
+	 * This header's (and hence the model's) ColumnSpecs.
+	 */
+//	std::vector<ColumnSpec> m_column_specs;
+
 };
 
-Q_DECLARE_METATYPE(AbstractTreeModelHeaderItem);
+//Q_DECLARE_METATYPE(AbstractTreeModelHeaderItem);
 Q_DECLARE_METATYPE(std::shared_ptr<AbstractTreeModelHeaderItem>)
 
 #endif /* SRC_LOGIC_MODELS_ABSTRACTTREEMODELHEADERITEM_H_ */

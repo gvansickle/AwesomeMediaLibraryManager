@@ -82,7 +82,7 @@ void XmlSerializer::save(const ISerializable &serializable, const QUrl &file_url
 	savefile.commit();
 }
 
-void XmlSerializer::load(ISerializable& serializable, const QUrl &file_url)
+bool XmlSerializer::load(ISerializable& serializable, const QUrl &file_url)
 {
 	Stopwatch sw("###################### XmlSerializer::load()");
 
@@ -146,6 +146,8 @@ void XmlSerializer::load(ISerializable& serializable, const QUrl &file_url)
 	{
 		qWr() << "#### XML READ ERROR:" << error_string(xmlstream);
 	}
+
+	return !xmlstream.error();
 }
 
 static const int f_iomap_id = qMetaTypeId<QVariantInsertionOrderedMap>();
@@ -156,13 +158,6 @@ void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant
 {
 	xmlstream.writeStartElement(nodeName);
 	xmlstream.writeAttribute("type", variant.typeName());
-
-	/// @note not working, stopped here.
-//	if(variant.canConvert<ISerializable>())
-//	{
-//		auto* ptr = variant.value<ISerializable>();
-		xmlstream.writeAttribute("xml:id", "TESTING123");//toqstr(ptr->get_prefixed_uuid()));
-//	}
 
 	InnerWriteVariantToStream(variant, &xmlstream);
 
@@ -260,17 +255,6 @@ void XmlSerializer::writeVariantToStream(const QString& nodeName, const ISeriali
 }
 #endif
 
-//void XmlSerializer::writeAttributedQVariantToStream(const AttributedQVariant& variant, QXmlStreamWriter& xmlstream)
-//{
-//	// Add the attributes to the XML tag's attributes list.
-//	for(const auto& it : variant.m_key_value_pairs)
-//	{
-//		xmlstream.writeAttribute(toqstr(it.first), toqstr(it.second));
-//	}
-//
-//	InnerWriteVariantToStream(variant.m_variant, &xmlstream);
-//}
-
 void XmlSerializer::writeQVariantHomogenousListToStream(const QVariant& variant, QXmlStreamWriter& xmlstream)
 {
 	Q_ASSERT(variant.isValid());
@@ -347,9 +331,6 @@ void XmlSerializer::writeVariantValueToStream(const QVariant &variant, QXmlStrea
 {
 	Q_ASSERT(variant.isValid());
 
-	Q_ASSERT(!variant.canConvert<ISerializable*>());
-//	Q_ASSERT(!variant.canConvert<ISerializable&>());
-
 	// variant must be convertible to a string.
 	if(!variant.canConvert<QString>())
 	{
@@ -391,11 +372,11 @@ QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 	return variant;
 }
 
-QVariant XmlSerializer::InnerReadVariantFromStream(QString typeString, QXmlStreamAttributes attributes, QXmlStreamReader& xmlstream)
+QVariant XmlSerializer::InnerReadVariantFromStream(QString typeString, const QXmlStreamAttributes& attributes, QXmlStreamReader& xmlstream)
 {
 	QVariant variant;
 
-	// Copy the attributes, removing "type".
+	// Copy the attributes, removing only "type".
 	std::vector<QXmlStreamAttribute> attributes_cp = attributes.toStdVector();
 	std::experimental::erase_if(attributes_cp, [](auto& attr){ return attr.qualifiedName() == "type" ? true : false; });
 
@@ -626,7 +607,6 @@ QVariant XmlSerializer::readVariantMapFromStream(QXmlStreamReader& xmlstream)
 
 QVariant XmlSerializer::readVariantOrderedMapFromStream(std::vector<QXmlStreamAttribute> attributes, QXmlStreamReader& xmlstream)
 {
-	// Only difference from readVariantMapFromStream() is the local map type we use.
 	QVariantInsertionOrderedMap map;
 
 	Q_ASSERT(xmlstream.isStartElement());
@@ -646,7 +626,6 @@ void XmlSerializer::check_for_stream_error_and_skip(QXmlStreamReader& xmlstream)
 {
 	if(xmlstream.hasError())
 	{
-//		QXmlStreamReader::Error err = xmlstream.error();
 		auto estr = error_string(xmlstream);
 
 		qWr() << "### XML STREAM READ ERROR:" << estr << ", skipping current element";
@@ -659,7 +638,7 @@ void XmlSerializer::log_current_node(QXmlStreamReader& xmlstream)
 	qIn() << "#### Current node:" << xmlstream.lineNumber() << ":" << xmlstream.columnNumber() << ":" << xmlstream.qualifiedName();
 }
 
-void XmlSerializer::set_default_namespace(const QString& default_ns, const QString& default_ns_version)
+void XmlSerializer::set_default_namespace(const std::string& default_ns, const std::string& default_ns_version)
 {
 	m_default_ns = default_ns;
 	m_default_ns_version = default_ns_version;
@@ -696,8 +675,8 @@ void XmlSerializer::save_extra_start_info(QXmlStreamWriter& xmlstream)
 
 	// Write Start Element, default namespace and version.
 	xmlstream.writeStartElement("amlm_database");
-	xmlstream.writeDefaultNamespace(m_default_ns);
-	xmlstream.writeAttribute("version", m_default_ns_version);
+	xmlstream.writeDefaultNamespace(toqstr(m_default_ns));
+	xmlstream.writeAttribute("version", toqstr(m_default_ns_version));
 	xmlstream.writeNamespace("http://amlm/ns/0/", "amlm");
 
 #if 0 /// @note This was moved out of the old writer.  It's XSPF stuff, but we need a generally applicable solution.

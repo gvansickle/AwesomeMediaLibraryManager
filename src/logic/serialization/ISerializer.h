@@ -49,7 +49,7 @@ public:
 			const QString& rootName = "",
 			std::function<void(void)> extra_save_actions = nullptr ) = 0;
 
-	virtual void load(ISerializable& serializable, const QUrl& filepath) = 0;
+	virtual bool load(ISerializable& serializable, const QUrl& filepath) = 0;
 };
 
 

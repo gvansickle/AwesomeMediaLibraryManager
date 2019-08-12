@@ -18,6 +18,10 @@
  */
 #include "ScanResultsTreeModel.h"
 
+// Qt5
+#include <QAbstractItemModelTester>
+
+
 // sqlite_orm
 #include <third_party/sqlite_orm/include/sqlite_orm/sqlite_orm.h>
 
@@ -31,8 +35,8 @@
 #include <serialization/XmlSerializer.h>
 
 
-ScanResultsTreeModel::ScanResultsTreeModel(QObject *parent)
-    : BASE_CLASS(parent)
+ScanResultsTreeModel::ScanResultsTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject *parent)
+	: BASE_CLASS(column_specs, parent)
 {
 }
 
@@ -69,11 +73,14 @@ void ScanResultsTreeModel::sendModification()
 }
 
 // static
-std::shared_ptr<ScanResultsTreeModel> ScanResultsTreeModel::construct(QObject* parent)
+std::shared_ptr<ScanResultsTreeModel>
+ScanResultsTreeModel::make_ScanResultsTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent)
 {
-	std::shared_ptr<ScanResultsTreeModel> retval(new ScanResultsTreeModel(parent));
-	retval->m_root_item = AbstractTreeModelHeaderItem::construct(retval);
-	return retval;
+	auto retval_shptr = std::shared_ptr<ScanResultsTreeModel>(new ScanResultsTreeModel(column_specs, parent));
+
+	retval_shptr->postConstructorFinalization(retval_shptr, column_specs);
+
+	return retval_shptr;
 }
 
 void ScanResultsTreeModel::setBaseDirectory(const QUrl &base_directory)
@@ -83,6 +90,7 @@ void ScanResultsTreeModel::setBaseDirectory(const QUrl &base_directory)
 	m_base_directory = base_directory;
 }
 
+#if 0
 void ScanResultsTreeModel::LoadDatabase(const QString& database_filename)
 {
 	qIn() << "###### READING" << database_filename;
@@ -107,15 +115,18 @@ void ScanResultsTreeModel::SaveDatabase(const QString& database_filename)
 
 	qIn() << "###### WROTE" << database_filename;
 }
+#endif
 
+#if 0////
 UUIncD ScanResultsTreeModel::requestAddScanResultsTreeModelItem(const QVariant& variant, UUIncD parent_id, Fun undo, Fun redo)
 {
 	std::unique_lock write_lock(m_rw_mutex);
 
 	// ::construct() a new tree model item from variant.
-	std::shared_ptr<ScanResultsTreeModelItem> new_item = ScanResultsTreeModelItem::construct(variant,
-																							 std::static_pointer_cast<ScanResultsTreeModel>(shared_from_this()));
-	bool status = addItem(new_item, parent_id, undo, redo);
+//	std::shared_ptr<ScanResultsTreeModelItem> new_item = ScanResultsTreeModelItem::construct(variant);
+	std::shared_ptr<ScanResultsTreeModelItem> new_item = std::make_shared<ScanResultsTreeModelItem>(variant);
+
+	bool status = addItem(std::static_pointer_cast<AbstractTreeModelItem>(new_item), parent_id, undo, redo);
 
 	if(!status)
 	{
@@ -132,7 +143,9 @@ UUIncD ScanResultsTreeModel::requestAddSRTMLibEntryItem(const QVariant& variant,
 {
 	std::unique_lock write_lock(m_rw_mutex);
 
-	auto new_item = SRTMItem_LibEntry::construct(variant, std::static_pointer_cast<ScanResultsTreeModel>(shared_from_this()));
+//	auto new_item = SRTMItem_LibEntry::construct(variant, std::static_pointer_cast<ScanResultsTreeModel>(shared_from_this()));
+//	auto new_item = SRTMItem_LibEntry::construct(variant);//, std::static_pointer_cast<ScanResultsTreeModel>(shared_from_this()));
+	auto new_item = std::make_shared<SRTMItem_LibEntry>(variant);//, std::static_pointer_cast<ScanResultsTreeModel>(shared_from_this()));
 	bool status = addItem(new_item, parent_id, undo, redo);
 
 	if(!status)
@@ -145,24 +158,28 @@ UUIncD ScanResultsTreeModel::requestAddSRTMLibEntryItem(const QVariant& variant,
 
 	return new_item->getId();
 }
+#endif////
 
-//UUIncD ScanResultsTreeModel::requestAddExistingTreeModelItem(std::shared_ptr<AbstractTreeModelItem> new_item, UUIncD parent_id, Fun undo, Fun redo)
-//{
-//	std::unique_lock write_lock(m_rw_mutex);
+#if 0///
+UUIncD ScanResultsTreeModel::requestAddExistingTreeModelItem(std::shared_ptr<AbstractTreeModelItem> new_item, UUIncD parent_id, Fun undo, Fun redo)
+{
+	std::unique_lock write_lock(m_rw_mutex);
 
-//	// ::construct() a new tree model item from variant.
-////	std::shared_ptr<AbstractTreeModelItem> new_item = make_item_from_variant(variant);
+	// ::construct() a new tree model item from variant.
+//	std::shared_ptr<AbstractTreeModelItem> new_item = make_item_from_variant(variant);
 
-//	bool status = addItem(new_item, parent_id, undo, redo);
+	bool status = addItem(new_item, parent_id, undo, redo);
 
-//	if(!status)
-//	{
-//		// Add failed for some reason, return a null UUIncD.
-//		return UUIncD::null();
-//	}
-//	return new_item->getId();
-//}
+	if(!status)
+	{
+		// Add failed for some reason, return a null UUIncD.
+		return UUIncD::null();
+	}
+	return new_item->getId();
+}
+#endif///
 
+#if 0
 void ScanResultsTreeModel::toOrm(std::string filename) const
 {
 #if 0
@@ -189,11 +206,19 @@ void ScanResultsTreeModel::fromOrm(std::string filename)
 {
 
 }
+#endif
+
+void ScanResultsTreeModel::DERIVED_set_default_namespace()
+{
+	/// @todo Not right.
+	m_default_namespace_decl = "http://xspf.org/ns/0/";
+	m_default_namespace_version = "1";
+}
 
 /// Qt5 ids for the TreeItems it can hold.
-static const int f_atmi_id = qMetaTypeId<AbstractTreeModelItem>();
-static const int f_strmi_id = qMetaTypeId<ScanResultsTreeModelItem>();
-static const int f_strmile_id = qMetaTypeId<SRTMItem_LibEntry>();
+//static const int f_atmi_id = qMetaTypeId<AbstractTreeModelItem>();
+//static const int f_strmi_id = qMetaTypeId<ScanResultsTreeModelItem>();
+//static const int f_strmile_id = qMetaTypeId<SRTMItem_LibEntry>();
 
 
 /**
@@ -272,15 +297,14 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 	/// @todo This should have a list of known base directory paths,
 	///         e.g. the file:// URL and the gvfs /run/... mount point, Windows drive letter paths, etc.
 	map_read_field_or_warn(map, XMLTAG_SRTM_BASE_DIRECTORY, &m_base_directory);
-//	m_base_directory = map.value(SRTMTagToXMLTagMap[SRTMTag::BASE_DIRECTORY]).toUrl();
 
 	QString title, creator;
-	map_read_field_or_warn(map, XMLTAG_SRTM_TITLE, &title);//.toString();
-	map_read_field_or_warn(map, XMLTAG_SRTM_CREATOR, &creator);//.toString();
+	map_read_field_or_warn(map, XMLTAG_SRTM_TITLE, &title);
+	map_read_field_or_warn(map, XMLTAG_SRTM_CREATOR, &creator);
 
 	/// @todo This is a QDateTime
 	QString creation_date;
-	map_read_field_or_warn(map, XMLTAG_SRTM_DATE, &creation_date);//.toString();
+	map_read_field_or_warn(map, XMLTAG_SRTM_DATE, &creation_date);
 
 	/// @todo Read these in.
 	QDateTime last_scan_start, last_scan_end;
@@ -292,8 +316,4 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 	map_read_field_or_warn(map, XMLTAG_SRTM_ROOT_ITEM, &root_item_map);
 	m_root_item->fromVariant(root_item_map);
 	dump_map(map);
-//	requestAddTreeModelItem()
-
-
-#warning @todo INCOMPLETE/error handling
 }

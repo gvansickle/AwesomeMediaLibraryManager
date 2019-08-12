@@ -46,6 +46,7 @@ class QStandardItemModel;
 #include <KMainWindow>
 #include <KXmlGuiWindow>
 
+// Ours
 #include <gui/widgets/CollectionStatsWidget.h>
 
 class KJob;
@@ -87,6 +88,7 @@ class ActionBundle;
 class PlayerControls;
 class MDINowPlayingView;
 class Experimental;
+class ExperimentalKDEView1;
 class SettingsDialog;
 class LibraryModel;
 class PlaylistModel;
@@ -386,6 +388,9 @@ private:
 
     /// Experimental "scratch" widget for doing development experiments.
     Experimental* m_experimental;
+	ExperimentalKDEView1* m_exp_second_child_view;
+
+
 
 	/// The "model of models", used for the collection dock widget.
 	QPointer<QStandardItemModel> m_model_of_model_view_pairs;
@@ -518,7 +523,7 @@ public:
 
 private:
 
-    /// The MainWindow signleton.
+    /// The MainWindow singleton.
     static QPointer<MainWindow> m_instance;
 
 #if HAVE_KF501

@@ -1,5 +1,5 @@
 #
-# Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -25,11 +25,17 @@ set(SOURCE_FILES_SRC_LOGIC_MODELS
 	AbstractTreeModel.cpp
 	AbstractTreeModelItem.cpp
 	AbstractTreeModelHeaderItem.cpp
+	ColumnSpec.cpp
+	ModelIterators.cpp
     PlaceholderTreeModelItem.cpp
 	ScanResultsTreeModel.cpp
 	ScanResultsTreeModelItem.cpp
 	SRTMItemLibEntry.cpp
 	ThreadsafeTreeModel.cpp
+    UndoRedoHelper.cpp
+	# ETM
+	treeitem.cpp
+	treemodel.cpp
 	)
 set(HEADER_FILES_SRC_LOGIC_MODELS
 		AbstractHeaderSection.h
@@ -37,11 +43,17 @@ set(HEADER_FILES_SRC_LOGIC_MODELS
 		AbstractTreeModel.h
 		AbstractTreeModelItem.h
 		AbstractTreeModelHeaderItem.h
+		ColumnSpec.h
+		ModelIterators.h
         PlaceholderTreeModelItem.h
 		ScanResultsTreeModel.h
 		ScanResultsTreeModelItem.h
 		SRTMItemLibEntry.h
 		ThreadsafeTreeModel.h
+		UndoRedoHelper.h
+		# ETM
+		treeitem.h
+		treemodel.h
 		)
 
 target_sources_local(models

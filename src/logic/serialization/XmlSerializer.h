@@ -39,7 +39,7 @@ class QVariantHomogenousList;
 
 // Ours
 #include "ISerializer.h"
-class AttributedQVariant;
+
 
 /**
  * Concrete ISerializer class for serializing ISerializables as XML.
@@ -63,7 +63,7 @@ public:
 			std::function<void(void)> extra_save_actions = nullptr
 			) override;
 
-	void load(ISerializable& serializable, const QUrl& file_url) override;
+	bool load(ISerializable& serializable, const QUrl& file_url) override;
 
 	void HACK_skip_extra(bool hack_skip) { m_HACK_SKIP = hack_skip; };
 
@@ -72,7 +72,7 @@ public:
 	 * @param default_ns
 	 * @param default_ns_version
 	 */
-	void set_default_namespace(const QString& default_ns, const QString& default_ns_version);
+	void set_default_namespace(const std::string& default_ns, const std::string& default_ns_version);
 
 protected:
 
@@ -105,14 +105,13 @@ private:
 	/// @{
 
 	QVariant readVariantFromStream(QXmlStreamReader& xmlstream);
-	QVariant InnerReadVariantFromStream(QString typeString, QXmlStreamAttributes attributes, QXmlStreamReader& xmlstream);
+	QVariant InnerReadVariantFromStream(QString typeString, const QXmlStreamAttributes& attributes, QXmlStreamReader& xmlstream);
 
 
 	QVariant readHomogenousListFromStream(QXmlStreamReader& xmlstream);
 	QVariant readVariantListFromStream(QXmlStreamReader& xmlstream);
 	QVariant readVariantMapFromStream(QXmlStreamReader& xmlstream);
 	QVariant readVariantOrderedMapFromStream(std::vector<QXmlStreamAttribute> attributes, QXmlStreamReader& xmlstream);
-//	QVariant readAttributedQVariantFromStream(std::vector<QXmlStreamAttribute> attributes, QXmlStreamReader& xmlstream);
 
 	QVariant readVariantValueFromStream(QXmlStreamReader& xmlstream);
 
@@ -139,8 +138,10 @@ private:
 	QString error_string(QXmlStreamWriter& xmlstream) const;
 
 	QString m_root_name;
-	QString m_default_ns;
-	QString m_default_ns_version;
+
+	std::string m_default_ns;
+	std::string m_default_ns_version;
+
 	bool m_HACK_SKIP {true};
 };
 

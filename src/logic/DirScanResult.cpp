@@ -48,13 +48,15 @@ AMLM_QREG_CALLBACK([](){
 
 
 DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_finfo)
-	: /*IUUIDSerializable("id_dsr_"),*/ m_exturl_media(found_url, &found_url_finfo)
+	: m_exturl_media(found_url, &found_url_finfo)
 {
 	determineDirProps(found_url_finfo);
 }
 
 #define M_DATASTREAM_FIELDS(X) \
 	X(XMLTAG_FLAGS_DIRPROPS, m_flags_dirprops) \
+	X(XMLTAG_HAS_SIDECAR_CUESHEET, m_has_sidecar_cuesheet) \
+	X(XMLTAG_HAS_EMBEDDED_CUESHEET, m_has_embedded_cuesheet) \
 	X(XMLTAG_EXTURL_DIR, m_exturl_dir_url) \
 	X(XMLTAG_EXTURL_MEDIA, m_exturl_media) \
 	X(XMLTAG_EXTURL_CUESHEET, m_exturl_cuesheet)
@@ -68,32 +70,24 @@ QVariant DirScanResult::toVariant() const
 {
 	QVariantInsertionOrderedMap map;
 
+	// Set the xml:id.
+	map.insert_attributes({{"xml:id", get_prefixed_uuid()}});
+
 	// Add all the fields to the map.
 #define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
-#if 0
-//	return map;
-	Q_ASSERT(!isUuidNull());
-	// Insert the map and a unique ID into the AttQVar.
-	map.insert_attributes({
-							  {"xml:id", get_prefixed_uuid()}
-						  });
-//	AttributedQVariant retval = AttributedQVariant(map, {
-//													   {"xml:id", get_prefixed_uuid()}
-//												   });
-#endif
 	return map;// QVariant::fromValue(retval);
 }
 
 void DirScanResult::fromVariant(const QVariant& variant)
 {
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
-#if 0
-	auto idval = map.get_attr("xml:id");
-	set_prefixed_uuid(idval);
-#endif
+
+	auto uuid = map.get_attr("xml:id", "");
+	set_prefixed_uuid(uuid);
+
 	// Extract all the fields from the map.
 #define X(field_tag, member_field) map_read_field_or_warn(map, field_tag, &(member_field));
 	M_DATASTREAM_FIELDS(X);
@@ -129,6 +123,11 @@ void DirScanResult::determineDirProps(const QFileInfo &found_url_finfo)
 			// Set the flag and the path relative to the directory (should be just the filename).
 			m_exturl_cuesheet = ExtUrl(possible_cue_url.m_url, &fi);
 			m_flags_dirprops |= HasSidecarCueSheet;
+	        m_has_sidecar_cuesheet = true;
+        }
+        else
+        {
+        	m_has_sidecar_cuesheet = false;
         }
     }
     else
@@ -144,6 +143,13 @@ QVector<ExtUrl> DirScanResult::otherMediaFilesInDir(const QFileInfo& finfo)
 Q_ASSERT(0);
 M_WARNING("TODO");
     return QVector<ExtUrl>();
+}
+
+template <class stream>
+stream operator<<(stream s, std::optional<bool> val)
+{
+	s << val.value_or("unknown");
+	return s;
 }
 
 QDebug operator<<(QDebug dbg, const DirScanResult & obj) // NOLINT(performance-unnecessary-value-param)

@@ -29,32 +29,38 @@
 #include "ScanResultsTreeModel.h"
 
 
+//std::shared_ptr<SRTMItem_LibEntry> SRTMItem_LibEntry::construct(std::shared_ptr<LibraryEntry> libentry,
+//                                                                const std::shared_ptr<AbstractTreeModelItem>& parent_item, UUIncD id)
+//{
+//	std::shared_ptr<SRTMItem_LibEntry> self(new SRTMItem_LibEntry(libentry, parent_item, id));
+//	self->postConstructorFinalization();
+//	return self;
+//}
 
-std::shared_ptr<SRTMItem_LibEntry> SRTMItem_LibEntry::construct(std::shared_ptr<LibraryEntry> libentry, const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root)
-{
-	std::shared_ptr<SRTMItem_LibEntry> self(new SRTMItem_LibEntry(libentry, model, is_root));
-	baseFinishConstruct(self);
-	return self;
-}
+//std::shared_ptr<SRTMItem_LibEntry> SRTMItem_LibEntry::construct(const QVariant& variant, const std::shared_ptr<AbstractTreeModelItem>& parent_item, UUIncD id)
+//{
+//	std::shared_ptr<SRTMItem_LibEntry> self(new SRTMItem_LibEntry(variant, parent_item, id));
+//	self->postConstructorFinalization();
+//	return self;
+//}
 
-std::shared_ptr<SRTMItem_LibEntry> SRTMItem_LibEntry::construct(const QVariant& variant, const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root)
-{
-	std::shared_ptr<SRTMItem_LibEntry> self(new SRTMItem_LibEntry(model, is_root));
-	baseFinishConstruct(self);
-	return self;
-}
-
-SRTMItem_LibEntry::SRTMItem_LibEntry(std::shared_ptr<LibraryEntry> libentry, const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root)
-	: BASE_CLASS(std::static_pointer_cast<ScanResultsTreeModel>(model), is_root), m_library_entry(libentry)
-{
-
-}
-
-SRTMItem_LibEntry::SRTMItem_LibEntry(const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root)
-	: BASE_CLASS(std::static_pointer_cast<ScanResultsTreeModel>(model), is_root)
+SRTMItem_LibEntry::SRTMItem_LibEntry(const std::shared_ptr<AbstractTreeModelItem>& parent_item, UUIncD id)
+	: BASE_CLASS(parent_item, id)
 {
 
 }
+
+SRTMItem_LibEntry::SRTMItem_LibEntry(std::shared_ptr<LibraryEntry> libentry, const std::shared_ptr<AbstractTreeModelItem>& parent_item, UUIncD id)
+	: BASE_CLASS(parent_item, id), m_library_entry(libentry)
+{
+
+}
+
+//SRTMItem_LibEntry::SRTMItem_LibEntry(const QVariant& variant, const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id)
+//	: BASE_CLASS(parent, id)
+//{
+//
+//}
 
 QVariant SRTMItem_LibEntry::data(int column, int role) const
 {
@@ -131,7 +137,11 @@ QVariant SRTMItem_LibEntry::toVariant() const
 	QVariantInsertionOrderedMap map;
 
 	// Overwrite any class info added by the above.
-	set_map_class_info(this, &map);
+//	set_map_class_info(this, &map);
+	set_map_class_info(std::string("SRTMItem_LibEntry"), &map);
+
+	// Set the xml:id.
+	map.insert_attributes({{"xml:id", get_prefixed_uuid()}});
 
 	QVariantHomogenousList list(XMLTAG_LIBRARY_ENTRIES, "m_library_entry");
 	if(auto libentry = m_library_entry.get(); libentry != nullptr)
@@ -155,6 +165,16 @@ void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 //	dump_map(map);
 
+	try
+	{
+		auto uuid = map.get_attr("xml:id");
+		set_prefixed_uuid(uuid);
+	}
+	catch(...)
+	{
+		qWr() << "NO XML:ID:";
+	}
+
 #define X(field_tag, tag_string, var_name) map_read_field_or_warn(map, field_tag, var_name);
 	M_DATASTREAM_FIELDS(X);
 #undef X
@@ -162,6 +182,13 @@ void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 	// Load LibraryEntry's.
 	QVariantHomogenousList list(XMLTAG_LIBRARY_ENTRIES, "m_library_entry");
 	map_read_field_or_warn(map, XMLTAG_LIBRARY_ENTRIES, &list);
+
+	/// There should only be one I think....
+	AMLM_ASSERT_EQ(list.size(), 1);
+
+#if 0///
+	append_children_from_variant<LibraryEntry>(this, list);
+#else///old
 	for(const QVariant& it : list)
 	{
 		/// @todo First doesn't work for some reason.
@@ -170,9 +197,15 @@ void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 		m_library_entry = std::make_shared<LibraryEntry>();
 		m_library_entry->fromVariant(it);
 	}
+#endif
 
-	QVariantHomogenousList child_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
+	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
+	child_var_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
 
+	append_children_from_variant<AbstractTreeModelItem>(this, child_var_list);
+
+
+#if 0///
 	auto model_ptr_base = m_model.lock();
 	Q_ASSERT(model_ptr_base);
 	auto model_ptr = std::dynamic_pointer_cast<ScanResultsTreeModel>(model_ptr_base);
@@ -190,6 +223,7 @@ void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 //		Q_ASSERT(ok);
 		// WRONG: model_ptr->requestAddSRTMLibEntryItem(child, parent_id);
 	}
+#endif
 }
 
 //std::shared_ptr<ScanResultsTreeModel> SRTMItem_LibEntry::getTypedModel()

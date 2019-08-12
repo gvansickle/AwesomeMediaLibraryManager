@@ -36,6 +36,16 @@
 // Ours
 #include <utils/QtHelpers.h>
 #include <future/guideline_helpers.h>
+#include <future/future_algorithms.h>
+#include <utils/DebugHelpers.h>
+
+//template <typename KeyType, typename ValueType>
+//struct value_type_grvs
+//{
+//	const KeyType first;
+//	ValueType second;
+//};
+
 
 /**
  * A map which maintains the insertion order of its keys.  The only operational difference between this and
@@ -51,7 +61,8 @@ public:
 	/// @{
 	using key_type = KeyType;
 	using mapped_type = ValueType;
-	using value_type = std::pair<const KeyType, ValueType>;
+	using value_type = std::pair</*const*/ KeyType, ValueType>;
+//	using value_type = value_type_grvs<KeyType, ValueType>;
 	using underlying_container_type = std::deque<value_type>;
 	using const_iterator = typename underlying_container_type::const_iterator;
 	using iterator = typename underlying_container_type::iterator;
@@ -95,6 +106,34 @@ public:
 		}
 	}
 
+	void erase(const key_type& key)
+	{
+		// Remove/erase from vector/deque.
+//		std::experimental::erase_if(this->m_vector_of_elements, [=](const auto& it){ return it->first == key; });
+		auto it = std::find_if(this->m_vector_of_elements.begin(), this->m_vector_of_elements.end(),
+											   [=](const auto& val){ return val.first == key; });
+		if(it != this->m_vector_of_elements.end())
+		{
+			this->m_vector_of_elements.erase(it);
+		}
+		else
+		{
+			qWr() << "NO KEY FOUND TO ERASE:" << key;
+		}
+//		this->m_vector_of_elements.erase();
+//				(std::remove_if(
+//											 this->m_vector_of_elements.begin(),
+//											 this->m_vector_of_elements.end(), [=](const key_type& key){ return ;}),
+//										 this->m_vector_of_elements.end());
+		// Remove/erase from map.
+//		std::experimental::erase_if(this->m_map_of_keys_to_vector_indices, [=](const auto& it){ return it.first == key; });
+		auto removed_ct = this->m_map_of_keys_to_vector_indices.erase(key);
+		if(removed_ct < 1)
+		{
+			qWr() << "NO MAP KEY FOUND TO ERASE:" << key;
+		}
+	}
+
 	const mapped_type& at(const KeyType& key) const
 	{
 		auto it = this->find(key);
@@ -105,7 +144,7 @@ public:
 		return it->second;
 	}
 
-	const_iterator find( const KeyType& key ) const
+	const_iterator find( const key_type& key ) const
 	{
 		auto it_index = m_map_of_keys_to_vector_indices.find(key);
 		if(it_index == m_map_of_keys_to_vector_indices.end())
@@ -115,7 +154,12 @@ public:
 
 		Q_ASSERT(it_index->first == m_vector_of_elements[it_index->second].first);
 		return m_vector_of_elements.cbegin() + it_index->second;
-	};
+	}
+
+//	const_iterator find( const KeyType& key ) const
+//	{
+//		return m_vector_of_elements.find(key);
+//	}
 
 	bool contains(const KeyType& key) const
 	{
@@ -147,15 +191,16 @@ public:
 	{
 		for(const auto& it : attr_list)
 		{
-			m_attribute_map[it.qualifiedName().toString().toStdString()] = it.value().toString().toStdString();
+			// Dup attributes get replaced.
+			m_attribute_map.insert_or_assign(it.qualifiedName().toString().toStdString(), it.value().toString().toStdString());
 		}
 	}
 
-	void insert_attributes(std::initializer_list<std::pair<std::string,std::string>> attr_list)
+	void insert_attributes(std::initializer_list<std::pair<std::string, std::string>> attr_list)
 	{
 		for(const auto& it : attr_list)
 		{
-			m_attribute_map[it.first] = it.second;
+			m_attribute_map.insert_or_assign(it.first, it.second);
 		}
 	}
 
@@ -171,6 +216,22 @@ public:
 			return it->second;
 		}
 	}
+
+	std::string get_attr(const std::string& key, const std::string& default_val) const
+	{
+		std::string retval = default_val;
+
+		try
+		{
+			retval = this->get_attr(key);
+		}
+		catch(...)
+		{
+			retval = default_val;
+		}
+		return retval;
+	}
+
 
 	using attr_map_type = std::map<std::string, std::string>;
 	attr_map_type get_attrs() const
@@ -216,7 +277,7 @@ protected:
 #if 1 // Qt5
 
 
-Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(InsertionOrderedMap);
+//Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(InsertionOrderedMap);
 
 using QVariantInsertionOrderedMap = InsertionOrderedMap<QString, QVariant>;
 Q_DECLARE_METATYPE(QVariantInsertionOrderedMap);

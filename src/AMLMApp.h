@@ -112,8 +112,6 @@ public:
 
 //    ActivityProgressStatusBarTracker == see MainWindow, this currently needs a parent widget.
 
-//	static std::shared_ptr<ScanResultsTreeModel> IScanResultsTreeModel();
-
 	QMimeDatabase& mime_db();
 
 	AbstractTreeModel* cdb2_model_instance() { return m_cdb2_model_instance; }

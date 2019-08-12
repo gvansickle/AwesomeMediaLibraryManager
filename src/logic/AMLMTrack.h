@@ -23,17 +23,25 @@
 #ifndef SRC_LOGIC_AMLMTRACK_H_
 #define SRC_LOGIC_AMLMTRACK_H_
 
+// Std C++
+#include <string>
+
 namespace AMLM
 {
 
 /**
- *
+ * Entity which refers to an individual Track.
  */
 class Track
 {
 public:
 	Track();
 	virtual ~Track();
+
+private:
+
+	/// UUID of the LibraryEntry this track is in.
+	std::string m_uuid_libentry;
 };
 
 };

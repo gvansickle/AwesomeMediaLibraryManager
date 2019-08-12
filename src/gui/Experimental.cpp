@@ -39,6 +39,7 @@
 
 #define EX1 0
 #define EX2 0
+#define EX_WT 0
 
 #if EX1 == 1
 
@@ -60,6 +61,36 @@
 
 #endif
 
+#if EX_WT == 1
+#include <Wt/Dbo/Dbo.h>
+#include <Wt/Dbo/backend/Sqlite3.h>
+#include <string>
+namespace dbo = Wt::Dbo;
+
+enum class Role {
+    Visitor = 0,
+    Admin = 1,
+    Alien = 42
+};
+
+class User {
+public:
+    std::string name;
+    std::string password;
+    Role        role;
+    int         karma;
+
+    template<class Action>
+    void persist(Action& a)
+    {
+        dbo::field(a, name,     "name");
+        dbo::field(a, password, "password");
+        dbo::field(a, role,     "role");
+        dbo::field(a, karma,    "karma");
+    }
+};
+#endif
+
 // SQLite ORM
 #include <src/third_party/sqlite_orm/include/sqlite_orm/sqlite_orm.h>
 
@@ -78,6 +109,38 @@ enum /*__attribute__((enum_extensibility(closed), flag_enum))*/ BITS
 Experimental::Experimental(QWidget *parent) : QWidget(parent)
 {
 //	setAttribute(Qt::WA_NativeWindow);
+}
+
+static void wt_orm_exp()
+{
+#if EX_WT == 1
+	/*
+	     * Setup a session, would typically be done once at application startup.
+	     */
+	    std::unique_ptr<dbo::backend::Sqlite3> sqlite3{new dbo::backend::Sqlite3("deletemeblog.db")};
+	    dbo::Session session;
+	    session.setConnection(std::move(sqlite3));
+
+	    session.mapClass<User>("user");
+
+	      /*
+	       * Try to create the schema (will fail if already exists).
+	       */
+	      session.createTables();
+
+	      /*
+	           * A unit of work happens always within a transaction.
+	           */
+	          dbo::Transaction transaction{session};
+
+	          std::unique_ptr<User> user{new User()};
+	          user->name = "Joe";
+	          user->password = "Secret";
+	          user->role = Role::Visitor;
+	          user->karma = 13;
+
+	          dbo::ptr<User> userPtr = session.add(std::move(user));
+#endif
 }
 
 static void sqlite_orm_exp()
@@ -127,6 +190,8 @@ static void sqlite_orm_exp()
 void Experimental::DoExperiment()
 {
 	qDebug() << "Starting DoExperiment()";
+
+	wt_orm_exp();
 
     /// @todo Experiments
 	sqlite_orm_exp();

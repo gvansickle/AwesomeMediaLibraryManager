@@ -23,12 +23,14 @@
 #ifndef SRC_LOGIC_MODELS_SCANRESULTSTREEMODELITEM_H_
 #define SRC_LOGIC_MODELS_SCANRESULTSTREEMODELITEM_H_
 
-#include "AbstractTreeModelItem.h"
+// Std C++
+#include <memory>
 
 // Qt5
 #include <QStringLiteral>
 
 // Ours
+#include "AbstractTreeModelItem.h"
 #include <logic/DirScanResult.h>
 #include <logic/serialization/ISerializable.h>
 #include <future/enable_shared_from_this_virtual.h>
@@ -42,27 +44,25 @@ class ScanResultsTreeModel;
  * Tree model item containing the results of a single DirScanResult.
  * KDEN: ~similar to AbstractProjectItem
  */
-class ScanResultsTreeModelItem : public AbstractTreeModelItem//, public enable_shared_from_this_virtual<ScanResultsTreeModelItem>
+class ScanResultsTreeModelItem : public AbstractTreeModelItem, public enable_shared_from_this_virtual<ScanResultsTreeModelItem>
 
 {
 	using BASE_CLASS = AbstractTreeModelItem;
 
-protected:
-	/// Create a new model item populated with the passed DirScanResult.
-	explicit ScanResultsTreeModelItem(const DirScanResult& dsr, std::shared_ptr<ScanResultsTreeModel> model,
-	                                  bool is_root = false);
-
-	explicit ScanResultsTreeModelItem(std::shared_ptr<ScanResultsTreeModel> model, bool is_root = false);
+//protected:
 public:
-	/**
-	 * Named constructors.
-	 */
-	static std::shared_ptr<ScanResultsTreeModelItem> construct(const DirScanResult& dsr,
-			std::shared_ptr<ScanResultsTreeModel> model,
-            bool is_root = false);
-	static std::shared_ptr<ScanResultsTreeModelItem> construct(const QVariant& variant,
-			std::shared_ptr<ScanResultsTreeModel> model);
-	ScanResultsTreeModelItem() {};
+	/// Create a new model item populated with the passed DirScanResult.
+//	explicit ScanResultsTreeModelItem(const DirScanResult& dsr, std::shared_ptr<ScanResultsTreeModel> model,
+//	                                  bool is_root = false);
+	explicit ScanResultsTreeModelItem(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr, UUIncD id = UUIncD::null());
+	explicit ScanResultsTreeModelItem(const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr, UUIncD id = UUIncD::null());
+	explicit ScanResultsTreeModelItem(const QVariant& variant, const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr, UUIncD id = UUIncD::null());
+
+//
+//	explicit ScanResultsTreeModelItem(std::shared_ptr<ScanResultsTreeModel> model, bool is_root = false);
+public:
+//	ScanResultsTreeModelItem() {};
+//	explicit ScanResultsTreeModelItem(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr, UUIncD id = UUIncD::null());
 	~ScanResultsTreeModelItem() override;
 
 	void setDirscanResults(const DirScanResult& dsr);
@@ -78,9 +78,6 @@ public:
 
 	int columnCount() const override;
 
-	/// KDEN::AbsProjItem
-	std::shared_ptr<AbstractTreeModelHeaderItem> parent() const;
-
 	/// @name ISerializable interface
 	/// @{
 
@@ -94,21 +91,14 @@ public:
 
 protected:
 
-//	std::shared_ptr<ScanResultsTreeModel> getTypedModel() const;
-
 	/// The directory scan results corresponding to this entry.
 	/// This is things like the main media URL, sidecar cue sheet URLs, timestamp info, etc.
 	DirScanResult m_dsr;
 };
 
-/**
- * A ScanResultsTreeModelItem with a LibraryEntry field.
- */
-
-
 /// @todo Need this here for QVariant::fromValue().
 //Q_DECLARE_METATYPE(std::string);
-Q_DECLARE_METATYPE(ScanResultsTreeModelItem);
-//Q_DECLARE_METATYPE(std::shared_ptr<LibraryEntry>);
+//Q_DECLARE_METATYPE(ScanResultsTreeModelItem);
+Q_DECLARE_METATYPE(std::shared_ptr<ScanResultsTreeModelItem>);
 
 #endif /* SRC_LOGIC_MODELS_SCANRESULTSTREEMODELITEM_H_ */

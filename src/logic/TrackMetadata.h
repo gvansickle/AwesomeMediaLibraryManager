@@ -26,6 +26,7 @@
 
 // Qt5
 #include <QtCore>
+#include <QVariant>
 
 // Libcue.
 struct Cdtext;
@@ -38,27 +39,9 @@ using Frames = qint64;
 #include <third_party/libcue/libcue.h>
 #include "AMLMTagMap.h"
 
+#include "TrackIndex.h"
 
-class TrackIndex : public virtual ISerializable
-{
-public:
-	M_GH_RULE_OF_FIVE_DEFAULT_C21(TrackIndex);
-	~TrackIndex() override = default;
 
-	/// @name Serialization
-	/// @{
-	QVariant toVariant() const override;
-	void fromVariant(const QVariant& variant) override;
-	/// @}
-
-	// ~ "00" to "99"
-	std::string m_index_num {};
-
-	// Index value in Frames.
-	Frames m_index_frames {};
-};
-
-Q_DECLARE_METATYPE(TrackIndex);
 
 /**
  * Metadata which applies to a single track on a possibly multi-track media.
@@ -211,7 +194,6 @@ This information is always ASCII encoded. */ \
 };
 
 Q_DECLARE_METATYPE(TrackMetadata);
-Q_DECLARE_METATYPE(std::vector<TrackIndex>);
 // Qt5 already declares this.
 //Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE(std::vector);
 

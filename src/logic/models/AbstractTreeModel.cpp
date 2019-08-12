@@ -40,51 +40,127 @@
 #include <QtWidgets>
 #include <QAbstractItemModelTester>
 
-// KF5
-//#include <KItemViews/KCategorizedSortFilterProxyModel>
-
 // Ours
 #include "AbstractTreeModelItem.h"
 #include "AbstractTreeModelHeaderItem.h"
+#include "ColumnSpec.h"
 #include <utils/DebugHelpers.h>
 #include <logic/serialization/XmlSerializer.h>
-//#include "ScanResultsTreeModel.h"
-//#include "ThreadsafeTreeModel.h"
 #include <third_party/sqlite_orm/include/sqlite_orm/sqlite_orm.h>
 
-/**
- * This really should never get called, since AbstractTreeModel is abstract.  Mostly here for an example for derived classes.
- * @param parent
- * @return
- */
-std::shared_ptr<AbstractTreeModel> AbstractTreeModel::construct(QObject* parent)
+// static
+std::shared_ptr<AbstractTreeModel>
+AbstractTreeModel::make_AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent)
 {
-	std::shared_ptr<AbstractTreeModel> self(new AbstractTreeModel(parent));
-	self->m_root_item = AbstractTreeModelHeaderItem::construct(self, true);
-//	self->m_model_tester = new QAbstractItemModelTester(self.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, self.get());
-	return self;
+	auto retval_shptr = std::shared_ptr<AbstractTreeModel>(new AbstractTreeModel(column_specs, parent));
+
+	retval_shptr->postConstructorFinalization(retval_shptr, column_specs);
+
+	return retval_shptr;
 }
+
 
 AbstractTreeModel::AbstractTreeModel(QObject* parent) : QAbstractItemModel(parent)
 {
+	// Delegate to this constructor, then you'll have a vtable and should be able to call virtual functions in the other constructor.
+	qDb() << "Done, this:" << this;
+}
+
+AbstractTreeModel::AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent)
+	: AbstractTreeModel(parent)
+{
+	/// Can't call virtual functions in here, which makes our life more difficult.
+	/// Actually, it's the "shared_from_this() requires this to already be a shared_ptr<>" that's tripping me up. I think.
+	/// Regardless, the named constructor is working well now, so we're good.
+}
+
+void AbstractTreeModel::postConstructorFinalization(const std::shared_ptr<AbstractTreeModel>& retval_shptr, std::initializer_list<ColumnSpec> column_specs)
+{
+	// Create the root item/header item.
+	retval_shptr->m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs, retval_shptr);
+	// Register it with this model.
+	retval_shptr->register_item(retval_shptr->m_root_item);
+
+	AMLM_ASSERT_X(retval_shptr->m_root_item->isInModel(), "ROOT ITEM NOT IN MODEL");
+
+	/// TODO Keep trying to get this to not barf all over the place.
+//	retval_shptr->m_model_tester = new QAbstractItemModelTester(retval_shptr.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, retval_shptr.get());
+	AMLM_ASSERT_X(retval_shptr->checkConsistency(), "MODEL INCONSISTENT");
 }
 
 AbstractTreeModel::~AbstractTreeModel()
 {
+	// KDEN does exactly this in its ~AbstractTreeModel().
 	m_model_item_map.clear();
 	m_root_item.reset();
 }
 
-bool AbstractTreeModel::setColumnSpecs(std::initializer_list<QString> column_specs)
+//void AbstractTreeModel::postConstructorFinalization(std::initializer_list<ColumnSpec> column_specs)
+//{
+////	m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs, this->shared_from_this());
+//	m_root_item = AbstractTreeModelHeaderItem::construct(column_specs, this->shared_from_this());
+//	Q_ASSERT(m_root_item->m_is_root == true);
+//	Q_ASSERT(m_root_item->m_is_in_model == true);
+
+//}
+
+void AbstractTreeModel::clear()
 {
+	std::unique_lock write_lock(m_rw_mutex);
+
+#if 0///KDEN
+	std::vector<std::shared_ptr<AbstractTreeModelItem>> items_to_delete;
+
+	items_to_delete.reserve(m_root_item->childCount());
+
+	for (int i = 0; i < m_root_item->childCount(); ++i)
+	{
+		items_to_delete.push_back(std::static_pointer_cast<AbstractTreeModelItem>(m_root_item->child(i)));
+	}
+	Fun undo = []() { return true; };
+	Fun redo = []() { return true; };
+	for (const auto &child : items_to_delete)
+	{
+		qDb() << "clearing" << items_to_delete.size() << "items, current:" << child->m_uuid;
+		requestDeleteItem(child, undo, redo);
+	}
+	Q_ASSERT(m_root_item->childCount() == 0);
+
+	// One last thing, our hidden root node / header node still has ColumnSpecs.
+	m_root_item->clear();
+#elif 0
+	beginResetModel();
+#error "TODO"
+	// Delete the root item, which will get us 99% of the way to cleared.
+//	m_root_item.reset();
+
+	// One last thing, our hidden root node / header node still has ColumnSpecs.
+	m_root_item->clear();
+
+	endResetModel();
+#endif
+}
+
+bool AbstractTreeModel::setColumnSpecs(std::initializer_list<ColumnSpec> column_specs)
+{
+	std::unique_lock write_lock(m_rw_mutex);
+
+	Q_ASSERT(m_root_item);
+//	if(!m_root_item)
+//	{
+//		m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs, this->shared_from_this());
+//	}
 	return m_root_item->setColumnSpecs(column_specs);
 }
 
 int AbstractTreeModel::columnCount(const QModelIndex& parent) const
 {
+	/// @note ETM does this differently, simply always returning m_root_item->columnCount().
+	std::unique_lock read_lock(m_rw_mutex);
+
 	if(!parent.isValid())
 	{
-		// Invalid parent, return root column count.
+		// Invalid index, return root column count.
 		return m_root_item->columnCount();
 	}
 	// Else look up the item and return it's column count.
@@ -95,6 +171,8 @@ int AbstractTreeModel::columnCount(const QModelIndex& parent) const
 
 QVariant AbstractTreeModel::data(const QModelIndex &index, int role) const
 {
+	std::unique_lock read_lock(m_rw_mutex);
+
 	// data() expects a valid index, except it won't get one for data() calls for the root item info.
 //	Q_ASSERT(checkIndex(index, CheckIndexOption::IndexIsValid));
 
@@ -105,9 +183,9 @@ QVariant AbstractTreeModel::data(const QModelIndex &index, int role) const
 	}
 
 	/// @todo ###
-#if 0 // TEMP?
+#if 1 // TEMP?
 	// Color invalid model indexes.
-	if(index.column() > columnCount())
+	if(index.column() >= columnCount())
 	{
 		switch(role)
 		{
@@ -115,17 +193,19 @@ QVariant AbstractTreeModel::data(const QModelIndex &index, int role) const
 				return QVariant::fromValue(QBrush(Qt::lightGray));
 				break;
 			default:
+				return QVariant();
 				break;
 		}
 	}
 #endif
-    if (role != Qt::DisplayRole) /// @todo Not in KDen AbstTreeModel: && role != Qt::EditRole)
+    if (role != Qt::DisplayRole && role != Qt::EditRole) /// @todo Not in KDen AbstTreeModel: && role != Qt::EditRole)
 	{
         return QVariant();
 	}
 
     // Get a pointer to the indexed item.
-	auto item = getItemById(UUIncD(index.internalId()));
+	//auto item = getItemById(UUIncD(index.internalId()));
+	std::shared_ptr<AbstractTreeModelItem> item = getItem(index);
 
 	// Return the requested [column,role] data from the item.
     return item->data(index.column(), role);
@@ -133,7 +213,9 @@ QVariant AbstractTreeModel::data(const QModelIndex &index, int role) const
 
 Qt::ItemFlags AbstractTreeModel::flags(const QModelIndex &index) const
 {
-    if (!index.isValid())
+	std::unique_lock read_lock(m_rw_mutex);
+
+	if (!index.isValid())
 	{
 		return Qt::NoItemFlags;
 	}
@@ -152,6 +234,12 @@ Qt::ItemFlags AbstractTreeModel::flags(const QModelIndex &index) const
 
 std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getItem(const QModelIndex &index) const
 {
+	std::unique_lock read_lock(m_rw_mutex);
+	/**
+	 * There's a fail here.  Trying to do a mapping from QModelIndex->TreeItem*, but we're going through
+	 * getItemById() to do it (index.internalId() -> TreeItem*).  In e.g. insertChild(), this results in the
+	 * second lookup being done before the item is in the map, == error.
+	 */
 	if (index.isValid())
 	{
 		std::shared_ptr<AbstractTreeModelItem> item = getItemById(UUIncD(index.internalId()));
@@ -159,29 +247,120 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getItem(const QModelIn
 		{
             return item;
 		}
-    }
-	/// @todo This might want to be an assert() due to invalid index.
-	Q_ASSERT(0);
+		else
+		{
+			/// GRVS: AQP doesn't do this, simply falls through and returns root item.
+			Q_ASSERT(0);
+		}
+
+	}
+	// Invalid index, return the root item.
 	return m_root_item;
 }
+
+//void AbstractTreeModel::setBaseDirectory(const QUrl& base_directory)
+//{
+//	std::unique_lock write_lock(m_rw_mutex);
+//
+//	m_base_directory = base_directory;
+//}
 
 /// NEW: KDEN:
 std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getItemById(const UUIncD& id) const
 {
+	std::unique_lock read_lock(m_rw_mutex);
+
+	Q_ASSERT(m_root_item);
 	Q_ASSERT(id != UUIncD::null());
+
 	if(id == m_root_item->getId())
 	{
 		return m_root_item;
 	}
-	Q_ASSERT(m_model_item_map.count(id) > 0);
+//#error "An empty model dies here in the view, via parent()"
+	AMLM_ASSERT_GT(m_model_item_map.count(id), 0);
 	return m_model_item_map.at(id).lock();
 }
 
 /// BOTH
 std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getRootItem() const
 {
+	std::unique_lock read_lock(m_rw_mutex);
+
 	Q_ASSERT(m_root_item);
 	return m_root_item;
+}
+
+#if 0///
+/**
+ * Insert an empty new child under @a parent and returns a shared_ptr to it.
+ * ETM: From MainWindow, where parent is always currentIndex() from a selection model.
+ * @param parent
+ * @return
+ */
+std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::insertChild(const QModelIndex& parent)
+{
+	const QModelIndex index = parent;
+	std::shared_ptr<AbstractTreeModel> model = this->shared_from_this();
+
+	// Is there no such parent?
+	if(model->columnCount(index) == 0)
+	{
+		// No parent with a column 0, so create it by inserting a column 0.
+		/// GRVS Seems a bit odd.
+		if(!model->insertColumn(0, index))
+		{
+			return nullptr;
+		}
+	}
+
+	if(!model->insertRow(0, index))
+	{
+		return nullptr;
+	}
+
+	// Ok, at this point we should have a new default-constructed child in parent's child list.
+	// We need to add it to this model's UUIncD<->TreeItem map.
+	//	register_item();
+
+	QModelIndex child;
+	for (int column = 0; column < model->columnCount(index); ++column)
+	{
+		child = model->index(0, column, index);
+		//#error /// This fails because the TreeItem backing child hasn't been added to the model map yet, so circular dependency.
+		auto shpt = getItem(child);
+		model->register_item(shpt);
+		model->setData(child, QVariant("[No data]"), Qt::EditRole);
+		if (!model->headerData(column, Qt::Horizontal).isValid())
+		{
+			model->setHeaderData(column, Qt::Horizontal, QVariant("[No header]"), Qt::EditRole);
+		}
+	}
+
+	return getItem(child);
+}
+#endif///
+
+std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::append_child(const QVector<QVariant>& data, std::shared_ptr<AbstractTreeModelItem> parent)
+{
+	// Append a new item to the given parent's list of children.
+	parent->insertChildren(parent->childCount(), 1, m_root_item->columnCount());
+	QVector<QVariant> columnData;
+	for(int column = 0; column < data.size(); ++column)
+	{
+		columnData << data[column];
+	}
+	std::shared_ptr<AbstractTreeModelItem> new_child = parent->child(parent->childCount()-1);
+
+	// Register the new child with this model.
+	register_item(new_child);
+
+	for(int column = 0; column < columnData.size(); ++column)
+	{
+		new_child->setData(column, columnData[column]);
+	}
+
+	return new_child;
 }
 
 Fun AbstractTreeModel::addItem_lambda(const std::shared_ptr<AbstractTreeModelItem>& new_item, UUIncD parentId)
@@ -206,8 +385,8 @@ Fun AbstractTreeModel::addItem_lambda(const std::shared_ptr<AbstractTreeModelIte
 Fun AbstractTreeModel::removeItem_lambda(UUIncD id)
 {
 	return [this, id]() {
-		/* Deletion simply deregister clip and remove it from parent.
-		   The actual object is not actually deleted, because a shared_pointer to it
+		/* Deletion simply deregister the item and remove it from parent.
+		   The item object is not actually deleted, because a shared_pointer to it
 		   is captured by the reverse operation.
 		   Actual deletions occurs when the undo object is destroyed.
 		*/
@@ -255,7 +434,8 @@ Fun AbstractTreeModel::moveItem_lambda(UUIncD id, int destRow, bool force)
 			}
 		}
 		// insert back in order
-		for (const auto &elem : oldStack) {
+		for (const auto &elem : oldStack)
+		{
 			oper = addItem_lambda(elem, parentId);
 			PUSH_LAMBDA(oper, lambda);
 		}
@@ -264,6 +444,62 @@ Fun AbstractTreeModel::moveItem_lambda(UUIncD id, int destRow, bool force)
 	return []() { return false; };
 }
 
+bool AbstractTreeModel::LoadDatabase(const QString& database_filename)
+{
+	qIn() << "###### READING AbstractTreeModel from:" << database_filename;
+
+	/// @todo This is unworkable I think.
+	/// @note Not sure if this is the best place for this, but we need to clear everything before reloading it.
+M_WARNING("Not right, this needs ColumnSpecs added initially from somewhere");
+	std::unique_lock write_lock(m_rw_mutex);
+//	m_root_item = AbstractTreeModelHeaderItem::construct({}, shared_from_this());
+
+	XmlSerializer xmlser;
+	/// @todo Better name
+	DERIVED_set_default_namespace();
+	if(!m_default_namespace_decl.empty())
+	{
+		xmlser.set_default_namespace(m_default_namespace_decl, m_default_namespace_version);
+	}
+	xmlser.HACK_skip_extra(false);
+
+	beginResetModel();
+	clear();
+
+	bool success = xmlser.load(*this, QUrl::fromLocalFile(database_filename));
+
+	qIn() << "###### TREEMODELPTR HAS NUM ROWS:" << rowCount();
+	qIn() << "###### FINISHED READING AbstractTreeModel from:" << database_filename << "STATUS:" << success;
+
+	return success;
+}
+
+void AbstractTreeModel::SaveDatabase(const QString& database_filename)
+{
+	std::unique_lock read_lock(m_rw_mutex);
+
+	qIn() << "###### WRITING AbstractTreeModel to:" << database_filename;
+	qIn() << "###### TREEMODELPTR HAS NUM ROWS:" << rowCount();
+
+	XmlSerializer xmlser;
+
+	DERIVED_set_default_namespace();
+	if(!m_default_namespace_decl.empty())
+	{
+		xmlser.set_default_namespace(m_default_namespace_decl, m_default_namespace_version);
+	}
+	xmlser.save(*this, QUrl::fromLocalFile(database_filename), "playlist");
+
+	qIn() << "###### FINISHED WRITING AbstractTreeModel to:" << database_filename;
+}
+
+void AbstractTreeModel::dump_model_info() const
+{
+	qDb() << "------------------------ MODEL INFO -----------------------------------------";
+	qDb() << "Total items in m_model_item_map:" << m_model_item_map.size();
+}
+
+#if 0
 void AbstractTreeModel::toOrm(std::string filename) const
 {
 //	using namespace sqlite_orm;
@@ -286,7 +522,7 @@ void AbstractTreeModel::fromOrm(std::string filename)
 {
 	Q_ASSERT(0);
 }
-
+#endif
 
 AbstractTreeModel::iterator AbstractTreeModel::begin()
 {
@@ -300,16 +536,55 @@ AbstractTreeModel::iterator AbstractTreeModel::end()
 
 void AbstractTreeModel::register_item(const std::shared_ptr<AbstractTreeModelItem>& item)
 {
+	std::unique_lock write_lock(m_rw_mutex);
+
 	UUIncD id = item->getId();
-	Q_ASSERT(m_model_item_map.count(id) == 0);
+	Q_ASSERT(id.isValid());
+	AMLM_ASSERT_X(m_model_item_map.count(id) == 0, "Item was already in model.");
 	m_model_item_map[id] = item;
 }
 
 void AbstractTreeModel::deregister_item(UUIncD id, AbstractTreeModelItem* item)
 {
+	std::unique_lock write_lock(m_rw_mutex);
+
 	Q_UNUSED(item);
-	AMLM_ASSERT_GT(m_model_item_map.count(id), 0);
-	m_model_item_map.erase(id);
+//	AMLM_ASSERT_GT(m_model_item_map.count(id), 0);
+
+	if(m_model_item_map.count(id) == 0)
+	{
+		// Nothing to erase, we weren't in the model for some reason.
+		qWr() << "Attempt to deregister unregistered item:" << M_ID_VAL(id) << M_ID_VAL(item);
+	}
+	else
+	{
+		m_model_item_map.erase(id);
+	}
+}
+
+bool AbstractTreeModel::addItem(const std::shared_ptr<AbstractTreeModelItem>& item, UUIncD parent_id, Fun& undo, Fun& redo)
+{
+	std::unique_lock write_lock(m_rw_mutex);
+
+	std::shared_ptr<AbstractTreeModelItem> parent_item = getItemById(parent_id);
+
+	if(!parent_item)
+	{
+		qCr() << "ERROR, BAD PARENT ITEM with ID:" << parent_id;// << "," << item;
+		return false;
+	}
+
+	Fun operation = addItem_lambda(item, parent_item->getId());
+
+	UUIncD itemId = item->getId();
+	Fun reverse = removeItem_lambda(itemId);
+	bool res = operation();
+	Q_ASSERT(item->isInModel());
+	if (res)
+	{
+		UPDATE_UNDO_REDO(m_rw_mutex, operation, reverse, undo, redo);
+	}
+	return res;
 }
 
 void AbstractTreeModel::notifyColumnsAboutToInserted(const std::shared_ptr<AbstractTreeModelItem>& parent, int first_column, int last_column)
@@ -359,9 +634,11 @@ void AbstractTreeModel::notifyRowDeleted()
 	endRemoveRows();
 }
 
+
 /// NEW: KDEN:
 bool AbstractTreeModel::checkConsistency()
 {
+#if 0///
 // first check that the root is all good
 	if (!m_root_item || !m_root_item->m_is_root || !m_root_item->isInModel() || m_model_item_map.count(m_root_item->getId()) == 0)
 	{
@@ -409,7 +686,7 @@ bool AbstractTreeModel::checkConsistency()
 				qDebug() << "ERROR: Invalid tree: duplicate root";
 				return false;
 			}
-			if (auto ptr = currentItem->parent().lock())
+			if (auto ptr = currentItem->parent_item().lock())
 			{
 				if (ptr->getId() != parentId || ptr->child(currentItem->childNumber())->getId() != currentItem->getId())
 				{
@@ -435,11 +712,15 @@ bool AbstractTreeModel::checkConsistency()
 			i++;
 		}
 	}
+#endif///
+
 	return true;
 }
 
 QVariant AbstractTreeModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
+	std::unique_lock read_lock(m_rw_mutex);
+
 	// Both ETM and KDEN are the same here.
     if (orientation == Qt::Horizontal && role == Qt::DisplayRole)
 	{
@@ -453,7 +734,7 @@ QModelIndex AbstractTreeModel::index(int row, int column, const QModelIndex &par
 {
 	std::shared_ptr<AbstractTreeModelItem> parent_item;
 
-	// Get the parent item.
+	// Get the parent item QMI parent is pointing to.
 	if(!parent.isValid())
 	{
 		parent_item = m_root_item;
@@ -488,8 +769,10 @@ bool AbstractTreeModel::insertColumns(int insert_before_column, int num_columns,
 	bool success;
 
 	beginInsertColumns(parent_model_index, insert_before_column, insert_before_column + num_columns - 1);
-M_WARNING("TODO: This should be the parent_model_index, not the root_item.");
+
+M_WARNING("TODO: This is what ETM has.  Should it be the parent_model_index, not the m_root_item?");
 	success = m_root_item->insertColumns(insert_before_column, num_columns);
+
 	endInsertColumns();
 
 	return success;
@@ -497,28 +780,76 @@ M_WARNING("TODO: This should be the parent_model_index, not the root_item.");
 
 bool AbstractTreeModel::insertRows(int insert_before_row, int num_rows, const QModelIndex& parent_model_index)
 {
-	Q_CHECK_PTR(m_root_item);
+#if 1 //ETM
+	qDb() << "Trying to insert:" << insert_before_row << num_rows << parent_model_index;
 
-	std::shared_ptr<AbstractTreeModelItem> parent_item = getItemById(UUIncD(parent_model_index.internalId()));
+	std::shared_ptr<AbstractTreeModelItem> parentItem = getItem(parent_model_index);
 	bool success;
 
 	beginInsertRows(parent_model_index, insert_before_row, insert_before_row + num_rows - 1);
-	success = parent_item->insertChildren(insert_before_row, num_rows, m_root_item->columnCount());
+
+	// Create @a rows default-constructed children of parent.
+	auto new_children = parentItem->insertChildren(insert_before_row, num_rows, m_root_item->columnCount());
+
+	// Add the new children to the UUID lookup map.
+	for(const auto& item : new_children)
+	{
+		qDb() << "Adding UUIncD:" << item->getId() << item->columnCount();
+		m_model_item_map.insert({item->getId(), item});
+	}
+
+	success = !new_children.empty();
+
 	endInsertRows();
 
 	return success;
+#else
+	///AQP
+    if(!m_root_item)
+    {
+    	// No root item yet, create it.
+	    QVector<QVariant> data;
+	    data << "[header a]" << "[header b]";
+    	m_root_item = std::make_shared<TreeItem>(data, nullptr);
+    }
+
+    std::shared_ptr<TreeItem> parent_item = parent.isValid() ? getItem(parent) : m_root_item;
+
+	beginInsertRows(parent, position, position + rows - 1);
+
+	for (int i = 0; i < rows; ++i)
+	{
+		QVector<QVariant> data;
+		for(int col=0; col != columnCount(); ++i)
+		{
+			data << "[No data]";
+		}
+		std::shared_ptr<TreeItem> item = std::make_shared<TreeItem>(data, parent_item);
+		parent_item->insertChild(position, item);
+	}
+
+	endInsertRows();
+
+	return true;
+#endif
 }
 
 QModelIndex AbstractTreeModel::parent(const QModelIndex &index) const
 {
+	std::unique_lock write_lock(m_rw_mutex);
+
 	// Check index but don't touch parent, since per Qt5 docs that would make this go recursive.
 	Q_ASSERT(checkIndex(index, CheckIndexOption::IndexIsValid | CheckIndexOption::DoNotUseParent));
-    if (!index.isValid())
+    // Return invalid parent index for invalid index.
+	if (!index.isValid())
 	{
         return QModelIndex();
 	}
 
-	std::shared_ptr<AbstractTreeModelItem> childItem = getItemById(static_cast<UUIncD>(index.internalId()));
+	auto child_uuincd_int = index.internalId();
+	UUIncD child_uuincd = UUIncD(child_uuincd_int);
+
+	std::shared_ptr<AbstractTreeModelItem> childItem = getItemById(child_uuincd);
 	std::shared_ptr<AbstractTreeModelItem> parentItem = childItem->parent_item().lock();
 
 	Q_ASSERT(parentItem);
@@ -578,52 +909,10 @@ bool AbstractTreeModel::moveColumns(const QModelIndex& sourceParent, int sourceC
 }
 
 
-bool AbstractTreeModel::appendItems(std::vector<std::shared_ptr<AbstractTreeModelItem>> new_items, const QModelIndex &parent)
-{
-	std::shared_ptr<AbstractTreeModelItem> parent_item;
-	if(!parent.isValid())
-	{
-		parent_item = m_root_item;
-	}
-	else
-	{
-		parent_item = getItemById(static_cast<UUIncD>(parent.internalId()));
-	}
-
-	Q_CHECK_PTR(parent_item);
-
-    if(new_items.empty())
-    {
-    	qWr() << "Attempt to append zero items.";
-    	return false;
-    }
-
-    auto first_new_row_num_after_insertion = parent_item->childCount();
-
-    /// @todo What do we need to do to support/handle different num of columns?
-	/// @todo These items have data already and aren't default-constructed, do we need to do anything different
-	///       than begin/endInsert rows?
-	// parent, first_row_num_after_insertion, last_row_num_after_insertion.
-	this->beginInsertRows(parent, first_new_row_num_after_insertion, first_new_row_num_after_insertion + new_items.size() - 1);
-
-    parent_item->appendChildren(std::move(new_items));
-
-    this->endInsertRows();
-
-    return true;
-}
-
-//bool AbstractTreeModel::appendItem(std::shared_ptr<AbstractTreeModelItem> new_item, const QModelIndex& parent)
-//{
-//	Q_ASSERT(0/*NOT IMPL*/);
-//	std::vector<std::shared_ptr<AbstractTreeModelItem>> new_items;
-
-//	new_items.emplace_back(std::move(new_item));
-//	return appendItems(std::move(new_items), parent);
-//}
-
 QModelIndex AbstractTreeModel::getIndexFromItem(const std::shared_ptr<AbstractTreeModelItem>& item) const
 {
+	std::unique_lock read_lock(m_rw_mutex);
+
 	Q_CHECK_PTR(item);
 	if(item == m_root_item)
 	{
@@ -635,6 +924,8 @@ QModelIndex AbstractTreeModel::getIndexFromItem(const std::shared_ptr<AbstractTr
 
 QModelIndex AbstractTreeModel::getIndexFromId(UUIncD id) const
 {
+	std::unique_lock read_lock(m_rw_mutex);
+
 	if(id == m_root_item->getId())
 	{
 		return QModelIndex();
@@ -650,9 +941,10 @@ QModelIndex AbstractTreeModel::getIndexFromId(UUIncD id) const
 
 int AbstractTreeModel::rowCount(const QModelIndex &parent) const
 {
-	// Only the hidden parent item has row count info.
-	/// @todo Is this right?
-	if(parent.column() > 0)
+	std::unique_lock read_lock(m_rw_mutex);
+
+	// Only column 0 has children, and hence a non-zero rowCount().
+	if(parent.isValid() && parent.column() != 0)
 	{
 		return 0;
 	}
@@ -664,7 +956,10 @@ int AbstractTreeModel::rowCount(const QModelIndex &parent) const
 	}
 	else
 	{
+M_WARNING("FIXME: We still get here before parent has been added to the model.");
 		parent_item = getItemById(UUIncD(parent.internalId()));
+//		parent_item = getItem(parent);
+
 	}
 
 	return parent_item->childCount();
@@ -672,6 +967,8 @@ int AbstractTreeModel::rowCount(const QModelIndex &parent) const
 
 bool AbstractTreeModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
+	std::unique_lock write_lock(m_rw_mutex);
+
 	// setData() expects a valid index.
 	// From Qt5 docs:
 	/// "A legal model index is either an invalid model index, or a valid model index for which all the following holds:
@@ -728,6 +1025,9 @@ bool AbstractTreeModel::setHeaderData(int section, const AbstractHeaderSection& 
 //	for()
 	return true;
 }
+
+
+
 
 
 

@@ -666,6 +666,10 @@ configure_file(${PROJECT_SOURCE_DIR}/src/config.h.in
 	${PROJECT_BINARY_DIR}/src/config.h
 	ESCAPE_QUOTES)
 
+# Create a graphviz dep graph.
+# add_custom_target(graphviz ALL
+# 	${CMAKE_COMMAND} .. "--graphviz=graphviz.dot" .
+# 	WORKING_DIRECTORY .)
 
 ###
 ### Add the project subdirs.

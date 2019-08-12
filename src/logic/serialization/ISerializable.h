@@ -51,8 +51,11 @@ class ISerializable
 {
 
 public:
-	explicit ISerializable(/*std::string uuid_prefix = {}*/)
-	: m_uuid_prefix(/*uuid_prefix*/"xmlid_"), m_uuid( /*(!uuid_prefix.empty()) ?*/ QUuid::createUuid() /*: QUuid("null")*/ ) {};
+	/**
+	 * Default constructor creates a new UUID.
+	 */
+	explicit ISerializable()
+		: m_uuid_prefix("xmlid_"), m_uuid( QUuid::createUuid() ) {};
 	virtual ~ISerializable() = default;
 
 	/**
@@ -65,35 +68,68 @@ public:
 	 */
 	virtual void fromVariant(const QVariant& variant) = 0;
 
+	/// Sort of clumsy way to deal with this it seems.
+//	template <class MapType>
+//	void AddUUIDToVariantMap(MapType* map) const
+//	{
+//		auto uuid = get_prefixed_uuid();
+//		map->insert(QString("xml:id"), QVariant::fromValue(uuid));
+//	}
+
+	/**
+	 * Remove any UUID from the @a map and set this's uuid with it.
+	 * @tparam MapType
+	 * @param map
+	 */
+//	template <class MapType>
+//	void GetUUIDFromVariantMap(const MapType& map)
+//	{
+//		auto uuid = map.take("xml:id");
+//		set_prefixed_uuid(uuid);
+//	}
+
 	explicit operator QVariant() const { return toVariant(); };
 
 	bool isUuidNull() const { return m_uuid.isNull() || m_uuid_prefix.empty(); };
 
-	void set_prefix(std::string prefix)
-	{
-		Q_ASSERT(m_uuid_prefix.empty());
-		m_uuid_prefix = prefix;
-	}
+//	void set_prefix(std::string prefix)
+//	{
+//		Q_ASSERT(m_uuid_prefix.empty());
+//		m_uuid_prefix = prefix;
+//	}
 
 	std::string get_prefix() const
 	{
 		return m_uuid_prefix;
 	}
 
+	/**
+	 * Returns the prefix + UUID of this node as a string.
+	 * @return
+	 */
 	std::string get_prefixed_uuid() const
 	{
+		if(m_uuid.isNull())
+		{
+			// No valid prefix + UUID set.
+			return std::string();
+		}
 		return m_uuid_prefix + m_uuid.toString(QUuid::WithoutBraces).toStdString();
 	}
 
-	void set_prefixed_uuid(std::string uuid_string)
+	/**
+	 * Split the incoming string into prefix and UUID, and sets it to the incoming value.
+	 * @param uuid_string
+	 */
+	void set_prefixed_uuid(const std::string& uuid_string)
 	{
-		Q_ASSERT(!m_uuid_prefix.empty());
+		m_uuid_prefix = "xmlid_"; ///< @todo
 		m_uuid = QUuid::fromString(toqstr(uuid_string).remove(toqstr(m_uuid_prefix)));
-		Q_ASSERT(m_uuid.isNull());
+		Q_ASSERT(!m_uuid.isNull());
 	}
 
 	/// EXPERIMENTAL ORM
-	int m_int_uuid;
+//	int m_int_uuid;
 	/// The GUID used to ID this item in the database etc.
 	QUuid m_uuid;
 	/// The prefix to prepend if XML, since xml:id's need to start with a non-digit character.
@@ -102,6 +138,7 @@ public:
 };
 
 Q_DECLARE_METATYPE(ISerializable*);
+//Q_DECLARE_METATYPE(ISerializable&);
 Q_DECLARE_INTERFACE(ISerializable, "ISerializable") // define this out of namespace scope
 
 class IUUIDSerializable : public virtual ISerializable
@@ -114,17 +151,17 @@ public:
 
 	bool isUuidNull() const { return m_uuid.isNull() || m_uuid_prefix.empty(); };
 
-	std::string get_prefixed_uuid() const
-	{
-		return m_uuid_prefix + m_uuid.toString(QUuid::WithoutBraces).toStdString();
-	}
+//	std::string get_prefixed_uuid() const
+//	{
+//		return m_uuid_prefix + m_uuid.toString(QUuid::WithoutBraces).toStdString();
+//	}
 
-	void set_prefixed_uuid(std::string uuid_string)
-	{
-		Q_ASSERT(!m_uuid_prefix.empty());
-		m_uuid = QUuid::fromString(toqstr(uuid_string).remove(toqstr(m_uuid_prefix)));
-		Q_ASSERT(m_uuid.isNull());
-	}
+//	void set_prefixed_uuid(std::string uuid_string)
+//	{
+//		Q_ASSERT(!m_uuid_prefix.empty());
+//		m_uuid = QUuid::fromString(toqstr(uuid_string).remove(toqstr(m_uuid_prefix)));
+//		Q_ASSERT(m_uuid.isNull());
+//	}
 
 protected:
 

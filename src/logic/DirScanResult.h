@@ -22,6 +22,9 @@
 
 #include <config.h>
 
+// Std C++
+#include <optional>
+
 // Qt5
 #include <QUrl>
 #include <QFileInfo>
@@ -30,6 +33,7 @@
 #include <QDebug>
 
 // Ours
+#include <utils/RegisterQtMetatypes.h> ///< For at least std::optional<bool>.
 #include <utils/QtHelpers.h>
 #include "ExtUrl.h"
 #include <logic/models/AbstractTreeModelItem.h>
@@ -42,7 +46,7 @@ class ScanResultsTreeModelItem;
 /**
  * A single hit found during a directory scan.
  */
-class DirScanResult : /*public virtual IUUIDSerializable,*/ public virtual ISerializable
+class DirScanResult : public virtual ISerializable
 {
 	Q_GADGET // Needed for DirProp enum below.
 
@@ -60,11 +64,12 @@ public:
 
 	/**
 	 * Flags for various properties of a scanned directory.
+	 * [[deprecated]]
 	 */
     enum DirProp
     {
 	    /// Nothing is known about the directory.
-	    Unknown = 0x00,
+	    Unknown = 0x00000000'00000000,
         /// Directory contains only one album, not just e.g. a dump of mp3's.
         SingleAlbum = 0x01,
         /// Directory contains a single audio file.
@@ -119,6 +124,18 @@ protected:
 	ExtUrl m_exturl_dir_url;
 
 	DirPropFlags m_flags_dirprops { Unknown };
+
+	/// @name Fancy New C++17 flags using std::optional.
+	/// @{
+	/// Directory contains a separate cue sheet file.
+	/// @note Does not preclude an embedded cuesheet.
+	std::optional<bool> m_has_sidecar_cuesheet;
+	/// Directory (actually the media file) contains an embedded cue sheet.
+	/// @note Does not preclude a sidecar cuesheet.
+	std::optional<bool> m_has_embedded_cuesheet;
+	/// Directory contains only one album, not just e.g. a dump of mp3's.
+	std::optional<bool> m_single_album;
+	/// @}
 
     /// The media URL which was found.
 	ExtUrl m_exturl_media;
