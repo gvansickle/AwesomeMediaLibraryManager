@@ -135,8 +135,8 @@ protected:
 
 private:
 
-	/// KDEN KeyFrameModel
-	QPersistentModelIndex m_pmindex;
+//	/// KDEN KeyFrameModel
+//	QPersistentModelIndex m_pmindex;
 };
 
 

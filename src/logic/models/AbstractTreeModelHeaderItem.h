@@ -95,7 +95,7 @@ public:
 
 protected:
 
-	std::shared_ptr<AbstractHeaderSection> getHeaderSection(int column);
+//	std::shared_ptr<AbstractHeaderSection> getHeaderSection(int column);
 
 private:
 

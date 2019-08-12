@@ -256,12 +256,6 @@ public:
 	/// Remember to override these in derived classes.
 	/// @{
 
-	/**
-	 * Sets the base directory of the model.
-	 * @todo TEMP.
-	 */
-//	void setBaseDirectory(const QUrl& base_directory);
-
 	/// Load and save the database to a file.
 	/// @note The idea is that these shouldn't need to be overridden in derived classes, but just in case we make
 	/// them virtual.

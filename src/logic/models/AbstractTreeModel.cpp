@@ -119,14 +119,22 @@ void AbstractTreeModel::clear()
 
 	// One last thing, our hidden root node / header node still has ColumnSpecs.
 	m_root_item->clear();
-#elif 0
+#elif 1
 	beginResetModel();
-#error "TODO"
-	// Delete the root item, which will get us 99% of the way to cleared.
-//	m_root_item.reset();
 
-	// One last thing, our hidden root node / header node still has ColumnSpecs.
+	// Clear the root item, which will get us 99% of the way to cleared.
 	m_root_item->clear();
+	// Clear all items out of the model item id->weakptr map.
+	m_model_item_map.clear();
+	// Important: Re-add the root item to the map.
+	// Register it with this model.
+	/*retval_shptr->*/register_item(m_root_item);
+
+	AMLM_ASSERT_X(m_root_item->isInModel(), "ROOT ITEM NOT IN MODEL AFTER CLEAR");
+
+	/// TODO ???
+//	retval_shptr->m_model_tester = new QAbstractItemModelTester(retval_shptr.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, retval_shptr.get());
+	AMLM_ASSERT_X(checkConsistency(), "MODEL INCONSISTENT AFTER CLEAR");
 
 	endResetModel();
 #endif
@@ -137,26 +145,23 @@ bool AbstractTreeModel::setColumnSpecs(std::initializer_list<ColumnSpec> column_
 	std::unique_lock write_lock(m_rw_mutex);
 
 	Q_ASSERT(m_root_item);
-//	if(!m_root_item)
-//	{
-//		m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs, this->shared_from_this());
-//	}
+
 	return m_root_item->setColumnSpecs(column_specs);
 }
 
 int AbstractTreeModel::columnCount(const QModelIndex& parent) const
 {
-	/// @note ETM does this differently, simply always returning m_root_item->columnCount().
 	std::unique_lock read_lock(m_rw_mutex);
 
+	/// This is what KDEN does.  ETM does this differently, simply always returning m_root_item->columnCount().
+	/// AQP does even less, just returning a constant.
 	if(!parent.isValid())
 	{
 		// Invalid index, return root column count.
 		return m_root_item->columnCount();
 	}
-	// Else look up the item and return it's column count.
-	const auto id = UUIncD(parent.internalId());
-	auto item = getItemById(id);
+	// Else look up the item and return its column count.
+	auto item = getItem(parent);
 	return item->columnCount();
 }
 
@@ -248,13 +253,6 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getItem(const QModelIn
 	// Invalid index, return the root item.
 	return m_root_item;
 }
-
-//void AbstractTreeModel::setBaseDirectory(const QUrl& base_directory)
-//{
-//	std::unique_lock write_lock(m_rw_mutex);
-//
-//	m_base_directory = base_directory;
-//}
 
 /// NEW: KDEN:
 std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getItemById(const UUIncD& id) const

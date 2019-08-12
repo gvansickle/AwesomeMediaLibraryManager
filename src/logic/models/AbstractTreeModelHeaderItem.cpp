@@ -144,7 +144,6 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 	QVariantInsertionOrderedMap map;
 
 	// Set some class meta-info.
-//	set_map_class_info(this, &map);
 	set_map_class_info(std::string("AbstractTreeModelHeaderItem"), &map);
 
 	QVariantHomogenousList header_section_list(XMLTAG_HEADER_SECTION_LIST, "section");
@@ -210,7 +209,7 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	// Now read in our children.  We need this HeaderItem to be in a model for that to work.
 	Q_ASSERT(isInModel());
 
-	// This needs to be in a model before we can requestAddXxx() anything.
+	// Currently, this needs to be in a model before we can add any child nodes.
 	// By default, this HeaderItem *only* will already be in the model.
 	auto model_ptr = std::dynamic_pointer_cast<ScanResultsTreeModel>(m_model.lock());
 	Q_ASSERT(model_ptr);
@@ -229,15 +228,15 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	append_children_from_variant<ScanResultsTreeModelItem>(this, child_var_list);
 }
 
-std::shared_ptr<AbstractHeaderSection> AbstractTreeModelHeaderItem::getHeaderSection(int column)
-{
-	// This is just a type conversion from the base class's vector<QVariant>.
-	QVariant var = m_item_data.at(column);
-	Q_ASSERT(var.canConvert<std::shared_ptr<AbstractHeaderSection>>());
-	auto retval = var.value<std::shared_ptr<AbstractHeaderSection>>();
-
-	return retval;
-}
+//std::shared_ptr<AbstractHeaderSection> AbstractTreeModelHeaderItem::getHeaderSection(int column)
+//{
+//	// This is just a type conversion from the base class's vector<QVariant>.
+//	QVariant var = m_item_data.at(column);
+//	Q_ASSERT(var.canConvert<std::shared_ptr<AbstractHeaderSection>>());
+//	auto retval = var.value<std::shared_ptr<AbstractHeaderSection>>();
+//
+//	return retval;
+//}
 
 
 

@@ -569,21 +569,6 @@ void AbstractTreeModelItem::insertChild(int row, std::shared_ptr<AbstractTreeMod
 {
 	AMLM_ASSERT_X(!item->isInModel(), "TODO: ITEM ALREADY IN MODEL, MOVE ITEMS BETWEEN MODELS");
 	AMLM_ASSERT_X(isInModel(), "TODO: PARENT ITEM NOT IN MODEL");
-#if 0 ///GRVS+++
-	item->updateParent(this->shared_from_this());
-
-	// Need an iterator to insert before.
-	auto ins_it = m_child_items.begin();
-	std::advance(ins_it, row);
-	m_child_items.insert(ins_it, item);
-
-	// If the parent is in a model, add the child item to the same model.
-	if(auto model = m_model.lock())
-	{
-		item->m_model = m_model;
-		register_self(item);
-	}
-#elif 1 /// Adapted from KDEN/appendChild().
 
 	if(has_ancestor(item->getId()))
 	{
@@ -640,7 +625,7 @@ void AbstractTreeModelItem::insertChild(int row, std::shared_ptr<AbstractTreeMod
 	}
 	qDebug() << "ERROR: Something went wrong when appending child in TreeItem. Model is not available anymore";
 	Q_ASSERT(false);
-#endif
+
 	verify_post_add_ins_child(item);
 }
 
