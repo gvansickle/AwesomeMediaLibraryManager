@@ -125,7 +125,7 @@ M_WARNING("NEED TO BE OVERRIDDEN IN HeaderItem");
 	// ETM, no KDEN
 	virtual bool removeColumns(int position, int columns);
 
-	/// Returns a weak pointer to this item's parent.
+	/// Returns a weak_ptr to this item's parent.
 	/// ETM+KDEN
 	std::weak_ptr<AbstractTreeModelItem> parent_item() const;
 	/// Returns a shared_ptr to the parent item.
@@ -415,7 +415,7 @@ void append_children_from_variant(ParentItemType* parent_item, const QVariantHom
 
 	for(const QVariant& child_variant : child_var_list)
 	{
-		qDb() << "READING CHILD ITEM:" << child_variant << " INTO PARENT ITEM:" << parent_item;
+//		qDb() << "READING CHILD ITEM:" << child_variant << " INTO PARENT ITEM:" << parent_item;
 
 		// Default constructed child ite,
 		auto new_child = std::make_shared<ChildItemType>();
