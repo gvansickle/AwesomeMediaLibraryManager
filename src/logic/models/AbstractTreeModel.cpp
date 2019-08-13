@@ -134,7 +134,7 @@ void AbstractTreeModel::clear()
 	Q_ASSERT(m_model_item_map.count(m_root_item->getId()) == 1);
 
 	AMLM_ASSERT_X(m_root_item->isInModel(), "ROOT ITEM NOT IN MODEL AFTER CLEAR");
-	AMLM_ASSERT_X(getItemById(m_root_item->getId())->isInModel(), "MODEL DOES NOT CONTAIN ROOT ITEM AFTER CLEAR");
+//	AMLM_ASSERT_X(getItemById(m_root_item->getId())->isInModel(), "MODEL DOES NOT CONTAIN ROOT ITEM AFTER CLEAR");
 
 	/// TODO ???
 //	retval_shptr->m_model_tester = new QAbstractItemModelTester(retval_shptr.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, retval_shptr.get());

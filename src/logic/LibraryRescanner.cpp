@@ -250,8 +250,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 
 	// Clear it out.
 	///TODO
-#error "Dies here"
-	tree_model->clear();
+#warning "Dies here"
+//	tree_model->clear();
 
 	Q_CHECK_PTR(tree_model);
     // Set the root URL of the scan results model.
