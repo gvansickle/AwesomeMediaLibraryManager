@@ -20,21 +20,24 @@
 # @file src/logic/proxymodels/CMakeLists.txt
 
 set(proxymodels_subdir_SOURCES
-	SelectionFilterProxyModel.h
 	SelectionFilterProxyModel.cpp
-	ModelHelpers.h
-	LibrarySortFilterProxyModel.h
+	ModelHelpers.cpp
 	LibrarySortFilterProxyModel.cpp
 	ModelChangeWatcher.cpp
-	ModelChangeWatcher.h
-	QPersistentModelIndexVec.h
 	QPersistentModelIndexVec.cpp
 	)
-#prepend_to_each(proxymodels_subdir_SOURCES "${CMAKE_CURRENT_LIST_DIR}/" ${proxymodels_subdir_SOURCES})
-
+set(proxymodels_subdir_HEADERS
+	SelectionFilterProxyModel.h
+	ModelHelpers.h
+	LibrarySortFilterProxyModel.h
+	ModelChangeWatcher.h
+	QPersistentModelIndexVec.h
+	)
 
 target_sources_local(proxymodels
 	PUBLIC
+	${proxymodels_subdir_HEADERS}
+	PRIVATE
 		${proxymodels_subdir_SOURCES}
 	)
 

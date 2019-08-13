@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -145,6 +145,20 @@ inline static QAbstractItemModel* getRootModel(QAbstractItemModel* maybe_proxy_m
 		qDebug() << "Not a proxy model:" << maybe_proxy_model;
 		return maybe_proxy_model;
 	}
+}
+
+template <typename ModelType, class ViewType, class ContextType>
+inline static void connect_jit_item_expansion(ModelType* model, ViewType* view, ContextType* context)
+{
+	// Hook up Just-In-Time item expansion.
+	connect_or_die(/*ui->m_top_level_tree_view->model()*/model, &ModelType::rowsInserted,
+				   context, [context, view](const QModelIndex& parent, int first, int last)
+	{
+		if(!view->isExpanded(parent))
+		{
+			view->expand(parent);
+		}
+	});
 }
 
 #endif /* MODELHELPERS_H */
