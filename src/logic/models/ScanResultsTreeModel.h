@@ -107,6 +107,8 @@ public:
 	void fromOrm(std::string filename) override;
 #endif
 
+	/// @}
+
 protected:
 	/// @name Derived-class serialization info.
 	/// @{
@@ -133,8 +135,7 @@ protected:
 
 private:
 
-//	/// KDEN KeyFrameModel
-//	QPersistentModelIndex m_pmindex;
+
 };
 
 

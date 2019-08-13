@@ -220,12 +220,6 @@ void ScanResultsTreeModel::DERIVED_set_default_namespace()
 	m_default_namespace_version = "1";
 }
 
-/// Qt5 ids for the TreeItems it can hold.
-//static const int f_atmi_id = qMetaTypeId<AbstractTreeModelItem>();
-//static const int f_strmi_id = qMetaTypeId<ScanResultsTreeModelItem>();
-//static const int f_strmile_id = qMetaTypeId<SRTMItem_LibEntry>();
-
-
 /**
  * ScanResultsTreeModel XML tags.
  */
