@@ -92,6 +92,8 @@ protected:
 public:
 	/**
 	 * Named constructor.
+	 * @note KDEN live doesn't pass a non-null parent QObject, ETM, AQP do pass a parent QObject (main window).
+	 *       Going the KDEN route here, but it's not clear that this is completely kosher wrt Qt.
 	 */
 	static std::shared_ptr<AbstractTreeModel> make_AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
 	/**

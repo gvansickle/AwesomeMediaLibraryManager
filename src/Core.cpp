@@ -48,15 +48,28 @@ Core::Core()
 
 Core::~Core()
 {
+	qDb() << "Deleting Core singleton";
 }
 
 void Core::build()
 {
+	// If this singleton has already been built, simply return.
 	if(m_self)
 	{
 		return;
 	}
+	// Else create the singleton.
 	m_self.reset(new Core());
+
+	/// @note KDEN does this at this point:
+	/// - Calls to qRegisterMetaType()
+	/// - (N/A) If AppImage, resets some paths.  Else opens a connection to MLT.
+	/// - (N/A?) Loads "profiles", which looks like an MLT-specific thing.
+	/// - (N/A?) Initializes a default unavailable media "producer".
+	/// - Constructs the ProjectItemModel (with no QObject parent).
+	/// - Constructs a new JobManager (with m_self as parent).
+	/// - returns.
+
 
 	// Create the single (at this point) ScanResultsTreeModel.
 	/// @note In KDenLive, this is the same, no parent QObject given to ProjectItemModel::construct();

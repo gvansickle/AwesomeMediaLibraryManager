@@ -39,7 +39,8 @@ namespace AMLM
 {
 
 /**
- *
+ * Similar to the Core object from KDEN, kind of not really Amarok's App class (we also have something like that, AMLMApp).
+ * Singleton which collects core app functionality, otherwise-global data structures, etc.
  */
 class Core : public QObject
 {
