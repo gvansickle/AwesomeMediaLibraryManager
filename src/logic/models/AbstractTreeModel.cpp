@@ -127,6 +127,7 @@ void AbstractTreeModel::clear()
 	m_root_item->clear();
 	Q_ASSERT(m_root_item->childCount() == 0);
 	// Clear all items out of the model item id->weakptr map.
+	// Note that this will also remove the m_root_item, see below...
 	m_model_item_map.clear();
 	// Important: Re-add the root item to the map.
 	// Register it with this model.
@@ -465,7 +466,7 @@ bool AbstractTreeModel::LoadDatabase(const QString& database_filename)
 	endResetModel();
 
 M_TODO("DEBUG")
-//	Q_ASSERT(checkConsistency());
+	Q_ASSERT(checkConsistency());
 
 	return success;
 }
@@ -638,11 +639,9 @@ void AbstractTreeModel::notifyRowDeleted()
 }
 
 
-/// NEW: KDEN:
 bool AbstractTreeModel::checkConsistency()
 {
-#if 1///
-// first check that the root is all good
+	// first check that the root is all good
 	if (!m_root_item || !m_root_item->m_is_root || !m_root_item->isInModel() || m_model_item_map.count(m_root_item->getId()) == 0)
 	{
 		qDebug() << !m_root_item->m_is_root << !m_root_item->isInModel() << (m_model_item_map.count(m_root_item->getId()) == 0);
@@ -715,7 +714,6 @@ bool AbstractTreeModel::checkConsistency()
 			i++;
 		}
 	}
-#endif///
 
 	return true;
 }

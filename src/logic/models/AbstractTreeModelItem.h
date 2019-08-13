@@ -231,7 +231,6 @@ M_WARNING("NEED TO BE OVERRIDDEN IN HeaderItem");
 	template <class T, class BinOp>
 	T accumulate_const(T init, BinOp op) const;
 
-
     /// @}
 
     /**
@@ -239,9 +238,11 @@ M_WARNING("NEED TO BE OVERRIDDEN IN HeaderItem");
      */
     bool has_ancestor(UUIncD id);
 
-	/* @brief Return true if the item thinks it is a root.
-   Note that it should be consistent with what the model thinks, but it may have been
-   messed up at some point if someone wrongly constructed the object with isRoot = true */
+	/**
+	 * @brief Return true if the item thinks it is a root.
+	 * Note that it should be consistent with what the model thinks, but it may have been
+	 * messed up at some point if someone wrongly constructed the object with isRoot = true
+	 */
 	bool isRoot() const;
 
     // Debug stream op free func friender.
@@ -328,7 +329,6 @@ protected:
 	std::vector<QVariant> m_item_data;
 
 	std::weak_ptr<AbstractTreeModel> m_model;
-//	bool m_is_in_model {false};
 
 	bool m_is_root {false};
 

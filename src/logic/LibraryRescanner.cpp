@@ -218,6 +218,20 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	// Time how long all this takes.
 	m_timer.start("############ startAsyncDirectoryTraversal()");
 
+	// Get a pointer to the Scan Results Tree model.
+	/// @note IS THIS STILL VALID?: This ptr will go away when we exit the function, so we can't copy it into any stap() lambdas.
+	std::shared_ptr<ScanResultsTreeModel> tree_model = AMLM::Core::self()->getScanResultsTreeModel();
+
+	// Clear it out.
+	///TODO
+#warning "Dies here"
+	tree_model->clear();
+
+	Q_CHECK_PTR(tree_model);
+	// Set the root URL of the scan results model.
+	/// @todo Should this really be done here, or somewhere else?
+	tree_model->setBaseDirectory(dir_url);
+
     auto master_job_tracker = MainWindow::master_tracker_instance();
     Q_CHECK_PTR(master_job_tracker);
 
@@ -244,19 +258,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	// Make a new AMLMJobT for the metadata rescan.
 	AMLMJobT<ExtFuture<MetadataReturnVal>>* lib_rescan_job = make_async_AMLMJobT(lib_rescan_future, "LibRescanJob", AMLMApp::instance());
 
-    // Get a pointer to the Scan Results Tree model.
-    /// @note IS THIS STILL VALID?: This ptr will go away when we exit the function, so we can't copy it into any stap() lambdas.
-	std::shared_ptr<ScanResultsTreeModel> tree_model = AMLM::Core::self()->getScanResultsTreeModel();
 
-	// Clear it out.
-	///TODO
-#warning "Dies here"
-//	tree_model->clear();
-
-	Q_CHECK_PTR(tree_model);
-    // Set the root URL of the scan results model.
-    /// @todo Should this really be done here, or somewhere else?
-    tree_model->setBaseDirectory(dir_url);
 
 	// Create a future so we can attach a watcher to get the QUrl results to the main thread.
 	/// @todo Obsoleting.

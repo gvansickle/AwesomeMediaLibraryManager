@@ -46,18 +46,7 @@ bool ExperimentalKDEView1::setModel(AbstractTreeModel* model)
 	view->expandAll();
 
 	// Hook up Just-In-Time item expansion.
-#if 0///
-	connect_or_die(ui->m_top_level_tree_view->model(), &QAbstractItemModel::rowsInserted,
-				   this, [this](const QModelIndex& parent, int first, int last)
-	{
-		if(!ui->m_top_level_tree_view->isExpanded(parent))
-		{
-			ui->m_top_level_tree_view->expand(parent);
-		}
-	});
-#else
 	connect_jit_item_expansion(ui->m_top_level_tree_view->model(), ui->m_top_level_tree_view, this);
-#endif
 
 	return true;
 }

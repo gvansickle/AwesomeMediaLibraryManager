@@ -1702,6 +1702,12 @@ M_WARNING("HACKISH, MAKE THIS BETTER");
 	{
 		openFileLibrary(url);
 	}
+
+	/// @todo Move this to its own handler.
+	/// Reload the AMLMDatabase.
+	auto srtmodel = AMLM::Core::self()->getScanResultsTreeModel();
+	srtmodel->clear();
+	srtmodel->LoadDatabase("/home/gary/AMLMDatabase.xml");
 }
 
 void MainWindow::onCancelRescan()

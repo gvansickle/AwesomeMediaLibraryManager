@@ -81,12 +81,13 @@ AbstractTreeModelItem::AbstractTreeModelItem(const std::vector<QVariant>& data, 
 
 AbstractTreeModelItem::~AbstractTreeModelItem()
 {
+//	qDb() << "Destructing model item:" << *this;
 	deregister_self();
 }
 
 void AbstractTreeModelItem::clear()
 {
-	// Reset this item to completely empty, except for its place in the model.
+	// Reset this item to its default-constructed state.  I.e. empty with no child items.
 	m_child_items.clear();
 	m_item_data.clear();
 }
@@ -125,7 +126,7 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::child(int row)
 {
 	Q_ASSERT_X(row >= 0 && row < m_child_items.size(), __func__, "Child row out of range.");
 
-	auto it = m_child_items.cbegin();
+	auto it = m_child_items.begin();
 	std::advance(it, row);
 
 	return *it;
@@ -174,6 +175,7 @@ int AbstractTreeModelItem::childNumber() const
 		else
 		{
 			qCr() << "Can't find ourselves in parent's list";
+			Q_ASSERT(0);
 			return -1;
 		}
 	}
@@ -397,7 +399,7 @@ QVariant AbstractTreeModelItem::toVariant() const
 	M_DATASTREAM_FIELDS_CONTSIZES(X);
 #undef X
 
-	// Number of elements in the std::vector<QVariant>.
+	// Number of elements in m_item_data.
 //	map_insert_or_die(map, XMLTAG_ITEM_DATA_SIZE, QVariant::fromValue<qulonglong>(m_item_data.size()));
 	// Number of immediate children.
 //	map_insert_or_die(map, XMLTAG_NUM_CHILDREN, QVariant::fromValue<qulonglong>(m_child_items.size()));
@@ -840,6 +842,9 @@ void AbstractTreeModelItem::deregister_self()
 		if (auto ptr = m_model.lock())
 		{
 			ptr->deregister_item(m_uuincid, this);
+			// Clear our weak pointer to the model we used to be in.
+			/// @todo This at least makes it not crash, but now we don't get the view showing anything.
+			m_model.reset();
 			AMLM_ASSERT_X(isInModel() == false, "ITEM STILL IN MODEL");
 		}
 		else

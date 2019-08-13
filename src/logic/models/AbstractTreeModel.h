@@ -101,10 +101,10 @@ public:
 	 */
 	~AbstractTreeModel() override;
 
-	/// GRVS/KDEN's is ProjItemModel::clean().
 	/**
 	 * Clears all data from the model.
 	 * May need to be overridden in derived classes.
+	 * GRVS, KDEN's equivalent is ProjItemModel::clean().
 	 */
 	virtual void clear();
 
@@ -391,8 +391,8 @@ protected:
 
 	/**
 	 * Map of UUIncD's to AbstractTreeModelItems.
+	 * Type is: std::map<UUIncD, std::weak_ptr<AbstractTreeModelItem>> m_model_item_map;
 	 */
-//	std::map<UUIncD, std::weak_ptr<AbstractTreeModelItem>> m_model_item_map;
 	item_map_type m_model_item_map;
 };
 
