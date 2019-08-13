@@ -1456,7 +1456,10 @@ void MainWindow::readLibSettings(QSettings& settings)
 
 //		auto oldselmodel = m_exp_second_child_view->selectionModel();
 
-		AMLM::Core::self()->swapScanResultsTreeModel(temp_load_srtm_instance);
+		auto old_srtm_model = AMLM::Core::self()->swapScanResultsTreeModel(temp_load_srtm_instance);
+
+		qDb() << "!!!!!!!!!!!!!!!!!!!!!!! OLD MODEL INFO:";
+		old_srtm_model->dump_model_info();
 
 		auto srtmodel = AMLM::Core::self()->getScanResultsTreeModel().get();
 		m_exp_second_child_view->setModel(srtmodel);

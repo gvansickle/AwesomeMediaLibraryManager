@@ -75,9 +75,6 @@ AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(std::initializer_list<C
 	m_is_root = true;
 	m_model = parent_model;
 	setColumnSpecs(column_specs);
-//	m_model->
-//	m_is_root = true;
-//	m_is_in_model = true;
 }
 
 AbstractTreeModelHeaderItem::~AbstractTreeModelHeaderItem()
@@ -88,23 +85,20 @@ void AbstractTreeModelHeaderItem::clear()
 {
 	// Reset this header item to completely empty, except for its place in the model.
 	// All children should have already been removed from the model by the model.
-	Q_ASSERT(m_child_items.empty());
+//	Q_ASSERT(m_child_items.empty());
 
-//	m_column_specs.clear();
-//	BASE_CLASS::clear();
-	m_item_data.clear();
-//	m_num_columns = 0;
-//	m_num_parent_columns = -1;
+	BASE_CLASS::clear();
+//	m_item_data.clear();
 }
 
 bool AbstractTreeModelHeaderItem::setColumnSpecs(std::initializer_list<ColumnSpec> column_specs)
 {
 	M_WARNING("TODO This should take a list of ColumnSpecs, NEEDS TO INSERT COLUMNS");
 	Q_ASSERT_X(childCount() == 0, __PRETTY_FUNCTION__, "Model has children already");
-#warning "INSERT COLUMNS"
-//	m_column_specs.clear();
+#warning "INSERT COLUMNS?"
+
 	m_item_data.clear();
-//	std::copy(column_specs.begin(), column_specs.end(), std::back_inserter(m_column_specs));
+
 	for(auto& it : column_specs)
 	{
 		m_item_data.push_back(it.m_display_name);

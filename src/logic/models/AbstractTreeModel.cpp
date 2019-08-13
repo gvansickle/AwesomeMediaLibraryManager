@@ -494,6 +494,8 @@ M_TODO("DEBUG")
 
 void AbstractTreeModel::dump_model_info() const
 {
+	std::unique_lock read_lock(m_rw_mutex);
+
 	qDb() << "------------------------ MODEL INFO -----------------------------------------";
 	qDb() << "Total items in m_model_item_map:" << m_model_item_map.size();
 	qDb() << "Root item columnCount():" << m_root_item->columnCount();
@@ -947,7 +949,7 @@ int AbstractTreeModel::rowCount(const QModelIndex &parent) const
 	// This is what KDEN does.
 
 	// Only column 0 has children, and hence a non-zero rowCount().
-M_TODO("The firts one causes the model to not get read in or displayed correctly")
+M_TODO("The first one causes the model to not get read in or displayed correctly")
 //	if(/*parent.isValid() &&*/ parent.column() != 0)
 	if(parent.isValid() && parent.column() != 0)
 	{
@@ -957,7 +959,7 @@ M_TODO("The firts one causes the model to not get read in or displayed correctly
 	std::shared_ptr<AbstractTreeModelItem> parent_item;
 	if(!parent.isValid())
 	{
-		/// parent is root item.
+		// parent is root item.
 		Q_CHECK_PTR(m_root_item);
 		parent_item = m_root_item;
 	}

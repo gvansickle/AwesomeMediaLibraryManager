@@ -65,6 +65,10 @@ public:
 ////	AbstractTreeModelHeaderItem() {};
 	~AbstractTreeModelHeaderItem() override;
 
+	/**
+	 * Restore this item to its default-constructed state.
+	 * Note that this deletes child items.
+	 */
 	void clear() override;
 
 	 /**
@@ -94,10 +98,6 @@ protected:
 
 private:
 
-	/**
-	 * This header's (and hence the model's) ColumnSpecs.
-	 */
-//	std::vector<ColumnSpec> m_column_specs;
 
 };
 
