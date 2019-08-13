@@ -151,7 +151,7 @@ template <typename ModelType, class ViewType, class ContextType>
 inline static void connect_jit_item_expansion(ModelType* model, ViewType* view, ContextType* context)
 {
 	// Hook up Just-In-Time item expansion.
-	connect_or_die(/*ui->m_top_level_tree_view->model()*/model, &ModelType::rowsInserted,
+	connect_or_die(model, &ModelType::rowsInserted,
 				   context, [context, view](const QModelIndex& parent, int first, int last)
 	{
 		if(!view->isExpanded(parent))
