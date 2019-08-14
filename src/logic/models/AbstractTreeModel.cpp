@@ -56,12 +56,6 @@ AbstractTreeModel::make_AbstractTreeModel(std::initializer_list<ColumnSpec> colu
 {
 	auto vec_colspec = to_vector(column_specs);
 	return AbstractTreeModel::make_AbstractTreeModel(vec_colspec, parent);
-
-//	auto retval_shptr = std::shared_ptr<AbstractTreeModel>(new AbstractTreeModel(column_specs, parent));
-//
-//	retval_shptr->postConstructorFinalization(retval_shptr, column_specs);
-//
-//	return retval_shptr;
 }
 
 // static
@@ -82,7 +76,7 @@ AbstractTreeModel::AbstractTreeModel(QObject* parent) : QAbstractItemModel(paren
 	qDb() << "Done, this:" << this;
 }
 
-AbstractTreeModel::AbstractTreeModel(std::vector<ColumnSpec> column_specs, QObject* parent)
+AbstractTreeModel::AbstractTreeModel(const std::vector<ColumnSpec>& column_specs, QObject* parent)
 	: AbstractTreeModel(parent)
 {
 	/// Can't call virtual functions in here, which makes our life more difficult.

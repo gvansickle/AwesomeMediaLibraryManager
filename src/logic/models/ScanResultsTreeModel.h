@@ -57,7 +57,7 @@ protected:
 	/**
 	 * Use the public named constructor.
 	 */
-	explicit ScanResultsTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
+	explicit ScanResultsTreeModel(const std::vector<ColumnSpec>& column_specs, QObject *parent = nullptr);
 
 	/**
 	 * Make sig/slot connections.
@@ -76,6 +76,7 @@ public:
 	 * Named constructors.
 	 */
 	static std::shared_ptr<ScanResultsTreeModel> make_ScanResultsTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent = nullptr);
+	static std::shared_ptr<ScanResultsTreeModel> make_ScanResultsTreeModel(const std::vector<ColumnSpec>& column_specs, QObject* parent = nullptr);
 
 	ScanResultsTreeModel() = delete;
 	~ScanResultsTreeModel() override;

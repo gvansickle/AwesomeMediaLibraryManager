@@ -218,19 +218,19 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	// Time how long all this takes.
 	m_timer.start("############ startAsyncDirectoryTraversal()");
 
-	// Get a pointer to the Scan Results Tree model.
-	/// @note IS THIS STILL VALID?: This ptr will go away when we exit the function, so we can't copy it into any stap() lambdas.
+	// Get a shared pointer to the Scan Results Tree model.
 	std::shared_ptr<ScanResultsTreeModel> tree_model = AMLM::Core::self()->getScanResultsTreeModel();
+	Q_CHECK_PTR(tree_model);
 
 	// Clear it out.
-	///TODO
-#warning "Dies here"
 	tree_model->clear();
 
-	Q_CHECK_PTR(tree_model);
 	// Set the root URL of the scan results model.
 	/// @todo Should this really be done here, or somewhere else?
 	tree_model->setBaseDirectory(dir_url);
+	// Set the default columnspecs.
+	/// @todo I don't know why I hate this so much.  So very very much.
+	tree_model->setColumnSpecs(AMLM::Core::self()->getDefaultColumnSpecs());
 
     auto master_job_tracker = MainWindow::master_tracker_instance();
     Q_CHECK_PTR(master_job_tracker);

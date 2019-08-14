@@ -79,7 +79,7 @@ protected:
 	 * @warning This model will NOT have a root item because virtual.  The named constructor will create it.
 	 * In general, derived constructors don't do much more than pass the @a parent param.
 	 */
-	AbstractTreeModel(std::vector<ColumnSpec> column_specs, QObject *parent = nullptr);
+	AbstractTreeModel(const std::vector<ColumnSpec>& column_specs, QObject *parent = nullptr);
 
 	/**
 	 * Creates and adds the root item to the model, some sanity checks, and other last-chance setup of the model object

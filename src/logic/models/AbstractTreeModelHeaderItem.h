@@ -68,7 +68,9 @@ public:
 
 	/**
 	 * Restore this item to its default-constructed state.
-	 * Note that this deletes child items.
+	 * @note This both deletes all child items and the ColumnSpecs this header is holding.
+	 * The ColumnSpecs will have to be restored somehow by the model, especially on a new scan.
+	 * If the DB is consistent, the ColumnSpecs will be read in from it on a LoadModel().
 	 */
 	void clear() override;
 

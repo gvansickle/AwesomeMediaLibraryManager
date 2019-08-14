@@ -31,11 +31,12 @@
 #include "AbstractTreeModelHeaderItem.h"
 #include "SRTMItemLibEntry.h"
 #include <logic/serialization/SerializationHelpers.h>
+#include <future/initializer_list_helpers.h>
 
 #include <serialization/XmlSerializer.h>
 
 
-ScanResultsTreeModel::ScanResultsTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject *parent)
+ScanResultsTreeModel::ScanResultsTreeModel(const std::vector<ColumnSpec>& column_specs, QObject *parent)
 	: BASE_CLASS(column_specs, parent)
 {
 }
@@ -75,6 +76,14 @@ void ScanResultsTreeModel::sendModification()
 // static
 std::shared_ptr<ScanResultsTreeModel>
 ScanResultsTreeModel::make_ScanResultsTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent)
+{
+	auto vec_colspec = to_vector(column_specs);
+	return ScanResultsTreeModel::make_ScanResultsTreeModel(vec_colspec, parent);
+}
+
+// static
+std::shared_ptr<ScanResultsTreeModel>
+ScanResultsTreeModel::make_ScanResultsTreeModel(const std::vector<ColumnSpec>& column_specs, QObject* parent)
 {
 	auto retval_shptr = std::shared_ptr<ScanResultsTreeModel>(new ScanResultsTreeModel(column_specs, parent));
 
@@ -282,6 +291,7 @@ QVariant ScanResultsTreeModel::toVariant() const
 	qDb() << "START tree serialize";
 	map_insert_or_die(map, XMLTAG_SRTM_ROOT_ITEM, m_root_item->toVariant());
 	qDb() << "END tree serialize";
+	AMLM_ASSERT_X(m_root_item->columnCount(), "SAVED NO HEADER SECTIONS");
 
 	return map;
 }
@@ -314,5 +324,6 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 	QVariantInsertionOrderedMap root_item_map;
 	map_read_field_or_warn(map, XMLTAG_SRTM_ROOT_ITEM, &root_item_map);
 	m_root_item->fromVariant(root_item_map);
+	AMLM_ASSERT_X(m_root_item->columnCount(), "LOADED NO HEADER SECTIONS");
 	dump_map(map);
 }
