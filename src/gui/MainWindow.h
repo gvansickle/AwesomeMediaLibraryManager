@@ -299,6 +299,8 @@ private:
     void addViewMenuActions();
 
     void initRootModels();
+
+	void createDBModelAndView();
 	/// @}
 
     /// Equivalent of a "File->New" action for the Now Playing model/view.

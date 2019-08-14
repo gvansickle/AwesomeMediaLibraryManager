@@ -144,14 +144,16 @@ std::shared_ptr<ScanResultsTreeModel> Core::getScanResultsTreeModel()
 	return std::dynamic_pointer_cast<ScanResultsTreeModel>(m_srtm_instance);
 }
 
-std::shared_ptr<ScanResultsTreeModel> Core::swapScanResultsTreeModel(const std::shared_ptr<ScanResultsTreeModel>& new_model)
-{
-	auto old_model = m_srtm_instance;
-
-	m_srtm_instance = new_model;
-
-	return old_model;
-}
+//std::shared_ptr<ScanResultsTreeModel> Core::swapScanResultsTreeModel(const std::shared_ptr<ScanResultsTreeModel>& new_model)
+//{
+//	AMLM_ASSERT_X(0, "TODO");
+//	auto old_model = m_srtm_instance;
+//	old_model->beginResetModel();
+//
+//	m_srtm_instance = new_model;
+//
+//	return old_model;
+//}
 
 std::initializer_list<ColumnSpec> Core::getDefaultColumnSpecs()
 {

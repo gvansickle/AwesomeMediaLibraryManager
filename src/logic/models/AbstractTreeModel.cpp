@@ -462,8 +462,11 @@ bool AbstractTreeModel::LoadDatabase(const QString& database_filename)
 	qIn() << "###### TREEMODELPTR HAS NUM ROWS:" << rowCount();
 	qIn() << "###### FINISHED READING AbstractTreeModel from:" << database_filename << "STATUS:" << success;
 
-	/// @todo Should we do this even on fail?  AQP's load() doesn't.
-	endResetModel();
+	if(success)
+	{
+		/// @todo Should we do this even on fail?  AQP's load() doesn't.
+		endResetModel();
+	}
 
 M_TODO("DEBUG")
 	Q_ASSERT(checkConsistency());

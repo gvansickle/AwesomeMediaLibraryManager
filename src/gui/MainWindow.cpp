@@ -1042,6 +1042,38 @@ void MainWindow::initRootModels()
 	m_collection_dock_widget->setModel(m_model_of_model_view_pairs);
 }
 
+void MainWindow::createDBModelAndView()
+{
+	Q_CHECK_PTR(m_exp_second_child_view);
+
+	// The primary database file.
+	/// @todo Locate somewhere else.
+	QString database_filename = QDir::homePath() + "/AMLMDatabase.xml";
+
+	/// This clears the existing model, and may not reload it.
+	auto srtmodel = AMLM::Core::self()->getScanResultsTreeModel();
+	srtmodel->clear();
+	Q_ASSERT(srtmodel->checkConsistency());
+	bool success = srtmodel->LoadDatabase(database_filename);
+	Q_ASSERT(srtmodel->checkConsistency());
+	if(success)
+	{
+		qDb() << "!!!!!!!!!!!!!!!!!!!!!!! Load succeeded, model info:";
+		srtmodel->dump_model_info();
+//		Q_ASSERT(srtmodel->checkConsistency());
+//		m_exp_second_child_view->setModel(srtmodel);
+	}
+	else
+	{
+		qWr() << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Load failed";
+//		Q_ASSERT(0);
+		auto default_columnspecs = AMLM::Core::self()->getDefaultColumnSpecs();
+		srtmodel->setColumnSpecs(default_columnspecs);
+	}
+
+	m_exp_second_child_view->setModel(srtmodel.get());
+}
+
 void MainWindow::createConnections()
 {
 	/// @todo
@@ -1440,10 +1472,25 @@ void MainWindow::readLibSettings(QSettings& settings)
 	prog->setValue(2);
 	prog->show();
 
+#if 0
 	// The primary database file.
 	QString database_filename = QDir::homePath() + "/AMLMDatabase.xml";
 
-	// Try to Load it asynchronously into a new model.
+#if 0//// This clears the existing model, and may not reload it.
+	auto srtmodel = AMLM::Core::self()->getScanResultsTreeModel();
+	m_exp_second_child_view->setModel(srtmodel.get());
+	srtmodel->clear();
+	Q_ASSERT(srtmodel->checkConsistency());
+	bool success = srtmodel->LoadDatabase(database_filename);
+	if(success)
+	{
+		qDb() << "!!!!!!!!!!!!!!!!!!!!!!! Load succeeded, model info:";
+		srtmodel->dump_model_info();
+		Q_ASSERT(srtmodel->checkConsistency());
+//		m_exp_second_child_view->setModel(srtmodel);
+	}
+#else
+	// Try to Load it into a new model.
 	auto temp_load_srtm_instance = ScanResultsTreeModel::make_ScanResultsTreeModel({});
 	bool success = temp_load_srtm_instance->LoadDatabase(database_filename);
 	if(success)
@@ -1456,7 +1503,7 @@ void MainWindow::readLibSettings(QSettings& settings)
 
 //		auto oldselmodel = m_exp_second_child_view->selectionModel();
 
-		auto old_srtm_model = AMLM::Core::self()->swapScanResultsTreeModel(temp_load_srtm_instance);
+//		auto old_srtm_model = AMLM::Core::self()->swapScanResultsTreeModel(temp_load_srtm_instance);
 
 		qDb() << "!!!!!!!!!!!!!!!!!!!!!!! OLD MODEL INFO:";
 		old_srtm_model->dump_model_info();
@@ -1466,12 +1513,16 @@ void MainWindow::readLibSettings(QSettings& settings)
 
 //		oldselmodel->deleteLater();
 	}
+#endif
 	else
 	{
 		qWr() << "Load failed";
+//		Q_ASSERT(0);
 //				auto default_columnspecs = AMLM::Core::self()->getDefaultColumnSpecs();
 //				AMLM::Core::self()->getScanResultsTreeModel()->setColumnSpecs(default_columnspecs);
 	}
+#endif
+	createDBModelAndView();
 
 #if 0///
 	auto fut_load_db = ExtAsync::qthread_async_with_cnr_future([=, &temp_load_srtm_instance](ExtFuture<Unit> fut_cnr, QString overlay_filename){
