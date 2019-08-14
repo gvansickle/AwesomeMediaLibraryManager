@@ -58,10 +58,11 @@ public:
 	 * @param parent_model
 	 * @param id
 	 */
-	AbstractTreeModelHeaderItem(std::vector<ColumnSpec> column_specs,
+	explicit AbstractTreeModelHeaderItem(std::vector<ColumnSpec> column_specs,
 	                            const std::shared_ptr<AbstractTreeModel>& parent_model = nullptr, UUIncD id = UUIncD::null());
 
 public:
+	M_GH_DELETE_COPY_AND_MOVE(AbstractTreeModelHeaderItem);
 ////	AbstractTreeModelHeaderItem() {};
 	~AbstractTreeModelHeaderItem() override;
 
@@ -75,8 +76,8 @@ public:
 	  * Replaces any existing column_specs with the given @a column_specs.
 	  * @warning This must be called before any child items are added to the model.
 	  */
-	virtual bool setColumnSpecs(std::initializer_list<ColumnSpec> column_specs);
-	virtual bool setColumnSpecs(std::vector<ColumnSpec> column_specs);
+	bool setColumnSpecs(std::initializer_list<ColumnSpec> column_specs);
+	bool setColumnSpecs(std::vector<ColumnSpec> column_specs);
 
 	QVariant data(int column, int role = Qt::DisplayRole) const override;
 

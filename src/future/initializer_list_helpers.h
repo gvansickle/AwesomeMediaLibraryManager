@@ -31,6 +31,9 @@
  * Some helpers for handling the std::initializer_list<> object.
  */
 
+/**
+ * Convert the @a init_list to a std::vector<> so it can be persisted, passed around, etc.
+ */
 template <class T>
 std::vector<T> to_vector(const std::initializer_list<T> &init_list)
 {
