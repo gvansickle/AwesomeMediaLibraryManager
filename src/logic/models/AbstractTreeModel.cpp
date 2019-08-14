@@ -45,6 +45,7 @@
 #include "AbstractTreeModelItem.h"
 #include "AbstractTreeModelHeaderItem.h"
 #include "ColumnSpec.h"
+#include <future/initializer_list_helpers.h>
 #include <utils/DebugHelpers.h>
 #include <logic/serialization/XmlSerializer.h>
 #include <third_party/sqlite_orm/include/sqlite_orm/sqlite_orm.h>
@@ -52,6 +53,20 @@
 // static
 std::shared_ptr<AbstractTreeModel>
 AbstractTreeModel::make_AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent)
+{
+	auto vec_colspec = to_vector(column_specs);
+	return AbstractTreeModel::make_AbstractTreeModel(vec_colspec, parent);
+
+//	auto retval_shptr = std::shared_ptr<AbstractTreeModel>(new AbstractTreeModel(column_specs, parent));
+//
+//	retval_shptr->postConstructorFinalization(retval_shptr, column_specs);
+//
+//	return retval_shptr;
+}
+
+// static
+std::shared_ptr<AbstractTreeModel>
+AbstractTreeModel::make_AbstractTreeModel(std::vector<ColumnSpec> column_specs, QObject* parent)
 {
 	auto retval_shptr = std::shared_ptr<AbstractTreeModel>(new AbstractTreeModel(column_specs, parent));
 
@@ -67,7 +82,7 @@ AbstractTreeModel::AbstractTreeModel(QObject* parent) : QAbstractItemModel(paren
 	qDb() << "Done, this:" << this;
 }
 
-AbstractTreeModel::AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent)
+AbstractTreeModel::AbstractTreeModel(std::vector<ColumnSpec> column_specs, QObject* parent)
 	: AbstractTreeModel(parent)
 {
 	/// Can't call virtual functions in here, which makes our life more difficult.
@@ -75,7 +90,7 @@ AbstractTreeModel::AbstractTreeModel(std::initializer_list<ColumnSpec> column_sp
 	/// Regardless, the named constructor is working well now, so we're good.
 }
 
-void AbstractTreeModel::postConstructorFinalization(const std::shared_ptr<AbstractTreeModel>& retval_shptr, std::initializer_list<ColumnSpec> column_specs)
+void AbstractTreeModel::postConstructorFinalization(const std::shared_ptr<AbstractTreeModel>& retval_shptr, std::vector<ColumnSpec> column_specs)
 {
 	// Create the root item/header item.
 	retval_shptr->m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs, retval_shptr);
@@ -151,6 +166,13 @@ bool AbstractTreeModel::setColumnSpecs(std::initializer_list<ColumnSpec> column_
 
 	Q_ASSERT(m_root_item);
 
+	return m_root_item->setColumnSpecs(column_specs);
+}
+
+bool AbstractTreeModel::setColumnSpecs(std::vector<ColumnSpec> column_specs)
+{
+	std::unique_lock write_lock(m_rw_mutex);
+	Q_ASSERT(m_root_item);
 	return m_root_item->setColumnSpecs(column_specs);
 }
 

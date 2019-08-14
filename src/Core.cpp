@@ -74,7 +74,7 @@ void Core::build()
 	// Create the single (at this point) ScanResultsTreeModel.
 	/// @note In KDenLive, this is the same, no parent QObject given to ProjectItemModel::construct();
 M_TODO("Improve ColumnSpecs, not sure I like how we do this and then need to erase it on a LoadModel().");
-	std::initializer_list<ColumnSpec> column_specs = {ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}};
+	std::vector<ColumnSpec> column_specs = {ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}};
 	m_self->m_srtm_instance = ScanResultsTreeModel::make_ScanResultsTreeModel({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
 	// Create and set the root item / headers
 //	m_self->m_srtm_instance->setColumnSpecs({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
@@ -144,20 +144,22 @@ std::shared_ptr<ScanResultsTreeModel> Core::getScanResultsTreeModel()
 	return std::dynamic_pointer_cast<ScanResultsTreeModel>(m_srtm_instance);
 }
 
-//std::shared_ptr<ScanResultsTreeModel> Core::swapScanResultsTreeModel(const std::shared_ptr<ScanResultsTreeModel>& new_model)
-//{
-//	AMLM_ASSERT_X(0, "TODO");
-//	auto old_model = m_srtm_instance;
-//	old_model->beginResetModel();
-//
-//	m_srtm_instance = new_model;
-//
-//	return old_model;
-//}
-
-std::initializer_list<ColumnSpec> Core::getDefaultColumnSpecs()
+#if 1///
+std::shared_ptr<ScanResultsTreeModel> Core::swapScanResultsTreeModel(const std::shared_ptr<ScanResultsTreeModel>& new_model)
 {
-	std::initializer_list<ColumnSpec> column_specs = {ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}};
+//	AMLM_ASSERT_X(0, "TODO");
+	auto old_model = m_srtm_instance;
+//	old_model->beginResetModel();
+
+	m_srtm_instance = new_model;
+
+	return old_model;
+}
+#endif
+
+std::vector<ColumnSpec> Core::getDefaultColumnSpecs()
+{
+	std::vector<ColumnSpec> column_specs = {ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}};
 	return column_specs;
 };
 

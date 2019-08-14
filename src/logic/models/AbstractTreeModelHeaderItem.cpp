@@ -68,7 +68,7 @@ AbstractTreeModelHeaderItem::construct(std::initializer_list<ColumnSpec> column_
 }
 #endif
 
-AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(std::initializer_list<ColumnSpec> column_specs,
+AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(std::vector<ColumnSpec> column_specs,
                                                          const std::shared_ptr<AbstractTreeModel>& parent_model, UUIncD id)
 	: BASE_CLASS({}, nullptr, id)//, m_is_root(true) //, m_column_specs(column_specs)
 {
@@ -93,10 +93,23 @@ void AbstractTreeModelHeaderItem::clear()
 
 bool AbstractTreeModelHeaderItem::setColumnSpecs(std::initializer_list<ColumnSpec> column_specs)
 {
-	M_WARNING("TODO This should take a list of ColumnSpecs, NEEDS TO INSERT COLUMNS");
+	M_WARNING("TODO: NEED TO INSERT COLUMNS?");
 	Q_ASSERT_X(childCount() == 0, __PRETTY_FUNCTION__, "Model has children already");
 #warning "INSERT COLUMNS?"
 
+	std::vector<ColumnSpec> temp_item_data;
+
+	for(auto& it : column_specs)
+	{
+		temp_item_data.push_back(it);
+	}
+
+	this->setColumnSpecs(temp_item_data);
+	return true;
+}
+
+bool AbstractTreeModelHeaderItem::setColumnSpecs(std::vector<ColumnSpec> column_specs)
+{
 	m_item_data.clear();
 
 	for(auto& it : column_specs)

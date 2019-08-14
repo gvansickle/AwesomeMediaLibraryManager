@@ -1472,7 +1472,7 @@ void MainWindow::readLibSettings(QSettings& settings)
 	prog->setValue(2);
 	prog->show();
 
-#if 0
+#if 1
 	// The primary database file.
 	QString database_filename = QDir::homePath() + "/AMLMDatabase.xml";
 
@@ -1503,10 +1503,10 @@ void MainWindow::readLibSettings(QSettings& settings)
 
 //		auto oldselmodel = m_exp_second_child_view->selectionModel();
 
-//		auto old_srtm_model = AMLM::Core::self()->swapScanResultsTreeModel(temp_load_srtm_instance);
+		/*auto old_srtm_model =*/ AMLM::Core::self()->swapScanResultsTreeModel(temp_load_srtm_instance);
 
 		qDb() << "!!!!!!!!!!!!!!!!!!!!!!! OLD MODEL INFO:";
-		old_srtm_model->dump_model_info();
+//		old_srtm_model->dump_model_info();
 
 		auto srtmodel = AMLM::Core::self()->getScanResultsTreeModel().get();
 		m_exp_second_child_view->setModel(srtmodel);
@@ -1522,7 +1522,7 @@ void MainWindow::readLibSettings(QSettings& settings)
 //				AMLM::Core::self()->getScanResultsTreeModel()->setColumnSpecs(default_columnspecs);
 	}
 #endif
-	createDBModelAndView();
+//	createDBModelAndView();
 
 #if 0///
 	auto fut_load_db = ExtAsync::qthread_async_with_cnr_future([=, &temp_load_srtm_instance](ExtFuture<Unit> fut_cnr, QString overlay_filename){
@@ -1754,11 +1754,13 @@ M_WARNING("HACKISH, MAKE THIS BETTER");
 		openFileLibrary(url);
 	}
 
+#if 0
 	/// @todo Move this to its own handler.
 	/// Reload the AMLMDatabase.
 	auto srtmodel = AMLM::Core::self()->getScanResultsTreeModel();
 	srtmodel->clear();
 	srtmodel->LoadDatabase("/home/gary/AMLMDatabase.xml");
+#endif
 }
 
 void MainWindow::onCancelRescan()

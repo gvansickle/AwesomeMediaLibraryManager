@@ -29,6 +29,7 @@ set(HEADER_FILES_SRC_FUTURE
 	cloneable.h
 	grvs_functional.hpp
 	guideline_helpers.h
+	initializer_list_helpers.h
 	InsertionOrderedMap.h
 	overloaded.h
 	preproc.h
@@ -37,6 +38,7 @@ set(HEADER_FILES_SRC_FUTURE
 set(SOURCE_FILES_SRC_FUTURE
 	function_traits.cpp
 	guideline_helpers.cpp
+	initializer_list_helpers.cpp
 	InsertionOrderedMap.cpp
 	)
 

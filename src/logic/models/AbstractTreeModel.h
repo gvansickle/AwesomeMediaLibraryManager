@@ -79,7 +79,7 @@ protected:
 	 * @warning This model will NOT have a root item because virtual.  The named constructor will create it.
 	 * In general, derived constructors don't do much more than pass the @a parent param.
 	 */
-	AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
+	AbstractTreeModel(std::vector<ColumnSpec> column_specs, QObject *parent = nullptr);
 
 	/**
 	 * Creates and adds the root item to the model, some sanity checks, and other last-chance setup of the model object
@@ -87,7 +87,7 @@ protected:
 	 * @param retval_shptr  A shared_ptr to the model being constructed.
 	 * @param column_specs  The columnspecs list to initialize the root/header item with.
 	 */
-	virtual void postConstructorFinalization(const std::shared_ptr<AbstractTreeModel>& retval_shptr, std::initializer_list<ColumnSpec> column_specs);
+	virtual void postConstructorFinalization(const std::shared_ptr<AbstractTreeModel>& retval_shptr, std::vector<ColumnSpec> column_specs);
 
 public:
 	/**
@@ -96,6 +96,7 @@ public:
 	 *       Going the KDEN route here, but it's not clear that this is completely kosher wrt Qt.
 	 */
 	static std::shared_ptr<AbstractTreeModel> make_AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
+	static std::shared_ptr<AbstractTreeModel> make_AbstractTreeModel(std::vector<ColumnSpec> column_specs, QObject* parent = nullptr);
 	/**
 	 * Destructor.  Clears all items in the model, including the root item.
 	 */
@@ -114,6 +115,8 @@ public:
 	 * @todo setHeaderData() enough?
 	 */
 	virtual bool setColumnSpecs(std::initializer_list<ColumnSpec> column_specs);
+	virtual bool setColumnSpecs(std::vector<ColumnSpec> column_specs);
+
 
 	// bool hasIndex() is not virtual.
 
