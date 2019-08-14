@@ -49,9 +49,15 @@ static qint64 gcd(qint64 x, qint64 y)
 {
 	for (;;)
 	{
-		if (x == 0) return y;
+		if (x == 0)
+		{
+			return y;
+		}
 		y %= x;
-		if (y == 0) return x;
+		if (y == 0)
+		{
+			return x;
+		}
 		x %= y;
 	}
 }

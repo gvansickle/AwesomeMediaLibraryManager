@@ -84,7 +84,7 @@ namespace ExtFuture_detail
 {
 template <class T, class R>
 void connect_or_die_backprop_cancel_watcher(ExtFuture<T> up, ExtFuture<R> down);
-};
+}; // namespace ExtFuture_detail
 
 namespace ManagedExtFutureWatcher_detail {};
 

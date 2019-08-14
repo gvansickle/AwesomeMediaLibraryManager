@@ -19,14 +19,3 @@
 
 #include "QtHelpers.h"
 
-QtHelpers::QtHelpers()
-{
-	// TODO Auto-generated constructor stub
-
-}
-
-QtHelpers::~QtHelpers()
-{
-	// TODO Auto-generated destructor stub
-}
-

@@ -23,16 +23,6 @@
 #include <config.h>
 #include <QtCore/QSharedPointer>
 
-/*
- *
- */
-class QtHelpers
-{
-public:
-	QtHelpers();
-	virtual ~QtHelpers();
-};
-
 /**
  * In many/most instances we can't cross the std:: and Qt 5 streams.
  * Uhhhh.......

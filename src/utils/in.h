@@ -35,7 +35,7 @@ namespace impl
 		using std::end;
 		return std::find(begin(c), end(c), key) != end(c);
 	}
-}
+}; // namespace impl
 
 template<typename C, typename K>
 bool in(C const& c, K const& k)

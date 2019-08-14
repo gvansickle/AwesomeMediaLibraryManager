@@ -44,7 +44,7 @@
 #include "ISerializable.h"
 
 
-void XmlSerializer::save(const ISerializable &serializable, const QUrl &file_url, const QString &root_name,
+void XmlSerializer::save(const ISerializable &serializable, const QUrl &file_url, const QString &root_element_name,
                          std::function<void(void)> extra_save_actions)
 {
 	/// @todo file_url Currently only file://'s are supported.
@@ -75,7 +75,7 @@ void XmlSerializer::save(const ISerializable &serializable, const QUrl &file_url
 	// xmlstream.writeStartElement(str);
 	save_extra_start_info(xmlstream);
 
-	writeVariantToStream(root_name, serializable.toVariant(), xmlstream);
+	writeVariantToStream(root_element_name, serializable.toVariant(), xmlstream);
 
 	xmlstream.writeEndDocument();
 
