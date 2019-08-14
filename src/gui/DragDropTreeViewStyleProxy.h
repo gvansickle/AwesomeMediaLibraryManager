@@ -44,7 +44,7 @@ public:
 
 	explicit DragDropTreeViewStyleProxy(QStyle* style = Q_NULLPTR) : QProxyStyle(style) {}
 
-    void drawPrimitive(PrimitiveElement element, const QStyleOption *option, QPainter *painter, const QWidget *widget) const
+	void drawPrimitive(PrimitiveElement element, const QStyleOption *option, QPainter *painter, const QWidget *widget) const override
     {
         if(element == QStyle::PE_IndicatorItemViewItemDrop && !option->rect.isNull())
         {

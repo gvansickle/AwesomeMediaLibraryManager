@@ -36,8 +36,12 @@ class FilterWidget : public QLineEdit
 	//W_OBJECT(FilterWidget)
 	Q_OBJECT
 
-	Q_PROPERTY(Qt::CaseSensitivity caseSensitivity READ caseSensitivity WRITE setCaseSensitivity)
-	Q_PROPERTY(QRegExp::PatternSyntax patternSyntax READ patternSyntax WRITE setPatternSyntax)
+/// EXP
+	Q_PROPERTY(Qt::CaseSensitivity caseSensitivity READ caseSensitivity WRITE setCaseSensitivity NOTIFY filterChanged)
+	Q_PROPERTY(QRegExp::PatternSyntax patternSyntax READ patternSyntax WRITE setPatternSyntax NOTIFY filterChanged)
+//	Q_PROPERTY(Qt::CaseSensitivity caseSensitivity MEMBER m_caseSensitivityAction NOTIFY filterChanged)
+//	Q_PROPERTY(QRegExp::PatternSyntax patternSyntax MEMBER m_READ patternSyntax WRITE setPatternSyntax)
+
 
 Q_SIGNALS:
 	void filterChanged();
