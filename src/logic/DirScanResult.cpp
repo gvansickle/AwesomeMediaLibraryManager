@@ -98,30 +98,31 @@ void DirScanResult::determineDirProps(const QFileInfo &found_url_finfo)
 {
     // Separate out just the directory part of the URL.
 	// Works for any URL.
-	QUrl m_dir_url = m_exturl_media.m_url.adjusted(QUrl::RemoveFilename);
-	QFileInfo fi(m_dir_url.toString());
-	m_exturl_dir_url = ExtUrl(m_dir_url, &fi);
+	QUrl dir_url = static_cast<QUrl>(m_exturl_media).adjusted(QUrl::RemoveFilename);
+	QFileInfo fi(dir_url.toString());
+	m_exturl_dir_url = ExtUrl(dir_url, &fi);
 
     // Is there a sidecar cue sheet?
 
 	// Create the URL the *.cue file would have.
 	ExtUrl possible_cue_url;
 	possible_cue_url = QUrl(m_exturl_media);
-	QString cue_url_as_str = possible_cue_url.m_url.toString();
+	QString cue_url_as_str = static_cast<QUrl>(possible_cue_url).toString();
     Q_ASSERT(!cue_url_as_str.isEmpty());
     cue_url_as_str.replace(QRegularExpression("\\.[[:alnum:]]+$"), ".cue");
     possible_cue_url = cue_url_as_str;
-	Q_ASSERT(possible_cue_url.m_url.isValid());
+	Q_ASSERT(static_cast<QUrl>(possible_cue_url).isValid());
 
 	// Does the possible cue sheet file actually exist?
     if(true /** @todo local file*/)
     {
-		QFileInfo fi(possible_cue_url.m_url.toLocalFile());
+		QUrl possible_cue_qurl = static_cast<QUrl>(possible_cue_url);
+		QFileInfo fi(possible_cue_qurl.toLocalFile());
         if(fi.exists())
         {
             // It's there.
 			// Set the flag and the path relative to the directory (should be just the filename).
-			m_exturl_cuesheet = ExtUrl(possible_cue_url.m_url, &fi);
+			m_exturl_cuesheet = ExtUrl(possible_cue_qurl, &fi);
 			m_flags_dirprops |= HasSidecarCueSheet;
 	        m_has_sidecar_cuesheet = true;
         }

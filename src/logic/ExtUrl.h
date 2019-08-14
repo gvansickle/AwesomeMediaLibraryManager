@@ -103,7 +103,7 @@ public:
     /**
      * ExtUrl Status enum.
      */
-    enum Statuses
+	enum Statuses
     {
     	Unknown = 0x00,
         Exists = 0x01,
@@ -123,6 +123,20 @@ public:
      * Check the status of the URL, if it is accessible, if it's stale, etc.
      */
     Status getStatus();
+
+	/// @name Serialization
+	/// @{
+
+	/// @todo Can these be protected?
+	QVariant toVariant() const override;
+	void fromVariant(const QVariant& variant) override;
+
+	QTH_FRIEND_QDATASTREAM_OPS(ExtUrl);
+	QTH_DECLARE_FRIEND_QDEBUG_OP(ExtUrl);
+
+	/// @}
+
+private:
 
     /// @name Data members.
     /// @{
@@ -153,17 +167,6 @@ public:
 	/// @}
 
 //	bool isValid() { return m_url.isValid(); }
-
-	/// @name Serialization
-	/// @{
-
-	/// @todo Can these be protected?
-	QVariant toVariant() const override;
-	void fromVariant(const QVariant& variant) override;
-
-	QTH_FRIEND_QDATASTREAM_OPS(ExtUrl);
-
-	/// @}
 
 protected:
 

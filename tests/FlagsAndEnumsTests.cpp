@@ -358,7 +358,7 @@ TEST_F(FlagsAndEnumsTests, ExtUrlRoundTripThroughQVariant)
 {
 	ExtUrl before;
 
-	before.m_url = "file://a.b.com/";
+	before = QUrl("file://a.b.com/");
 
 	QVariant during = before.toVariant();
 
