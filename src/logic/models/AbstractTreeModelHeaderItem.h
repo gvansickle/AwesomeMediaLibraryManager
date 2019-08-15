@@ -63,7 +63,6 @@ public:
 
 public:
 	M_GH_DELETE_COPY_AND_MOVE(AbstractTreeModelHeaderItem);
-////	AbstractTreeModelHeaderItem() {};
 	~AbstractTreeModelHeaderItem() override;
 
 	/**

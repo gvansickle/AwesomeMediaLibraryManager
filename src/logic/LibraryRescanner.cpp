@@ -195,17 +195,17 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
     return retval;
 }
 
-void LibraryRescanner::SaveDatabase(std::shared_ptr<ScanResultsTreeModel> tree_model_ptr, const QString& database_filename)
-{
-	/// @todo Stub
-	tree_model_ptr->SaveDatabase(database_filename);
-}
-
-void LibraryRescanner::LoadDatabase(std::shared_ptr<ScanResultsTreeModel> tree_model_ptr, const QString& database_filename)
-{
-	/// @todo Stub
-	tree_model_ptr->LoadDatabase(database_filename);
-}
+//void LibraryRescanner::SaveDatabase(std::shared_ptr<ScanResultsTreeModel> tree_model_ptr, const QString& database_filename)
+//{
+//	/// @todo Stub
+//	tree_model_ptr->SaveDatabase(database_filename);
+//}
+//
+//void LibraryRescanner::LoadDatabase(std::shared_ptr<ScanResultsTreeModel> tree_model_ptr, const QString& database_filename)
+//{
+//	/// @todo Stub
+//	tree_model_ptr->LoadDatabase(database_filename);
+//}
 
 void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 {

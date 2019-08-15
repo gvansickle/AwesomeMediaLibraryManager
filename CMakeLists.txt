@@ -96,7 +96,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Min versions of Qt5, KF5, KF5/ECM.
-set(QT_MIN_VERSION "5.12.1")
+set(QT_MIN_VERSION "5.12.4")
 set(KF5_MIN_VERSION "5.57.0") ### @win temp: Only have 5.52.0
 set(ECM_MIN_VERSION "5.57.0")
 
@@ -125,7 +125,7 @@ find_package(ECM ${ECM_MIN_VERSION} REQUIRED NO_MODULE)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake
 		#${CMAKE_SOURCE_DIR}/cmake/cotire/CMake
 		${CMAKE_SOURCE_DIR}/cmake/ucm/cmake
-		${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR}
+		${ECM_MODULE_PATH} #${ECM_KDE_MODULE_DIR} # Obsolete?
 		${CMAKE_SOURCE_DIR}/src/third_party/continuable/cmake)
 
 ###
@@ -136,6 +136,10 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake
 # ECM KDE macros
 # @note Order matters for these next two include()s.  Per the docs, InstallDirs needs to come before CMakeSettings.
 # @link https://api.kde.org/ecm/kde-module/KDECMakeSettings.html#runtime-paths
+
+# "The ``KDE_INSTALL_PREFIX_SCRIPT`` option will install a ${CMAKE_INSTALL_PREFIX}/prefix.sh"
+
+set(KDE_INSTALL_PREFIX_SCRIPT ON)
 include(KDEInstallDirs)  ##< Replaces/uses GNUInstallDirs.
 #set(APPLE_FORCE_X11 ON) # This applies to KDECMakeSettings.
 set(ENABLE_CLAZY ON) # This applies to KDECMakeSettings.
@@ -172,6 +176,8 @@ include(ECMEnableSanitizers)
 # That is what happens, but I'm not clear on why this var would control that; are all the KDE Install Dirs deprecated?
 #set(KDE_INSTALL_DIRS_NO_DEPRECATED TRUE)
 
+# "The ``KDE_INSTALL_PREFIX_SCRIPT`` option will install a ${CMAKE_INSTALL_PREFIX}/prefix.sh"
+add_feature_info("prefix.sh" KDE_INSTALL_PREFIX_SCRIPT "create prefix.sh script to support local execution")
 
 # KDECompilerSettings
 # Enables more warnings.  Transitively includes include(ECMEnableSanitizers).
@@ -335,10 +341,11 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # without overriding a user-provided value"
 ### @todo This is still broken: prefix.sh gets generated (first time after a wipe?) with /usr/bin paths.
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+	# TODO: This is wrong on Windows.
 	set(NEW_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install")
 	message(STATUS "Changing CMAKE_INSTALL_PREFIX from ${CMAKE_INSTALL_PREFIX} to ${NEW_INSTALL_PREFIX}")
 	set (CMAKE_INSTALL_PREFIX "${NEW_INSTALL_PREFIX}" CACHE
-		PATH "Install path prefix, prepended onto install directories." FORCE )
+		PATH "AMLM Default install path prefix, prepended onto install directories." FORCE )
 	message(STATUS "Set CMAKE_INSTALL_PREFIX to ${CMAKE_INSTALL_PREFIX}")
 else()
 	message(WARNING "CMAKE_INSTALL_PREFIX set to default ${CMAKE_INSTALL_PREFIX}")
@@ -664,7 +671,7 @@ set(IDENTIFIER "io.github.gvansickle")
 
 ### Generate configured headers.
 # @note The version info file is generated in the "resources" dir/target.
-# Generate the amlm-configure.h file.
+# Generate the config.h file.  CMake will only touch this if it changes.
 configure_file(${PROJECT_SOURCE_DIR}/src/config.h.in
 	${PROJECT_BINARY_DIR}/src/config.h
 	ESCAPE_QUOTES)
