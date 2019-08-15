@@ -119,7 +119,7 @@ public:
 	/**
 	 * Insert new default-constructed columns into this item/row.
 	 */
-M_WARNING("NEED TO BE OVERRIDDEN IN HeaderItem");
+//M_WARNING("NEED TO BE OVERRIDDEN IN HeaderItem");
 	 // ETM, no KDEN
 	virtual bool insertColumns(int insert_before_column, int num_columns);
 	// ETM, no KDEN

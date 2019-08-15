@@ -131,67 +131,6 @@ void ScanResultsTreeModel::SaveDatabase(const QString& database_filename)
 }
 #endif
 
-#if 0////
-UUIncD ScanResultsTreeModel::requestAddScanResultsTreeModelItem(const QVariant& variant, UUIncD parent_id, Fun undo, Fun redo)
-{
-	std::unique_lock write_lock(m_rw_mutex);
-
-	// ::construct() a new tree model item from variant.
-//	std::shared_ptr<ScanResultsTreeModelItem> new_item = ScanResultsTreeModelItem::construct(variant);
-	std::shared_ptr<ScanResultsTreeModelItem> new_item = std::make_shared<ScanResultsTreeModelItem>(variant);
-
-	bool status = addItem(std::static_pointer_cast<AbstractTreeModelItem>(new_item), parent_id, undo, redo);
-
-	if(!status)
-	{
-		// Add failed for some reason, return a null UUIncD.
-		return UUIncD::null();
-	}
-
-	new_item->fromVariant(variant);
-
-	return new_item->getId();
-}
-
-UUIncD ScanResultsTreeModel::requestAddSRTMLibEntryItem(const QVariant& variant, UUIncD parent_id, Fun undo, Fun redo)
-{
-	std::unique_lock write_lock(m_rw_mutex);
-
-//	auto new_item = SRTMItem_LibEntry::construct(variant, std::static_pointer_cast<ScanResultsTreeModel>(shared_from_this()));
-//	auto new_item = SRTMItem_LibEntry::construct(variant);//, std::static_pointer_cast<ScanResultsTreeModel>(shared_from_this()));
-	auto new_item = std::make_shared<SRTMItem_LibEntry>(variant);//, std::static_pointer_cast<ScanResultsTreeModel>(shared_from_this()));
-	bool status = addItem(new_item, parent_id, undo, redo);
-
-	if(!status)
-	{
-		// Add failed for some reason, return a null UUIncD.
-		return UUIncD::null();
-	}
-
-	new_item->fromVariant(variant);
-
-	return new_item->getId();
-}
-#endif////
-
-#if 0///
-UUIncD ScanResultsTreeModel::requestAddExistingTreeModelItem(std::shared_ptr<AbstractTreeModelItem> new_item, UUIncD parent_id, Fun undo, Fun redo)
-{
-	std::unique_lock write_lock(m_rw_mutex);
-
-	// ::construct() a new tree model item from variant.
-//	std::shared_ptr<AbstractTreeModelItem> new_item = make_item_from_variant(variant);
-
-	bool status = addItem(new_item, parent_id, undo, redo);
-
-	if(!status)
-	{
-		// Add failed for some reason, return a null UUIncD.
-		return UUIncD::null();
-	}
-	return new_item->getId();
-}
-#endif///
 
 #if 0
 void ScanResultsTreeModel::toOrm(std::string filename) const

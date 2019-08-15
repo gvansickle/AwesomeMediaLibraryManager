@@ -93,16 +93,6 @@ public:
 	QVariant toVariant() const override;
 	void fromVariant(const QVariant& variant) override;
 
-	/**
-	 * Non-static factory functions for creating new, typed tree nodes from QVariantMaps.
-	 */
-//	UUIncD requestAddScanResultsTreeModelItem(const QVariant& variant, UUIncD parent_id,
-//								   Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
-//	UUIncD requestAddSRTMLibEntryItem(const QVariant& variant, UUIncD parent_id,
-//									  Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
-//	UUIncD requestAddExistingTreeModelItem(std::shared_ptr<AbstractTreeModelItem> new_item, UUIncD parent_id,
-//										   Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
-
 #if 0
 	void toOrm(std::string filename) const override;
 	void fromOrm(std::string filename) override;

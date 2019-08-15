@@ -53,6 +53,7 @@ SettingsDialog::SettingsDialog(QWidget *parent, const char* name, KConfigSkeleto
     addPage(new SettingsPageGeneral(this), tr("General"), "preferences-desktop-sound");
     addPage(new SettingsPageCollection(this), tr("Collection"), "applications-multimedia");
 	addPage(new SettingsPageAppearance(this), tr("Appearance"), "preferences-desktop-color");
+	addPage(new SettingsPageDatabase(this), tr("Database"), "database");
 //	addPage(new SettingsPageLibrary(this), tr("Music Library") );
 	/// ...
 

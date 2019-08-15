@@ -58,6 +58,8 @@
   		<label>The list of URLs to include in your music library</label>
   	</entry>
   </group>
+  <group name="Database">
+  </group>
   <group name="Collection">
   	<entry name="CollectionSourceUrls" key="collection_source_urls" type="StringList">
         <label>List of source paths in the collection</label>

@@ -254,7 +254,7 @@ void Theme::initialize()
 #endif
     // Interesting stuff in here by default.
     /// @note Dumps a lot, use for debug only.
-	dump_resource_tree(":/");
+//	dump_resource_tree(":/");
 //    LogIconThemeInfo();
 
 
