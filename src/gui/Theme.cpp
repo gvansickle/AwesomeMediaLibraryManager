@@ -192,7 +192,7 @@ void Theme::initialize()
 
     LogIconThemeInfo();
 
-#if 0 /// @todo KIconLoader should be handling icontheme.rcc.
+#if 1 /// @todo KIconLoader should be handling icontheme.rcc.
     // Load the bundled icon resources.
     int rccs_loaded = 0;
     // Filename/resource map root pairs
@@ -254,7 +254,7 @@ void Theme::initialize()
 #endif
     // Interesting stuff in here by default.
     /// @note Dumps a lot, use for debug only.
-//	dump_resource_tree(":/");
+	dump_resource_tree(":/");
 //    LogIconThemeInfo();
 
 
