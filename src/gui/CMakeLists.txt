@@ -99,6 +99,8 @@ set(gui_settings_SOURCE_FILES
 	SettingsPageAppearance.ui
 	SettingsPageLibrary.cpp
 	SettingsPageLibrary.h
+	SettingsPageDatabase.h
+	SettingsPageDatabase.cpp
 	SettingsPageDatabase.ui
 	SettingsPageLibrary.ui
 	SettingsDialog.h

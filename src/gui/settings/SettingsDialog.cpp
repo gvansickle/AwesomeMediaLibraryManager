@@ -21,6 +21,7 @@
 
 // Pages
 #include "SettingsPageGeneral.h"
+#include "SettingsPageDatabase.h"
 #include "SettingsPageCollection.h"
 #include "SettingsPageAppearance.h"
 #include "SettingsPageLibrary.h"
