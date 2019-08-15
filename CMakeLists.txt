@@ -137,20 +137,23 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake
 # @note Order matters for these next two include()s.  Per the docs, InstallDirs needs to come before CMakeSettings.
 # @link https://api.kde.org/ecm/kde-module/KDECMakeSettings.html#runtime-paths
 
-# "The ``KDE_INSTALL_PREFIX_SCRIPT`` option will install a ${CMAKE_INSTALL_PREFIX}/prefix.sh"
+include(ECMInstallIcons) ### Order per KDEN and KDEV
 
+# "The 'KDE_INSTALL_PREFIX_SCRIPT' option will install a ${CMAKE_INSTALL_PREFIX}/prefix.sh"
 set(KDE_INSTALL_PREFIX_SCRIPT ON)
+
+### @note KDEInstallDirs is immediately followed by KDECMakeSettings in KDevelop and KDenLive.
+### KDEV has these after all the other ECM includes, KDEN hasthem only after ECMInstallIcons and othe ECM's are after these.
 include(KDEInstallDirs)  ##< Replaces/uses GNUInstallDirs.
 #set(APPLE_FORCE_X11 ON) # This applies to KDECMakeSettings.
 set(ENABLE_CLAZY ON) # This applies to KDECMakeSettings.
-include(KDECMakeSettings NO_POLICY_SCOPE)
+include(KDECMakeSettings)  ### @note Was NO_POLICY_SCOPE, KDEN and KDEV don't have that.
 
 # CMake macros.
 include(FeatureSummary)
 
 # ECM macros.
 include(ECMOptionalAddSubdirectory)
-include(ECMInstallIcons)
 include(ECMAddAppIcon)
 include(ECMAddTests)
 include(ECMMarkAsTest)
@@ -796,6 +799,7 @@ message(STATUS "Variables:")
 print_varlist(
 	PROJECT_NAME
 	CMAKE_BINARY_DIR
+	KDE_INSTALL_BINDIR
 	PROJECT_BINARY_DIR
 	CMAKE_LIBRARY_PATH
 	CMAKE_PREFIX_PATH
@@ -803,10 +807,15 @@ print_varlist(
 	CMAKE_CXX_FLAGS
 	CMAKE_CXX_FLAGS_DEBUG
 	CMAKE_EXPORT_COMPILE_COMMANDS
-	CMAKE_INSTALL_PREFIX 
-	KDE_INSTALL_BINDIR
+	CMAKE_INSTALL_PREFIX
+	### These don't exist, only CMAKE_INSTALL_PREFIX
+	#KDE_INSTALL_PREFIX
+	#KDE_INSTALL_FULL_PREFIX
+	KDE_INSTALL_PREFIX_SCRIPT
 	KDE_INSTALL_DATADIR
+	CMAKE_INSTALL_ICONDIR
 	KDE_INSTALL_ICONDIR
+	KDE_INSTALL_FULL_ICONDIR
 	META_FILES_TO_INCLUDE
 	KDE_INSTALL_TARGETS_DEFAULT_ARGS)
 
