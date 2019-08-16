@@ -721,7 +721,12 @@ M_TODO("????");
 
 void LibraryRescanner::cancelAsyncDirectoryTraversal()
 {
-//	m_dirtrav_future.cancel();
+	//	m_dirtrav_future.cancel();
+}
+
+void LibraryRescanner::SLOT_startAsyncDirectoryTraversal_ForDB(const QUrl& dir_url, std::shared_ptr<ScanResultsTreeModel> srtm)
+{
+#error
 }
 
 #if 0

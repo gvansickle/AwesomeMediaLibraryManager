@@ -85,8 +85,10 @@ set(INCLUDE_DIR_VERDIGRIS ${PROJECT_SOURCE_DIR}/src/third_party/verdigris/src)
 add_library(verdigris_target INTERFACE)
 target_include_directories(verdigris_target INTERFACE ${PROJECT_SOURCE_DIR}/src/third_party/verdigris/src)
 
-
-# KF5 settings system sources.
+###
+### KF5 settings system sources.
+###
+# The actual settings file compilation.
 kconfig_add_kcfg_files(amlm_settings_SRCS AwesomeMediaLibraryManagerSettings.kcfgc)
 # We make the generated KConfig settings files into their own library so dependencies get handled correctly.
 # amlm_settings_SRCS == AwesomeMediaLibraryManagerSettings.cpp and .h.

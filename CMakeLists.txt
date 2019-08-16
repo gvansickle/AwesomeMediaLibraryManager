@@ -34,7 +34,7 @@
 
 
 # cmake setup.
-cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 cmake_policy(SET CMP0053 NEW) # Use new var ref/esc seq eval
 cmake_policy(SET CMP0010 NEW) # Silence warning on CMP0010.
 
@@ -816,6 +816,7 @@ print_varlist(
 	### These don't exist, only CMAKE_INSTALL_PREFIX
 	#KDE_INSTALL_PREFIX
 	#KDE_INSTALL_FULL_PREFIX
+	KDE_INSTALL_KCFGDIR # kconfig description files (DATAROOTDIR/config.kcfg), prev: [KCFG_INSTALL_DIR]
 	KDE_INSTALL_PREFIX_SCRIPT
 	KDE_INSTALL_DATADIR
 	CMAKE_INSTALL_ICONDIR

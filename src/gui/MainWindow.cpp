@@ -665,7 +665,7 @@ void MainWindow::createActionsTools(KActionCollection *ac)
 
 	m_rescanLibraryAct = make_action(QIcon::fromTheme("view-refresh"), tr("&Rescan libray..."), this,
 									QKeySequence::Refresh);
-	connect_trig(m_rescanLibraryAct, this, &MainWindow::onRescanLibrary);
+	connect_trig(m_rescanLibraryAct, this, &MainWindow::SLOT_onRescanDatabase);
 	addAction("rescan_library", m_rescanLibraryAct);
 
 	m_cancelRescanAct = make_action(Theme::iconFromTheme("process-stop"), tr("Cancel Rescan"), this,
@@ -1493,6 +1493,7 @@ void MainWindow::readLibSettings(QSettings& settings)
 	// Try to Load it into a new model.
 	auto temp_load_srtm_instance = ScanResultsTreeModel::make_ScanResultsTreeModel({});
 	bool success = temp_load_srtm_instance->LoadDatabase(database_filename);
+	Q_ASSERT(temp_load_srtm_instance->checkConsistency());
 	if(success)
 	{
 		// Swap in the new model.
@@ -1734,8 +1735,10 @@ void MainWindow::openFileLibrary(const QUrl& filename)
 	}
 }
 
-void MainWindow::onRescanLibrary()
+void MainWindow::SLOT_onRescanDatabase()
 {
+	/// Rescan the root database.
+#if 0
 	// Start a rescan on all models.
 M_WARNING("HACKISH, MAKE THIS BETTER");
 /// @todo So really what we're doing is removing any libraries and re-opening them.
@@ -1753,13 +1756,15 @@ M_WARNING("HACKISH, MAKE THIS BETTER");
 	{
 		openFileLibrary(url);
 	}
-
-#if 0
+#endif
+#if 1
 	/// @todo Move this to its own handler.
 	/// Reload the AMLMDatabase.
 	auto srtmodel = AMLM::Core::self()->getScanResultsTreeModel();
+	/// @todo Get the rot dirs.
+	auto root_dir_list = srtmodel->getBaseDirectoryList();
 	srtmodel->clear();
-	srtmodel->LoadDatabase("/home/gary/AMLMDatabase.xml");
+//	srtmodel->LoadDatabase("/home/gary/AMLMDatabase.xml");
 #endif
 }
 
@@ -2159,35 +2164,20 @@ void MainWindow::SLOT_find_prev()
 
 void MainWindow::startSettingsDialog()
 {
-//	KConfigDialog *dialog = KConfigDialog::exists( "settings" );
-    auto dialog = SettingsDialog::exists("settings");
-	if( !dialog )
+	// Based on @link https://techbase.kde.org/Development/Tutorials/Using_KConfig_XT
+	if(SettingsDialog::showDialog("settings"))
 	{
-		// KConfigDialog didn't find an instance of this dialog, so lets create it:
-		dialog = new SettingsDialog(this, "settings", AMLMSettings::self());
-
-		connect(dialog, &KConfigDialog::settingsChanged, this, &MainWindow::onSettingsChanged);
-	}
-    dialog->show( /*page*/);
-//    dialog->exec();
-
-#if 0
-	if(!m_settings_dlg)
-	{
-		// This is the first time anyone has opened the settings dialog.
-		m_settings_dlg = QSharedPointer<SettingsDialog>(new SettingsDialog(this, "App Settings", Settings::self()), &QObject::deleteLater);
+		// Dialog was already created, we just showed it.
+		return;
 	}
 
-	// Open the settings dialog modeless.
-	// Note this from the Qt5 docs:
-	// http://doc.qt.io/qt-5/qdialog.html
-	// "If you invoke the show() function after hiding a dialog, the dialog will be displayed in its original position. [...]
-	// To preserve the position of a dialog that has been moved by the user, save its position in your closeEvent() handler and
-	// then move the dialog to that position, before showing it again"
-	m_settings_dlg->show();
-	m_settings_dlg->raise();
-	m_settings_dlg->activateWindow();
-#endif
+	// No dialog yet, create a new one.
+	SettingsDialog* settings_dlg = new SettingsDialog(this, "settings", AMLMSettings::self());
+
+	// Hook up the "settings changed" signal.
+	connect_or_die(settings_dlg, &KConfigDialog::settingsChanged, this, &MainWindow::onSettingsChanged);
+
+	settings_dlg->show();
 }
 
 void MainWindow::onOpenShortcutDlg()

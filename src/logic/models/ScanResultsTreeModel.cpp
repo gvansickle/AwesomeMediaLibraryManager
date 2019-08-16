@@ -104,6 +104,17 @@ void ScanResultsTreeModel::setBaseDirectory(const QUrl &base_directory)
 	m_base_directory = base_directory;
 }
 
+QStringList ScanResultsTreeModel::getBaseDirectoryList() const
+{
+	std::unique_lock read_lock(m_rw_mutex);
+
+	QStringList retval;
+
+	retval << m_base_directory.toString();
+
+	return retval;
+}
+
 #if 0
 void ScanResultsTreeModel::LoadDatabase(const QString& database_filename)
 {

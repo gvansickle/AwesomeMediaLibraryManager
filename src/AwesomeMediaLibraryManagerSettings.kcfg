@@ -20,6 +20,10 @@
    		</choices>
     	<default>KPageDialog::FaceType::List</default>
     </entry>
+    <entry name="SettingsDialogFiles" type="String">
+    	<label>Config Files</label>
+    	<default></default>
+    </entry>
     <!--Settings dialog, General page, Window tab-->
     <entry name="toolbarTextIconModeCombo" key="toolbar_global_text_icon_mode" type="Enum">
     	<label context="@label:listbox">XXX Toolbar text/icon mode:</label>
@@ -58,7 +62,12 @@
   		<label>The list of URLs to include in your music library</label>
   	</entry>
   </group>
+  <!--Settings dialog, Database -->
   <group name="Database">
+  	<entry name="DatabaseUrl" type="Url">
+  		<label>Path to the primary database file</label>
+  		<default>file://dummy</default>
+  	</entry>
   </group>
   <group name="Collection">
   	<entry name="CollectionSourceUrls" key="collection_source_urls" type="StringList">

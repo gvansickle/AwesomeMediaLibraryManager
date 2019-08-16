@@ -190,7 +190,7 @@ public Q_SLOTS:
 
 	void onCloseSubwindow();
 
-    void onRescanLibrary();
+	void SLOT_onRescanDatabase();
 
 	void onCancelRescan();
 

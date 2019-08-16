@@ -33,6 +33,7 @@
 #include <QDataWidgetMapper>
 #include <QDebug>
 #include <QStandardItem>
+#include <QListWidget>
 
 #include <KCoreConfigSkeleton>
 
@@ -52,13 +53,30 @@ SettingsDialog::SettingsDialog(QWidget *parent, const char* name, KConfigSkeleto
 	// Create and add the pages.
 	setFaceType(KPageDialog::List);
     addPage(new SettingsPageGeneral(this), tr("General"), "preferences-desktop-sound");
-    addPage(new SettingsPageCollection(this), tr("Collection"), "applications-multimedia");
+	addPage(new SettingsPageDatabase(this), tr("Database"), "network-server-database");
+	addPage(new SettingsPageCollection(this), tr("Collection"), "applications-multimedia");
 	addPage(new SettingsPageAppearance(this), tr("Appearance"), "preferences-desktop-color");
-	addPage(new SettingsPageDatabase(this), tr("Database"), "database");
 //	addPage(new SettingsPageLibrary(this), tr("Music Library") );
 	/// ...
 
 	connect(this, &KConfigDialog::settingsChanged, this, &SettingsDialog::onSettingsChanged);
+
+	auto cfg_file_list_edit = findChild<QListWidget*>("kcfg_configFileLocationListLineEdit");
+	auto list = DefaultSettingsHelper::getSettingsFileList();
+
+//	KSharedConfigPtr config = KSharedConfig::openConfig();
+//	QString str = AMLMSettings::self()->;
+	QStandardPaths::StandardLocation std_loc = config->config()->locationType();
+	QStringList std_config_list = QStandardPaths::standardLocations(std_loc);
+	QStringList additional_sources = config->config()->additionalConfigSources();
+	QString str = config->config()->name();
+	cfg_file_list_edit->addItem("Name:");
+	cfg_file_list_edit->addItem(str);
+	cfg_file_list_edit->addItem("Paths:");
+	cfg_file_list_edit->addItems(std_config_list);
+	cfg_file_list_edit->addItem("Additional Sources:");
+	cfg_file_list_edit->addItems(additional_sources);
+
 
 ///// @todo experiment
 //    QRegExp re("^kcfg_.*");

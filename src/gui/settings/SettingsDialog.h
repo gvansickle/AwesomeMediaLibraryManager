@@ -66,6 +66,10 @@ public:
 	SettingsDialog(QWidget *parent, const char* name, KConfigSkeleton *config);
     ~SettingsDialog() override;
 
+// KConfigDialog signals:
+	// void 	settingsChanged (const QString &dialogName)
+	// void 	widgetModified ()
+
 protected Q_SLOTS:
 
     /**
@@ -94,9 +98,9 @@ protected Q_SLOTS:
 
 protected:
 
-    virtual void parseWidgetsThatKDEForgotAbout();
+	void parseWidgetsThatKDEForgotAbout();
 
-    virtual void setupWidget(KComboBox* box, KConfigSkeletonItem *item);
+	void setupWidget(KComboBox* box, KConfigSkeletonItem *item);
 
 };
 
