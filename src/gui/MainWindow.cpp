@@ -1760,7 +1760,7 @@ M_WARNING("HACKISH, MAKE THIS BETTER");
 #if 1
 	/// @todo Move this to its own handler.
 	/// Reload the AMLMDatabase.
-	auto srtmodel = AMLM::Core::self()->getScanResultsTreeModel();
+	std::shared_ptr<ScanResultsTreeModel> srtmodel = AMLM::Core::self()->getScanResultsTreeModel();
 	/// @todo Really Get the root dirs.
 	auto root_dir_list = srtmodel->getBaseDirectoryList();
 	srtmodel->clear();

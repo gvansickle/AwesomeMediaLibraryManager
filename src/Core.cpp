@@ -173,12 +173,12 @@ std::shared_ptr<TreeModel> Core::getEditableTreeModel()
 	return m_etm_instance;
 }
 
-DatabaseScanJob* Core::getDatabaseRescanner()
-{
-	Q_ASSERT(0);
-//	Q_CHECK_PTR(m_rescanner);
-//	return m_rescanner;
-}
+//DatabaseScanJob* Core::getDatabaseRescanner()
+//{
+//	Q_ASSERT(0);
+////	Q_CHECK_PTR(m_rescanner);
+////	return m_rescanner;
+//}
 
 
 void Core::clean()

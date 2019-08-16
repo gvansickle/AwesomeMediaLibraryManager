@@ -80,7 +80,7 @@ public:
 
 	std::shared_ptr<TreeModel> getEditableTreeModel();
 
-	DatabaseScanJob* getDatabaseRescanner();
+//	DatabaseScanJob* getDatabaseRescanner();
 
 	/// @}
 
