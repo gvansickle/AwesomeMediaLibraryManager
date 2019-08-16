@@ -384,7 +384,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 
 #if 1
 
-#define TREE_ITEM_MODEL_POP_NON_GUI_THREAD 0
+#define TREE_ITEM_MODEL_POP_NON_GUI_THREAD 1
 
 	/// Append TreeModelItems to the ScanResultsTreeModel tree_model.
 	Q_ASSERT(tree_model);
@@ -724,10 +724,7 @@ void LibraryRescanner::cancelAsyncDirectoryTraversal()
 	//	m_dirtrav_future.cancel();
 }
 
-void LibraryRescanner::SLOT_startAsyncDirectoryTraversal_ForDB(const QUrl& dir_url, std::shared_ptr<ScanResultsTreeModel> srtm)
-{
-#error
-}
+
 
 #if 0
 

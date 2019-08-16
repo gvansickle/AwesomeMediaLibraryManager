@@ -1761,9 +1761,11 @@ M_WARNING("HACKISH, MAKE THIS BETTER");
 	/// @todo Move this to its own handler.
 	/// Reload the AMLMDatabase.
 	auto srtmodel = AMLM::Core::self()->getScanResultsTreeModel();
-	/// @todo Get the rot dirs.
+	/// @todo Really Get the root dirs.
 	auto root_dir_list = srtmodel->getBaseDirectoryList();
 	srtmodel->clear();
+	auto db_rescanner = AMLM::Core::self()->getDatabaseRescanner();
+	db_rescanner->SLOT_startAsyncDirectoryTraversal_ForDB(root_dir_list[0], srtmodel);
 //	srtmodel->LoadDatabase("/home/gary/AMLMDatabase.xml");
 #endif
 }

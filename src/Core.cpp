@@ -29,6 +29,7 @@
 #include "AMLMApp.h"
 #include <logic/models/ColumnSpec.h>
 #include <logic/models/treeitem.h>
+#include <logic/LibraryRescanner.h>
 
 
 namespace AMLM
@@ -69,6 +70,9 @@ void Core::build()
 	/// - Constructs the ProjectItemModel (with no QObject parent).
 	/// - Constructs a new JobManager (with m_self as parent).
 	/// - returns.
+
+	// Create the asynchronous rescanner.
+//	m_self->m_rescanner = new LibraryRescanner(m_self);
 
 
 	// Create the single (at this point) ScanResultsTreeModel.
@@ -167,6 +171,13 @@ std::shared_ptr<TreeModel> Core::getEditableTreeModel()
 {
 	Q_CHECK_PTR(m_etm_instance);
 	return m_etm_instance;
+}
+
+DatabaseScanJob* Core::getDatabaseRescanner()
+{
+	Q_ASSERT(0);
+//	Q_CHECK_PTR(m_rescanner);
+//	return m_rescanner;
 }
 
 

@@ -101,7 +101,7 @@ public Q_SLOTS:
 	void startAsyncDirectoryTraversal(const QUrl& dir_url);
 	void cancelAsyncDirectoryTraversal();
 
-	void SLOT_startAsyncDirectoryTraversal_ForDB(const QUrl& dir_url, std::shared_ptr<ScanResultsTreeModel> srtm);
+//	void SLOT_startAsyncDirectoryTraversal_ForDB(const QUrl& dir_url, std::shared_ptr<ScanResultsTreeModel> srtm);
 
 //	void onDirTravFinished();
 	/**

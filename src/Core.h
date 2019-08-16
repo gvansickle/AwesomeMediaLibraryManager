@@ -34,6 +34,8 @@
 #include <logic/models/ScanResultsTreeModel.h>
 #include <models/ScanResultsTreeModel.h>
 #include <logic/models/treemodel.h>
+#include <logic/jobs/DatabaseScanJob.h>
+
 
 namespace AMLM
 {
@@ -78,6 +80,8 @@ public:
 
 	std::shared_ptr<TreeModel> getEditableTreeModel();
 
+	DatabaseScanJob* getDatabaseRescanner();
+
 	/// @}
 
 private:
@@ -91,6 +95,9 @@ private:
 
 	std::shared_ptr<TreeModel> m_etm_instance;
 	std::shared_ptr<AbstractTreeModel> m_atm_instance;
+
+	/// @todo Temp?
+//	LibraryRescanner* m_rescanner {0};
 
 };
 

@@ -21,12 +21,14 @@
 
 set(jobs_SOURCE_FILES
 		CoverArtJob.cpp
+		DatabaseScanJob.cpp
 		DirectoryScanJob.cpp
 		LibraryEntryLoaderJob.cpp
 		LibraryRescannerJob.cpp
 	)
 set(jobs_HEADER_FILES
 		CoverArtJob.h
+		DatabaseScanJob.h
 		DirectoryScanJob.h
 		LibraryEntryLoaderJob.h
 		LibraryRescannerJob.h

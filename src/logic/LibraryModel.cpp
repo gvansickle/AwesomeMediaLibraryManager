@@ -984,7 +984,7 @@ void LibraryModel::connectSignals()
 
 	// Connect model signal to start scanning a URL to the async filesystem traverser.
 	/// @todo This is clunky, refactor.
-	connect(this, &LibraryModel::startFileScanSignal, m_rescanner, &LibraryRescanner::startAsyncDirectoryTraversal);
+	connect_or_die(this, &LibraryModel::startFileScanSignal, m_rescanner, &LibraryRescanner::startAsyncDirectoryTraversal);
 }
 
 void LibraryModel::disconnectIncomingSignals()
