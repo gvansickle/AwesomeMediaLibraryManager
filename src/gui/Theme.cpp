@@ -250,7 +250,8 @@ void Theme::initialize()
         }
     }
 
-    Q_ASSERT(rccs_loaded > 0);
+M_TODO("Doesn't work under clion.");
+//    Q_ASSERT(rccs_loaded > 0);
 #endif
     // Interesting stuff in here by default.
     /// @note Dumps a lot, use for debug only.
