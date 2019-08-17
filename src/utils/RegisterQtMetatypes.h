@@ -116,8 +116,26 @@ struct StaticInitBase : public StaticInitBaseBase<T>
  * This is me trying to avoid using Q_GLOBAL_STATIC().
  * @link https://doc.qt.io/qt-5/qglobalstatic.html#Q_GLOBAL_STATIC.
  */
+#if 1
 #define AMLM_QREG_CALLBACK(...) static auto TOKEN_PASTE(dummy, __COUNTER__) = (reginstance().register_callback(__VA_ARGS__), rand())
 
+#else
+template <class Lambda>
+class QGSBaseClass
+{
+public:
+	explicit QGSBaseClass(Lambda l)
+	{
+		m_l = l;
+	}
+
+	Lambda m_l;
+};
+
+#define AMLM_QREG_CALLBACK(...) /*class TOKEN_PASTE(dummy, __COUNTER__) {};*/ \
+	Q_GLOBAL_STATIC_WITH_ARGS(QGSBaseClass, staticType, (__VA_ARGS__));\
+	/*static auto TOKEN_PASTE(dummy, __COUNTER__) = (reginstance().register_callback(__VA_ARGS__), rand())*/
+#endif
 
 //#define AMLM_QREG_CALLBACK(...) AMLM_QREG_CALLBACK2(FIXME, __VA_ARGS__)
 
