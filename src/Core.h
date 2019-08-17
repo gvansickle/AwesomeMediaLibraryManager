@@ -80,7 +80,7 @@ public:
 
 	std::shared_ptr<TreeModel> getEditableTreeModel();
 
-//	DatabaseScanJob* getDatabaseRescanner();
+	std::shared_ptr<DatabaseScanJob> getDatabaseRescanner();
 
 	/// @}
 
@@ -96,8 +96,8 @@ private:
 	std::shared_ptr<TreeModel> m_etm_instance;
 	std::shared_ptr<AbstractTreeModel> m_atm_instance;
 
-	/// @todo Temp?
-//	LibraryRescanner* m_rescanner {0};
+	// The database scanner.
+	std::shared_ptr<DatabaseScanJob> m_db_scan_job;
 
 };
 

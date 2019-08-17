@@ -71,8 +71,8 @@ void Core::build()
 	/// - Constructs a new JobManager (with m_self as parent).
 	/// - returns.
 
-	// Create the asynchronous rescanner.
-//	m_self->m_rescanner = new LibraryRescanner(m_self);
+	// Create the Database asynchronous rescanner.
+	m_self->m_db_scan_job = std::make_shared<DatabaseScanJob>();
 
 
 	// Create the single (at this point) ScanResultsTreeModel.
@@ -173,13 +173,11 @@ std::shared_ptr<TreeModel> Core::getEditableTreeModel()
 	return m_etm_instance;
 }
 
-//DatabaseScanJob* Core::getDatabaseRescanner()
-//{
-//	Q_ASSERT(0);
-////	Q_CHECK_PTR(m_rescanner);
-////	return m_rescanner;
-//}
-
+std::shared_ptr<DatabaseScanJob> Core::getDatabaseRescanner()
+{
+	Q_CHECK_PTR(m_db_scan_job);
+	return m_db_scan_job;
+}
 
 void Core::clean()
 {

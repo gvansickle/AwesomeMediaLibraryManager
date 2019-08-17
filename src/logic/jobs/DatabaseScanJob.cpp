@@ -45,6 +45,9 @@
  */
 void DatabaseScanJob::startAsyncDirectoryTraversal_ForDB(const QUrl& dir_url, std::shared_ptr<ScanResultsTreeModel> srtm)
 {
+	/// @todo We can't use srtm currently, since it seem sto be changing out from under us after we capture it but before we
+	/// use it in the lambdas.
+
 	Q_ASSERT(srtm);
 
 	// To save some typing.

@@ -1765,7 +1765,7 @@ M_WARNING("HACKISH, MAKE THIS BETTER");
 	auto root_dir_list = srtmodel->getBaseDirectoryList();
 	srtmodel->clear();
 //	auto db_rescanner = AMLM::Core::self()->getDatabaseRescanner();
-	DatabaseScanJob::startAsyncDirectoryTraversal_ForDB(root_dir_list[0], srtmodel);
+	AMLM::Core::self()->getDatabaseRescanner()->startAsyncDirectoryTraversal_ForDB(root_dir_list[0], srtmodel);
 //	srtmodel->LoadDatabase("/home/gary/AMLMDatabase.xml");
 #endif
 }

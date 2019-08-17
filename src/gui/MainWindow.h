@@ -392,8 +392,6 @@ private:
     Experimental* m_experimental;
 	ExperimentalKDEView1* m_exp_second_child_view;
 
-
-
 	/// The "model of models", used for the collection dock widget.
 	QPointer<QStandardItemModel> m_model_of_model_view_pairs;
 	QStandardItem* m_stditem_libraries;

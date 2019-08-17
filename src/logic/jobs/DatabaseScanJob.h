@@ -40,7 +40,7 @@ class DatabaseScanJob
 {
 public:
 
-	static void startAsyncDirectoryTraversal_ForDB(const QUrl& dir_url, std::shared_ptr<ScanResultsTreeModel> srtm);
+	void startAsyncDirectoryTraversal_ForDB(const QUrl& dir_url, std::shared_ptr<ScanResultsTreeModel> srtm);
 
 private:
 	Stopwatch m_timer;
