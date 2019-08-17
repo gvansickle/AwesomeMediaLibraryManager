@@ -28,16 +28,28 @@
 #include <string>
 #include <vector>
 #include <mutex>
+#include <memory>
+
+class Stopwatch;
 
 class ScopedLap
 {
 public:
+	explicit ScopedLap(const std::string& lap_desc, const std::shared_ptr<Stopwatch>& psw);
+	~ScopedLap();
+
+//private:
+	std::chrono::steady_clock::time_point m_lap_start;
+	std::chrono::steady_clock::time_point m_lap_end;
+	std::string m_lap_description;
+	std::weak_ptr<Stopwatch> m_parent_stopwatch;
+
 };
 
 /**
  * Threadsafe, scoped Elapsed time timer, mostly for debug purposes.
  */
-class Stopwatch
+class Stopwatch : public std::enable_shared_from_this<Stopwatch>
 {
 public:
 	explicit Stopwatch();
@@ -48,7 +60,7 @@ public:
 
 	void lap(const std::string& lap_marker_str);
 
-	std::shared_ptr<ScopedLap> scoped_lap(const std::string& lap_marker_str);
+//	ScopedLap scoped_lap(const std::string& lap_marker_str);
 
 	void stop();
 	/// Threadsafe Interface pattern, public interface to the internal reset functionality in TSI_reset().
@@ -60,11 +72,13 @@ private:
 	/// Threadsafe Interface pattern, internal reset.
 	void TSI_reset();
 
+	friend class ScopedLap;
+//	void addCompletedScopedLap(const ScopedLap& sl);
 
 	struct lap_marker
 	{
 		std::chrono::steady_clock::time_point m_lap_time;
-		std::string m_lap_discription;
+		std::string m_lap_description;
 	};
 
 	std::mutex m_mutex;
@@ -73,6 +87,7 @@ private:
 	std::chrono::steady_clock::time_point m_end;
 	std::string m_being_timed_msg;
 	std::vector<lap_marker> m_lap_markers;
+//	std::vector<ScopedLap> m_scoped_lap_markers;
 };
 
 #endif /* SRC_UTILS_STOPWATCH_H_ */

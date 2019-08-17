@@ -31,6 +31,26 @@
 
 #define AMLMCOUT qDb()
 
+//// ScopedLap
+
+ScopedLap::ScopedLap(const std::string& lap_desc, const std::shared_ptr<Stopwatch>& psw)
+	: m_lap_description(lap_desc), m_parent_stopwatch(psw)
+{
+	m_lap_start = std::chrono::steady_clock::now();
+}
+
+ScopedLap::~ScopedLap()
+{
+	// Add this lap to the Stopwatch object.
+//	if(auto psw = m_parent_stopwatch.lock())
+//	{
+//		m_lap_end = std::chrono::steady_clock::now();
+//		psw->addCompletedScopedLap(*this);
+//	}
+}
+
+//// Stopwatch
+
 Stopwatch::Stopwatch()
 {
 	reset();
@@ -64,22 +84,22 @@ void Stopwatch::lap(const std::string& lap_marker_str)
 
 	lap_marker lm;
 	lm.m_lap_time = std::chrono::steady_clock::now();
-	lm.m_lap_discription = lap_marker_str;
+	lm.m_lap_description = lap_marker_str;
 	m_lap_markers.push_back(lm);
 
 	std::chrono::duration<double> elapsed = lm.m_lap_time - m_start;
 
-	AMLMCOUT << "ELAPSED TIME, LAP:" << lm.m_lap_discription << ": " << elapsed.count() << " sec"; // << std::endl;
+	AMLMCOUT << "ELAPSED TIME, LAP:" << lm.m_lap_description << ": " << elapsed.count() << " sec"; // << std::endl;
 }
 
-std::shared_ptr<ScopedLap> Stopwatch::scoped_lap(const std::string& lap_marker_str)
-{
-	std::scoped_lock sl(m_mutex);
-
-	auto retval = std::shared_ptr<ScopedLap>();
-
-	return retval;
-}
+//ScopedLap Stopwatch::scoped_lap(const std::string& lap_marker_str)
+//{
+//	std::scoped_lock sl(m_mutex);
+//
+//	ScopedLap retval(lap_marker_str, this->shared_from_this());
+//
+//	return retval;
+//}
 
 void Stopwatch::stop()
 {
@@ -120,10 +140,23 @@ void Stopwatch::print_results()
 		for(const auto& lm : m_lap_markers)
 		{
 			std::chrono::duration<double> elapsed = lm.m_lap_time - m_start;
-			AMLMCOUT << "LAP " << lap << " TIME: " << elapsed.count() << " DESC: " << lm.m_lap_discription;// << "\n";
+			AMLMCOUT << "LAP " << lap << " TIME: " << elapsed.count() << " DESC: " << lm.m_lap_description;// << "\n";
 			lap++;
 		}
 	}
+//	if(!m_scoped_lap_markers.empty())
+//	{
+//		AMLMCOUT << "SCOPED LAP MARKERS:\n";
+//		int lap = 0;
+//		for(const auto& slm : m_scoped_lap_markers)
+//		{
+//			std::chrono::duration<double> elapsed = slm.m_lap_end - slm.m_lap_start;
+//			std::chrono::duration<double> start = slm.m_lap_start.time_since_epoch();
+//			std::chrono::duration<double> end = slm.m_lap_end.time_since_epoch();
+//			AMLMCOUT << "SCOPED LAP " << lap << "START:" << start.count() << "END:" << end.count() << "ELAPSED:" << elapsed.count() << " DESC: " << slm.m_lap_description;// << "\n";
+//			lap++;
+//		}
+//	}
 }
 
 void Stopwatch::TSI_reset()
@@ -131,8 +164,13 @@ void Stopwatch::TSI_reset()
 	m_start = decltype(m_start)::min();
 	m_end = decltype(m_end)::max();
 	m_lap_markers.clear();
+//	m_scoped_lap_markers.clear();
 	m_being_timed_msg.clear();
 }
 
+//void Stopwatch::addCompletedScopedLap(const ScopedLap& sl)
+//{
+//	m_scoped_lap_markers.emplace_back(sl);
+//}
 
 

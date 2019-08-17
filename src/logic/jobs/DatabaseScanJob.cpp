@@ -119,8 +119,6 @@ void DatabaseScanJob::startAsyncDirectoryTraversal_ForDB(const QUrl& dir_url, st
 
 		Q_ASSERT(tree_model_sptr == AMLM::Core::self()->getScanResultsTreeModel());
 
-//		std::shared_ptr<ScanResultsTreeModel> tree_model_sptr(srtm);//= AMLM::Core::self()->getScanResultsTreeModel();
-//		auto tree_model_sptr = tree_model_sptr.lock();
 		if(!tree_model_sptr)
 		{
 			qCr() << "Shared ptr problem";
@@ -444,9 +442,9 @@ void DatabaseScanJob::startAsyncDirectoryTraversal_ForDB(const QUrl& dir_url, st
 				{
 					// Succeeded, but we may still have outgoing filenames in flight.
 					qIn() << "DIRTRAV SUCCEEDED";
-//			                      m_timer.lap("DirTrav succeeded");
+					m_timer.lap("DirTrav succeeded");
 					qIn() << "Directory scan time params:";
-//			   m_timer.print_results();
+					m_timer.print_results();
 
 					// Save the database out to XML.
 					QString database_filename = QDir::homePath() + "/AMLMDatabase.xml";
@@ -455,9 +453,12 @@ void DatabaseScanJob::startAsyncDirectoryTraversal_ForDB(const QUrl& dir_url, st
 //			                      m_model_ready_to_save_to_db = false;
 
                   // Save the database.
-//			                      m_timer.lap("Start of SaveDatabase");
-					tree_model_ptr->SaveDatabase(database_filename);
-//			                      m_timer.lap("End of SaveDatabase");
+					{
+//						m_timer.scoped_lap("tree_model_ptr->SaveDatabase");
+						m_timer.lap("SaveDatabase START");
+						tree_model_ptr->SaveDatabase(database_filename);
+						m_timer.lap("SaveDatabase END");
+					}
 
 				////////// EXPERIMENTAL
 #if 1 //// PUT BACK
@@ -470,6 +471,7 @@ void DatabaseScanJob::startAsyncDirectoryTraversal_ForDB(const QUrl& dir_url, st
 //				dump_map(load_tree);
 					load_tree->SaveDatabase(QDir::homePath() +"/AMLMDatabaseRT.xml");
 #endif /////
+				m_timer.print_results();
 				}
 			});
 
