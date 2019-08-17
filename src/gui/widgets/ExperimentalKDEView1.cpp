@@ -3,6 +3,7 @@
 
 #include <utils/ConnectHelpers.h>
 #include <proxymodels/ModelHelpers.h>
+#include <utils/StringHelpers.h>
 
 ExperimentalKDEView1::ExperimentalKDEView1(QWidget *parent) :
 	QWidget(parent),
@@ -22,6 +23,11 @@ bool ExperimentalKDEView1::setModel(AbstractTreeModel* model)
 
 	Q_CHECK_PTR(model);
 	Q_CHECK_PTR(view);
+
+	auto model_ptr_box = ui->m_currentModelPtrLineEdit;
+	auto str = tostr_hex((unsigned long)model);
+
+	model_ptr_box->setText(toqstr(str));
 
 #if 1
 	// Put the URLs in column 0.

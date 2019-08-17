@@ -24,6 +24,7 @@
 
 // Std C
 #include <cstring>
+#include <cstdio> // For std::stdout etc.
 
 // Std C++
 #include <type_traits>
@@ -92,6 +93,7 @@ enum /*QLocale::*/DataSizeFormats
 #endif
 
 #include <future/cpp14_concepts.hpp>
+#include <charconv>
 
 /// @name Functions for converting between the several thousand different and
 /// non-interoperable UTF-8 string classes, one or more brought into the project per library used.
@@ -161,6 +163,20 @@ static inline QString toqstr(const TagLib::String& tstr)
 {
 	// Convert from TagLib::String (UTF-16) to QString (UTF-16).
 	return QString::fromStdString(tstr.to8Bit(true));
+}
+
+template<class IntegerType>
+std::string tostr_hex(const IntegerType x)
+{
+	constexpr int max_hex_chars_for_type = sizeof(IntegerType)*2;
+	constexpr int max_string_bytes_for_type = max_hex_chars_for_type + 2;
+
+	std::string str; //(max_string_bytes_for_type, "0");
+	str.resize(max_string_bytes_for_type);
+	std::string fmt_str = "0x%0" + std::to_string(max_hex_chars_for_type) + "llx";
+	std::sprintf(&(str[0]), fmt_str.c_str(), (unsigned long long)x);
+
+	return str;
 }
 
 #if HAVE_GTKMM01
@@ -243,6 +259,8 @@ QString toqstr(const QEnumType value)
 	}
 }
 
+/// @name Streaming helpers
+/// @{
 
 template <class StreamLikeType>
 StreamLikeType log_QStringList(const QStringList& strlist, StreamLikeType out)
@@ -254,6 +272,8 @@ StreamLikeType log_QStringList(const QStringList& strlist, StreamLikeType out)
     }
     return out;
 }
+
+/// @}
 
 /**
  * Until we can rely on Qt 5.10's QLocale::formattedDataSize().

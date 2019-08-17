@@ -1236,9 +1236,9 @@ public:
 	 * @param stap_callback
 	 * @return
 	 */
-	template <class StreamingTapCallbackType,
+	template <class StreamingTapCallbackType, class... Args,
 		REQUIRES(std::is_invocable_r_v<void, StreamingTapCallbackType, ExtFuture<T>, int, int>)>
-	ExtFuture<T> stap_qthread_async(StreamingTapCallbackType&& stap_callback) const
+	ExtFuture<T> stap_qthread_async(StreamingTapCallbackType&& stap_callback, Args&&... args) const
 	{
 		ExtFuture<T> retfuture = ExtAsync::make_started_only_future<T>();
 
