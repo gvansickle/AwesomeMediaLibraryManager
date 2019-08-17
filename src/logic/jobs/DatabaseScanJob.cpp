@@ -45,7 +45,7 @@
  */
 void DatabaseScanJob::startAsyncDirectoryTraversal_ForDB(const QUrl& dir_url, std::shared_ptr<ScanResultsTreeModel> srtm)
 {
-	/// @todo We can't use srtm currently, since it seem sto be changing out from under us after we capture it but before we
+	/// @todo We can't use srtm currently, since it seems to be changing out from under us after we capture it but before we
 	/// use it in the lambdas.
 
 	Q_ASSERT(srtm);
@@ -64,7 +64,7 @@ void DatabaseScanJob::startAsyncDirectoryTraversal_ForDB(const QUrl& dir_url, st
 //	expect_and_set(0, 1);
 
 	// Time how long all this takes.
-//	m_timer.start("############ startAsyncDirectoryTraversal()");
+	m_timer.start("############ startAsyncDirectoryTraversal()");
 
 #if 1 /// Uhhhhh.... @link https://floating.io/2017/07/lambda-shared_ptr-memory-leak/
 	// Get a shared pointer to the Scan Results Tree model.

@@ -29,6 +29,11 @@
 #include <vector>
 #include <mutex>
 
+class ScopedLap
+{
+public:
+};
+
 /**
  * Threadsafe, scoped Elapsed time timer, mostly for debug purposes.
  */
@@ -42,6 +47,8 @@ public:
 	void start(const std::string& being_timed_msg);
 
 	void lap(const std::string& lap_marker_str);
+
+	std::shared_ptr<ScopedLap> scoped_lap(const std::string& lap_marker_str);
 
 	void stop();
 	/// Threadsafe Interface pattern, public interface to the internal reset functionality in TSI_reset().

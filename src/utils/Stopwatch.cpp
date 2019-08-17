@@ -72,6 +72,15 @@ void Stopwatch::lap(const std::string& lap_marker_str)
 	AMLMCOUT << "ELAPSED TIME, LAP:" << lm.m_lap_discription << ": " << elapsed.count() << " sec"; // << std::endl;
 }
 
+std::shared_ptr<ScopedLap> Stopwatch::scoped_lap(const std::string& lap_marker_str)
+{
+	std::scoped_lock sl(m_mutex);
+
+	auto retval = std::shared_ptr<ScopedLap>();
+
+	return retval;
+}
+
 void Stopwatch::stop()
 {
 	std::scoped_lock sl(m_mutex);
@@ -124,4 +133,6 @@ void Stopwatch::TSI_reset()
 	m_lap_markers.clear();
 	m_being_timed_msg.clear();
 }
+
+
 
