@@ -124,13 +124,17 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
+#if 1
 	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
 	for(auto& it : m_child_items)
 	{
 		list_push_back_or_die(child_var_list, it->toVariant());
 	}
 	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, child_var_list);
-
+#else
+	auto base_map = BASE_CLASS::toVariant();
+	map_insert_or_die(map, "BASE_TOVARIANT", base_map);
+#endif
 	return map;
 }
 
@@ -177,28 +181,6 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 	Q_ASSERT(child_var_list.size() > 0);
 
 	append_children_from_variant<SRTMItem_LibEntry>(this, child_var_list);
-
-
-
-#if 0////
-	auto model_ptr_base = m_model.lock();
-	Q_ASSERT(model_ptr_base);
-	auto model_ptr = std::dynamic_pointer_cast<ScanResultsTreeModel>(model_ptr_base);
-	auto parent_id = getId();
-
-	/// NEEDS TO BE IN MODEL HERE.
-	Q_ASSERT(isInModel());
-
-	std::vector<std::shared_ptr<AbstractTreeModelItem>> new_child_item_vec;
-	for(const QVariant& child_variant : child_list)
-	{
-		qDb() << "READING CHILD ITEM INTO ScanResultsTreeModelItem:" << child_variant.typeName();
-
-		auto id = model_ptr->requestAddSRTMLibEntryItem(child_variant, parent_id);
-		auto new_child = model_ptr->getItemById(id);
-		Q_ASSERT(new_child);
-	}
-#endif
 }
 
 //std::shared_ptr<ScanResultsTreeModel> ScanResultsTreeModelItem::getTypedModel() const
