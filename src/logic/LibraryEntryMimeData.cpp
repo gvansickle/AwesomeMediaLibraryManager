@@ -19,6 +19,20 @@
 
 #include "LibraryEntryMimeData.h"
 
+//class AdditionalMimeTypesHelper
+//{
+//public:
+//	const QStringList g_additional_supported_mimetypes { {"application/x-grvs-libraryentryref"} };
+//};
+//class GSHelper
+//{
+//public:
+//	GSHelper();
+//};
+
+//Q_GLOBAL_STATIC(AdditionalMimeTypesHelper, s_additional_supported_mimetypes);
+Q_GLOBAL_STATIC_WITH_ARGS(QStringList, g_additional_supported_mimetypes, { {"application/x-grvs-libraryentryref"} });
+
 LibraryEntryMimeData::LibraryEntryMimeData() : QMimeData ()
 {
 
@@ -26,7 +40,8 @@ LibraryEntryMimeData::LibraryEntryMimeData() : QMimeData ()
 
 bool LibraryEntryMimeData::hasFormat(const QString& mimetype) const
 {
-	if(mimetype == g_additional_supported_mimetypes[0] && !m_lib_item_list.empty())
+	if(mimetype == (*g_additional_supported_mimetypes)[0] // s_additional_supported_mimetypes()->g_additional_supported_mimetypes[0]
+			&& !m_lib_item_list.empty())
 	{
 		return true;
 	}

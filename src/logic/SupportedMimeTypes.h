@@ -41,11 +41,14 @@ public:
     QStringList supportedAudioMimeTypesAsFilterStringList() const;
     QStringList supportedAudioMimeTypesAsSuffixStringList() const;
 
+	QStringList supportedDnDMimeTypes() const;
+
 protected:
     QStringList m_mime_audio_types;
     QStringList m_mime_audio_associated_types;
-    QStringList m_mime_playlist_types;
-
+	QStringList m_mime_playlist_types;
+	/// This is just the internal drag and drop mime type.
+	QStringList m_additional_supported_mimetypes;
 private:
 
 };

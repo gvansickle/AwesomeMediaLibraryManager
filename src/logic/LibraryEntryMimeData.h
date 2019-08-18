@@ -32,7 +32,6 @@
 
 class LibraryEntry;
 
-static const QStringList g_additional_supported_mimetypes = { {"application/x-grvs-libraryentryref"} };
 
 class DropTargetInstructions
 {

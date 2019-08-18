@@ -53,7 +53,7 @@
 #include <jobs/LibraryEntryLoaderJob.h>
 #include <jobs/LibraryRescannerJob.h>
 #include <logic/serialization/SerializationHelpers.h>
-
+#include <logic/SupportedMimeTypes.h>
 
 AMLM_QREG_CALLBACK([](){
     qIn() << "Registering LibraryModel types";
@@ -718,7 +718,7 @@ QStringList LibraryModel::mimeTypes() const
 {
 	M_MESSAGE("TODO: Return url type as well?");
 
-	return g_additional_supported_mimetypes;
+	return SupportedMimeTypes::instance().supportedDnDMimeTypes();
 }
 
 

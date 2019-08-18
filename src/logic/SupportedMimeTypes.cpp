@@ -43,6 +43,9 @@ SupportedMimeTypes::SupportedMimeTypes(QObject* parent) : QObject(parent)
     m_mime_audio_types << "audio/flac" << "audio/mpeg" << "audio/ogg" << "audio/x-flac+ogg" << "audio/x-vorbis+ogg" << "audio/x-wav";
     m_mime_audio_associated_types << "application/x-cue";
     m_mime_playlist_types << "audio/x-mpegurl" /* *.m3u/8/ .vlc */ << "application/xspf+xml";
+
+	m_additional_supported_mimetypes << "application/x-grvs-libraryentryref";
+
 }
 
 SupportedMimeTypes::~SupportedMimeTypes()
@@ -96,6 +99,11 @@ QStringList SupportedMimeTypes::supportedAudioMimeTypesAsSuffixStringList() cons
 
     retval.removeDuplicates();
 
-    return retval;
+	return retval;
+}
+
+QStringList SupportedMimeTypes::supportedDnDMimeTypes() const
+{
+	return m_additional_supported_mimetypes;
 }
 

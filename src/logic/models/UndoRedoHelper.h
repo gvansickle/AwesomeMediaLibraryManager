@@ -116,6 +116,6 @@ reading a Read-protected property. In that case, we try to write lock it first (
 /**
  * No-op lambda which just returns true.  For use when a real undo or redo operation isn't needed.
  */
-inline static Fun noop_undo_redo_lambda = [](){ return true; };
+const auto /*Fun*/ noop_undo_redo_lambda = [](){ return true; };
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_UNDOREDOHELPER_H

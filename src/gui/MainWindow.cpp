@@ -102,7 +102,9 @@
 #include "CollectionDockWidget.h"
 #include "widgets/PlayerControls.h"
 
+#include "logic/SupportedMimeTypes.h"
 #include "logic/LibraryEntryMimeData.h"
+
 
 #include "utils/ConnectHelpers.h"
 #include "utils/DebugHelpers.h"
@@ -412,7 +414,8 @@ void MainWindow::updateActionEnableStates_Edit()
 			if(mimeData)
 			{
 				QStringList mimedata_formats = mimeData->formats();
-				if(mimedata_formats.contains(g_additional_supported_mimetypes[0]))
+				auto additional_mime_types = SupportedMimeTypes::instance().supportedDnDMimeTypes();
+				if(mimedata_formats.contains(additional_mime_types[0]))
 				{
 					clipboard_has_contents = true;
 				}
