@@ -332,23 +332,16 @@ void DatabaseScanJob::startAsyncDirectoryTraversal_ForDB(const QUrl& dir_url, st
 #endif
 	[=](ExtFuture<SharedItemContType> new_items_future,
 	                                           int begin_index, int end_index) mutable {
-
+		// Get the current ScanResultsTreeModel.
 		std::shared_ptr<ScanResultsTreeModel> tree_model_sptr = AMLM::Core::self()->getScanResultsTreeModel();
 
-//		Q_ASSERT(srtm == original_srtm);
-//		Q_ASSERT(tree_model_sptr == original_srtm);
 		Q_ASSERT(tree_model_sptr);
 #if TREE_ITEM_MODEL_POP_NON_GUI_THREAD != 1
       AMLM_ASSERT_IN_GUITHREAD();
 #else
       AMLM_ASSERT_NOT_IN_GUITHREAD();
 #endif
-      // Get the current ScanResultsTreeModel.
-//		std::shared_ptr<ScanResultsTreeModel> tree_model_sptr = AMLM::Core::self()->getScanResultsTreeModel();
-//      std::shared_ptr<AbstractTreeModel> tree_model_sptr = AMLM::Core::self()->getScanResultsTreeModel();
-//		auto tree_model_sptr = tree_model_weak.lock();
-		Q_ASSERT(tree_model_sptr);
-//		tree_model_sptr->clear();
+
 //		qDb() << "START: tree_model_item_future.stap(), new_items_future count:" << new_items_future.resultCount();
 
       // For each QList<SharedItemContType> entry.
@@ -379,27 +372,16 @@ void DatabaseScanJob::startAsyncDirectoryTraversal_ForDB(const QUrl& dir_url, st
 //				entry_dp->changeParent(tree_model_sptr->getRootItem());
               tree_model_sptr->getRootItem()->appendChild(entry_dp);
               entry_dp->appendChild(new_child);
-//				tree_model_sptr->getRootItem()->appendChild(entry_dp);
           }
 
           // Finally, move the new model items to their new home.
           Q_ASSERT(new_items_vector_ptr->at(0));
-#if 1 // !signal
+
           /// @temp
           bool ok = tree_model_sptr->checkConsistency();
           Q_ASSERT(ok);
-//			qDb() << "########################### TREE MODEL CHECK checkConsistency:" << ok;
-          /// @temp Check if iterator works.
-          long node_ct = 0;
-          using ittype = map_value_iterator<decltype(tree_model_sptr->begin()->first), decltype(tree_model_sptr->begin()->second)>;
-//			for(ittype it = std::begin(*tree_model_ptr); it != std::end(*tree_model_ptr); ++it)
-//			{
-//				node_ct++;
-//			}
-//			qDb() << "TREE MODEL ITERATOR COUNT:" << node_ct << ", MODEL SAYS:" << tree_model_ptr->get_total_model_node_count();
-#else
-          Q_EMIT SIGNAL_StapToTreeModel(*new_items_vector_ptr);
-#endif
+			qDb() << "########################### TREE MODEL CHECK checkConsistency:" << ok;
+
 			qDb() << "TREEMODELPTR:" << M_ID_VAL(tree_model_sptr->rowCount());
           }
 
