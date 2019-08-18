@@ -23,6 +23,7 @@
 #ifndef SRC_LOGIC_SERIALIZATION_SERIALIZATIONHELPERS_H_
 #define SRC_LOGIC_SERIALIZATION_SERIALIZATIONHELPERS_H_
 
+/// Std C++
 #include <type_traits>
 
 // Ours
@@ -86,7 +87,7 @@ void map_insert_or_die(MapType& map, const StringType& key, const ISerializable&
 }
 
 template <class MapType, class StringType, class ValueType,
-		  REQUIRES(!std::is_base_of_v<ISerializable, ValueType>)>
+		  REQUIRES(!std::is_base_of_v<std::remove_cvref_t<ISerializable>, ValueType>)>
 void map_insert_or_die(MapType& map, const StringType& key, const ValueType& member)
 {
 //	qDb() << "MIOD 2b:" << key;

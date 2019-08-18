@@ -59,6 +59,7 @@ class AbstractTreeModel;
  */
 class AbstractTreeModelItem : public virtual ISerializable, public enable_shared_from_this_virtual<AbstractTreeModelItem>
 {
+	Q_GADGET
 protected:
 
 	friend class AbstractTreeModel;
