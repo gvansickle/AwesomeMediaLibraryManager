@@ -966,8 +966,6 @@ int AbstractTreeModel::rowCount(const QModelIndex &parent) const
 	// This is what KDEN does.
 
 	// Only column 0 has children, and hence a non-zero rowCount().
-M_TODO("The first one causes the model to not get read in or displayed correctly")
-//	if(/*parent.isValid() &&*/ parent.column() != 0)
 	if(parent.isValid() && parent.column() != 0)
 	{
 		return 0;

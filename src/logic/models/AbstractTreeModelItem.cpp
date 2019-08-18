@@ -148,22 +148,6 @@ int AbstractTreeModelItem::columnCount() const
  */
 int AbstractTreeModelItem::childNumber() const
 {
-#if 0
-	if (auto shpt = m_parent_item.lock())
-	{
-		// We compute the distance in the parent's children list
-		auto it = shpt->m_child_items.begin();
-		return (int)std::distance(it, (decltype(it))shpt->get_m_child_items_iterator(m_uuincid));
-	}
-	else
-	{
-		/// @note Expired parent item. KDenLive doesn't do this.
-		qWr() << "EXPIRED PARENT ITEM";
-//		Q_ASSERT(0);
-	}
-
-    return -1;
-#endif
 	if(auto par = m_parent_item.lock())
 	{
 		std::shared_ptr<AbstractTreeModelItem> this_cast = std::const_pointer_cast<AbstractTreeModelItem>(this->shared_from_this());

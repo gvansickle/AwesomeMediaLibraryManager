@@ -66,17 +66,6 @@ void DatabaseScanJob::startAsyncDirectoryTraversal_ForDB(const QUrl& dir_url, st
 	// Time how long all this takes.
 	m_timer.start("############ startAsyncDirectoryTraversal()");
 
-#if 1 /// Uhhhhh.... @link https://floating.io/2017/07/lambda-shared_ptr-memory-leak/
-	// Get a shared pointer to the Scan Results Tree model.
-//	std::shared_ptr<ScanResultsTreeModel> tree_model = srtm; ///AMLM::Core::self()->getScanResultsTreeModel();
-//	Q_CHECK_PTR(tree_model);
-//	std::shared_ptr<ScanResultsTreeModel> tree_model_sptr = tree_model;
-//	Q_CHECK_PTR(tree_model_sptr);
-#else
-	// Create a weak_ptr to the tree_model that we can pass to lambdas.
-	std::weak_ptr<ScanResultsTreeModel> tree_model_weak(srtm);
-#endif
-
 	// Clear it out.
 	srtm->clear();
 
@@ -205,99 +194,6 @@ void DatabaseScanJob::startAsyncDirectoryTraversal_ForDB(const QUrl& dir_url, st
 	// Attach a streaming tap to the dirscan future.
 	ExtFuture<Unit> tail_future
 			= dirresults_future.stap(dirresults_future_stap_callback)
-#if 0
-				/*this,*/[=, tree_model_sptr=srtm](ExtFuture<DirScanResult> tap_future, int begin, int end) mutable -> void {
-
-		// Start of the dirtrav tap callback.  This should be a non-main thread.
-		AMLM_ASSERT_NOT_IN_GUITHREAD();
-//		AMLM_ASSERT_IN_GUITHREAD();
-
-		Q_ASSERT(srtm == original_srtm);
-
-//		std::shared_ptr<ScanResultsTreeModel> tree_model_sptr(srtm);//= AMLM::Core::self()->getScanResultsTreeModel();
-//		auto tree_model_sptr = tree_model_sptr.lock();
-		if(!tree_model_sptr)
-		{
-			qCr() << "Shared ptr problem";
-			qCr() << M_ID_VAL(tree_model_sptr.unique()) << M_ID_VAL(srtm.unique());
-		}
-
-		if(begin == 0)
-		{
-//			expect_and_set(1, 2);
-		}
-
-		// Create a new container instance we'll use to pass the incoming values to the GUI thread below.
-		/// @todo We should find a better way to do this sort of thing.
-		/// Maybe a multi-output .tap()?
-		/// @note This is really populated with as type vector<shared_ptr<ScanResultsTreeModelItem>>
-		SharedItemContType new_items = std::make_shared<ItemContType>();
-
-		int original_end = end;
-		for(int i=begin; i<end; i++)
-		{
-			DirScanResult dsr = tap_future.resultAt(i);
-
-			// Add another entry to the vector we'll send to the model.
-//			new_items->emplace_back(std::make_shared<ScanResultsTreeModelItem>(dsr, tree_model));
-			/// @todo This is in a non-GUI thread.
-//			Q_ASSERT(tree_model_sptr);
-//			auto new_item = ScanResultsTreeModelItem::construct(dsr);
-			auto new_item = std::make_shared<ScanResultsTreeModelItem>(dsr);
-			new_items->emplace_back(new_item);
-
-			if(i >= end)
-			{
-			   // We're about to leave the loop.  Check if we have more ready results now than was originally reported.
-			   if(tap_future.isResultReadyAt(end+1) || tap_future.resultCount() > (end+1))
-			   {
-			       // There are more results now than originally reported.
-			       qIn() << "##### MORE RESULTS:" << M_NAME_VAL(original_end) << M_NAME_VAL(end) << M_NAME_VAL(tap_future.resultCount());
-			       end = end+1;
-			   }
-			}
-
-			if(tap_future.HandlePauseResumeShouldICancel())
-			{
-			   tap_future.reportCanceled();
-			   break;
-			}
-			}
-			// Broke out of loop, check for problems.
-			if(tap_future.isCanceled())
-			{
-				// We've been canceled.
-				/// @todo Not sure if we should see that in here or not, probably not.
-				qWr() << "tap_callback saw canceled";
-				return;
-			}
-			if(tap_future.isFinished())
-			{
-				qIn() << "tap_callback saw finished";
-				if(new_items->empty())
-				{
-					qWr() << "tap_callback saw finished/empty new_items";
-
-					return;
-					qIn() << "tap_callback saw finished, but with" << new_items->size() << "outstanding results.";
-				}
-			}
-
-			// Shouldn't get here with no incoming items.
-			Q_ASSERT_X(!new_items->empty(), "DIRTRAV CALLBACK", "NO NEW ITEMS BUT HIT TAP CALLBACK");
-
-			// Got all the ready results, send them to the model(s).
-			// Because of Qt5's model/view system not being threadsafeable, we have to do at least the final
-			// model item entry from the GUI thread.
-//		qIn() << "Sending" << new_items->size() << "scan results to models";
-
-			/// @note This could also be a signal emit.
-			Q_ASSERT(new_items->size() == 1);
-			tree_model_item_future.reportResult(new_items);
-
-//		qDb() << "END OF DSR TAP:" << M_ID_VAL(tree_model_item_future);
-		}) // returns ExtFuture<DirScanResult> tail_future.
-#endif
         .then([=](ExtFuture<DirScanResult> fut_ignored) -> Unit {
             // The dirscan is complete.
 			qDb() << "DIRSCAN COMPLETE .then()";

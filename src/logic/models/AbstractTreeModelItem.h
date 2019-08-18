@@ -418,7 +418,7 @@ void append_children_from_variant(ParentItemType* parent_item, const QVariantHom
 	{
 //		qDb() << "READING CHILD ITEM:" << child_variant << " INTO PARENT ITEM:" << parent_item;
 
-		// Default constructed child ite,
+		// Default constructed child.
 		auto new_child = std::make_shared<ChildItemType>();
 		Q_ASSERT(new_child);
 

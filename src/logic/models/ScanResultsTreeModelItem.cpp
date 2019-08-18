@@ -72,6 +72,7 @@ QVariant ScanResultsTreeModelItem::data(int column, int role) const
 		return QUrl(m_dsr.getSidecarCuesheetExtUrl());
 	default:
 		qWr() << "data() request for unknown column:" << column;
+		M_TODO("This should just return QVariant() I think");
 		return BASE_CLASS::data(column, role);
 		break;
 	}
@@ -147,13 +148,37 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
+#if 1
 	map_read_field_or_warn(map, XMLTAG_DIRSCANRESULT, &m_dsr);
+#else
+	DirScanResult temp_dsr;
+	map_read_field_or_warn(map, XMLTAG_DIRSCANRESULT, &temp_dsr);
+	append_children_from_variant<DirScanResult>(this, temp_dsr);
+#endif
+
+	////// EXPERIMENTAL
+	// Default constructed child.
+//	auto new_child = std::make_shared<ChildItemType>();
+//	Q_ASSERT(new_child);
+//	/// @note Currently we need to add the empty item to the model before reading it in, so that
+//	/// its children will be set up correctly model-wise.  This is almost certainly more efficient anyway.
+//	bool append_success = parent_item->appendChild(new_child);
+//	AMLM_ASSERT_X(append_success, "FAILED TO APPEND NEW ITEM TO PARENT");
+//	// Now load the default-constructed child's data into it.
+//	new_child->fromVariant(child_variant);
+
+	std::vector<QVariant> test_child_data {"Test1"};
+	auto test_child = std::make_shared<AbstractTreeModelItem>(test_child_data);
+	bool append_success = appendChild(test_child);
+	AMLM_ASSERT_X(append_success, "FAILED TO APPEND NEW ITEM TO PARENT");
 
 	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
 	child_var_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
 	Q_ASSERT(child_var_list.size() > 0);
 
 	append_children_from_variant<SRTMItem_LibEntry>(this, child_var_list);
+
+
 
 #if 0////
 	auto model_ptr_base = m_model.lock();

@@ -41,12 +41,6 @@ SRTMItem_LibEntry::SRTMItem_LibEntry(std::shared_ptr<LibraryEntry> libentry, con
 
 }
 
-//SRTMItem_LibEntry::SRTMItem_LibEntry(const QVariant& variant, const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id)
-//	: BASE_CLASS(parent, id)
-//{
-//
-//}
-
 QVariant SRTMItem_LibEntry::data(int column, int role) const
 {
 	if((role != Qt::ItemDataRole::DisplayRole) && (role != Qt::ItemDataRole::EditRole))
