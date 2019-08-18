@@ -23,7 +23,7 @@
 #ifndef SRC_LOGIC_SERIALIZATION_SERIALIZATIONHELPERS_H_
 #define SRC_LOGIC_SERIALIZATION_SERIALIZATIONHELPERS_H_
 
-/// Std C++
+// Std C++
 #include <type_traits>
 
 // Ours

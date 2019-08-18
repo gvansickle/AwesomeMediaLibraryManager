@@ -401,7 +401,7 @@ QVariant AbstractTreeModelItem::toVariant() const
 	// Serialize out Child nodes.
 	/// @todo ???
 	// Insert the list into the map.
-//	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, child_list);
+//	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, m_child_items);
 
 	return map;
 }
