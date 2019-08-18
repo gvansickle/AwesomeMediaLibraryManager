@@ -118,6 +118,7 @@ public:
 
 	/**
 	 * Insert new default-constructed columns into this item/row.
+	 * @note These are for this item, not model-level.
 	 */
 //M_WARNING("NEED TO BE OVERRIDDEN IN HeaderItem");
 	 // ETM, no KDEN

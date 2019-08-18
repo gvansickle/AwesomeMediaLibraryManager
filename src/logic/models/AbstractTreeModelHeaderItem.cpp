@@ -43,31 +43,6 @@
 /// TEMP
 #include "ScanResultsTreeModel.h"
 
-#if 0
-// static
-std::shared_ptr<AbstractTreeModelHeaderItem>
-AbstractTreeModelHeaderItem::construct(std::initializer_list<ColumnSpec> column_specs,
-									   const std::shared_ptr<AbstractTreeModel>& parent_model, UUIncD id)
-{
-	std::shared_ptr<AbstractTreeModelHeaderItem> self(new AbstractTreeModelHeaderItem(column_specs, parent_model, id));
-
-	self->setColumnSpecs(column_specs);
-
-	auto lambda = parent_model->addItem_lambda(self, UUIncD::null());
-	lambda();
-
-	self->m_is_root = true;
-//	self->m_model = parent_model;
-//	self->m_is_in_model = true;
-	// This should add the HeaderItem to the model.
-	self->postConstructorFinalization();
-//	Q_ASSERT(self->m_model.lock());// = parent_model;
-
-	Q_ASSERT(self->isInModel());
-	return self;
-}
-#endif
-
 AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(std::vector<ColumnSpec> column_specs,
                                                          const std::shared_ptr<AbstractTreeModel>& parent_model, UUIncD id)
 	: BASE_CLASS({}, nullptr, id)//, m_is_root(true) //, m_column_specs(column_specs)

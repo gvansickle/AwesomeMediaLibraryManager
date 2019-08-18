@@ -91,7 +91,7 @@ protected:
 
 public:
 	/**
-	 * Named constructor.
+	 * Named constructors.
 	 * @note KDEN live doesn't pass a non-null parent QObject, ETM, AQP do pass a parent QObject (main window).
 	 *       Going the KDEN route here, but it's not clear that this is completely kosher wrt Qt.
 	 */
@@ -117,10 +117,17 @@ public:
 	virtual bool setColumnSpecs(std::initializer_list<ColumnSpec> column_specs);
 	virtual bool setColumnSpecs(std::vector<ColumnSpec> column_specs);
 
+	////////////////////////////////////////
+	/// @name QAbstractItemModel overrides
+	////////////////////////////////////////
+	/// @{
 
-	// bool hasIndex() is not virtual.
+	/// @name Read-Only access overrides
+	/// @note Grouping and order based on @link https://doc.qt.io/qt-5/model-view-programming.html#model-subclassing-reference.
+	/// @{
 
-	/// BOTH
+	Qt::ItemFlags flags(const QModelIndex &index) const override;
+
 	/**
 	 * Calls getItem(index), which returns index.internalPointer() which is an AbstractTreeModelItem*.
 	 * Item then returns the data for this index and role from its @a data(column) function.
@@ -129,89 +136,91 @@ public:
 	 */
     QVariant data(const QModelIndex &index, int role) const override;
 
-    /// @todo Maybe override these.
-//	QMap<int, QVariant> itemData(const QModelIndex &index) const override;
-//	bool setItemData(const QModelIndex &index, const QMap<int, QVariant> &roles) override;
+	/// Get the header data corresponding to the given section number, orientation, and role.
+	QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
 
-    /// @name Header data interface
-    /// @{
+	int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 
-    /// Get the header data corresponding to the given section number, orientation, and role.
-    /// BOTH
-    QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
+	/**
+	 * Returns the number of columns for the children of the given parent.
+	 */
+	int columnCount(const QModelIndex &parent = QModelIndex()) const override;
 
-    /// Set the header data corresponding to the given section number, orientation, and role.
-    bool setHeaderData(int section, Qt::Orientation orientation,
-                         const QVariant &value, int role = Qt::EditRole) override;
+	/// @} // END Read-Only access overrides
 
-    /// Overload taking an AbstractHeaderSection.
-    virtual bool setHeaderData(int section, const AbstractHeaderSection& header_section);
+	/// @name Editable Items
+	/// Data and Header Data setting interface
+	/// @{
 
-    /// @}
-
-    /// BOTH
-    QModelIndex index(int row, int column,
-                      const QModelIndex &parent = QModelIndex()) const override;
-	/// BOTH
-	Qt::ItemFlags flags(const QModelIndex &index) const override;
-
-    /// BOTH
-    QModelIndex parent(const QModelIndex &index) const override;
-	/// BOTH
-    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
-
-    /**
-     * Returns the number of columns for the children of the given parent.
-     */
-    int columnCount(const QModelIndex &parent = QModelIndex()) const override;
-
-
-    /// ETM, KDEN AbsTreeModel doesn't override this.
+	/// ETM, KDEN AbsTreeModel doesn't override this.
 	bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
 
-    /// @name Row and column insert, remove, and move operations.
-    /// @note Singular insert/remove/move row and column functions are not virtual
-    ///       but are implemented in QAbstractItemModel.
-    /// @{
+	/// Set the header data corresponding to the given section number, orientation, and role.
+	bool setHeaderData(int section, Qt::Orientation orientation,
+						 const QVariant &value, int role = Qt::EditRole) override;
 
-    /**
-     * Inserts @a num_columns new columns into the model before column @a insert_before_column.  If
-     * @a insert_before_column is 0, columns are still prepended, and if it's columnCount(), they're still prepended
-     * to the non-existent one-past-the-end column, i.e. they're appended to the list.
-     *
-     * @return true on success.
-     */
+	/// Overload taking an AbstractHeaderSection.
+	virtual bool setHeaderData(int section, const AbstractHeaderSection& header_section);
+
+	/// @} // END Editable Items
+
+	/// @name Navigation and model index creation
+	/// @{
+
+	QModelIndex index(int row, int column,
+					  const QModelIndex &parent = QModelIndex()) const override;
+
+	QModelIndex parent(const QModelIndex &index) const override;
+
+	/// @} // END Navigation and model index creation
+
+	/// @name Row and column insert, remove, and move operations.
+	/// @note Singular insert/remove/move row and column functions are not virtual
+	///       but are implemented in QAbstractItemModel.
+	/// @{
+
+	/**
+	 * Inserts @a count new default-constructed rows under model item @a parent_model_index model before the given row @a insert_before_row.
+	 * If @a insert_before_row is 0, rows are still prepended.  If it's > rowCount(), operation is meaningless and
+	 * the call returns false, not having done anything.
+	 *
+	 * @return true on success.
+	 */
+	bool insertRows(int insert_before_row, int num_rows,
+					const QModelIndex& parent_model_index = QModelIndex()) override;
+
+	/**
+	 * Remove rows [@a remove_start_row, @a remove_start_row + @a num_rows - 1 ].
+	 */
+	bool removeRows(int remove_start_row, int num_rows,
+					const QModelIndex& parent_item_index = QModelIndex()) override;
+
+	/**
+	 * Inserts @a num_columns new columns into the model before column @a insert_before_column.  If
+	 * @a insert_before_column is 0, columns are still prepended, and if it's columnCount(), they're still prepended
+	 * to the non-existent one-past-the-end column, i.e. they're appended to the list.
+	 *
+	 * @return true on success.
+	 */
 	bool insertColumns(int insert_before_column, int num_columns,
 					   const QModelIndex& parent_model_index = QModelIndex()) override;
 	/**
 	 * Remove columns.
 	 */
-    bool removeColumns(int remove_start_column, int num_columns,
-                       const QModelIndex& parent_model_index = QModelIndex()) override;
+	bool removeColumns(int remove_start_column, int num_columns,
+					   const QModelIndex& parent_model_index = QModelIndex()) override;
 
-    /**
-     * Inserts @a count new default-constructed rows under model item @a parent_model_index model before the given row @a insert_before_row.
-     * If @a insert_before_row is 0, rows are still prepended.  If it's > rowCount(), operation is meaningless and
-     * the call returns false, not having done anything.
-     *
-     * @return true on success.
-     */
-	bool insertRows(int insert_before_row, int num_rows,
-					const QModelIndex& parent_model_index = QModelIndex()) override;
-
-    /**
-     * Remove rows [@a remove_start_row, @a remove_start_row + @a num_rows - 1 ].
-     */
-    bool removeRows(int remove_start_row, int num_rows,
-                    const QModelIndex& parent_item_index = QModelIndex()) override;
-
-    /// @todo These currently just call the base class functions.
-    bool moveRows(const QModelIndex &sourceParent, int sourceRow, int count,
-	                      const QModelIndex &destinationParent, int destinationChild) override;
+	/// @todo These currently just call the base class functions.
+	bool moveRows(const QModelIndex &sourceParent, int sourceRow, int count,
+						  const QModelIndex &destinationParent, int destinationChild) override;
 	bool moveColumns(const QModelIndex &sourceParent, int sourceColumn, int count,
-	                         const QModelIndex &destinationParent, int destinationChild) override;
+							 const QModelIndex &destinationParent, int destinationChild) override;
 
 	/// @} // END row/col insert/remove/move.
+
+	//////////////////////////////////////////
+	/// @} // END QAbstractItemModel overrides
+	//////////////////////////////////////////
 
 
 	/// @name Extended public model interface.

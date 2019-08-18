@@ -116,34 +116,6 @@ QStringList ScanResultsTreeModel::getBaseDirectoryList() const
 }
 
 #if 0
-void ScanResultsTreeModel::LoadDatabase(const QString& database_filename)
-{
-	qIn() << "###### READING" << database_filename;
-
-	XmlSerializer xmlser;
-	xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
-	xmlser.HACK_skip_extra(false);
-	xmlser.load(*this, QUrl::fromLocalFile(database_filename));
-
-	qIn() << "###### TREEMODELPTR HAS NUM ROWS:" << rowCount();
-	qIn() << "###### READ" << database_filename;
-}
-
-void ScanResultsTreeModel::SaveDatabase(const QString& database_filename)
-{
-	qIn() << "###### WRITING" << database_filename;
-	qIn() << "###### TREEMODELPTR HAS NUM ROWS:" << rowCount();
-
-	XmlSerializer xmlser;
-	xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
-	xmlser.save(*this, QUrl::fromLocalFile(database_filename), "playlist");
-
-	qIn() << "###### WROTE" << database_filename;
-}
-#endif
-
-
-#if 0
 void ScanResultsTreeModel::toOrm(std::string filename) const
 {
 #if 0
