@@ -49,7 +49,8 @@ class ScanResultsTreeModelItem : public AbstractTreeModelItem, public enable_sha
 {
 	using BASE_CLASS = AbstractTreeModelItem;
 
-//protected:
+protected:
+	M_GH_DELETE_COPY_AND_MOVE(ScanResultsTreeModelItem);
 public:
 	/// Create a new model item populated with the passed DirScanResult.
 //	explicit ScanResultsTreeModelItem(const DirScanResult& dsr, std::shared_ptr<ScanResultsTreeModel> model,

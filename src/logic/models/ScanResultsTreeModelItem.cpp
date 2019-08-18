@@ -183,11 +183,6 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 	append_children_from_variant<SRTMItem_LibEntry>(this, child_var_list);
 }
 
-//std::shared_ptr<ScanResultsTreeModel> ScanResultsTreeModelItem::getTypedModel() const
-//{
-//	return std::dynamic_pointer_cast<ScanResultsTreeModel>(m_model.lock());
-//}
-
 void ScanResultsTreeModelItem::setDirscanResults(const DirScanResult& dsr)
 {
 	m_dsr = dsr;
