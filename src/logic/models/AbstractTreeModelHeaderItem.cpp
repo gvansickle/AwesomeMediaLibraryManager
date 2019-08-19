@@ -193,7 +193,7 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 
 	// Currently, this needs to be in a model before we can add any child nodes.
 	// By default, this HeaderItem *only* will already be in the model.
-	auto model_ptr = std::dynamic_pointer_cast<ScanResultsTreeModel>(m_model.lock());
+	auto model_ptr = std::dynamic_pointer_cast<AbstractTreeModel>(m_model.lock());
 	Q_ASSERT(model_ptr);
 
 	auto parent_id = getId();

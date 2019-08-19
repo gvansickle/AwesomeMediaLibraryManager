@@ -170,11 +170,12 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 //	AMLM_ASSERT_X(append_success, "FAILED TO APPEND NEW ITEM TO PARENT");
 //	// Now load the default-constructed child's data into it.
 //	new_child->fromVariant(child_variant);
-
+#if 0 // EXP
 	std::vector<QVariant> test_child_data {{"Test1"}, {"Test2"}};
 	auto test_child = std::make_shared<AbstractTreeModelItem>(test_child_data);
 	bool append_success = appendChild(test_child);
 	AMLM_ASSERT_X(append_success, "FAILED TO APPEND NEW ITEM TO PARENT");
+#endif /// EXP
 
 	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
 	child_var_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();

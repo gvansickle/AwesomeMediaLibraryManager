@@ -636,24 +636,28 @@ void AbstractTreeModel::notifyRowsInserted(const std::shared_ptr<AbstractTreeMod
 
 void AbstractTreeModel::notifyRowAboutToAppend(const std::shared_ptr<AbstractTreeModelItem>& item)
 {
+	/// KDEN
 	auto index = getIndexFromItem(item);
 	beginInsertRows(index, item->childCount(), item->childCount());
 }
 
 void AbstractTreeModel::notifyRowAppended(const std::shared_ptr<AbstractTreeModelItem>& row)
 {
+	/// KDEN
 	Q_UNUSED(row);
 	endInsertRows();
 }
 
 void AbstractTreeModel::notifyRowAboutToDelete(std::shared_ptr<AbstractTreeModelItem> item, int row)
 {
+	/// KDEN
 	auto index = getIndexFromItem(item);
 	beginRemoveRows(index, row, row);
 }
 
 void AbstractTreeModel::notifyRowDeleted()
 {
+	/// KDEN
 	endRemoveRows();
 }
 
@@ -856,6 +860,8 @@ bool AbstractTreeModel::insertRows(int insert_before_row, int num_rows, const QM
 
 QModelIndex AbstractTreeModel::parent(const QModelIndex &index) const
 {
+	/// This is essentially the same as KDEN.
+
 	std::unique_lock write_lock(m_rw_mutex);
 
 	// Check index but don't touch parent, since per Qt5 docs that would make this go recursive.

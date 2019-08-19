@@ -288,7 +288,6 @@ bool AbstractTreeModelItem::removeChildren(int position, int count)
 	return true;
 }
 
-#if 1///
 void AbstractTreeModelItem::removeChild(const std::shared_ptr<AbstractTreeModelItem>& child)
 {
 	if (auto ptr = m_model.lock())
@@ -348,7 +347,6 @@ bool AbstractTreeModelItem::changeParent(std::shared_ptr<AbstractTreeModelItem> 
 	}
 	return res;
 }
-#endif///
 
 #define M_DATASTREAM_FIELDS(X) \
 	/* TAG_IDENTIFIER, tag_string, member_field, var_name */ \
@@ -398,15 +396,19 @@ QVariant AbstractTreeModelItem::toVariant() const
 	// Add them to the output map.
 	map_insert_or_die(map, "item_data", list);
 
-	// Serialize out Child nodes.
-	/// @todo ???
-	// Insert the list into the map.
-//	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, m_child_items);
+//	// Serialize out Child nodes.
+//	/// @todo ???
+//	// Insert the list into the map.
+////	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, m_child_items);
+//	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
+//	child_var_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
+//	Q_ASSERT(child_var_list.size() > 0);
+//
+//	append_children_from_variant<AbstractTreeModelItem>(this, child_var_list);
+
 
 	return map;
 }
-
-
 
 void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 {
