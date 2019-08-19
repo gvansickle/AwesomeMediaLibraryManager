@@ -660,7 +660,7 @@ QString XmlSerializer::error_string(QXmlStreamWriter& xmlstream) const
 {
 	QString retval("");
 
-	return QObject::tr("%1: Line %2, column %3").arg("Unknown error on write").arg("0", "0");
+	return QObject::tr("%1: Line %2, column %3").arg("Unknown error on write", "0", "0");
 
 	return retval;
 }

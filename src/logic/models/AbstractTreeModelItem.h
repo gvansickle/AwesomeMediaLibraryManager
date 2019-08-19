@@ -240,6 +240,8 @@ public:
      */
     bool has_ancestor(UUIncD id);
 
+	bool has_children() const;
+
 	/**
 	 * @brief Return true if the item thinks it is a root.
 	 * Note that it should be consistent with what the model thinks, but it may have been

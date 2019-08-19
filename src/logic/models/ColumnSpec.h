@@ -69,14 +69,14 @@ struct ColumnSpec
     {
         m_section_id = s;
 		m_display_name = display_name;
-        metadata_list = ml;
+		m_metadata_list = ml;
 		m_should_fit_column_width_to_contents = fit_col_width;
 		m_default_to_hidden = default_to_hidden;
 	}
 
     SectionID m_section_id;
     QString m_display_name;
-    QStringList metadata_list;
+	QStringList m_metadata_list;
 	bool m_should_fit_column_width_to_contents {false};
 	bool m_default_to_hidden {false};
 };

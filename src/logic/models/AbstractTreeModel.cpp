@@ -190,8 +190,16 @@ QVariant AbstractTreeModel::data(const QModelIndex &index, int role) const
 {
 	std::unique_lock read_lock(m_rw_mutex);
 
-	// data() expects a valid index, except it won't get one for data() calls for the root item info.
-//	Q_ASSERT(checkIndex(index, CheckIndexOption::IndexIsValid));
+	// data() expects a valid index.  Per Qt5 docs, with no options:
+	// "This function checks whether index is a legal model index for this model. A legal model index is
+	//  either an invalid model index, or a valid model index for which all the following holds:
+	// - the index' model is this;
+	// - the index' row is greater or equal than zero;
+	// - the index' row is less than the row count for the index' parent;
+	// - the index' column is greater or equal than zero;
+	// - the index' column is less than the column count for the index' parent."
+
+	Q_ASSERT(checkIndex(index, (/*CheckIndexOption::IndexIsValid |*/ CheckIndexOption::DoNotUseParent)));
 
 	if (!index.isValid())
 	{
@@ -751,7 +759,35 @@ QVariant AbstractTreeModel::headerData(int section, Qt::Orientation orientation,
 		return m_root_item->data(section, role);
 	}
 
-    return QVariant();
+	return QVariant();
+}
+
+bool AbstractTreeModel::hasChildren(const QModelIndex& parent) const
+{
+	std::unique_lock read_lock(m_rw_mutex);
+
+	// hasChildren() expects a valid index.  Per Qt5 docs, with no options:
+	// "This function checks whether index is a legal model index for this model. A legal model index is
+	//  either an invalid model index, or a valid model index for which all the following holds:
+	// - the index' model is this;
+	// - the index' row is greater or equal than zero;
+	// - the index' row is less than the row count for the index' parent;
+	// - the index' column is greater or equal than zero;
+	// - the index' column is less than the column count for the index' parent."
+
+	Q_ASSERT(checkIndex(parent, (/*CheckIndexOption::IndexIsValid |*/ CheckIndexOption::DoNotUseParent)));
+
+	auto parent_sp = getItem(parent);
+
+	if(parent_sp)
+	{
+		return parent_sp->has_children();
+	}
+	else
+	{
+		qWr() << "NO PARENT";
+		return false;
+	}
 }
 
 QModelIndex AbstractTreeModel::index(int row, int column, const QModelIndex &parent) const

@@ -757,6 +757,11 @@ bool AbstractTreeModelItem::has_ancestor(UUIncD id)
 	return false;
 }
 
+bool AbstractTreeModelItem::has_children() const
+{
+	return !m_child_items.empty();
+}
+
 bool AbstractTreeModelItem::isRoot() const
 {
 	return m_is_root;

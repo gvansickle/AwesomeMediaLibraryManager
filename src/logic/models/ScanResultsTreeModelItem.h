@@ -49,20 +49,15 @@ class ScanResultsTreeModelItem : public AbstractTreeModelItem, public enable_sha
 {
 	using BASE_CLASS = AbstractTreeModelItem;
 
-protected:
-	M_GH_DELETE_COPY_AND_MOVE(ScanResultsTreeModelItem);
 public:
+	M_GH_DELETE_COPY_AND_MOVE(ScanResultsTreeModelItem);
+
 	/// Create a new model item populated with the passed DirScanResult.
-//	explicit ScanResultsTreeModelItem(const DirScanResult& dsr, std::shared_ptr<ScanResultsTreeModel> model,
-//	                                  bool is_root = false);
 	explicit ScanResultsTreeModelItem(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr, UUIncD id = UUIncD::null());
 	explicit ScanResultsTreeModelItem(const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr, UUIncD id = UUIncD::null());
 
-//
-//	explicit ScanResultsTreeModelItem(std::shared_ptr<ScanResultsTreeModel> model, bool is_root = false);
 public:
-//	ScanResultsTreeModelItem() {};
-//	explicit ScanResultsTreeModelItem(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr, UUIncD id = UUIncD::null());
+
 	~ScanResultsTreeModelItem() override;
 
 	void setDirscanResults(const DirScanResult& dsr);

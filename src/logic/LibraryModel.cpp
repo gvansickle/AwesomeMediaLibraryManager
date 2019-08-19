@@ -290,7 +290,7 @@ M_MESSAGE("TODO Probably should be refactored.");
 			{
 				// Get the list of metadata entry names which will work for this column's text,
 				// in descending order of preference.
-				QStringList metadata_choices = m_columnSpecs[index.column()].metadata_list;
+				QStringList metadata_choices = m_columnSpecs[index.column()].m_metadata_list;
 //                qDebug() << "metadata_choices:" << metadata_choices;
 				for(QString& key: metadata_choices)
 				{

@@ -139,6 +139,8 @@ public:
 	/// Get the header data corresponding to the given section number, orientation, and role.
 	QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
 
+	bool hasChildren(const QModelIndex &parent = QModelIndex()) const override;
+
 	int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 
 	/**
