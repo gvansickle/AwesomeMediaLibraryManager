@@ -49,6 +49,7 @@
 #include <utils/DebugHelpers.h>
 #include <logic/serialization/XmlSerializer.h>
 #include <third_party/sqlite_orm/include/sqlite_orm/sqlite_orm.h>
+#include <serialization/SerializationHelpers.h>
 
 // static
 std::shared_ptr<AbstractTreeModel>
@@ -462,6 +463,23 @@ Fun AbstractTreeModel::moveItem_lambda(UUIncD id, int destRow, bool force)
 	return []() { return false; };
 }
 
+/**
+ * AbstractTreeModel XML tags.
+ */
+#define M_DATASTREAM_FIELDS(X) \
+	X(XMLTAG_SRTM_ROOT_ITEM, tree_model_root_item)
+//	X(XMLTAG_SRTM_BASE_DIRECTORY, base_directory) \
+//	X(XMLTAG_SRTM_TITLE, title) \
+//	X(XMLTAG_SRTM_CREATOR, creator) \
+//	X(XMLTAG_SRTM_DATE, date) \
+//	X(XMLTAG_SRTM_TS_LAST_SCAN_START, ts_last_scan_start) \
+//	X(XMLTAG_SRTM_TS_LAST_SCAN_END, ts_last_scan_end)
+
+/// Strings to use for the tags.
+#define X(field_tag, member_field) static const QLatin1Literal field_tag ( # member_field );
+	M_DATASTREAM_FIELDS(X);
+#undef X
+
 bool AbstractTreeModel::LoadDatabase(const QString& database_filename)
 {
 	qIn() << "###### READING AbstractTreeModel from:" << database_filename;
@@ -518,6 +536,41 @@ M_TODO("DEBUG")
 	xmlser.save(*this, QUrl::fromLocalFile(database_filename), "playlist");
 
 	qIn() << "###### FINISHED WRITING AbstractTreeModel to:" << database_filename;
+}
+
+QVariant AbstractTreeModel::toVariant() const
+{
+	QVariantInsertionOrderedMap map;
+
+	std::unique_lock read_lock(m_rw_mutex);
+
+
+#define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
+//	M_DATASTREAM_FIELDS(X)
+#undef X
+
+	// Insert the invisible root item, which will recursively add all children.
+	/// @todo It also serves as the model's header, not sure that's a good overloading.
+	qDb() << "START tree serialize";
+	map_insert_or_die(map, XMLTAG_SRTM_ROOT_ITEM, m_root_item->toVariant());
+	qDb() << "END tree serialize";
+
+	return map;
+}
+
+void AbstractTreeModel::fromVariant(const QVariant& variant)
+{
+	std::unique_lock write_lock(m_rw_mutex);
+
+	QVariantInsertionOrderedMap map;
+	qviomap_from_qvar_or_die(&map, variant);
+
+	/// @note This is a QVariantMap, contains abstract_tree_model_header as a QVariantList.
+	QVariantInsertionOrderedMap root_item_map;
+	map_read_field_or_warn(map, XMLTAG_SRTM_ROOT_ITEM, &root_item_map);
+	m_root_item->fromVariant(root_item_map);
+	AMLM_WARNIF(m_root_item->columnCount() == 0);
+	dump_map(map);
 }
 
 void AbstractTreeModel::dump_model_info() const

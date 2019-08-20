@@ -24,6 +24,7 @@
 
 // Std C++
 #include <memory>
+#include <vector>
 
 // Ours
 #include "AMLMApp.h"
@@ -85,6 +86,8 @@ M_TODO("Improve ColumnSpecs, not sure I like how we do this and then need to era
 	// Let's add two more columns
 	m_self->m_srtm_instance->insertColumns(3, 2);
 
+	Q_ASSERT(m_self->m_srtm_instance->checkConsistency());
+
 
 	/// ETM
 	QStringList headers;
@@ -107,7 +110,10 @@ M_TODO("Improve ColumnSpecs, not sure I like how we do this and then need to era
 	auto new_unparented_child = std::make_shared<TreeItem>(fields2);
 
 
+	/// ATM
 	/// std::shared_ptr<AbstractTreeModel> m_atm_instance;
+	/// experimental
+	{
 //	m_self->m_atm_instance = std::make_shared<AbstractTreeModel>(column_specs);
 	m_self->m_atm_instance = AbstractTreeModel::make_AbstractTreeModel(column_specs);
 
@@ -116,14 +122,21 @@ M_TODO("Improve ColumnSpecs, not sure I like how we do this and then need to era
 //	TreeItem* new_item = new TreeItem(fields, root_item);
 //	root_item->insertChildren();
 
-	/// @todo experimental
-//	UUIncD new_id = m_self->m_srtm_instance->requestAddItem({"Artist1", "B", "C", "D"}, m_self->m_srtm_instance->getRootItem()->getId());
-//	auto new_child_id_1 = m_self->m_srtm_instance->requestAddItem({"Album1", "F", "GHI", "J"}, new_id);
-//	auto new_grandchild_id_1 = m_self->m_srtm_instance->requestAddItem({"Track1", "F", "GHI", "J"}, new_child_id_1);
-//	auto new_child_id_2 = m_self->m_srtm_instance->requestAddItem({"Album2", "F", "GHI", "J"}, new_id);
-//	auto new_grandchild_id_2 = m_self->m_srtm_instance->requestAddItem({"Track1", "F", "GHI", "J"}, new_child_id_2);
-//
-//	Q_ASSERT(m_self->m_srtm_instance->checkConsistency());
+	std::vector<QVariant> fields_atm{QString("First"), QString("Second")};
+	auto new_child_id_1 = std::make_shared<AbstractTreeModelItem>(fields_atm);
+	m_self->m_atm_instance->getRootItem()->appendChild(new_child_id_1);
+//	UUIncD new_id = m_self->m_atm_instance->requestAddItem({"Artist1", "B", "C", "D"}, m_self->m_srtm_instance->getRootItem()->getId());
+//	auto new_child_id_1 = m_self->m_atm_instance->requestAddItem({"Album1", "F", "GHI", "J"}, new_id);
+	auto new_grandchild_id_1 = std::make_shared<AbstractTreeModelItem>(fields_atm);
+	new_child_id_1->appendChild(new_grandchild_id_1);
+//	auto new_grandchild_id_1 = m_self->m_atm_instance->requestAddItem({"Track1", "F", "GHI", "J"}, new_child_id_1);
+//	auto new_child_id_2 = m_self->m_atm_instance->requestAddItem({"Album2", "F", "GHI", "J"}, new_id);
+//	auto new_grandchild_id_2 = m_self->m_atm_instance->requestAddItem({"Track1", "F", "GHI", "J"}, new_child_id_2);
+
+	Q_ASSERT(m_self->m_atm_instance->checkConsistency());
+
+	m_self->m_atm_instance->SaveDatabase("/home/gary/AMLM_Exp.xml");
+	}
 }
 
 void Core::initGUI()

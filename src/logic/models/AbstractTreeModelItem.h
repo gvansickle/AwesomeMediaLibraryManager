@@ -270,6 +270,11 @@ protected:
 	 */
 	virtual void updateParent(std::shared_ptr<AbstractTreeModelItem> parent);
 
+	/**
+	 * Serialization helper which recursively serializes this item's children to a map.
+	 */
+	QVariantInsertionOrderedMap children_to_variant() const;
+
 	/// @name Pre/Post-condition checks
 	/// @{
 
@@ -436,5 +441,6 @@ void append_children_from_variant(ParentItemType* parent_item, const QVariantHom
 
 	AMLM_ASSERT_EQ(starting_childcount+child_var_list.size(), parent_item->childCount());
 }
+
 
 #endif // ABSTRACTTREEMODELITEM_H

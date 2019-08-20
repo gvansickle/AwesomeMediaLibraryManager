@@ -279,10 +279,10 @@ public:
 	virtual void SaveDatabase(const QString& database_filename);
 
 	/// Serialize the entire model to a QVariant.
-	QVariant toVariant() const override { Q_ASSERT(0); return QVariant(); }; // = 0;
+	QVariant toVariant() const override;
 
 	/// Serialize the entire model from a QVariant.
-	void fromVariant(const QVariant& variant) override { Q_ASSERT(0); }; // = 0;
+	void fromVariant(const QVariant& variant) override;
 
 #if 0
 	virtual void toOrm(std::string filename) const;

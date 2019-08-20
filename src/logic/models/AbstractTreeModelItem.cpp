@@ -399,7 +399,8 @@ QVariant AbstractTreeModelItem::toVariant() const
 //	// Serialize out Child nodes.
 //	/// @todo ???
 //	// Insert the list into the map.
-////	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, m_child_items);
+	QVariantInsertionOrderedMap child_map = children_to_variant();
+	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, child_map);
 //	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
 //	child_var_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
 //	Q_ASSERT(child_var_list.size() > 0);
@@ -866,6 +867,20 @@ void AbstractTreeModelItem::updateParent(std::shared_ptr<AbstractTreeModelItem> 
     }
     TreeItem::updateParent(newParent);
 #endif
+}
+
+QVariantInsertionOrderedMap AbstractTreeModelItem::children_to_variant() const
+{
+	QVariantInsertionOrderedMap map;
+	// Child nodes.  Note we don't use HomogenousList here because the children could be arbitrary classes.
+	QVariantList child_var_list;
+	for(const auto& it : m_child_items)
+	{
+		list_push_back_or_die(child_var_list, it->toVariant());
+	}
+	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, child_var_list);
+
+	return map;
 }
 
 AbstractTreeModelItem::CICTIteratorType AbstractTreeModelItem::get_m_child_items_iterator(UUIncD id)
