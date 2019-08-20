@@ -39,6 +39,7 @@
 #include <logic/models/AbstractTreeModelItem.h>
 #include <logic/serialization/ISerializable.h>
 #include <future/guideline_helpers.h>
+#include <future/InsertionOrderedMap.h> ///< For QVariantInsertionOrderedMap
 
 class CollectionMedium;
 class ScanResultsTreeModelItem;
@@ -106,6 +107,10 @@ public:
 
 	QVariant toVariant() const override;
 	void fromVariant(const QVariant& variant) override;
+
+	/// Return an insertion-ordered map of the data members of this class.
+	/// EXP
+	QVariantInsertionOrderedMap getChildMap() const;
 
 	/// @}
 

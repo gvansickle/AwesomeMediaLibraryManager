@@ -204,7 +204,7 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	/// contains a single <dirscanresult>/QVariantMap.
 	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
 	child_var_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
-	Q_ASSERT(child_var_list.size() > 0);
+//	Q_ASSERT(child_var_list.size() > 0);
 	qDb() << "Number of children read:" << child_var_list.size();
 
 	append_children_from_variant<ScanResultsTreeModelItem>(this, child_var_list);

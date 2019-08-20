@@ -198,10 +198,3 @@ void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 	}
 #endif
 }
-
-//std::shared_ptr<ScanResultsTreeModel> SRTMItem_LibEntry::getTypedModel()
-//{
-//	return std::dynamic_pointer_cast<ScanResultsTreeModel>(m_model);
-//}
-
-/////////// @todo SRTMItem_LibEntry

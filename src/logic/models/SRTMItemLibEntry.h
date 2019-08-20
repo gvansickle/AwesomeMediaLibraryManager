@@ -63,10 +63,6 @@ public:
 
 	/// @} // END Serialization
 
-protected:
-
-//	std::shared_ptr<ScanResultsTreeModel> getTypedModel();
-
 private:
 	std::string m_key {"key"};
 	std::string m_val {"value"};

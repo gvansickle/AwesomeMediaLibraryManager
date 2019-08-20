@@ -36,6 +36,7 @@
 #include "models/ScanResultsTreeModel.h"
 #include <utils/EnumFlagHelpers.h>
 #include <logic/serialization/SerializationHelpers.h>
+#include <future/InsertionOrderedMap.h>
 
 
 AMLM_QREG_CALLBACK([](){
@@ -78,7 +79,7 @@ QVariant DirScanResult::toVariant() const
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
-	return map;// QVariant::fromValue(retval);
+	return map;
 }
 
 void DirScanResult::fromVariant(const QVariant& variant)
@@ -92,6 +93,22 @@ void DirScanResult::fromVariant(const QVariant& variant)
 #define X(field_tag, member_field) map_read_field_or_warn(map, field_tag, &(member_field));
 	M_DATASTREAM_FIELDS(X);
 #undef X
+}
+
+QVariantInsertionOrderedMap DirScanResult::getChildMap() const
+{
+	QVariantInsertionOrderedMap map;
+
+//	// Add all the fields to the map.
+//#define X(field_tag, member_field) map_insert_or_die(map, field_tag, &(member_field));
+//	M_DATASTREAM_FIELDS(X);
+//#undef X
+
+	/// EXP
+	map_insert_or_die(map, XMLTAG_HAS_SIDECAR_CUESHEET, m_has_sidecar_cuesheet);
+	/// EXP
+
+	return map;
 }
 
 void DirScanResult::determineDirProps(const QFileInfo &found_url_finfo)

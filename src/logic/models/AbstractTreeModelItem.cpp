@@ -446,8 +446,12 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 	AMLM_ASSERT_EQ(num_children, child_list.size());
 
 	// Read in our children.
+	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
+	child_var_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
 	/// @todo ???
-//	childrenFromVariant(child_list);
+	Q_ASSERT(child_var_list.size() > 0);
+
+	append_children_from_variant<AbstractTreeModelItem>(this, child_var_list);
 
 	////////////////////////////////////
 #if 0

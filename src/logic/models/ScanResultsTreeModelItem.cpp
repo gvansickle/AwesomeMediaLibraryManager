@@ -118,7 +118,15 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 	/// @todo Will be more fields, justifying the map vs. value?
 	/// @todo Need the parent here too?  Probably needs to be handled by the parent, but maybe for error detection.
 
+#if 1
 	map_insert_or_die(map, XMLTAG_DIRSCANRESULT, m_dsr.toVariant());
+#else
+//	QVariantHomogenousList child_var_list_EXP(XMLTAG_CHILD_NODE_LIST, "child");
+
+//#define X(field_tag, tag_string, var_name)
+//	list_push_back_or_die(child_var_list_EXP, it->toVariant());
+//#undef X
+#endif
 
 #define X(field_tag, tag_string, var_name) map_insert_or_die(map, field_tag, var_name);
 	M_DATASTREAM_FIELDS(X);
@@ -126,6 +134,14 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 
 #if 1
 	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
+	/// EXP
+//	QVariantInsertionOrderedMap child_fields;
+//	child_fields = m_dsr.getChildMap();
+//	for(auto& keyval : child_fields)
+//	{
+//		list_push_back_or_die(child_var_list, child_fields);
+//	}
+	/// EXP
 	for(auto& it : m_child_items)
 	{
 		list_push_back_or_die(child_var_list, it->toVariant());
