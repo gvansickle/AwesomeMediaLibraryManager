@@ -141,6 +141,7 @@ Q_DECLARE_METATYPE(ISerializable*);
 //Q_DECLARE_METATYPE(ISerializable&);
 Q_DECLARE_INTERFACE(ISerializable, "ISerializable") // define this out of namespace scope
 
+#if 0
 class IUUIDSerializable : public virtual ISerializable
 {
 public:
@@ -172,6 +173,7 @@ protected:
 Q_DECLARE_METATYPE(IUUIDSerializable*);
 Q_DECLARE_INTERFACE(IUUIDSerializable, "IUUIDSerializable") // define this out of namespace scope
 
+#endif
 
 
 template <class OutMapType>

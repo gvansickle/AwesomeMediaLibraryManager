@@ -449,7 +449,7 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
 	child_var_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
 	/// @todo ???
-	Q_ASSERT(child_var_list.size() > 0);
+//	Q_ASSERT(child_var_list.size() > 0);
 
 	append_children_from_variant<AbstractTreeModelItem>(this, child_var_list);
 

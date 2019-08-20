@@ -359,18 +359,18 @@ void map_read_field_or_warn(const MapType& map, const StringType& key, RawMember
 		return;
 	}
 
-	if constexpr(std::is_convertible_v<RawMemberType, ISerializable*> || std::is_convertible_v<RawMemberType, IUUIDSerializable*>)
-	{
-		// Ptrs to ISerializable-implementing members.
-		// This value should know how to read itself from a QVariant.
-		member->fromVariant(qvar);
-	}
-	else if constexpr(std::is_convertible_v<RawMemberType, ISerializable&> || std::is_convertible_v<RawMemberType, IUUIDSerializable&>)
-	{
-		// Ref to an ISerializable.
-		member.fromVariant(qvar);
-	}
-	else if constexpr(std::is_pointer_v<RawMemberType>)
+//	if constexpr(std::is_convertible_v<RawMemberType, ISerializable*> || std::is_convertible_v<RawMemberType, IUUIDSerializable*>)
+//	{
+//		// Ptrs to ISerializable-implementing members.
+//		// This value should know how to read itself from a QVariant.
+//		member->fromVariant(qvar);
+//	}
+//	else if constexpr(std::is_convertible_v<RawMemberType, ISerializable&> || std::is_convertible_v<RawMemberType, IUUIDSerializable&>)
+//	{
+//		// Ref to an ISerializable.
+//		member.fromVariant(qvar);
+//	}
+/*	else*/ if constexpr(std::is_pointer_v<RawMemberType>)
 	{
 		*member = qvar.value<std::remove_pointer_t<RawMemberType>>();
 	}
