@@ -158,6 +158,13 @@ std::unique_ptr<Core>& Core::self()
 	return m_self;
 }
 
+std::shared_ptr<AbstractTreeModel> Core::getAbstractTreeModel()
+{
+	Q_CHECK_PTR(m_atm_instance);
+
+	return std::dynamic_pointer_cast<AbstractTreeModel>(m_atm_instance);
+}
+
 std::shared_ptr<ScanResultsTreeModel> Core::getScanResultsTreeModel()
 {
 	Q_CHECK_PTR(m_srtm_instance);
@@ -200,5 +207,7 @@ void Core::clean()
 {
 	m_self.reset();
 }
+
+
 
 } /* namespace AMLM */

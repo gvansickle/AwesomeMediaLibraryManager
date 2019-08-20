@@ -23,10 +23,13 @@ CollectionView::~CollectionView()
     delete ui;
 }
 
-void CollectionView::setMainModel2(ScanResultsTableModel* model)
+void CollectionView::setMainModel2(AbstractTreeModel* model)
 {
-	auto view = ui->treeView;
+	auto view = ui->m_left_treeView;
 	view->setModel(model);
+
+	// Hook up Just-In-Time item expansion.
+	connect_jit_item_expansion(view->model(), view, this);
 }
 
 void CollectionView::setPane2Model(TreeModel* model)

@@ -72,7 +72,7 @@ public:
 	/// @name Accessors for the singletons.
 	/// @{
 
-//	std::shared_ptr<AbstractTreeModel> getScanResultsTreeModel();
+	std::shared_ptr<AbstractTreeModel> getAbstractTreeModel();
 	std::shared_ptr<ScanResultsTreeModel> getScanResultsTreeModel();
 	std::shared_ptr<ScanResultsTreeModel> swapScanResultsTreeModel(const std::shared_ptr<ScanResultsTreeModel>& new_model);
 	/// Really don't like this here.

@@ -5,7 +5,7 @@
 #include <QWidget>
 
 // Ours
-#include <logic/dbmodels/ScanResultsTableModel.h>
+#include <logic/models/AbstractTreeModel.h>
 #include <logic/models/treemodel.h>
 
 namespace Ui
@@ -24,7 +24,7 @@ public:
     explicit CollectionView(QWidget *parent = nullptr);
     ~CollectionView() override;
 
-	void setMainModel2(ScanResultsTableModel* model);
+	void setMainModel2(AbstractTreeModel* model);
 
 	void setPane2Model(TreeModel* tmp);
 
