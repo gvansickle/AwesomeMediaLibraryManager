@@ -127,8 +127,12 @@ M_TODO("Improve ColumnSpecs, not sure I like how we do this and then need to era
 	m_self->m_atm_instance->getRootItem()->appendChild(new_child_id_1);
 //	UUIncD new_id = m_self->m_atm_instance->requestAddItem({"Artist1", "B", "C", "D"}, m_self->m_srtm_instance->getRootItem()->getId());
 //	auto new_child_id_1 = m_self->m_atm_instance->requestAddItem({"Album1", "F", "GHI", "J"}, new_id);
-	auto new_grandchild_id_1 = std::make_shared<AbstractTreeModelItem>(fields_atm);
+	auto new_grandchild_id_1 = std::make_shared<AbstractTreeModelItem>(std::vector<QVariant>{{"Track1"}, {"F"}, {"GHI"}, {"J"}});//fields_atm);
+	auto new_child_id_2 = std::make_shared<AbstractTreeModelItem>(std::vector<QVariant>{"Album2", "F", "GHI", "J"});
+
 	new_child_id_1->appendChild(new_grandchild_id_1);
+	m_self->m_atm_instance->getRootItem()->appendChild(new_child_id_2);
+
 //	auto new_grandchild_id_1 = m_self->m_atm_instance->requestAddItem({"Track1", "F", "GHI", "J"}, new_child_id_1);
 //	auto new_child_id_2 = m_self->m_atm_instance->requestAddItem({"Album2", "F", "GHI", "J"}, new_id);
 //	auto new_grandchild_id_2 = m_self->m_atm_instance->requestAddItem({"Track1", "F", "GHI", "J"}, new_child_id_2);

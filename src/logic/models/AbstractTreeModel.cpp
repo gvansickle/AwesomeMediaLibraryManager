@@ -467,7 +467,7 @@ Fun AbstractTreeModel::moveItem_lambda(UUIncD id, int destRow, bool force)
  * AbstractTreeModel XML tags.
  */
 #define M_DATASTREAM_FIELDS(X) \
-	X(XMLTAG_SRTM_ROOT_ITEM, tree_model_root_item)
+	X(XMLTAG_SRTM_ROOT_ITEM, tree_model_root_item, m_root_item)
 //	X(XMLTAG_SRTM_BASE_DIRECTORY, base_directory) \
 //	X(XMLTAG_SRTM_TITLE, title) \
 //	X(XMLTAG_SRTM_CREATOR, creator) \
@@ -476,7 +476,7 @@ Fun AbstractTreeModel::moveItem_lambda(UUIncD id, int destRow, bool force)
 //	X(XMLTAG_SRTM_TS_LAST_SCAN_END, ts_last_scan_end)
 
 /// Strings to use for the tags.
-#define X(field_tag, member_field) static const QLatin1Literal field_tag ( # member_field );
+#define X(field_tag, tag_name, member_field) static const QLatin1Literal field_tag ( # tag_name );
 	M_DATASTREAM_FIELDS(X);
 #undef X
 

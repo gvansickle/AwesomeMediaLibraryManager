@@ -49,7 +49,7 @@
        </sizepolicy>
       </property>
      </widget>
-     <widget class="QTreeView" name="treeView_exp">
+     <widget class="QTreeView" name="m_right_treeView">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
         <horstretch>1</horstretch>

@@ -20,38 +20,23 @@
 #ifndef MODELHELPERS_H
 #define MODELHELPERS_H
 
+// Qt5
 #include <QPersistentModelIndex>
 #include <QModelIndexList>
 #include <QItemSelection>
 #include <QAbstractProxyModel>
 #include <QDebug>
 
+// Ours
 #include <utils/DebugHelpers.h>
 #include <logic/proxymodels/QPersistentModelIndexVec.h>
+#include <utils/ConnectHelpers.h>
 
 /**
  * Map a QItemSelection to a top-level source selection via QAbstractProxyModel::mapSelectionToSource().
  * A no-op if selection is empty or the model isn't a proxy model.
  */
-inline static QItemSelection mapQItemSelectionToSource(const QItemSelection& proxy_selection)
-{
-    if(proxy_selection.size() > 0)
-    {
-        // There's a selection to convert.  Get the first QModelIndex so we can get its model.
-        auto model = proxy_selection[0].model();
-        if(model)
-        {
-            // Is it a proxy model?
-            auto proxy_model = qobject_cast<const QAbstractProxyModel*>(model);
-            if(proxy_model)
-            {
-                return proxy_model->mapSelectionToSource(proxy_selection);
-            }
-        }
-    }
-
-    return proxy_selection;
-}
+QItemSelection mapQItemSelectionToSource(const QItemSelection& proxy_selection);
 
 /**
  * Converts a QItemSelection to a QVector of the equivalent QPersistentModelIndex'es.
@@ -59,44 +44,9 @@ inline static QItemSelection mapQItemSelectionToSource(const QItemSelection& pro
  * @param col
  * @return
  */
-inline static QPersistentModelIndexVec pindexes(const QItemSelection& selection, int col = -1)
-{
-	QModelIndexList index_vec = selection.indexes();
-	QModelIndexList retval;
-	if(col != -1)
-	{
-		for(auto i : index_vec)
-		{
-			if(i.isValid())
-			{
-				if(i.column() == col)
-				{
-					retval.push_back(i);
-				}
-			}
-		}
-		return toQPersistentModelIndexVec(retval);
-	}
-	else
-	{
-		return toQPersistentModelIndexVec(index_vec);
-	}
-}
+QPersistentModelIndexVec pindexes(const QItemSelection& selection, int col = -1);
 
-inline static QModelIndex mapToSource(const QModelIndex& proxy_index)
-{
-	if(proxy_index.model())
-	{
-		// There's a model.  See if it's a proxy model.
-		auto proxy_model = qobject_cast<const QAbstractProxyModel*>(proxy_index.model());
-		if(proxy_model)
-		{
-			return proxy_model->mapToSource(proxy_index);
-		}
-	}
-
-	return proxy_index;
-}
+QModelIndex mapToSource(const QModelIndex& proxy_index);
 
 template <template<class> class T>
 T<QPersistentModelIndex> mapQPersistentModelIndexesToSource(const T<QPersistentModelIndex>& iterable_of_pindexes)
@@ -109,43 +59,9 @@ T<QPersistentModelIndex> mapQPersistentModelIndexesToSource(const T<QPersistentM
 	return retval;
 }
 
-inline static QModelIndexList mapToSource(const QModelIndexList& source_indices)
-{
-	QModelIndexList retval;
+QModelIndexList mapToSource(const QModelIndexList& source_indices);
 
-	for(auto i : source_indices)
-	{
-		retval.push_back(mapToSource(i));
-	}
-
-	return retval;
-}
-
-inline static QAbstractItemModel* getRootModel(QAbstractItemModel* maybe_proxy_model)
-{
-	auto proxy_model = qobject_cast<QAbstractProxyModel*>(maybe_proxy_model);
-
-	if(proxy_model)
-	{
-		qDebug() << "Is a proxy model:" << proxy_model;
-		auto source_model = proxy_model->sourceModel();
-		if(source_model)
-		{
-			qDebug() << "With source model:" << source_model;
-			return (QAbstractItemModel*)source_model;
-		}
-		else
-		{
-			return maybe_proxy_model;
-		}
-	}
-	else
-	{
-		// Wasn't a proxy model.
-		qDebug() << "Not a proxy model:" << maybe_proxy_model;
-		return maybe_proxy_model;
-	}
-}
+QAbstractItemModel* getRootModel(QAbstractItemModel* maybe_proxy_model);
 
 template <typename ModelType, class ViewType, class ContextType>
 inline static void connect_jit_item_expansion(ModelType* model, ViewType* view, ContextType* context)

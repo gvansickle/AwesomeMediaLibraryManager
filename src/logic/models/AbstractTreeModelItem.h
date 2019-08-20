@@ -59,7 +59,7 @@ class AbstractTreeModel;
  */
 class AbstractTreeModelItem : public virtual ISerializable, public enable_shared_from_this_virtual<AbstractTreeModelItem>
 {
-	Q_GADGET
+//	Q_GADGET
 protected:
 
 	friend class AbstractTreeModel;
@@ -68,6 +68,8 @@ public:
 	AbstractTreeModelItem();
 
 public:
+	explicit AbstractTreeModelItem(const std::initializer_list<QVariant>& data,
+				const std::shared_ptr<AbstractTreeModelItem>& parent_item = nullptr, UUIncD id = UUIncD::null());
 	explicit AbstractTreeModelItem(const std::vector<QVariant>& data,
 			const std::shared_ptr<AbstractTreeModelItem>& parent_item = nullptr, UUIncD id = UUIncD::null());
 	~AbstractTreeModelItem() override;

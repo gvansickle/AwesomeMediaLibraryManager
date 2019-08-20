@@ -39,6 +39,7 @@
 #include <QStringList>
 
 // Ours
+#include <future/initializer_list_helpers.h>
 #include <utils/DebugHelpers.h>
 #include <utils/VectorHelpers.h>
 #include <logic/UUIncD.h>
@@ -51,6 +52,12 @@
 AbstractTreeModelItem::AbstractTreeModelItem()
 {
 	// Just to get a vptr.
+}
+
+AbstractTreeModelItem::AbstractTreeModelItem(const std::initializer_list<QVariant>& data, const std::shared_ptr<AbstractTreeModelItem>& parent_item, UUIncD id)
+	: AbstractTreeModelItem(to_vector(data), parent_item, id)
+{
+	// Just delegating.
 }
 
 AbstractTreeModelItem::AbstractTreeModelItem(const std::vector<QVariant>& data, const std::shared_ptr<AbstractTreeModelItem>& parent_item, UUIncD id)
