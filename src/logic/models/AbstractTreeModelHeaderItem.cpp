@@ -145,13 +145,19 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 	map_insert_or_die(map, XMLTAG_HEADER_SECTION_LIST, header_section_list);
 
 	// Child nodes.
+#if 0
 	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
 	for(auto& it : m_child_items)
 	{
 		list_push_back_or_die(child_var_list, it->toVariant());
 	}
 	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, child_var_list);
-
+#else
+//	 Serialize out Child nodes.
+//	// Insert the list into the map.
+	QVariantInsertionOrderedMap child_map = children_to_variant();
+	map_insert_or_die(map, /*XMLTAG_CHILD_ITEM_LIST*/XMLTAG_CHILD_NODE_LIST, child_map);
+#endif
 	return map;
 }
 
@@ -208,17 +214,10 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	qDb() << "Number of children read:" << child_var_list.size();
 
 	append_children_from_variant<ScanResultsTreeModelItem>(this, child_var_list);
+//	children_from_variant(child_var_list);
 }
 
-//std::shared_ptr<AbstractHeaderSection> AbstractTreeModelHeaderItem::getHeaderSection(int column)
-//{
-//	// This is just a type conversion from the base class's vector<QVariant>.
-//	QVariant var = m_item_data.at(column);
-//	Q_ASSERT(var.canConvert<std::shared_ptr<AbstractHeaderSection>>());
-//	auto retval = var.value<std::shared_ptr<AbstractHeaderSection>>();
-//
-//	return retval;
-//}
+
 
 
 

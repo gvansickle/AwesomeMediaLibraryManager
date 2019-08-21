@@ -560,9 +560,10 @@ QVariant AbstractTreeModel::toVariant() const
 
 void AbstractTreeModel::fromVariant(const QVariant& variant)
 {
+	QVariantInsertionOrderedMap map;
+
 	std::unique_lock write_lock(m_rw_mutex);
 
-	QVariantInsertionOrderedMap map;
 	qviomap_from_qvar_or_die(&map, variant);
 
 	/// @note This is a QVariantMap, contains abstract_tree_model_header as a QVariantList.

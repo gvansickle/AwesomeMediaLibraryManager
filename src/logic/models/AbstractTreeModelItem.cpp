@@ -357,7 +357,7 @@ bool AbstractTreeModelItem::changeParent(std::shared_ptr<AbstractTreeModelItem> 
 
 #define M_DATASTREAM_FIELDS(X) \
 	/* TAG_IDENTIFIER, tag_string, member_field, var_name */ \
-	X(XMLTAG_CHILD_NODE_LIST, child_node_list, nullptr)
+	X(XMLTAG_CHILD_ITEM_LIST, child_item_list, nullptr)
 
 #define M_DATASTREAM_FIELDS_CONTSIZES(X) \
 	X(XMLTAG_NUM_COLUMNS, num_columns, m_item_data) \
@@ -407,9 +407,9 @@ QVariant AbstractTreeModelItem::toVariant() const
 //	/// @todo ???
 //	// Insert the list into the map.
 	QVariantInsertionOrderedMap child_map = children_to_variant();
-	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, child_map);
-//	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
-//	child_var_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
+	map_insert_or_die(map, XMLTAG_CHILD_ITEM_LIST, child_map);
+//	QVariantHomogenousList child_var_list(XMLTAG_CHILD_ITEM_LIST, "child");
+//	child_var_list = map.value(XMLTAG_CHILD_ITEM_LIST).value<QVariantHomogenousList>();
 //	Q_ASSERT(child_var_list.size() > 0);
 //
 //	append_children_from_variant<AbstractTreeModelItem>(this, child_var_list);
@@ -446,16 +446,16 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 	qDb() << XMLTAG_NUM_CHILDREN << num_children;
 
 
-//	QVariantHomogenousList child_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
-	QVariantHomogenousList child_list(XMLTAG_CHILD_NODE_LIST, "child");
-	child_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
+//	QVariantHomogenousList child_list = map.value(XMLTAG_CHILD_ITEM_LIST).value<QVariantHomogenousList>();
+	QVariantHomogenousList child_list(XMLTAG_CHILD_ITEM_LIST, "child");
+	child_list = map.value(XMLTAG_CHILD_ITEM_LIST).value<QVariantHomogenousList>();
 	qDb() << M_ID_VAL(child_list.size());
 
 	AMLM_ASSERT_EQ(num_children, child_list.size());
 
 	// Read in our children.
-	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
-	child_var_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
+	QVariantHomogenousList child_var_list(XMLTAG_CHILD_ITEM_LIST, "child");
+	child_var_list = map.value(XMLTAG_CHILD_ITEM_LIST).value<QVariantHomogenousList>();
 	/// @todo ???
 //	Q_ASSERT(child_var_list.size() > 0);
 
@@ -878,6 +878,9 @@ void AbstractTreeModelItem::updateParent(std::shared_ptr<AbstractTreeModelItem> 
 
 QVariantInsertionOrderedMap AbstractTreeModelItem::children_to_variant() const
 {
+	// Return value will be ~QMap<QString, QVariant>, where the QVariants are whatever the items
+	// in m_child_items turn into via toVariant().
+
 	QVariantInsertionOrderedMap map;
 	// Child nodes.  Note we don't use HomogenousList here because the children could be arbitrary classes.
 	QVariantList child_var_list;
@@ -885,9 +888,31 @@ QVariantInsertionOrderedMap AbstractTreeModelItem::children_to_variant() const
 	{
 		list_push_back_or_die(child_var_list, it->toVariant());
 	}
-	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, child_var_list);
+	map_insert_or_die(map, XMLTAG_CHILD_ITEM_LIST, child_var_list);
 
 	return map;
+}
+
+void AbstractTreeModelItem::children_from_variant(QVariant& variant)
+{
+	// Ok, our goal here is to take a QVar map and populate our
+	// std::deque<std::shared_ptr<AbstractTreeModelItem>> m_child_items; member with the contents.
+	// The incoming QVariants may contain different item types.
+
+	QVariantInsertionOrderedMap map;
+	qviomap_from_qvar_or_die(&map, variant);
+
+	// Child nodes.  Note we don't use HomogenousList here because the children could be arbitrary classes.
+	QVariantList child_var_list;
+	child_var_list = map.value(XMLTAG_CHILD_ITEM_LIST).toList();
+//	QSequentialIterable iterable = child_var_list.value<QSequentialIterable>();
+	for(const QVariant& it : child_var_list)
+	{
+		using child_base_type = std::shared_ptr<AbstractTreeModelItem>;
+		AMLM_ASSERT_X(it.canConvert<child_base_type>(), "Can't convert to an appropriate class");
+		child_base_type child_sptr = it.value<child_base_type>();
+		m_child_items.push_back(child_sptr);
+	}
 }
 
 AbstractTreeModelItem::CICTIteratorType AbstractTreeModelItem::get_m_child_items_iterator(UUIncD id)

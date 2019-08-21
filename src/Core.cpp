@@ -114,32 +114,32 @@ M_TODO("Improve ColumnSpecs, not sure I like how we do this and then need to era
 	/// std::shared_ptr<AbstractTreeModel> m_atm_instance;
 	/// experimental
 	{
-//	m_self->m_atm_instance = std::make_shared<AbstractTreeModel>(column_specs);
-	m_self->m_atm_instance = AbstractTreeModel::make_AbstractTreeModel(column_specs);
+		std::vector<ColumnSpec> column_specs = {ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}};
+		m_self->m_atm_instance = AbstractTreeModel::make_AbstractTreeModel(column_specs);
 
-//	new_child->setData(0, fields[0]);
-//	new_child->setData(1, fields[1]);
-//	TreeItem* new_item = new TreeItem(fields, root_item);
-//	root_item->insertChildren();
+		//	new_child->setData(0, fields[0]);
+		//	new_child->setData(1, fields[1]);
+		//	TreeItem* new_item = new TreeItem(fields, root_item);
+		//	root_item->insertChildren();
 
-	std::vector<QVariant> fields_atm{QString("First"), QString("Second")};
-	auto new_child_id_1 = std::make_shared<AbstractTreeModelItem>(fields_atm);
-	m_self->m_atm_instance->getRootItem()->appendChild(new_child_id_1);
+		std::vector<QVariant> fields_atm{QString("First"), QString("Second")};
+		auto new_child_id_1 = std::make_shared<AbstractTreeModelItem>(fields_atm);
+		m_self->m_atm_instance->getRootItem()->appendChild(new_child_id_1);
 //	UUIncD new_id = m_self->m_atm_instance->requestAddItem({"Artist1", "B", "C", "D"}, m_self->m_srtm_instance->getRootItem()->getId());
 //	auto new_child_id_1 = m_self->m_atm_instance->requestAddItem({"Album1", "F", "GHI", "J"}, new_id);
-	auto new_grandchild_id_1 = std::make_shared<AbstractTreeModelItem>(std::vector<QVariant>{{"Track1"}, {"F"}, {"GHI"}, {"J"}});//fields_atm);
-	auto new_child_id_2 = std::make_shared<AbstractTreeModelItem>(std::vector<QVariant>{"Album2", "F", "GHI", "J"});
+		auto new_child_id_2 = std::make_shared<AbstractTreeModelItem>(std::vector<QVariant>{"Album2", "F", "GHI", "J"});
 
-	new_child_id_1->appendChild(new_grandchild_id_1);
-	m_self->m_atm_instance->getRootItem()->appendChild(new_child_id_2);
+		m_self->m_atm_instance->getRootItem()->appendChild(new_child_id_2);
+		auto new_grandchild_id_1 = std::make_shared<AbstractTreeModelItem>(std::vector<QVariant>{{"Track1"}, {"F"}, {"GHI"}, {"J"}});
+		new_child_id_1->appendChild(new_grandchild_id_1);
 
-//	auto new_grandchild_id_1 = m_self->m_atm_instance->requestAddItem({"Track1", "F", "GHI", "J"}, new_child_id_1);
-//	auto new_child_id_2 = m_self->m_atm_instance->requestAddItem({"Album2", "F", "GHI", "J"}, new_id);
-//	auto new_grandchild_id_2 = m_self->m_atm_instance->requestAddItem({"Track1", "F", "GHI", "J"}, new_child_id_2);
+//		auto new_child_id_2 = m_self->m_atm_instance->requestAddItem({"Album2", "F", "GHI", "J"}, new_id);
+		auto new_grandchild_id_2 = std::make_shared<AbstractTreeModelItem>(std::vector<QVariant>{"Track2", "K", "LMN", "OP"});
+		new_child_id_2->appendChild(new_grandchild_id_2);
 
-	Q_ASSERT(m_self->m_atm_instance->checkConsistency());
+		Q_ASSERT(m_self->m_atm_instance->checkConsistency());
 
-	m_self->m_atm_instance->SaveDatabase("/home/gary/AMLM_Exp.xml");
+		m_self->m_atm_instance->SaveDatabase("/home/gary/AMLM_Exp.xml");
 	}
 }
 

@@ -69,7 +69,7 @@ private:
 	std::shared_ptr<LibraryEntry> m_library_entry;
 };
 
-//Q_DECLARE_METATYPE(SRTMItem_LibEntry);
+Q_DECLARE_METATYPE(std::shared_ptr<SRTMItem_LibEntry>);
 
 
 #endif /* SRC_LOGIC_MODELS_SRTMITEMLIBENTRY_H_ */

@@ -340,6 +340,9 @@ void DatabaseScanJob::startAsyncDirectoryTraversal_ForDB(const QUrl& dir_url, st
 
 				////////// EXPERIMENTAL
 #if 1 //// PUT BACK
+				//// Save the database using the root model method.
+				tree_model_ptr->AbstractTreeModel::SaveDatabase(QDir::homePath() +"/AMLMDatabase_AsATM.xml");
+				////
 			                      /// Try to load it back in and round-trip it.
 //				std::initializer_list<ColumnSpec> temp_initlist = {ColumnSpec(SectionID(0), "DirProps"), {SectionID(0), "MediaURL"}, {SectionID(0), "SidecarCueURL"}};
 					std::shared_ptr<ScanResultsTreeModel> load_tree	= ScanResultsTreeModel::make_ScanResultsTreeModel({});
