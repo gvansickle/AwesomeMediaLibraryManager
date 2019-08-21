@@ -142,8 +142,9 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 //		list_push_back_or_die(child_var_list, child_fields);
 //	}
 	/// EXP
-	for(auto& it : m_child_items)
+	for(const auto& it : m_child_items)
 	{
+		qDb() << "FROM ScanResultsTreeModelItem, Type is:" << QVariant::fromValue(it).typeName();
 		list_push_back_or_die(child_var_list, it->toVariant());
 	}
 	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, child_var_list);

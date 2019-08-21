@@ -881,11 +881,14 @@ QVariantInsertionOrderedMap AbstractTreeModelItem::children_to_variant() const
 	// Return value will be ~QMap<QString, QVariant>, where the QVariants are whatever the items
 	// in m_child_items turn into via toVariant().
 
+/// Q_DECLARE_SMART_POINTER_METATYPE(std::shared_ptr)
+
 	QVariantInsertionOrderedMap map;
 	// Child nodes.  Note we don't use HomogenousList here because the children could be arbitrary classes.
 	QVariantList child_var_list;
 	for(const auto& it : m_child_items)
 	{
+		qDb() << "Type is:" << QVariant::fromValue(it).typeName();
 		list_push_back_or_die(child_var_list, it->toVariant());
 	}
 	map_insert_or_die(map, XMLTAG_CHILD_ITEM_LIST, child_var_list);
@@ -897,7 +900,7 @@ void AbstractTreeModelItem::children_from_variant(QVariant& variant)
 {
 	// Ok, our goal here is to take a QVar map and populate our
 	// std::deque<std::shared_ptr<AbstractTreeModelItem>> m_child_items; member with the contents.
-	// The incoming QVariants may contain different item types.
+	// The incoming QVariants may contain shared_ptrs to different item types.
 
 	QVariantInsertionOrderedMap map;
 	qviomap_from_qvar_or_die(&map, variant);
@@ -908,6 +911,8 @@ void AbstractTreeModelItem::children_from_variant(QVariant& variant)
 //	QSequentialIterable iterable = child_var_list.value<QSequentialIterable>();
 	for(const QVariant& it : child_var_list)
 	{
+		// Get the QMetaType.
+		qDb() << "Type is:" << it.typeName();
 		using child_base_type = std::shared_ptr<AbstractTreeModelItem>;
 		AMLM_ASSERT_X(it.canConvert<child_base_type>(), "Can't convert to an appropriate class");
 		child_base_type child_sptr = it.value<child_base_type>();
