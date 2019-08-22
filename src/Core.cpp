@@ -114,7 +114,7 @@ M_TODO("Improve ColumnSpecs, not sure I like how we do this and then need to era
 	/// std::shared_ptr<AbstractTreeModel> m_atm_instance;
 	/// experimental
 	{
-		std::vector<ColumnSpec> column_specs = {ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}};
+		std::vector<ColumnSpec> column_specs = {ColumnSpec(SectionID(0), "Tag"), {SectionID{0}, "Value"}, {SectionID{0}, "Type"}, {SectionID{0}, "Class"}};
 		m_self->m_atm_instance = AbstractTreeModel::make_AbstractTreeModel(column_specs);
 
 		//	new_child->setData(0, fields[0]);

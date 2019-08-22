@@ -94,6 +94,9 @@ AbstractTreeModelItem::~AbstractTreeModelItem()
 
 void AbstractTreeModelItem::clear()
 {
+	qDb() << "clear(): Deregister if needed etc.";
+	deregister_self();
+
 	// Reset this item to its default-constructed state.  I.e. empty with no child items.
 	m_child_items.clear();
 	m_item_data.clear();

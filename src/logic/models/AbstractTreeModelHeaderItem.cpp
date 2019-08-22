@@ -59,11 +59,12 @@ AbstractTreeModelHeaderItem::~AbstractTreeModelHeaderItem()
 void AbstractTreeModelHeaderItem::clear()
 {
 	// Reset this header item to completely empty, except for its place in the model.
+	// Note that we can't defer to the base class here because it should be cleaning up its parent, which we don't have.
 	// All children should have already been removed from the model by the model.
-//	Q_ASSERT(m_child_items.empty());
+	AMLM_ASSERT_EQ(m_child_items.size(), 0);
 
-	BASE_CLASS::clear();
-//	m_item_data.clear();
+	m_child_items.clear();
+	m_item_data.clear();
 }
 
 bool AbstractTreeModelHeaderItem::setColumnSpecs(std::initializer_list<ColumnSpec> column_specs)
