@@ -108,10 +108,10 @@ private:
 	QVariant InnerReadVariantFromStream(QString typeString, const QXmlStreamAttributes& attributes, QXmlStreamReader& xmlstream);
 
 
-	QVariant readHomogenousListFromStream(QXmlStreamReader& xmlstream);
-	QVariant readVariantListFromStream(QXmlStreamReader& xmlstream);
-	QVariant readVariantMapFromStream(QXmlStreamReader& xmlstream);
-	QVariant readVariantOrderedMapFromStream(std::vector<QXmlStreamAttribute> attributes, QXmlStreamReader& xmlstream);
+	QVariant readHomogenousListFromStream(const std::vector<QXmlStreamAttribute>& attributes, QXmlStreamReader& xmlstream);
+	QVariant readVariantListFromStream(const std::vector<QXmlStreamAttribute>& attributes, QXmlStreamReader& xmlstream);
+	QVariant readVariantMapFromStream(const std::vector<QXmlStreamAttribute>& attributes, QXmlStreamReader& xmlstream);
+	QVariant readVariantOrderedMapFromStream(const std::vector<QXmlStreamAttribute> attributes, QXmlStreamReader& xmlstream);
 
 	QVariant readVariantValueFromStream(QXmlStreamReader& xmlstream);
 

@@ -305,6 +305,7 @@ void XmlSerializer::writeVariantMapToStream(const QVariant &variant, QXmlStreamW
 	}
 }
 
+
 void XmlSerializer::writeVariantOrderedMapToStream(const QVariant& variant, QXmlStreamWriter& xmlstream)
 {
 	Q_ASSERT(variant.isValid());
@@ -376,7 +377,7 @@ QVariant XmlSerializer::InnerReadVariantFromStream(QString typeString, const QXm
 {
 	QVariant variant;
 
-	// Copy the attributes, removing only "type".
+	// Copy the attributes, removing only "type", which we've already processed.
 	std::vector<QXmlStreamAttribute> attributes_cp = attributes.toStdVector();
 	std::experimental::erase_if(attributes_cp, [](auto& attr){ return attr.qualifiedName() == "type" ? true : false; });
 
@@ -389,11 +390,11 @@ QVariant XmlSerializer::InnerReadVariantFromStream(QString typeString, const QXm
 	}
 	else if(metatype == f_qvarlist_id)
 	{
-		variant = readHomogenousListFromStream(xmlstream);
+		variant = readHomogenousListFromStream(attributes_cp, xmlstream);
 	}
 	else if(metatype == f_serqvarlist_id)
 	{
-		variant = readHomogenousListFromStream(xmlstream);
+		variant = readHomogenousListFromStream(attributes_cp, xmlstream);
 	}
 	else
 	{
@@ -404,10 +405,10 @@ QVariant XmlSerializer::InnerReadVariantFromStream(QString typeString, const QXm
 				/// "Returns the variant as a QVariantList if the variant has userType() QMetaType::QVariantList
 				/// or QMetaType::QStringList"
 			case QMetaType::QStringList:
-				variant = readVariantListFromStream(xmlstream);
+				variant = readVariantListFromStream(attributes_cp, xmlstream);
 				break;
 			case QMetaType::QVariantMap:
-				variant = readVariantMapFromStream(xmlstream);
+				variant = readVariantMapFromStream(attributes_cp, xmlstream);
 				break;
 			default:
 				variant = readVariantValueFromStream(xmlstream);
@@ -431,7 +432,7 @@ QVariant XmlSerializer::InnerReadVariantFromStream(QString typeString, const QXm
 }
 
 
-QVariant XmlSerializer::readHomogenousListFromStream(QXmlStreamReader& xmlstream)
+QVariant XmlSerializer::readHomogenousListFromStream(const std::vector<QXmlStreamAttribute>& attributes, QXmlStreamReader& xmlstream)
 {
 	QVariantHomogenousList list;
 	bool is_first_item = true;
@@ -478,7 +479,7 @@ QVariant XmlSerializer::readHomogenousListFromStream(QXmlStreamReader& xmlstream
 	return QVariant::fromValue(list);
 }
 
-QVariant XmlSerializer::readVariantListFromStream(QXmlStreamReader& xmlstream)
+QVariant XmlSerializer::readVariantListFromStream(const std::vector<QXmlStreamAttribute>& attributes, QXmlStreamReader& xmlstream)
 {
 	QVariantList list;
 
@@ -592,11 +593,19 @@ QString XmlSerializer::normalize_node_name(const QString& node_name) const
 	return retval.replace(" ", "%20");
 }
 
-QVariant XmlSerializer::readVariantMapFromStream(QXmlStreamReader& xmlstream)
+QVariant XmlSerializer::readVariantMapFromStream(const std::vector<QXmlStreamAttribute>& attributes, QXmlStreamReader& xmlstream)
 {
 	QVariantMap map;
 
 	Q_ASSERT(xmlstream.isStartElement());
+
+	// Add the attributes to the QVariantInsertionOrderedMap.
+	QVariantMap amap;
+	for(const auto& it : attributes)
+	{
+		amap.insertMulti(it.name().toString(), it.value().toString());
+	}
+	map.insert("attributes", amap);
 
 	while(xmlstream.readNextStartElement())
 	{
@@ -605,7 +614,7 @@ QVariant XmlSerializer::readVariantMapFromStream(QXmlStreamReader& xmlstream)
 	return map;
 }
 
-QVariant XmlSerializer::readVariantOrderedMapFromStream(std::vector<QXmlStreamAttribute> attributes, QXmlStreamReader& xmlstream)
+QVariant XmlSerializer::readVariantOrderedMapFromStream(const std::vector<QXmlStreamAttribute> attributes, QXmlStreamReader& xmlstream)
 {
 	QVariantInsertionOrderedMap map;
 

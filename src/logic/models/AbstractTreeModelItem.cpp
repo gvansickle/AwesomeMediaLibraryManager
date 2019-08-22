@@ -381,8 +381,7 @@ QVariant AbstractTreeModelItem::toVariant() const
 	QVariantInsertionOrderedMap map;
 
 	// Write class info to the map.
-//	set_map_class_info(this, &map);
-	set_map_class_info(std::string("AbstractTreeModelItem"), &map);
+	set_map_class_info(this, &map);
 
 #define X(field_tag, tag_string, var_name) map_insert_or_die(map, field_tag, var_name);
 	M_DATASTREAM_FIELDS(X);

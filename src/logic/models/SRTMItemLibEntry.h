@@ -40,11 +40,11 @@ class SRTMItem_LibEntry : public ScanResultsTreeModelItem, public enable_shared_
 
 public:
 //protected:
-	explicit SRTMItem_LibEntry(const std::shared_ptr<AbstractTreeModelItem>& parent_item = nullptr, UUIncD id = UUIncD::null());
+	explicit SRTMItem_LibEntry(const std::shared_ptr<AbstractTreeModelItem>& parent_item, UUIncD id = UUIncD::null());
 	explicit SRTMItem_LibEntry(std::shared_ptr<LibraryEntry> libentry, const std::shared_ptr<AbstractTreeModelItem>& parent_item = nullptr, UUIncD id = UUIncD::null());
 
 public:
-//	SRTMItem_LibEntry() {};
+	M_GH_RULE_OF_FIVE_DEFAULT_C21(SRTMItem_LibEntry);
 	~SRTMItem_LibEntry() override = default;
 
 	QVariant data(int column, int role = Qt::DisplayRole) const override;
@@ -69,7 +69,7 @@ private:
 	std::shared_ptr<LibraryEntry> m_library_entry;
 };
 
-
+Q_DECLARE_METATYPE(SRTMItem_LibEntry);
 Q_DECLARE_METATYPE(std::shared_ptr<SRTMItem_LibEntry>);
 
 

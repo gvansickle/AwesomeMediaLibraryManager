@@ -68,7 +68,7 @@ void dump_map(const MapType& map)
 
 /**
  *
- * @param member  The ISerializer-derived member variable to insert.
+ * @param member  The ISerializable-derived member variable to insert.
  */
 template <class MapType, class StringType>
 void map_insert_or_die(MapType& map, const StringType& key, const std::nullptr_t member)

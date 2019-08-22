@@ -50,11 +50,11 @@ class ScanResultsTreeModelItem : public AbstractTreeModelItem, public enable_sha
 	using BASE_CLASS = AbstractTreeModelItem;
 
 public:
-	M_GH_DELETE_COPY_AND_MOVE(ScanResultsTreeModelItem);
+	M_GH_RULE_OF_FIVE_DEFAULT_C21(ScanResultsTreeModelItem);
 
 	/// Create a new model item populated with the passed DirScanResult.
 	explicit ScanResultsTreeModelItem(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr, UUIncD id = UUIncD::null());
-	explicit ScanResultsTreeModelItem(const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr, UUIncD id = UUIncD::null());
+	explicit ScanResultsTreeModelItem(const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id = UUIncD::null());
 
 public:
 
@@ -93,7 +93,7 @@ protected:
 
 /// @todo Need this here for QVariant::fromValue().
 //Q_DECLARE_METATYPE(std::string);
-//Q_DECLARE_METATYPE(ScanResultsTreeModelItem);
+Q_DECLARE_METATYPE(ScanResultsTreeModelItem);
 Q_DECLARE_METATYPE(std::shared_ptr<ScanResultsTreeModelItem>);
 
 #endif /* SRC_LOGIC_MODELS_SCANRESULTSTREEMODELITEM_H_ */

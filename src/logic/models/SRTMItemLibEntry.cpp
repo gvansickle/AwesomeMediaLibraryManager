@@ -110,8 +110,8 @@ QVariant SRTMItem_LibEntry::toVariant() const
 	QVariantInsertionOrderedMap map;
 
 	// Overwrite any class info added by the above.
-//	set_map_class_info(this, &map);
-	set_map_class_info(std::string("SRTMItem_LibEntry"), &map);
+	set_map_class_info(this, &map);
+//	set_map_class_info(std::string("SRTMItem_LibEntry"), &map);
 
 	// Set the xml:id.
 	map.insert_attributes({{"xml:id", get_prefixed_uuid()}});

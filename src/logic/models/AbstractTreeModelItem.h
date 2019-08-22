@@ -373,7 +373,8 @@ private:
 	int m_depth {0};
 };
 
-//Q_DECLARE_METATYPE(AbstractTreeModelItem);
+// For name access and QVariant use.
+Q_DECLARE_METATYPE(AbstractTreeModelItem);
 Q_DECLARE_METATYPE(std::vector<QVariant>);
 Q_DECLARE_METATYPE(std::weak_ptr<AbstractTreeModelItem>);
 Q_DECLARE_METATYPE(std::shared_ptr<AbstractTreeModelItem>);

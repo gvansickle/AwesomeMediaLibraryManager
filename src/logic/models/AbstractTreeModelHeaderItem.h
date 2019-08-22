@@ -62,7 +62,7 @@ public:
 	                            const std::shared_ptr<AbstractTreeModel>& parent_model = nullptr, UUIncD id = UUIncD::null());
 
 public:
-	M_GH_DELETE_COPY_AND_MOVE(AbstractTreeModelHeaderItem);
+	M_GH_RULE_OF_FIVE_DEFAULT_C21(AbstractTreeModelHeaderItem);
 	~AbstractTreeModelHeaderItem() override;
 
 	/**
@@ -104,7 +104,7 @@ private:
 
 };
 
-//Q_DECLARE_METATYPE(AbstractTreeModelHeaderItem);
+Q_DECLARE_METATYPE(AbstractTreeModelHeaderItem);
 Q_DECLARE_METATYPE(std::shared_ptr<AbstractTreeModelHeaderItem>)
 
 #endif /* SRC_LOGIC_MODELS_ABSTRACTTREEMODELHEADERITEM_H_ */
