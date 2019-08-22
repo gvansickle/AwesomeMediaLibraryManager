@@ -63,25 +63,7 @@ QModelIndexList mapToSource(const QModelIndexList& source_indices);
 
 QAbstractItemModel* getRootModel(QAbstractItemModel* maybe_proxy_model);
 
-/**
- * This is really a view helper, not a model helper.
- * @param model
- * @param view
- * @param context
- */
-template <typename ModelType, class ViewType, class ContextType>
-inline static void connect_jit_item_expansion(ModelType* model, ViewType* view, ContextType* context)
-{
-	// Hook up Just-In-Time item expansion.
-	connect_or_die(model, &ModelType::rowsInserted,
-				   context, [context, view](const QModelIndex& parent, int first, int last)
-	{
-		if(!view->isExpanded(parent))
-		{
-			view->expand(parent);
-		}
-	});
-}
+
 
 #endif /* MODELHELPERS_H */
 

@@ -7,6 +7,7 @@
 
 // Ours
 #include <proxymodels/ModelHelpers.h>
+#include <gui/helpers/ViewHelpers.h>
 //#include <logic/models/AbstractTreeModel.h>
 #include <logic/models/treemodel.h>
 
@@ -29,7 +30,7 @@ void CollectionView::setMainModel2(AbstractTreeModel* model)
 	view->setModel(model);
 
 	// Hook up Just-In-Time item expansion.
-	connect_jit_item_expansion(view->model(), view, this);
+	AMLM::connect_jit_item_expansion(view->model(), view, this);
 }
 
 void CollectionView::setPane2Model(TreeModel* model)
@@ -42,7 +43,7 @@ void CollectionView::setPane2Model(TreeModel* model)
 	}
 
 	// Hook up Just-In-Time item expansion.
-	connect_jit_item_expansion(right_tree_view_atmi->model(), right_tree_view_atmi, this);
+	AMLM::connect_jit_item_expansion(right_tree_view_atmi->model(), right_tree_view_atmi, this);
 }
 
 

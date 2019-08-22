@@ -23,10 +23,42 @@
 #ifndef SRC_GUI_HELPERS_VIEWHELPERS_H_
 #define SRC_GUI_HELPERS_VIEWHELPERS_H_
 
+// Qt5
+#include <QTreeView>
+#include <QModelIndex>
+
+// Ours
+#include <utils/ConnectHelpers.h>
+
 namespace AMLM
 {
 
+/**
+ * This is really a view helper, not a model helper.
+ * @param model
+ * @param view
+ * @param context
+ */
+template <typename ModelType, class ViewType, class ContextType>
+inline static void connect_jit_item_expansion(ModelType* model, ViewType* view, ContextType* context)
+{
+	// Do a preemptive expansion in case the model has items already.
+#if 0 // Needs 5.13, which I thought we had.
+	view->expandRecursively(QModelIndex());
+#else
+	view->expandAll();
+#endif
 
+	// Hook up Just-In-Time item expansion.
+	connect_or_die(model, &ModelType::rowsInserted,
+				   context, [context, view](const QModelIndex& parent, int first, int last)
+	{
+		if(!view->isExpanded(parent))
+		{
+			view->expand(parent);
+		}
+	});
+}
 
 } /* namespace AMLM */
 

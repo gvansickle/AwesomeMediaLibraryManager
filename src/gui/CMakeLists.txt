@@ -33,6 +33,7 @@ set(gui_HEADER_FILES
 	MetadataDockWidget.h
 	NetworkAwareFileDialog.h
 	helpers/Tips.h
+	helpers/ViewHelpers.h
 	menus/DropMenu.h
 	menus/LibraryContextMenu.h
 	menus/PlaylistContextMenuViewport.h
@@ -68,6 +69,7 @@ set(gui_SOURCE_FILES
 	MDINowPlayingView.h
 	DragDropTreeViewStyleProxy.cpp
 	helpers/Tips.cpp
+	helpers/ViewHelpers.cpp
 	menus/DropMenu.cpp
 	menus/LibraryContextMenu.cpp
 	menus/PlaylistContextMenuViewport.cpp

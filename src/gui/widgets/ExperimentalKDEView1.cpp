@@ -3,6 +3,7 @@
 
 // Ours
 #include <utils/ConnectHelpers.h>
+#include <gui/helpers/ViewHelpers.h>
 #include <proxymodels/ModelHelpers.h>
 #include <utils/StringHelpers.h>
 
@@ -55,7 +56,7 @@ bool ExperimentalKDEView1::setModel(AbstractTreeModel* model)
 	view->expandAll();
 
 	// Hook up Just-In-Time item expansion.
-	connect_jit_item_expansion(ui->m_top_level_tree_view->model(), ui->m_top_level_tree_view, this);
+	AMLM::connect_jit_item_expansion(ui->m_top_level_tree_view->model(), ui->m_top_level_tree_view, this);
 
 	return true;
 }
