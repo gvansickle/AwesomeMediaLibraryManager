@@ -111,7 +111,7 @@ QVariant AbstractTreeModelHeaderItem::data(int column, int role) const
 
 #define M_DATASTREAM_FIELDS(X) \
 	X(XMLTAG_HEADER_NUM_SECTIONS, header_num_sections) \
-	X(XMLTAG_CHILD_NODE_LIST, child_node_list)
+	X(XMLTAG_CHILD_NODE_MAP, child_node_map)
 
 using strviw_type = QLatin1Literal;
 
@@ -157,7 +157,7 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 //	 Serialize out Child nodes.
 //	// Insert the list into the map.
 	QVariantInsertionOrderedMap child_map = children_to_variant();
-	map_insert_or_die(map, /*XMLTAG_CHILD_ITEM_LIST*/XMLTAG_CHILD_NODE_LIST, child_map);
+	map_insert_or_die(map, XMLTAG_CHILD_NODE_MAP, child_map);
 #endif
 	return map;
 }
@@ -209,13 +209,13 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	/// @todo This is a QVariantList containing <item>/QVariantMap's, each of which
 	/// contains a single <scan_res_tree_model_item type="QVariantMap">, which in turn
 	/// contains a single <dirscanresult>/QVariantMap.
-	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
-	child_var_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
+	QVariantInsertionOrderedMap child_var_map;//(XMLTAG_CHILD_NODE_MAP, "child");
+	child_var_map = map.value(XMLTAG_CHILD_NODE_MAP).value<QVariantInsertionOrderedMap>();
 //	Q_ASSERT(child_var_list.size() > 0);
-	qDb() << "Number of children read:" << child_var_list.size();
+	qDb() << "Number of children read:" << child_var_map.size();
 
-	append_children_from_variant<ScanResultsTreeModelItem>(this, child_var_list);
-//	children_from_variant(child_var_list);
+//	append_children_from_variant<ScanResultsTreeModelItem>(this, child_var_list);
+	children_from_variant(child_var_map);
 }
 
 

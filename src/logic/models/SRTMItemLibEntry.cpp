@@ -93,7 +93,7 @@ QVariant SRTMItem_LibEntry::data(int column, int role) const
 
 #define M_DATASTREAM_FIELDS(X) \
 	/* TAG_IDENTIFIER, tag_string, member_field, var_name */ \
-	X(XMLTAG_CHILD_NODE_LIST, child_node_list, nullptr) \
+	X(XMLTAG_CHILD_ITEM_MAP, child_node_list, nullptr) \
 	X(XMLTAG_LIBRARY_ENTRIES, library_entries, nullptr)
 
 
@@ -123,12 +123,12 @@ QVariant SRTMItem_LibEntry::toVariant() const
 	}
 	map_insert_or_die(map, XMLTAG_LIBRARY_ENTRIES, list);
 
-	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
+	QVariantHomogenousList child_var_list(XMLTAG_CHILD_ITEM_MAP, "child");
 	for(auto& it : m_child_items)
 	{
 		list_push_back_or_die(child_var_list, it->toVariant());
 	}
-	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, child_var_list);
+	map_insert_or_die(map, XMLTAG_CHILD_ITEM_MAP, child_var_list);
 
 	return map;
 }
@@ -172,10 +172,15 @@ void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 	}
 #endif
 
-	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
-	child_var_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
+	QVariantHomogenousList child_var_list(XMLTAG_CHILD_ITEM_MAP, "child");
+	child_var_list = map.value(XMLTAG_CHILD_ITEM_MAP).value<QVariantHomogenousList>();
 
-	append_children_from_variant<AbstractTreeModelItem>(this, child_var_list);
+//	append_children_from_variant<AbstractTreeModelItem>(this, child_var_list);
+	// Read in our children.
+//	QVariantHomogenousList child_list = map.value(XMLTAG_CHILD_ITEM_LIST).value<QVariantHomogenousList>();
+	QVariantInsertionOrderedMap child_map; (XMLTAG_CHILD_ITEM_MAP, "child");
+	child_map = map.value(XMLTAG_CHILD_ITEM_MAP).value<QVariantInsertionOrderedMap>();
+	qDb() << M_ID_VAL(child_map.size());
 
 
 #if 0///

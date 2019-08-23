@@ -78,7 +78,8 @@ public:
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(InsertionOrderedMap);
 	virtual ~InsertionOrderedMap() = default;
 
-	InsertionOrderedMap(const QVariant& variant)
+	/// Copy-through-QVariant constructor.
+	explicit InsertionOrderedMap(const QVariant& variant)
 	{
 		Q_ASSERT(variant.isValid());
 		using qvartype = InsertionOrderedMap<KeyType, ValueType>;

@@ -92,7 +92,7 @@ int ScanResultsTreeModelItem::columnCount() const
 	/*X(XMLTAG_NUM_COLUMNS, num_columns, (qulonglong)m_item_data.size())*/ \
 	/*X(XMLTAG_ITEM_DATA_SIZE, item_data_size, (qulonglong)m_item_data.size())*/ \
 	/*X(XMLTAG_NUM_CHILDREN, num_children, (qulonglong)m_child_items.size())*/ \
-	X(XMLTAG_CHILD_NODE_LIST, child_node_list, nullptr)
+	X(XMLTAG_CHILD_ITEM_MAP, child_node_list, nullptr)
 
 
 /// Strings to use for the tags.
@@ -121,7 +121,7 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 #if 1
 	map_insert_or_die(map, XMLTAG_DIRSCANRESULT, m_dsr.toVariant());
 #else
-//	QVariantHomogenousList child_var_list_EXP(XMLTAG_CHILD_NODE_LIST, "child");
+//	QVariantHomogenousList child_var_list_EXP(XMLTAG_CHILD_ITEM_MAP, "child");
 
 //#define X(field_tag, tag_string, var_name)
 //	list_push_back_or_die(child_var_list_EXP, it->toVariant());
@@ -133,7 +133,7 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 #undef X
 
 #if 1
-	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
+	QVariantHomogenousList child_var_list(XMLTAG_CHILD_ITEM_MAP, "child");
 	/// EXP
 //	QVariantInsertionOrderedMap child_fields;
 //	child_fields = m_dsr.getChildMap();
@@ -147,7 +147,7 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 		qDb() << "FROM ScanResultsTreeModelItem, Type is:" << QVariant::fromValue(it).typeName();
 		list_push_back_or_die(child_var_list, it->toVariant());
 	}
-	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, child_var_list);
+	map_insert_or_die(map, XMLTAG_CHILD_ITEM_MAP, child_var_list);
 #else
 	auto base_map = BASE_CLASS::toVariant();
 	map_insert_or_die(map, "BASE_TOVARIANT", base_map);
@@ -194,11 +194,17 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 	AMLM_ASSERT_X(append_success, "FAILED TO APPEND NEW ITEM TO PARENT");
 #endif /// EXP
 
-	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
-	child_var_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
-	Q_ASSERT(child_var_list.size() > 0);
+//	QVariantHomogenousList child_var_list(XMLTAG_CHILD_ITEM_MAP, "child");
+//	child_var_list = map.value(XMLTAG_CHILD_ITEM_MAP).value<QVariantHomogenousList>();
+//	Q_ASSERT(child_var_list.size() > 0);
 
-	append_children_from_variant<SRTMItem_LibEntry>(this, child_var_list);
+//	append_children_from_variant<SRTMItem_LibEntry>(this, child_var_list);
+	//	append_children_from_variant<AbstractTreeModelItem>(this, child_var_list);
+	// Read in our children.
+	//	QVariantHomogenousList child_list = map.value(XMLTAG_CHILD_ITEM_LIST).value<QVariantHomogenousList>();
+	QVariantInsertionOrderedMap child_map; (XMLTAG_CHILD_ITEM_MAP, "child");
+	child_map = map.value(XMLTAG_CHILD_ITEM_MAP).value<QVariantInsertionOrderedMap>();
+	qDb() << M_ID_VAL(child_map.size());
 }
 
 void ScanResultsTreeModelItem::setDirscanResults(const DirScanResult& dsr)
