@@ -247,12 +247,20 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	message(STATUS "C++ Compiler is Clang")
 	target_compile_options(cxx_compile_options
 		INTERFACE
+			-O0
 			# This is to avoid this gtest error:
 			# "googletest-src/googletest/src/gtest.cc:414:1: error: non-POD static (vector) [-Wclazy-non-pod-global-static]"
-			#-Xclang no-non-pod-global-static
+# 			-Xclang no-non-pod-global-static
 			-fforce-emit-vtables
+			-Wthread-safety 
+			-fdebug-macro 
+			-fdiagnostics-show-template-tree 
+			-mno-omit-leaf-frame-pointer
+			-gcolumn-info 
+			-ggnu-pubnames
+			-grecord-command-line
 			)
-	ucm_add_flags(-Wthread-safety -fdebug-macro -fdiagnostics-show-template-tree -mno-omit-leaf-frame-pointer)
+# 	ucm_add_flags(-Wthread-safety -fdebug-macro -fdiagnostics-show-template-tree -mno-omit-leaf-frame-pointer)
 	#ucm_add_flags(-fdelayed-template-parsing -frelaxed-template-template-args)
 endif()
 if(WIN32)

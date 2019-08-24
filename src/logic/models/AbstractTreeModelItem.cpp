@@ -880,10 +880,24 @@ void AbstractTreeModelItem::updateParent(std::shared_ptr<AbstractTreeModelItem> 
 #endif
 }
 
-struct ChildHolder
+class ChildHolder : public ISerializable
 {
+public:
+	M_GH_RULE_OF_FIVE_DEFAULT_C21(ChildHolder);
+	~ChildHolder() override = default;
+
 	QString m_class_name;
 	std::shared_ptr<AbstractTreeModelItem> m_item;
+
+	/**
+	 * Override in derived classes to serialize to a QVariantMap or QVariantList.
+	 */
+	QVariant toVariant() const override;
+
+	/**
+	 * Override in derived classes to serialize from a QVariantMap or QVariantList.
+	 */
+	void fromVariant(const QVariant& variant) override;
 };
 Q_DECLARE_METATYPE(ChildHolder);
 
@@ -921,6 +935,8 @@ void AbstractTreeModelItem::children_from_variant(const InsertionOrderedStrVarMa
 	// std::deque<std::shared_ptr<AbstractTreeModelItem>> m_child_items; member with the contents.
 	// The incoming QVariants may contain shared_ptrs to different item types.
 
+#if 1
+
 	QVariant cvl = variant.at(XMLTAG_CHILD_ITEM_LIST);
 	Q_ASSERT(cvl.canConvert<QVariantList>());
 
@@ -949,11 +965,29 @@ void AbstractTreeModelItem::children_from_variant(const InsertionOrderedStrVarMa
 //		using child_base_type = std::shared_ptr<AbstractTreeModelItem>;
 //		AMLM_ASSERT_X(ch.m_item.canConvert<child_base_type>(), "Can't convert to an appropriate class");
 //		child_base_type child_sptr = ch.m_item.value<child_base_type>();
-		bool status = variant.convert(metatype);
-		Q_ASSERT(status);
-		auto child_sptr = std::dynamic_pointer_cast<>
-		m_child_items.push_back(child_sptr);
+///		bool status = variant.convert(metatype);
+///		Q_ASSERT(status);
+	///	auto child_sptr = std::dynamic_pointer_cast<>
+		///m_child_items.push_back(child_sptr);
 	}
+#else
+
+	return map;
+	map_insert_or_die(map, XMLTAG_CHILD_ITEM_LIST, child_var_list);
+	QVariantList child_var_list;
+	for(const auto& it : m_child_items)
+	{
+		ChildHolder ch;
+		ch.m_class_name = QVariant::fromValue(it).typeName();
+		ch.m_item = std::dynamic_pointer_cast<AbstractTreeModelItem>(it);
+
+		qDb() << "Type is:" << ch.m_class_name;
+
+		list_push_back_or_die(child_var_list, QVariant::fromValue(ch)); //it->toVariant());
+	}
+	InsertionOrderedStrVarMap map;
+
+#endif
 }
 
 #if 0
@@ -992,3 +1026,21 @@ AbstractTreeModelItem::CICTIteratorType AbstractTreeModelItem::get_m_child_items
 	return retval;
 }
 
+
+QVariant ChildHolder::toVariant() const
+{
+	InsertionOrderedStrVarMap map;
+
+	map_insert_or_die(map, "m_class_name", m_class_name);
+	map_insert_or_die(map, "m_item", m_item);
+
+	return map;
+}
+
+void ChildHolder::fromVariant(const QVariant& variant)
+{
+	InsertionOrderedStrVarMap map;
+	qviomap_from_qvar_or_die(&map, variant);
+	map_read_field_or_warn(map, "m_class_name", &m_class_name);
+	map_read_field_or_warn(map, "m_item", &m_item);
+}
