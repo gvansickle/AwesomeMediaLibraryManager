@@ -72,6 +72,12 @@ public:
 			const std::shared_ptr<AbstractTreeModelItem>& parent_item = nullptr, UUIncD id = UUIncD::null());
 	~AbstractTreeModelItem() override;
 
+	/**
+	 * KDEN has a clean() in ProjectItemModel, nothing in item.
+	 * ETM has nothing like this.
+	 * AQP has one in the model which essentially just deletes the root item, and a takeChild()
+	 * in the item which is what the removeRows() override uses.
+	 */
 	virtual void clear();
 
 	/**
@@ -190,8 +196,10 @@ public:
 
 	/**
      * Remove and delete the @a count children starting at @a position.
+     * @note ETM has this using takeAt(). KDEN has no such plural in the item, see removeChild(), and doesn't overload
+     *       removeChildren() in the model either, which seems odd.  AQP has only takeChild() here and does overload
+     *       removeRows() in the model, which uses that to remove children.
      */
-	// ETM, KDEN no plural, see removeChild().
 	bool removeChildren(int position, int count);
 
 	/**
@@ -254,6 +262,10 @@ protected:
 	 * Helper functions to handle registration / deregistration to the model.
 	 */
 	static void register_self(const std::shared_ptr<AbstractTreeModelItem>& self);
+	/**
+	 * Remove the subtree rooted at this item from the model @ m_model by recursively calling @a m_model->derigister_item().
+	 * Does effectively nothing if item is not in a model.
+	 */
 	void deregister_self();
 
 	/**
@@ -268,12 +280,12 @@ protected:
 	/**
 	 * Serialization helper which recursively serializes this item's children to a map.
 	 */
-	QVariantInsertionOrderedMap children_to_variant() const;
+	InsertionOrderedStrVarMap children_to_variant() const;
 
 	/**
 	 * Serialization helper which recursively serializes this item's children from a map.
 	 */
-	void children_from_variant(const QVariantInsertionOrderedMap& variant);
+	void children_from_variant(const InsertionOrderedStrVarMap& variant);
 
 	/// @name Pre/Post-condition checks
 	/// @{

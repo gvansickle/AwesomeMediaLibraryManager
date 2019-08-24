@@ -161,7 +161,7 @@ static const strviw_type XMLTAG_NUM_LIBRARY_ENTRIES("num_lib_entries");
 
 QVariant Library::toVariant() const
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedStrVarMap map;
 
 #define X(field_tag, member_field)   map_insert_or_die(map, field_tag, member_field);
 	M_DATASTREAM_FIELDS(X);
@@ -191,7 +191,7 @@ void Library::fromVariant(const QVariant& variant)
 {
 	Stopwatch sw("################### Library::fromVariant()");
 
-	QVariantInsertionOrderedMap map; // = variant.value<QVariantInsertionOrderedMap>();
+	InsertionOrderedStrVarMap map; // = variant.value<QVariantInsertionOrderedMap>();
 	qviomap_from_qvar_or_die(&map, variant);
 
 #define X(field_tag, member_field)   map_read_field_or_warn(map, field_tag, &member_field);

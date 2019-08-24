@@ -69,7 +69,7 @@ DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_f
 
 QVariant DirScanResult::toVariant() const
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedStrVarMap map;
 
 	// Set the xml:id.
 	map.insert_attributes({{"xml:id", get_prefixed_uuid()}});
@@ -84,7 +84,7 @@ QVariant DirScanResult::toVariant() const
 
 void DirScanResult::fromVariant(const QVariant& variant)
 {
-	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
+	InsertionOrderedStrVarMap map = variant.value<InsertionOrderedStrVarMap>();
 
 	auto uuid = map.get_attr("xml:id", "");
 	set_prefixed_uuid(uuid);
@@ -95,9 +95,9 @@ void DirScanResult::fromVariant(const QVariant& variant)
 #undef X
 }
 
-QVariantInsertionOrderedMap DirScanResult::getChildMap() const
+InsertionOrderedStrVarMap DirScanResult::getChildMap() const
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedStrVarMap map;
 
 //	// Add all the fields to the map.
 //#define X(field_tag, member_field) map_insert_or_die(map, field_tag, &(member_field));

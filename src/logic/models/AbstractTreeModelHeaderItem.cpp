@@ -58,11 +58,18 @@ AbstractTreeModelHeaderItem::~AbstractTreeModelHeaderItem()
 
 void AbstractTreeModelHeaderItem::clear()
 {
+#if 0
 	// Reset this header item to completely empty, except for its place in the model.
 	// Note that we can't defer to the base class here because it should be cleaning up its parent, which we don't have.
 	// All children should have already been removed from the model by the model.
-	AMLM_ASSERT_EQ(m_child_items.size(), 0);
-
+	AMLM_ASSERT_X(m_child_items.size() == 0, "clear() called with unremoved children");
+#else
+	for(const auto& child : m_child_items)
+	{
+		qDb() << "Removing child:";// << *child << "from" << this;
+		this->removeChild(child);
+	}
+#endif
 	m_child_items.clear();
 	m_item_data.clear();
 }
@@ -124,7 +131,7 @@ static const strviw_type XMLTAG_HEADER_SECTION_LIST ("header_section_list");
 
 QVariant AbstractTreeModelHeaderItem::toVariant() const
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedStrVarMap map;
 
 	// Set some class meta-info.
 	set_map_class_info(this, &map);
@@ -156,7 +163,7 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 #else
 //	 Serialize out Child nodes.
 //	// Insert the list into the map.
-	QVariantInsertionOrderedMap child_map = children_to_variant();
+	InsertionOrderedStrVarMap child_map = children_to_variant();
 	map_insert_or_die(map, XMLTAG_CHILD_NODE_MAP, child_map);
 #endif
 	return map;
@@ -164,7 +171,7 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 
 void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedStrVarMap map;
 	qviomap_from_qvar_or_die(&map, variant);
 
 	// Read the number of header sections...
@@ -209,8 +216,8 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	/// @todo This is a QVariantList containing <item>/QVariantMap's, each of which
 	/// contains a single <scan_res_tree_model_item type="QVariantMap">, which in turn
 	/// contains a single <dirscanresult>/QVariantMap.
-	QVariantInsertionOrderedMap child_var_map;//(XMLTAG_CHILD_NODE_MAP, "child");
-	child_var_map = map.value(XMLTAG_CHILD_NODE_MAP).value<QVariantInsertionOrderedMap>();
+	InsertionOrderedStrVarMap child_var_map;//(XMLTAG_CHILD_NODE_MAP, "child");
+	child_var_map = map.value(XMLTAG_CHILD_NODE_MAP).value<InsertionOrderedStrVarMap>();
 //	Q_ASSERT(child_var_list.size() > 0);
 	qDb() << "Number of children read:" << child_var_map.size();
 

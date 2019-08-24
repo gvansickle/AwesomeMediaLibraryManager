@@ -107,7 +107,7 @@ using strviw_type = QLatin1Literal;
 
 QVariant SRTMItem_LibEntry::toVariant() const
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedStrVarMap map;
 
 	// Overwrite any class info added by the above.
 	set_map_class_info(this, &map);
@@ -135,7 +135,7 @@ QVariant SRTMItem_LibEntry::toVariant() const
 
 void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 {
-	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
+	InsertionOrderedStrVarMap map = variant.value<InsertionOrderedStrVarMap>();
 //	dump_map(map);
 
 	try
@@ -178,8 +178,8 @@ void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 //	append_children_from_variant<AbstractTreeModelItem>(this, child_var_list);
 	// Read in our children.
 //	QVariantHomogenousList child_list = map.value(XMLTAG_CHILD_ITEM_LIST).value<QVariantHomogenousList>();
-	QVariantInsertionOrderedMap child_map; (XMLTAG_CHILD_ITEM_MAP, "child");
-	child_map = map.value(XMLTAG_CHILD_ITEM_MAP).value<QVariantInsertionOrderedMap>();
+	InsertionOrderedStrVarMap child_map; (XMLTAG_CHILD_ITEM_MAP, "child");
+	child_map = map.value(XMLTAG_CHILD_ITEM_MAP).value<InsertionOrderedStrVarMap>();
 	qDb() << M_ID_VAL(child_map.size());
 
 

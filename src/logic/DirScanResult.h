@@ -110,7 +110,7 @@ public:
 
 	/// Return an insertion-ordered map of the data members of this class.
 	/// EXP
-	QVariantInsertionOrderedMap getChildMap() const;
+	InsertionOrderedStrVarMap getChildMap() const;
 
 	/// @}
 

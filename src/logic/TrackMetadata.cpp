@@ -173,7 +173,7 @@ std::string TrackMetadata::toStdString() const
 
 QVariant TrackMetadata::toVariant() const
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedStrVarMap map;
 
 	// Set some extra class info to the attributes.
 //	set_map_class_info(this, &map);
@@ -199,7 +199,7 @@ QVariant TrackMetadata::toVariant() const
 
 void TrackMetadata::fromVariant(const QVariant& variant)
 {
-	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
+	InsertionOrderedStrVarMap map = variant.value<InsertionOrderedStrVarMap>();
 
 	auto uuid = map.get_attr("xml:id", {});
 	if(uuid.empty())
@@ -229,9 +229,9 @@ M_TODO("REMOVE");
 	for(const QVariant& qvar_index_entry : qAsConst(index_list))
 	{
 		Q_ASSERT(qvar_index_entry.isValid());
-		Q_ASSERT(qvar_index_entry.canConvert<QVariantInsertionOrderedMap>());
+		Q_ASSERT(qvar_index_entry.canConvert<InsertionOrderedStrVarMap>());
 
-		QVariantInsertionOrderedMap qvmap_index_entry = qvar_index_entry.value<QVariantInsertionOrderedMap>();
+		InsertionOrderedStrVarMap qvmap_index_entry = qvar_index_entry.value<InsertionOrderedStrVarMap>();
 		TrackIndex ti;
 		ti.fromVariant(qvmap_index_entry);
 		m_indexes.push_back(ti);

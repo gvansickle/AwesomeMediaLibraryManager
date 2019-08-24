@@ -106,7 +106,7 @@ using strviw_type = QLatin1Literal;
 
 QVariant ScanResultsTreeModelItem::toVariant() const
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedStrVarMap map;
 
 	// Overwrite any class info added by the above.
 	set_map_class_info(this, &map);
@@ -157,7 +157,7 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 
 void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 {
-	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
+	InsertionOrderedStrVarMap map = variant.value<InsertionOrderedStrVarMap>();
 
 	// Overwrite any class info added by the above.
 //	dump_map_class_info(this, &map);
@@ -202,8 +202,8 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 	//	append_children_from_variant<AbstractTreeModelItem>(this, child_var_list);
 	// Read in our children.
 	//	QVariantHomogenousList child_list = map.value(XMLTAG_CHILD_ITEM_LIST).value<QVariantHomogenousList>();
-	QVariantInsertionOrderedMap child_map; (XMLTAG_CHILD_ITEM_MAP, "child");
-	child_map = map.value(XMLTAG_CHILD_ITEM_MAP).value<QVariantInsertionOrderedMap>();
+	InsertionOrderedStrVarMap child_map; (XMLTAG_CHILD_ITEM_MAP, "child");
+	child_map = map.value(XMLTAG_CHILD_ITEM_MAP).value<InsertionOrderedStrVarMap>();
 	qDb() << M_ID_VAL(child_map.size());
 }
 

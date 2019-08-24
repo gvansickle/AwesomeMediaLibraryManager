@@ -170,7 +170,7 @@ void ScanResultsTreeModel::DERIVED_set_default_namespace()
 
 QVariant ScanResultsTreeModel::toVariant() const
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedStrVarMap map;
 
 	std::unique_lock write_lock(m_rw_mutex);
 
@@ -222,7 +222,7 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 {
 	std::unique_lock write_lock(m_rw_mutex);
 
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedStrVarMap map;
 	qviomap_from_qvar_or_die(&map, variant);
 
 	/// @todo This should have a list of known base directory paths,
@@ -243,7 +243,7 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 	map_read_field_or_warn(map, XMLTAG_SRTM_TS_LAST_SCAN_END, &last_scan_end);
 
 	/// @note This is a QVariantMap, contains abstract_tree_model_header as a QVariantList.
-	QVariantInsertionOrderedMap root_item_map;
+	InsertionOrderedStrVarMap root_item_map;
 	map_read_field_or_warn(map, XMLTAG_SRTM_ROOT_ITEM, &root_item_map);
 	m_root_item->fromVariant(root_item_map);
 	AMLM_ASSERT_X(m_root_item->columnCount(), "LOADED NO HEADER SECTIONS");

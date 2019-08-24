@@ -150,7 +150,7 @@ bool XmlSerializer::load(ISerializable& serializable, const QUrl &file_url)
 	return !xmlstream.error();
 }
 
-static const int f_iomap_id = qMetaTypeId<QVariantInsertionOrderedMap>();
+static const int f_iomap_id = qMetaTypeId<InsertionOrderedStrVarMap>();
 static const int f_qvarlist_id = qMetaTypeId<QVariantHomogenousList>();
 static const int f_serqvarlist_id = qMetaTypeId<SerializableQVariantList>();
 
@@ -309,9 +309,9 @@ void XmlSerializer::writeVariantMapToStream(const QVariant &variant, QXmlStreamW
 void XmlSerializer::writeVariantOrderedMapToStream(const QVariant& variant, QXmlStreamWriter& xmlstream)
 {
 	Q_ASSERT(variant.isValid());
-	Q_ASSERT(variant.canConvert<QVariantInsertionOrderedMap>());
+	Q_ASSERT(variant.canConvert<InsertionOrderedStrVarMap>());
 
-	QVariantInsertionOrderedMap omap = variant.value<QVariantInsertionOrderedMap>();
+	InsertionOrderedStrVarMap omap = variant.value<InsertionOrderedStrVarMap>();
 
 	xmlstream.writeAttribute("metatype_id", toqstr(std::to_string(omap.m_id)));
 	xmlstream.writeAttribute("class", toqstr(omap.m_class));
@@ -616,7 +616,7 @@ QVariant XmlSerializer::readVariantMapFromStream(const std::vector<QXmlStreamAtt
 
 QVariant XmlSerializer::readVariantOrderedMapFromStream(const std::vector<QXmlStreamAttribute> attributes, QXmlStreamReader& xmlstream)
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedStrVarMap map;
 
 	Q_ASSERT(xmlstream.isStartElement());
 

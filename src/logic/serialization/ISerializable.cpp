@@ -46,7 +46,7 @@ QVariant SerializableQVariantList::toVariant() const
 	Q_ASSERT(!m_list_item_tag.isNull());
 	Q_ASSERT(!m_list_item_tag.isEmpty());
 
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedStrVarMap map;
 	// Return a QMap with a single QVariant(QVariantHomogenousList) item.
 	/// @note Slicing warning, but this is ok here.
 	QVariantHomogenousList list = *this;
@@ -62,7 +62,7 @@ void SerializableQVariantList::fromVariant(const QVariant& variant)
 	Q_ASSERT(!m_list_item_tag.isNull());
 	Q_ASSERT(!m_list_item_tag.isEmpty());
 
-	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
+	InsertionOrderedStrVarMap map = variant.value<InsertionOrderedStrVarMap>();
 
 	Q_ASSERT(map.contains(m_list_tag));
 //	qDb() << M_ID_VAL(m_list_tag);

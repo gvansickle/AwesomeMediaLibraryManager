@@ -540,7 +540,7 @@ M_TODO("DEBUG")
 
 QVariant AbstractTreeModel::toVariant() const
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedStrVarMap map;
 
 	std::unique_lock read_lock(m_rw_mutex);
 
@@ -560,14 +560,14 @@ QVariant AbstractTreeModel::toVariant() const
 
 void AbstractTreeModel::fromVariant(const QVariant& variant)
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedStrVarMap map;
 
 	std::unique_lock write_lock(m_rw_mutex);
 
 	qviomap_from_qvar_or_die(&map, variant);
 
 	/// @note This is a QVariantMap, contains abstract_tree_model_header as a QVariantList.
-	QVariantInsertionOrderedMap root_item_map;
+	InsertionOrderedStrVarMap root_item_map;
 	map_read_field_or_warn(map, XMLTAG_SRTM_ROOT_ITEM, &root_item_map);
 	m_root_item->fromVariant(root_item_map);
 	AMLM_WARNIF(m_root_item->columnCount() == 0);
@@ -996,6 +996,7 @@ bool AbstractTreeModel::removeColumns(int position, int columns, const QModelInd
 
 bool AbstractTreeModel::removeRows(int remove_start_row, int num_rows, const QModelIndex& parent_item_index)
 {
+	AMLM_ASSERT_X(0, "TODO: Unclear if we need this override, in AQP not in KDEN.");
 	if(num_rows == 0)
 	{
 		qWr() << "Attempt to remove zero children";

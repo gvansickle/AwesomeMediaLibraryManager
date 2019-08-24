@@ -178,7 +178,7 @@ QVariant AMLMTagMap::toVariant() const
 			qvector_of_values.push_back(toqstr(value));
 		}
 
-		QVariantInsertionOrderedMap kvpair_map;
+		InsertionOrderedStrVarMap kvpair_map;
 
 		// Insert it into the return value.
 		map_insert_or_die(kvpair_map, "key", toqstr(key));
@@ -203,7 +203,7 @@ void AMLMTagMap::fromVariant(const QVariant& variant)
 
 	for(auto entry = list.cbegin(); entry != list.cend(); ++entry)
 	{
-		QVariantInsertionOrderedMap kvpair_map = entry->value<QVariantInsertionOrderedMap>();
+		InsertionOrderedStrVarMap kvpair_map = entry->value<InsertionOrderedStrVarMap>();
 		QVariantHomogenousList qvector_of_values("values", "value");
 
 		QString key;
