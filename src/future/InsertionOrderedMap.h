@@ -281,10 +281,8 @@ protected:
 //Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(InsertionOrderedMap);
 
 using InsertionOrderedStrVarMap = InsertionOrderedMap<QString, QVariant>;
-//using InsertionOrderedStrVarMap = InsertionOrderedMap<QString, QVariant>;
 Q_DECLARE_METATYPE(InsertionOrderedStrVarMap);
-//Q_DECLARE_METATYPE(InsertionOrderedStrVarMap);
-//Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(InsertionOrderedMap<QString, QVariant>);
+
 
 #endif // Qt5
 

@@ -359,7 +359,9 @@ bool AbstractTreeModelItem::changeParent(std::shared_ptr<AbstractTreeModelItem> 
 
 #define M_DATASTREAM_FIELDS(X) \
 	/* TAG_IDENTIFIER, tag_string, member_field, var_name */ \
-	X(XMLTAG_CHILD_ITEM_MAP, child_item_map, nullptr)
+	X(XMLTAG_CHILD_ITEM_MAP, child_item_map, nullptr) \
+	X(XMLTAG_CHILD_ITEM_LIST, child_item_list, nullptr)
+
 
 #define M_DATASTREAM_FIELDS_CONTSIZES(X) \
 	X(XMLTAG_NUM_COLUMNS, num_columns, m_item_data) \
@@ -878,6 +880,13 @@ void AbstractTreeModelItem::updateParent(std::shared_ptr<AbstractTreeModelItem> 
 #endif
 }
 
+struct ChildHolder
+{
+	QString m_class_name;
+	std::shared_ptr<AbstractTreeModelItem> m_item;
+};
+Q_DECLARE_METATYPE(ChildHolder);
+
 InsertionOrderedStrVarMap AbstractTreeModelItem::children_to_variant() const
 {
 	// Return value will be ~QMap<QString, QVariant>, where the QVariants are whatever the items
@@ -886,26 +895,40 @@ InsertionOrderedStrVarMap AbstractTreeModelItem::children_to_variant() const
 /// Q_DECLARE_SMART_POINTER_METATYPE(std::shared_ptr)
 
 	InsertionOrderedStrVarMap map;
-	// Child nodes.  Note we don't use HomogenousList here because the children could be arbitrary classes.
+	// Child item list.  Note we don't use HomogenousList here because the children could be arbitrary classes.
+	/// @todo Do we actually need this?
 	QVariantList child_var_list;
 	for(const auto& it : m_child_items)
 	{
-		qDb() << "Type is:" << QVariant::fromValue(it).typeName();
-		list_push_back_or_die(child_var_list, it->toVariant());
+		ChildHolder ch;
+		ch.m_class_name = QVariant::fromValue(it).typeName();
+		ch.m_item = std::dynamic_pointer_cast<AbstractTreeModelItem>(it);
+
+		qDb() << "Type is:" << ch.m_class_name;
+
+		list_push_back_or_die(child_var_list, QVariant::fromValue(ch)); //it->toVariant());
 	}
-	map_insert_or_die(map, XMLTAG_CHILD_ITEM_MAP, child_var_list);
+	map_insert_or_die(map, XMLTAG_CHILD_ITEM_LIST, child_var_list);
 
 	return map;
 }
 
 void AbstractTreeModelItem::children_from_variant(const InsertionOrderedStrVarMap& variant)
 {
-	// Ok, our goal here is to take a QVar map and populate our
+	// Ok, our goal here is to take a:
+	// "child_item_map", InsertionOrderedStrVarMap("child_item_list", QVariantList("item", InsertionOrderedStrVarMap the_item))
+	// ...and populate our
 	// std::deque<std::shared_ptr<AbstractTreeModelItem>> m_child_items; member with the contents.
 	// The incoming QVariants may contain shared_ptrs to different item types.
 
-	InsertionOrderedStrVarMap map;
-	qviomap_from_qvar_or_die(&map, variant);
+	QVariant cvl = variant.at(XMLTAG_CHILD_ITEM_LIST);
+	Q_ASSERT(cvl.canConvert<QVariantList>());
+
+	QVariantList child_var_list = cvl.value<QVariantList>();
+
+
+//	InsertionOrderedStrVarMap map;
+//	qviomap_from_qvar_or_die(&map, variant);
 
 	qDb() << "ATTRS:" << variant.get_attrs();
 
@@ -913,15 +936,23 @@ void AbstractTreeModelItem::children_from_variant(const InsertionOrderedStrVarMa
 //	QVariantList/*InsertionOrderedMap*/ child_var_list = variant.operator QVariant();
 //	child_var_list = map.cbegin() .value<QVariantList>(XMLTAG_CHILD_ITEM_MAP);
 //	QSequentialIterable iterable = child_var_list.value<QSequentialIterable>();
-	for(const auto& it : map)
+	for(const auto& it : child_var_list)
 	{
 		// Get the QMetaType.
-		qDb() << "Type is:" << it.first; ///< Comes up "QVariantInsertionOrderedMap"
-//		qDb() << "Class is:" << it.second.get_attr("class");
-		using child_base_type = std::shared_ptr<AbstractTreeModelItem>;
-//		AMLM_ASSERT_X(it.canConvert<child_base_type>(), "Can't convert to an appropriate class");
-//		child_base_type child_sptr = it.value<child_base_type>();
-//		m_child_items.push_back(child_sptr);
+		Q_ASSERT(it.canConvert<ChildHolder>());
+		ChildHolder ch = it.value<ChildHolder>();
+//		qDb() << "Type is:" << it; ///< Comes up "QVariantInsertionOrderedMap"
+		qDb() << "Class is:" << ch.m_class_name; //second.get_attr("class");
+		QVariant::Type metatype_v = QVariant::nameToType(ch.m_class_name.toStdString().c_str());
+		int metatype = QMetaType::type(ch.m_class_name.toStdString().c_str());
+
+//		using child_base_type = std::shared_ptr<AbstractTreeModelItem>;
+//		AMLM_ASSERT_X(ch.m_item.canConvert<child_base_type>(), "Can't convert to an appropriate class");
+//		child_base_type child_sptr = ch.m_item.value<child_base_type>();
+		bool status = variant.convert(metatype);
+		Q_ASSERT(status);
+		auto child_sptr = std::dynamic_pointer_cast<>
+		m_child_items.push_back(child_sptr);
 	}
 }
 
