@@ -139,6 +139,7 @@ M_TODO("Improve ColumnSpecs, not sure I like how we do this and then need to era
 
 		Q_ASSERT(m_self->m_atm_instance->checkConsistency());
 
+#if 0///////
 		m_self->m_atm_instance->SaveDatabase("/home/gary/AMLM_Exp.xml");
 
 		// Try to reload
@@ -146,7 +147,7 @@ M_TODO("Improve ColumnSpecs, not sure I like how we do this and then need to era
 		bool succeeded = loaded_atm->LoadDatabase("/home/gary/AMLM_Exp.xml");
 		Q_ASSERT(succeeded);
 		loaded_atm->SaveDatabase("/home/gary/AMLM_Exp_RT.xml");
-
+#endif
 	}
 }
 
