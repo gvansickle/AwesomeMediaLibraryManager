@@ -50,10 +50,7 @@
  *
  * @note Seriously.
  */
-inline static QDebug& operator<<(QDebug& d, const std::string& s)
-{
-	return d << toqstr(s);
-}
+QDebug& operator<<(QDebug& d, const std::string& s);
 
 /**
  * Shorter qDebug() etc. replacements.

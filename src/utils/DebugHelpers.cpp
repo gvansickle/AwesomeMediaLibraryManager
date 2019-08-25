@@ -39,3 +39,8 @@ std::string class_name(const char * pretty_function)
 }
 
 
+
+QDebug& operator<<(QDebug& d, const std::string& s)
+{
+	return d << toqstr(s);
+}

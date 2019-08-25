@@ -1,5 +1,5 @@
 /*
- * Copyright 2017, 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -31,8 +31,9 @@
 // Qt5
 #include <QObject>
 
-// Qt5 metatype declarations for some std containers.
+// Qt5 metatype declarations for some std containers, smart_ptr's, etc.
 Q_DECLARE_METATYPE(std::string);
+Q_DECLARE_SMART_POINTER_METATYPE(std::unique_ptr);
 Q_DECLARE_SMART_POINTER_METATYPE(std::shared_ptr);
 Q_DECLARE_SMART_POINTER_METATYPE(std::weak_ptr);
 Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE(std::deque);

@@ -38,7 +38,7 @@
 #include <QVector>
 
 // Ours
-#include <utils/RegisterQtMetatypes.h>
+#include <utils/RegisterQtMetatypes.h> ///< For smart_ptrs etc.
 #include <utils/QtHelpers.h>
 #include <utils/StaticAnalysis.h>
 #include <future/guideline_helpers.h>

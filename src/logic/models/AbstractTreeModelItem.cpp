@@ -887,7 +887,8 @@ public:
 	~ChildHolder() override = default;
 
 	QString m_class_name;
-	std::shared_ptr<AbstractTreeModelItem> m_item;
+//	std::shared_ptr<AbstractTreeModelItem> m_item;
+	QVariant m_item;
 
 	/**
 	 * Override in derived classes to serialize to a QVariantMap or QVariantList.
@@ -901,12 +902,22 @@ public:
 };
 Q_DECLARE_METATYPE(ChildHolder);
 
+
 InsertionOrderedStrVarMap AbstractTreeModelItem::children_to_variant() const
 {
-	// Return value will be ~QMap<QString, QVariant>, where the QVariants are whatever the items
+	// Return value will be InsertionOrderedMap<QString, QVariant>, where the QVariants are whatever the items
 	// in m_child_items turn into via toVariant().
 
-/// Q_DECLARE_SMART_POINTER_METATYPE(std::shared_ptr)
+#if 1 // TEST
+	// T accumulate_const(T init, BinOp op) const;
+	// T BinOp(T, std::shared_ptr<AbstractTreeModelItem>)
+	int count = 0;
+	qDb() << "START children_from_variant():";
+	accumulate_const(0, [&](int last_count, auto shptr_atmi){
+		qDb() << "Total child count:" << last_count + childCount() << M_ID_VAL(shptr_atmi->has_children()) << M_ID_VAL(shptr_atmi->getId());
+		return last_count + childCount();
+	});
+#endif
 
 	InsertionOrderedStrVarMap map;
 	// Child item list.  Note we don't use HomogenousList here because the children could be arbitrary classes.
@@ -916,11 +927,14 @@ InsertionOrderedStrVarMap AbstractTreeModelItem::children_to_variant() const
 	{
 		ChildHolder ch;
 		ch.m_class_name = QVariant::fromValue(it).typeName();
-		ch.m_item = std::dynamic_pointer_cast<AbstractTreeModelItem>(it);
+//		ch.m_item = std::dynamic_pointer_cast<AbstractTreeModelItem>(it);
+		ch.m_item = it->toVariant();
 
-		qDb() << "Type is:" << ch.m_class_name;
+		qDb() << "Pushing child item:";
+		qDb() << "Class name is:" << ch.m_class_name;
+//		qDb() << "Item UUIncD:" << ch.m_item.getId();
 
-		list_push_back_or_die(child_var_list, QVariant::fromValue(ch)); //it->toVariant());
+		list_push_back_or_die(child_var_list, ch.toVariant());//QVariant::fromValue<ChildHolder>(ch)); //it->toVariant());
 	}
 	map_insert_or_die(map, XMLTAG_CHILD_ITEM_LIST, child_var_list);
 
@@ -936,6 +950,8 @@ void AbstractTreeModelItem::children_from_variant(const InsertionOrderedStrVarMa
 	// The incoming QVariants may contain shared_ptrs to different item types.
 
 #if 1
+
+	Q_ASSERT(variant.m_class == "child_item_list");
 
 	QVariant cvl = variant.at(XMLTAG_CHILD_ITEM_LIST);
 	Q_ASSERT(cvl.canConvert<QVariantList>());

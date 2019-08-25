@@ -41,7 +41,9 @@
 #include <utils/DebugHelpers.h>
 #include <utils/Stopwatch.h>
 #include <future/future_algorithms.h>
+#include <future/attributes.h>
 #include "ISerializable.h"
+#include "SerializationHelpers.h"
 
 
 void XmlSerializer::save(const ISerializable &serializable, const QUrl &file_url, const QString &root_element_name,
@@ -159,6 +161,8 @@ void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant
 	xmlstream.writeStartElement(nodeName);
 	xmlstream.writeAttribute("type", variant.typeName());
 
+	qDb() << "writing variant:" << variant;
+	qDb() << "  variant typename:" << variant.typeName();
 	InnerWriteVariantToStream(variant, &xmlstream);
 
 	xmlstream.writeEndElement();
@@ -168,6 +172,9 @@ void XmlSerializer::InnerWriteVariantToStream(const QVariant& variant, QXmlStrea
 {
 	// Handles the QVariant type dispatch and basically everything between the writing of the node name and type
 	// and the end element.
+
+	ATTR_VAR_MAX_DEBUG(variant);
+
 
 	/**
 	 * @note Uhhhhhh..... QMetaType sometimes != QVariant.type().
@@ -197,8 +204,8 @@ void XmlSerializer::InnerWriteVariantToStream(const QVariant& variant, QXmlStrea
 	QVariant(QMetaType::Type) Q_DECL_EQ_DELETE;"
 	 */
 
-	int type = variant.type(); // AFAICT this is just wrong.
-	int usertype = variant.userType(); // This matches variant.typeName()
+	volatile int type = variant.type(); // AFAICT this is just wrong.
+	volatile int usertype = variant.userType(); // This matches variant.typeName()
 
 	if(type != usertype)
 	{
@@ -241,7 +248,7 @@ void XmlSerializer::InnerWriteVariantToStream(const QVariant& variant, QXmlStrea
 	}
 }
 
-#if 0
+
 void XmlSerializer::writeVariantToStream(const QString& nodeName, const ISerializable& variant, QXmlStreamWriter* xmlstream)
 {
 	Q_ASSERT(0);
@@ -253,7 +260,7 @@ void XmlSerializer::writeVariantToStream(const QString& nodeName, const ISeriali
 	Q_ASSERT(0);
 	writeVariantToStream(nodeName, variant->toVariant(), *xmlstream);
 }
-#endif
+
 
 void XmlSerializer::writeQVariantHomogenousListToStream(const QVariant& variant, QXmlStreamWriter& xmlstream)
 {
@@ -330,6 +337,7 @@ void XmlSerializer::writeVariantOrderedMapToStream(const QVariant& variant, QXml
 
 void XmlSerializer::writeVariantValueToStream(const QVariant &variant, QXmlStreamWriter& xmlstream)
 {
+	ATTR_VAR_MAX_DEBUG(variant);
 	Q_ASSERT(variant.isValid());
 
 	// variant must be convertible to a string.
@@ -337,6 +345,9 @@ void XmlSerializer::writeVariantValueToStream(const QVariant &variant, QXmlStrea
 	{
 		std::string vartype {variant.typeName()};
 		qCr() << "QVariant contents not convertible to a QString:" << M_ID_VAL(variant) << M_ID_VAL(vartype);
+//		dump_map(variant);
+		auto qdb = qDebug();
+		QMetaType::debugStream(qdb, &variant, variant.type());
 		Q_ASSERT(0);
 	}
 

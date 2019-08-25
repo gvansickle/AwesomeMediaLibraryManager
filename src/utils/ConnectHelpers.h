@@ -97,17 +97,6 @@ void connect_queued_or_die(const T* t, TPMF tpmf, const U* u, UPMF upmf)
     Q_ASSERT(static_cast<bool>(retval) != false);
 }
 
-//inline static
-//void connect_or_die(const QObject *sender, const QMetaMethod &signal,
-//                    const QObject *receiver, const QMetaMethod &method,
-//                    Qt::ConnectionType type = Qt::AutoConnection)
-//{
-//    QMetaObject::Connection retval;
-
-//    retval = QObject::connect(sender, signal, receiver, method, Qt::ConnectionType(type | Qt::UniqueConnection));
-//    Q_ASSERT(static_cast<bool>(retval) != false);
-//}
-
 /**
  * Make a blocking signal-slot connection and assert if the attempt fails.
  * Checks if the sender and receiver are in the same thread and makes either a

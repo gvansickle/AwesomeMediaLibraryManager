@@ -45,6 +45,7 @@ set(utils_SOURCE_FILES
 	ext_iterators.cpp
 	Fraction.cpp
 	MapConverter.cpp
+	StringHelpers.cpp
 	RegisterQtMetatypes.cpp
 	UniqueIDMixin.h
 	Logging.cpp
@@ -65,7 +66,7 @@ target_link_libraries(utils
 	PUBLIC
 		${QT5_LINK_LIB_TARGETS}
 		${KF5_LINK_LIB_TARGETS}
-		${GTK_LINK_LIB_TARGETS}
+# 		${GTK_LINK_LIB_TARGETS}
 	PRIVATE
 		future
 		resources	

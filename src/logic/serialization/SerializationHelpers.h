@@ -82,7 +82,7 @@ void map_insert_or_die(MapType& map, const StringType& key, const std::nullptr_t
 template <class MapType, class StringType>
 void map_insert_or_die(MapType& map, const StringType& key, const ISerializable& member)
 {
-//	qDb() << "MIOD 2:" << key;
+	qDb() << "MIOD 2:" << key;
 	map.insert(key, member.toVariant());
 }
 
@@ -90,7 +90,7 @@ template <class MapType, class StringType, class ValueType,
 		  REQUIRES(!std::is_base_of_v<std::remove_cvref_t<ISerializable>, std::remove_cvref_t<ValueType>>)>
 void map_insert_or_die(MapType& map, const StringType& key, const ValueType& member)
 {
-//	qDb() << "MIOD 2b:" << key;
+	qDb() << "MIOD 2b:" << key;
 	map.insert(key, QVariant::fromValue(member));
 }
 
@@ -120,6 +120,7 @@ void list_push_back_or_die(ListType& list, const ISerializable& member)
  * Push a single entry given by @a member onto the @a list.
  * @todo Does this handle an incoming QVariant correctly?
  */
+
 template <class ListType, class MemberType,
 		  REQUIRES(!std::is_base_of_v<ISerializable, MemberType>)>
 void list_push_back_or_die(ListType& list, const MemberType& member)
@@ -359,18 +360,18 @@ void map_read_field_or_warn(const MapType& map, const StringType& key, RawMember
 		return;
 	}
 
-//	if constexpr(std::is_convertible_v<RawMemberType, ISerializable*> || std::is_convertible_v<RawMemberType, IUUIDSerializable*>)
-//	{
-//		// Ptrs to ISerializable-implementing members.
-//		// This value should know how to read itself from a QVariant.
-//		member->fromVariant(qvar);
-//	}
-//	else if constexpr(std::is_convertible_v<RawMemberType, ISerializable&> || std::is_convertible_v<RawMemberType, IUUIDSerializable&>)
-//	{
-//		// Ref to an ISerializable.
-//		member.fromVariant(qvar);
-//	}
-/*	else*/ if constexpr(std::is_pointer_v<RawMemberType>)
+	if constexpr(std::is_convertible_v<RawMemberType, ISerializable*> /*|| std::is_convertible_v<RawMemberType, IUUIDSerializable*>*/)
+	{
+		// Ptrs to ISerializable-implementing members.
+		// This value should know how to read itself from a QVariant.
+		member->fromVariant(qvar);
+	}
+	else if constexpr(std::is_convertible_v<RawMemberType, ISerializable&> /*|| std::is_convertible_v<RawMemberType, IUUIDSerializable&>*/)
+	{
+		// Ref to an ISerializable.
+		member.fromVariant(qvar);
+	}
+	else if constexpr(std::is_pointer_v<RawMemberType>)
 	{
 		*member = qvar.value<std::remove_pointer_t<RawMemberType>>();
 	}
