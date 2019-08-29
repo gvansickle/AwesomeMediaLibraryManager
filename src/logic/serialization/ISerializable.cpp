@@ -52,7 +52,7 @@ QVariant SerializableQVariantList::toVariant() const
 	QVariantHomogenousList list = *this;
 
 	map.insert(m_list_tag, QVariant::fromValue(list));
-	return map;
+	return QVariant::fromValue(map);
 }
 
 void SerializableQVariantList::fromVariant(const QVariant& variant)

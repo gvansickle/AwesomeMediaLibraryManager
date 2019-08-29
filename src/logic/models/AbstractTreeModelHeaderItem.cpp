@@ -163,10 +163,10 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 #else
 //	 Serialize out Child nodes.
 //	// Insert the list into the map.
-	InsertionOrderedStrVarMap child_map = children_to_variant();
+	InsertionOrderedStrVarMap child_map = convert_or_die<InsertionOrderedStrVarMap>(children_to_variant());
 	map_insert_or_die(map, XMLTAG_CHILD_ITEM_MAP, child_map);
 #endif
-	return map;
+	return QVariant::fromValue(map);
 }
 
 void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
@@ -192,8 +192,6 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	Q_ASSERT(!m_model.expired());
 
 
-//	insertColumns(0, header_num_sections);
-
 	int section_index = 0;
 	for(const QVariant& e : header_section_list)
 	{
@@ -218,11 +216,13 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	/// contains a single <dirscanresult>/QVariantMap.
 	InsertionOrderedStrVarMap child_var_map;//(XMLTAG_CHILD_ITEM_MAP, "child");
 	child_var_map = map.value(XMLTAG_CHILD_ITEM_MAP).value<InsertionOrderedStrVarMap>();
-//	Q_ASSERT(child_var_list.size() > 0);
 	qDb() << "Number of children read:" << child_var_map.size();
+	Q_ASSERT(child_var_map.size() > 0);
 
-//	append_children_from_variant<ScanResultsTreeModelItem>(this, child_var_list);
-	children_from_variant(child_var_map);
+	qDb() << "START: Trying to read in child items";
+	children_from_variant(QVariant::fromValue(child_var_map));
+	qDb() << "END: Trying to read in child items";
+	AMLM_ASSERT_EQ(child_var_map.size(), m_child_items.size());
 }
 
 

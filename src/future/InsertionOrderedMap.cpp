@@ -20,8 +20,14 @@
 /**
  * @file InsertionOrderedMap.cpp
  */
-#include <InsertionOrderedMap.h>
+#include "InsertionOrderedMap.h"
 
 // Qt5
 #include <utils/RegisterQtMetatypes.h>
+
+// Ours
+#include <utils/DebugHelpers.h>
+
+QTH_DEFINE_QDEBUG_OP(InsertionOrderedStrVarMap);
+
 

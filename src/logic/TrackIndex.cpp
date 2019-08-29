@@ -64,7 +64,7 @@ QVariant TrackIndex::toVariant() const
 	M_TRACK_INDEX_DATASTREAM_FIELDS(X)
 #undef X
 
-	return map;
+	return QVariant::fromValue(map);
 }
 
 void TrackIndex::fromVariant(const QVariant& variant)

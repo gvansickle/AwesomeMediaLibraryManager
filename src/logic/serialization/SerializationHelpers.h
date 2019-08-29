@@ -67,6 +67,25 @@ void dump_map(const MapType& map)
 }
 
 /**
+ * - Casts the type of the QVariant @a variant. (not crazy about this side effect, may want to change this).
+ * -
+ */
+template <class ExpectedType, class VariantType>
+ExpectedType convert_or_die(const VariantType& variant)
+{
+	if(!variant.template canConvert<ExpectedType>())
+	{
+		AMLM_ASSERT_X(0, "Can't convert VariantType to ExpectedType");
+	}
+//	if(!variant.template convert<ExpectedType>())
+//	{
+//		AMLM_ASSERT_X(0, "Failed to convert variant to ExpectedType");
+//	}
+
+	return variant.template value<ExpectedType>();
+}
+
+/**
  *
  * @param member  The ISerializable-derived member variable to insert.
  */
@@ -82,7 +101,7 @@ void map_insert_or_die(MapType& map, const StringType& key, const std::nullptr_t
 template <class MapType, class StringType>
 void map_insert_or_die(MapType& map, const StringType& key, const ISerializable& member)
 {
-	qDb() << "MIOD 2:" << key;
+//	qDb() << "MIOD 2:" << key;
 	map.insert(key, member.toVariant());
 }
 
@@ -90,7 +109,7 @@ template <class MapType, class StringType, class ValueType,
 		  REQUIRES(!std::is_base_of_v<std::remove_cvref_t<ISerializable>, std::remove_cvref_t<ValueType>>)>
 void map_insert_or_die(MapType& map, const StringType& key, const ValueType& member)
 {
-	qDb() << "MIOD 2b:" << key;
+//	qDb() << "MIOD 2b:" << key;
 	map.insert(key, QVariant::fromValue(member));
 }
 
@@ -396,5 +415,10 @@ void map_read_field_or_warn(const MapType& map, const StringType& key, std::null
 	// Do nothing.
 }
 
+//std::string get_type_name()
+//{
+//	int metatype = QMetaType::type(typeString.toStdString().c_str());
+
+//}
 
 #endif /* SRC_LOGIC_SERIALIZATION_SERIALIZATIONHELPERS_H_ */

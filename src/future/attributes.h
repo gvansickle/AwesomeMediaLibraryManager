@@ -79,9 +79,6 @@ void ATTR_VAR_MAX_DEBUG(T&& var)
 #pragma optimize("", on)
 
 #else
-//#define ATTR_VAR_MAX_DEBUG(var) \
-//	__attribute__((used))\
-//	ATTR_VAR_MAX_DEBUG_TMPL(var)
 template <class T>
 void ATTR_VAR_MAX_DEBUG/*_TMPL*/(T&& var)
 {

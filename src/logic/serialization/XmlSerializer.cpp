@@ -161,8 +161,8 @@ void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant
 	xmlstream.writeStartElement(nodeName);
 	xmlstream.writeAttribute("type", variant.typeName());
 
-	qDb() << "writing variant:" << variant;
-	qDb() << "  variant typename:" << variant.typeName();
+//	qDb() << "writing variant:" << variant;
+//	qDb() << "  variant typename:" << variant.typeName();
 	InnerWriteVariantToStream(variant, &xmlstream);
 
 	xmlstream.writeEndElement();

@@ -685,7 +685,7 @@ QVariant Metadata::toVariant() const
 	/// @todo Somehow eliminate duplication here.
 	map_insert_or_die(map, XMLTAG_CUESHEET, m_cuesheet);
 
-	return map;
+	return QVariant::fromValue(map);
 }
 
 void Metadata::fromVariant(const QVariant& variant)

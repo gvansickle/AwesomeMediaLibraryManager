@@ -194,7 +194,7 @@ QVariant TrackMetadata::toVariant() const
 
 	map_insert_or_die(map, XMLTAG_TRACK_META_INDEXES, index_list);
 
-	return map;
+	return QVariant::fromValue(map);
 }
 
 void TrackMetadata::fromVariant(const QVariant& variant)
@@ -233,7 +233,7 @@ M_TODO("REMOVE");
 
 		InsertionOrderedStrVarMap qvmap_index_entry = qvar_index_entry.value<InsertionOrderedStrVarMap>();
 		TrackIndex ti;
-		ti.fromVariant(qvmap_index_entry);
+		ti.fromVariant(QVariant::fromValue(qvmap_index_entry));
 		m_indexes.push_back(ti);
 	}
 

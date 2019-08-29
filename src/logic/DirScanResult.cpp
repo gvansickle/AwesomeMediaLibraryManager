@@ -79,7 +79,7 @@ QVariant DirScanResult::toVariant() const
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
-	return map;
+	return QVariant::fromValue(map);
 }
 
 void DirScanResult::fromVariant(const QVariant& variant)

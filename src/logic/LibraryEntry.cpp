@@ -318,7 +318,7 @@ QVariant LibraryEntry::toVariant() const
 	}
 //	qDb() << "LEAVING";
 
-	return map;
+	return QVariant::fromValue(map);
 }
 
 void LibraryEntry::fromVariant(const QVariant& variant)

@@ -46,6 +46,9 @@
 //	ValueType second;
 //};
 
+// Fwd declarations.
+template <class KeyType, class ValueType> class InsertionOrderedMap;
+template <class KeyType, class ValueType> QDebug operator<<(QDebug out, const InsertionOrderedMap<KeyType, ValueType>& obj);
 
 /**
  * A map which maintains the insertion order of its keys.  The only operational difference between this and
@@ -76,7 +79,7 @@ private:
 
 public:
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(InsertionOrderedMap);
-	virtual ~InsertionOrderedMap() = default;
+	~InsertionOrderedMap() = default; ///@note Not virtual because templates and slicing.
 
 	/// Copy-through-QVariant constructor.
 	explicit InsertionOrderedMap(const QVariant& variant)
@@ -85,6 +88,16 @@ public:
 		using qvartype = InsertionOrderedMap<KeyType, ValueType>;
 		Q_ASSERT(variant.canConvert< qvartype >());
 		*this = variant.value< InsertionOrderedMap<KeyType, ValueType> >();
+	}
+
+	void set_name(const std::string& name_str)
+	{
+		m_name = name_str;
+	}
+
+	const std::string& get_name() const
+	{
+		return m_name;
 	}
 
 	void insert(const KeyType key, const ValueType value)
@@ -205,6 +218,11 @@ public:
 		}
 	}
 
+	void set_attr(const std::string& key, const std::string& value) const
+	{
+		insert_attributes({{key, value}});
+	}
+
 	std::string get_attr(const std::string& key) const
 	{
 		auto it = m_attribute_map.find(key);
@@ -251,6 +269,16 @@ public:
 	size_t size() const { return m_vector_of_elements.size(); };
 
 #if 1 // Qt5
+
+	/// @name Debug
+	/// @{
+	/// @link See SO https://stackoverflow.com/a/4661372
+//	QTH_DECLARE_FRIEND_QDEBUG_OP(InsertionOrderedMap<KeyType,ValueType>);
+	friend QDebug operator<< <KeyType, ValueType>(QDebug out, const InsertionOrderedMap<KeyType, ValueType>& obj);
+
+	/// @}
+
+
 //	QTH_FRIEND_QDATASTREAM_OPS(InsertionOrderedMap);
 
 	/**
@@ -266,6 +294,11 @@ public:
 
 
 protected:
+//	class InsertionOrderedStrVarMap;
+//	friend QDebug operator<<(QDebug dbg, const InsertionOrderedStrVarMap & obj);
+
+	/// Arbitrary "name" string.  Mainly for debug, happy path shouldn't try to use this for anything.
+	std::string m_name {"[name_not_set]"};
 
 	underlying_container_type m_vector_of_elements;
 	// Map of keys to indexes in the vector.
@@ -277,11 +310,37 @@ protected:
 
 #if 1 // Qt5
 
-
 //Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(InsertionOrderedMap);
 
 using InsertionOrderedStrVarMap = InsertionOrderedMap<QString, QVariant>;
 Q_DECLARE_METATYPE(InsertionOrderedStrVarMap);
+
+QTH_DECLARE_QDEBUG_OP(InsertionOrderedStrVarMap);
+
+template <class KeyType, class ValueType>
+QDebug operator<<(QDebug dbg, const InsertionOrderedMap<KeyType, ValueType>& obj)
+{
+	QDebugStateSaver saver(dbg);
+
+#define M_DATASTREAM_FIELDS(X) \
+	X(m_name)/* \
+	X(m_vector_of_elements) \
+	X(m_map_of_keys_to_vector_indices) \
+	X(m_attribute_map)*/
+
+	dbg << "InsertionOrderedMap\n(";
+	dbg << M_ID_VAL(obj.size());
+
+#define X(field) dbg << M_ID_VAL(obj.field) ;
+	M_DATASTREAM_FIELDS(X);
+#undef X
+
+	dbg << ")";
+
+	return dbg;
+#undef M_DATASTREAM_FIELDS
+}
+
 
 
 #endif // Qt5

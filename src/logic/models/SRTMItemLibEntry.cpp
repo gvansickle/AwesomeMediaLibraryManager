@@ -130,7 +130,7 @@ QVariant SRTMItem_LibEntry::toVariant() const
 	}
 	map_insert_or_die(map, XMLTAG_CHILD_ITEM_MAP, child_var_list);
 
-	return map;
+	return QVariant::fromValue(map);
 }
 
 void SRTMItem_LibEntry::fromVariant(const QVariant& variant)

@@ -131,15 +131,26 @@ M_TODO("Improve ColumnSpecs, not sure I like how we do this and then need to era
 
 		m_self->m_atm_instance->getRootItem()->appendChild(new_child_id_2);
 		auto new_grandchild_id_1 = std::make_shared<AbstractTreeModelItem>(std::vector<QVariant>{{"Track1"}, {"F"}, {"GHI"}, {"J"}});
+		auto new_grandchild_id_2 = std::make_shared<AbstractTreeModelItem>(std::vector<QVariant>{{"Track2"},
+		                                                                                         {"234"},
+		                                                                                         {"mmm"},
+		                                                                                         {"ol"}});
+		auto new_grandchild_id_3 = std::make_shared<AbstractTreeModelItem>(std::vector<QVariant>{{"Track3"},
+		                                                                                         {"VB"},
+		                                                                                         {"098"},
+		                                                                                         {"12#"}});
+
 		new_child_id_1->appendChild(new_grandchild_id_1);
+		new_child_id_1->appendChild(new_grandchild_id_2);
+		new_child_id_1->appendChild(new_grandchild_id_3);
 
 //		auto new_child_id_2 = m_self->m_atm_instance->requestAddItem({"Album2", "F", "GHI", "J"}, new_id);
-		auto new_grandchild_id_2 = std::make_shared<AbstractTreeModelItem>(std::vector<QVariant>{"Track2", "K", "LMN", "OP"});
-		new_child_id_2->appendChild(new_grandchild_id_2);
+		auto new_grandchild_id_2_1 = std::make_shared<AbstractTreeModelItem>(std::vector<QVariant>{"Track21", "K", "LMN", "OP"});
+		new_child_id_2->appendChild(new_grandchild_id_2_1);
 
 		Q_ASSERT(m_self->m_atm_instance->checkConsistency());
 
-#if 0///////
+#if 1///////
 		m_self->m_atm_instance->SaveDatabase("/home/gary/AMLM_Exp.xml");
 
 		// Try to reload

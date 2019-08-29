@@ -184,7 +184,7 @@ QVariant Library::toVariant() const
 
 qDb() << "EXIT, wrote:" << m_lib_entries.size() << "libentries";
 
-	return map;
+	return QVariant::fromValue(map);
 }
 
 void Library::fromVariant(const QVariant& variant)
