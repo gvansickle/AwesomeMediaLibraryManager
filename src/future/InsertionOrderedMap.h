@@ -218,9 +218,9 @@ public:
 		}
 	}
 
-	void set_attr(const std::string& key, const std::string& value) const
+	void set_attr(const std::string& key, const std::string& value)
 	{
-		insert_attributes({{key, value}});
+		m_attribute_map.insert_or_assign(key, value);
 	}
 
 	std::string get_attr(const std::string& key) const
