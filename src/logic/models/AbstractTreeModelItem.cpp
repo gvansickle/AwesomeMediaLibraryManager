@@ -417,7 +417,6 @@ QVariant AbstractTreeModelItem::toVariant() const
 //	child_var_list = map.value(XMLTAG_CHILD_ITEM_LIST).value<QVariantHomogenousList>();
 //	Q_ASSERT(child_var_list.size() > 0);
 //
-//	append_children_from_variant<AbstractTreeModelItem>(this, child_var_list);
 
 	return QVariant::fromValue(map);
 }
@@ -911,7 +910,6 @@ QVariant AbstractTreeModelItem::children_to_variant() const
 
 	InsertionOrderedStrVarMap map;
 
-
 #if 1 // TEST
 	// T accumulate_const(T init, BinOp op) const;
 	// T BinOp(T, std::shared_ptr<AbstractTreeModelItem>)
@@ -952,10 +950,11 @@ QVariant AbstractTreeModelItem::children_to_variant() const
 		qDb() << M_ID_VAL(class_metatype);
 		const char* class_metatype_name = QMetaType::typeName(class_metatype);
 		qDb() << M_ID_VAL(class_metatype_name);
-
-		map.set_attr("class", class_metatype_name);
+/// @note This doubles the "class" entry for some reason when it shouldn't.
+//		map.set_attr("class", class_metatype_name);
 		map.insert("one_child_item", it->toVariant());
 	}
+	dump_map(map);
 #endif
 
 	return map;
@@ -1018,6 +1017,7 @@ void AbstractTreeModelItem::children_from_variant(const QVariant& variant)
 
 		Q_ASSERT(class_metatype != QMetaType::UnknownType);
 ///// @todo
+#warning "INCOMPLETE/BROKEN"
 		void* new_item = QMetaType::create(class_metatype);
 //		InsertionOrderedStrVarMap the_child; = the_child_var.value(the_child_var);
 

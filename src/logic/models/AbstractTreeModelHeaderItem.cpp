@@ -166,7 +166,7 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 	InsertionOrderedStrVarMap child_map = convert_or_die<InsertionOrderedStrVarMap>(children_to_variant());
 	map_insert_or_die(map, XMLTAG_CHILD_ITEM_MAP, child_map);
 #endif
-	return QVariant::fromValue(map);
+	return map;
 }
 
 void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
