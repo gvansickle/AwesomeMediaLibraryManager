@@ -46,6 +46,7 @@ set(QT5_LINK_LIB_TARGETS Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Concurrent Qt5::Te
 # find_package(Qt5Widgets REQUIRED)
 # find_package(Qt5Test REQUIRED)
 #find_package(LibXml2 REQUIRED)
+if(FALSE)
 find_package(Boost 1.55
     COMPONENTS
 #      unit_test_framework
@@ -53,7 +54,7 @@ find_package(Boost 1.55
       filesystem
       system
   REQUIRED)
-
+endif()
 #add_subdirectory(libixxx)
 #add_subdirectory(libixxxutil)
 #add_subdirectory(libxxxml)

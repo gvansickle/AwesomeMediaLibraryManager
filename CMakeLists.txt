@@ -97,8 +97,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Min versions of Qt5, KF5, KF5/ECM.
 set(QT_MIN_VERSION "5.12.1")
-set(KF5_MIN_VERSION "5.57.0") ### @win temp: Only have 5.52.0
-set(ECM_MIN_VERSION "5.57.0")
+if(WIN32)
+	set(KF5_MIN_VERSION "5.52.0") ### @win temp: Only have 5.52.0
+	set(ECM_MIN_VERSION "5.57.0")
+else()
+	set(KF5_MIN_VERSION "5.57.0") ### @win temp: Only have 5.52.0
+	set(ECM_MIN_VERSION "5.57.0")
+endif()
 
 ###
 ### IDE helper setup
