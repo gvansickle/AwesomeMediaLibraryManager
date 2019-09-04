@@ -258,6 +258,11 @@ public:
 		return m_attribute_map;
 	}
 
+	bool contains_attr(const std::string& attr_name)
+	{
+		return m_attribute_map.count(attr_name) > 0;
+	}
+
 	/// @}
 
 	const_iterator cbegin() const { return std::cbegin(m_vector_of_elements); };

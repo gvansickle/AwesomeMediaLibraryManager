@@ -219,9 +219,10 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	qDb() << "Number of children read:" << child_var_map.size();
 	Q_ASSERT(child_var_map.size() > 0);
 
-	qDb() << "START: Trying to read in child items";
-	children_from_variant(QVariant::fromValue(child_var_map));
-	qDb() << "END: Trying to read in child items";
+	qDb() << "START: HeaderItem: Trying to read in child items";
+	QVariant qvar = QVariant::fromValue(child_var_map);
+	children_from_variant(qvar);
+	qDb() << "END: HeaderItem: Trying to read in child items";
 	AMLM_ASSERT_EQ(child_var_map.size(), m_child_items.size());
 }
 
