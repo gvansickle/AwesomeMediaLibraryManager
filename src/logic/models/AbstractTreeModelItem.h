@@ -422,39 +422,7 @@ std::shared_ptr<T> TreeItemFactory(Args... args)
   return retval;
 }
 
-/**
- * Function template for trying to commonalize the loading of an item's children.
- * @tparam ChildItemType
- * @tparam ParentItemType
- * @param parent_item
- * @param child_var_list
- */
-//template <class ChildItemType, class ParentItemType = AbstractTreeModelItem>
-//void append_children_from_variant(ParentItemType* parent_item, const QVariantHomogenousList& child_var_list)
-//{
-//	/// @todo Currently we need the parent_item to already be in a model when we appendChild() to it.
-//	Q_ASSERT(parent_item->isInModel());
-//	auto starting_childcount = parent_item->childCount();
 
-//	for(const QVariant& child_variant : child_var_list)
-//	{
-////		qDb() << "READING CHILD ITEM:" << child_variant << " INTO PARENT ITEM:" << parent_item;
-
-//		// Default constructed child.
-//		auto new_child = std::make_shared<ChildItemType>();
-//		Q_ASSERT(new_child);
-
-//		/// @note Currently we need to add the empty item to the model before reading it in, so that
-//		/// its children will be set up correctly model-wise.  This is almost certainly more efficient anyway.
-//		bool append_success = parent_item->appendChild(new_child);
-//		AMLM_ASSERT_X(append_success, "FAILED TO APPEND NEW ITEM TO PARENT");
-
-//		// Now load the default-constructed child's data into it.
-//		new_child->fromVariant(child_variant);
-//	}
-
-//	AMLM_ASSERT_EQ(starting_childcount+child_var_list.size(), parent_item->childCount());
-//}
 
 
 #endif // ABSTRACTTREEMODELITEM_H

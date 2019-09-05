@@ -412,6 +412,7 @@ QVariant AbstractTreeModelItem::toVariant() const
 //	/// @todo ???
 //	// Insert the list into the map.
 	InsertionOrderedStrVarMap child_map = convert_or_die<InsertionOrderedStrVarMap>(children_to_variant());
+	qDb() << "child_map:" << child_map;
 	map_insert_or_die(map, XMLTAG_CHILD_ITEM_MAP, child_map);
 //	QVariantHomogenousList child_var_list(XMLTAG_CHILD_ITEM_LIST, "child");
 //	child_var_list = map.value(XMLTAG_CHILD_ITEM_LIST).value<QVariantHomogenousList>();
@@ -1011,17 +1012,38 @@ void AbstractTreeModelItem::children_from_variant(const QVariant& variant)
 		const char* class_metatype_name = QMetaType::typeName(class_metatype);
 		qDb() << M_ID_VAL(class_metatype_name);
 
-		// Concvert to the target ID.
-		qDb() << "Converting to target ID:" << class_metatype << class_metatype_name;
+		// Convert to the target ID.
+		qDb() << "Converting from:" << class_str << "to target ID:" << class_metatype << class_metatype_name;
 		Q_ASSERT(the_child_var.convert(class_metatype));
 
 		Q_ASSERT(class_metatype != QMetaType::UnknownType);
 ///// @todo
 #warning "INCOMPLETE/BROKEN"
-		void* new_item = QMetaType::create(class_metatype);
+//		void* new_item = QMetaType::create(class_metatype);
 //		InsertionOrderedStrVarMap the_child; = the_child_var.value(the_child_var);
+		if(class_metatype == QMetaType::type("InsertionOrderedStrVarMap"))
+		{
+			// What's the contained class?
+			InsertionOrderedStrVarMap svmap = the_child_var.value<InsertionOrderedStrVarMap>();
+			std::string contained_class_name = svmap.get_attr("class");
+			qDb() << M_ID_VAL(contained_class_name);
 
-//		qDb() << "the_child:" << the_child;
+			int attr_class_type = QMetaType::type(contained_class_name.c_str());
+//			Q_ASSERT(the_child_var.canConvert(attr_class_type));
+
+			// Convert to the "class" type ID.
+			qDb() << "Converting again, to:" << attr_class_type << contained_class_name;
+			Q_ASSERT(contained_class_name == "AbstractTreeModelItem");
+//			Q_ASSERT(the_child_var.convert(attr_class_type));
+			std::shared_ptr<AbstractTreeModelItem> child_sp = std::make_shared<AbstractTreeModelItem>();
+			child_sp->fromVariant(svmap);
+			this->appendChild(child_sp);
+//			void* temp_item_ptr = QMetaType::create(attr_class_type);
+						//std::dynamic_pointer_cast<AbstractTreeModelItem>();
+		}
+
+
+		qDb() << "the_child_var:" << the_child_var;
 
 	}
 
