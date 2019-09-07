@@ -95,7 +95,7 @@ private:
 	void writeQVariantHomogenousListToStream(const QVariant& variant, QXmlStreamWriter& xmlstream);
 	void writeVariantListToStream(const QVariant &variant, QXmlStreamWriter& xmlstream);
 	void writeVariantMapToStream(const QVariant& variant, QXmlStreamWriter& xmlstream);
-	void writeVariantOrderedMapToStream(const QVariant& variant, QXmlStreamWriter& xmlstream);
+	void writeInsertionOrderedStrVarMap(const QVariant& variant, QXmlStreamWriter& xmlstream);
 
 	void writeVariantValueToStream(const QVariant& variant, QXmlStreamWriter& xmlstream);
 
@@ -111,7 +111,7 @@ private:
 	QVariant readHomogenousListFromStream(const std::vector<QXmlStreamAttribute>& attributes, QXmlStreamReader& xmlstream);
 	QVariant readVariantListFromStream(const std::vector<QXmlStreamAttribute>& attributes, QXmlStreamReader& xmlstream);
 	QVariant readVariantMapFromStream(const std::vector<QXmlStreamAttribute>& attributes, QXmlStreamReader& xmlstream);
-	QVariant readVariantOrderedMapFromStream(const std::vector<QXmlStreamAttribute> attributes, QXmlStreamReader& xmlstream);
+	QVariant readVariantOrderedMapFromStream(const std::vector<QXmlStreamAttribute>& attributes, QXmlStreamReader& xmlstream);
 
 	QVariant readVariantValueFromStream(QXmlStreamReader& xmlstream);
 

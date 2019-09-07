@@ -40,6 +40,8 @@ public:
 	explicit UUIncD(quintptr qmodelindex_int_id);
 	~UUIncD() = default;
 
+	void clear();
+
 	static UUIncD create();
 
 	static UUIncD null() { return UUIncD(0xFFFFFFFFFFFFFFFF); };

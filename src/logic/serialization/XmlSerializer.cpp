@@ -44,6 +44,8 @@
 #include <future/attributes.h>
 #include "ISerializable.h"
 #include "SerializationHelpers.h"
+/// @todo TEMP, BREAK DEPS.
+#include <models/AbstractTreeModelHeaderItem.h>
 
 
 void XmlSerializer::save(const ISerializable &serializable, const QUrl &file_url, const QString &root_element_name,
@@ -152,9 +154,17 @@ bool XmlSerializer::load(ISerializable& serializable, const QUrl &file_url)
 	return !xmlstream.error();
 }
 
+/// @name Metatype IDs for the different user types we handle.
+/// @{
 static const int f_iomap_id = qMetaTypeId<InsertionOrderedStrVarMap>();
 static const int f_qvarlist_id = qMetaTypeId<QVariantHomogenousList>();
 static const int f_serqvarlist_id = qMetaTypeId<SerializableQVariantList>();
+/// @todo Find a better way, run-time registration?
+static const int f_abs_tree_model_header_item_id = qMetaTypeId<AbstractTreeModelHeaderItem>();
+static const int f_abs_tree_model_item_id = qMetaTypeId<AbstractTreeModelItem>();
+/// @}
+//static const std::map<int, std::function(void(const QVariant& variant, QXmlStreamWriter& xmlstream))> f_user_id_to_write_func =
+//	{};
 
 void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant& variant, QXmlStreamWriter& xmlstream)
 {
@@ -215,7 +225,7 @@ void XmlSerializer::InnerWriteVariantToStream(const QVariant& variant, QXmlStrea
 
 	if(usertype == f_iomap_id)
 	{
-		writeVariantOrderedMapToStream(variant, *xmlstream);
+		writeInsertionOrderedStrVarMap(variant, *xmlstream);
 	}
 	else if(usertype == f_qvarlist_id)
 	{
@@ -226,6 +236,16 @@ void XmlSerializer::InnerWriteVariantToStream(const QVariant& variant, QXmlStrea
 		QVariantHomogenousList list = variant.value<QVariantHomogenousList>();
 
 		writeQVariantHomogenousListToStream(list, *xmlstream);
+	}
+	else if(usertype == f_abs_tree_model_header_item_id)
+	{
+		///
+		qDb() << "USERTYPE IS HEADER ITEM";
+	}
+	else if(usertype == f_abs_tree_model_item_id)
+	{
+		///
+		qDb() << "USERTYPE IS ITEM";
 	}
 	else
 	{
@@ -313,7 +333,7 @@ void XmlSerializer::writeVariantMapToStream(const QVariant &variant, QXmlStreamW
 }
 
 
-void XmlSerializer::writeVariantOrderedMapToStream(const QVariant& variant, QXmlStreamWriter& xmlstream)
+void XmlSerializer::writeInsertionOrderedStrVarMap(const QVariant& variant, QXmlStreamWriter& xmlstream)
 {
 	Q_ASSERT(variant.isValid());
 	Q_ASSERT(variant.canConvert<InsertionOrderedStrVarMap>());
@@ -322,7 +342,7 @@ void XmlSerializer::writeVariantOrderedMapToStream(const QVariant& variant, QXml
 
 	Q_ASSERT(!omap.contains_attr("class"));
 
-	xmlstream.writeAttribute("metatype_id", toqstr(std::to_string(omap.m_id)));
+	xmlstream.writeAttribute("metatype_id", toqstr(std::to_string(omap.m_metatype_id)));
 	xmlstream.writeAttribute("class", toqstr(omap.m_class));
 
 	auto attrs = omap.get_attrs();
@@ -627,7 +647,7 @@ QVariant XmlSerializer::readVariantMapFromStream(const std::vector<QXmlStreamAtt
 	return map;
 }
 
-QVariant XmlSerializer::readVariantOrderedMapFromStream(const std::vector<QXmlStreamAttribute> attributes, QXmlStreamReader& xmlstream)
+QVariant XmlSerializer::readVariantOrderedMapFromStream(const std::vector<QXmlStreamAttribute>& attributes, QXmlStreamReader& xmlstream)
 {
 	InsertionOrderedStrVarMap map;
 

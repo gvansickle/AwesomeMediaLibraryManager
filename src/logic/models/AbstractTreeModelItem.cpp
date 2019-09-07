@@ -449,8 +449,14 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 
 	qDb() << XMLTAG_NUM_CHILDREN << num_children;
 
-	// Read in our children.
-//	QVariantHomogenousList child_list = map.value(XMLTAG_CHILD_ITEM_LIST).value<QVariantHomogenousList>();
+	// Now read in our children.  We need this Item to be in a model for that to work.
+	/// @todo Add to model, Will this finally work?
+//	auto parent_item_ptr = this->parent_item().lock();
+//WRONG:	appendChild(this->shared_from_this());
+	Q_ASSERT(isInModel());
+	auto model_ptr = m_model.lock();
+	Q_ASSERT(model_ptr);
+
 	InsertionOrderedStrVarMap child_map;// (XMLTAG_CHILD_ITEM_MAP, "child");
 	child_map = map.value(XMLTAG_CHILD_ITEM_MAP).value<InsertionOrderedStrVarMap>();
 	qDb() << M_ID_VAL(child_map.size());
@@ -463,16 +469,14 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 //	/// @todo ???
 //	Q_ASSERT(child_var_list.size() > 0);
 
-
-	children_from_variant(child_map);
+	if(num_children > 0)
+	{
+		children_from_variant(child_map);
+	}
 
 	////////////////////////////////////
 #if 0
-	// Now read in our children.  We need this Item to be in a model for that to work.
-	Q_ASSERT(isInModel());
 
-	auto model_ptr = m_model.lock();
-	Q_ASSERT(model_ptr);
 
 	// What was the derived class that was actually written?
 	std::string metatype_class_str = map.get_attr("class");
@@ -881,6 +885,7 @@ void AbstractTreeModelItem::updateParent(std::shared_ptr<AbstractTreeModelItem> 
 #endif
 }
 
+#if 0
 class ChildHolder : public ISerializable
 {
 public:
@@ -902,7 +907,7 @@ public:
 	void fromVariant(const QVariant& variant) override;
 };
 Q_DECLARE_METATYPE(ChildHolder);
-
+#endif
 
 QVariant AbstractTreeModelItem::children_to_variant() const
 {
@@ -915,7 +920,7 @@ QVariant AbstractTreeModelItem::children_to_variant() const
 	// T accumulate_const(T init, BinOp op) const;
 	// T BinOp(T, std::shared_ptr<AbstractTreeModelItem>)
 	int count = 0;
-	qDb() << "START children_from_variant():";
+	qDb() << "START children_to_variant():";
 	accumulate_const(0, [&](int last_count, auto shptr_atmi){
 		qDb() << "Total child count:" << last_count + childCount() << M_ID_VAL(shptr_atmi->has_children()) << M_ID_VAL(shptr_atmi->getId());
 		return last_count + childCount();
@@ -943,7 +948,7 @@ QVariant AbstractTreeModelItem::children_to_variant() const
 	qDb() << "child_var_list:" << child_var_list;
 	map_insert_or_die(map, XMLTAG_CHILD_ITEM_LIST, child_var_list);
 #else
-	for(const auto& it : m_child_items)
+	for(const std::shared_ptr<AbstractTreeModelItem>& it : m_child_items)
 	{
 		QString class_str = QVariant::fromValue(*it).typeName();
 		qDb() << M_ID_VAL(class_str);
@@ -953,6 +958,7 @@ QVariant AbstractTreeModelItem::children_to_variant() const
 		qDb() << M_ID_VAL(class_metatype_name);
 /// @note This doubles the "class" entry for some reason when it shouldn't.
 //		map.set_attr("class", class_metatype_name);
+//		void* temp_item_ptr = QMetaType::create(class_metatype, 0);
 		map.insert("one_child_item", it->toVariant());
 	}
 	dump_map(map);
@@ -1036,8 +1042,12 @@ void AbstractTreeModelItem::children_from_variant(const QVariant& variant)
 			Q_ASSERT(contained_class_name == "AbstractTreeModelItem");
 //			Q_ASSERT(the_child_var.convert(attr_class_type));
 			std::shared_ptr<AbstractTreeModelItem> child_sp = std::make_shared<AbstractTreeModelItem>();
+			/// ??? Non-Null out the UUIncD.
+			child_sp->m_uuincid = UUIncD::create();
+			appendChild(child_sp);
 			child_sp->fromVariant(svmap);
-			this->appendChild(child_sp);
+//			m_child_items.push_back(child_sp);
+//			this->appendChild(child_sp);
 //			void* temp_item_ptr = QMetaType::create(attr_class_type);
 						//std::dynamic_pointer_cast<AbstractTreeModelItem>();
 		}
@@ -1152,7 +1162,7 @@ AbstractTreeModelItem::CICTIteratorType AbstractTreeModelItem::get_m_child_items
 	return retval;
 }
 
-
+#if 0
 QVariant ChildHolder::toVariant() const
 {
 	InsertionOrderedStrVarMap map;
@@ -1170,3 +1180,4 @@ void ChildHolder::fromVariant(const QVariant& variant)
 	map_read_field_or_warn(map, "m_class_name", &m_class_name);
 	map_read_field_or_warn(map, "m_item", &m_item);
 }
+#endif

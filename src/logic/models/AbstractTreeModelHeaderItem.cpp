@@ -211,9 +211,7 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	auto parent_id = getId();
 	Q_ASSERT(parent_id != UUIncD::null());
 
-	/// @todo This is a QVariantList containing <item>/QVariantMap's, each of which
-	/// contains a single <scan_res_tree_model_item type="QVariantMap">, which in turn
-	/// contains a single <dirscanresult>/QVariantMap.
+	/// @todo
 	InsertionOrderedStrVarMap child_var_map;//(XMLTAG_CHILD_ITEM_MAP, "child");
 	child_var_map = map.value(XMLTAG_CHILD_ITEM_MAP).value<InsertionOrderedStrVarMap>();
 	qDb() << "Number of children read:" << child_var_map.size();

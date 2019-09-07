@@ -304,7 +304,7 @@ protected:
 	{
 		int id = qMetaTypeId<T>();
 		qDb() << "QMetaType:" << id << QMetaType::typeName(id);// << QVariant(*this).typeName();
-		map->m_id = id;
+		map->m_metatype_id = id;
 		map->m_class = QMetaType::typeName(id);
 	}
 

@@ -26,13 +26,18 @@ UUIncD::UUIncD(std::uint64_t id)
 	m_my_id = id;
 }
 
-// static
 UUIncD::UUIncD(quintptr qmodelindex_int_id)
 {
 	static_assert(sizeof(quintptr) == sizeof(m_my_id));
 	m_my_id = qmodelindex_int_id;
 }
 
+void UUIncD::clear()
+{
+	m_my_id = UUIncD::null();
+}
+
+// static
 UUIncD UUIncD::create()
 {
 	return UUIncD(UUIncD::m_next_id.fetch_add(1));

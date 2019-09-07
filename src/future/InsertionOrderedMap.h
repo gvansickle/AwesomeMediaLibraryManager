@@ -71,7 +71,7 @@ public:
 	using iterator = typename underlying_container_type::iterator;
 	/// @}
 
-	int m_id = 0;
+	int m_metatype_id = 0;
 	std::string m_class;
 
 private:
