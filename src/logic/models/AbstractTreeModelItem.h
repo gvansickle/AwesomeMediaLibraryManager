@@ -257,7 +257,6 @@ public:
 
 protected:
 
-
 	/**
 	 * Helper functions to handle registration / deregistration to the model.
 	 */
@@ -277,6 +276,12 @@ protected:
 	 */
 	virtual void updateParent(std::shared_ptr<AbstractTreeModelItem> parent);
 
+	/// @name Protected Serialization Helpers
+	/// @{
+
+	virtual int item_data_to_variant(InsertionOrderedStrVarMap* add_to_map) const;
+	virtual int item_data_from_variant(const InsertionOrderedStrVarMap& read_from_map);
+
 	/**
 	 * Serialization helper which recursively serializes this item's children to a map.
 	 */
@@ -286,6 +291,8 @@ protected:
 	 * Serialization helper which recursively serializes this item's children from a map.
 	 */
 	void children_from_variant(const QVariant& variant);
+
+	/// @}
 
 	/// @name Pre/Post-condition checks
 	/// @{

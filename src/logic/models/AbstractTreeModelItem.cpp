@@ -29,7 +29,6 @@
  */
 
 #include "AbstractTreeModelItem.h"
-#include "SRTMItemLibEntry.h"
 
 // Std C++
 #include <memory>
@@ -397,15 +396,14 @@ QVariant AbstractTreeModelItem::toVariant() const
 #define X(field_tag, tag_string, var_name) map_insert_or_die(map, field_tag, var_name);
 	M_DATASTREAM_FIELDS(X);
 #undef X
+	// Number of columns, XMLTAG_NUM_COLUMNS.
+	// Number of elements in m_item_data, XMLTAG_ITEM_DATA_LIST_SIZE.
+	// Number of immediate children, XMLTAG_NUM_CHILDREN.
 #define X(field_tag, tag_string, var_name) map_insert_or_die(map, field_tag, (qulonglong)(var_name).size());
 	M_DATASTREAM_FIELDS_CONTSIZES(X);
 #undef X
 
-	// Number of elements in m_item_data.
-//	map_insert_or_die(map, XMLTAG_ITEM_DATA_SIZE, QVariant::fromValue<qulonglong>(m_item_data.size()));
-	// Number of immediate children.
-//	map_insert_or_die(map, XMLTAG_NUM_CHILDREN, QVariant::fromValue<qulonglong>(m_child_items.size()));
-
+#if 0
 	/// @todo The "m_item_data" string is not getting written out, not sure if we care.
 	QVariantHomogenousList list(XMLTAG_ITEM_DATA_LIST, "item");
 	// The item data itself.
@@ -415,6 +413,9 @@ QVariant AbstractTreeModelItem::toVariant() const
 	}
 	// Add them to the output map.
 	map_insert_or_die(map, XMLTAG_ITEM_DATA_LIST, list);
+#else
+	item_data_to_variant(&map);
+#endif
 
 	// Serialize out Child nodes.
 	// Insert the list into the map.
@@ -433,11 +434,11 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 //	M_DATASTREAM_FIELDS(X);
 #undef X
 
+#if 0
+	// Get this item's data from variant list.
 	// Get the number of item_data entries.
 	std::vector<QVariant>::size_type item_data_size = 0;
 	map_read_field_or_warn(map, XMLTAG_ITEM_DATA_LIST, &item_data_size);
-
-	// This item's data from variant list.
 	QVariantHomogenousList vl(XMLTAG_ITEM_DATA_LIST, "m_item_data");
 	map_read_field_or_warn(map, XMLTAG_ITEM_DATA_LIST, &vl);
 	for(const auto& it : vl)
@@ -445,6 +446,9 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 		QString itstr = it.toString();
 		m_item_data.push_back(itstr);
 	}
+#else
+	int item_data_retval = item_data_from_variant(map);
+#endif
 
 	// Get this item's children.
 	qulonglong num_children = 0;
@@ -888,11 +892,61 @@ void AbstractTreeModelItem::updateParent(std::shared_ptr<AbstractTreeModelItem> 
 #endif
 }
 
+
+
 /// @todo Find a better way, run-time registration?
 static const int f_abs_tree_model_header_item_id = qMetaTypeId<AbstractTreeModelHeaderItem>();
 static const int f_abs_tree_model_item_id = qMetaTypeId<AbstractTreeModelItem>();
 static const int f_scan_res_tree_model_item_id = qMetaTypeId<ScanResultsTreeModelItem>();
 static const int f_srtm_item_lib_entry_id = qMetaTypeId<SRTMItem_LibEntry>();
+
+//#define M_DATASTREAM_FIELDS(X) \
+//	/* TAG_IDENTIFIER, tag_string, member_field, var_name */ \
+//	X(XMLTAG_CHILD_ITEM_MAP, child_item_map, nullptr) \
+//	X(XMLTAG_ITEM_DATA_LIST, item_data_list, nullptr)
+
+//using strviw_type = QLatin1Literal;
+
+/////// Strings to use for the tags.
+//#define X(field_tag, tag_string, var_name) static const strviw_type field_tag ( # tag_string );
+//	M_DATASTREAM_FIELDS(X);
+////	M_DATASTREAM_FIELDS_CONTSIZES(X);
+//#undef X
+
+int AbstractTreeModelItem::item_data_to_variant(InsertionOrderedStrVarMap* add_to_map) const
+{
+	/// @todo The "m_item_data" string is not getting written out, not sure if we care.
+	QVariantHomogenousList list(XMLTAG_ITEM_DATA_LIST, "item");
+	// The item data itself.
+	for(const QVariant& itemdata : m_item_data)
+	{
+		list_push_back_or_die(list, itemdata);
+	}
+	// Add them to the output map.
+	map_insert_or_die(*add_to_map, XMLTAG_ITEM_DATA_LIST, list);
+
+	return 0; /// @todo Return a better number.
+}
+
+int AbstractTreeModelItem::item_data_from_variant(const InsertionOrderedStrVarMap& read_from_map)
+{
+	// Get this item's data from variant list.
+	// Get the number of item_data entries.
+	std::vector<QVariant>::size_type item_data_size = 0;
+	map_read_field_or_warn(read_from_map, XMLTAG_ITEM_DATA_LIST, &item_data_size);
+
+	QVariantHomogenousList list(XMLTAG_ITEM_DATA_LIST, "item");
+	map_read_field_or_warn(read_from_map, XMLTAG_ITEM_DATA_LIST, &list);
+	for(const auto& it : list)
+	{
+		QString itstr = it.toString();
+		m_item_data.push_back(itstr);
+	}
+
+	return 0; /// @todo Return a better number.
+}
+
+//#define M_DATASTREAM_FIELDS
 
 QVariant AbstractTreeModelItem::children_to_variant() const
 {
