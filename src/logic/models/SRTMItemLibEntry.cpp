@@ -93,9 +93,14 @@ QVariant SRTMItem_LibEntry::data(int column, int role) const
 
 #define M_DATASTREAM_FIELDS(X) \
 	/* TAG_IDENTIFIER, tag_string, member_field, var_name */ \
-	X(XMLTAG_CHILD_ITEM_MAP, child_node_list, nullptr) \
-	X(XMLTAG_LIBRARY_ENTRIES, library_entries, nullptr)
+	X(XMLTAG_LIBRARY_ENTRIES, library_entries, nullptr) \
+	X(XMLTAG_CHILD_ITEM_MAP, child_item_map, nullptr) \
+	X(XMLTAG_ITEM_DATA_LIST, item_data_list, nullptr)
 
+#define M_DATASTREAM_FIELDS_CONTSIZES(X) \
+	X(XMLTAG_NUM_COLUMNS, num_columns, m_item_data) \
+	X(XMLTAG_ITEM_DATA_LIST_SIZE, item_data_list_size, m_item_data) \
+	X(XMLTAG_NUM_CHILDREN, num_children, m_child_items)
 
 /// Strings to use for the tags.
 using strviw_type = QLatin1Literal;
@@ -103,6 +108,7 @@ using strviw_type = QLatin1Literal;
 ///// Strings to use for the tags.
 #define X(field_tag, tag_string, var_name) static const strviw_type field_tag ( # tag_string );
 	M_DATASTREAM_FIELDS(X);
+	M_DATASTREAM_FIELDS_CONTSIZES(X);
 #undef X
 
 QVariant SRTMItem_LibEntry::toVariant() const
@@ -111,24 +117,43 @@ QVariant SRTMItem_LibEntry::toVariant() const
 
 	// Overwrite any class info added by the above.
 	set_map_class_info(this, &map);
-//	set_map_class_info(std::string("SRTMItem_LibEntry"), &map);
 
 	// Set the xml:id.
 	map.insert_attributes({{"xml:id", get_prefixed_uuid()}});
 
-	QVariantHomogenousList list(XMLTAG_LIBRARY_ENTRIES, "m_library_entry");
+#define X(field_tag, tag_string, var_name) map_insert_or_die(map, field_tag, var_name);
+	M_DATASTREAM_FIELDS(X);
+#undef X
+#define X(field_tag, tag_string, var_name) map_insert_or_die(map, field_tag, (qulonglong)(var_name).size());
+	M_DATASTREAM_FIELDS_CONTSIZES(X);
+#undef X
+
+	// Insert the LibraryEntry's.
+	/// @todo Currently there's only one entry.
+	QVariantHomogenousList libentrylist(XMLTAG_LIBRARY_ENTRIES, "m_library_entry");
 	if(auto libentry = m_library_entry.get(); libentry != nullptr)
 	{
-		list_push_back_or_die(list, m_library_entry->toVariant());
+		list_push_back_or_die(libentrylist, m_library_entry->toVariant());
 	}
-	map_insert_or_die(map, XMLTAG_LIBRARY_ENTRIES, list);
+	map_insert_or_die(map, XMLTAG_LIBRARY_ENTRIES, libentrylist);
 
-	QVariantHomogenousList child_var_list(XMLTAG_CHILD_ITEM_MAP, "child");
-	for(auto& it : m_child_items)
+	// Serialize out the item's data.
+	// Same as base class.
+	/// @todo The "m_item_data" string is not getting written out, not sure if we care.
+	QVariantHomogenousList list(XMLTAG_ITEM_DATA_LIST, "item");
+	// The item data itself.
+	for(const QVariant& itemdata : m_item_data)
 	{
-		list_push_back_or_die(child_var_list, it->toVariant());
+		list_push_back_or_die(list, itemdata);
 	}
-	map_insert_or_die(map, XMLTAG_CHILD_ITEM_MAP, child_var_list);
+	// Add them to the output map.
+	map_insert_or_die(map, XMLTAG_ITEM_DATA_LIST, list);
+
+	// Serialize out Child nodes.
+	// Insert the list into the map.
+	InsertionOrderedStrVarMap child_map = convert_or_die<InsertionOrderedStrVarMap>(children_to_variant());
+	qDb() << "child_map:" << child_map;
+	map_insert_or_die(map, XMLTAG_CHILD_ITEM_MAP, child_map);
 
 	return QVariant::fromValue(map);
 }
@@ -149,19 +174,16 @@ void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 	}
 
 #define X(field_tag, tag_string, var_name) map_read_field_or_warn(map, field_tag, var_name);
-	M_DATASTREAM_FIELDS(X);
+//	M_DATASTREAM_FIELDS(X);
 #undef X
 
 	// Load LibraryEntry's.
 	QVariantHomogenousList list(XMLTAG_LIBRARY_ENTRIES, "m_library_entry");
 	map_read_field_or_warn(map, XMLTAG_LIBRARY_ENTRIES, &list);
 
-	/// There should only be one I think....
+	// There should only be one currently.
 	AMLM_ASSERT_EQ(list.size(), 1);
 
-#if 0///
-	append_children_from_variant<LibraryEntry>(this, list);
-#else///old
 	for(const QVariant& it : list)
 	{
 		/// @todo First doesn't work for some reason.
@@ -170,16 +192,43 @@ void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 		m_library_entry = std::make_shared<LibraryEntry>();
 		m_library_entry->fromVariant(it);
 	}
-#endif
 
-	QVariantHomogenousList child_var_list(XMLTAG_CHILD_ITEM_MAP, "child");
-	child_var_list = map.value(XMLTAG_CHILD_ITEM_MAP).value<QVariantHomogenousList>();
+	// This item's data from variant list.
+	/// @todo Same as base.
+	QVariantHomogenousList vl(XMLTAG_ITEM_DATA_LIST, "m_item_data");
+	map_read_field_or_warn(map, XMLTAG_ITEM_DATA_LIST, &vl);
+	for(const auto& it : vl)
+	{
+		QString itstr = it.toString();
+		m_item_data.push_back(itstr);
+	}
 
-//	append_children_from_variant<AbstractTreeModelItem>(this, child_var_list);
-	// Read in our children.
-//	QVariantHomogenousList child_list = map.value(XMLTAG_CHILD_ITEM_LIST).value<QVariantHomogenousList>();
-	InsertionOrderedStrVarMap child_map; (XMLTAG_CHILD_ITEM_MAP, "child");
+	// Get this item's children.
+	qulonglong num_children = 0;
+	map_read_field_or_warn(map, XMLTAG_NUM_CHILDREN, &num_children);
+
+	qDb() << XMLTAG_NUM_CHILDREN << num_children;
+
+	// Now read in our children.
+	// We need this Item to be in a model for that to work.
+	/// @todo Add to model, Will this finally work?
+//	auto parent_item_ptr = this->parent_item().lock();
+//WRONG:	appendChild(this->shared_from_this());
+	Q_ASSERT(isInModel());
+	auto model_ptr = m_model.lock();
+	Q_ASSERT(model_ptr);
+
+	InsertionOrderedStrVarMap child_map;// (XMLTAG_CHILD_ITEM_MAP, "child");
 	child_map = map.value(XMLTAG_CHILD_ITEM_MAP).value<InsertionOrderedStrVarMap>();
+	qDb() << M_ID_VAL(child_map.size());
+
+	AMLM_ASSERT_EQ(num_children, child_map.size());
+
+	if(num_children > 0)
+	{
+		children_from_variant(child_map);
+	}
+
 	qDb() << M_ID_VAL(child_map.size());
 
 

@@ -46,6 +46,7 @@
 #include "SerializationHelpers.h"
 /// @todo TEMP, BREAK DEPS.
 #include <models/AbstractTreeModelHeaderItem.h>
+#include <models/SRTMItemLibEntry.h>
 
 
 void XmlSerializer::save(const ISerializable &serializable, const QUrl &file_url, const QString &root_element_name,
@@ -162,7 +163,10 @@ static const int f_serqvarlist_id = qMetaTypeId<SerializableQVariantList>();
 /// @todo Find a better way, run-time registration?
 static const int f_abs_tree_model_header_item_id = qMetaTypeId<AbstractTreeModelHeaderItem>();
 static const int f_abs_tree_model_item_id = qMetaTypeId<AbstractTreeModelItem>();
+static const int f_scan_res_tree_model_item_id = qMetaTypeId<ScanResultsTreeModelItem>();
+static const int f_srtm_item_lib_entry_id = qMetaTypeId<SRTMItem_LibEntry>();
 /// @}
+
 //static const std::map<int, std::function(void(const QVariant& variant, QXmlStreamWriter& xmlstream))> f_user_id_to_write_func =
 //	{};
 

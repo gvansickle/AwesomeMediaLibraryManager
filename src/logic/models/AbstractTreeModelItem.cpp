@@ -29,6 +29,7 @@
  */
 
 #include "AbstractTreeModelItem.h"
+#include "SRTMItemLibEntry.h"
 
 // Std C++
 #include <memory>
@@ -49,6 +50,10 @@
 #include <utils/ext_iterators.h>
 #include <logic/serialization/SerializationHelpers.h>
 
+/// @todo Break Deps.
+#include "AbstractTreeModelHeaderItem.h"
+#include "ScanResultsTreeModelItem.h"
+#include "SRTMItemLibEntry.h"
 
 
 //AbstractTreeModelItem::AbstractTreeModelItem()
@@ -127,6 +132,9 @@ M_WARNING("TODO, NEEDS MUTEX MEMBER");
 	return true;
 }
 
+/**
+ * QDebug streaming operator.
+ */
 QDebug operator<<(QDebug dbg, const AbstractTreeModelItem& obj)
 {
 	QDebugStateSaver saver(dbg);
@@ -362,12 +370,12 @@ bool AbstractTreeModelItem::changeParent(std::shared_ptr<AbstractTreeModelItem> 
 #define M_DATASTREAM_FIELDS(X) \
 	/* TAG_IDENTIFIER, tag_string, member_field, var_name */ \
 	X(XMLTAG_CHILD_ITEM_MAP, child_item_map, nullptr) \
-	X(XMLTAG_CHILD_ITEM_LIST, child_item_list, nullptr)
+	X(XMLTAG_ITEM_DATA_LIST, item_data_list, nullptr)
 
 
 #define M_DATASTREAM_FIELDS_CONTSIZES(X) \
 	X(XMLTAG_NUM_COLUMNS, num_columns, m_item_data) \
-	X(XMLTAG_ITEM_DATA_SIZE, item_data_size, m_item_data) \
+	X(XMLTAG_ITEM_DATA_LIST_SIZE, item_data_list_size, m_item_data) \
 	X(XMLTAG_NUM_CHILDREN, num_children, m_child_items)
 
 using strviw_type = QLatin1Literal;
@@ -399,25 +407,20 @@ QVariant AbstractTreeModelItem::toVariant() const
 //	map_insert_or_die(map, XMLTAG_NUM_CHILDREN, QVariant::fromValue<qulonglong>(m_child_items.size()));
 
 	/// @todo The "m_item_data" string is not getting written out, not sure if we care.
-	QVariantHomogenousList list("m_item_data", "item");
+	QVariantHomogenousList list(XMLTAG_ITEM_DATA_LIST, "item");
 	// The item data itself.
 	for(const QVariant& itemdata : m_item_data)
 	{
 		list_push_back_or_die(list, itemdata);
 	}
 	// Add them to the output map.
-	map_insert_or_die(map, "item_data", list);
+	map_insert_or_die(map, XMLTAG_ITEM_DATA_LIST, list);
 
-//	// Serialize out Child nodes.
-//	/// @todo ???
-//	// Insert the list into the map.
+	// Serialize out Child nodes.
+	// Insert the list into the map.
 	InsertionOrderedStrVarMap child_map = convert_or_die<InsertionOrderedStrVarMap>(children_to_variant());
 	qDb() << "child_map:" << child_map;
 	map_insert_or_die(map, XMLTAG_CHILD_ITEM_MAP, child_map);
-//	QVariantHomogenousList child_var_list(XMLTAG_CHILD_ITEM_LIST, "child");
-//	child_var_list = map.value(XMLTAG_CHILD_ITEM_LIST).value<QVariantHomogenousList>();
-//	Q_ASSERT(child_var_list.size() > 0);
-//
 
 	return QVariant::fromValue(map);
 }
@@ -432,11 +435,11 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 
 	// Get the number of item_data entries.
 	std::vector<QVariant>::size_type item_data_size = 0;
-	map_read_field_or_warn(map, XMLTAG_ITEM_DATA_SIZE, &item_data_size);
+	map_read_field_or_warn(map, XMLTAG_ITEM_DATA_LIST, &item_data_size);
 
 	// This item's data from variant list.
-	QVariantHomogenousList vl("itemdata_list", "m_item_data");
-	map_read_field_or_warn(map, "item_data", &vl);
+	QVariantHomogenousList vl(XMLTAG_ITEM_DATA_LIST, "m_item_data");
+	map_read_field_or_warn(map, XMLTAG_ITEM_DATA_LIST, &vl);
 	for(const auto& it : vl)
 	{
 		QString itstr = it.toString();
@@ -885,29 +888,11 @@ void AbstractTreeModelItem::updateParent(std::shared_ptr<AbstractTreeModelItem> 
 #endif
 }
 
-#if 0
-class ChildHolder : public ISerializable
-{
-public:
-	M_GH_RULE_OF_FIVE_DEFAULT_C21(ChildHolder);
-	~ChildHolder() override = default;
-
-	QString m_class_name;
-//	std::shared_ptr<AbstractTreeModelItem> m_item;
-	QVariant m_item;
-
-	/**
-	 * Override in derived classes to serialize to a QVariantMap or QVariantList.
-	 */
-	QVariant toVariant() const override;
-
-	/**
-	 * Override in derived classes to serialize from a QVariantMap or QVariantList.
-	 */
-	void fromVariant(const QVariant& variant) override;
-};
-Q_DECLARE_METATYPE(ChildHolder);
-#endif
+/// @todo Find a better way, run-time registration?
+static const int f_abs_tree_model_header_item_id = qMetaTypeId<AbstractTreeModelHeaderItem>();
+static const int f_abs_tree_model_item_id = qMetaTypeId<AbstractTreeModelItem>();
+static const int f_scan_res_tree_model_item_id = qMetaTypeId<ScanResultsTreeModelItem>();
+static const int f_srtm_item_lib_entry_id = qMetaTypeId<SRTMItem_LibEntry>();
 
 QVariant AbstractTreeModelItem::children_to_variant() const
 {
@@ -1039,9 +1024,34 @@ void AbstractTreeModelItem::children_from_variant(const QVariant& variant)
 
 			// Convert to the "class" type ID.
 			qDb() << "Converting again, to:" << attr_class_type << contained_class_name;
-			Q_ASSERT(contained_class_name == "AbstractTreeModelItem");
+//			Q_ASSERT(contained_class_name == "AbstractTreeModelItem");
 //			Q_ASSERT(the_child_var.convert(attr_class_type));
-			std::shared_ptr<AbstractTreeModelItem> child_sp = std::make_shared<AbstractTreeModelItem>();
+			std::shared_ptr<AbstractTreeModelItem> child_sp;
+			if(attr_class_type == f_abs_tree_model_item_id)
+			{
+				qDb() << "AbstractTreeModelItem";
+				child_sp = std::dynamic_pointer_cast<AbstractTreeModelItem>(std::make_shared<AbstractTreeModelItem>());
+			}
+			else if(attr_class_type == f_srtm_item_lib_entry_id)
+			{
+				qDb() << "SRTMItem_LibEntry";
+				child_sp = std::dynamic_pointer_cast<AbstractTreeModelItem>(std::make_shared<SRTMItem_LibEntry>());
+			}
+			else if(attr_class_type == f_scan_res_tree_model_item_id)
+			{
+				qDb() << "ScanResultsTreeModelItem";
+				child_sp = std::dynamic_pointer_cast<AbstractTreeModelItem>(std::make_shared<ScanResultsTreeModelItem>());
+			}
+			else if(attr_class_type == f_abs_tree_model_header_item_id)
+			{
+				qDb() << "AbstractTreeModelHeaderItem";
+				child_sp = std::dynamic_pointer_cast<AbstractTreeModelItem>(std::make_shared<AbstractTreeModelHeaderItem>());
+			}
+			else
+			{
+					Q_ASSERT(0);
+			}
+
 			/// ??? Non-Null out the UUIncD.
 			child_sp->m_uuincid = UUIncD::create();
 			appendChild(child_sp);
@@ -1162,22 +1172,3 @@ AbstractTreeModelItem::CICTIteratorType AbstractTreeModelItem::get_m_child_items
 	return retval;
 }
 
-#if 0
-QVariant ChildHolder::toVariant() const
-{
-	InsertionOrderedStrVarMap map;
-
-	map_insert_or_die(map, "m_class_name", m_class_name);
-	map_insert_or_die(map, "m_item", m_item);
-
-	return map;
-}
-
-void ChildHolder::fromVariant(const QVariant& variant)
-{
-	InsertionOrderedStrVarMap map;
-	qviomap_from_qvar_or_die(&map, variant);
-	map_read_field_or_warn(map, "m_class_name", &m_class_name);
-	map_read_field_or_warn(map, "m_item", &m_item);
-}
-#endif

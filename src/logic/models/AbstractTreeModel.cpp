@@ -297,7 +297,8 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getItemById(const UUIn
 		return m_root_item;
 	}
 //#error "An empty model dies here in the view, via parent()"
-	AMLM_ASSERT_GT(m_model_item_map.count(id), 0);
+	auto id_count = m_model_item_map.count(id);
+	Q_ASSERT(id_count > 0);
 	return m_model_item_map.at(id).lock();
 }
 

@@ -280,7 +280,6 @@ protected:
 	/**
 	 * Serialization helper which recursively serializes this item's children to a map.
 	 */
-//	InsertionOrderedStrVarMap children_to_variant() const;
 	QVariant children_to_variant() const;
 
 	/**

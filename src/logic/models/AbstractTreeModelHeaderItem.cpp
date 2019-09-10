@@ -117,14 +117,20 @@ QVariant AbstractTreeModelHeaderItem::data(int column, int role) const
 }
 
 #define M_DATASTREAM_FIELDS(X) \
-	X(XMLTAG_HEADER_NUM_SECTIONS, header_num_sections) \
-	X(XMLTAG_CHILD_ITEM_MAP, child_item_map)
+	X(XMLTAG_HEADER_NUM_SECTIONS, header_num_sections, nullptr) \
+	X(XMLTAG_CHILD_ITEM_MAP, child_item_map, nullptr)
+
+#define M_DATASTREAM_FIELDS_CONTSIZES(X) \
+	/*X(XMLTAG_NUM_COLUMNS, num_columns, m_item_data)*/ \
+	X(XMLTAG_ITEM_DATA_SIZE, item_data_size, m_item_data) \
+	X(XMLTAG_NUM_CHILDREN, num_children, m_child_items)
 
 using strviw_type = QLatin1Literal;
 
 /// Strings to use for the tags.
-#define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
+#define X(field_tag, member_field, var_name) static const strviw_type field_tag ( # member_field );
 	M_DATASTREAM_FIELDS(X);
+	M_DATASTREAM_FIELDS_CONTSIZES(X);
 #undef X
 static const strviw_type XMLTAG_HEADER_SECTION_LIST ("header_section_list");
 
@@ -135,6 +141,13 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 
 	// Set some class meta-info.
 	set_map_class_info(this, &map);
+
+#define X(field_tag, tag_string, var_name) map_insert_or_die(map, field_tag, var_name);
+	M_DATASTREAM_FIELDS(X);
+#undef X
+#define X(field_tag, tag_string, var_name) map_insert_or_die(map, field_tag, (qulonglong)(var_name).size());
+	M_DATASTREAM_FIELDS_CONTSIZES(X);
+#undef X
 
 	QVariantHomogenousList header_section_list(XMLTAG_HEADER_SECTION_LIST, "section");
 
@@ -211,11 +224,11 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	auto parent_id = getId();
 	Q_ASSERT(parent_id != UUIncD::null());
 
-	/// @todo
+	/// @todo Need to handle 0 children.
 	InsertionOrderedStrVarMap child_var_map;//(XMLTAG_CHILD_ITEM_MAP, "child");
 	child_var_map = map.value(XMLTAG_CHILD_ITEM_MAP).value<InsertionOrderedStrVarMap>();
 	qDb() << "Number of children read:" << child_var_map.size();
-	Q_ASSERT(child_var_map.size() > 0);
+	Q_ASSERT(child_var_map.size() >= 0);
 
 	qDb() << "START: HeaderItem: Trying to read in child items";
 	QVariant qvar = QVariant::fromValue(child_var_map);

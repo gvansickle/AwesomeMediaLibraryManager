@@ -28,6 +28,6 @@
 // Ours
 #include <utils/DebugHelpers.h>
 
-QTH_DEFINE_QDEBUG_OP(InsertionOrderedStrVarMap);
+QTH_DEFINE_QDEBUG_OP(InsertionOrderedStrVarMap, );
 
 

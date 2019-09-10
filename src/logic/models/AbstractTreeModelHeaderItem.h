@@ -105,6 +105,9 @@ private:
 };
 
 Q_DECLARE_METATYPE(AbstractTreeModelHeaderItem);
-Q_DECLARE_METATYPE(std::shared_ptr<AbstractTreeModelHeaderItem>)
+Q_DECLARE_METATYPE(std::shared_ptr<AbstractTreeModelHeaderItem>);
+
+// Debug stream op free func declaration.
+QTH_DECLARE_QDEBUG_OP(AbstractTreeModelHeaderItem);
 
 #endif /* SRC_LOGIC_MODELS_ABSTRACTTREEMODELHEADERITEM_H_ */
