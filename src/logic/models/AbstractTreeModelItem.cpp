@@ -403,19 +403,8 @@ QVariant AbstractTreeModelItem::toVariant() const
 	M_DATASTREAM_FIELDS_CONTSIZES(X);
 #undef X
 
-#if 0
-	/// @todo The "m_item_data" string is not getting written out, not sure if we care.
-	QVariantHomogenousList list(XMLTAG_ITEM_DATA_LIST, "item");
-	// The item data itself.
-	for(const QVariant& itemdata : m_item_data)
-	{
-		list_push_back_or_die(list, itemdata);
-	}
-	// Add them to the output map.
-	map_insert_or_die(map, XMLTAG_ITEM_DATA_LIST, list);
-#else
+	// Add the m_item_data QVariants to the map under key XMLTAG_ITEM_DATA_LIST/"<item_data_list>".
 	item_data_to_variant(&map);
-#endif
 
 	// Serialize out Child nodes.
 	// Insert the list into the map.
@@ -435,7 +424,6 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 #undef X
 
 #if 0
-	// Get this item's data from variant list.
 	// Get the number of item_data entries.
 	std::vector<QVariant>::size_type item_data_size = 0;
 	map_read_field_or_warn(map, XMLTAG_ITEM_DATA_LIST, &item_data_size);
@@ -447,6 +435,7 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 		m_item_data.push_back(itstr);
 	}
 #else
+	// Get this item's data from variant list.
 	int item_data_retval = item_data_from_variant(map);
 #endif
 
@@ -470,35 +459,10 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 
 	AMLM_ASSERT_EQ(num_children, child_map.size());
 
-
-//	QVariantHomogenousList child_var_list(XMLTAG_CHILD_ITEM_MAP, "child");
-//	child_var_list = map.value(XMLTAG_CHILD_ITEM_MAP).value<QVariantHomogenousList>();
-//	/// @todo ???
-//	Q_ASSERT(child_var_list.size() > 0);
-
 	if(num_children > 0)
 	{
 		children_from_variant(child_map);
 	}
-
-	////////////////////////////////////
-#if 0
-
-
-	// What was the derived class that was actually written?
-	std::string metatype_class_str = map.get_attr("class");
-	if(metatype_class_str.empty())
-	{
-		// Get as much info as we can.
-		auto vartype = variant.type();
-		const char* typename_per_var = variant.typeName();
-		auto metatype = QMetaType::typeName(vartype);
-		qDb() << "Class attr:" << M_ID_VAL(metatype) << M_ID_VAL(vartype) << M_ID_VAL(typename_per_var);
-//		Q_ASSERT(0);
-	}
-
-	AMLM_ASSERT_EQ(num_children, m_child_items.size());
-#endif///
 }
 
 QVariant AbstractTreeModelItem::data(int column, int role) const
@@ -900,19 +864,6 @@ static const int f_abs_tree_model_item_id = qMetaTypeId<AbstractTreeModelItem>()
 static const int f_scan_res_tree_model_item_id = qMetaTypeId<ScanResultsTreeModelItem>();
 static const int f_srtm_item_lib_entry_id = qMetaTypeId<SRTMItem_LibEntry>();
 
-//#define M_DATASTREAM_FIELDS(X) \
-//	/* TAG_IDENTIFIER, tag_string, member_field, var_name */ \
-//	X(XMLTAG_CHILD_ITEM_MAP, child_item_map, nullptr) \
-//	X(XMLTAG_ITEM_DATA_LIST, item_data_list, nullptr)
-
-//using strviw_type = QLatin1Literal;
-
-/////// Strings to use for the tags.
-//#define X(field_tag, tag_string, var_name) static const strviw_type field_tag ( # tag_string );
-//	M_DATASTREAM_FIELDS(X);
-////	M_DATASTREAM_FIELDS_CONTSIZES(X);
-//#undef X
-
 int AbstractTreeModelItem::item_data_to_variant(InsertionOrderedStrVarMap* add_to_map) const
 {
 	/// @todo The "m_item_data" string is not getting written out, not sure if we care.
@@ -937,6 +888,8 @@ int AbstractTreeModelItem::item_data_from_variant(const InsertionOrderedStrVarMa
 
 	QVariantHomogenousList list(XMLTAG_ITEM_DATA_LIST, "item");
 	map_read_field_or_warn(read_from_map, XMLTAG_ITEM_DATA_LIST, &list);
+	// Push the item data members into the m_item_data vector<QVariant>.
+	Q_ASSERT(m_item_data.empty());
 	for(const auto& it : list)
 	{
 		QString itstr = it.toString();
@@ -946,7 +899,6 @@ int AbstractTreeModelItem::item_data_from_variant(const InsertionOrderedStrVarMa
 	return 0; /// @todo Return a better number.
 }
 
-//#define M_DATASTREAM_FIELDS
 
 QVariant AbstractTreeModelItem::children_to_variant() const
 {

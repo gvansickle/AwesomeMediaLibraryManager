@@ -137,6 +137,7 @@ QVariant SRTMItem_LibEntry::toVariant() const
 	}
 	map_insert_or_die(map, XMLTAG_LIBRARY_ENTRIES, libentrylist);
 
+#if 0
 	// Serialize out the item's data.
 	// Same as base class.
 	/// @todo The "m_item_data" string is not getting written out, not sure if we care.
@@ -148,6 +149,10 @@ QVariant SRTMItem_LibEntry::toVariant() const
 	}
 	// Add them to the output map.
 	map_insert_or_die(map, XMLTAG_ITEM_DATA_LIST, list);
+#else
+	// Add the m_item_data QVariants to the map under key XMLTAG_ITEM_DATA_LIST/"<item_data_list>".
+	item_data_to_variant(&map);
+#endif
 
 	// Serialize out Child nodes.
 	// Insert the list into the map.
@@ -193,15 +198,8 @@ void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 		m_library_entry->fromVariant(it);
 	}
 
-	// This item's data from variant list.
-	/// @todo Same as base.
-	QVariantHomogenousList vl(XMLTAG_ITEM_DATA_LIST, "m_item_data");
-	map_read_field_or_warn(map, XMLTAG_ITEM_DATA_LIST, &vl);
-	for(const auto& it : vl)
-	{
-		QString itstr = it.toString();
-		m_item_data.push_back(itstr);
-	}
+	// Get this item's data from variant list.
+	int item_data_retval = item_data_from_variant(map);
 
 	// Get this item's children.
 	qulonglong num_children = 0;

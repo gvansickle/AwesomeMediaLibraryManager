@@ -208,6 +208,7 @@ QVariant ScanResultsTreeModel::toVariant() const
 	map_insert_or_die(map, XMLTAG_SRTM_TS_LAST_SCAN_START, QVariant(QDateTime()));
 	map_insert_or_die(map, XMLTAG_SRTM_TS_LAST_SCAN_END, QVariant(QDateTime()));
 
+
 	// Insert the invisible root item, which will recursively add all children.
 	/// @todo It also serves as the model's header, not sure that's a good overloading.
 	qDb() << "START tree serialize";

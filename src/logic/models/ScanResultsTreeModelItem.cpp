@@ -126,6 +126,7 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 	// Class-specific data.
 	map_insert_or_die(map, XMLTAG_DIRSCANRESULT, m_dsr.toVariant());
 
+#if 0
 	// Serialize out the item's data.
 	// Same as base class.
 	/// @todo The "m_item_data" string is not getting written out, not sure if we care.
@@ -137,6 +138,10 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 	}
 	// Add them to the output map.
 	map_insert_or_die(map, XMLTAG_ITEM_DATA_LIST, list);
+#else
+	// Add the m_item_data QVariants to the map under key XMLTAG_ITEM_DATA_LIST/"<item_data_list>".
+	item_data_to_variant(&map);
+#endif
 
 	// Serialize out Child nodes.
 	// Insert the list into the map.
@@ -167,7 +172,7 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 	// Get the number of item_data entries.
 	std::vector<QVariant>::size_type item_data_size = 0;
 	map_read_field_or_warn(map, XMLTAG_ITEM_DATA_LIST_SIZE, &item_data_size);
-
+#if 0
 	// This item's data from variant list.
 	QVariantHomogenousList vl(XMLTAG_ITEM_DATA_LIST, "m_item_data");
 	map_read_field_or_warn(map, XMLTAG_ITEM_DATA_LIST, &vl);
@@ -176,6 +181,10 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 		QString itstr = it.toString();
 		m_item_data.push_back(itstr);
 	}
+#else
+	// Get this item's data from variant list.
+	int item_data_retval = item_data_from_variant(map);
+#endif
 
 	// Get this item's children.
 	qulonglong num_children = 0;

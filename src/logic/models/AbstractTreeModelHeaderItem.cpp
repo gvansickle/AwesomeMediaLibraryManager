@@ -66,7 +66,7 @@ void AbstractTreeModelHeaderItem::clear()
 #else
 	for(const auto& child : m_child_items)
 	{
-		qDb() << "Removing child:";// << *child << "from" << this;
+//		qDb() << "Removing child:";// << *child << "from" << this;
 		this->removeChild(child);
 	}
 #endif
