@@ -128,6 +128,9 @@ QVariant SRTMItem_LibEntry::toVariant() const
 	M_DATASTREAM_FIELDS_CONTSIZES(X);
 #undef X
 
+	// Add the m_item_data QVariants to the map under key XMLTAG_ITEM_DATA_LIST/"<item_data_list>".
+	item_data_to_variant(&map);
+
 	// Insert the LibraryEntry's.
 	/// @todo Currently there's only one entry.
 	QVariantHomogenousList libentrylist(XMLTAG_LIBRARY_ENTRIES, "m_library_entry");
@@ -137,28 +140,8 @@ QVariant SRTMItem_LibEntry::toVariant() const
 	}
 	map_insert_or_die(map, XMLTAG_LIBRARY_ENTRIES, libentrylist);
 
-#if 0
-	// Serialize out the item's data.
-	// Same as base class.
-	/// @todo The "m_item_data" string is not getting written out, not sure if we care.
-	QVariantHomogenousList list(XMLTAG_ITEM_DATA_LIST, "item");
-	// The item data itself.
-	for(const QVariant& itemdata : m_item_data)
-	{
-		list_push_back_or_die(list, itemdata);
-	}
-	// Add them to the output map.
-	map_insert_or_die(map, XMLTAG_ITEM_DATA_LIST, list);
-#else
-	// Add the m_item_data QVariants to the map under key XMLTAG_ITEM_DATA_LIST/"<item_data_list>".
-	item_data_to_variant(&map);
-#endif
-
 	// Serialize out Child nodes.
-	// Insert the list into the map.
-	InsertionOrderedStrVarMap child_map = convert_or_die<InsertionOrderedStrVarMap>(children_to_variant());
-	qDb() << "child_map:" << child_map;
-	map_insert_or_die(map, XMLTAG_CHILD_ITEM_MAP, child_map);
+	children_to_variant(&map);
 
 	return QVariant::fromValue(map);
 }
@@ -177,6 +160,9 @@ void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 	{
 		qWr() << "NO XML:ID:";
 	}
+
+	// Get this item's data from variant list.
+	int item_data_retval = item_data_from_variant(map);
 
 #define X(field_tag, tag_string, var_name) map_read_field_or_warn(map, field_tag, var_name);
 //	M_DATASTREAM_FIELDS(X);
@@ -198,8 +184,6 @@ void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 		m_library_entry->fromVariant(it);
 	}
 
-	// Get this item's data from variant list.
-	int item_data_retval = item_data_from_variant(map);
 
 	// Get this item's children.
 	qulonglong num_children = 0;
@@ -228,25 +212,4 @@ void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 	}
 
 	qDb() << M_ID_VAL(child_map.size());
-
-
-#if 0///
-	auto model_ptr_base = m_model.lock();
-	Q_ASSERT(model_ptr_base);
-	auto model_ptr = std::dynamic_pointer_cast<ScanResultsTreeModel>(model_ptr_base);
-	auto parent_id = getId();
-
-	/// NEEDS TO BE IN MODEL HERE.
-	Q_ASSERT(isInModel());
-
-	Q_ASSERT(child_list.size() == 0);
-	for(const QVariant& child : child_list)
-	{
-		qDb() << "READING CHILD ITEM INTO SRTMItem_LibEntry:" << child;
-
-//		bool ok = appendChild(new_child_item);
-//		Q_ASSERT(ok);
-		// WRONG: model_ptr->requestAddSRTMLibEntryItem(child, parent_id);
-	}
-#endif
 }

@@ -116,6 +116,9 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 	// Set the xml:id.
 	map.insert_attributes({{"xml:id", get_prefixed_uuid()}});
 
+	// Add the m_item_data QVariants to the map under key XMLTAG_ITEM_DATA_LIST/"<item_data_list>".
+	item_data_to_variant(&map);
+
 #define X(field_tag, tag_string, var_name) map_insert_or_die(map, field_tag, var_name);
 	M_DATASTREAM_FIELDS(X);
 #undef X
@@ -126,30 +129,10 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 	// Class-specific data.
 	map_insert_or_die(map, XMLTAG_DIRSCANRESULT, m_dsr.toVariant());
 
-#if 0
-	// Serialize out the item's data.
-	// Same as base class.
-	/// @todo The "m_item_data" string is not getting written out, not sure if we care.
-	QVariantHomogenousList list(XMLTAG_ITEM_DATA_LIST, "item");
-	// The item data itself.
-	for(const QVariant& itemdata : m_item_data)
-	{
-		list_push_back_or_die(list, itemdata);
-	}
-	// Add them to the output map.
-	map_insert_or_die(map, XMLTAG_ITEM_DATA_LIST, list);
-#else
-	// Add the m_item_data QVariants to the map under key XMLTAG_ITEM_DATA_LIST/"<item_data_list>".
-	item_data_to_variant(&map);
-#endif
-
 	// Serialize out Child nodes.
-	// Insert the list into the map.
-	InsertionOrderedStrVarMap child_map = convert_or_die<InsertionOrderedStrVarMap>(children_to_variant());
-	qDb() << "child_map:" << child_map;
-	map_insert_or_die(map, XMLTAG_CHILD_ITEM_MAP, child_map);
+	children_to_variant(&map);
 
-	return QVariant::fromValue(map);
+	return map;
 }
 
 void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
@@ -172,19 +155,9 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 	// Get the number of item_data entries.
 	std::vector<QVariant>::size_type item_data_size = 0;
 	map_read_field_or_warn(map, XMLTAG_ITEM_DATA_LIST_SIZE, &item_data_size);
-#if 0
-	// This item's data from variant list.
-	QVariantHomogenousList vl(XMLTAG_ITEM_DATA_LIST, "m_item_data");
-	map_read_field_or_warn(map, XMLTAG_ITEM_DATA_LIST, &vl);
-	for(const auto& it : vl)
-	{
-		QString itstr = it.toString();
-		m_item_data.push_back(itstr);
-	}
-#else
+
 	// Get this item's data from variant list.
 	int item_data_retval = item_data_from_variant(map);
-#endif
 
 	// Get this item's children.
 	qulonglong num_children = 0;

@@ -121,7 +121,7 @@ void Logging::InstallMessageHandler()
 	if(true/** @todo We're running under a debugger.  This still doesn't work on Windows.*/)
     {
 #ifndef Q_OS_WIN
-        qInstallMessageHandler(printDebugMessagesWhileDebuggingHandler);
+		qInstallMessageHandler(printDebugMessagesWhileDebuggingHandler);
 #endif
     }
 }

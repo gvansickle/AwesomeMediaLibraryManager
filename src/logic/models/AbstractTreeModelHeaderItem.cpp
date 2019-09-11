@@ -165,20 +165,10 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 	}
 	map_insert_or_die(map, XMLTAG_HEADER_SECTION_LIST, header_section_list);
 
-	// Child nodes.
-#if 0
-	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
-	for(auto& it : m_child_items)
-	{
-		list_push_back_or_die(child_var_list, it->toVariant());
-	}
-	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, child_var_list);
-#else
-//	 Serialize out Child nodes.
-//	// Insert the list into the map.
-	InsertionOrderedStrVarMap child_map = convert_or_die<InsertionOrderedStrVarMap>(children_to_variant());
-	map_insert_or_die(map, XMLTAG_CHILD_ITEM_MAP, child_map);
-#endif
+
+	// Serialize out Child nodes.
+	children_to_variant(&map);
+
 	return map;
 }
 
@@ -231,8 +221,8 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	Q_ASSERT(child_var_map.size() >= 0);
 
 	qDb() << "START: HeaderItem: Trying to read in child items";
-	QVariant qvar = QVariant::fromValue(child_var_map);
-	children_from_variant(qvar);
+//	QVariant qvar = QVariant::fromValue(child_var_map);
+	children_from_variant(child_var_map);//qvar);
 	qDb() << "END: HeaderItem: Trying to read in child items";
 	AMLM_ASSERT_EQ(child_var_map.size(), m_child_items.size());
 }

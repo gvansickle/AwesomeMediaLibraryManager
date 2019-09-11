@@ -129,7 +129,8 @@ function(target_sources_local target)
 	return()
   endif()
 	
-	message(FATAL_ERROR "NEED CMAKE > 3.13")
+  ### GRVS: Require CMake > 3.13, bomb out here if the above didn't work.
+  message(FATAL_ERROR "NEED CMAKE > 3.13")
 	
   # Must be using CMake 3.12 or earlier, so simulate the new behavior
   unset(_srcList)
@@ -137,7 +138,7 @@ function(target_sources_local target)
 
   foreach(src ${ARGN})
 	if(NOT src STREQUAL "PRIVATE" AND
-			NOT src STREQUAL "PUBLIC" AND
+	NOT src STREQUAL "PUBLIC" AND
 	   NOT src STREQUAL "INTERFACE" AND
 	   NOT IS_ABSOLUTE "${src}")
       # Relative path to source, prepend relative to where target was defined

@@ -407,10 +407,7 @@ QVariant AbstractTreeModelItem::toVariant() const
 	item_data_to_variant(&map);
 
 	// Serialize out Child nodes.
-	// Insert the list into the map.
-	InsertionOrderedStrVarMap child_map = convert_or_die<InsertionOrderedStrVarMap>(children_to_variant());
-	qDb() << "child_map:" << child_map;
-	map_insert_or_die(map, XMLTAG_CHILD_ITEM_MAP, child_map);
+	children_to_variant(&map);
 
 	return QVariant::fromValue(map);
 }
@@ -423,21 +420,8 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 //	M_DATASTREAM_FIELDS(X);
 #undef X
 
-#if 0
-	// Get the number of item_data entries.
-	std::vector<QVariant>::size_type item_data_size = 0;
-	map_read_field_or_warn(map, XMLTAG_ITEM_DATA_LIST, &item_data_size);
-	QVariantHomogenousList vl(XMLTAG_ITEM_DATA_LIST, "m_item_data");
-	map_read_field_or_warn(map, XMLTAG_ITEM_DATA_LIST, &vl);
-	for(const auto& it : vl)
-	{
-		QString itstr = it.toString();
-		m_item_data.push_back(itstr);
-	}
-#else
 	// Get this item's data from variant list.
 	int item_data_retval = item_data_from_variant(map);
-#endif
 
 	// Get this item's children.
 	qulonglong num_children = 0;
@@ -881,8 +865,9 @@ int AbstractTreeModelItem::item_data_to_variant(InsertionOrderedStrVarMap* add_t
 
 int AbstractTreeModelItem::item_data_from_variant(const InsertionOrderedStrVarMap& read_from_map)
 {
-	// Get this item's data from variant list.
+	// Get this item's data from the item_data_list variant list in read_from_map.
 	// Get the number of item_data entries.
+	/// @todo Save this and/or merge it into the list type itself.
 	std::vector<QVariant>::size_type item_data_size = 0;
 	map_read_field_or_warn(read_from_map, XMLTAG_ITEM_DATA_LIST, &item_data_size);
 
@@ -900,7 +885,7 @@ int AbstractTreeModelItem::item_data_from_variant(const InsertionOrderedStrVarMa
 }
 
 
-QVariant AbstractTreeModelItem::children_to_variant() const
+void AbstractTreeModelItem::children_to_variant(InsertionOrderedStrVarMap* add_to_map) const
 {
 	// Return value will be InsertionOrderedMap<QString, QVariant>, where the QVariants are whatever the items
 	// in m_child_items turn into via toVariant().
@@ -919,26 +904,7 @@ QVariant AbstractTreeModelItem::children_to_variant() const
 #endif
 
 	map.insert_attributes({{"debug", "OuterChildMap"}});
-#if 0
-	// Child item list.  Note we don't use HomogenousList here because the children could be arbitrary classes.
-	QVariantList child_var_list;
-	for(const auto& it : m_child_items)
-	{
-		ChildHolder ch;
-		ch.m_class_name = QVariant::fromValue(it).typeName();
-//		ch.m_item = std::dynamic_pointer_cast<AbstractTreeModelItem>(it);
-		ch.m_item = it->toVariant();
 
-		qDb() << "Pushing child item:";
-		qDb() << "Class name is:" << ch.m_class_name;
-		qDb() << "Variant type name is:" << ch.m_item.typeName();
-//		qDb() << "Item UUIncD:" << ch.m_item.getId();
-
-		list_push_back_or_die(child_var_list, ch);.toVariant());//QVariant::fromValue<ChildHolder>(ch)); //it->toVariant());
-	}
-	qDb() << "child_var_list:" << child_var_list;
-	map_insert_or_die(map, XMLTAG_CHILD_ITEM_LIST, child_var_list);
-#else
 	for(const std::shared_ptr<AbstractTreeModelItem>& it : m_child_items)
 	{
 		QString class_str = QVariant::fromValue(*it).typeName();
@@ -947,22 +913,21 @@ QVariant AbstractTreeModelItem::children_to_variant() const
 		qDb() << M_ID_VAL(class_metatype);
 		const char* class_metatype_name = QMetaType::typeName(class_metatype);
 		qDb() << M_ID_VAL(class_metatype_name);
-/// @note This doubles the "class" entry for some reason when it shouldn't.
-//		map.set_attr("class", class_metatype_name);
-//		void* temp_item_ptr = QMetaType::create(class_metatype, 0);
 		map.insert("one_child_item", it->toVariant());
 	}
-	dump_map(map);
-#endif
+//	dump_map(map);
 
-	return map;
+	// Insert the list into the map.
+	map_insert_or_die(*add_to_map, XMLTAG_CHILD_ITEM_MAP, map);
+
+//	return map;
 }
 
-void AbstractTreeModelItem::children_from_variant(const QVariant& variant)
+void AbstractTreeModelItem::children_from_variant(const InsertionOrderedStrVarMap& read_from_map)
 {
-	ATTR_VAR_MAX_DEBUG(variant);
+	ATTR_VAR_MAX_DEBUG(read_from_map);
 
-	qDb() << M_ID_VAL(variant);
+	qDb() << M_ID_VAL(read_from_map);
 
 	// Ok, our goal here is to take a:
 	// "child_item_map", InsertionOrderedStrVarMap("child_item_list", QVariantList("item", InsertionOrderedStrVarMap the_item))
@@ -970,15 +935,13 @@ void AbstractTreeModelItem::children_from_variant(const QVariant& variant)
 	// std::deque<std::shared_ptr<AbstractTreeModelItem>> m_child_items; member with the contents.
 	// The incoming QVariants may contain shared_ptrs to different item types.
 
-	InsertionOrderedStrVarMap map;
-	qviomap_from_qvar_or_die(&map, variant);
+	InsertionOrderedStrVarMap map{read_from_map};
+//	qviomap_from_qvar_or_die(&map, variant);
 
 	map.set_name("map_from_var");
 
 	qDb() << "MAP ATTRS:" << map.get_attrs();
 	qDb() << "MAP SIZE:" << map.size();
-
-#if 1
 
 	if(map.size() == 0)
 	{
@@ -1072,74 +1035,6 @@ void AbstractTreeModelItem::children_from_variant(const QVariant& variant)
 		qDb() << "the_child_var:" << the_child_var;
 
 	}
-
-#if 0///
-	QVariant cvl = map.at(XMLTAG_CHILD_ITEM_LIST);
-	ATTR_VAR_MAX_DEBUG(cvl);
-	Q_ASSERT(cvl.canConvert<QVariantList>());
-
-	QVariantList child_var_list = cvl.value<QVariantList>();
-	ATTR_VAR_MAX_DEBUG(child_var_list);
-	Q_ASSERT(child_var_list.size() > 0);
-
-	qDb() << M_ID_VAL(child_var_list[0].typeName());
-
-	// Child nodes.  Note we don't use HomogenousList here because the children could be arbitrary classes.
-//	QVariantList/*InsertionOrderedMap*/ child_var_list = variant.operator QVariant();
-//	child_var_list = map.cbegin() .value<QVariantList>(XMLTAG_CHILD_ITEM_MAP);
-//	QSequentialIterable iterable = child_var_list.value<QSequentialIterable>();
-	for(const QVariant& it : qAsConst(child_var_list))
-	{
-		qDb() << "it type is:" << it; ///< Comes up "QVariant(InsertionOrderedStrVarMap,)"
-		qDb() << "it typename is:" << it.typeName();
-//		qDb() << "*it typename is:" << (*it).typeName();
-
-		// Get the QMetaType.
-		ChildHolder ch = convert_or_die<ChildHolder>(it);
-//		bool can_conv = it.canConvert<ChildHolder>();
-//		qWr() << "CAN CONVERT:" << can_conv;
-//		Q_ASSERT(can_conv);
-//		ChildHolder ch = it.value<ChildHolder>();
-
-		qDb() << "Class is:" << ch.m_class_name; //second.get_attr("class");
-		QVariant::Type metatype_v = QVariant::nameToType(ch.m_class_name.toStdString().c_str());
-		int metatype = QMetaType::type(ch.m_class_name.toStdString().c_str());
-//		int metatype = QMetaType::type(typeString.toStdString().c_str());
-
-//		 @todo BROKEN
-//		volatile int usertype = variant.userType(); // This matches variant.typeName()
-
-		qDb() << "Metatype is:" << metatype << "'" << QMetaType::typeName(metatype) << "'";
-
-//		using child_base_type = std::shared_ptr<AbstractTreeModelItem>;
-//		AMLM_ASSERT_X(ch.m_item.canConvert<child_base_type>(), "Can't convert to an appropriate class");
-//		child_base_type child_sptr = ch.m_item.value<child_base_type>();
-///		bool status = variant.convert(metatype);
-///		Q_ASSERT(status);
-	///	auto child_sptr = std::dynamic_pointer_cast<>
-		///m_child_items.push_back(child_sptr);
-	}
-#endif///
-
-#else
-
-	InsertionOrderedStrVarMap map;
-
-	QVariantList child_var_list;
-	map_read_field_or_warn(map, XMLTAG_CHILD_ITEM_LIST, &child_var_list);
-	for(const auto& it : m_child_items)
-	{
-		ChildHolder ch;
-		ch.m_class_name = QVariant::fromValue(it).typeName();
-		ch.m_item = std::dynamic_pointer_cast<AbstractTreeModelItem>(it);
-
-		qDb() << "Type is:" << ch.m_class_name;
-
-		list_push_back_or_die(child_var_list, QVariant::fromValue(ch)); //it->toVariant());
-	}
-	InsertionOrderedStrVarMap map;
-
-#endif
 }
 
 #if 0

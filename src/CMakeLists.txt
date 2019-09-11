@@ -121,7 +121,7 @@ set(PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS
 set(HEADER_FILES
 	AMLMApp.h
     Core.h
-	${PROJECT_SOURCE_DIR}/resources/VersionInfo.h    ### @todo
+# 	${PROJECT_SOURCE_DIR}/resources/VersionInfo.h    ### @todo
     )
 
 # Source file list.

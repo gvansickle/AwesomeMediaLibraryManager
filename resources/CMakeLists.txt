@@ -42,7 +42,7 @@ configure_file(VersionInfo.cpp.in VersionInfo.cpp)
 
 target_sources_local(resources
 	PUBLIC
-		VersionInfo.h
+	VersionInfo.h
 	PRIVATE
 		VersionInfo.cpp
 		${amlm_APP_ICONS}

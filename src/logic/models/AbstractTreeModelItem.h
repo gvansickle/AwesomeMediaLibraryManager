@@ -285,14 +285,14 @@ protected:
 	/**
 	 * Serialization helper which recursively serializes this item's children to a map.
 	 */
-	QVariant children_to_variant() const;
+	virtual void children_to_variant(InsertionOrderedStrVarMap* add_to_map) const;
 
 	/**
 	 * Serialization helper which recursively serializes this item's children from a map.
 	 */
-	void children_from_variant(const QVariant& variant);
+	void children_from_variant(const InsertionOrderedStrVarMap& read_from_map);
 
-	/// @}
+	/// @}  // END Protected Serialization Helpers
 
 	/// @name Pre/Post-condition checks
 	/// @{
