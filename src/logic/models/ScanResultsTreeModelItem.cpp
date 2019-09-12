@@ -181,7 +181,7 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 
 	if(num_children > 0)
 	{
-		children_from_variant(child_map);
+		children_from_str_var_map(child_map);
 	}
 
 	qDb() << M_ID_VAL(child_map.size());

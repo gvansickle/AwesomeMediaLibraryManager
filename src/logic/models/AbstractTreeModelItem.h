@@ -290,7 +290,7 @@ protected:
 	/**
 	 * Serialization helper which recursively serializes this item's children from a map.
 	 */
-	void children_from_variant(const InsertionOrderedStrVarMap& read_from_map);
+	void children_from_str_var_map(const InsertionOrderedStrVarMap& read_from_map);
 
 	/// @}  // END Protected Serialization Helpers
 
