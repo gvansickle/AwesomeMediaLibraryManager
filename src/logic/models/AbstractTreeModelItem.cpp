@@ -445,7 +445,7 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 
 	if(num_children > 0)
 	{
-		children_from_variant(child_map);
+		children_from_str_var_map(child_map);
 	}
 }
 
@@ -923,7 +923,7 @@ void AbstractTreeModelItem::children_to_variant(InsertionOrderedStrVarMap* add_t
 //	return map;
 }
 
-void AbstractTreeModelItem::children_from_variant(const InsertionOrderedStrVarMap& read_from_map)
+void AbstractTreeModelItem::children_from_str_var_map(const InsertionOrderedStrVarMap& read_from_map)
 {
 	ATTR_VAR_MAX_DEBUG(read_from_map);
 
@@ -935,30 +935,54 @@ void AbstractTreeModelItem::children_from_variant(const InsertionOrderedStrVarMa
 	// std::deque<std::shared_ptr<AbstractTreeModelItem>> m_child_items; member with the contents.
 	// The incoming QVariants may contain shared_ptrs to different item types.
 
-	InsertionOrderedStrVarMap map{read_from_map};
+//	InsertionOrderedStrVarMap map{read_from_map};
 //	qviomap_from_qvar_or_die(&map, variant);
 
-	map.set_name("map_from_var");
+//	map.set_name("map_from_var");
 
-	qDb() << "MAP ATTRS:" << map.get_attrs();
-	qDb() << "MAP SIZE:" << map.size();
+	// Get this item's child count.
+	qulonglong num_children = 0;
+//	map_read_field_or_warn(read_from_map, XMLTAG_NUM_CHILDREN, &num_children);
 
-	if(map.size() == 0)
+	qDb() << XMLTAG_NUM_CHILDREN << num_children;
+
+	// We need this Item to be in a model for that to work.
+		/// @todo Add to model, Will this finally work?
+//	auto parent_item_ptr = this->parent_item().lock();
+//WRONG:	appendChild(this->shared_from_this());
+	Q_ASSERT(isInModel());
+	auto model_ptr = m_model.lock();
+	Q_ASSERT(model_ptr);
+
+	InsertionOrderedStrVarMap child_map;// (XMLTAG_CHILD_ITEM_MAP, "child");
+	child_map = read_from_map.value(XMLTAG_CHILD_ITEM_MAP).value<InsertionOrderedStrVarMap>();
+	qDb() << M_ID_VAL(child_map.size());
+
+//	AMLM_ASSERT_EQ(num_children, child_map.size());
+
+//	if(num_children > 0)
+//	{
+//		children_from_variant(child_map);
+//	}
+
+	qDb() << "child_map ATTRS:" << child_map.get_attrs();
+	qDb() << "child_map SIZE:" << child_map.size();
+
+	if(child_map.size() == 0)
 	{
 		// This child map has no entries, skip it.
-		qDb() << "MAP HAS NO ENTRIES";
+		qDb() << "child_map HAS NO ENTRIES";
 		return;
 	}
 
-	qDb() << "Map has num child items:" << map.size();
-	qDb() << "Map:";
-	dump_map(map);
-//	qDb() << "Class name is:" << ch.m_class_name;
+	qDb() << "child_map has num child items:" << child_map.size();
+//	qDb() << "Map:";
+//	dump_map(map);
 	// Should be 1 or more "one_child_item"'s.
-	qDb() << "First field QString value:" << map.cbegin()->first;
-	qDb() << "Second field/Variant type name is:" << map.cbegin()->second.typeName();
+	qDb() << "First field QString value:" << child_map.cbegin()->first;
+	qDb() << "Second field/Variant type name is:" << child_map.cbegin()->second.typeName();
 
-	for(auto& it : map)
+	for(auto& it : child_map)
 	{
 		QString one_child_item = it.first;
 		QVariant the_child_var = it.second;
@@ -977,10 +1001,7 @@ void AbstractTreeModelItem::children_from_variant(const InsertionOrderedStrVarMa
 		Q_ASSERT(the_child_var.convert(class_metatype));
 
 		Q_ASSERT(class_metatype != QMetaType::UnknownType);
-///// @todo
-#warning "INCOMPLETE/BROKEN"
-//		void* new_item = QMetaType::create(class_metatype);
-//		InsertionOrderedStrVarMap the_child; = the_child_var.value(the_child_var);
+
 		if(class_metatype == QMetaType::type("InsertionOrderedStrVarMap"))
 		{
 			// What's the contained class?
@@ -1021,50 +1042,16 @@ void AbstractTreeModelItem::children_from_variant(const InsertionOrderedStrVarMa
 					Q_ASSERT(0);
 			}
 
+			// Finally add the child to our child map.
 			/// ??? Non-Null out the UUIncD.
 			child_sp->m_uuincid = UUIncD::create();
 			appendChild(child_sp);
 			child_sp->fromVariant(svmap);
-//			m_child_items.push_back(child_sp);
-//			this->appendChild(child_sp);
-//			void* temp_item_ptr = QMetaType::create(attr_class_type);
-						//std::dynamic_pointer_cast<AbstractTreeModelItem>();
 		}
 
-
 		qDb() << "the_child_var:" << the_child_var;
-
 	}
 }
-
-#if 0
-template <class ChildItemType, class ParentItemType = AbstractTreeModelItem>
-void append_children_from_variant(ParentItemType* parent_item, const QVariantHomogenousList& child_var_list)
-{
-	/// @todo Currently we need the parent_item to already be in a model when we appendChild() to it.
-	Q_ASSERT(parent_item->isInModel());
-	auto starting_childcount = parent_item->childCount();
-
-	for(const QVariant& child_variant : child_var_list)
-	{
-//		qDb() << "READING CHILD ITEM:" << child_variant << " INTO PARENT ITEM:" << parent_item;
-
-		// Default constructed child.
-		auto new_child = std::make_shared<ChildItemType>();
-		Q_ASSERT(new_child);
-
-		/// @note Currently we need to add the empty item to the model before reading it in, so that
-		/// its children will be set up correctly model-wise.  This is almost certainly more efficient anyway.
-		bool append_success = parent_item->appendChild(new_child);
-		AMLM_ASSERT_X(append_success, "FAILED TO APPEND NEW ITEM TO PARENT");
-
-		// Now load the default-constructed child's data into it.
-		new_child->fromVariant(child_variant);
-	}
-
-	AMLM_ASSERT_EQ(starting_childcount+child_var_list.size(), parent_item->childCount());
-}
-#endif
 
 AbstractTreeModelItem::CICTIteratorType AbstractTreeModelItem::get_m_child_items_iterator(UUIncD id)
 {
