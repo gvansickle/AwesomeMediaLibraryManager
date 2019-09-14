@@ -366,6 +366,33 @@ bool AbstractTreeModelItem::changeParent(std::shared_ptr<AbstractTreeModelItem> 
 	return res;
 }
 
+class DataStreamField
+{
+public:
+	DataStreamField(const std::string& xml_tag_str)
+		: m_xml_tag_str(xml_tag_str)
+	{};
+	~DataStreamField() {};
+
+//	QString toqstr() const { return QString::fromStdString(m_xml_tag_str); };
+
+	// Implicit conversion to std::string.
+	operator std::string() const { return m_xml_tag_str; };
+
+	operator QString() const { return toqstr(m_xml_tag_str); };
+
+private:
+	std::string m_xml_tag_str;
+};
+
+QDebug operator<<(QDebug qdb, const DataStreamField& dsr)
+{
+	qdb << QString(dsr);
+	return qdb;
+}
+
+static DataStreamField XMLTAG_NUM_CHILDREN{"num_children"};
+
 #define M_DATASTREAM_FIELDS(X) \
 	/* TAG_IDENTIFIER, tag_string, member_field, var_name */ \
 	X(XMLTAG_CHILD_ITEM_MAP, child_item_map, nullptr) \
@@ -375,7 +402,7 @@ bool AbstractTreeModelItem::changeParent(std::shared_ptr<AbstractTreeModelItem> 
 #define M_DATASTREAM_FIELDS_CONTSIZES(X) \
 	X(XMLTAG_NUM_COLUMNS, num_columns, m_item_data) \
 	X(XMLTAG_ITEM_DATA_LIST_SIZE, item_data_list_size, m_item_data) \
-	X(XMLTAG_NUM_CHILDREN, num_children, m_child_items)
+//	X(XMLTAG_NUM_CHILDREN, num_children, m_child_items)
 
 using strviw_type = QLatin1Literal;
 
@@ -425,7 +452,7 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 
 	// Get this item's children.
 	qulonglong num_children = 0;
-	map_read_field_or_warn(map, XMLTAG_NUM_CHILDREN, &num_children);
+//	map_read_field_or_warn(map, XMLTAG_NUM_CHILDREN, &num_children);
 
 	qDb() << XMLTAG_NUM_CHILDREN << num_children;
 
@@ -437,16 +464,7 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 	auto model_ptr = m_model.lock();
 	Q_ASSERT(model_ptr);
 
-	InsertionOrderedStrVarMap child_map;// (XMLTAG_CHILD_ITEM_MAP, "child");
-	child_map = map.value(XMLTAG_CHILD_ITEM_MAP).value<InsertionOrderedStrVarMap>();
-	qDb() << M_ID_VAL(child_map.size());
-
-	AMLM_ASSERT_EQ(num_children, child_map.size());
-
-	if(num_children > 0)
-	{
-		children_from_str_var_map(child_map);
-	}
+	children_from_str_var_map(map);
 }
 
 QVariant AbstractTreeModelItem::data(int column, int role) const
@@ -905,6 +923,9 @@ void AbstractTreeModelItem::children_to_variant(InsertionOrderedStrVarMap* add_t
 
 	map.insert_attributes({{"debug", "OuterChildMap"}});
 
+	// Insert the child count as an attribute.
+	map.set_attr(tostdstr(XMLTAG_NUM_CHILDREN), std::to_string(static_cast<qulonglong>(m_child_items.size())));
+
 	for(const std::shared_ptr<AbstractTreeModelItem>& it : m_child_items)
 	{
 		QString class_str = QVariant::fromValue(*it).typeName();
@@ -941,7 +962,8 @@ void AbstractTreeModelItem::children_from_str_var_map(const InsertionOrderedStrV
 //	map.set_name("map_from_var");
 
 	// Get this item's child count.
-	qulonglong num_children = 0;
+	std::string num_children_str = read_from_map.get_attr(QString(XMLTAG_NUM_CHILDREN).toStdString());
+	qulonglong num_children = std::atoll(num_children_str.c_str());
 //	map_read_field_or_warn(read_from_map, XMLTAG_NUM_CHILDREN, &num_children);
 
 	qDb() << XMLTAG_NUM_CHILDREN << num_children;
@@ -957,13 +979,6 @@ void AbstractTreeModelItem::children_from_str_var_map(const InsertionOrderedStrV
 	InsertionOrderedStrVarMap child_map;// (XMLTAG_CHILD_ITEM_MAP, "child");
 	child_map = read_from_map.value(XMLTAG_CHILD_ITEM_MAP).value<InsertionOrderedStrVarMap>();
 	qDb() << M_ID_VAL(child_map.size());
-
-//	AMLM_ASSERT_EQ(num_children, child_map.size());
-
-//	if(num_children > 0)
-//	{
-//		children_from_variant(child_map);
-//	}
 
 	qDb() << "child_map ATTRS:" << child_map.get_attrs();
 	qDb() << "child_map SIZE:" << child_map.size();
