@@ -940,8 +940,6 @@ void AbstractTreeModelItem::children_to_variant(InsertionOrderedStrVarMap* add_t
 
 	// Insert the list into the map.
 	map_insert_or_die(*add_to_map, XMLTAG_CHILD_ITEM_MAP, map);
-
-//	return map;
 }
 
 void AbstractTreeModelItem::children_from_str_var_map(const InsertionOrderedStrVarMap& read_from_map)
@@ -955,11 +953,6 @@ void AbstractTreeModelItem::children_from_str_var_map(const InsertionOrderedStrV
 	// ...and populate our
 	// std::deque<std::shared_ptr<AbstractTreeModelItem>> m_child_items; member with the contents.
 	// The incoming QVariants may contain shared_ptrs to different item types.
-
-//	InsertionOrderedStrVarMap map{read_from_map};
-//	qviomap_from_qvar_or_die(&map, variant);
-
-//	map.set_name("map_from_var");
 
 	// Get this item's child count.
 	std::string num_children_str = read_from_map.get_attr(QString(XMLTAG_NUM_CHILDREN).toStdString());

@@ -214,18 +214,10 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	auto parent_id = getId();
 	Q_ASSERT(parent_id != UUIncD::null());
 
-#if 0
-	/// @todo Need to handle 0 children.
-	InsertionOrderedStrVarMap child_var_map;//(XMLTAG_CHILD_ITEM_MAP, "child");
-	child_var_map = map.value(XMLTAG_CHILD_ITEM_MAP).value<InsertionOrderedStrVarMap>();
-	qDb() << "Number of children read:" << child_var_map.size();
-	Q_ASSERT(child_var_map.size() >= 0);
-#endif
 	qDb() << "START: HeaderItem: Trying to read in child items";
-//	QVariant qvar = QVariant::fromValue(child_var_map);
-	children_from_str_var_map(map);//qvar);
+	children_from_str_var_map(map);
 	qDb() << "END: HeaderItem: Trying to read in child items";
-//	AMLM_ASSERT_EQ(child_var_map.size(), m_child_items.size());
+
 }
 
 
