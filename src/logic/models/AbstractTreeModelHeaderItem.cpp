@@ -165,6 +165,8 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 	}
 	map_insert_or_die(map, XMLTAG_HEADER_SECTION_LIST, header_section_list);
 
+#warning "Looks like we're not in a ScanResultsTreeModel here, but an AbstractTreeModel."
+	Q_ASSERT(isInModel());
 
 	// Serialize out Child nodes.
 	children_to_variant(&map);

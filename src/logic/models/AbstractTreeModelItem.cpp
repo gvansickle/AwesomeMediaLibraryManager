@@ -94,8 +94,9 @@ AbstractTreeModelItem::AbstractTreeModelItem(const std::vector<QVariant>& data, 
 
 AbstractTreeModelItem::~AbstractTreeModelItem()
 {
-//	qDb() << "Destructing model item:" << *this;
+	qDb() << "Destructing model item:" << *this;
 	deregister_self();
+//	clear();
 }
 
 void AbstractTreeModelItem::clear()
@@ -137,7 +138,7 @@ M_WARNING("TODO, NEEDS MUTEX MEMBER");
 QDebug operator<<(QDebug dbg, const AbstractTreeModelItem& obj)
 {
 	QDebugStateSaver saver(dbg);
-	dbg << "AbstractTreeModelItem (" << M_ID_VAL(*obj.m_parent_item.lock().get()) << M_ID_VAL(obj.m_child_items.size()) << ")";
+//	dbg << "AbstractTreeModelItem (" << M_ID_VAL(*obj.m_parent_item.lock().get()) << M_ID_VAL(obj.m_child_items.size()) << ")";
 	return dbg;
 }
 
@@ -374,11 +375,10 @@ public:
 	{};
 	~DataStreamField() {};
 
-//	QString toqstr() const { return QString::fromStdString(m_xml_tag_str); };
-
-	// Implicit conversion to std::string.
+	/// Implicit conversion to std::string.
 	operator std::string() const { return m_xml_tag_str; };
 
+	/// Implicit conversion to QString.
 	operator QString() const { return toqstr(m_xml_tag_str); };
 
 private:
@@ -958,6 +958,7 @@ void AbstractTreeModelItem::children_from_str_var_map(const InsertionOrderedStrV
 	std::string num_children_str = read_from_map.get_attr(QString(XMLTAG_NUM_CHILDREN).toStdString());
 	qulonglong num_children = std::atoll(num_children_str.c_str());
 //	map_read_field_or_warn(read_from_map, XMLTAG_NUM_CHILDREN, &num_children);
+//	num_children = read_from_map.get_attr(XMLTAG_NUM_CHILDREN);
 
 	qDb() << XMLTAG_NUM_CHILDREN << num_children;
 

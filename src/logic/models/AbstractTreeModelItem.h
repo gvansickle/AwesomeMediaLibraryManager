@@ -279,18 +279,18 @@ protected:
 	/// @name Protected Serialization Helpers
 	/// @{
 
-	virtual int item_data_to_variant(InsertionOrderedStrVarMap* add_to_map) const;
-	virtual int item_data_from_variant(const InsertionOrderedStrVarMap& read_from_map);
+	virtual int item_data_to_variant(InsertionOrderedStrVarMap* add_to_map) const final;
+	virtual int item_data_from_variant(const InsertionOrderedStrVarMap& read_from_map) final;
 
 	/**
 	 * Serialization helper which recursively serializes this item's children to a map.
 	 */
-	virtual void children_to_variant(InsertionOrderedStrVarMap* add_to_map) const;
+	virtual void children_to_variant(InsertionOrderedStrVarMap* add_to_map) const final;
 
 	/**
 	 * Serialization helper which recursively serializes this item's children from a map.
 	 */
-	void children_from_str_var_map(const InsertionOrderedStrVarMap& read_from_map);
+	virtual void children_from_str_var_map(const InsertionOrderedStrVarMap& read_from_map) final;
 
 	/// @}  // END Protected Serialization Helpers
 

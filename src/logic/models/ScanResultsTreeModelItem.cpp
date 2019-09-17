@@ -179,13 +179,18 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 
 	AMLM_ASSERT_EQ(num_children, child_map.size());
 
-	if(num_children > 0)
-	{
+//	if(num_children > 0)
+//	{
 		children_from_str_var_map(child_map);
-	}
+//	}
 
 	qDb() << M_ID_VAL(child_map.size());
 }
+
+//void ScanResultsTreeModelItem::clear()
+//{
+////	m_dsr.clear();
+//}
 
 void ScanResultsTreeModelItem::setDirscanResults(const DirScanResult& dsr)
 {

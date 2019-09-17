@@ -86,6 +86,8 @@ public:
 
 protected:
 
+//	void clear() override;
+
 	/// The directory scan results corresponding to this entry.
 	/// This is things like the main media URL, sidecar cue sheet URLs, timestamp info, etc.
 	DirScanResult m_dsr;
