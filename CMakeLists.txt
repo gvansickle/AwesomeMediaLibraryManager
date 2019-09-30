@@ -222,7 +222,8 @@ if(UNIX)
 ### @todo Detect that we're actually using GNU libstdc++
 # "compiles user code using the debug mode. When defined, _GLIBCXX_ASSERTIONS is defined automatically"
 ### @note This crashes when linked with non-debug libstdc++.  Can't pass containers between them.
-#ucm_add_flags(CXX -D_GLIBCXX_DEBUG=1)
+### Except this says you should be able to: @link https://gcc.gnu.org/onlinedocs/gcc-9.2.0/libstdc++/manual/manual/debug_mode_design.html#debug_mode.design.methods.coexistence
+ucm_add_flags(CXX -D_GLIBCXX_DEBUG=1)
 endif(UNIX)
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	message(STATUS "C++ Compiler is GCC")

@@ -356,12 +356,20 @@ protected:
 	/// The data for each column of this row.
 	std::vector<QVariant> m_item_data;
 
+	/// Pointer to the model this is a part of.
 	std::weak_ptr<AbstractTreeModel> m_model;
 
 	bool m_is_root {false};
 
 	/// Deque of shared_ptr's to child items.
 	std::deque<std::shared_ptr<AbstractTreeModelItem>> m_child_items;
+
+	/// KDEN: The "Last parent id", the last parent this item had.
+	/// Maintained by updateParent().  Don't actually see it used anywhere other than BinPlaylist::manageBinItemDeletion().
+//	UUIncD m_last_parent_item_id;
+
+	/// KDEN abstractprojectitem has a reader/writer mutex.
+//	mutable std::shared_mutex m_rw_mutex;
 
 private:
 
@@ -379,6 +387,8 @@ private:
 	/// For items in a tree model (i.e. not being copy/pasted or mid-construction), this will always
 	/// be non-null as long as this item is not the invisible root item.
 	std::weak_ptr<AbstractTreeModelItem> m_parent_item;
+
+
 
 	/// The depth of this item in its tree.
 	///KDEN

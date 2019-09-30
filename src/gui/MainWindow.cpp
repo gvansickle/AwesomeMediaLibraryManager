@@ -1512,8 +1512,8 @@ void MainWindow::readLibSettings(QSettings& settings)
 //		qDb() << "!!!!!!!!!!!!!!!!!!!!!!! OLD MODEL INFO:";
 //		old_srtm_model->dump_model_info();
 
-		auto srtmodel = AMLM::Core::self()->getScanResultsTreeModel().get();
-		m_exp_second_child_view->setModel(srtmodel);
+//		std::shared_ptr<ScanResultsTreeModel> srtmodel = AMLM::Core::self()->getScanResultsTreeModel().get();
+//		m_exp_second_child_view->setModel(srtmodel);
 
 //		oldselmodel->deleteLater();
 	}
@@ -1526,7 +1526,7 @@ void MainWindow::readLibSettings(QSettings& settings)
 //				AMLM::Core::self()->getScanResultsTreeModel()->setColumnSpecs(default_columnspecs);
 	}
 #endif
-	createDBModelAndView();
+//	createDBModelAndView();
 
 #if 0///
 	auto fut_load_db = ExtAsync::qthread_async_with_cnr_future([=, &temp_load_srtm_instance](ExtFuture<Unit> fut_cnr, QString overlay_filename){

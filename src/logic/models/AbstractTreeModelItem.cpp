@@ -74,10 +74,12 @@ AbstractTreeModelItem::AbstractTreeModelItem(const std::vector<QVariant>& data, 
 	{
 		if(id.isValid())
 		{
+			// Set the id to the one passed in.
 			m_uuincid = id;
 		}
 		else
 		{
+			// Set it to a new unique ID.
 			m_uuincid = UUIncD::create();
 		}
 	}
@@ -546,7 +548,7 @@ std::vector<std::shared_ptr<AbstractTreeModelItem>> AbstractTreeModelItem::inser
 void AbstractTreeModelItem::insertChild(int row, std::shared_ptr<AbstractTreeModelItem> item)
 {
 	AMLM_ASSERT_X(!item->isInModel(), "TODO: ITEM ALREADY IN MODEL, MOVE ITEMS BETWEEN MODELS");
-	AMLM_ASSERT_X(isInModel(), "TODO: PARENT ITEM NOT IN MODEL");
+	AMLM_ASSERT_X(isInModel(), "We have to be in model or this fails");
 
 	if(has_ancestor(item->getId()))
 	{
@@ -569,7 +571,7 @@ void AbstractTreeModelItem::insertChild(int row, std::shared_ptr<AbstractTreeMod
 		{
 			// in that case a call to removeChild should have been carried out
 			/// @todo GRVS: I think this may be a valid case, probably can be made to work.
-			qCr() << "ERROR: trying to append a child that already has a parent";
+			AMLM_ASSERT_X(0, "ERROR: trying to append a child that already has a parent");
 			return;
 		}
 	}
@@ -601,7 +603,7 @@ void AbstractTreeModelItem::insertChild(int row, std::shared_ptr<AbstractTreeMod
 
 		return;
 	}
-	qDebug() << "ERROR: Something went wrong when appending child in TreeItem. Model is not available anymore";
+	qDebug() << "ERROR: Something went wrong when appending child in AbstractTreeModelItem. Model is not available anymore";
 	Q_ASSERT(false);
 
 	verify_post_add_ins_child(item);
@@ -630,6 +632,10 @@ Q_ASSERT(0);
 bool AbstractTreeModelItem::appendChild(const std::shared_ptr<AbstractTreeModelItem>& new_child)
 {
 #if 1///
+
+
+	AMLM_ASSERT_X(isInModel(), "We have to be in model or this fails");
+
 	this->insertChild(childCount(), new_child);
 
 	verify_post_add_ins_child(new_child);

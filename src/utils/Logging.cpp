@@ -86,7 +86,7 @@ void printDebugMessagesWhileDebuggingHandler(QtMsgType type, const QMessageLogCo
 		shortfunction = shortfunction.left(32);
 #else
 		std::string shortfunction = context.function;
-		shortfunction = std::regex_replace(shortfunction, std::regex(u8R"!(^[\s]*(static|void|template|virtual|\*))!"), "");
+//		shortfunction = std::regex_replace(shortfunction, std::regex(u8R"!(^[\s]*(static|void|template|virtual|\*))!"), "");
 		// Strip trailing whitespace.
 		shortfunction = std::regex_replace(shortfunction, std::regex(u8R"!(\w+\s+)!"), "");
 		// Strip leading whitespace.

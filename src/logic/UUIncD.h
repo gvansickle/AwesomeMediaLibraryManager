@@ -90,6 +90,6 @@ namespace std
 			return h1;
 		}
 	};
-}
+} // namespace std
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_UUINCD_H
