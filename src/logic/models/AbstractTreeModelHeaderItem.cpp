@@ -65,6 +65,7 @@ void AbstractTreeModelHeaderItem::clear()
 	AMLM_ASSERT_X(m_child_items.size() == 0, "clear() called with unremoved children");
 #else
 ///#WRONG ITERATOR
+#error
 	for(const std::shared_ptr<AbstractTreeModelItem>& child : m_child_items)
 	{
 //		qDb() << "Removing child:";// << *child << "from" << this;

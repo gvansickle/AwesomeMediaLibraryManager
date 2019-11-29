@@ -85,19 +85,19 @@ AbstractTreeModel::AbstractTreeModel(const std::vector<ColumnSpec>& column_specs
 	/// Regardless, the named constructor is working well now, so we're good.
 }
 
-void AbstractTreeModel::postConstructorFinalization(const std::shared_ptr<AbstractTreeModel>& retval_shptr, std::vector<ColumnSpec> column_specs)
-{
-	// Create the root item/header item.
-	retval_shptr->m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs, retval_shptr);
-	// Register it with this model.
-	retval_shptr->register_item(retval_shptr->m_root_item);
+//void AbstractTreeModel::postConstructorFinalization(const std::shared_ptr<AbstractTreeModel>& retval_shptr, std::vector<ColumnSpec> column_specs)
+//{
+//	// Create the root item/header item.
+//	retval_shptr->m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs, retval_shptr);
+//	// Register it with this model.
+//	retval_shptr->register_item(retval_shptr->m_root_item);
 
-	AMLM_ASSERT_X(retval_shptr->m_root_item->isInModel(), "ROOT ITEM NOT IN MODEL");
+//	AMLM_ASSERT_X(retval_shptr->m_root_item->isInModel(), "ROOT ITEM NOT IN MODEL");
 
-	/// TODO Keep trying to get this to not barf all over the place.
-//	retval_shptr->m_model_tester = new QAbstractItemModelTester(retval_shptr.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, retval_shptr.get());
-	AMLM_ASSERT_X(retval_shptr->checkConsistency(), "MODEL INCONSISTENT");
-}
+//	/// TODO Keep trying to get this to not barf all over the place.
+////	retval_shptr->m_model_tester = new QAbstractItemModelTester(retval_shptr.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, retval_shptr.get());
+//	AMLM_ASSERT_X(retval_shptr->checkConsistency(), "MODEL INCONSISTENT");
+//}
 
 AbstractTreeModel::~AbstractTreeModel()
 {
