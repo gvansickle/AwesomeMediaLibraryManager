@@ -87,7 +87,8 @@ protected:
 	 * @param retval_shptr  A shared_ptr to the model being constructed.
 	 * @param column_specs  The columnspecs list to initialize the root/header item with.
 	 */
-//	virtual void postConstructorFinalization(const std::shared_ptr<AbstractTreeModel>& retval_shptr, std::vector<ColumnSpec> column_specs);
+#warning "TODO: THIS IS BROKEN I THINK, HERE JUST TO GET STUFF TO COMPILE"
+	virtual void postConstructorFinalization(const std::shared_ptr<AbstractTreeModel>& retval_shptr, std::vector<ColumnSpec> column_specs);
 
 public:
 	/**

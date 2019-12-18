@@ -86,8 +86,8 @@ std::shared_ptr<ScanResultsTreeModel>
 ScanResultsTreeModel::make_ScanResultsTreeModel(const std::vector<ColumnSpec>& column_specs, QObject* parent)
 {
 	auto retval_shptr = std::shared_ptr<ScanResultsTreeModel>(new ScanResultsTreeModel(column_specs, parent));
-
-	retval_shptr->postConstructorFinalization(retval_shptr, column_specs);
+#warning "THIS DOESN'T COMPILE"
+//	retval_shptr->postConstructorFinalization(retval_shptr, column_specs);
 
 	return retval_shptr;
 }

@@ -2292,7 +2292,7 @@ void MainWindow::onConfigureToolbars()
 
 	KEditToolBar dialog(factory(), this);
 
-	connect(&dialog, &KEditToolBar::newToolbarConfig, this, &MainWindow::onApplyToolbarConfig);
+	connect_or_die(&dialog, &KEditToolBar::newToolBarConfig, this, &MainWindow::onApplyToolbarConfig);
 
 	dialog.exec();
 }
