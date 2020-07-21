@@ -58,6 +58,7 @@ struct compiles : std::false_type {};
 template <typename T, template <typename> class Expression>
 struct compiles<T, Expression, std::void_t<Expression<T>>> : std::true_type {};
 
+#if 0///
 /**
  * SFINAE-based "requires".
  * Return type is ResultType if all Concepts applied to CheckType are fulfilled, otherwise it's ill-formed and template
@@ -70,6 +71,7 @@ struct compiles<T, Expression, std::void_t<Expression<T>>> : std::true_type {};
  */
 template <typename ResultType, typename CheckType, template <typename> class ... Concepts>
 using requires = std::enable_if_t<std::conjunction<Concepts<CheckType>...>::value, ResultType>;
+#endif///
 
 /**
  * fallback is valid only if all conditions are false.  You want this as the compliment to
@@ -104,6 +106,7 @@ namespace concepts
 	/// Mishmash of ideas from all over.
 	/// SO post: https://stackoverflow.com/a/26533335
 
+#if 0///
 	/// "models" trait declarations.
 	/// Primary template, handles types which do not model a Concept, which we define as
 	/// having a "requires" member.
@@ -117,16 +120,19 @@ namespace concepts
 									decltype(std::declval<Concept>().requires(std::declval<Ts>()...))
 									>
 			> : std::true_type {};
+#endif///
 
 	/// Our low-rent C++2x "requires" "keyword".
 	#define REQUIRES(...) typename std::enable_if_t<(__VA_ARGS__), int> = 0
 
+#if 0///
 	/// Helper function for reducing the need for dectype().
 	template<class Concept, class... Ts>
 	constexpr auto modeled(Ts&&...)
 	{
 	    return models<Concept(Ts...)>();
 	}
+#endif///
 
 	template <class T>
 	constexpr bool Class = std::is_class_v<T>;
@@ -134,11 +140,13 @@ namespace concepts
 	template <class T>
 	constexpr bool Function = std::is_function<T>::value;
 
+#if 0///
 	struct Callable
 	{
 		template<class F, class... Ts>
 		auto requires(F&& f, Ts&&... xs) -> decltype(f(std::forward<Ts>(xs)...));
 	};
+#endif///
 
 }
 

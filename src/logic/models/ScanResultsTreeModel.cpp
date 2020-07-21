@@ -36,6 +36,14 @@
 #include <serialization/XmlSerializer.h>
 
 
+/// TEST
+//#include <experimental/future>
+//#if __cpp_lib_experimental_future_continuations >= 201505
+//#pragma GCC message "Has C++2a continuations"
+//#else
+//#error #pragma GCC message "NO C++2a continuations"
+//#endif
+
 ScanResultsTreeModel::ScanResultsTreeModel(const std::vector<ColumnSpec>& column_specs, QObject *parent)
 	: BASE_CLASS(column_specs, parent)
 {
@@ -86,8 +94,8 @@ std::shared_ptr<ScanResultsTreeModel>
 ScanResultsTreeModel::make_ScanResultsTreeModel(const std::vector<ColumnSpec>& column_specs, QObject* parent)
 {
 	auto retval_shptr = std::shared_ptr<ScanResultsTreeModel>(new ScanResultsTreeModel(column_specs, parent));
-#warning "THIS DOESN'T COMPILE"
-//	retval_shptr->postConstructorFinalization(retval_shptr, column_specs);
+
+	retval_shptr->postConstructorFinalization(retval_shptr, column_specs);
 
 	return retval_shptr;
 }

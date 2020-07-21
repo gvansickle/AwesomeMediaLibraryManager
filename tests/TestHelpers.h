@@ -124,20 +124,20 @@ QT_END_NAMESPACE
 /// @{
 /// @note The link makes it look like this should all be here, but it's exposed by gtest.h.
 ///       Leaving it here for reference to the color enumerators if nothing else.
-//namespace testing
-//{
-//	namespace internal
-//	{
-////		enum GTestColor;
-////		{
-////			COLOR_DEFAULT,
-////			COLOR_RED,
-////			COLOR_GREEN,
-////			COLOR_YELLOW
-////		};
-//		extern void ColoredPrintf(GTestColor color, const char* fmt, ...);
-//	} // namespace internal
-//} // namespace testing
+namespace testing
+{
+	namespace internal
+	{
+		enum GTestColor
+		{
+			COLOR_DEFAULT,
+			COLOR_RED,
+			COLOR_GREEN,
+			COLOR_YELLOW
+		};
+		extern void ColoredPrintf(GTestColor color, const char* fmt, ...);
+	} // namespace internal
+} // namespace testing
 
 /**
  * Class which provides a QDebug output stream to log arbitrary Qt messages to.
