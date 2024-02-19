@@ -2132,7 +2132,8 @@ void MainWindow::startSettingsDialog()
 void MainWindow::onOpenShortcutDlg()
 {
 	// Start the Keyboard Shorcut editor dialog.
-	KShortcutsDialog::configure(actionCollection(), KShortcutsEditor::LetterShortcutsDisallowed, this);
+//	KShortcutsDialog::configure(actionCollection(), KShortcutsEditor::LetterShortcutsDisallowed, this);
+	KShortcutsDialog::showDialog(actionCollection(), KShortcutsEditor::LetterShortcutsDisallowed, this);
 
 	AMLMSettings::self()->save();
 }
@@ -2234,7 +2235,7 @@ void MainWindow::onConfigureToolbars()
 
 	KEditToolBar dialog(factory(), this);
 
-	connect(&dialog, &KEditToolBar::newToolbarConfig, this, &MainWindow::onApplyToolbarConfig);
+	connect(&dialog, &KEditToolBar::newToolBarConfig, this, &MainWindow::onApplyToolbarConfig);
 
 	dialog.exec();
 }

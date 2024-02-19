@@ -1,5 +1,5 @@
 #
-# Copyright 2017, 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2017, 2018, 2019, 2024 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -34,7 +34,7 @@
 
 
 # cmake setup.
-cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.27 FATAL_ERROR)
 cmake_policy(SET CMP0053 NEW) # Use new var ref/esc seq eval
 cmake_policy(SET CMP0010 NEW) # Silence warning on CMP0010.
 
@@ -53,7 +53,7 @@ if(TRUE)
 	### Set up the <LANG>_COMPILER_LAUNCHERs.
 	### @note "This property is initialized by the value of 
 	###       the CMAKE_<LANG>_COMPILER_LAUNCHER variable if it is set when a target is created."
-	
+
 	# Use ccache if it's available.
 	find_program(CCACHE_PROGRAM ccache)
 	if(CCACHE_PROGRAM)
@@ -429,7 +429,7 @@ if(WIN32)
 	set(BREEZEICONS_DIR
 		# Craft has a couple of breeze-icons.rcc's, plus an icontheme.rcc in CraftRoot/bin/data/.
 		C:/CraftRoot/bin/data/icons/breeze
-	) 
+	)
 else()
 	set(BREEZEICONS_DIR
 		/usr/share/icons/breeze
@@ -439,13 +439,13 @@ endif()
 if(WITH_BUNDLED_BREEZE_ICONS)
 	### @todo SOMETHING IS WRONG HERE, FIX THIS 
 	set(AMLM_INSTALL_BUNDLED_ICON_THEME_DIR "${KDE_INSTALL_FULL_DATAROOTDIR}/gvansickle/AwesomeMediaLibraryManager")
-	find_file(BREEZEICONS_PATH breeze-icons.rcc 
+	find_file(BREEZEICONS_PATH breeze-icons.rcc
 		HINTS
 			${BREEZEICONS_DIR}
 		PATH_SUFFIXES
 			breeze
 		DOC
-			"Full path to the breeze-icons.rcc file"	
+			"Full path to the breeze-icons.rcc file"
 			)
     if (NOT EXISTS ${BREEZEICONS_PATH})
         message(FATAL_ERROR "Cannot find breeze-icons.rcc")
@@ -500,7 +500,7 @@ if(FALSE)
 ### CallableTraits only in 1.66+.
 set(Boost_USE_MULTITHREADED      ON)
 find_package(Boost REQUIRED 1.66.0
-  COMPONENTS CallableTraits 
+  COMPONENTS CallableTraits
   )
 else()
 if(FALSE)
@@ -527,14 +527,14 @@ add_compile_definitions(BOOST_THREAD_VERSION=5
 	BOOST_THREAD_FUTURE_USES_OPTIONAL=1
 	)
 set(Boost_USE_STATIC_LIBS        ON) # Only find static libs.
-set(Boost_USE_STATIC_RUNTIME     ON) # Want static runtime.
+#set(Boost_USE_STATIC_RUNTIME     ON) # Want static runtime.
 set(Boost_USE_MULTITHREADED      ON) # Need multithreaded.
-set(Boost_USE_DEBUG_LIBS         ON)
-set(Boost_USE_RELEASE_LIBS       OFF)
+#set(Boost_USE_DEBUG_LIBS         ON)
+#set(Boost_USE_RELEASE_LIBS       OFF)
 set(BOOST_ALL_DYN_LINK           OFF)
-set(Boost_USE_DEBUG_RUNTIME      ON)
+#set(Boost_USE_DEBUG_RUNTIME      ON)
 set(Boost_DEBUG    				 ON) # enable debug output from FindBoost.
-set(Boost_DETAILED_FAILURE_MSG   ON) # add detailed information to the failure message 
+set(Boost_DETAILED_FAILURE_MSG   ON) # add detailed information to the failure message
 #								   # even when the REQUIRED option is not given to the find_package call.
 find_package(Boost 1.69.0 REQUIRED
 	COMPONENTS
@@ -546,7 +546,7 @@ if(Boost_FOUND)
 	add_library(amlm_boost_settings_target INTERFACE)
 	target_link_libraries(amlm_boost_settings_target INTERFACE ${Boost_LIBRARIES})
 	target_compile_definitions(amlm_boost_settings_target
-		INTERFACE 
+		INTERFACE
 			BOOST_THREAD_VERSION=5)
 	add_definitions(${Boost_LIB_DIAGNOSTIC_DEFINITIONS})
 endif()
@@ -555,7 +555,7 @@ endif() # BOOST
 if(FALSE)
 # Ok, we're going to try to pull in just Wt::Dbo.
 # Following instructions here: @link https://www.webtoolkit.eu/wt/doc/tutorial/dbo.html#_installation :
-# "Starting from a Wt source package (and on a UNIX-like environment), 
+# "Starting from a Wt source package (and on a UNIX-like environment),
 # you would do the following to build and install only Wt::Dbo:
 # $ cd wt-xxx
 # $ mkdir build
@@ -602,7 +602,7 @@ ExternalProject_Add(
 	BUILD_COMMAND "" #${CMAKE_COMMAND} -E echo "Starting $<CONFIG> build of Wt::Dbo in binary dir: <BINARY_DIR>"
   	#COMMAND       ${CMAKE_COMMAND} --build <BINARY_DIR> --config $<CONFIG> --target wt-target-dbo # wtdbo
   	#COMMAND       ${CMAKE_COMMAND} -E echo "$<CONFIG> build of Wt::Dbo complete"
-	
+
 	# Install
 	# This target is exported: wt-target-dbo, target is wtdbo
 	INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "Starting $<CONFIG> install of Wt::Dbo to install dir: <INSTALL_DIR>"
@@ -629,7 +629,7 @@ ecm_qt_declare_logging_category(QT5_LOGGING_CATEGORY_SOURCE_FILES
                                 )
 
 # Qt-specific compiler definitions.                               
-target_compile_definitions(cxx_definitions_qt 
+target_compile_definitions(cxx_definitions_qt
 	INTERFACE
 		-DQT_DEPRECATED_WARNINGS
 		-DQT_SHAREDPOINTER_TRACK_POINTERS=1
@@ -793,7 +793,7 @@ print_varlist(
 	CMAKE_CXX_FLAGS
 	CMAKE_CXX_FLAGS_DEBUG
 	CMAKE_EXPORT_COMPILE_COMMANDS
-	CMAKE_INSTALL_PREFIX 
+	CMAKE_INSTALL_PREFIX
 	KDE_INSTALL_BINDIR
 	KDE_INSTALL_DATADIR
 	KDE_INSTALL_ICONDIR

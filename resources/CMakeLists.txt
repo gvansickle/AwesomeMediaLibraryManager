@@ -44,7 +44,7 @@ target_sources_local(resources
 	PUBLIC
 		VersionInfo.h
 	PRIVATE
-		VersionInfo.cpp
+        ${CMAKE_CURRENT_BINARY_DIR}/VersionInfo.cpp
 		${amlm_APP_ICONS}
 		${amlm_ICONS}
 		${amlm_XQUERIES}

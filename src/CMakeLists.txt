@@ -316,7 +316,7 @@ enable_testing()
 find_package(Threads REQUIRED)
 download_project(PROJ                googletest
                  GIT_REPOSITORY      https://github.com/google/googletest.git
-                 GIT_TAG             master
+                 GIT_TAG             main
                  ${UPDATE_DISCONNECTED_IF_AVAILABLE}
 )
 # Prevent GoogleTest from overriding our compiler/linker options
