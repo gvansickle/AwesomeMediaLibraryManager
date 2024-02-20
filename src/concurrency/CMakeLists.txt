@@ -71,7 +71,8 @@ set(SOURCE_FILES_UTILS_CONCURRENCY
 	WorkerThreadControllerBase.cpp
 	)
 
-target_sources_local(concurrency
+target_sources(concurrency
+#add_library(concurrency STATIC
 	PUBLIC
 		${HEADER_FILES_UTILS_CONCURRENCY}
 		${PRIVATE_HEADER_FILES_UTILS_CONCURRENCY}
@@ -79,7 +80,7 @@ target_sources_local(concurrency
 		${SOURCE_FILES_UTILS_CONCURRENCY}
 		)
 target_link_libraries(concurrency
-	PUBLIC
+	PRIVATE
 		#${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS} ### @todo "logic_subdir links to itself".
 		${QT5_LINK_LIB_TARGETS}
 		${KF5_LINK_LIB_TARGETS}

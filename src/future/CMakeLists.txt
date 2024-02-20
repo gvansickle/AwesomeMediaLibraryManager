@@ -40,12 +40,13 @@ set(SOURCE_FILES_SRC_FUTURE
 	InsertionOrderedMap.cpp
 	)
 
-target_sources_local(future
-	PUBLIC
+add_library(future STATIC EXCLUDE_FROM_ALL
 		${HEADER_FILES_SRC_FUTURE}
 		${SOURCE_FILES_SRC_FUTURE}
 	)
-target_link_libraries(future PUBLIC ${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS})
+target_link_libraries(future
+                      PUBLIC
+                        ${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS})
 target_include_directories(future
 	PUBLIC
 		${CMAKE_CURRENT_LIST_DIR}
@@ -56,11 +57,4 @@ target_include_directories(future
 		${PROJECT_BINARY_DIR}/src
 		)
 
-#MESSAGE(STATUS "\${CMAKE_CURRENT_LIST_DIR}/..: ${CMAKE_CURRENT_LIST_DIR}/..")
-		
-set_target_properties(future
-    PROPERTIES
-    AUTOMOC ON
-    AUTORCC OFF
-    AUTOUIC OFF)
-    
+
