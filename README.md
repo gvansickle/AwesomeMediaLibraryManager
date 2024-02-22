@@ -12,6 +12,7 @@ Really this is just me experimenting with a number of things:
   - Unit testing via GoogleTest and QTest
   - Coordinating all build duties with CMake.
 - Adding continuations (".then()") to QFuture()s.
+- Identifying and playing individual tracks from a full-CD FLAC rip.
 - ...and I'm sure a bunch of other stuff I've forgotten since I last touched this.
 
 The Windows installer [here](https://github.com/gvansickle/AwesomeMediaLibraryManager/releases/tag/0.0.1.1) worked the last time I tried it and gave you a not-completely-useless media player for your troubles.
