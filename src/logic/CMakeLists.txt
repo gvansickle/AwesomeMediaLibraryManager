@@ -19,12 +19,16 @@
 
 # @file src/logic/CMakeLists.txt
 
-add_subdir_lib(dbmodels EXCLUDE_FROM_ALL)
-add_subdir_lib(jobs EXCLUDE_FROM_ALL)
+#add_subdir_lib(dbmodels EXCLUDE_FROM_ALL)
+add_subdirectory(dbmodels)
+#add_subdir_lib(jobs EXCLUDE_FROM_ALL)
+add_subdirectory(jobs)
 #add_subdir_lib(models EXCLUDE_FROM_ALL)
 add_subdirectory(models)
-add_subdir_lib(proxymodels EXCLUDE_FROM_ALL)
-add_subdir_lib(serialization EXCLUDE_FROM_ALL)
+#add_subdir_lib(proxymodels EXCLUDE_FROM_ALL)
+add_subdirectory(proxymodels)
+#add_subdir_lib(serialization EXCLUDE_FROM_ALL)
+add_subdirectory(serialization)
 
 # The Tree Model from gsauthof.
 add_subdirectory(gsauthof_tree_model EXCLUDE_FROM_ALL)
@@ -98,11 +102,11 @@ set(logic_subdir_HEADERS
     UUIncD.h
 	)
 
-target_sources_local(logic
-#add_library(logic STATIC EXCLUDE_FROM_ALL
-	PUBLIC
+#target_sources_local(logic
+add_library(logic STATIC EXCLUDE_FROM_ALL
+#	PUBLIC
 		${logic_subdir_HEADERS}
-	PRIVATE
+#	PRIVATE
 		${logic_subdir_SOURCES}
 	)
 target_link_libraries(logic
@@ -130,6 +134,7 @@ target_include_directories(logic
 		#gsauthof_tree_model/tree_model
 	PRIVATE
 		${PROJECT_SOURCE_DIR}/src
+		                   ${PROJECT_SOURCE_DIR}/src/logic/models
 	)
 
 

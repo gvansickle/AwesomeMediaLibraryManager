@@ -36,8 +36,9 @@ set(gui_widgets_UI_FILES
 		CollectionView.ui
  	)
 
-target_sources_local(widgets
-	PUBLIC
+#target_sources_local(widgets
+#	PUBLIC
+add_library(widgets STATIC EXCLUDE_FROM_ALL
 		${gui_widgets_HEADER_FILES}
 	#PRIVATE
 		${gui_widgets_SOURCE_FILES}
@@ -55,6 +56,7 @@ target_link_libraries(widgets
 		${KF5_LINK_LIB_TARGETS}
 #		${GTK_LINK_LIB_TARGETS}
 		jobs  ### For LibraryEntryLoaderJob.h via LibraryModel.h.
+        models
 		)
 target_include_directories(widgets
 	PUBLIC

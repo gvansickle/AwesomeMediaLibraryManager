@@ -33,8 +33,9 @@ set(proxymodels_subdir_SOURCES
 #prepend_to_each(proxymodels_subdir_SOURCES "${CMAKE_CURRENT_LIST_DIR}/" ${proxymodels_subdir_SOURCES})
 
 
-target_sources_local(proxymodels
-	PUBLIC
+#target_sources_local(proxymodels
+#	PUBLIC
+add_library(proxymodels STATIC EXCLUDE_FROM_ALL
 		${proxymodels_subdir_SOURCES}
 	)
 
@@ -46,6 +47,7 @@ target_link_libraries(proxymodels
 		${GTK_LINK_LIB_TARGETS}
 #		${AMLM_TAGLIB_TARGET}
 #		${AMLM_LIBCUE_TARGET}
+                      models
 )
 target_include_directories(proxymodels
 	PUBLIC

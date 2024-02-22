@@ -139,12 +139,14 @@ list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_NOMOC})
 #
 # Subdir targets.
 #
-add_subdir_lib(concurrency STATIC EXCLUDE_FROM_ALL)
+#add_subdir_lib(concurrency STATIC EXCLUDE_FROM_ALL)
+add_subdirectory(concurrency)
 #add_subdirectory(concurrency EXCLUDE_FROM_ALL)
 add_subdirectory(future)
-add_subdir_lib(gui STATIC EXCLUDE_FROM_ALL)
-add_subdir_lib(logic STATIC EXCLUDE_FROM_ALL)
-#add_subdirectory(logic)
+#add_subdir_lib(gui STATIC EXCLUDE_FROM_ALL)
+add_subdirectory(gui)
+#add_subdir_lib(logic STATIC EXCLUDE_FROM_ALL)
+add_subdirectory(logic)
 add_subdirectory(utils)
 
 #

@@ -32,10 +32,11 @@ set(jobs_HEADER_FILES
 		LibraryRescannerJob.h
 	)
 
-target_sources_local(jobs
-	PUBLIC
+#target_sources_local(jobs
+add_library(jobs STATIC EXCLUDE_FROM_ALL
+#	PUBLIC
 		${jobs_HEADER_FILES}
-	PRIVATE
+#	PRIVATE
 		${jobs_SOURCE_FILES}
 	)
 
@@ -47,6 +48,7 @@ target_link_libraries(jobs
     PRIVATE
 		${AMLM_TAGLIB_TARGET}
 		concurrency
+                      logic
 		)
 target_include_directories(jobs
 	PUBLIC

@@ -41,10 +41,11 @@ set(serialization_subdir_HEADERS
 		QVariantHomogenousList.h
 		)
 
-target_sources_local(serialization
-	PUBLIC
+#target_sources_local(serialization
+add_library(serialization STATIC EXCLUDE_FROM_ALL
+#	PUBLIC
 		${serialization_subdir_HEADERS}
-	PRIVATE
+#	PRIVATE
 		${serialization_subdir_SOURCES}
 	)
 
