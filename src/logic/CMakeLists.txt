@@ -19,15 +19,10 @@
 
 # @file src/logic/CMakeLists.txt
 
-#add_subdir_lib(dbmodels EXCLUDE_FROM_ALL)
 add_subdirectory(dbmodels)
-#add_subdir_lib(jobs EXCLUDE_FROM_ALL)
 add_subdirectory(jobs)
-#add_subdir_lib(models EXCLUDE_FROM_ALL)
 add_subdirectory(models)
-#add_subdir_lib(proxymodels EXCLUDE_FROM_ALL)
 add_subdirectory(proxymodels)
-#add_subdir_lib(serialization EXCLUDE_FROM_ALL)
 add_subdirectory(serialization)
 
 # The Tree Model from gsauthof.

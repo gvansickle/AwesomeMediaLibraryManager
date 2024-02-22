@@ -107,8 +107,6 @@ PREPEND_TO_EACH(gui_settings_SOURCE_FILES "settings/" ${gui_settings_SOURCE_FILE
 
 message(WARN "TODO")
 add_subdirectory(activityprogressmanager)
-
-#add_subdir_lib(widgets STATIC EXCLUDE_FROM_ALL)
 add_subdirectory(widgets)
 
 #target_sources_local(gui

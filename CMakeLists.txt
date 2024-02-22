@@ -270,9 +270,6 @@ include(CheckCXXCompilerFlag)
 include(PrintTargetProperties)
 include(helperfunctions)
 
-# @TODO Removing use of add_subdir_lib
-#include(add_subdir_lib)
-
 # Include some basic Qt5-related cmake functions
 include(QtCommon)
 set(CMAKE_INSTALL_UCRT_LIBRARIES TRUE) # Without this, Release builds won't include the MSVC C runtime.
@@ -682,9 +679,7 @@ add_subdirectory(resources)
 message(AUTHOR_WARNING "amlm_APP_ICONS: ${amlm_APP_ICONS}")
 add_subdirectory(src)
 
-### @todo Google Test creates a target named "tests" as well, and I can't seem to disable/work around it other than
-###    by using add_subdirectory() vs. add_subdir_lib().  Maybe this is better anyway.
-#add_subdir_lib(tests EXCLUDE_FROM_ALL)
+### @todo IS THIS STILL TRUE??? Google Test creates a target named "tests" as well.
 add_subdirectory(tests STATIC EXCLUDE_FROM_ALL)
 
 #include(resources/CMakeLists.txt)
