@@ -40,7 +40,8 @@ set(amlm_XQUERIES
 # Generate the version info file.
 configure_file(VersionInfo.cpp.in VersionInfo.cpp)
 
-target_sources_local(resources
+add_library(resources STATIC EXCLUDE_FROM_ALL)
+target_sources(resources
 	PUBLIC
 		VersionInfo.h
 	PRIVATE
@@ -49,6 +50,11 @@ target_sources_local(resources
 		${amlm_ICONS}
 		${amlm_XQUERIES}
 )
+target_include_directories(resources
+	PUBLIC
+		${CMAKE_CURRENT_SOURCE_DIR}/.. ### this is so the built VersionInfo.cpp can find the VersionInfo.h header.
+)
+
 set_target_properties(resources
 	PROPERTIES
 		AUTOMOC OFF

@@ -188,6 +188,7 @@ list(APPEND amlm_SRCS ${SOURCE_FILES} ${HEADER_FILES}
 # See:
 # @link https://api.kde.org/ecm/module/ECMAddAppIcon.html
 # @link http://kfunk.org/2017/12/20/tips-streamlining-kde-application-for-deployment-microsoft-windows/
+add_library(src STATIC EXCLUDE_FROM_ALL)
 target_link_libraries(src
 	PUBLIC
 		logic

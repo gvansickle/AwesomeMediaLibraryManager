@@ -71,8 +71,8 @@ set(SOURCE_FILES_UTILS_CONCURRENCY
 	WorkerThreadControllerBase.cpp
 	)
 
-#target_sources(concurrency
 add_library(concurrency STATIC EXCLUDE_FROM_ALL
+#target_sources(concurrency
 #	PUBLIC
 		${HEADER_FILES_UTILS_CONCURRENCY}
 		${PRIVATE_HEADER_FILES_UTILS_CONCURRENCY}
