@@ -56,10 +56,11 @@ set(HEADER_FILES_SRC_LOGIC_MODELS
 		treemodel.h
 		)
 
-target_sources_local(models
-	PUBLIC
+#target_sources_local(models
+add_library(models STATIC EXCLUDE_FROM_ALL
+#	PUBLIC
 		${HEADER_FILES_SRC_LOGIC_MODELS}
-	PRIVATE
+#	PRIVATE
 		${SOURCE_FILES_SRC_LOGIC_MODELS}
 	)
 

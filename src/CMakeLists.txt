@@ -144,6 +144,7 @@ add_subdir_lib(concurrency STATIC EXCLUDE_FROM_ALL)
 add_subdirectory(future)
 add_subdir_lib(gui STATIC EXCLUDE_FROM_ALL)
 add_subdir_lib(logic STATIC EXCLUDE_FROM_ALL)
+#add_subdirectory(logic)
 add_subdirectory(utils)
 
 #

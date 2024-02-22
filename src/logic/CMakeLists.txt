@@ -21,7 +21,8 @@
 
 add_subdir_lib(dbmodels EXCLUDE_FROM_ALL)
 add_subdir_lib(jobs EXCLUDE_FROM_ALL)
-add_subdir_lib(models EXCLUDE_FROM_ALL)
+#add_subdir_lib(models EXCLUDE_FROM_ALL)
+add_subdirectory(models)
 add_subdir_lib(proxymodels EXCLUDE_FROM_ALL)
 add_subdir_lib(serialization EXCLUDE_FROM_ALL)
 
@@ -98,6 +99,7 @@ set(logic_subdir_HEADERS
 	)
 
 target_sources_local(logic
+#add_library(logic STATIC EXCLUDE_FROM_ALL
 	PUBLIC
 		${logic_subdir_HEADERS}
 	PRIVATE
