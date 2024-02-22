@@ -54,10 +54,9 @@ set(utils_SOURCE_FILES
 	VectorHelpers.cpp
 )
 
-target_sources_local(utils
-	PUBLIC
+#target_sources_local(utils
+add_library(utils STATIC EXCLUDE_FROM_ALL
 		${utils_HEADER_FILES}
-	PRIVATE
 		${utils_SOURCE_FILES}
 		)
 
