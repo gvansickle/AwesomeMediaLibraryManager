@@ -21,9 +21,7 @@
 
 ### @todo This needs work.  Not sure atm how best to partition this.
 
-add_library(tests STATIC
- 	EXCLUDE_FROM_ALL
- 	)
+add_library(tests STATIC EXCLUDE_FROM_ALL)
 target_sources(tests
 	PRIVATE
 		IResultsSequenceMock.cpp

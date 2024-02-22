@@ -105,17 +105,16 @@ set(gui_settings_SOURCE_FILES
 	)
 PREPEND_TO_EACH(gui_settings_SOURCE_FILES "settings/" ${gui_settings_SOURCE_FILES})
 
-message(WARN "TODO")
 add_subdirectory(activityprogressmanager)
 add_subdirectory(widgets)
 
-#target_sources_local(gui
 add_library(gui STATIC EXCLUDE_FROM_ALL
+#target_sources(gui
 #	PUBLIC
 		${gui_HEADER_FILES}
 		${gui_settings_SOURCE_FILES}
 		${HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER}
-	#PRIVATE
+#	PRIVATE
 		${gui_SOURCE_FILES}
 		${SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER}
 		${UI_FILES_GUI_ACTIVITYPROGRESSMANAGER}
