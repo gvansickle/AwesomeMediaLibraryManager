@@ -48,7 +48,7 @@ target_link_libraries(jobs
     PRIVATE
 		${AMLM_TAGLIB_TARGET}
 		concurrency
-                      logic
+        logic
 		)
 target_include_directories(jobs
 	PUBLIC
