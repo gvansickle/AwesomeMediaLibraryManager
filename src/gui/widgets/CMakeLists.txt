@@ -38,9 +38,11 @@ set(gui_widgets_UI_FILES
 
 #target_sources_local(widgets
 #	PUBLIC
-add_library(widgets STATIC EXCLUDE_FROM_ALL
+add_library(widgets STATIC EXCLUDE_FROM_ALL)
+target_sources(widgets
+	PUBLIC
 		${gui_widgets_HEADER_FILES}
-	#PRIVATE
+#	PRIVATE
 		${gui_widgets_SOURCE_FILES}
 		${gui_widgets_UI_FILES}
 	)
@@ -64,7 +66,7 @@ target_include_directories(widgets
 		${PROJECT_BINARY_DIR}/src
 		# For nomoc.
 		${PROJECT_SOURCE_DIR}/src/utils/nomoc
-	PUBLIC
+	PRIVATE
 		# For anything in <root>/src: utils, logic, future, gui.
 		${PROJECT_SOURCE_DIR}/src
 		)

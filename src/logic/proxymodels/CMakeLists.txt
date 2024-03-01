@@ -20,22 +20,25 @@
 # @file src/logic/proxymodels/CMakeLists.txt
 
 set(proxymodels_subdir_SOURCES
-	SelectionFilterProxyModel.h
 	SelectionFilterProxyModel.cpp
-	ModelHelpers.h
-	LibrarySortFilterProxyModel.h
 	LibrarySortFilterProxyModel.cpp
 	ModelChangeWatcher.cpp
-	ModelChangeWatcher.h
-	QPersistentModelIndexVec.h
 	QPersistentModelIndexVec.cpp
-	)
-#prepend_to_each(proxymodels_subdir_SOURCES "${CMAKE_CURRENT_LIST_DIR}/" ${proxymodels_subdir_SOURCES})
+)
 
+set(proxymodels_subdir_HEADERS
+    SelectionFilterProxyModel.h
+    ModelHelpers.h
+    LibrarySortFilterProxyModel.h
+    ModelChangeWatcher.h
+    QPersistentModelIndexVec.h
+)
 
-#target_sources_local(proxymodels
-#	PUBLIC
-add_library(proxymodels STATIC EXCLUDE_FROM_ALL
+add_library(proxymodels STATIC EXCLUDE_FROM_ALL)
+target_sources(proxymodels
+	PUBLIC
+        ${proxymodels_subdir_HEADERS}
+	PRIVATE
 		${proxymodels_subdir_SOURCES}
 	)
 
@@ -47,7 +50,8 @@ target_link_libraries(proxymodels
 		${GTK_LINK_LIB_TARGETS}
 #		${AMLM_TAGLIB_TARGET}
 #		${AMLM_LIBCUE_TARGET}
-                      models
+#	PRIVATE
+		models
 )
 target_include_directories(proxymodels
 	PUBLIC

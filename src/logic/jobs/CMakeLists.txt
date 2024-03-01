@@ -32,11 +32,11 @@ set(jobs_HEADER_FILES
 		LibraryRescannerJob.h
 	)
 
-#target_sources_local(jobs
-add_library(jobs STATIC EXCLUDE_FROM_ALL
-#	PUBLIC
+add_library(jobs STATIC EXCLUDE_FROM_ALL)
+target_sources(jobs
+	PUBLIC
 		${jobs_HEADER_FILES}
-#	PRIVATE
+	PRIVATE
 		${jobs_SOURCE_FILES}
 	)
 

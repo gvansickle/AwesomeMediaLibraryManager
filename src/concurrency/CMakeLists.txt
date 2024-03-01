@@ -71,12 +71,12 @@ set(SOURCE_FILES_UTILS_CONCURRENCY
 	WorkerThreadControllerBase.cpp
 	)
 
-add_library(concurrency STATIC EXCLUDE_FROM_ALL
-#target_sources(concurrency
-#	PUBLIC
+add_library(concurrency STATIC EXCLUDE_FROM_ALL)
+target_sources(concurrency
+	PUBLIC
 		${HEADER_FILES_UTILS_CONCURRENCY}
+	PRIVATE
 		${PRIVATE_HEADER_FILES_UTILS_CONCURRENCY}
-#	PRIVATE
 		${SOURCE_FILES_UTILS_CONCURRENCY}
 		)
 target_link_libraries(concurrency
@@ -91,9 +91,9 @@ target_include_directories(concurrency
 	PUBLIC
 		# For config.h
 		${PROJECT_BINARY_DIR}/src
-	PUBLIC
+	PRIVATE
 		# For anything in <root>/src: utils, logic, future, gui.
 		${PROJECT_SOURCE_DIR}/src
-		                   ${PROJECT_SOURCE_DIR}/src/logic
-		                   ${PROJECT_SOURCE_DIR}/src/logic/models
+       ${PROJECT_SOURCE_DIR}/src/logic
+       ${PROJECT_SOURCE_DIR}/src/logic/models
 		)

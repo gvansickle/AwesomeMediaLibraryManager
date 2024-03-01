@@ -165,8 +165,6 @@ set(PROJECT_COMMON_INTERNAL_LINK_LIB_TARGETS
         SQLite::SQLite3
 )
 
-### @OBSOLETE Models
-#list(APPEND SOURCE_FILES ${SOURCE_FILES_LOGIC_MODELS})
 
 # QT5_LOGGING_CATEGORY_SOURCE_FILES
 list(APPEND SOURCE_FILES ${QT5_LOGGING_CATEGORY_SOURCE_FILES})
@@ -186,7 +184,7 @@ list(APPEND amlm_SRCS ${SOURCE_FILES} ${HEADER_FILES}
 # @link http://kfunk.org/2017/12/20/tips-streamlining-kde-application-for-deployment-microsoft-windows/
 add_library(src STATIC EXCLUDE_FROM_ALL)
 target_link_libraries(src
-	PUBLIC
+	PRIVATE
 		logic
 	PRIVATE
 		resources
@@ -273,6 +271,7 @@ target_link_libraries(${PROJECT_NAME}
 		# Targetized C++ compile settings.
 		cxx_settings
 		cxx_definitions_qt
+	PRIVATE
 		src
 		logic
 	PRIVATE

@@ -97,11 +97,11 @@ set(logic_subdir_HEADERS
     UUIncD.h
 	)
 
-#target_sources_local(logic
-add_library(logic STATIC EXCLUDE_FROM_ALL
-#	PUBLIC
+add_library(logic STATIC EXCLUDE_FROM_ALL)
+target_sources(logic
+	PUBLIC
 		${logic_subdir_HEADERS}
-#	PRIVATE
+	PRIVATE
 		${logic_subdir_SOURCES}
 	)
 target_link_libraries(logic
@@ -120,7 +120,6 @@ target_link_libraries(logic
 		${GTK_LINK_LIB_TARGETS}
 		${AMLM_TAGLIB_TARGET}
 		${AMLM_LIBCUE_TARGET}
-
 	)
 target_include_directories(logic
 	PUBLIC
@@ -129,8 +128,8 @@ target_include_directories(logic
 		#gsauthof_tree_model/tree_model
 	PRIVATE
 		${PROJECT_SOURCE_DIR}/src
-		                   ${PROJECT_SOURCE_DIR}/src/logic/models
+		${PROJECT_SOURCE_DIR}/src/logic/models
 	)
 
 
-
+message(STATUS "QT5_LINK_LIB_TARGETS: ${QT5_LINK_LIB_TARGETS}")

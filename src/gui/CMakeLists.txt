@@ -108,20 +108,20 @@ PREPEND_TO_EACH(gui_settings_SOURCE_FILES "settings/" ${gui_settings_SOURCE_FILE
 add_subdirectory(activityprogressmanager)
 add_subdirectory(widgets)
 
-add_library(gui STATIC EXCLUDE_FROM_ALL
-#target_sources(gui
-#	PUBLIC
+add_library(gui STATIC EXCLUDE_FROM_ALL)
+target_sources(gui
+	PRIVATE
 		${gui_HEADER_FILES}
 		${gui_settings_SOURCE_FILES}
 		${HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER}
-#	PRIVATE
-		${gui_SOURCE_FILES}
+	PRIVATE
+        ${gui_SOURCE_FILES}
 		${SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER}
 		${UI_FILES_GUI_ACTIVITYPROGRESSMANAGER}
 		)
 set_target_properties(gui
     PROPERTIES
-    	AUTOMOC ON
+#    	AUTOMOC ON
     	AUTOUIC ON
     	AUTORCC ON
     	)
@@ -130,8 +130,9 @@ target_link_libraries(gui
 		${QT5_LINK_LIB_TARGETS}
 		${KF5_LINK_LIB_TARGETS}
 		${GTK_LINK_LIB_TARGETS}
-		widgets
+#		widgets
 	PRIVATE
+		widgets
 		resources
 		)
 target_include_directories(gui
