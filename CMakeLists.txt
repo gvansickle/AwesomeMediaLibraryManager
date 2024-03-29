@@ -552,66 +552,6 @@ if(Boost_FOUND)
 endif()
 endif() # BOOST
 
-if(FALSE)
-# Ok, we're going to try to pull in just Wt::Dbo.
-# Following instructions here: @link https://www.webtoolkit.eu/wt/doc/tutorial/dbo.html#_installation :
-# "Starting from a Wt source package (and on a UNIX-like environment),
-# you would do the following to build and install only Wt::Dbo:
-# $ cd wt-xxx
-# $ mkdir build
-# $ cd build
-# $ cmake ../ # extra options may be needed, see instructions
-# $ cd src/Wt/Dbo
-# $ make
-# $ sudo make install"
-#
-# Also @link https://www.webtoolkit.eu/wt/doc/reference/html/InstallationUnix.html for the "see instructions" above.
-#
-#download_project
-include(ExternalProject)
-ExternalProject_Add(
-	wt_dbo # Creates variables wt_dbo_{SOURCE,BINARY}_DIR
-	GIT_REPOSITORY https://github.com/emweb/wt.git
-	GIT_TAG        master
-	GIT_PROGRESS  true
-	${UPDATE_DISCONNECTED_IF_AVAILABLE}
-	# Configuration
-	CMAKE_ARGS
-		${CMAKE_ARGS}
-		"-DCMAKE_BUILD_TYPE=$<CONFIG>"
-		"-DCMAKE_CONFIGURATION_TYPES=$<CONFIG>"
-		"-DBUILD_EXAMPLES=OFF"
-		"-DINSTALL_RESOURCES=OFF"
-		"-DENABLE_SSL=OFF"
-		"-DENABLE_HARU=OFF"
-		"-DENABLE_PANGO=OFF"
-		"-DENABLE_SQLITE=ON"
-		"-DENABLE_POSTGRES=OFF"
-		"-DENABLE_FIREBIRD=OFF"
-		"-DENABLE_MYSQL=OFF"
-		"-DENABLE_MSSQLSERVER=OFF"
-		"-DENABLE_QT4=OFF"
-		"-DENABLE_LIBWTTEST=OFF"
-		"-DENABLE_LIBWTDBO=ON"
-		"-DENABLE_OPENGL=OFF"
-		"-DBUILD_TESTS=OFF"
-		"-DCONNECTOR_ISAPI=OFF"
-		"-DCONNECTOR_HTTP=OFF"
-		"-DCONNECTOR_FCGI=OFF"
-	# Build step options
-	BUILD_COMMAND "" #${CMAKE_COMMAND} -E echo "Starting $<CONFIG> build of Wt::Dbo in binary dir: <BINARY_DIR>"
-  	#COMMAND       ${CMAKE_COMMAND} --build <BINARY_DIR> --config $<CONFIG> --target wt-target-dbo # wtdbo
-  	#COMMAND       ${CMAKE_COMMAND} -E echo "$<CONFIG> build of Wt::Dbo complete"
-
-	# Install
-	# This target is exported: wt-target-dbo, target is wtdbo
-	INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "Starting $<CONFIG> install of Wt::Dbo to install dir: <INSTALL_DIR>"
-	COMMAND			${CMAKE_COMMAND} --build <BINARY_DIR> --config $<CONFIG> --target install
- 	COMMAND			${CMAKE_COMMAND} -E echo "$<CONFIG> install of Wt::Dbo complete"
-	)
-#add_subdirectory(${wt_dbo_SOURCE_DIR} ${wt_dbo_BINARY_DIR} EXCLUDE_FROM_ALL)
-#print_varlist(wt_dbo_SOURCE_DIR wt_dbo_BINARY_DIR)
-endif()
 
 # Qt logging categories.
 # @link https://api.kde.org/ecm/module/ECMQtDeclareLoggingCategory.html
