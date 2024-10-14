@@ -139,7 +139,7 @@ target_include_directories(gui
 	PUBLIC
 		# For config.h
 		${PROJECT_BINARY_DIR}/src
-	PUBLIC
+	PRIVATE
 		# For anything in <root>/src: utils, logic, future, gui.
 		${PROJECT_SOURCE_DIR}/src
 		${Qt5Gui_PRIVATE_INCLUDE_DIRS} ### @todo OBSOLETE THIS

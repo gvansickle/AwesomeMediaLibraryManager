@@ -48,8 +48,12 @@ include(cmake/GetVersionInfo.cmake)
 # be prior to project().
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
+if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
+	message("ERROR: ${CMAKE_SOURCE_DIR} == ${CMAKE_BINARY_DIR}")
+	message(FATAL_ERROR "Prevented in-root-of-tree build. Please create a build directory outside of the source code root directory and call cmake from there. Thank you.")
+endif()
 
-if(TRUE)
+if(FALSE)
 	### Set up the <LANG>_COMPILER_LAUNCHERs.
 	### @note "This property is initialized by the value of 
 	###       the CMAKE_<LANG>_COMPILER_LAUNCHER variable if it is set when a target is created."
@@ -71,13 +75,6 @@ project(AwesomeMediaLibraryManager
         VERSION ${GVI_VERSION_TAG_QUAD}
         DESCRIPTION "The Awesome Media Library Manager"
         LANGUAGES C CXX)
-
-# Prevent an in-root-of-src-tree build.
-set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
-if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
-        message("ERROR: ${CMAKE_SOURCE_DIR} == ${CMAKE_BINARY_DIR}")
-	message(FATAL_ERROR "Prevented in-root-of-tree build. Please create a build directory outside of the source code root directory and call cmake from there. Thank you.")
-endif()
 
 # Additional project info.
 set(PROJECT_AUTHOR "Gary R. Van Sickle")
@@ -107,6 +104,10 @@ source_group(TREE ${CMAKE_SOURCE_DIR})
 set(AUTOGEN_SOURCE_GROUP autogen)
 set(AUTOMOC_SOURCE_GROUP automoc)
 set(AUTORCC_SOURCE_GROUP autorcc)
+
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
 
 ###
 ### ECM Setup ====================================================================================================
@@ -615,12 +616,12 @@ configure_file(${PROJECT_SOURCE_DIR}/src/config.h.in
 ### Add the project subdirs.
 ###
 #set(amlm_APP_ICONS "re-set this in resources_subdir")
-add_subdirectory(resources)
+add_subdirectory(resources EXCLUDE_FROM_ALL)
 message(AUTHOR_WARNING "amlm_APP_ICONS: ${amlm_APP_ICONS}")
-add_subdirectory(src)
+add_subdirectory(src EXCLUDE_FROM_ALL)
 
-### @todo IS THIS STILL TRUE??? Google Test creates a target named "tests" as well.
-add_subdirectory(tests STATIC EXCLUDE_FROM_ALL)
+### @todo IS THIS STILL TRUE???: Google Test creates a target named "tests" as well.
+add_subdirectory(tests EXCLUDE_FROM_ALL)
 
 #include(resources/CMakeLists.txt)
 #print_varlist(amlm_ICONS amlm_SRCS)
@@ -714,6 +715,12 @@ add_custom_target(graphviz ALL
 	COMMAND "${CMAKE_COMMAND}" "--graphviz=graphviz/amlm.dot" .
 	WORKING_DIRECTORY "${CMAKE_BINARY_DIR}")
 endif()
+
+
+###
+### Testing
+###
+enable_testing()
 
 
 ###

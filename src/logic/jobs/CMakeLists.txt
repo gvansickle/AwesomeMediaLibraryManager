@@ -34,7 +34,7 @@ set(jobs_HEADER_FILES
 
 add_library(jobs STATIC EXCLUDE_FROM_ALL)
 target_sources(jobs
-	PUBLIC
+	PRIVATE
 		${jobs_HEADER_FILES}
 	PRIVATE
 		${jobs_SOURCE_FILES}

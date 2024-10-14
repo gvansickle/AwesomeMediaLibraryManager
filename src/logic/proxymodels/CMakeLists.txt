@@ -36,26 +36,25 @@ set(proxymodels_subdir_HEADERS
 
 add_library(proxymodels STATIC EXCLUDE_FROM_ALL)
 target_sources(proxymodels
-	PUBLIC
+	PRIVATE
         ${proxymodels_subdir_HEADERS}
 	PRIVATE
 		${proxymodels_subdir_SOURCES}
 	)
-
-target_link_libraries(proxymodels
-	PUBLIC
-	    #${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS} ### @todo "logic_subdir links to itself".
-		${QT5_LINK_LIB_TARGETS}
-		${KF5_LINK_LIB_TARGETS}
-		${GTK_LINK_LIB_TARGETS}
-#		${AMLM_TAGLIB_TARGET}
-#		${AMLM_LIBCUE_TARGET}
-#	PRIVATE
-		models
-)
 target_include_directories(proxymodels
 	PUBLIC
 	    # For config.h
 		${PROJECT_BINARY_DIR}/src
 		${PROJECT_SOURCE_DIR}/src
 	)
+target_link_libraries(proxymodels
+	PUBLIC
+		#${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS} ### @todo "logic_subdir links to itself".
+		${QT5_LINK_LIB_TARGETS}
+		${KF5_LINK_LIB_TARGETS}
+		#		${GTK_LINK_LIB_TARGETS}
+		#		${AMLM_TAGLIB_TARGET}
+		#		${AMLM_LIBCUE_TARGET}
+		#	PRIVATE
+		models
+)

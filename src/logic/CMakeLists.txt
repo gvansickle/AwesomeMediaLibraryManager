@@ -26,7 +26,7 @@ add_subdirectory(proxymodels)
 add_subdirectory(serialization)
 
 # The Tree Model from gsauthof.
-add_subdirectory(gsauthof_tree_model EXCLUDE_FROM_ALL)
+#add_subdirectory(gsauthof_tree_model EXCLUDE_FROM_ALL)
 
 set(logic_subdir_SOURCES
 	AMLMCompoundTrack.cpp
@@ -99,11 +99,21 @@ set(logic_subdir_HEADERS
 
 add_library(logic STATIC EXCLUDE_FROM_ALL)
 target_sources(logic
-	PUBLIC
+	PRIVATE
 		${logic_subdir_HEADERS}
 	PRIVATE
 		${logic_subdir_SOURCES}
 	)
+target_include_directories(logic
+   PUBLIC
+       # For config.h
+       ${PROJECT_BINARY_DIR}/src
+       #gsauthof_tree_model/tree_model
+   PRIVATE
+       ${PROJECT_SOURCE_DIR}/src
+       ${PROJECT_SOURCE_DIR}/src/logic/models
+)
+
 target_link_libraries(logic
 	PUBLIC
 		concurrency
@@ -112,6 +122,7 @@ target_link_libraries(logic
 		models
 		proxymodels
 		serialization
+		utils
 		#tree_model
 	PRIVATE
 	    #${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS} ### @todo "logic_subdir links to itself".
@@ -120,15 +131,6 @@ target_link_libraries(logic
 		${GTK_LINK_LIB_TARGETS}
 		${AMLM_TAGLIB_TARGET}
 		${AMLM_LIBCUE_TARGET}
-	)
-target_include_directories(logic
-	PUBLIC
-	    # For config.h
-		${PROJECT_BINARY_DIR}/src
-		#gsauthof_tree_model/tree_model
-	PRIVATE
-		${PROJECT_SOURCE_DIR}/src
-		${PROJECT_SOURCE_DIR}/src/logic/models
 	)
 
 

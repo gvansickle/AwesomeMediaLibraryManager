@@ -154,15 +154,15 @@ add_subdirectory(utils)
 
 # Collect all the project-common internal and external link library targets into a single variable.
 set(PROJECT_COMMON_INTERNAL_LINK_LIB_TARGETS
-		kconfig_target
-		concurrency
-		future
-		gui
-		logic
-		resources
-		utils
-		${AMLM_WT_LIBRARIES}
-        SQLite::SQLite3
+#		kconfig_target
+#		concurrency
+#		future
+#		gui
+#		logic
+#		resources
+#		utils
+#		${AMLM_WT_LIBRARIES}
+#        SQLite::SQLite3
 )
 
 
@@ -183,11 +183,25 @@ list(APPEND amlm_SRCS ${SOURCE_FILES} ${HEADER_FILES}
 # @link https://api.kde.org/ecm/module/ECMAddAppIcon.html
 # @link http://kfunk.org/2017/12/20/tips-streamlining-kde-application-for-deployment-microsoft-windows/
 add_library(src STATIC EXCLUDE_FROM_ALL)
+target_include_directories(src
+   PRIVATE
+       logic
+       utils
+   PRIVATE
+
+)
 target_link_libraries(src
-	PRIVATE
+	PUBLIC
 		logic
+		kconfig_target
+		concurrency
+		future
+		gui
+		logic
+		utils
+		${AMLM_WT_LIBRARIES}
+		SQLite::SQLite3
 	PRIVATE
-		resources
 		# Boost
 		Boost::boost					# Target for header-only dependencies
 		Boost::diagnostic_definitions # For information about Boost's automatic linking
@@ -273,9 +287,13 @@ target_link_libraries(${PROJECT_NAME}
 		cxx_definitions_qt
 	PRIVATE
 		src
-		logic
-	PRIVATE
-		${PROJECT_COMMON_LINK_LIBS})
+		utils
+#		logic
+#		gui
+#		concurrency
+)
+#	PRIVATE
+#		${PROJECT_COMMON_LINK_LIBS})
 
 ### @todo breeze
 #add_dependencies(${PROJECT_NAME} icons_oxygen)

@@ -73,7 +73,7 @@ set(SOURCE_FILES_UTILS_CONCURRENCY
 
 add_library(concurrency STATIC EXCLUDE_FROM_ALL)
 target_sources(concurrency
-	PUBLIC
+	PRIVATE
 		${HEADER_FILES_UTILS_CONCURRENCY}
 	PRIVATE
 		${PRIVATE_HEADER_FILES_UTILS_CONCURRENCY}
@@ -96,4 +96,4 @@ target_include_directories(concurrency
 		${PROJECT_SOURCE_DIR}/src
        ${PROJECT_SOURCE_DIR}/src/logic
        ${PROJECT_SOURCE_DIR}/src/logic/models
-		)
+)

@@ -40,7 +40,7 @@ set(gui_widgets_UI_FILES
 #	PUBLIC
 add_library(widgets STATIC EXCLUDE_FROM_ALL)
 target_sources(widgets
-	PUBLIC
+	PRIVATE
 		${gui_widgets_HEADER_FILES}
 #	PRIVATE
 		${gui_widgets_SOURCE_FILES}

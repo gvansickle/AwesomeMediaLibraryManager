@@ -43,7 +43,7 @@ set(serialization_subdir_HEADERS
 
 add_library(serialization STATIC EXCLUDE_FROM_ALL)
 target_sources(serialization
-	PUBLIC
+	PRIVATE
 		${serialization_subdir_HEADERS}
 	PRIVATE
 		${serialization_subdir_SOURCES}

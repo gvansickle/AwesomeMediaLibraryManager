@@ -42,7 +42,7 @@ configure_file(VersionInfo.cpp.in VersionInfo.cpp)
 
 add_library(resources STATIC EXCLUDE_FROM_ALL)
 target_sources(resources
-	PUBLIC
+	PRIVATE
 		VersionInfo.h
 	PRIVATE
         ${CMAKE_CURRENT_BINARY_DIR}/VersionInfo.cpp
