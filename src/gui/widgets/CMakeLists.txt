@@ -42,7 +42,6 @@ add_library(widgets STATIC EXCLUDE_FROM_ALL)
 target_sources(widgets
 	PRIVATE
 		${gui_widgets_HEADER_FILES}
-#	PRIVATE
 		${gui_widgets_SOURCE_FILES}
 		${gui_widgets_UI_FILES}
 	)

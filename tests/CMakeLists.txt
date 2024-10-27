@@ -30,6 +30,13 @@ target_sources(tests
 		TestLifecycleManager.h
 		TestHelpers.h
 	)
+target_include_directories(tests
+	PRIVATE
+		# For config.h
+		${PROJECT_BINARY_DIR}/src
+		${Qt5Gui_PRIVATE_INCLUDE_DIRS}
+		${Boost_INCLUDE_DIRS}
+)
 target_link_libraries(tests
 	PRIVATE
 		gtest
@@ -39,10 +46,4 @@ target_link_libraries(tests
 		#${Boost_LIBRARIES}
 )
 
-target_include_directories(tests
-	PRIVATE
-	    # For config.h
-		${PROJECT_BINARY_DIR}/src
-		${Qt5Gui_PRIVATE_INCLUDE_DIRS}
-		${Boost_INCLUDE_DIRS}
-	)
+

@@ -38,7 +38,6 @@ add_library(proxymodels STATIC EXCLUDE_FROM_ALL)
 target_sources(proxymodels
 	PRIVATE
         ${proxymodels_subdir_HEADERS}
-	PRIVATE
 		${proxymodels_subdir_SOURCES}
 	)
 target_include_directories(proxymodels

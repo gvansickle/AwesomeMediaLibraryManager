@@ -369,7 +369,7 @@ list(APPEND AMLM_SOURCE_FILES_TEST
 	concurrency/tests/AMLMJobTests.cpp
 	)
 list(APPEND AMLM_HEADER_FILES_TEST
-#	${PROJECT_SOURCE_DIR}/tests/TestHelpers.h
+	${PROJECT_SOURCE_DIR}/tests/TestHelpers.h
 	${PROJECT_SOURCE_DIR}/tests/FlagsAndEnumsTests.h
 	concurrency/tests/ExtAsyncTaskTests.h
 	concurrency/tests/ExtAsyncTests.h
@@ -386,6 +386,12 @@ target_sources(${TEST_EXE_TARGET}
 		${amlm_settings_SRCS}
 		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
 	)
+target_include_directories(${TEST_EXE_TARGET}
+	PRIVATE
+		"utils/nomoc"
+		${INCLUDE_DIR_VERDIGRIS}
+		"logic"
+)
 #target_compile_features(${TEST_EXE_TARGET} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
 target_compile_definitions(${TEST_EXE_TARGET}
 	PUBLIC
@@ -395,10 +401,6 @@ target_compile_definitions(${TEST_EXE_TARGET}
 	PRIVATE
 		"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
 		"TEST_FWK_IS_GTEST=1"
-	)
-target_include_directories(${TEST_EXE_TARGET} PRIVATE
-	"utils/nomoc"
-	${INCLUDE_DIR_VERDIGRIS}
 	)
 target_compile_definitions(${TEST_EXE_TARGET} PRIVATE "GTEST_LANGUAGE_CXX11")
 target_compile_options(${TEST_EXE_TARGET} PRIVATE ${EXTRA_CXX_COMPILE_FLAGS})

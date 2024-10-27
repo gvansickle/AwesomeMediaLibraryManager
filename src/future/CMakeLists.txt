@@ -44,21 +44,22 @@ add_library(future STATIC EXCLUDE_FROM_ALL)
 target_sources(future
 	PRIVATE
 		${HEADER_FILES_SRC_FUTURE}
-	PRIVATE
 		${SOURCE_FILES_SRC_FUTURE}
 )
-target_link_libraries(future
-                      PUBLIC
-                        ${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS})
 target_include_directories(future
 	PUBLIC
 		${CMAKE_CURRENT_LIST_DIR}
-	    ${CMAKE_CURRENT_LIST_DIR}/.. # To allow <future/whatever.h>
-#		${boost_callable_traits_SOURCE_DIR}
-#		${boost_callable_traits_BINARY_DIR}
+		${CMAKE_CURRENT_LIST_DIR}/.. # To allow <future/whatever.h>
+		#		${boost_callable_traits_SOURCE_DIR}
+		#		${boost_callable_traits_BINARY_DIR}
 	PRIVATE
 		# For config.h
 		${PROJECT_BINARY_DIR}/src
-		)
+)
+
+target_link_libraries(future
+	PUBLIC
+		${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS}
+)
 
 

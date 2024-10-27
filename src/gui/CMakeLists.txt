@@ -114,14 +114,22 @@ target_sources(gui
 		${gui_HEADER_FILES}
 		${gui_settings_SOURCE_FILES}
 		${HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER}
-	PRIVATE
         ${gui_SOURCE_FILES}
 		${SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER}
 		${UI_FILES_GUI_ACTIVITYPROGRESSMANAGER}
 		)
+target_include_directories(gui
+	PUBLIC
+		# For config.h
+		${PROJECT_BINARY_DIR}/src
+	PRIVATE
+		# For anything in <root>/src: utils, logic, future, gui.
+		${PROJECT_SOURCE_DIR}/src
+		${Qt5Gui_PRIVATE_INCLUDE_DIRS} ### @todo OBSOLETE THIS
+)
 set_target_properties(gui
     PROPERTIES
-#    	AUTOMOC ON
+    	AUTOMOC ON
     	AUTOUIC ON
     	AUTORCC ON
     	)
@@ -135,12 +143,4 @@ target_link_libraries(gui
 		widgets
 		resources
 		)
-target_include_directories(gui
-	PUBLIC
-		# For config.h
-		${PROJECT_BINARY_DIR}/src
-	PRIVATE
-		# For anything in <root>/src: utils, logic, future, gui.
-		${PROJECT_SOURCE_DIR}/src
-		${Qt5Gui_PRIVATE_INCLUDE_DIRS} ### @todo OBSOLETE THIS
-		)
+
