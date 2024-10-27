@@ -318,7 +318,7 @@ find_package(Qt5Test REQUIRED)
 # @todo Also per the docs, this has to be in the source directory root, but it seems to work here:
 # "Note that ctest expects to find a test file in the build directory root.
 # Therefore, this command should be in the source directory root."
-enable_testing()
+#enable_testing()
 # We do not want to include CTest or CDash.  They result in hundreds of top-level targets
 # that we have no use for.  Per @link https://stackoverflow.com/questions/45169854/cmake-in-qtcreator-4-3-shows-many-automatic-targets-how-to-remove-hide-them,
 # The above enable_testing() is enough.
@@ -376,7 +376,7 @@ list(APPEND AMLM_HEADER_FILES_TEST
 	concurrency/tests/AMLMJobTests.h
 	)
 
-add_executable(${TEST_EXE_TARGET} ${WIN32_OR_MACOS_BUNDLE} "")
+add_executable(${TEST_EXE_TARGET} ${WIN32_OR_MACOS_BUNDLE} EXCLUDE_FROM_ALL)
 target_sources(${TEST_EXE_TARGET}
 	PRIVATE
 	    alltests.cpp ${AMLM_SOURCE_FILES_TEST} ${AMLM_HEADER_FILES_TEST}
@@ -433,7 +433,7 @@ if(TRUE)
 ### Qt5 QTests
 ###
 #set(test_qtestamlmjobtests_SRCS concurrency/tests/QTestAMLMJobTests.cpp)
-add_executable(test_qtestamlmjobtests "") #${test_qtestamlmjobtests_SRCS} ${} ${amlm_settings_SRCS})
+add_executable(test_qtestamlmjobtests EXCLUDE_FROM_ALL) #${test_qtestamlmjobtests_SRCS} ${} ${amlm_settings_SRCS})
 target_sources(test_qtestamlmjobtests
 	PRIVATE
 	    concurrency/tests/QTestAMLMJobTests.cpp
@@ -475,8 +475,11 @@ endif() # END Enable test target.
 ### @note ${KDE_INSTALL_TARGETS_DEFAULT_ARGS} "should be used when libraries or user-executable applications are installed,
 ###        [...] It MUST NOT be used for installing plugins, system admin executables or executables only intended for use internally by
 ###        other code.  Those should use KDE_INSTALL_PLUGINDIR, KDE_INSTALL_SBINDIR or KDE_INSTALL_LIBEXECDIR respectively."
-### @see https://api.kde.org/ecm/kde-module/KDEInstallDirs.html?highlight=kde_install_targets_default_args#kdeinstalldirs
-install(TARGETS ${PROJECT_NAME} ${KDE_INSTALL_TARGETS_DEFAULT_ARGS}
+#### @see https://api.kde.org/ecm/kde-module/KDEInstallDirs.html?highlight=kde_install_targets_default_args#kdeinstalldirs
+install(TARGETS ${PROJECT_NAME}
+            RUNTIME
+                DESTINATION bin
+        #${KDE_INSTALL_TARGETS_DEFAULT_ARGS}
 				#RUNTIME DESTINATION . # Default is /usr/local/${PROJECT_NAME} on UNIX and c:/Program Files/${PROJECT_NAME}/${PROJECT_NAME} on Windows.
 				#LIBRARY DESTINATION .
 				#ARCHIVE DESTINATION .
@@ -487,11 +490,11 @@ install(FILES ${AppIcon_rcc}
 		COMPONENT coreapp)
 
 ### Install the test executable.  We do this because for debugging we need the same gdb_wrap.sh to be found.
-install(TARGETS ${TEST_EXE_TARGET} ${KDE_INSTALL_TARGETS_DEFAULT_ARGS}
-				#RUNTIME DESTINATION . # Default is /usr/local/${PROJECT_NAME} on UNIX and c:/Program Files/${PROJECT_NAME}/${PROJECT_NAME} on Windows.
-				#LIBRARY DESTINATION .
-				#ARCHIVE DESTINATION .
-		COMPONENT coreapp)
+#install(TARGETS ${TEST_EXE_TARGET} ${KDE_INSTALL_TARGETS_DEFAULT_ARGS}
+#				#RUNTIME DESTINATION . # Default is /usr/local/${PROJECT_NAME} on UNIX and c:/Program Files/${PROJECT_NAME}/${PROJECT_NAME} on Windows.
+#				#LIBRARY DESTINATION .
+#				#ARCHIVE DESTINATION .
+#		COMPONENT coreapp)
 		
 # Make the built and installed app debuggable.
 # Add a .gdbinit file and support files to the install directory.

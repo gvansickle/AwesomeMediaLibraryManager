@@ -95,7 +95,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Min versions of Qt5, KF5, KF5/ECM.
 set(QT_MIN_VERSION "5.12.1")
 set(KF5_MIN_VERSION "5.57.0") ### @win temp: Only have 5.52.0
-set(ECM_MIN_VERSION "5.57.0")
+set(ECM_MIN_VERSION "6.0.0") #"5.57.0")
 
 ###
 ### IDE helper setup
@@ -618,14 +618,14 @@ configure_file(${PROJECT_SOURCE_DIR}/src/config.h.in
 #set(amlm_APP_ICONS "re-set this in resources_subdir")
 add_subdirectory(resources EXCLUDE_FROM_ALL)
 message(AUTHOR_WARNING "amlm_APP_ICONS: ${amlm_APP_ICONS}")
-add_subdirectory(src EXCLUDE_FROM_ALL)
+add_subdirectory(src)
 
 ###
 ### Testing
 ###
 enable_testing()
 ### @todo IS THIS STILL TRUE???: Google Test creates a target named "tests" as well.
-add_subdirectory(tests EXCLUDE_FROM_ALL)
+add_subdirectory(tests)
 
 #include(resources/CMakeLists.txt)
 #print_varlist(amlm_ICONS amlm_SRCS)
@@ -636,6 +636,22 @@ add_subdirectory(tests EXCLUDE_FROM_ALL)
 # needed for a windows build (essentially just the configured .rc file).
 add_project_meta(META_FILES_TO_INCLUDE)
 
+###
+### Install (@todo icons are still above, move them here)
+###
+### The AMLM binary.
+### @note ${KDE_INSTALL_TARGETS_DEFAULT_ARGS} "should be used when libraries or user-executable applications are installed,
+###        [...] It MUST NOT be used for installing plugins, system admin executables or executables only intended for use internally by
+###        other code.  Those should use KDE_INSTALL_PLUGINDIR, KDE_INSTALL_SBINDIR or KDE_INSTALL_LIBEXECDIR respectively."
+### @see https://api.kde.org/ecm/kde-module/KDEInstallDirs.html?highlight=kde_install_targets_default_args#kdeinstalldirs
+#install(TARGETS ${PROJECT_NAME}
+#        RUNTIME
+#        DESTINATION bin
+#        #${KDE_INSTALL_TARGETS_DEFAULT_ARGS}
+#        #RUNTIME DESTINATION . # Default is /usr/local/${PROJECT_NAME} on UNIX and c:/Program Files/${PROJECT_NAME}/${PROJECT_NAME} on Windows.
+#        #LIBRARY DESTINATION .
+#        #ARCHIVE DESTINATION .
+#        COMPONENT coreapp)
 
 
 ###
