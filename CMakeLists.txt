@@ -620,6 +620,10 @@ add_subdirectory(resources EXCLUDE_FROM_ALL)
 message(AUTHOR_WARNING "amlm_APP_ICONS: ${amlm_APP_ICONS}")
 add_subdirectory(src EXCLUDE_FROM_ALL)
 
+###
+### Testing
+###
+enable_testing()
 ### @todo IS THIS STILL TRUE???: Google Test creates a target named "tests" as well.
 add_subdirectory(tests EXCLUDE_FROM_ALL)
 
@@ -717,10 +721,7 @@ add_custom_target(graphviz ALL
 endif()
 
 
-###
-### Testing
-###
-enable_testing()
+
 
 
 ###

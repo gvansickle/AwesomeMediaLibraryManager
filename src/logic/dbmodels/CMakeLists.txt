@@ -1,5 +1,5 @@
 #
-# Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2018, 2024 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -36,8 +36,6 @@ set(dbmodels_subdir_SOURCES
 	ScanResultsTableModel.h
 		)
 
-#target_sources_local(dbmodels
-#	PUBLIC
 add_library(dbmodels STATIC EXCLUDE_FROM_ALL
 		${dbmodels_subdir_SOURCES}
 	)

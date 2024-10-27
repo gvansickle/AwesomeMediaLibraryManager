@@ -1,5 +1,5 @@
 #
-# Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2018, 2024 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -36,7 +36,6 @@ add_library(jobs STATIC EXCLUDE_FROM_ALL)
 target_sources(jobs
 	PRIVATE
 		${jobs_HEADER_FILES}
-	PRIVATE
 		${jobs_SOURCE_FILES}
 	)
 
@@ -51,10 +50,9 @@ target_link_libraries(jobs
         logic
 		)
 target_include_directories(jobs
-	PUBLIC
+	PRIVATE
 	    # For config.h
 		${PROJECT_BINARY_DIR}/src
-	PRIVATE
 		# For anything under src: utils/, logic/, etc.
 		${PROJECT_SOURCE_DIR}/src
 	)

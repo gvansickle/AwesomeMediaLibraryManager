@@ -1,5 +1,5 @@
 #
-# Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2018, 2019, 2024 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -44,7 +44,6 @@ add_library(resources STATIC EXCLUDE_FROM_ALL)
 target_sources(resources
 	PRIVATE
 		VersionInfo.h
-	PRIVATE
         ${CMAKE_CURRENT_BINARY_DIR}/VersionInfo.cpp
 		${amlm_APP_ICONS}
 		${amlm_ICONS}

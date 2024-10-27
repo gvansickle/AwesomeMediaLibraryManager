@@ -1,5 +1,5 @@
 #
-# Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2018, 2024 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -75,7 +75,6 @@ add_library(concurrency STATIC EXCLUDE_FROM_ALL)
 target_sources(concurrency
 	PRIVATE
 		${HEADER_FILES_UTILS_CONCURRENCY}
-	PRIVATE
 		${PRIVATE_HEADER_FILES_UTILS_CONCURRENCY}
 		${SOURCE_FILES_UTILS_CONCURRENCY}
 		)

@@ -1,5 +1,5 @@
 #
-# Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2018, 2019, 2024 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -187,8 +187,6 @@ target_include_directories(src
    PRIVATE
        logic
        utils
-   PRIVATE
-
 )
 target_link_libraries(src
 	PUBLIC

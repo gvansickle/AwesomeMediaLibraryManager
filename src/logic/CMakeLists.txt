@@ -1,5 +1,5 @@
 #
-# Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2018, 2019, 2024 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -101,15 +101,13 @@ add_library(logic STATIC EXCLUDE_FROM_ALL)
 target_sources(logic
 	PRIVATE
 		${logic_subdir_HEADERS}
-	PRIVATE
 		${logic_subdir_SOURCES}
 	)
 target_include_directories(logic
-   PUBLIC
+   PRIVATE
        # For config.h
        ${PROJECT_BINARY_DIR}/src
        #gsauthof_tree_model/tree_model
-   PRIVATE
        ${PROJECT_SOURCE_DIR}/src
        ${PROJECT_SOURCE_DIR}/src/logic/models
 )

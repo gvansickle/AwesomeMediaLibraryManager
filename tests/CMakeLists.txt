@@ -1,5 +1,5 @@
 #
-# Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2018, 2024 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -41,7 +41,6 @@ target_link_libraries(tests
 	PRIVATE
 		gtest
 		gmock
-	PRIVATE
 		amlm_boost_settings_target
 		#${Boost_LIBRARIES}
 )

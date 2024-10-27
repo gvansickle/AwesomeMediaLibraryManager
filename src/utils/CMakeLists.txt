@@ -58,14 +58,12 @@ add_library(utils STATIC EXCLUDE_FROM_ALL)
 target_sources(utils
 	PRIVATE
 		${utils_HEADER_FILES}
-	PRIVATE
 		${utils_SOURCE_FILES}
 		)
 target_include_directories(utils
-	PUBLIC
+	PRIVATE
 		# For config.h
 		${PROJECT_BINARY_DIR}/src
-	PUBLIC
 		# For anything in <root>/src: utils, logic, future, gui.
 		${PROJECT_SOURCE_DIR}/src
 )

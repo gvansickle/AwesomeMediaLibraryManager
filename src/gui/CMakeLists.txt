@@ -1,5 +1,5 @@
 #
-# Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2018, 2024 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -119,10 +119,9 @@ target_sources(gui
 		${UI_FILES_GUI_ACTIVITYPROGRESSMANAGER}
 		)
 target_include_directories(gui
-	PUBLIC
+	PRIVATE
 		# For config.h
 		${PROJECT_BINARY_DIR}/src
-	PRIVATE
 		# For anything in <root>/src: utils, logic, future, gui.
 		${PROJECT_SOURCE_DIR}/src
 		${Qt5Gui_PRIVATE_INCLUDE_DIRS} ### @todo OBSOLETE THIS
@@ -138,7 +137,6 @@ target_link_libraries(gui
 		${QT5_LINK_LIB_TARGETS}
 		${KF5_LINK_LIB_TARGETS}
 		${GTK_LINK_LIB_TARGETS}
-#		widgets
 	PRIVATE
 		widgets
 		resources

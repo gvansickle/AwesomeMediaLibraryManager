@@ -1,5 +1,5 @@
 #
-# Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2018, 2024 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -41,7 +41,7 @@ target_sources(proxymodels
 		${proxymodels_subdir_SOURCES}
 	)
 target_include_directories(proxymodels
-	PUBLIC
+	PRIVATE
 	    # For config.h
 		${PROJECT_BINARY_DIR}/src
 		${PROJECT_SOURCE_DIR}/src
@@ -51,7 +51,7 @@ target_link_libraries(proxymodels
 		#${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS} ### @todo "logic_subdir links to itself".
 		${QT5_LINK_LIB_TARGETS}
 		${KF5_LINK_LIB_TARGETS}
-		#		${GTK_LINK_LIB_TARGETS}
+		${GTK_LINK_LIB_TARGETS}
 		#		${AMLM_TAGLIB_TARGET}
 		#		${AMLM_LIBCUE_TARGET}
 		#	PRIVATE
