@@ -637,21 +637,9 @@ add_subdirectory(tests)
 add_project_meta(META_FILES_TO_INCLUDE)
 
 ###
-### Install (@todo icons are still above, move them here)
+### Install
 ###
-### The AMLM binary.
-### @note ${KDE_INSTALL_TARGETS_DEFAULT_ARGS} "should be used when libraries or user-executable applications are installed,
-###        [...] It MUST NOT be used for installing plugins, system admin executables or executables only intended for use internally by
-###        other code.  Those should use KDE_INSTALL_PLUGINDIR, KDE_INSTALL_SBINDIR or KDE_INSTALL_LIBEXECDIR respectively."
-### @see https://api.kde.org/ecm/kde-module/KDEInstallDirs.html?highlight=kde_install_targets_default_args#kdeinstalldirs
-#install(TARGETS ${PROJECT_NAME}
-#        RUNTIME
-#        DESTINATION bin
-#        #${KDE_INSTALL_TARGETS_DEFAULT_ARGS}
-#        #RUNTIME DESTINATION . # Default is /usr/local/${PROJECT_NAME} on UNIX and c:/Program Files/${PROJECT_NAME}/${PROJECT_NAME} on Windows.
-#        #LIBRARY DESTINATION .
-#        #ARCHIVE DESTINATION .
-#        COMPONENT coreapp)
+# In subdirs.
 
 
 ###

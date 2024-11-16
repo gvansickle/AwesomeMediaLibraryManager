@@ -154,15 +154,15 @@ add_subdirectory(utils)
 
 # Collect all the project-common internal and external link library targets into a single variable.
 set(PROJECT_COMMON_INTERNAL_LINK_LIB_TARGETS
-#		kconfig_target
-#		concurrency
-#		future
-#		gui
-#		logic
-#		resources
-#		utils
-#		${AMLM_WT_LIBRARIES}
-#        SQLite::SQLite3
+		kconfig_target
+		concurrency
+		future
+		gui
+		logic
+		resources
+		utils
+		${AMLM_WT_LIBRARIES}
+        SQLite::SQLite3
 )
 
 
@@ -376,7 +376,7 @@ list(APPEND AMLM_HEADER_FILES_TEST
 	concurrency/tests/AMLMJobTests.h
 	)
 
-add_executable(${TEST_EXE_TARGET} ${WIN32_OR_MACOS_BUNDLE} EXCLUDE_FROM_ALL)
+add_executable(${TEST_EXE_TARGET} ${WIN32_OR_MACOS_BUNDLE})
 target_sources(${TEST_EXE_TARGET}
 	PRIVATE
 	    alltests.cpp ${AMLM_SOURCE_FILES_TEST} ${AMLM_HEADER_FILES_TEST}
@@ -468,7 +468,7 @@ endif()
 endif() # END Enable test target.
 
 ###
-### Installation.
+### Installation. (@todo icons are still in top level, prob should all be in one place)
 ###
 
 ### The AMLM binary.
@@ -476,10 +476,7 @@ endif() # END Enable test target.
 ###        [...] It MUST NOT be used for installing plugins, system admin executables or executables only intended for use internally by
 ###        other code.  Those should use KDE_INSTALL_PLUGINDIR, KDE_INSTALL_SBINDIR or KDE_INSTALL_LIBEXECDIR respectively."
 #### @see https://api.kde.org/ecm/kde-module/KDEInstallDirs.html?highlight=kde_install_targets_default_args#kdeinstalldirs
-install(TARGETS ${PROJECT_NAME}
-            RUNTIME
-                DESTINATION bin
-        #${KDE_INSTALL_TARGETS_DEFAULT_ARGS}
+install(TARGETS ${PROJECT_NAME} ${KDE_INSTALL_TARGETS_DEFAULT_ARGS}
 				#RUNTIME DESTINATION . # Default is /usr/local/${PROJECT_NAME} on UNIX and c:/Program Files/${PROJECT_NAME}/${PROJECT_NAME} on Windows.
 				#LIBRARY DESTINATION .
 				#ARCHIVE DESTINATION .
@@ -490,11 +487,11 @@ install(FILES ${AppIcon_rcc}
 		COMPONENT coreapp)
 
 ### Install the test executable.  We do this because for debugging we need the same gdb_wrap.sh to be found.
-#install(TARGETS ${TEST_EXE_TARGET} ${KDE_INSTALL_TARGETS_DEFAULT_ARGS}
-#				#RUNTIME DESTINATION . # Default is /usr/local/${PROJECT_NAME} on UNIX and c:/Program Files/${PROJECT_NAME}/${PROJECT_NAME} on Windows.
-#				#LIBRARY DESTINATION .
-#				#ARCHIVE DESTINATION .
-#		COMPONENT coreapp)
+install(TARGETS ${TEST_EXE_TARGET} ${KDE_INSTALL_TARGETS_DEFAULT_ARGS}
+				#RUNTIME DESTINATION . # Default is /usr/local/${PROJECT_NAME} on UNIX and c:/Program Files/${PROJECT_NAME}/${PROJECT_NAME} on Windows.
+				#LIBRARY DESTINATION .
+				#ARCHIVE DESTINATION .
+		COMPONENT coreapp)
 		
 # Make the built and installed app debuggable.
 # Add a .gdbinit file and support files to the install directory.
