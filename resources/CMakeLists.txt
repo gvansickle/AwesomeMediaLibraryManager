@@ -1,5 +1,5 @@
 #
-# Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2018, 2019, 2024 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -40,15 +40,20 @@ set(amlm_XQUERIES
 # Generate the version info file.
 configure_file(VersionInfo.cpp.in VersionInfo.cpp)
 
-target_sources_local(resources
-	PUBLIC
-		VersionInfo.h
+add_library(resources STATIC EXCLUDE_FROM_ALL)
+target_sources(resources
 	PRIVATE
-		VersionInfo.cpp
+		VersionInfo.h
+        ${CMAKE_CURRENT_BINARY_DIR}/VersionInfo.cpp
 		${amlm_APP_ICONS}
 		${amlm_ICONS}
 		${amlm_XQUERIES}
 )
+target_include_directories(resources
+	PUBLIC
+		${CMAKE_CURRENT_SOURCE_DIR}/.. ### this is so the built VersionInfo.cpp can find the VersionInfo.h header.
+)
+
 set_target_properties(resources
 	PROPERTIES
 		AUTOMOC OFF

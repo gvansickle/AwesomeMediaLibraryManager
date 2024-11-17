@@ -76,7 +76,7 @@ Q_SIGNALS:
 
     /// Signal-to-self for async loading of metadata for a single LibraryEntry.
 //    void SIGNAL_selfSendReadyResults(MetadataReturnVal results) const;
-	void SIGNAL_selfSendReadyResults(LibraryEntryLoaderJobResult results) const;
+	void SIGNAL_selfSendReadyResults(LibraryEntryLoaderJobResult results);
 
 public:
 	explicit LibraryModel(QObject *parent = nullptr);

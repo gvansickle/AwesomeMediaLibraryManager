@@ -1,5 +1,5 @@
 #
-# Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2018, 2024 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -21,10 +21,8 @@
 
 ### @todo This needs work.  Not sure atm how best to partition this.
 
-# add_library(amlm_tests STATIC
-# 	EXCLUDE_FROM_ALL
-# 	)
-target_sources_local(tests
+add_library(tests STATIC EXCLUDE_FROM_ALL)
+target_sources(tests
 	PRIVATE
 		IResultsSequenceMock.cpp
 		IResultsSequenceMock.h
@@ -32,19 +30,19 @@ target_sources_local(tests
 		TestLifecycleManager.h
 		TestHelpers.h
 	)
+target_include_directories(tests
+	PRIVATE
+		# For config.h
+		${PROJECT_BINARY_DIR}/src
+		${Qt5Gui_PRIVATE_INCLUDE_DIRS}
+		${Boost_INCLUDE_DIRS}
+)
 target_link_libraries(tests
 	PRIVATE
 		gtest
 		gmock
-	PRIVATE
 		amlm_boost_settings_target
 		#${Boost_LIBRARIES}
 )
 
-target_include_directories(tests
-	PRIVATE
-	    # For config.h
-		${PROJECT_BINARY_DIR}/src
-		${Qt5Gui_PRIVATE_INCLUDE_DIRS}
-		${Boost_INCLUDE_DIRS}
-	)
+

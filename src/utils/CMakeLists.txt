@@ -54,12 +54,19 @@ set(utils_SOURCE_FILES
 	VectorHelpers.cpp
 )
 
-target_sources_local(utils
-	PUBLIC
-		${utils_HEADER_FILES}
+add_library(utils STATIC EXCLUDE_FROM_ALL)
+target_sources(utils
 	PRIVATE
+		${utils_HEADER_FILES}
 		${utils_SOURCE_FILES}
 		)
+target_include_directories(utils
+	PRIVATE
+		# For config.h
+		${PROJECT_BINARY_DIR}/src
+		# For anything in <root>/src: utils, logic, future, gui.
+		${PROJECT_SOURCE_DIR}/src
+)
 
 target_link_libraries(utils
 	PUBLIC
@@ -71,11 +78,3 @@ target_link_libraries(utils
 		resources	
 		)
 
-target_include_directories(utils
-	PUBLIC
-		# For config.h
-		${PROJECT_BINARY_DIR}/src
-	PUBLIC
-		# For anything in <root>/src: utils, logic, future, gui.
-		${PROJECT_SOURCE_DIR}/src
-		)

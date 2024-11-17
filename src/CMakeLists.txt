@@ -1,5 +1,5 @@
 #
-# Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2018, 2019, 2024 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -137,14 +137,13 @@ list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_NOMOC})
 
 
 #
-# Subdir targets.
+# Subdirs
 #
-add_subdir_lib(concurrency STATIC EXCLUDE_FROM_ALL)
-add_subdir_lib(future STATIC EXCLUDE_FROM_ALL)
-add_subdir_lib(gui STATIC EXCLUDE_FROM_ALL)
-add_subdir_lib(logic STATIC EXCLUDE_FROM_ALL)
-add_subdir_lib(utils STATIC EXCLUDE_FROM_ALL)
-
+add_subdirectory(concurrency)
+add_subdirectory(future)
+add_subdirectory(gui)
+add_subdirectory(logic)
+add_subdirectory(utils)
 
 #
 # Append all the SOURCE_* subsets.
@@ -166,8 +165,6 @@ set(PROJECT_COMMON_INTERNAL_LINK_LIB_TARGETS
         SQLite::SQLite3
 )
 
-### @OBSOLETE Models
-#list(APPEND SOURCE_FILES ${SOURCE_FILES_LOGIC_MODELS})
 
 # QT5_LOGGING_CATEGORY_SOURCE_FILES
 list(APPEND SOURCE_FILES ${QT5_LOGGING_CATEGORY_SOURCE_FILES})
@@ -185,11 +182,24 @@ list(APPEND amlm_SRCS ${SOURCE_FILES} ${HEADER_FILES}
 # See:
 # @link https://api.kde.org/ecm/module/ECMAddAppIcon.html
 # @link http://kfunk.org/2017/12/20/tips-streamlining-kde-application-for-deployment-microsoft-windows/
+add_library(src STATIC EXCLUDE_FROM_ALL)
+target_include_directories(src
+   PRIVATE
+       logic
+       utils
+)
 target_link_libraries(src
 	PUBLIC
 		logic
+		kconfig_target
+		concurrency
+		future
+		gui
+		logic
+		utils
+		${AMLM_WT_LIBRARIES}
+		SQLite::SQLite3
 	PRIVATE
-		resources
 		# Boost
 		Boost::boost					# Target for header-only dependencies
 		Boost::diagnostic_definitions # For information about Boost's automatic linking
@@ -273,10 +283,15 @@ target_link_libraries(${PROJECT_NAME}
 		# Targetized C++ compile settings.
 		cxx_settings
 		cxx_definitions_qt
-		src
-		logic
 	PRIVATE
-		${PROJECT_COMMON_LINK_LIBS})
+		src
+		utils
+#		logic
+#		gui
+#		concurrency
+)
+#	PRIVATE
+#		${PROJECT_COMMON_LINK_LIBS})
 
 ### @todo breeze
 #add_dependencies(${PROJECT_NAME} icons_oxygen)
@@ -303,7 +318,7 @@ find_package(Qt5Test REQUIRED)
 # @todo Also per the docs, this has to be in the source directory root, but it seems to work here:
 # "Note that ctest expects to find a test file in the build directory root.
 # Therefore, this command should be in the source directory root."
-enable_testing()
+#enable_testing()
 # We do not want to include CTest or CDash.  They result in hundreds of top-level targets
 # that we have no use for.  Per @link https://stackoverflow.com/questions/45169854/cmake-in-qtcreator-4-3-shows-many-automatic-targets-how-to-remove-hide-them,
 # The above enable_testing() is enough.
@@ -316,7 +331,7 @@ enable_testing()
 find_package(Threads REQUIRED)
 download_project(PROJ                googletest
                  GIT_REPOSITORY      https://github.com/google/googletest.git
-                 GIT_TAG             master
+                 GIT_TAG             main
                  ${UPDATE_DISCONNECTED_IF_AVAILABLE}
 )
 # Prevent GoogleTest from overriding our compiler/linker options
@@ -352,7 +367,7 @@ list(APPEND AMLM_SOURCE_FILES_TEST
 	concurrency/tests/AMLMJobTests.cpp
 	)
 list(APPEND AMLM_HEADER_FILES_TEST
-#	${PROJECT_SOURCE_DIR}/tests/TestHelpers.h
+	${PROJECT_SOURCE_DIR}/tests/TestHelpers.h
 	${PROJECT_SOURCE_DIR}/tests/FlagsAndEnumsTests.h
 	concurrency/tests/ExtAsyncTaskTests.h
 	concurrency/tests/ExtAsyncTests.h
@@ -361,7 +376,7 @@ list(APPEND AMLM_HEADER_FILES_TEST
 	concurrency/tests/AMLMJobTests.h
 	)
 
-add_executable(${TEST_EXE_TARGET} ${WIN32_OR_MACOS_BUNDLE} "")
+add_executable(${TEST_EXE_TARGET} ${WIN32_OR_MACOS_BUNDLE})
 target_sources(${TEST_EXE_TARGET}
 	PRIVATE
 	    alltests.cpp ${AMLM_SOURCE_FILES_TEST} ${AMLM_HEADER_FILES_TEST}
@@ -369,6 +384,12 @@ target_sources(${TEST_EXE_TARGET}
 		${amlm_settings_SRCS}
 		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
 	)
+target_include_directories(${TEST_EXE_TARGET}
+	PRIVATE
+		"utils/nomoc"
+		${INCLUDE_DIR_VERDIGRIS}
+		"logic"
+)
 #target_compile_features(${TEST_EXE_TARGET} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
 target_compile_definitions(${TEST_EXE_TARGET}
 	PUBLIC
@@ -378,10 +399,6 @@ target_compile_definitions(${TEST_EXE_TARGET}
 	PRIVATE
 		"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
 		"TEST_FWK_IS_GTEST=1"
-	)
-target_include_directories(${TEST_EXE_TARGET} PRIVATE
-	"utils/nomoc"
-	${INCLUDE_DIR_VERDIGRIS}
 	)
 target_compile_definitions(${TEST_EXE_TARGET} PRIVATE "GTEST_LANGUAGE_CXX11")
 target_compile_options(${TEST_EXE_TARGET} PRIVATE ${EXTRA_CXX_COMPILE_FLAGS})
@@ -416,7 +433,7 @@ if(TRUE)
 ### Qt5 QTests
 ###
 #set(test_qtestamlmjobtests_SRCS concurrency/tests/QTestAMLMJobTests.cpp)
-add_executable(test_qtestamlmjobtests "") #${test_qtestamlmjobtests_SRCS} ${} ${amlm_settings_SRCS})
+add_executable(test_qtestamlmjobtests EXCLUDE_FROM_ALL) #${test_qtestamlmjobtests_SRCS} ${} ${amlm_settings_SRCS})
 target_sources(test_qtestamlmjobtests
 	PRIVATE
 	    concurrency/tests/QTestAMLMJobTests.cpp
@@ -451,14 +468,14 @@ endif()
 endif() # END Enable test target.
 
 ###
-### Installation.
+### Installation. (@todo icons are still in top level, prob should all be in one place)
 ###
 
 ### The AMLM binary.
 ### @note ${KDE_INSTALL_TARGETS_DEFAULT_ARGS} "should be used when libraries or user-executable applications are installed,
 ###        [...] It MUST NOT be used for installing plugins, system admin executables or executables only intended for use internally by
 ###        other code.  Those should use KDE_INSTALL_PLUGINDIR, KDE_INSTALL_SBINDIR or KDE_INSTALL_LIBEXECDIR respectively."
-### @see https://api.kde.org/ecm/kde-module/KDEInstallDirs.html?highlight=kde_install_targets_default_args#kdeinstalldirs
+#### @see https://api.kde.org/ecm/kde-module/KDEInstallDirs.html?highlight=kde_install_targets_default_args#kdeinstalldirs
 install(TARGETS ${PROJECT_NAME} ${KDE_INSTALL_TARGETS_DEFAULT_ARGS}
 				#RUNTIME DESTINATION . # Default is /usr/local/${PROJECT_NAME} on UNIX and c:/Program Files/${PROJECT_NAME}/${PROJECT_NAME} on Windows.
 				#LIBRARY DESTINATION .

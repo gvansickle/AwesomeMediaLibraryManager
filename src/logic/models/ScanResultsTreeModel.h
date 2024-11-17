@@ -37,7 +37,7 @@
 
 class AbstractTreeModelHeaderItem;
 #include <future/enable_shared_from_this_virtual.h>
-#include <models/UndoRedoHelper.h>
+#include "UndoRedoHelper.h"
 
 
 /**
