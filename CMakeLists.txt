@@ -623,9 +623,12 @@ add_subdirectory(src)
 ###
 ### Testing
 ###
-enable_testing()
+include(CTest)
 ### @todo IS THIS STILL TRUE???: Google Test creates a target named "tests" as well.
-add_subdirectory(tests)
+### This var comes from CTest, and is True by default.
+if(BUILD_TESTING)
+	add_subdirectory(tests)
+endif()
 
 #include(resources/CMakeLists.txt)
 #print_varlist(amlm_ICONS amlm_SRCS)

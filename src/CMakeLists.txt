@@ -329,10 +329,13 @@ find_package(Qt5Test REQUIRED)
 ### Google Test
 ###
 find_package(Threads REQUIRED)
-download_project(PROJ                googletest
-                 GIT_REPOSITORY      https://github.com/google/googletest.git
-                 GIT_TAG             main
-                 ${UPDATE_DISCONNECTED_IF_AVAILABLE}
+
+include(FetchContent)
+FetchContent_Declare(
+		googletest
+		GIT_REPOSITORY https://github.com/google/googletest.git
+		GIT_TAG main
+		#${UPDATE_DISCONNECTED_IF_AVAILABLE} @todo
 )
 # Prevent GoogleTest from overriding our compiler/linker options
 # when building with Visual Studio
@@ -341,11 +344,10 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 set(gmock_build_tests OFF CACHE BOOL "" FORCE)
 set(gtest_build_samples OFF CACHE BOOL "" FORCE)
 set(gtest_build_tests OFF CACHE BOOL "" FORCE)
-# Add googletest directly to our build. This adds
+# Make googletest available to our build. This adds
 # the following targets: gtest, gtest_main, gmock
 # and gmock_main.
-add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR}
-	EXCLUDE_FROM_ALL)
+FetchContent_MakeAvailable(googletest)
 # Now we should be able to link our targets against gtest, gmock, etc. as appropriate
 message(STATUS "GOOGLETEST-------------------------------")
 print_varlist(googletest_SOURCE_DIR googletest_BINARY_DIR)
