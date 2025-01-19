@@ -31,7 +31,7 @@
 #include "utils/RegisterQtMetatypes.h"
 #include "resources/VersionInfo.h"
 #include "utils/Logging.h"
-#include <tests/TestHelpers.h>
+#include "TestHelpers.h"
 
 // Google Test
 #include <gtest/gtest.h>
