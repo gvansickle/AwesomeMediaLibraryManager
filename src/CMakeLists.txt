@@ -86,17 +86,23 @@ add_library(verdigris_target INTERFACE)
 target_include_directories(verdigris_target INTERFACE ${PROJECT_SOURCE_DIR}/src/third_party/verdigris/src)
 
 
-
 kconfig_add_kcfg_files(amlm_settings_SRCS AwesomeMediaLibraryManagerSettings.kcfgc)
 # We make the generated KConfig settings files into their own library so dependencies get handled correctly.
 # amlm_settings_SRCS == AwesomeMediaLibraryManagerSettings.cpp and .h.
-add_library(kconfig_target
-		STATIC EXCLUDE_FROM_ALL
-		${amlm_settings_SRCS}
-		)
-#		${CMAKE_CURRENT_BINARY_DIR}/AwesomeMediaLibraryManagerSettings.h)
+add_library(kconfig_target STATIC EXCLUDE_FROM_ALL)
+target_sources(kconfig_target
+               PRIVATE
+                    ${amlm_settings_SRCS}
+)
+target_include_directories(kconfig_target
+                           PUBLIC
+								${CMAKE_CURRENT_BINARY_DIR}
+)
 target_link_libraries(kconfig_target
-		${KF5_LINK_LIB_TARGETS}
+                      PUBLIC
+						${KF5_LINK_LIB_TARGETS}
+                      PRIVATE
+#                      gui # Really just gui/settings
 		)
 
 ###
@@ -191,11 +197,11 @@ target_include_directories(src
 target_link_libraries(src
 	PUBLIC
 		logic
-		kconfig_target
 		concurrency
 		future
 		gui
-		logic
+#		              kconfig_target
+#		logic
 		utils
 		${AMLM_WT_LIBRARIES}
 		SQLite::SQLite3
@@ -239,6 +245,52 @@ elseif (WIN32)
 endif()
 
 
+variable_watch(amlm_settings_SRCS)
+add_library(libapp STATIC EXCLUDE_FROM_ALL)
+target_sources(libapp
+		PRIVATE
+               ${amlm_SRCS}
+               ${amlm_settings_SRCS}
+               ${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
+)
+target_compile_definitions(libapp
+                           PRIVATE
+                           # libstdc++ defs: @link https://gcc.gnu.org/onlinedocs/gcc-9.1.0/libstdc++/manual/
+                           # Enable the libstdc++ debug mode.
+                           #_GLIBCXX_DEBUG
+                           "KXMLGUI_NO_DEPRECATED=1"
+                           "USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
+)
+target_include_directories(libapp
+								PUBLIC
+									${Wt_INCLUDE_DIRS}
+									"utils/nomoc"
+									${INCLUDE_DIR_VERDIGRIS}
+									${PROJECT_SOURCE_DIR}/src ### @todo For <future/...>
+									${PROJECT_BINARY_DIR}/src
+)
+target_compile_options(libapp PUBLIC ${EXTRA_CXX_COMPILE_FLAGS})
+set_target_properties(libapp
+                      PROPERTIES
+#                      LINK_INTERFACE_MULTIPLICITY 3
+                      AUTOMOC ON
+                      AUTOUIC ON
+                      #CXX_CLANG_TIDY "clang-tidy;-checks=-*,readability-*"
+)
+target_link_libraries(libapp
+                      PUBLIC
+	                      # Targetized C++ compile settings.
+	                      cxx_settings
+	                      cxx_definitions_qt
+                      src
+#                      PRIVATE
+#	                      src
+#	                      utils
+	                      #		logic
+	                      #		gui
+	                      #		concurrency
+)
+
 ###
 ### The main executable.
 ###
@@ -246,10 +298,11 @@ endif()
 ###
 add_executable(${PROJECT_NAME} ${WIN32_OR_MACOS_BUNDLE}
 		main.cpp
-		${amlm_SRCS}
+#		${amlm_SRCS}
 		${amlm_settings_SRCS}
-		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
+#		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
 	)
+#kconfig_add_kcfg_files(${PROJECT_NAME} AwesomeMediaLibraryManagerSettings.kcfgc)
 # Compiler features FBO Verdigris (esp. on Windows/MSVC).  -D__cpp_constexpr=201304 -D__cpp_variable_templates=201304.
 ### @todo No longer required?
 #target_compile_features(${PROJECT_NAME} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
@@ -262,7 +315,7 @@ target_compile_definitions(${PROJECT_NAME}
 		"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
 	)
 target_include_directories(${PROJECT_NAME}
-	PUBLIC 
+	PRIVATE
 		${Wt_INCLUDE_DIRS}
 		"utils/nomoc"
 		${INCLUDE_DIR_VERDIGRIS}
@@ -284,8 +337,10 @@ target_link_libraries(${PROJECT_NAME}
 		cxx_settings
 		cxx_definitions_qt
 	PRIVATE
-		src
-		utils
+#		src
+#		utils
+
+		libapp
 #		logic
 #		gui
 #		concurrency

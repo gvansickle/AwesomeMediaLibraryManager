@@ -124,7 +124,9 @@ target_link_libraries(logic
 		#tree_model
 	PRIVATE
 	    #${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS} ### @todo "logic_subdir links to itself".
-		${QT5_LINK_LIB_TARGETS}
+	                  gui
+
+                      ${QT5_LINK_LIB_TARGETS}
 		${KF5_LINK_LIB_TARGETS}
 		${GTK_LINK_LIB_TARGETS}
 		${AMLM_TAGLIB_TARGET}

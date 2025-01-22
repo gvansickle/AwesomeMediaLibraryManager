@@ -83,13 +83,15 @@ list(APPEND AMLM_HEADER_FILES_TEST
      ${PROJECT_SOURCE_DIR}/tests/FlagsAndEnumsTests.h
 )
 
-add_executable(${TEST_EXE_TARGET} ${WIN32_OR_MACOS_BUNDLE})
+add_executable(${TEST_EXE_TARGET} ${WIN32_OR_MACOS_BUNDLE} EXCLUDE_FROM_ALL)
 target_sources(${TEST_EXE_TARGET}
                PRIVATE
-               alltests.cpp ${AMLM_SOURCE_FILES_TEST} ${AMLM_HEADER_FILES_TEST}
-               ${amlm_SRCS} ### @todo ${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
-               ${amlm_settings_SRCS}
-               ${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
+                    alltests.cpp
+                    ${AMLM_SOURCE_FILES_TEST}
+                    ${AMLM_HEADER_FILES_TEST}
+					${amlm_SRCS} ### @todo ${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
+#					${amlm_settings_SRCS}
+					${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
 )
 target_include_directories(${TEST_EXE_TARGET}
                            PRIVATE
@@ -124,25 +126,23 @@ set_property(TARGET gmock PROPERTY SKIP_AUTOGEN ON)
 set_property(TARGET gtest_main PROPERTY SKIP_AUTOGEN ON)
 set_property(TARGET gmock_main PROPERTY SKIP_AUTOGEN ON)
 target_link_libraries(${TEST_EXE_TARGET}
-	PRIVATE
-		Threads::Threads
-		gtest
-		gmock
-		tests
-#                      ${PROJECT_SOURCE_DIR}/src
-                      src
-)
-target_link_libraries(${TEST_EXE_TARGET}
-	PRIVATE
-		Qt5::Test
-		${PROJECT_COMMON_LINK_LIBS}
-		${QT5_LINK_LIB_TARGETS}
-		${KF5_LINK_LIB_TARGETS}
 	PUBLIC
 		# Targetized C++ compile settings.
 		cxx_settings
 		# Qt-specific -D's.
 		cxx_definitions_qt
+	PRIVATE
+		Threads::Threads
+		gtest
+		gmock
+		tests
+		              libapp
+#                      src
+#		utils
+		Qt5::Test
+		${PROJECT_COMMON_LINK_LIBS}
+#		${QT5_LINK_LIB_TARGETS}
+		${KF5_LINK_LIB_TARGETS}
 )
 add_test(NAME ${TEST_EXE_TARGET} COMMAND $<TARGET_FILE:${TEST_EXE_TARGET}>)
 ecm_mark_as_test(${TEST_EXE_TARGET})

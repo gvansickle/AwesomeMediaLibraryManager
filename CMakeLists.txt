@@ -79,7 +79,7 @@ project(AwesomeMediaLibraryManager
 # Additional project info.
 set(PROJECT_AUTHOR "Gary R. Van Sickle")
 set(PROJECT_AUTHOR_EMAIL "grvs@users.sourceforge.net")
-set(FULL_COPYRIGHT_STRING "Copyright (c) 2017, 2018, 2019, 2024 ${PROJECT_AUTHOR} <${PROJECT_AUTHOR_EMAIL}>")
+set(FULL_COPYRIGHT_STRING "Copyright (c) 2017, 2018, 2019, 2024, 2025 ${PROJECT_AUTHOR} <${PROJECT_AUTHOR_EMAIL}>")
 
 # Early include of some basic cmake stuff.
 include(CMakePrintHelpers)
@@ -284,6 +284,7 @@ include(DownloadProject)
 set(CMAKE_VERBOSE_MAKEFILE  YES)
 # "CMake automatically analyzes the global inter-target dependency graph at the beginning of native build system generation.
 #  This property causes it to display details of its analysis to stderr."
+# GRVS: Dumps huge amounts of info.
 # set_property(GLOBAL PROPERTY GLOBAL_DEPENDS_DEBUG_MODE 1)
 set(CPACK_IFW_VERBOSE YES)
 #set(CMAKE_DEBUG_TARGET_PROPERTIES

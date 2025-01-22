@@ -138,7 +138,9 @@ target_link_libraries(gui
 		${KF5_LINK_LIB_TARGETS}
 		${GTK_LINK_LIB_TARGETS}
 	PRIVATE
-		widgets
+	                  kconfig_target
+                      widgets
 		resources
+
 		)
 

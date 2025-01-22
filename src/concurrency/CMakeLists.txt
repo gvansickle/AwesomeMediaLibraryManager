@@ -78,21 +78,22 @@ target_sources(concurrency
 		${PRIVATE_HEADER_FILES_UTILS_CONCURRENCY}
 		${SOURCE_FILES_UTILS_CONCURRENCY}
 		)
+target_include_directories(concurrency
+                           PUBLIC
+                           # For config.h
+                           ${PROJECT_BINARY_DIR}/src
+                           PRIVATE
+                           # For anything in <root>/src: utils, logic, future, gui.
+                           ${PROJECT_SOURCE_DIR}/src
+                           ${PROJECT_SOURCE_DIR}/src/logic
+                           ${PROJECT_SOURCE_DIR}/src/logic/models
+)
 target_link_libraries(concurrency
 	PRIVATE
 		#${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS} ### @todo "logic_subdir links to itself".
 		${QT5_LINK_LIB_TARGETS}
 		${KF5_LINK_LIB_TARGETS}
 		#${GTK_LINK_LIB_TARGETS} # == Some utils/*Helpers.h.
-		jobs  ### @note For LibraryEntryLoaderJob.h via LibraryModel.h.
+#		jobs  ### @note For LibraryEntryLoaderJob.h via LibraryModel.h.
 		)
-target_include_directories(concurrency
-	PUBLIC
-		# For config.h
-		${PROJECT_BINARY_DIR}/src
-	PRIVATE
-		# For anything in <root>/src: utils, logic, future, gui.
-		${PROJECT_SOURCE_DIR}/src
-       ${PROJECT_SOURCE_DIR}/src/logic
-       ${PROJECT_SOURCE_DIR}/src/logic/models
-)
+
