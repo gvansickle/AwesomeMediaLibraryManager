@@ -134,13 +134,13 @@ set_target_properties(gui
     	)
 target_link_libraries(gui
 	PUBLIC
-		${QT5_LINK_LIB_TARGETS}
+	                  kconfig_target
+                      ${QT5_LINK_LIB_TARGETS}
 		${KF5_LINK_LIB_TARGETS}
 		${GTK_LINK_LIB_TARGETS}
 	PRIVATE
-	                  kconfig_target
+
                       widgets
 		resources
-
 		)
 

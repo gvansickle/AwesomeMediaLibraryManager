@@ -136,8 +136,10 @@ target_link_libraries(${TEST_EXE_TARGET}
 		gtest
 		gmock
 		tests
-		              libapp
-#                      src
+#		              kconfig_target
+                      libapp
+
+                      #                      src
 #		utils
 		Qt5::Test
 		${PROJECT_COMMON_LINK_LIBS}
