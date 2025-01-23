@@ -1,5 +1,5 @@
 #
-# Copyright 2018, 2019, 2024 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2018, 2019, 2024, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -86,18 +86,21 @@ add_library(verdigris_target INTERFACE)
 target_include_directories(verdigris_target INTERFACE ${PROJECT_SOURCE_DIR}/src/third_party/verdigris/src)
 
 
-
-kconfig_add_kcfg_files(amlm_settings_SRCS AwesomeMediaLibraryManagerSettings.kcfgc)
 # We make the generated KConfig settings files into their own library so dependencies get handled correctly.
-# amlm_settings_SRCS == AwesomeMediaLibraryManagerSettings.cpp and .h.
-add_library(kconfig_target
-		STATIC EXCLUDE_FROM_ALL
-		${amlm_settings_SRCS}
-		)
-#		${CMAKE_CURRENT_BINARY_DIR}/AwesomeMediaLibraryManagerSettings.h)
+# The generated files are AwesomeMediaLibraryManagerSettings.cpp and .h.
+# This is an OBJECT library to get it to link.  There's a circular dependency between this and gui.
+# For some reason, CMake isn't able to handle that if this is a STATIC lib.
+add_library(kconfig_target OBJECT EXCLUDE_FROM_ALL)
+kconfig_add_kcfg_files(kconfig_target AwesomeMediaLibraryManagerSettings.kcfgc)
+target_include_directories(kconfig_target
+	PUBLIC
+		${CMAKE_CURRENT_BINARY_DIR}
+)
 target_link_libraries(kconfig_target
+	PUBLIC
 		${KF5_LINK_LIB_TARGETS}
-		)
+)
+
 
 ###
 ### Collect all the external link lib targets into one variable. 
@@ -154,7 +157,6 @@ add_subdirectory(utils)
 
 # Collect all the project-common internal and external link library targets into a single variable.
 set(PROJECT_COMMON_INTERNAL_LINK_LIB_TARGETS
-		kconfig_target
 		concurrency
 		future
 		gui
@@ -191,11 +193,10 @@ target_include_directories(src
 target_link_libraries(src
 	PUBLIC
 		logic
-		kconfig_target
 		concurrency
 		future
 		gui
-		logic
+		kconfig_target
 		utils
 		${AMLM_WT_LIBRARIES}
 		SQLite::SQLite3
@@ -239,6 +240,49 @@ elseif (WIN32)
 endif()
 
 
+add_library(libapp STATIC EXCLUDE_FROM_ALL)
+target_sources(libapp
+		PRIVATE
+               ${amlm_SRCS}
+               ${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
+)
+target_compile_definitions(libapp
+                           PRIVATE
+                           # libstdc++ defs: @link https://gcc.gnu.org/onlinedocs/gcc-9.1.0/libstdc++/manual/
+                           # Enable the libstdc++ debug mode.
+                           #_GLIBCXX_DEBUG
+                           "KXMLGUI_NO_DEPRECATED=1"
+                           "USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
+)
+target_include_directories(libapp
+								PUBLIC
+									${Wt_INCLUDE_DIRS}
+									"utils/nomoc"
+									${INCLUDE_DIR_VERDIGRIS}
+									${PROJECT_SOURCE_DIR}/src ### @todo For <future/...>
+									${PROJECT_BINARY_DIR}/src
+)
+target_compile_options(libapp PUBLIC ${EXTRA_CXX_COMPILE_FLAGS})
+set_target_properties(libapp
+                      PROPERTIES
+                      AUTOMOC ON
+                      AUTOUIC ON
+                      #CXX_CLANG_TIDY "clang-tidy;-checks=-*,readability-*"
+)
+target_link_libraries(libapp
+                      PUBLIC
+	                      # Targetized C++ compile settings.
+	                      cxx_settings
+	                      cxx_definitions_qt
+                      src
+#                      PRIVATE
+#	                      src
+#	                      utils
+	                      #		logic
+	                      #		gui
+	                      #		concurrency
+)
+
 ###
 ### The main executable.
 ###
@@ -246,10 +290,7 @@ endif()
 ###
 add_executable(${PROJECT_NAME} ${WIN32_OR_MACOS_BUNDLE}
 		main.cpp
-		${amlm_SRCS}
-		${amlm_settings_SRCS}
-		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
-	)
+)
 # Compiler features FBO Verdigris (esp. on Windows/MSVC).  -D__cpp_constexpr=201304 -D__cpp_variable_templates=201304.
 ### @todo No longer required?
 #target_compile_features(${PROJECT_NAME} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
@@ -262,7 +303,7 @@ target_compile_definitions(${PROJECT_NAME}
 		"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
 	)
 target_include_directories(${PROJECT_NAME}
-	PUBLIC 
+	PRIVATE
 		${Wt_INCLUDE_DIRS}
 		"utils/nomoc"
 		${INCLUDE_DIR_VERDIGRIS}
@@ -284,14 +325,8 @@ target_link_libraries(${PROJECT_NAME}
 		cxx_settings
 		cxx_definitions_qt
 	PRIVATE
-		src
-		utils
-#		logic
-#		gui
-#		concurrency
+		libapp
 )
-#	PRIVATE
-#		${PROJECT_COMMON_LINK_LIBS})
 
 ### @todo breeze
 #add_dependencies(${PROJECT_NAME} icons_oxygen)
@@ -323,147 +358,6 @@ find_package(Qt5Test REQUIRED)
 # that we have no use for.  Per @link https://stackoverflow.com/questions/45169854/cmake-in-qtcreator-4-3-shows-many-automatic-targets-how-to-remove-hide-them,
 # The above enable_testing() is enough.
 #include(CTest)
-
-
-###
-### Google Test
-###
-find_package(Threads REQUIRED)
-download_project(PROJ                googletest
-                 GIT_REPOSITORY      https://github.com/google/googletest.git
-                 GIT_TAG             main
-                 ${UPDATE_DISCONNECTED_IF_AVAILABLE}
-)
-# Prevent GoogleTest from overriding our compiler/linker options
-# when building with Visual Studio
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-# Try to disable Google Test/Mock's own tests.
-set(gmock_build_tests OFF CACHE BOOL "" FORCE)
-set(gtest_build_samples OFF CACHE BOOL "" FORCE)
-set(gtest_build_tests OFF CACHE BOOL "" FORCE)
-# Add googletest directly to our build. This adds
-# the following targets: gtest, gtest_main, gmock
-# and gmock_main.
-add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR}
-	EXCLUDE_FROM_ALL)
-# Now we should be able to link our targets against gtest, gmock, etc. as appropriate
-message(STATUS "GOOGLETEST-------------------------------")
-print_varlist(googletest_SOURCE_DIR googletest_BINARY_DIR)
-message(STATUS "GOOGLETEST-------------------------------")
-
-###
-### The "alltests" Google Test-based test exe.
-###
-set(TEST_EXE_TARGET alltests)
-set(AMLM_SOURCE_FILES_TEST "")
-set(AMLM_HEADER_FILES_TEST "")
-list(APPEND AMLM_SOURCE_FILES_TEST
-	logic/serialization/tests/XmlSerializerTest.cpp
-	${PROJECT_SOURCE_DIR}/tests/FlagsAndEnumsTests.cpp
-	concurrency/tests/ExtAsyncTaskTests.cpp
-	concurrency/tests/ExtAsyncTests.cpp
-	concurrency/tests/ExtAsyncTestCommon.cpp
-	concurrency/tests/ExtFutureTests.cpp
-	concurrency/tests/AMLMJobTests.cpp
-	)
-list(APPEND AMLM_HEADER_FILES_TEST
-	${PROJECT_SOURCE_DIR}/tests/TestHelpers.h
-	${PROJECT_SOURCE_DIR}/tests/FlagsAndEnumsTests.h
-	concurrency/tests/ExtAsyncTaskTests.h
-	concurrency/tests/ExtAsyncTests.h
-	concurrency/tests/ExtAsyncTestCommon.h
-	concurrency/tests/ExtFutureTests.h
-	concurrency/tests/AMLMJobTests.h
-	)
-
-add_executable(${TEST_EXE_TARGET} ${WIN32_OR_MACOS_BUNDLE})
-target_sources(${TEST_EXE_TARGET}
-	PRIVATE
-	    alltests.cpp ${AMLM_SOURCE_FILES_TEST} ${AMLM_HEADER_FILES_TEST}
-		${amlm_SRCS} ### @todo ${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
-		${amlm_settings_SRCS}
-		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
-	)
-target_include_directories(${TEST_EXE_TARGET}
-	PRIVATE
-		"utils/nomoc"
-		${INCLUDE_DIR_VERDIGRIS}
-		"logic"
-)
-#target_compile_features(${TEST_EXE_TARGET} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
-target_compile_definitions(${TEST_EXE_TARGET}
-	PUBLIC
-		# libstdc++ defs: @link https://gcc.gnu.org/onlinedocs/gcc-9.1.0/libstdc++/manual/
-		# Enable the libstdc++ debug mode.
-		#_GLIBCXX_DEBUG 
-	PRIVATE
-		"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
-		"TEST_FWK_IS_GTEST=1"
-	)
-target_compile_definitions(${TEST_EXE_TARGET} PRIVATE "GTEST_LANGUAGE_CXX11")
-target_compile_options(${TEST_EXE_TARGET} PRIVATE ${EXTRA_CXX_COMPILE_FLAGS})
-set_target_properties(${TEST_EXE_TARGET} PROPERTIES
-	AUTOMOC ON
-	AUTOUIC ON)
-# We don't want AUTOMOC etc. applied to googletest.
-set_property(DIRECTORY ${googletest_SOURCE_DIR}
-	PROPERTY SKIP_AUTOGEN ON
-	EXCLUDE_FROM_ALL)
-set_property(TARGET gtest PROPERTY SKIP_AUTOGEN ON)
-set_property(TARGET gmock PROPERTY SKIP_AUTOGEN ON)
-set_property(TARGET gtest_main PROPERTY SKIP_AUTOGEN ON)
-set_property(TARGET gmock_main PROPERTY SKIP_AUTOGEN ON)
-target_link_libraries(${TEST_EXE_TARGET}
-	PRIVATE
-		Threads::Threads gtest gmock tests)
-target_link_libraries(${TEST_EXE_TARGET}
-	PRIVATE
-        Qt5::Test ${PROJECT_COMMON_LINK_LIBS}
-	PUBLIC
-		# Targetized C++ compile settings.
-		cxx_settings
-		# Qt-specific -D's.
-		cxx_definitions_qt
-	)
-add_test(NAME ${TEST_EXE_TARGET} COMMAND $<TARGET_FILE:${TEST_EXE_TARGET}>)
-ecm_mark_as_test(${TEST_EXE_TARGET})
-
-if(TRUE)
-###
-### Qt5 QTests
-###
-#set(test_qtestamlmjobtests_SRCS concurrency/tests/QTestAMLMJobTests.cpp)
-add_executable(test_qtestamlmjobtests EXCLUDE_FROM_ALL) #${test_qtestamlmjobtests_SRCS} ${} ${amlm_settings_SRCS})
-target_sources(test_qtestamlmjobtests
-	PRIVATE
-	    concurrency/tests/QTestAMLMJobTests.cpp
-	    concurrency/tests/ExtAsyncTestCommon.cpp
-	    concurrency/tests/ExtAsyncTestCommon.h
-		#${AMLM_SOURCE_FILES_TEST} ${AMLM_HEADER_FILES_TEST}
-		${amlm_SRCS} ### @todo ${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
-		${amlm_settings_SRCS}
-		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
-	)
-target_compile_definitions(test_qtestamlmjobtests PRIVATE
-	"QT_SHAREDPOINTER_TRACK_POINTERS=1"
-	"QT_DEPRECATED_WARNINGS"
-	"QT_NO_KEYWORDS"
-	"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
-	"TEST_FWK_IS_QTEST=1"
-	)
-target_include_directories(test_qtestamlmjobtests PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
-target_link_libraries(test_qtestamlmjobtests Qt5::Test ${PROJECT_COMMON_LINK_LIBS}
-	# Qt-specific -D's.
-	cxx_definitions_qt)
-set_target_properties(test_qtestamlmjobtests PROPERTIES
-	AUTOMOC ON
-	AUTOUIC ON)
-add_test(NAME test_qtestamlmjobtests COMMAND $<TARGET_FILE:test_qtestamlmjobtests>)
-ecm_mark_as_test(test_qtestamlmjobtests)
-###
-### END Qt5 QTests
-###
-endif()
 
 endif() # END Enable test target.
 
