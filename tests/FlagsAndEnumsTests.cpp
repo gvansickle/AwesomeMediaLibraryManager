@@ -79,7 +79,7 @@ public:
 Q_DECLARE_METATYPE(TestFlagHolder);
 Q_DECLARE_OPERATORS_FOR_FLAGS(TestFlagHolder::TestFlags);
 
-static int dummy_456 = (AMLMRegisterQFlagQStringConverters<TestFlagHolder::TestFlags>(), 1);
+//static int dummy_456 = (AMLMRegisterQFlagQStringConverters<TestFlagHolder::TestFlags>(), 1);
 
 /**
  * Test QEnum class definition.

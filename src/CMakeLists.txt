@@ -386,46 +386,6 @@ find_package(Qt5Test REQUIRED)
 # The above enable_testing() is enough.
 #include(CTest)
 
-
-
-
-if(TRUE)
-###
-### Qt5 QTests
-###
-#set(test_qtestamlmjobtests_SRCS concurrency/tests/QTestAMLMJobTests.cpp)
-add_executable(test_qtestamlmjobtests EXCLUDE_FROM_ALL) #${test_qtestamlmjobtests_SRCS} ${} ${amlm_settings_SRCS})
-target_sources(test_qtestamlmjobtests
-	PRIVATE
-	    concurrency/tests/QTestAMLMJobTests.cpp
-	    concurrency/tests/ExtAsyncTestCommon.cpp
-	    concurrency/tests/ExtAsyncTestCommon.h
-		#${AMLM_SOURCE_FILES_TEST} ${AMLM_HEADER_FILES_TEST}
-		${amlm_SRCS} ### @todo ${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
-		${amlm_settings_SRCS}
-		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
-	)
-target_compile_definitions(test_qtestamlmjobtests PRIVATE
-	"QT_SHAREDPOINTER_TRACK_POINTERS=1"
-	"QT_DEPRECATED_WARNINGS"
-	"QT_NO_KEYWORDS"
-	"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
-	"TEST_FWK_IS_QTEST=1"
-	)
-target_include_directories(test_qtestamlmjobtests PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
-target_link_libraries(test_qtestamlmjobtests Qt5::Test ${PROJECT_COMMON_LINK_LIBS}
-	# Qt-specific -D's.
-	cxx_definitions_qt)
-set_target_properties(test_qtestamlmjobtests PROPERTIES
-	AUTOMOC ON
-	AUTOUIC ON)
-add_test(NAME test_qtestamlmjobtests COMMAND $<TARGET_FILE:test_qtestamlmjobtests>)
-ecm_mark_as_test(test_qtestamlmjobtests)
-###
-### END Qt5 QTests
-###
-endif()
-
 endif() # END Enable test target.
 
 ###

@@ -1,5 +1,5 @@
 #
-# Copyright 2018, 2024 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2018, 2024, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -90,7 +90,6 @@ target_sources(${TEST_EXE_TARGET}
                     ${AMLM_SOURCE_FILES_TEST}
                     ${AMLM_HEADER_FILES_TEST}
 					${amlm_SRCS} ### @todo ${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
-#					${amlm_settings_SRCS}
 					${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
 )
 target_include_directories(${TEST_EXE_TARGET}
@@ -136,10 +135,7 @@ target_link_libraries(${TEST_EXE_TARGET}
 		gtest
 		gmock
 		tests
-#		              kconfig_target
-                      libapp
-
-                      #                      src
+        libapp
 #		utils
 		Qt5::Test
 		${PROJECT_COMMON_LINK_LIBS}
@@ -148,6 +144,66 @@ target_link_libraries(${TEST_EXE_TARGET}
 )
 add_test(NAME ${TEST_EXE_TARGET} COMMAND $<TARGET_FILE:${TEST_EXE_TARGET}>)
 ecm_mark_as_test(${TEST_EXE_TARGET})
+
+########################
+
+if(TRUE)
+	###
+	### Qt5 QTests
+	###
+	add_executable(test_qtestamlmjobtests ${WIN32_OR_MACOS_BUNDLE} EXCLUDE_FROM_ALL) #${test_qtestamlmjobtests_SRCS} ${} ${amlm_settings_SRCS})
+	target_sources(test_qtestamlmjobtests
+	               PRIVATE
+	               ../src/concurrency/tests/QTestAMLMJobTests.cpp
+	               ../src/concurrency/tests/ExtAsyncTestCommon.cpp
+	               ../src/concurrency/tests/ExtAsyncTestCommon.h
+	               #${AMLM_SOURCE_FILES_TEST} ${AMLM_HEADER_FILES_TEST}
+#	               ${amlm_SRCS} ### @todo ${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
+	               ${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
+	)
+	target_compile_definitions(test_qtestamlmjobtests
+	                           PRIVATE
+#	                           "QT_SHAREDPOINTER_TRACK_POINTERS=1"
+#	                           "QT_DEPRECATED_WARNINGS"
+#	                           "QT_NO_KEYWORDS"
+	                           "USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
+	                           "TEST_FWK_IS_QTEST=1"
+	)
+	target_compile_options(test_qtestamlmjobtests PRIVATE ${EXTRA_CXX_COMPILE_FLAGS})
+	set_target_properties(test_qtestamlmjobtests PROPERTIES
+	                      AUTOMOC ON
+	                      AUTOUIC ON)
+	target_include_directories(test_qtestamlmjobtests
+	                           PRIVATE
+	                           "utils/nomoc"
+	                           ${INCLUDE_DIR_VERDIGRIS}
+	                           "../src/logic"
+	                           "../src"
+	                           # For config.h
+	                           ${PROJECT_BINARY_DIR}/src
+	)
+	target_link_libraries(test_qtestamlmjobtests
+	                      PUBLIC
+							# Targetized C++ compile settings.
+							cxx_settings
+							# Qt-specific -D's.
+							cxx_definitions_qt
+	                      PRIVATE
+								utils
+								concurrency
+								logic
+								libapp
+								Qt5::Test
+								${PROJECT_COMMON_LINK_LIBS}
+								${KF5_LINK_LIB_TARGETS}
+	)
+
+	add_test(NAME test_qtestamlmjobtests COMMAND $<TARGET_FILE:test_qtestamlmjobtests>)
+	ecm_mark_as_test(test_qtestamlmjobtests)
+	###
+	### END Qt5 QTests
+	###
+endif()
 
 ########################
 
