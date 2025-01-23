@@ -1,5 +1,5 @@
 #
-# Copyright 2017, 2018, 2019, 2024 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2017, 2018, 2019, 2024, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -79,7 +79,7 @@ project(AwesomeMediaLibraryManager
 # Additional project info.
 set(PROJECT_AUTHOR "Gary R. Van Sickle")
 set(PROJECT_AUTHOR_EMAIL "grvs@users.sourceforge.net")
-set(FULL_COPYRIGHT_STRING "Copyright (c) 2017, 2018, 2019, 2024 ${PROJECT_AUTHOR} <${PROJECT_AUTHOR_EMAIL}>")
+set(FULL_COPYRIGHT_STRING "Copyright (c) 2017, 2018, 2019, 2024, 2025 ${PROJECT_AUTHOR} <${PROJECT_AUTHOR_EMAIL}>")
 
 # Early include of some basic cmake stuff.
 include(CMakePrintHelpers)
@@ -94,7 +94,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Min versions of Qt5, KF5, KF5/ECM.
 set(QT_MIN_VERSION "5.12.1")
-set(KF5_MIN_VERSION "5.57.0") ### @win temp: Only have 5.52.0
+set(KF5_MIN_VERSION "5.67.0") ### @win temp: Only have 5.52.0
 set(ECM_MIN_VERSION "6.0.0") #"5.57.0")
 
 ###
@@ -284,6 +284,7 @@ include(DownloadProject)
 set(CMAKE_VERBOSE_MAKEFILE  YES)
 # "CMake automatically analyzes the global inter-target dependency graph at the beginning of native build system generation.
 #  This property causes it to display details of its analysis to stderr."
+# GRVS: Dumps huge amounts of info.
 # set_property(GLOBAL PROPERTY GLOBAL_DEPENDS_DEBUG_MODE 1)
 set(CPACK_IFW_VERBOSE YES)
 #set(CMAKE_DEBUG_TARGET_PROPERTIES
@@ -623,9 +624,11 @@ add_subdirectory(src)
 ###
 ### Testing
 ###
-enable_testing()
-### @todo IS THIS STILL TRUE???: Google Test creates a target named "tests" as well.
-add_subdirectory(tests)
+include(CTest)
+### This var comes from CTest, and is True by default.
+if(BUILD_TESTING)
+	add_subdirectory(tests)
+endif()
 
 #include(resources/CMakeLists.txt)
 #print_varlist(amlm_ICONS amlm_SRCS)
