@@ -1,5 +1,5 @@
 #
-# Copyright 2018, 2019, 2024 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2018, 2019, 2024, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -86,31 +86,20 @@ add_library(verdigris_target INTERFACE)
 target_include_directories(verdigris_target INTERFACE ${PROJECT_SOURCE_DIR}/src/third_party/verdigris/src)
 
 
-
-if(false)
-add_library(kconfig_target STATIC EXCLUDE_FROM_ALL)
-target_sources(kconfig_target
-               PRIVATE
-                    ${amlm_settings_SRCS}
-)
-endif()
 # We make the generated KConfig settings files into their own library so dependencies get handled correctly.
-# amlm_settings_SRCS == AwesomeMediaLibraryManagerSettings.cpp and .h.
+# The generated files are AwesomeMediaLibraryManagerSettings.cpp and .h.
 # This is an OBJECT library to get it to link.  There's a circular dependency between this and gui.
 # For some reason, CMake isn't able to handle that if this is a STATIC lib.
 add_library(kconfig_target OBJECT EXCLUDE_FROM_ALL)
 kconfig_add_kcfg_files(kconfig_target AwesomeMediaLibraryManagerSettings.kcfgc)
 target_include_directories(kconfig_target
-                           PUBLIC
-								${CMAKE_CURRENT_BINARY_DIR}
+	PUBLIC
+		${CMAKE_CURRENT_BINARY_DIR}
 )
 target_link_libraries(kconfig_target
-                      PUBLIC
-#                        gui
-						${KF5_LINK_LIB_TARGETS}
-                      PRIVATE
-#                      gui # Really just gui/settings
-		)
+	PUBLIC
+		${KF5_LINK_LIB_TARGETS}
+)
 
 
 ###
@@ -168,7 +157,6 @@ add_subdirectory(utils)
 
 # Collect all the project-common internal and external link library targets into a single variable.
 set(PROJECT_COMMON_INTERNAL_LINK_LIB_TARGETS
-#		kconfig_target
 		concurrency
 		future
 		gui
@@ -208,7 +196,7 @@ target_link_libraries(src
 		concurrency
 		future
 		gui
-		              kconfig_target
+		kconfig_target
 		utils
 		${AMLM_WT_LIBRARIES}
 		SQLite::SQLite3
@@ -252,15 +240,12 @@ elseif (WIN32)
 endif()
 
 
-variable_watch(amlm_settings_SRCS)
 add_library(libapp STATIC EXCLUDE_FROM_ALL)
 target_sources(libapp
 		PRIVATE
                ${amlm_SRCS}
-#               ${amlm_settings_SRCS}
                ${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
 )
-#kconfig_add_kcfg_files(libapp AwesomeMediaLibraryManagerSettings.kcfgc)
 target_compile_definitions(libapp
                            PRIVATE
                            # libstdc++ defs: @link https://gcc.gnu.org/onlinedocs/gcc-9.1.0/libstdc++/manual/
@@ -280,7 +265,6 @@ target_include_directories(libapp
 target_compile_options(libapp PUBLIC ${EXTRA_CXX_COMPILE_FLAGS})
 set_target_properties(libapp
                       PROPERTIES
-#                      LINK_INTERFACE_MULTIPLICITY 3
                       AUTOMOC ON
                       AUTOUIC ON
                       #CXX_CLANG_TIDY "clang-tidy;-checks=-*,readability-*"
@@ -306,10 +290,7 @@ target_link_libraries(libapp
 ###
 add_executable(${PROJECT_NAME} ${WIN32_OR_MACOS_BUNDLE}
 		main.cpp
-#		${amlm_SRCS}
-#		${amlm_settings_SRCS}
-#		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
-	)
+)
 # Compiler features FBO Verdigris (esp. on Windows/MSVC).  -D__cpp_constexpr=201304 -D__cpp_variable_templates=201304.
 ### @todo No longer required?
 #target_compile_features(${PROJECT_NAME} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
@@ -344,16 +325,8 @@ target_link_libraries(${PROJECT_NAME}
 		cxx_settings
 		cxx_definitions_qt
 	PRIVATE
-#		src
-#		utils
-
 		libapp
-#		logic
-#		gui
-#		concurrency
 )
-#	PRIVATE
-#		${PROJECT_COMMON_LINK_LIBS})
 
 ### @todo breeze
 #add_dependencies(${PROJECT_NAME} icons_oxygen)

@@ -1,5 +1,5 @@
 #
-# Copyright 2018, 2024 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2018, 2024, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -134,13 +134,12 @@ set_target_properties(gui
     	)
 target_link_libraries(gui
 	PUBLIC
-	                  kconfig_target
-                      ${QT5_LINK_LIB_TARGETS}
+		kconfig_target
+		${QT5_LINK_LIB_TARGETS}
 		${KF5_LINK_LIB_TARGETS}
 		${GTK_LINK_LIB_TARGETS}
 	PRIVATE
-
-                      widgets
+		widgets
 		resources
-		)
+)
 

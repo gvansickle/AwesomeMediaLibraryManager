@@ -1,5 +1,5 @@
 #
-# Copyright 2017, 2018, 2019, 2024 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2017, 2018, 2019, 2024, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -625,7 +625,6 @@ add_subdirectory(src)
 ### Testing
 ###
 include(CTest)
-### @todo IS THIS STILL TRUE???: Google Test creates a target named "tests" as well.
 ### This var comes from CTest, and is True by default.
 if(BUILD_TESTING)
 	add_subdirectory(tests)
