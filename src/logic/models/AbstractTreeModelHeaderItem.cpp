@@ -130,7 +130,7 @@ QVariant AbstractTreeModelHeaderItem::data(int column, int role) const
 	X(XMLTAG_HEADER_NUM_SECTIONS, header_num_sections) \
 	X(XMLTAG_CHILD_NODE_LIST, child_node_list)
 
-using strviw_type = QLatin1Literal;
+using strviw_type = QLatin1String;
 
 /// Strings to use for the tags.
 #define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );

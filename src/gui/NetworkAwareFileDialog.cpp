@@ -309,7 +309,7 @@ void NetworkAwareFileDialog::setDefaultSidebarUrls()
 			<< QUrl::fromLocalFile(QStandardPaths::standardLocations(QStandardPaths::HomeLocation)[0])
 			/// @todo if linux && gvfs
 			<< QUrl::fromLocalFile(QStandardPaths::standardLocations(QStandardPaths::RuntimeLocation)[0] + "/gvfs");
-		for(const auto& url : urls)
+		for(const auto& url : std::as_const(urls))
 		{
 			qDebug() << "Adding Sidebar URL:" << url;
 		}
