@@ -126,7 +126,7 @@ void SettingsDialog::parseWidgetsThatKDEForgotAbout()
     {
         qDb() << "CHILDREN:" << children;
 
-        for(auto combo : children)
+        for(auto combo : std::as_const(children))
         {
             // Get the name we need to look up the corresponding KConfigSkeletonItem.
             QString kskel_item_name = combo->objectName().mid(5);

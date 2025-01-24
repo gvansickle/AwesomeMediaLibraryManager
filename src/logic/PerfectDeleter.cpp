@@ -493,7 +493,7 @@ M_TODO("This doesn't look like it's livelocking on exit, but it seems like we ne
 	do
 	{
 		// One pass through the AMLMJob list.
-		for(const std::shared_ptr<DeletableBase> i : m_watched_AMLMJobs)
+		for(const std::shared_ptr<DeletableBase>& i : m_watched_AMLMJobs)
 		{
 			// Do nothing, the connections should take care of the deletion.
 			remaining_amlmjobs++;

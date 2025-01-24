@@ -19,7 +19,7 @@ QStringList DefaultSettingsHelper::defaultCollectionUrlList()
 {
 	QStringList default_collection_paths;
 	auto path_list = QStandardPaths::standardLocations(QStandardPaths::MusicLocation);
-	for(const auto& path : path_list)
+	for(const auto& path : std::as_const(path_list))
 	{
 		default_collection_paths.append(QUrl::fromUserInput(path).toDisplayString());
 	}

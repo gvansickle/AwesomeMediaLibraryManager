@@ -50,7 +50,7 @@ AMLM_QREG_CALLBACK([](){
 //Q_DECLARE_METATYPE(std::string);
 
 
-using strviw_type = QLatin1Literal;
+using strviw_type = QLatin1String;
 
 
 std::unique_ptr<TrackMetadata> TrackMetadata::make_track_metadata(const Track* track_ptr, int track_number)

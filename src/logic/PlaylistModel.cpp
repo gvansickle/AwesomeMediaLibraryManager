@@ -322,7 +322,7 @@ bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, i
 	insertRows(beginRow, rows, QModelIndex());
 	if(action == Qt::CopyAction)
 	{
-		for(auto libentry : libentries)
+		for(const auto& libentry : std::as_const(libentries))
 		{
 			qDebug() << "Inserting Copies";
 			// Create a new PlaylistModelItem to put in the model.
@@ -337,7 +337,7 @@ bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, i
 	else if(action == Qt::MoveAction)
 	{
         qDebug() << "MoveAction START";
-            for(auto libentry : libentries)
+            for(const auto& libentry: std::as_const(libentries))
             {
                     qDebug() << "Moving";
                     // The dropped libentries should actually be PlaylistEntries.

@@ -278,7 +278,7 @@ void ActivityProgressStatusBarTracker::SLOT_CancelAllKJobs()
 
     qDb() << "CANCELLING ALL JOBS: Num KJobs:" << m_amlmjob_to_widget_map.size() << "List size:" << kjoblist.size();
 
-    for(const QPointer<KJob>& kjob : kjoblist)
+    for(const QPointer<KJob>& kjob : std::as_const(kjoblist))
     {
 		if(kjob == nullptr || !m_amlmjob_to_widget_map.keys().contains(kjob))
         {

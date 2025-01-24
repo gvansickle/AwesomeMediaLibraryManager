@@ -101,7 +101,7 @@ QRegExp::PatternSyntax FilterWidget::patternSyntax() const
 void FilterWidget::setPatternSyntax(QRegExp::PatternSyntax s)
 {
 	auto actions = m_patternGroup->actions();
-	for(QAction *a : actions)
+	for(QAction *a : std::as_const(actions))
 	{
 		if (patternSyntaxFromAction(a) == s)
 		{

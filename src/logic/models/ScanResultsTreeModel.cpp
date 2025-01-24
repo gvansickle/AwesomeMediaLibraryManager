@@ -234,7 +234,7 @@ void ScanResultsTreeModel::DERIVED_set_default_namespace()
 	X(XMLTAG_SRTM_TS_LAST_SCAN_END, ts_last_scan_end)
 
 /// Strings to use for the tags.
-#define X(field_tag, member_field) static const QLatin1Literal field_tag ( # member_field );
+#define X(field_tag, member_field) static const QLatin1String field_tag ( # member_field );
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
