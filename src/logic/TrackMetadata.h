@@ -25,7 +25,6 @@
 #include <vector>
 
 // Qt5
-#include <QtCore>
 #include <QVariant>
 
 // Libcue.

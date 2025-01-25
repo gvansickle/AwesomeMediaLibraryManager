@@ -250,7 +250,7 @@ StreamLikeType log_QStringList(const QStringList& strlist, StreamLikeType out)
     QDebugStateSaver saver(out);
     for(const QString& str : strlist)
     {
-        out << "  " << str << endl;
+        out << "  " << str << Qt::endl;
     }
     return out;
 }

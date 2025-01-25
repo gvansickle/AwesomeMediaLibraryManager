@@ -529,7 +529,7 @@ M_WARNING("PUT THIS BACK");
 				////////// EXPERIMENTAL
 #if 1 //// PUT BACK
 				/// Try to load it back in and round-trip it.
-				std::initializer_list<ColumnSpec> temp_initlist = {ColumnSpec(SectionID(0), "DirProps"), {SectionID(0), "MediaURL"}, {SectionID(0), "SidecarCueURL"}};
+//				std::initializer_list<ColumnSpec> temp_initlist = {ColumnSpec(SectionID(0), "DirProps"), {SectionID(0), "MediaURL"}, {SectionID(0), "SidecarCueURL"}};
 //				std::shared_ptr<ScanResultsTreeModel> load_tree = ScanResultsTreeModel::construct({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
 				std::shared_ptr<ScanResultsTreeModel> load_tree	= ScanResultsTreeModel::make_ScanResultsTreeModel({});//temp_initlist);
 

@@ -1,5 +1,5 @@
 #
-# Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2018, 2024 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -20,36 +20,40 @@
 # @file src/logic/proxymodels/CMakeLists.txt
 
 set(proxymodels_subdir_SOURCES
-	SelectionFilterProxyModel.h
 	SelectionFilterProxyModel.cpp
-	ModelHelpers.h
-	LibrarySortFilterProxyModel.h
 	LibrarySortFilterProxyModel.cpp
 	ModelChangeWatcher.cpp
-	ModelChangeWatcher.h
-	QPersistentModelIndexVec.h
 	QPersistentModelIndexVec.cpp
-	)
-#prepend_to_each(proxymodels_subdir_SOURCES "${CMAKE_CURRENT_LIST_DIR}/" ${proxymodels_subdir_SOURCES})
+)
 
+set(proxymodels_subdir_HEADERS
+    SelectionFilterProxyModel.h
+    ModelHelpers.h
+    LibrarySortFilterProxyModel.h
+    ModelChangeWatcher.h
+    QPersistentModelIndexVec.h
+)
 
-target_sources_local(proxymodels
-	PUBLIC
+add_library(proxymodels STATIC EXCLUDE_FROM_ALL)
+target_sources(proxymodels
+	PRIVATE
+        ${proxymodels_subdir_HEADERS}
 		${proxymodels_subdir_SOURCES}
 	)
-
-target_link_libraries(proxymodels
-	PUBLIC
-	    #${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS} ### @todo "logic_subdir links to itself".
-		${QT5_LINK_LIB_TARGETS}
-		${KF5_LINK_LIB_TARGETS}
-		${GTK_LINK_LIB_TARGETS}
-#		${AMLM_TAGLIB_TARGET}
-#		${AMLM_LIBCUE_TARGET}
-)
 target_include_directories(proxymodels
-	PUBLIC
+	PRIVATE
 	    # For config.h
 		${PROJECT_BINARY_DIR}/src
 		${PROJECT_SOURCE_DIR}/src
 	)
+target_link_libraries(proxymodels
+	PUBLIC
+		#${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS} ### @todo "logic_subdir links to itself".
+		${QT5_LINK_LIB_TARGETS}
+		${KF5_LINK_LIB_TARGETS}
+		${GTK_LINK_LIB_TARGETS}
+		#		${AMLM_TAGLIB_TARGET}
+		#		${AMLM_LIBCUE_TARGET}
+		#	PRIVATE
+		models
+)

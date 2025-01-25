@@ -444,7 +444,7 @@ std::vector<MDIPlaylistView*> MDILibraryView::getAllMdiPlaylistViews()
 {
 	auto subwindows = getQMdiSubWindow()->mdiArea()->subWindowList(QMdiArea::ActivationHistoryOrder);
 	std::vector<MDIPlaylistView*> retval;
-	for(auto s : subwindows)
+	for(const auto& s : std::as_const(subwindows))
 	{
 		auto w = s->widget();
 		if(w != nullptr)

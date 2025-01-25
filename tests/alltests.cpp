@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2024 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -31,7 +31,7 @@
 #include "utils/RegisterQtMetatypes.h"
 #include "resources/VersionInfo.h"
 #include "utils/Logging.h"
-#include <tests/TestHelpers.h>
+#include "TestHelpers.h"
 
 // Google Test
 #include <gtest/gtest.h>

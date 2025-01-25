@@ -27,6 +27,7 @@
 #include <cstdint>
 #include <memory>
 #include <deque>
+#include <optional>
 
 // Qt5
 #include <QObject>

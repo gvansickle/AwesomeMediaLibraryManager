@@ -43,7 +43,7 @@ extern "C" {
 #include <future/InsertionOrderedMap.h>
 
 
-using strviw_type = QLatin1Literal;
+using strviw_type = QLatin1String;
 
 #define M_TRACK_INDEX_DATASTREAM_FIELDS(X) \
 	X(XMLTAG_TRACK_INDEX_NUM, "index_num", m_index_num) \

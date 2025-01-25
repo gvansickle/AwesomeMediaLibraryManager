@@ -1,5 +1,5 @@
 #
-# Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2018, 2024 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -32,10 +32,10 @@ set(jobs_HEADER_FILES
 		LibraryRescannerJob.h
 	)
 
-target_sources_local(jobs
-	PUBLIC
-		${jobs_HEADER_FILES}
+add_library(jobs STATIC EXCLUDE_FROM_ALL)
+target_sources(jobs
 	PRIVATE
+		${jobs_HEADER_FILES}
 		${jobs_SOURCE_FILES}
 	)
 
@@ -47,12 +47,12 @@ target_link_libraries(jobs
     PRIVATE
 		${AMLM_TAGLIB_TARGET}
 		concurrency
+        logic
 		)
 target_include_directories(jobs
-	PUBLIC
+	PRIVATE
 	    # For config.h
 		${PROJECT_BINARY_DIR}/src
-	PRIVATE
 		# For anything under src: utils/, logic/, etc.
 		${PROJECT_SOURCE_DIR}/src
 	)

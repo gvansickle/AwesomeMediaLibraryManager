@@ -751,7 +751,7 @@ M_WARNING("TODO");
     m_menu_view->addSection(tr("Docks"));
     QList<QDockWidget*> dockwidgets = findChildren<QDockWidget*>();
     qDb() << "Docks:" << dockwidgets;
-    for(auto dock : dockwidgets)
+    for(auto dock : std::as_const(dockwidgets))
     {
         qDb() << "Dock:" << dock;
         if(dock->parentWidget() == this)
@@ -782,7 +782,7 @@ M_WARNING("/// @todo This doesn't work for unknown reasons.");
 
     m_menu_view->addSection(tr("Toolbars"));
     auto tbs = toolBars();
-    for(auto tb : tbs)
+    for(auto tb : std::as_const(tbs))
     {
         auto action = tb->toggleViewAction();
         m_menu_view->addAction(action);
@@ -1365,7 +1365,7 @@ void MainWindow::view_is_closing(MDITreeViewBase* viewptr, QAbstractItemModel* m
 														Qt::MatchExactly | Qt::MatchRecursive);
 		qDebug() << "Num indexes found:" << indexes_to_delete.size();
 
-		for(auto i : indexes_to_delete)
+		for(auto i : std::as_const(indexes_to_delete))
 		{
 			m_model_of_model_view_pairs->removeRow(i.row(), parentindex);
 		}
@@ -2132,7 +2132,8 @@ void MainWindow::startSettingsDialog()
 void MainWindow::onOpenShortcutDlg()
 {
 	// Start the Keyboard Shorcut editor dialog.
-	KShortcutsDialog::configure(actionCollection(), KShortcutsEditor::LetterShortcutsDisallowed, this);
+//	KShortcutsDialog::configure(actionCollection(), KShortcutsEditor::LetterShortcutsDisallowed, this);
+	KShortcutsDialog::showDialog(actionCollection(), KShortcutsEditor::LetterShortcutsDisallowed, this);
 
 	AMLMSettings::self()->save();
 }
@@ -2234,7 +2235,7 @@ void MainWindow::onConfigureToolbars()
 
 	KEditToolBar dialog(factory(), this);
 
-	connect(&dialog, &KEditToolBar::newToolbarConfig, this, &MainWindow::onApplyToolbarConfig);
+	connect(&dialog, &KEditToolBar::newToolBarConfig, this, &MainWindow::onApplyToolbarConfig);
 
 	dialog.exec();
 }
@@ -2261,7 +2262,7 @@ void MainWindow::onSettingsChanged()
     auto text_icon_mode = AMLMSettings::toolbarTextIconModeCombo();
     setToolButtonStyle(text_icon_mode);
     auto toolbars = toolBars();
-    for(auto tb : toolbars)
+    for(auto tb : std::as_const(toolbars))
     {
         qDb() << "Toolbar:" << tb->objectName();
         tb->setToolButtonStyle(text_icon_mode);

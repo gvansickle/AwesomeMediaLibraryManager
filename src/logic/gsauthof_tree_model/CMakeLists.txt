@@ -217,7 +217,7 @@ set(TREE_MODEL_CC
 add_library(tree_model STATIC)
 	
 target_sources(tree_model
-	PUBLIC
+	PRIVATE
 		${TREE_MODEL_MOC}
 	PRIVATE
 		${TREE_MODEL_CC}
