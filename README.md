@@ -3,7 +3,7 @@ An Audio Media Library Manager using the Qt 5 GUI framework
 
 Because the world needs a Media Library Manager which is Awesome.
 
-Copyright (c) 2107, 2018, 2019, 2023, 2024, 2025 Gary R. Van Sickle
+Copyright (c) 2017, 2018, 2019, 2023, 2024, 2025 Gary R. Van Sickle
 
 Really this is just me experimenting with a number of things:
 - The Qt application framework
