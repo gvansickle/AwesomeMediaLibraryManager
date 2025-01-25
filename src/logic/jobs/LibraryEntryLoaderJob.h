@@ -33,8 +33,8 @@
 
 // Ours
 #include <concurrency/AMLMJobT.h>
-#include "LibraryEntry.h"
-#include "LibraryRescanner.h" // For MetadataReturnVal
+#include "logic/LibraryEntry.h"
+#include <logic/LibraryRescanner.h> // For MetadataReturnVal
 
 
 class LibraryEntryLoaderJobResult

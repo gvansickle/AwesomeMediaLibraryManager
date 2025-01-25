@@ -97,6 +97,7 @@
 #include <logic/LibraryModel.h>
 #include <logic/PlaylistModel.h>
 
+#include "SupportedMimeTypes.h"
 #include "gui/MDIArea.h"
 #include "MetadataDockWidget.h"
 #include "CollectionDockWidget.h"
@@ -412,7 +413,8 @@ void MainWindow::updateActionEnableStates_Edit()
 			if(mimeData)
 			{
 				QStringList mimedata_formats = mimeData->formats();
-				if(mimedata_formats.contains(g_additional_supported_mimetypes[0]))
+//				if(mimedata_formats.contains(g_additional_supported_mimetypes[0]))
+				if(mimedata_formats.contains(SupportedMimeTypes::instance(nullptr).supportedDnDMimeTypes()[0]))
 				{
 					clipboard_has_contents = true;
 				}
@@ -665,7 +667,7 @@ void MainWindow::createActionsTools(KActionCollection *ac)
 
 	m_rescanLibraryAct = make_action(QIcon::fromTheme("view-refresh"), tr("&Rescan libray..."), this,
 									QKeySequence::Refresh);
-	connect_trig(m_rescanLibraryAct, this, &MainWindow::onRescanLibrary);
+	connect_trig(m_rescanLibraryAct, this, &MainWindow::SLOT_onRescanDatabase);
 	addAction("rescan_library", m_rescanLibraryAct);
 
 	m_cancelRescanAct = make_action(Theme::iconFromTheme("process-stop"), tr("Cancel Rescan"), this,
@@ -751,7 +753,7 @@ M_WARNING("TODO");
     m_menu_view->addSection(tr("Docks"));
     QList<QDockWidget*> dockwidgets = findChildren<QDockWidget*>();
     qDb() << "Docks:" << dockwidgets;
-    for(auto dock : dockwidgets)
+    for(auto dock : std::as_const(dockwidgets))
     {
         qDb() << "Dock:" << dock;
         if(dock->parentWidget() == this)
@@ -782,7 +784,7 @@ M_WARNING("/// @todo This doesn't work for unknown reasons.");
 
     m_menu_view->addSection(tr("Toolbars"));
     auto tbs = toolBars();
-    for(auto tb : tbs)
+    for(auto tb : std::as_const(tbs))
     {
         auto action = tb->toggleViewAction();
         m_menu_view->addAction(action);
@@ -1365,7 +1367,7 @@ void MainWindow::view_is_closing(MDITreeViewBase* viewptr, QAbstractItemModel* m
 														Qt::MatchExactly | Qt::MatchRecursive);
 		qDebug() << "Num indexes found:" << indexes_to_delete.size();
 
-		for(auto i : indexes_to_delete)
+		for(auto i : std::as_const(indexes_to_delete))
 		{
 			m_model_of_model_view_pairs->removeRow(i.row(), parentindex);
 		}
@@ -1681,7 +1683,7 @@ void MainWindow::openFileLibrary(const QUrl& filename)
 	}
 }
 
-void MainWindow::onRescanLibrary()
+void MainWindow::SLOT_onRescanDatabase()
 {
 	// Start a rescan on all models.
 M_WARNING("HACKISH, MAKE THIS BETTER");
@@ -2132,7 +2134,8 @@ void MainWindow::startSettingsDialog()
 void MainWindow::onOpenShortcutDlg()
 {
 	// Start the Keyboard Shorcut editor dialog.
-	KShortcutsDialog::configure(actionCollection(), KShortcutsEditor::LetterShortcutsDisallowed, this);
+//	KShortcutsDialog::configure(actionCollection(), KShortcutsEditor::LetterShortcutsDisallowed, this);
+	KShortcutsDialog::showDialog(actionCollection(), KShortcutsEditor::LetterShortcutsDisallowed, this);
 
 	AMLMSettings::self()->save();
 }
@@ -2261,7 +2264,7 @@ void MainWindow::onSettingsChanged()
     auto text_icon_mode = AMLMSettings::toolbarTextIconModeCombo();
     setToolButtonStyle(text_icon_mode);
     auto toolbars = toolBars();
-    for(auto tb : toolbars)
+    for(auto tb : std::as_const(toolbars))
     {
         qDb() << "Toolbar:" << tb->objectName();
         tb->setToolButtonStyle(text_icon_mode);

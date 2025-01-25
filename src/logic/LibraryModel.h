@@ -38,11 +38,11 @@ class QFileDevice;
 #include <logic/serialization/ISerializable.h>
 #include <logic/dbmodels/CollectionDatabaseModel.h>
 #include <concurrency/ThreadsafeMap.h>
-#include <models/ColumnSpec.h>
+#include "models/ColumnSpec.h"
 #include "Library.h"
 #include "LibraryRescanner.h" ///< For MetadataReturnVal
 #include "LibraryEntry.h"
-#include <jobs/LibraryEntryLoaderJob.h>
+#include "jobs/LibraryEntryLoaderJob.h"
 #include "LibraryRescannerMapItem.h"
 #include <utils/RegisterQtMetatypes.h> ///< For common metatype declarations of C++ std types.
 

@@ -21,6 +21,7 @@
 
 set(proxymodels_subdir_SOURCES
 	SelectionFilterProxyModel.cpp
+	ModelHelpers.cpp
 	LibrarySortFilterProxyModel.cpp
 	ModelChangeWatcher.cpp
 	QPersistentModelIndexVec.cpp

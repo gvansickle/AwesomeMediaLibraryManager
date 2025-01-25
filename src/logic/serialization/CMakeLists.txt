@@ -50,6 +50,7 @@ target_sources(serialization
 
 target_link_libraries(serialization
 	PUBLIC
+		models ### @todo TEMP for XmlSerializer.
 		${QT5_LINK_LIB_TARGETS}
 		${KF5_LINK_LIB_TARGETS}
 		${GTK_LINK_LIB_TARGETS}

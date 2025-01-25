@@ -109,7 +109,8 @@ target_include_directories(logic
        ${PROJECT_BINARY_DIR}/src
        #gsauthof_tree_model/tree_model
        ${PROJECT_SOURCE_DIR}/src
-       ${PROJECT_SOURCE_DIR}/src/logic/models
+		${PROJECT_SOURCE_DIR}/src/logic  ### @todo TEMP for LibraryModel include of model/ColumnSpec.h
+	${PROJECT_SOURCE_DIR}/src/logic/models
 )
 
 target_link_libraries(logic

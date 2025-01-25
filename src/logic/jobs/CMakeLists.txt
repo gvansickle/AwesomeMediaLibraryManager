@@ -57,4 +57,5 @@ target_include_directories(jobs
 		${PROJECT_BINARY_DIR}/src
 		# For anything under src: utils/, logic/, etc.
 		${PROJECT_SOURCE_DIR}/src
+		${PROJECT_SOURCE_DIR}/src/logic ## @TEMP? For jobs/LibEntryLoaderJob.h including LibraryEntry.h.
 	)
