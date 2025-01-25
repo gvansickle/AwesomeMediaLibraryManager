@@ -23,6 +23,7 @@
 // Std C++
 #include <atomic>
 #include <cstdint>
+#include <functional> // For optional<>
 //#include <utility> // For std::rel_ops;
 
 // Qt5

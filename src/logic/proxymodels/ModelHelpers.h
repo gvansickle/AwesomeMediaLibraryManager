@@ -44,7 +44,29 @@ QItemSelection mapQItemSelectionToSource(const QItemSelection& proxy_selection);
  * @param col
  * @return
  */
-QPersistentModelIndexVec pindexes(const QItemSelection& selection, int col = -1);
+inline static QPersistentModelIndexVec pindexes(const QItemSelection& selection, int col = -1)
+{
+	QModelIndexList index_vec = selection.indexes();
+	QModelIndexList retval;
+	if(col != -1)
+	{
+		for(auto i : std::as_const(index_vec))
+		{
+			if(i.isValid())
+			{
+				if(i.column() == col)
+				{
+					retval.push_back(i);
+				}
+			}
+		}
+		return toQPersistentModelIndexVec(retval);
+	}
+	else
+	{
+		return toQPersistentModelIndexVec(index_vec);
+	}
+}
 
 QModelIndex mapToSource(const QModelIndex& proxy_index);
 

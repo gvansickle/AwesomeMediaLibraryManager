@@ -26,6 +26,9 @@
 // Std C++
 #include <type_traits>
 
+// Qt
+#include <QtConcurrent>
+
 // Ours
 #include <future/future_type_traits.hpp>
 #include <future/cpp14_concepts.hpp>

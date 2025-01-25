@@ -1,5 +1,5 @@
 #
-# Copyright 2017, 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2017, 2018, 2019, 2024, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -34,7 +34,7 @@
 
 
 # cmake setup.
-cmake_minimum_required(VERSION 3.14.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.27 FATAL_ERROR)
 cmake_policy(SET CMP0053 NEW) # Use new var ref/esc seq eval
 cmake_policy(SET CMP0010 NEW) # Silence warning on CMP0010.
 
@@ -48,12 +48,16 @@ include(cmake/GetVersionInfo.cmake)
 # be prior to project().
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
+if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
+	message("ERROR: ${CMAKE_SOURCE_DIR} == ${CMAKE_BINARY_DIR}")
+	message(FATAL_ERROR "Prevented in-root-of-tree build. Please create a build directory outside of the source code root directory and call cmake from there. Thank you.")
+endif()
 
-if(TRUE)
+if(FALSE)
 	### Set up the <LANG>_COMPILER_LAUNCHERs.
 	### @note "This property is initialized by the value of 
 	###       the CMAKE_<LANG>_COMPILER_LAUNCHER variable if it is set when a target is created."
-	
+
 	# Use ccache if it's available.
 	find_program(CCACHE_PROGRAM ccache)
 	if(CCACHE_PROGRAM)
@@ -72,17 +76,10 @@ project(AwesomeMediaLibraryManager
         DESCRIPTION "The Awesome Media Library Manager"
         LANGUAGES C CXX)
 
-# Prevent an in-root-of-src-tree build.
-set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
-if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
-        message("ERROR: ${CMAKE_SOURCE_DIR} == ${CMAKE_BINARY_DIR}")
-	message(FATAL_ERROR "Prevented in-root-of-tree build. Please create a build directory outside of the source code root directory and call cmake from there. Thank you.")
-endif()
-
 # Additional project info.
 set(PROJECT_AUTHOR "Gary R. Van Sickle")
 set(PROJECT_AUTHOR_EMAIL "grvs@users.sourceforge.net")
-set(FULL_COPYRIGHT_STRING "Copyright (c) 2017, 2018, 2019 ${PROJECT_AUTHOR} <${PROJECT_AUTHOR_EMAIL}>")
+set(FULL_COPYRIGHT_STRING "Copyright (c) 2017, 2018, 2019, 2024, 2025 ${PROJECT_AUTHOR} <${PROJECT_AUTHOR_EMAIL}>")
 
 # Early include of some basic cmake stuff.
 include(CMakePrintHelpers)
@@ -97,8 +94,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Min versions of Qt5, KF5, KF5/ECM.
 set(QT_MIN_VERSION "5.12.4")
-set(KF5_MIN_VERSION "5.57.0") ### @win temp: Only have 5.52.0
-set(ECM_MIN_VERSION "5.57.0")
+set(KF5_MIN_VERSION "5.67.0") ### @win temp: Only have 5.52.0
+set(ECM_MIN_VERSION "6.0.0") #"5.57.0")
 
 ###
 ### IDE helper setup
@@ -107,6 +104,10 @@ source_group(TREE ${CMAKE_SOURCE_DIR})
 set(AUTOGEN_SOURCE_GROUP autogen)
 set(AUTOMOC_SOURCE_GROUP automoc)
 set(AUTORCC_SOURCE_GROUP autorcc)
+
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
 
 ###
 ### ECM Setup ====================================================================================================
@@ -253,11 +254,11 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 			# "googletest-src/googletest/src/gtest.cc:414:1: error: non-POD static (vector) [-Wclazy-non-pod-global-static]"
 # 			-Xclang no-non-pod-global-static
 			-fforce-emit-vtables
-			-Wthread-safety 
-			-fdebug-macro 
-			-fdiagnostics-show-template-tree 
+			-Wthread-safety
+			-fdebug-macro
+			-fdiagnostics-show-template-tree
 			-mno-omit-leaf-frame-pointer
-			-gcolumn-info 
+			-gcolumn-info
 			-ggnu-pubnames
 			-grecord-command-line
 			)
@@ -290,7 +291,7 @@ message(STATUS "C++ CMAKE_CXX_FLAGS_DEBUG = ${CMAKE_CXX_FLAGS_DEBUG}")
 include(CheckCXXCompilerFlag)
 include(PrintTargetProperties)
 include(helperfunctions)
-include(add_subdir_lib)
+
 # Include some basic Qt5-related cmake functions
 include(QtCommon)
 set(CMAKE_INSTALL_UCRT_LIBRARIES TRUE) # Without this, Release builds won't include the MSVC C runtime.
@@ -304,6 +305,7 @@ include(DownloadProject)
 set(CMAKE_VERBOSE_MAKEFILE  YES)
 # "CMake automatically analyzes the global inter-target dependency graph at the beginning of native build system generation.
 #  This property causes it to display details of its analysis to stderr."
+# GRVS: Dumps huge amounts of info.
 # set_property(GLOBAL PROPERTY GLOBAL_DEPENDS_DEBUG_MODE 1)
 set(CPACK_IFW_VERBOSE YES)
 #set(CMAKE_DEBUG_TARGET_PROPERTIES
@@ -451,7 +453,7 @@ if(WIN32)
 	set(BREEZEICONS_DIR
 		# Craft has a couple of breeze-icons.rcc's, plus an icontheme.rcc in CraftRoot/bin/data/.
 		C:/CraftRoot/bin/data/icons/breeze
-	) 
+	)
 else()
 	set(BREEZEICONS_DIR
 		/usr/share/icons/breeze
@@ -466,13 +468,13 @@ if(WITH_BUNDLED_BREEZE_ICONS)
 	else()
 		message(STATUS "OK ICON INSTALL PATH: ${AMLM_INSTALL_BUNDLED_ICON_THEME_DIR} starts with ${CMAKE_BINARY_DIR}")
 	endif()
-	find_file(BREEZEICONS_PATH breeze-icons.rcc 
+	find_file(BREEZEICONS_PATH breeze-icons.rcc
 		HINTS
 			${BREEZEICONS_DIR}
 		PATH_SUFFIXES
 			breeze
 		DOC
-			"Full path to the breeze-icons.rcc file"	
+			"Full path to the breeze-icons.rcc file"
 			)
     if (NOT EXISTS ${BREEZEICONS_PATH})
         message(FATAL_ERROR "Cannot find breeze-icons.rcc")
@@ -527,7 +529,7 @@ if(FALSE)
 ### CallableTraits only in 1.66+.
 set(Boost_USE_MULTITHREADED      ON)
 find_package(Boost REQUIRED 1.66.0
-  COMPONENTS CallableTraits 
+  COMPONENTS CallableTraits
   )
 else()
 if(FALSE)
@@ -554,14 +556,14 @@ add_compile_definitions(BOOST_THREAD_VERSION=5
 	BOOST_THREAD_FUTURE_USES_OPTIONAL=1
 	)
 set(Boost_USE_STATIC_LIBS        ON) # Only find static libs.
-set(Boost_USE_STATIC_RUNTIME     ON) # Want static runtime.
+#set(Boost_USE_STATIC_RUNTIME     ON) # Want static runtime.
 set(Boost_USE_MULTITHREADED      ON) # Need multithreaded.
-set(Boost_USE_DEBUG_LIBS         ON)
-set(Boost_USE_RELEASE_LIBS       OFF)
+#set(Boost_USE_DEBUG_LIBS         ON)
+#set(Boost_USE_RELEASE_LIBS       OFF)
 set(BOOST_ALL_DYN_LINK           OFF)
-set(Boost_USE_DEBUG_RUNTIME      ON)
+#set(Boost_USE_DEBUG_RUNTIME      ON)
 set(Boost_DEBUG    				 ON) # enable debug output from FindBoost.
-set(Boost_DETAILED_FAILURE_MSG   ON) # add detailed information to the failure message 
+set(Boost_DETAILED_FAILURE_MSG   ON) # add detailed information to the failure message
 #								   # even when the REQUIRED option is not given to the find_package call.
 find_package(Boost 1.69.0 REQUIRED
 	COMPONENTS
@@ -573,72 +575,12 @@ if(Boost_FOUND)
 	add_library(amlm_boost_settings_target INTERFACE)
 	target_link_libraries(amlm_boost_settings_target INTERFACE ${Boost_LIBRARIES})
 	target_compile_definitions(amlm_boost_settings_target
-		INTERFACE 
+		INTERFACE
 			BOOST_THREAD_VERSION=5)
 	add_definitions(${Boost_LIB_DIAGNOSTIC_DEFINITIONS})
 endif()
 endif() # BOOST
 
-if(FALSE)
-# Ok, we're going to try to pull in just Wt::Dbo.
-# Following instructions here: @link https://www.webtoolkit.eu/wt/doc/tutorial/dbo.html#_installation :
-# "Starting from a Wt source package (and on a UNIX-like environment), 
-# you would do the following to build and install only Wt::Dbo:
-# $ cd wt-xxx
-# $ mkdir build
-# $ cd build
-# $ cmake ../ # extra options may be needed, see instructions
-# $ cd src/Wt/Dbo
-# $ make
-# $ sudo make install"
-#
-# Also @link https://www.webtoolkit.eu/wt/doc/reference/html/InstallationUnix.html for the "see instructions" above.
-#
-#download_project
-include(ExternalProject)
-ExternalProject_Add(
-	wt_dbo # Creates variables wt_dbo_{SOURCE,BINARY}_DIR
-	GIT_REPOSITORY https://github.com/emweb/wt.git
-	GIT_TAG        master
-	GIT_PROGRESS  true
-	${UPDATE_DISCONNECTED_IF_AVAILABLE}
-	# Configuration
-	CMAKE_ARGS
-		${CMAKE_ARGS}
-		"-DCMAKE_BUILD_TYPE=$<CONFIG>"
-		"-DCMAKE_CONFIGURATION_TYPES=$<CONFIG>"
-		"-DBUILD_EXAMPLES=OFF"
-		"-DINSTALL_RESOURCES=OFF"
-		"-DENABLE_SSL=OFF"
-		"-DENABLE_HARU=OFF"
-		"-DENABLE_PANGO=OFF"
-		"-DENABLE_SQLITE=ON"
-		"-DENABLE_POSTGRES=OFF"
-		"-DENABLE_FIREBIRD=OFF"
-		"-DENABLE_MYSQL=OFF"
-		"-DENABLE_MSSQLSERVER=OFF"
-		"-DENABLE_QT4=OFF"
-		"-DENABLE_LIBWTTEST=OFF"
-		"-DENABLE_LIBWTDBO=ON"
-		"-DENABLE_OPENGL=OFF"
-		"-DBUILD_TESTS=OFF"
-		"-DCONNECTOR_ISAPI=OFF"
-		"-DCONNECTOR_HTTP=OFF"
-		"-DCONNECTOR_FCGI=OFF"
-	# Build step options
-	BUILD_COMMAND "" #${CMAKE_COMMAND} -E echo "Starting $<CONFIG> build of Wt::Dbo in binary dir: <BINARY_DIR>"
-  	#COMMAND       ${CMAKE_COMMAND} --build <BINARY_DIR> --config $<CONFIG> --target wt-target-dbo # wtdbo
-  	#COMMAND       ${CMAKE_COMMAND} -E echo "$<CONFIG> build of Wt::Dbo complete"
-	
-	# Install
-	# This target is exported: wt-target-dbo, target is wtdbo
-	INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "Starting $<CONFIG> install of Wt::Dbo to install dir: <INSTALL_DIR>"
-	COMMAND			${CMAKE_COMMAND} --build <BINARY_DIR> --config $<CONFIG> --target install
- 	COMMAND			${CMAKE_COMMAND} -E echo "$<CONFIG> install of Wt::Dbo complete"
-	)
-#add_subdirectory(${wt_dbo_SOURCE_DIR} ${wt_dbo_BINARY_DIR} EXCLUDE_FROM_ALL)
-#print_varlist(wt_dbo_SOURCE_DIR wt_dbo_BINARY_DIR)
-endif()
 
 # Qt logging categories.
 # @link https://api.kde.org/ecm/module/ECMQtDeclareLoggingCategory.html
@@ -656,7 +598,7 @@ ecm_qt_declare_logging_category(QT5_LOGGING_CATEGORY_SOURCE_FILES
                                 )
 
 # Qt-specific compiler definitions.                               
-target_compile_definitions(cxx_definitions_qt 
+target_compile_definitions(cxx_definitions_qt
 	INTERFACE
 		-DQT_DEPRECATED_WARNINGS
 		-DQT_SHAREDPOINTER_TRACK_POINTERS=1
@@ -702,14 +644,18 @@ configure_file(${PROJECT_SOURCE_DIR}/src/config.h.in
 ### Add the project subdirs.
 ###
 #set(amlm_APP_ICONS "re-set this in resources_subdir")
-add_subdir_lib(resources STATIC EXCLUDE_FROM_ALL)
+add_subdirectory(resources EXCLUDE_FROM_ALL)
 message(AUTHOR_WARNING "amlm_APP_ICONS: ${amlm_APP_ICONS}")
-add_subdir_lib(src STATIC EXCLUDE_FROM_ALL)
+add_subdirectory(src)
 
-### @todo Google Test creates a target named "tests" as well, and I can't seem to disable/work around it other than
-###    by using add_subdirectory() vs. add_subdir_lib().  Maybe this is better anyway.
-add_subdir_lib(tests EXCLUDE_FROM_ALL)
-#add_subdirectory(tests EXCLUDE_FROM_ALL)
+###
+### Testing
+###
+include(CTest)
+### This var comes from CTest, and is True by default.
+if(BUILD_TESTING)
+	add_subdirectory(tests)
+endif()
 
 #include(resources/CMakeLists.txt)
 #print_varlist(amlm_ICONS amlm_SRCS)
@@ -720,6 +666,10 @@ add_subdir_lib(tests EXCLUDE_FROM_ALL)
 # needed for a windows build (essentially just the configured .rc file).
 add_project_meta(META_FILES_TO_INCLUDE)
 
+###
+### Install
+###
+# In subdirs.
 
 
 ###
@@ -803,6 +753,9 @@ add_custom_target(graphviz ALL
 	COMMAND "${CMAKE_COMMAND}" "--graphviz=graphviz/amlm.dot" .
 	WORKING_DIRECTORY "${CMAKE_BINARY_DIR}")
 endif()
+
+
+
 
 
 ###

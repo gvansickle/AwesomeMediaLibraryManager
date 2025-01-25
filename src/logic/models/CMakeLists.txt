@@ -1,5 +1,5 @@
 #
-# Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2018, 2019, 2024 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -56,10 +56,10 @@ set(HEADER_FILES_SRC_LOGIC_MODELS
 		treemodel.h
 		)
 
-target_sources_local(models
-	PUBLIC
-		${HEADER_FILES_SRC_LOGIC_MODELS}
+add_library(models STATIC EXCLUDE_FROM_ALL)
+target_sources(models
 	PRIVATE
+		${HEADER_FILES_SRC_LOGIC_MODELS}
 		${SOURCE_FILES_SRC_LOGIC_MODELS}
 	)
 
@@ -73,10 +73,9 @@ target_link_libraries(models
 		serialization
 )
 target_include_directories(models
-	PUBLIC
+	PRIVATE
 	    # For config.h
 		${PROJECT_BINARY_DIR}/src
-	PRIVATE
 		# For anything under src: utils/, logic/, etc.
 		${PROJECT_SOURCE_DIR}/src
 	)

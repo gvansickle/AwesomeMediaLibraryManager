@@ -313,7 +313,7 @@ void XmlSerializer::writeVariantListToStream(const QVariant &variant, QXmlStream
 
 	// Stream each QVariant in the list out.
 	/// @note tag name will be "item" for each element, not sure we want that.
-	for(const QVariant& element : list)
+	for(const QVariant& element : std::as_const(list))
 	{
 		writeVariantToStream("item", element, xmlstream);
 	}

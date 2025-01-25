@@ -542,7 +542,7 @@ void Theme::LogAllIconThemes()
     QStringList all_icon_themes = GetIconThemeNames();
 
     qIn() << "All Icon Themes:";
-    for(const auto& i : all_icon_themes)
+    for(const auto& i : std::as_const(all_icon_themes))
     {
         qIn() << "  " << i;
     }

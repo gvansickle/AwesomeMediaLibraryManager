@@ -102,9 +102,7 @@
 #include "CollectionDockWidget.h"
 #include "widgets/PlayerControls.h"
 
-#include "logic/SupportedMimeTypes.h"
 #include "logic/LibraryEntryMimeData.h"
-
 
 #include "utils/ConnectHelpers.h"
 #include "utils/DebugHelpers.h"
@@ -414,8 +412,7 @@ void MainWindow::updateActionEnableStates_Edit()
 			if(mimeData)
 			{
 				QStringList mimedata_formats = mimeData->formats();
-				auto additional_mime_types = SupportedMimeTypes::instance().supportedDnDMimeTypes();
-				if(mimedata_formats.contains(additional_mime_types[0]))
+				if(mimedata_formats.contains(g_additional_supported_mimetypes[0]))
 				{
 					clipboard_has_contents = true;
 				}
@@ -668,7 +665,7 @@ void MainWindow::createActionsTools(KActionCollection *ac)
 
 	m_rescanLibraryAct = make_action(QIcon::fromTheme("view-refresh"), tr("&Rescan libray..."), this,
 									QKeySequence::Refresh);
-	connect_trig(m_rescanLibraryAct, this, &MainWindow::SLOT_onRescanDatabase);
+	connect_trig(m_rescanLibraryAct, this, &MainWindow::onRescanLibrary);
 	addAction("rescan_library", m_rescanLibraryAct);
 
 	m_cancelRescanAct = make_action(Theme::iconFromTheme("process-stop"), tr("Cancel Rescan"), this,
@@ -1043,38 +1040,6 @@ void MainWindow::initRootModels()
 
 	// Set the Collection Doc widget model.
 	m_collection_dock_widget->setModel(m_model_of_model_view_pairs);
-}
-
-void MainWindow::createDBModelAndView()
-{
-	Q_CHECK_PTR(m_exp_second_child_view);
-
-	// The primary database file.
-	/// @todo Locate somewhere else.
-	QString database_filename = QDir::homePath() + "/AMLMDatabase.xml";
-
-	/// This clears the existing model, and may not reload it.
-	auto srtmodel = AMLM::Core::self()->getScanResultsTreeModel();
-	srtmodel->clear();
-	Q_ASSERT(srtmodel->checkConsistency());
-	bool success = srtmodel->LoadDatabase(database_filename);
-	Q_ASSERT(srtmodel->checkConsistency());
-	if(success)
-	{
-		qDb() << "!!!!!!!!!!!!!!!!!!!!!!! Load succeeded, model info:";
-		srtmodel->dump_model_info();
-//		Q_ASSERT(srtmodel->checkConsistency());
-//		m_exp_second_child_view->setModel(srtmodel);
-	}
-	else
-	{
-		qWr() << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Load failed";
-//		Q_ASSERT(0);
-		auto default_columnspecs = AMLM::Core::self()->getDefaultColumnSpecs();
-		srtmodel->setColumnSpecs(default_columnspecs);
-	}
-
-	m_exp_second_child_view->setModel(srtmodel.get());
 }
 
 void MainWindow::createConnections()
@@ -1475,28 +1440,13 @@ void MainWindow::readLibSettings(QSettings& settings)
 	prog->setValue(2);
 	prog->show();
 
-#if 1
 	// The primary database file.
 	QString database_filename = QDir::homePath() + "/AMLMDatabase.xml";
 
-#if 0//// This clears the existing model, and may not reload it.
-	auto srtmodel = AMLM::Core::self()->getScanResultsTreeModel();
-	m_exp_second_child_view->setModel(srtmodel.get());
-	srtmodel->clear();
-	Q_ASSERT(srtmodel->checkConsistency());
-	bool success = srtmodel->LoadDatabase(database_filename);
-	if(success)
-	{
-		qDb() << "!!!!!!!!!!!!!!!!!!!!!!! Load succeeded, model info:";
-		srtmodel->dump_model_info();
-		Q_ASSERT(srtmodel->checkConsistency());
-//		m_exp_second_child_view->setModel(srtmodel);
-	}
-#else
-	// Try to Load it into a new model.
+	// Try to Load it asyncronously into a new model.
+	/// AMLM::Core::self()->getDefaultColumnSpecs()
 	auto temp_load_srtm_instance = ScanResultsTreeModel::make_ScanResultsTreeModel({});
 	bool success = temp_load_srtm_instance->LoadDatabase(database_filename);
-	Q_ASSERT(temp_load_srtm_instance->checkConsistency());
 	if(success)
 	{
 		// Swap in the new model.
@@ -1507,26 +1457,19 @@ void MainWindow::readLibSettings(QSettings& settings)
 
 //		auto oldselmodel = m_exp_second_child_view->selectionModel();
 
-		/*auto old_srtm_model =*/ AMLM::Core::self()->swapScanResultsTreeModel(temp_load_srtm_instance);
+		AMLM::Core::self()->swapScanResultsTreeModel(temp_load_srtm_instance);
 
-//		qDb() << "!!!!!!!!!!!!!!!!!!!!!!! OLD MODEL INFO:";
-//		old_srtm_model->dump_model_info();
-
-//		std::shared_ptr<ScanResultsTreeModel> srtmodel = AMLM::Core::self()->getScanResultsTreeModel().get();
-//		m_exp_second_child_view->setModel(srtmodel);
+		auto srtmodel = AMLM::Core::self()->getScanResultsTreeModel().get();
+		m_exp_second_child_view->setModel(srtmodel);
 
 //		oldselmodel->deleteLater();
 	}
-#endif
 	else
 	{
 		qWr() << "Load failed";
-//		Q_ASSERT(0);
 //				auto default_columnspecs = AMLM::Core::self()->getDefaultColumnSpecs();
 //				AMLM::Core::self()->getScanResultsTreeModel()->setColumnSpecs(default_columnspecs);
 	}
-#endif
-//	createDBModelAndView();
 
 #if 0///
 	auto fut_load_db = ExtAsync::qthread_async_with_cnr_future([=, &temp_load_srtm_instance](ExtFuture<Unit> fut_cnr, QString overlay_filename){
@@ -1738,10 +1681,8 @@ void MainWindow::openFileLibrary(const QUrl& filename)
 	}
 }
 
-void MainWindow::SLOT_onRescanDatabase()
+void MainWindow::onRescanLibrary()
 {
-	/// Rescan the root database.
-#if 0
 	// Start a rescan on all models.
 M_WARNING("HACKISH, MAKE THIS BETTER");
 /// @todo So really what we're doing is removing any libraries and re-opening them.
@@ -1759,18 +1700,6 @@ M_WARNING("HACKISH, MAKE THIS BETTER");
 	{
 		openFileLibrary(url);
 	}
-#endif
-#if 1
-	/// @todo Move this to its own handler.
-	/// Reload the AMLMDatabase.
-	std::shared_ptr<ScanResultsTreeModel> srtmodel = AMLM::Core::self()->getScanResultsTreeModel();
-	/// @todo Really Get the root dirs.
-	auto root_dir_list = srtmodel->getBaseDirectoryList();
-	srtmodel->clear();
-//	auto db_rescanner = AMLM::Core::self()->getDatabaseRescanner();
-	AMLM::Core::self()->getDatabaseRescanner()->startAsyncDirectoryTraversal_ForDB(root_dir_list[0], srtmodel);
-//	srtmodel->LoadDatabase("/home/gary/AMLMDatabase.xml");
-#endif
 }
 
 void MainWindow::onCancelRescan()
@@ -1895,8 +1824,6 @@ M_WARNING("SHARED PTR");
 //	child->setPane2Model(AMLMApp::instance()->IScanResultsTreeModel().get());
 //	child->setPane2Model(AMLM::Core::self()->getScanResultsTreeModel().get());
 	child->setPane2Model(AMLM::Core::self()->getEditableTreeModel().get());
-
-//	child->setMainModel2(AMLM::Core::self()->getAbstractTreeModel().get());
 
 	m_exp_second_child_view = new ExperimentalKDEView1(this);
 	auto second_mdi_child = m_mdi_area->addSubWindow(m_exp_second_child_view);
@@ -2171,20 +2098,35 @@ void MainWindow::SLOT_find_prev()
 
 void MainWindow::startSettingsDialog()
 {
-	// Based on @link https://techbase.kde.org/Development/Tutorials/Using_KConfig_XT
-	if(SettingsDialog::showDialog("settings"))
+//	KConfigDialog *dialog = KConfigDialog::exists( "settings" );
+    auto dialog = SettingsDialog::exists("settings");
+	if( !dialog )
 	{
-		// Dialog was already created, we just showed it.
-		return;
+		// KConfigDialog didn't find an instance of this dialog, so lets create it:
+		dialog = new SettingsDialog(this, "settings", AMLMSettings::self());
+
+		connect(dialog, &KConfigDialog::settingsChanged, this, &MainWindow::onSettingsChanged);
+	}
+    dialog->show( /*page*/);
+//    dialog->exec();
+
+#if 0
+	if(!m_settings_dlg)
+	{
+		// This is the first time anyone has opened the settings dialog.
+		m_settings_dlg = QSharedPointer<SettingsDialog>(new SettingsDialog(this, "App Settings", Settings::self()), &QObject::deleteLater);
 	}
 
-	// No dialog yet, create a new one.
-	SettingsDialog* settings_dlg = new SettingsDialog(this, "settings", AMLMSettings::self());
-
-	// Hook up the "settings changed" signal.
-	connect_or_die(settings_dlg, &KConfigDialog::settingsChanged, this, &MainWindow::onSettingsChanged);
-
-	settings_dlg->show();
+	// Open the settings dialog modeless.
+	// Note this from the Qt5 docs:
+	// http://doc.qt.io/qt-5/qdialog.html
+	// "If you invoke the show() function after hiding a dialog, the dialog will be displayed in its original position. [...]
+	// To preserve the position of a dialog that has been moved by the user, save its position in your closeEvent() handler and
+	// then move the dialog to that position, before showing it again"
+	m_settings_dlg->show();
+	m_settings_dlg->raise();
+	m_settings_dlg->activateWindow();
+#endif
 }
 
 void MainWindow::onOpenShortcutDlg()
@@ -2292,7 +2234,7 @@ void MainWindow::onConfigureToolbars()
 
 	KEditToolBar dialog(factory(), this);
 
-	connect_or_die(&dialog, &KEditToolBar::newToolBarConfig, this, &MainWindow::onApplyToolbarConfig);
+	connect(&dialog, &KEditToolBar::newToolBarConfig, this, &MainWindow::onApplyToolbarConfig);
 
 	dialog.exec();
 }

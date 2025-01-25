@@ -282,7 +282,7 @@ QUrl LibraryEntry::getM2Url() const
 	X(XMLTAG_LENGTH_SECS, m_length_secs) \
 	X(XMLTAG_METADATA, m_metadata)
 
-using strviw_type = QLatin1Literal;
+using strviw_type = QLatin1String;
 
 /// Strings to use for the tags.
 #define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );

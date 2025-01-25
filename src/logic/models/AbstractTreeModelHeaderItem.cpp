@@ -127,7 +127,7 @@ QVariant AbstractTreeModelHeaderItem::data(int column, int role) const
 	X(XMLTAG_ITEM_DATA_SIZE, item_data_size, m_item_data) \
 	X(XMLTAG_NUM_CHILDREN, num_children, m_child_items)
 
-using strviw_type = QLatin1Literal;
+using strviw_type = QLatin1String;
 
 /// Strings to use for the tags.
 #define X(field_tag, member_field, var_name) static const strviw_type field_tag ( # member_field );

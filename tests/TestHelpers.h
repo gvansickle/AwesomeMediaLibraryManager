@@ -119,6 +119,7 @@ QT_END_NAMESPACE
 #define GTEST_COUT_ORIGINAL std::cout << "[          ] [ INFO ] "
 #define GTEST_COUT GTEST_COUT_ORIGINAL
 
+#if 0 ///@todo To get past compile errors: error: ‘ColoredPrintf’ is not a member of ‘testing::internal’
 /// @name Hopefully less quick-and-dirty way to add information to test output.
 /// Based on @link https://stackoverflow.com/a/45344932
 /// @{
@@ -164,6 +165,7 @@ public:
 		return m_qdebug_obj;
 	}
 };
+#endif
 
 /// Macro which exposes a new TestCout object to stream messages to, e.g.:
 /// @code

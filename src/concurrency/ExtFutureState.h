@@ -26,7 +26,6 @@
 #include <future/cpp14_concepts.hpp>
 
 // Qt5
-#include <QtCore>
 #include <QFlags>
 #include <QFutureInterface>
 

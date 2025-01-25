@@ -21,23 +21,23 @@
 
 set(proxymodels_subdir_SOURCES
 	SelectionFilterProxyModel.cpp
-	ModelHelpers.cpp
 	LibrarySortFilterProxyModel.cpp
 	ModelChangeWatcher.cpp
 	QPersistentModelIndexVec.cpp
-	)
-set(proxymodels_subdir_HEADERS
-	SelectionFilterProxyModel.h
-	ModelHelpers.h
-	LibrarySortFilterProxyModel.h
-	ModelChangeWatcher.h
-	QPersistentModelIndexVec.h
-	)
+)
 
-target_sources_local(proxymodels
-	PUBLIC
-	${proxymodels_subdir_HEADERS}
+set(proxymodels_subdir_HEADERS
+    SelectionFilterProxyModel.h
+    ModelHelpers.h
+    LibrarySortFilterProxyModel.h
+    ModelChangeWatcher.h
+    QPersistentModelIndexVec.h
+)
+
+add_library(proxymodels STATIC EXCLUDE_FROM_ALL)
+target_sources(proxymodels
 	PRIVATE
+        ${proxymodels_subdir_HEADERS}
 		${proxymodels_subdir_SOURCES}
 	)
 
