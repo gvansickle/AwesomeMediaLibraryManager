@@ -54,7 +54,7 @@ std::map<std::string, std::vector<std::string> > MapConverter::VarMapToTagMap(co
 
 		QStringList qsl = cit->value<QStringList>();
 
-		for(const auto& cstr : qsl)
+		for(const auto& cstr : std::as_const(qsl))
 		{
 			sl.push_back(cstr.toStdString());
 		}

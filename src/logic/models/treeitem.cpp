@@ -183,7 +183,7 @@ bool TreeItem::insertColumns(int position, int columns)
     for (int column = 0; column < columns; ++column)
         m_item_data.insert(position, QVariant());
 
-	for(std::shared_ptr<TreeItem> child : m_child_items)
+	for(std::shared_ptr<TreeItem> child : std::as_const(m_child_items))
 	{
         child->insertColumns(position, columns);
 	}
@@ -228,7 +228,7 @@ bool TreeItem::removeColumns(int position, int columns)
         m_item_data.remove(position);
 	}
 
-	for(std::shared_ptr<TreeItem> child : m_child_items)
+	for(std::shared_ptr<TreeItem> child : std::as_const(m_child_items))
 	{
         child->removeColumns(position, columns);
 	}

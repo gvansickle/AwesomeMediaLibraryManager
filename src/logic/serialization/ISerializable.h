@@ -31,7 +31,6 @@
 #include <QMetaType>
 #include <QVariant>
 #include <QUuid>
-#include <QtConcurrent>
 
 // Ours
 #include <utils/RegisterQtMetatypes.h> ///< For <cstdint> metatypes.

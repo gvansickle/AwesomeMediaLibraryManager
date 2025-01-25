@@ -1,5 +1,5 @@
 #
-# Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2017, 2024 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -73,9 +73,12 @@ flex_target(CueScanner
         COMPILE_FLAGS ${FLEX_FLAGS_EXTRA})
 ADD_FLEX_BISON_DEPENDENCY(CueScanner CueParser)
 
-# Generated file doesn't want AUTOMOC etc. applied to it.
+# Generated files don't want AUTOMOC etc. applied to them.
 # Actually this whole directory should be excluded.
 set_property(SOURCE "${libcue_BINARY_DIR}/cue_parser.h" PROPERTY SKIP_AUTOGEN ON)
+set_property(SOURCE "${libcue_BINARY_DIR}/cue_parser.c" PROPERTY SKIP_AUTOGEN ON)
+set_property(SOURCE "${libcue_BINARY_DIR}/cue_scanner.c" PROPERTY SKIP_AUTOGEN ON)
+
 
 # Create the "libcue" target.
 add_library(libcue STATIC ${CUE_SOURCES}

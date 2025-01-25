@@ -105,7 +105,7 @@ AMLM_QREG_CALLBACK([](){
     qRegisterMetaType<CueSheet>()
     ;});
 
-using strviw_type = QLatin1Literal;
+using strviw_type = QLatin1String;
 
 #define M_DATASTREAM_FIELDS_DISC(X) \
 	X(XMLTAG_DISC_CATALOG_NUM, m_disc_catalog_num) \

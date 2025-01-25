@@ -56,7 +56,7 @@ ExtUrl::ExtUrl(const QUrl& qurl, const QFileInfo* qurl_finfo) : m_url(qurl)
 	X(TS_LAST_MODIFIED_METADATA, m_metadata_last_modified_timestamp)
 
 /// Strings to use for the tags.
-#define X(field_tag, member_field) static const QLatin1Literal field_tag ( # member_field );
+#define X(field_tag, member_field) static const QLatin1String field_tag ( # member_field );
 	M_DATASTREAM_FIELDS(X);
 #undef X
 

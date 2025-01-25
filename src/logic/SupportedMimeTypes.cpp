@@ -74,7 +74,7 @@ QStringList SupportedMimeTypes::supportedAudioMimeTypesAsFilterStringList() cons
 
     auto mimetypes = supportedAudioMimeTypes();
 
-    for(const auto& s : mimetypes)
+    for(const auto& s : std::as_const(mimetypes))
     {
         retval.push_back(s.filterString());
     }
@@ -88,10 +88,10 @@ QStringList SupportedMimeTypes::supportedAudioMimeTypesAsSuffixStringList() cons
 
     auto mimetypes = supportedAudioMimeTypes();
 
-    for(const auto& s : mimetypes)
+    for(const auto& s : std::as_const(mimetypes))
     {
         auto suffixes = s.suffixes();
-        for(const auto& substr : suffixes)
+        for(const auto& substr : std::as_const(suffixes))
         {
             retval.push_back("*." + substr);
         }

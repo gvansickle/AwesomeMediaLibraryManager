@@ -27,7 +27,6 @@
 #include <memory> // for std::unique_ptr<>.
 
 // Qt5
-#include <QtCore>
 #include <QUrl>
 #include <QDateTime>
 class QFileInfo;

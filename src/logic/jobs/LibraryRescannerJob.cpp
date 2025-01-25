@@ -17,6 +17,8 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "LibraryRescannerJob.h"
+
 #include "LibraryEntry.h"
 #include <memory>
 #include <functional>
@@ -28,7 +30,6 @@
 // Ours
 #include <utils/DebugHelpers.h>
 #include <concurrency/ExtAsync.h>
-#include <jobs/LibraryRescannerJob.h>
 #include <utils/TheSimplestThings.h>
 #include "LibraryModel.h"
 

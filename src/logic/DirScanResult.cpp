@@ -63,7 +63,7 @@ DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_f
 	X(XMLTAG_EXTURL_CUESHEET, m_exturl_cuesheet)
 
 /// Strings to use for the tags.
-#define X(field_tag, member_field) static const QLatin1Literal field_tag ( # member_field );
+#define X(field_tag, member_field) static const QLatin1String field_tag ( # member_field );
 	M_DATASTREAM_FIELDS(X);
 #undef X
 

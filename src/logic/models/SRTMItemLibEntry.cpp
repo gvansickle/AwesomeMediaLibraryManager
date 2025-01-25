@@ -103,7 +103,7 @@ QVariant SRTMItem_LibEntry::data(int column, int role) const
 	X(XMLTAG_NUM_CHILDREN, num_children, m_child_items)
 
 /// Strings to use for the tags.
-using strviw_type = QLatin1Literal;
+using strviw_type = QLatin1String;
 
 ///// Strings to use for the tags.
 #define X(field_tag, tag_string, var_name) static const strviw_type field_tag ( # tag_string );

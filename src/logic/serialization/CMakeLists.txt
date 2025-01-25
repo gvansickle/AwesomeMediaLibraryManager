@@ -1,5 +1,5 @@
 #
-# Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2018, 2024 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -41,10 +41,10 @@ set(serialization_subdir_HEADERS
 		QVariantHomogenousList.h
 		)
 
-target_sources_local(serialization
-	PUBLIC
-		${serialization_subdir_HEADERS}
+add_library(serialization STATIC EXCLUDE_FROM_ALL)
+target_sources(serialization
 	PRIVATE
+		${serialization_subdir_HEADERS}
 		${serialization_subdir_SOURCES}
 	)
 
@@ -56,9 +56,8 @@ target_link_libraries(serialization
 
 )
 target_include_directories(serialization
-	PUBLIC
+	PRIVATE
 	    # For config.h
 		${PROJECT_BINARY_DIR}/src
-	PRIVATE
 		${PROJECT_SOURCE_DIR}/src
 	)
