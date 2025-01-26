@@ -217,14 +217,14 @@ target_compile_options(cxx_compile_options INTERFACE)
 if(UNIX)
 	target_compile_options(cxx_compile_options
 		INTERFACE
-			-Og -ggdb3 -fno-omit-frame-pointer -fmessage-length=0 -pthread -Werror=return-type)
-	ucm_add_flags(-Og -ggdb3 -fno-omit-frame-pointer -fmessage-length=0 -pthread -Werror=return-type)
-# Flags for GNU libstdc++
-### @todo Detect that we're actually using GNU libstdc++
-# "compiles user code using the debug mode. When defined, _GLIBCXX_ASSERTIONS is defined automatically"
-### @note This crashes when linked with non-debug libstdc++.  Can't pass containers between them.
-### Except this says you should be able to: @link https://gcc.gnu.org/onlinedocs/gcc-9.2.0/libstdc++/manual/manual/debug_mode_design.html#debug_mode.design.methods.coexistence
-ucm_add_flags(CXX -D_GLIBCXX_DEBUG=1)
+			-O0 -ggdb3 -fno-omit-frame-pointer -fmessage-length=0 -pthread -Werror=return-type)
+	ucm_add_flags(-O0 -ggdb3 -fno-omit-frame-pointer -fmessage-length=0 -pthread -Werror=return-type)
+	# Flags for GNU libstdc++
+	### @todo Detect that we're actually using GNU libstdc++
+	# "compiles user code using the debug mode. When defined, _GLIBCXX_ASSERTIONS is defined automatically"
+	### @note This crashes when linked with non-debug libstdc++.  Can't pass containers between them.
+	### Except this says you should be able to: @link https://gcc.gnu.org/onlinedocs/gcc-9.2.0/libstdc++/manual/manual/debug_mode_design.html#debug_mode.design.methods.coexistence
+	ucm_add_flags(CXX -D_GLIBCXX_DEBUG=1)
 endif(UNIX)
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	message(STATUS "C++ Compiler is GCC")
@@ -277,6 +277,7 @@ if(WIN32)
 	set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH};C:/CraftRoot/dev-utils/bin;C:/Qt/5.12.0/Src/gnuwin32/bin)
 endif(WIN32)
 target_link_libraries(cxx_settings INTERFACE cxx_compile_options)
+set(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS})
 
 message(STATUS "C compiler supported features = ${CMAKE_C_COMPILE_FEATURES}")
 message(STATUS "C++ compiler supported features = ${CMAKE_CXX_COMPILE_FEATURES}")

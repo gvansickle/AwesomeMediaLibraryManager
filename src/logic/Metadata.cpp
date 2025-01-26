@@ -291,11 +291,18 @@ bool Metadata::read(const QUrl& url)
 			// to check if the file on disk actually has a XiphComment."
 			TagLib::Ogg::XiphComment* xipf_comment;
 			xipf_comment = file->xiphComment();
-			m_tm_xipf = xipf_comment->fieldListMap();
+			auto field_count = xipf_comment->fieldCount();
+			qDb() << "Field count:" << field_count;
+			qDb() << "vendorID:" << xipf_comment->vendorID();
+			qDb() << M_NAME_VAL(xipf_comment->album());
+			const TagLib::Ogg::FieldListMap& flm = xipf_comment->fieldListMap();
+			qDb() << M_NAME_VAL(flm.size());
+			qDb() << M_NAME_VAL(flm.isEmpty());
+
+			m_tm_xipf = flm;//xipf_comment->fieldListMap();
 
 			m_tm_generic.merge(m_tm_xipf);
 
-			auto field_count = xipf_comment->fieldCount();
 
 			// Extract any CUESHEET embedded in the XiphComment.
 			cuesheet_str = get_cue_sheet_from_OggXipfComment(file).toStdString();

@@ -207,7 +207,7 @@ public:
 		/*std::shared_ptr<Deletable>*/
 //		auto deletable = std::make_shared<Deletable<QThread*,DestroyerCallbackType,void(*)(QThread*)>>(qthread, destroyer_cb, [](QThread*){});
 		auto deletable = make_shared_DeletableBase(qthread, destroyer_cb, [](QThread*) {/** @todo */ return true;}, [](QThread*){  });
-		connect_or_die(qthread, &QObject::destroyed, this, [=](){
+		connect_or_die(qthread, &QObject::destroyed, this, [=, this](){
 			std::lock_guard lock(m_mutex);
 			qIn() << "Deleting QThread:" << qthread;
 			/// @todo Uniquify, don't rely on pointer.

@@ -92,16 +92,23 @@ public:
 	{
 		clear();
 
+		bool t_empty = taglib_field_list_map.isEmpty();
+		int size = taglib_field_list_map.size();
+
+		qDebug() << size;
+
+		Q_ASSERT(!taglib_field_list_map.isEmpty());
+
 		// Iterate over key+value_vector pairs.
-		for(const auto & it : taglib_field_list_map)
+		for(const auto & it : std::as_const(taglib_field_list_map))
 		{
 			// Iterate over the value, which is a vector of values.
-			for(const auto& valit : it.second)
+			for(const auto& valit : std::as_const(it.second))
 			{
 				std::string key;
 				if constexpr(std::is_same_v<TagLib::ByteVector, decltype(it.first)>)
 				{
-					key = tostdstr(it.first.data());
+					key = tostdstr(it.first.data(TagLib::String::UTF8));
 				}
 				else
 				{
