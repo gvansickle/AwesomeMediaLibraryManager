@@ -102,7 +102,7 @@ public:
 		// Iterate over key+value_vector pairs.
 		for(const auto & [field_name, values] : std::as_const(taglib_field_list_map))
 		{
-			qDb() << M_NAME_VAL(field_name);
+//			qDb() << M_NAME_VAL(field_name);
 			// Iterate over the value, which is a vector of values.
 			for(const auto& valit : values)
 			{

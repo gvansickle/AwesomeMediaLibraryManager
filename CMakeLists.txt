@@ -88,7 +88,7 @@ include(CMakePrintHelpers)
 # C11
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
-# C++17
+# C++20
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -217,8 +217,8 @@ target_compile_options(cxx_compile_options INTERFACE)
 if(UNIX)
 	target_compile_options(cxx_compile_options
 		INTERFACE
-			-O0 -ggdb3 -fno-omit-frame-pointer -fmessage-length=0 -pthread -Werror=return-type)
-	ucm_add_flags(-O0 -ggdb3 -fno-omit-frame-pointer -fmessage-length=0 -pthread -Werror=return-type)
+			-Og -ggdb3 -fno-omit-frame-pointer -fmessage-length=0 -pthread -Werror=return-type)
+	ucm_add_flags(-Og -ggdb3 -fno-omit-frame-pointer -fmessage-length=0 -pthread -Werror=return-type)
 	# Flags for GNU libstdc++
 	### @todo Detect that we're actually using GNU libstdc++
 	# "compiles user code using the debug mode. When defined, _GLIBCXX_ASSERTIONS is defined automatically"

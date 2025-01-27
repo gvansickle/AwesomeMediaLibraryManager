@@ -41,7 +41,7 @@ set(amlm_XQUERIES
 configure_file(VersionInfo.cpp.in VersionInfo.cpp)
 
 add_library(resources STATIC EXCLUDE_FROM_ALL)
-	target_sources(resources
+target_sources(resources
 	PRIVATE
 		VersionInfo.h
         ${CMAKE_CURRENT_BINARY_DIR}/VersionInfo.cpp

@@ -79,7 +79,7 @@ private:
 
 public:
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(InsertionOrderedMap);
-	virtual ~InsertionOrderedMap() = default; ///@note Not virtual because templates and slicing.
+	~InsertionOrderedMap() = default; ///@note Not virtual because templates and slicing.
 
 	/// Copy-through-QVariant constructor.
 	explicit InsertionOrderedMap(const QVariant& variant)
