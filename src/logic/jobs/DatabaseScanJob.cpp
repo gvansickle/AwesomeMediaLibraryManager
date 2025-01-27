@@ -291,7 +291,7 @@ void DatabaseScanJob::startAsyncDirectoryTraversal_ForDB(const QUrl& dir_url, st
 //		                      m_timer.lap("TreeModelItems stap() finished.");
               return unit;
           })
-          .then(qApp, [=,
+          .then(qApp, [=, this,
 			                      tree_model_ptr=srtm,
 								  kjob=/*FWD_DECAY_COPY(QPointer<AMLMJobT<ExtFuture<DirScanResult>>>,*/ dirtrav_job/*)*///,
 //			                      &lib_rescan_job

@@ -2255,7 +2255,7 @@ TEST_F(ExtFutureTest, ThenChain)
 	using FutureType = ExtFuture<QString>;
 
 	TCOUT << "STARTING FUTURE";
-	ExtFuture<QString> future = ExtAsync::qthread_async_with_cnr_future([=](ExtFuture<QString> retf){
+	ExtFuture<QString> future = ExtAsync::qthread_async_with_cnr_future([=, this](ExtFuture<QString> retf){
 		auto retval = delayed_string_func_1(this);
 			retf.reportResult(retval);
 			retf.reportFinished();

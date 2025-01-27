@@ -100,19 +100,20 @@ public:
 		Q_ASSERT(!taglib_field_list_map.isEmpty());
 
 		// Iterate over key+value_vector pairs.
-		for(const auto & it : std::as_const(taglib_field_list_map))
+		for(const auto & [field_name, values] : std::as_const(taglib_field_list_map))
 		{
+			qDb() << M_NAME_VAL(field_name);
 			// Iterate over the value, which is a vector of values.
-			for(const auto& valit : std::as_const(it.second))
+			for(const auto& valit : values)
 			{
 				std::string key;
-				if constexpr(std::is_same_v<TagLib::ByteVector, decltype(it.first)>)
+				if constexpr(std::is_same_v<TagLib::ByteVector, decltype(field_name)>)
 				{
-					key = tostdstr(it.first.data(TagLib::String::UTF8));
+					key = tostdstr(field_name.data(TagLib::String::UTF8));
 				}
 				else
 				{
-					key = tostdstr(it.first);
+					key = tostdstr(field_name);
 				}
 				m_the_map.insert(std::make_pair(key, tostdstr(valit)));
 			}

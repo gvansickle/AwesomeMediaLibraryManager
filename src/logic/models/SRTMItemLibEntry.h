@@ -70,7 +70,7 @@ private:
 };
 
 Q_DECLARE_METATYPE(SRTMItem_LibEntry);
-Q_DECLARE_METATYPE(std::shared_ptr<SRTMItem_LibEntry>);
-
+//Q_DECLARE_METATYPE(std::shared_ptr<SRTMItem_LibEntry>);
+//Q_DECLARE_SMART_POINTER_METATYPE(std::shared_ptr);
 
 #endif /* SRC_LOGIC_MODELS_SRTMITEMLIBENTRY_H_ */

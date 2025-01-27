@@ -384,7 +384,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 
 #if 1
 
-#define TREE_ITEM_MODEL_POP_NON_GUI_THREAD 1
+#define TREE_ITEM_MODEL_POP_NON_GUI_THREAD 0 /// TEMP
 
 	/// Append TreeModelItems to the ScanResultsTreeModel tree_model.
 	Q_ASSERT(tree_model);

@@ -477,7 +477,7 @@ Fun AbstractTreeModel::moveItem_lambda(UUIncD id, int destRow, bool force)
 //	X(XMLTAG_SRTM_TS_LAST_SCAN_END, ts_last_scan_end)
 
 /// Strings to use for the tags.
-#define X(field_tag, tag_name, member_field) static const QLatin1Literal field_tag ( # tag_name );
+#define X(field_tag, tag_name, member_field) static const QLatin1String field_tag ( # tag_name );
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
