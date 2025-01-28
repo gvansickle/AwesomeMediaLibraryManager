@@ -1,5 +1,5 @@
 #
-# Copyright 2017, 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2017, 2018, 2019, 2024, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -34,7 +34,7 @@
 
 
 # cmake setup.
-cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.27 FATAL_ERROR)
 cmake_policy(SET CMP0053 NEW) # Use new var ref/esc seq eval
 cmake_policy(SET CMP0010 NEW) # Silence warning on CMP0010.
 
@@ -48,12 +48,16 @@ include(cmake/GetVersionInfo.cmake)
 # be prior to project().
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
+if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
+	message("ERROR: ${CMAKE_SOURCE_DIR} == ${CMAKE_BINARY_DIR}")
+	message(FATAL_ERROR "Prevented in-root-of-tree build. Please create a build directory outside of the source code root directory and call cmake from there. Thank you.")
+endif()
 
-if(TRUE)
+if(FALSE)
 	### Set up the <LANG>_COMPILER_LAUNCHERs.
 	### @note "This property is initialized by the value of 
 	###       the CMAKE_<LANG>_COMPILER_LAUNCHER variable if it is set when a target is created."
-	
+
 	# Use ccache if it's available.
 	find_program(CCACHE_PROGRAM ccache)
 	if(CCACHE_PROGRAM)
@@ -72,17 +76,10 @@ project(AwesomeMediaLibraryManager
         DESCRIPTION "The Awesome Media Library Manager"
         LANGUAGES C CXX)
 
-# Prevent an in-root-of-src-tree build.
-set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
-if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
-        message("ERROR: ${CMAKE_SOURCE_DIR} == ${CMAKE_BINARY_DIR}")
-	message(FATAL_ERROR "Prevented in-root-of-tree build. Please create a build directory outside of the source code root directory and call cmake from there. Thank you.")
-endif()
-
 # Additional project info.
 set(PROJECT_AUTHOR "Gary R. Van Sickle")
 set(PROJECT_AUTHOR_EMAIL "grvs@users.sourceforge.net")
-set(FULL_COPYRIGHT_STRING "Copyright (c) 2017, 2018, 2019 ${PROJECT_AUTHOR} <${PROJECT_AUTHOR_EMAIL}>")
+set(FULL_COPYRIGHT_STRING "Copyright (c) 2017, 2018, 2019, 2024, 2025 ${PROJECT_AUTHOR} <${PROJECT_AUTHOR_EMAIL}>")
 
 # Early include of some basic cmake stuff.
 include(CMakePrintHelpers)
@@ -97,8 +94,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Min versions of Qt5, KF5, KF5/ECM.
 set(QT_MIN_VERSION "5.12.1")
-set(KF5_MIN_VERSION "5.57.0") ### @win temp: Only have 5.52.0
-set(ECM_MIN_VERSION "5.57.0")
+set(KF5_MIN_VERSION "5.67.0") ### @win temp: Only have 5.52.0
+set(ECM_MIN_VERSION "6.0.0") #"5.57.0")
 
 ###
 ### IDE helper setup
@@ -283,6 +280,7 @@ include(DownloadProject)
 set(CMAKE_VERBOSE_MAKEFILE  YES)
 # "CMake automatically analyzes the global inter-target dependency graph at the beginning of native build system generation.
 #  This property causes it to display details of its analysis to stderr."
+# GRVS: Dumps huge amounts of info.
 # set_property(GLOBAL PROPERTY GLOBAL_DEPENDS_DEBUG_MODE 1)
 set(CPACK_IFW_VERBOSE YES)
 #set(CMAKE_DEBUG_TARGET_PROPERTIES
@@ -429,7 +427,7 @@ if(WIN32)
 	set(BREEZEICONS_DIR
 		# Craft has a couple of breeze-icons.rcc's, plus an icontheme.rcc in CraftRoot/bin/data/.
 		C:/CraftRoot/bin/data/icons/breeze
-	) 
+	)
 else()
 	set(BREEZEICONS_DIR
 		/usr/share/icons/breeze
@@ -439,13 +437,13 @@ endif()
 if(WITH_BUNDLED_BREEZE_ICONS)
 	### @todo SOMETHING IS WRONG HERE, FIX THIS 
 	set(AMLM_INSTALL_BUNDLED_ICON_THEME_DIR "${KDE_INSTALL_FULL_DATAROOTDIR}/gvansickle/AwesomeMediaLibraryManager")
-	find_file(BREEZEICONS_PATH breeze-icons.rcc 
+	find_file(BREEZEICONS_PATH breeze-icons.rcc
 		HINTS
 			${BREEZEICONS_DIR}
 		PATH_SUFFIXES
 			breeze
 		DOC
-			"Full path to the breeze-icons.rcc file"	
+			"Full path to the breeze-icons.rcc file"
 			)
     if (NOT EXISTS ${BREEZEICONS_PATH})
         message(FATAL_ERROR "Cannot find breeze-icons.rcc")
@@ -500,7 +498,7 @@ if(FALSE)
 ### CallableTraits only in 1.66+.
 set(Boost_USE_MULTITHREADED      ON)
 find_package(Boost REQUIRED 1.66.0
-  COMPONENTS CallableTraits 
+  COMPONENTS CallableTraits
   )
 else()
 if(FALSE)
@@ -527,14 +525,14 @@ add_compile_definitions(BOOST_THREAD_VERSION=5
 	BOOST_THREAD_FUTURE_USES_OPTIONAL=1
 	)
 set(Boost_USE_STATIC_LIBS        ON) # Only find static libs.
-set(Boost_USE_STATIC_RUNTIME     ON) # Want static runtime.
+#set(Boost_USE_STATIC_RUNTIME     ON) # Want static runtime.
 set(Boost_USE_MULTITHREADED      ON) # Need multithreaded.
-set(Boost_USE_DEBUG_LIBS         ON)
-set(Boost_USE_RELEASE_LIBS       OFF)
+#set(Boost_USE_DEBUG_LIBS         ON)
+#set(Boost_USE_RELEASE_LIBS       OFF)
 set(BOOST_ALL_DYN_LINK           OFF)
-set(Boost_USE_DEBUG_RUNTIME      ON)
+#set(Boost_USE_DEBUG_RUNTIME      ON)
 set(Boost_DEBUG    				 ON) # enable debug output from FindBoost.
-set(Boost_DETAILED_FAILURE_MSG   ON) # add detailed information to the failure message 
+set(Boost_DETAILED_FAILURE_MSG   ON) # add detailed information to the failure message
 #								   # even when the REQUIRED option is not given to the find_package call.
 find_package(Boost 1.69.0 REQUIRED
 	COMPONENTS
@@ -546,7 +544,7 @@ if(Boost_FOUND)
 	add_library(amlm_boost_settings_target INTERFACE)
 	target_link_libraries(amlm_boost_settings_target INTERFACE ${Boost_LIBRARIES})
 	target_compile_definitions(amlm_boost_settings_target
-		INTERFACE 
+		INTERFACE
 			BOOST_THREAD_VERSION=5)
 	add_definitions(${Boost_LIB_DIAGNOSTIC_DEFINITIONS})
 endif()
@@ -629,11 +627,11 @@ ecm_qt_declare_logging_category(QT5_LOGGING_CATEGORY_SOURCE_FILES
                                 )
 
 # Qt-specific compiler definitions.                               
-target_compile_definitions(cxx_definitions_qt 
+target_compile_definitions(cxx_definitions_qt
 	INTERFACE
 		-DQT_DEPRECATED_WARNINGS
 		-DQT_SHAREDPOINTER_TRACK_POINTERS=1
-    	-DQT_NO_KEYWORDS
+#    	-DQT_NO_KEYWORDS
     	-DQT_NO_SIGNALS_SLOTS_KEYWORDS
 	    #-DQT_NO_URL_CAST_FROM_STRING
 	    #-DQT_NO_CAST_FROM_ASCII
@@ -793,7 +791,7 @@ print_varlist(
 	CMAKE_CXX_FLAGS
 	CMAKE_CXX_FLAGS_DEBUG
 	CMAKE_EXPORT_COMPILE_COMMANDS
-	CMAKE_INSTALL_PREFIX 
+	CMAKE_INSTALL_PREFIX
 	KDE_INSTALL_BINDIR
 	KDE_INSTALL_DATADIR
 	KDE_INSTALL_ICONDIR

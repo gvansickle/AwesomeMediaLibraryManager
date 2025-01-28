@@ -82,14 +82,14 @@ namespace tree_model {
           int row, int column, const QModelIndex &parent) const override;
       const Base *model() const;
 
-    signals:
+    Q_SIGNALS: //signals:
       void dataAboutToBeChanged(const QModelIndex &topLeft,
           const QModelIndex &bottomRight,
           const QVector<int> &roles = QVector<int>());
 
-    public slots:
+  public Q_SLOTS: //slots:
 
-    private slots:
+  private Q_SLOTS: //slots:
       void emit_data_about_to_be_changed(const Index &index,
           const QVector<int> &roles = QVector<int>());
       void emit_data_changed(const Index &index,

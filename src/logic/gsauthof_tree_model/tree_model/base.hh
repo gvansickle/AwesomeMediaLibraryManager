@@ -79,7 +79,8 @@ namespace tree_model {
       virtual bool can_drop_mime_data(const QMimeData *data,
           Qt::DropAction action, const Index &index, int position) const;
 
-    signals:
+    Q_SIGNALS: //signals:
+
       void data_about_to_be_changed(const tree_model::Index &index,
           const QVector<int> &roles = QVector<int>());
       void data_changed(const tree_model::Index &index,
@@ -92,7 +93,7 @@ namespace tree_model {
           int position);
       void index_inserted(const tree_model::Index &index);
 
-    public slots:
+  public Q_SLOTS: //slots:
 
     protected:
       friend class Item_Adaptor;

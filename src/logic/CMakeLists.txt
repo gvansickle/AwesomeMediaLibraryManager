@@ -112,7 +112,8 @@ target_link_libraries(logic
 		models
 		proxymodels
 		serialization
-		gsauthof_tree_model
+		utils
+		#tree_model
 	PRIVATE
 	    #${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS} ### @todo "logic_subdir links to itself".
 		${QT5_LINK_LIB_TARGETS}

@@ -44,7 +44,7 @@ namespace tree_model {
       Recorder(QObject *parent = nullptr);
       ~Recorder();
 
-    public slots:
+  public Q_SLOTS: // slots:
       // implicit title: of the observed action
       void begin_transaction(const QString &title,
           bool auto_commit = false);
@@ -59,7 +59,7 @@ namespace tree_model {
 
       void set_depth(size_t number_of_transactions);
 
-    public slots:
+  public Q_SLOTS: //slots:
       void set_model(QAbstractItemModel *);
 
       void register_saved();
@@ -77,7 +77,7 @@ namespace tree_model {
           const QModelIndex &parent, int first, int last);
       void register_rows_inserted(
           const QModelIndex &parent, int first, int last);
-    signals:
+    Q_SIGNALS: //signals:
       void transaction_begun(const QString &title);
       void transaction_committed();
 
