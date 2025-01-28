@@ -76,7 +76,7 @@ public:
 protected:
 
 	/// @todo THESE do_create_'s ARE ALL NOW TAKING A MODEL vs. AN ITEM, SO ARE CERTAINLY BROKEN.
-	ScanResultsTreeModelItem* do_create_default_constructed_child_item(AbstractTreeModel *parent_model, int num_columns) override;
+	ScanResultsTreeModelItem* do_create_default_constructed_child_item(AbstractTreeModel *parent_model, int num_columns);
 
 	/// @name Virtual functions called by the base class to complete certain operations.
 	///       The base class will have error-checked function parameters.
