@@ -174,13 +174,13 @@ std::pair<QUrl, QString> NetworkAwareFileDialog::getExistingDirectoryUrl(QWidget
 
     auto &dlg = nafdlg; //->m_the_qfiledialog;
 
-	if(options)
-	{
-		dlg->setOptions(options);
-	}
-
 	// User must select a directory.
 	dlg->setFileMode(QFileDialog::Directory);
+	if(options)
+	{
+		// Set options after doing setFileMode(), or we'll get a popup saying "Can't determine file extension".
+		dlg->setOptions(options);
+	}
 	// List all directories and drives.  System is to allow KDE dialogs to see gvfs mounts.
 	dlg->setFilter(QDir::Dirs | QDir::NoDotAndDotDot | QDir::Drives | QDir::System);
 	dlg->setAcceptMode(QFileDialog::AcceptOpen);
