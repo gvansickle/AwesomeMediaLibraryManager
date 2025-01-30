@@ -19,7 +19,6 @@
 
 #include "DirectoryScanJob.h"
 
-
 // Qt5
 #include <QString>
 #include <QUrl>
@@ -29,6 +28,7 @@
 #include <utils/TheSimplestThings.h>
 #include <logic/DirScanResult.h>
 #include <concurrency/ExtAsync.h>
+#include <utils/Stopwatch.h>
 
 
 void DirScanFunction(ExtFuture<DirScanResult> ext_future, AMLMJob* /*amlmJob*/,
@@ -37,6 +37,8 @@ void DirScanFunction(ExtFuture<DirScanResult> ext_future, AMLMJob* /*amlmJob*/,
 		const QDir::Filters dir_filters,
 		const QDirIterator::IteratorFlags iterator_flags)
 {
+	Stopwatch sw;
+	sw.start("DirScanning");
 
 	if(!dir_url.isLocalFile())
 	{
@@ -87,7 +89,7 @@ void DirScanFunction(ExtFuture<DirScanResult> ext_future, AMLMJob* /*amlmJob*/,
 		// First check that we have a valid file or dir: Currently exists and is readable by current user.
 		if(!(file_info.exists() && file_info.isReadable()))
 		{
-			qWr() << "UNREADABLE/NON-EXISTENT FILE:" << file_info.absoluteFilePath();
+//			qWr() << "UNREADABLE/NON-EXISTENT FILE:" << file_info.absoluteFilePath();
 			/// @todo Collect errors
 		}
 		else if(file_info.isDir())
@@ -141,6 +143,7 @@ void DirScanFunction(ExtFuture<DirScanResult> ext_future, AMLMJob* /*amlmJob*/,
 			ext_future.setProgressValue(num_files_found_so_far);
 
 			// Report the URL we found to the future.
+			/// @todo Commenting this out results in a responsive GUI.
 			ext_future.reportResult(dir_scan_result);
 
 			qDb() << "NUM FILES:" << num_files_found_so_far << ", per ext_future:" << ext_future.resultCount();
@@ -166,6 +169,9 @@ void DirScanFunction(ExtFuture<DirScanResult> ext_future, AMLMJob* /*amlmJob*/,
 	}
 
 	ext_future.reportFinished();
+
+	sw.stop();
+	sw.print_results();
 
 	qDb() << "RETURNING, ExtFuture:" << ext_future; ///< STARTED only, last output of pool thread
 	return;

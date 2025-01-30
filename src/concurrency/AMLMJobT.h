@@ -55,6 +55,9 @@ public:
 	    // We could get a doKill() call at any time after we leave this constructor.
 		m_ext_watcher = new ExtFutureWatcherT(this);
 
+		// @todo Add throttling if necessary.
+//		m_ext_watcher->setPendingResultsLimit(10);
+
 		// Create a new 1 sec speed update QTimer.
 		m_speed_timer = new QTimer(this);
 	}

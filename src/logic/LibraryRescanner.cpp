@@ -211,7 +211,6 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 {
 	CALLGRIND_START_INSTRUMENTATION;
 
-    qDb() << "START:" << dir_url;
 
 	expect_and_set(0, 1);
 
@@ -260,7 +259,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	// Create a future so we can attach a continuation to get the results to the main thread.
 	ExtFuture<SharedItemContType> tree_model_item_future = ExtAsync::make_started_only_future<SharedItemContType>();
 
-	m_timer.lap("End setup, start continuation attachements");
+	m_timer.lap("End setup, start continuation attachments");
 
 	// Attach a streaming tap to the dirscan future.
 	ExtFuture<Unit> tail_future
@@ -404,6 +403,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 #else
 		AMLM_ASSERT_NOT_IN_GUITHREAD();
 #endif
+Stopwatch sw("Populate LibraryEntry");
 		// Get the current ScanResultsTreeModel.
 //		std::shared_ptr<ScanResultsTreeModel> tree_model_sptr = AMLM::Core::self()->getScanResultsTreeModel();
 		std::shared_ptr<AbstractTreeModel> tree_model_sptr = AMLM::Core::self()->getScanResultsTreeModel();
@@ -429,12 +429,14 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 
 				// Here we're only dealing with the per-file LibraryEntry's.
 M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
+
+sw.start("LibEntry");
 				std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(entry_dp->data(1).toString());
 				lib_entry->populate(true);
-
+sw.lap("Populate Complete");
 				std::shared_ptr<SRTMItem_LibEntry> new_child = std::make_shared<SRTMItem_LibEntry>(lib_entry);
 				Q_ASSERT(new_child);
-
+sw.lap("SRTMItem_LibEntry created");
 				/// NEW: Give the incoming ScanResultTreeModelItem entry a parent.
 M_WARNING("TODO: This needs rework.");
 //				entry_dp->changeParent(tree_model_sptr->getRootItem());
@@ -455,6 +457,10 @@ M_WARNING("PUT THIS BACK");
 			/// @temp
 			bool ok = tree_model_sptr->checkConsistency();
 			Q_ASSERT(ok);
+sw.lap("TreeModel checkConsistency");
+sw.stop();
+sw.print_results();
+
 //			qDb() << "########################### TREE MODEL CHECK checkConsistency:" << ok;
 			/// @temp Check if iterator works.
 			long node_ct = 0;
