@@ -58,7 +58,7 @@ using strviw_type = QLatin1String;
 
 QVariant TrackIndex::toVariant() const
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 
 #define X(field_tag, field_tag_str, member_field) map_insert_or_die(map, field_tag, member_field);
 	M_TRACK_INDEX_DATASTREAM_FIELDS(X)
@@ -69,7 +69,7 @@ QVariant TrackIndex::toVariant() const
 
 void TrackIndex::fromVariant(const QVariant& variant)
 {
-	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
+	InsertionOrderedMap<QString, QVariant> map = variant.value<InsertionOrderedMap<QString, QVariant>>();
 
 #define X(field_tag, field_tag_str, member_field) map_read_field_or_warn(map, field_tag, &member_field);
 	M_TRACK_INDEX_DATASTREAM_FIELDS(X)

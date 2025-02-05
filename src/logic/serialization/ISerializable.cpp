@@ -30,11 +30,13 @@
 #include <utils/DebugHelpers.h>
 #include <utils/RegisterQtMetatypes.h>
 
+// Ours
+#include <future/InsertionOrderedMap.h>
 
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering InsertionOrderedMap<QString, QVariant> alias QVariantInsertionOrderedMap";
 	qRegisterMetaType<InsertionOrderedMap<QString, QVariant>>();
-	qRegisterMetaType<InsertionOrderedMap<QString, QVariant>>("QVariantInsertionOrderedMap");
+//	qRegisterMetaType<InsertionOrderedMap<QString, QVariant>>("QVariantInsertionOrderedMap");
 //	AMLMRegisterQFlagQStringConverters<DirScanResult::DirPropFlags>();
 });
 
@@ -46,7 +48,7 @@ QVariant SerializableQVariantList::toVariant() const
 	Q_ASSERT(!m_list_item_tag.isNull());
 	Q_ASSERT(!m_list_item_tag.isEmpty());
 
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 	// Return a QMap with a single QVariant(QVariantHomogenousList) item.
 	/// @note Slicing warning, but this is ok here.
 	QVariantHomogenousList list = *this;
@@ -62,7 +64,7 @@ void SerializableQVariantList::fromVariant(const QVariant& variant)
 	Q_ASSERT(!m_list_item_tag.isNull());
 	Q_ASSERT(!m_list_item_tag.isEmpty());
 
-	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
+	InsertionOrderedMap<QString, QVariant> map = variant.value<InsertionOrderedMap<QString, QVariant>>();
 
 	Q_ASSERT(map.contains(m_list_tag));
 //	qDb() << M_ID_VAL(m_list_tag);

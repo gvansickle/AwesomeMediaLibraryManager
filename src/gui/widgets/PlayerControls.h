@@ -42,7 +42,7 @@ class PlayerControls : public QWidget
 public:
 	explicit PlayerControls(QWidget *parent = nullptr);
 
-    QMediaPlayer::State state() const;
+    QMediaPlayer::PlaybackState state() const;
 	bool isMuted() const { return m_playerMuted; }
     int volume() const;
 
@@ -58,7 +58,7 @@ Q_SIGNALS:
     void changeMuting(bool);
 
 public Q_SLOTS:
-    void setState(QMediaPlayer::State state);
+    void setState(QMediaPlayer::PlaybackState state);
     void setVolume(int volume);
     void setMuted(bool muted);
 	void onDurationChanged(qint64 duration);
@@ -74,7 +74,7 @@ private Q_SLOTS:
 private:
 	Q_DISABLE_COPY(PlayerControls)
 
-	QMediaPlayer::State m_playerState = QMediaPlayer::StoppedState;
+	QMediaPlayer::PlaybackState m_playerState = QMediaPlayer::StoppedState;
 	bool m_playerMuted = false;
 	bool m_playerRepeat = false;
 

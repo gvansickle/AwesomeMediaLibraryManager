@@ -28,6 +28,7 @@
 
 // Qt5
 #include <Qt>
+#include <QDebug>
 
 // Ours
 #include <future/guideline_helpers.h>
@@ -43,7 +44,7 @@ public:
 
 	static UUIncD create();
 
-	static UUIncD null() { return UUIncD(0xFFFFFFFFFFFFFFFF); };
+	static UUIncD null() { return UUIncD(0xFFFF'FFFF'FFFF'FFFF); };
 
 	// User-defined conversion to uin64_t.
 	operator uint64_t() const;
@@ -90,5 +91,13 @@ namespace std
 		}
 	};
 }
+
+inline QDebug operator<<(QDebug debug, const UUIncD& uuincd)
+{
+	debug << static_cast<uint64_t>(uuincd);
+
+	return debug;
+}
+Q_DECLARE_METATYPE(UUIncD);
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_UUINCD_H

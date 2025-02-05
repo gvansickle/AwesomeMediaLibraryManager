@@ -174,7 +174,7 @@ Qt::ItemFlags LibraryModel::flags(const QModelIndex &index) const
 	}
 	else
 	{
-		return 0;
+        return Qt::NoItemFlags;
 	}
 }
 
@@ -679,7 +679,7 @@ void LibraryModel::close(bool delete_cache)
 
 QVariant LibraryModel::toVariant() const
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 
 	map_insert_or_die(map, "the_models_library", m_library);
 
@@ -688,13 +688,13 @@ QVariant LibraryModel::toVariant() const
 
 void LibraryModel::fromVariant(const QVariant& variant)
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 	qviomap_from_qvar_or_die(&map, variant);
 
 	QVariant temp = map.value("the_models_library");
 
-	Q_ASSERT(temp.canConvert<QVariantInsertionOrderedMap>());
-	QVariantInsertionOrderedMap qvar_temp_lib = temp.value<QVariantInsertionOrderedMap>();
+	Q_ASSERT((temp.canConvert<InsertionOrderedMap<QString, QVariant>>()));
+	InsertionOrderedMap<QString, QVariant> qvar_temp_lib = temp.value<InsertionOrderedMap<QString, QVariant>>();
 	Library temp_lib;
 
 	temp_lib.fromVariant(qvar_temp_lib);

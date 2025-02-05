@@ -137,7 +137,7 @@ target_link_libraries(${TEST_EXE_TARGET}
 		tests
         libapp
 #		utils
-		Qt5::Test
+		Qt6::Test
 		${PROJECT_COMMON_LINK_LIBS}
 #		${QT5_LINK_LIB_TARGETS}
 		${KF5_LINK_LIB_TARGETS}
@@ -193,7 +193,7 @@ if(TRUE)
 								concurrency
 								logic
 								libapp
-								Qt5::Test
+								Qt6::Test
 								${PROJECT_COMMON_LINK_LIBS}
 								${KF5_LINK_LIB_TARGETS}
 	)

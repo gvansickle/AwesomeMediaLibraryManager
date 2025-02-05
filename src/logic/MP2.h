@@ -22,7 +22,7 @@
 
 #include <QAction>
 #include <QMediaPlayer>
-
+#include <QAudioOutput>
 
 
 class MP2 : public QMediaPlayer
@@ -30,7 +30,7 @@ class MP2 : public QMediaPlayer
 	Q_OBJECT
 
 public:
-	MP2(QObject *parent = Q_NULLPTR, Flags flags = Flags());
+	MP2(QObject *parent = Q_NULLPTR);
 
 	/// Property overrides.
 	qint64 position() const;
@@ -42,6 +42,8 @@ Q_SIGNALS:
 
 private:
 	Q_DISABLE_COPY(MP2)
+
+	QAudioOutput *m_audio_output;
 
 	/// @name State for use when we're playing a section of a larger sound file.
 	/// @{
@@ -74,11 +76,18 @@ public Q_SLOTS:
 	void setPosition(qint64 position);
 	void onPositionChanged(qint64 pos);
 	void onDurationChanged(qint64 duration);
-	void onMediaChanged(const QMediaContent &media);
+//	void onMediaChanged(const QMediaContent &media);
 	void onMediaStatusChanged(QMediaPlayer::MediaStatus status);
+
+#if 0 // QT5
 	void onCurrentMediaChanged(const QMediaContent &qmediacontent);
+#elif 1 // QT6
+	void onSourceChanged(const QUrl& url);
+#endif
+#if 0 // @todo QT6
 	void onStateChanged(QMediaPlayer::State state);
 	void onPlayerError(QMediaPlayer::Error error);
+#endif
 };
 
 #endif // MP2_H

@@ -31,6 +31,7 @@
 
 // Qt5
 #include <QObject>
+#include <QDebug>
 
 // Qt5 metatype declarations for some std containers.
 Q_DECLARE_METATYPE(std::string);
@@ -44,7 +45,20 @@ Q_DECLARE_METATYPE(std::int64_t);
 Q_DECLARE_METATYPE(std::uint64_t);
 //Q_DECLARE_METATYPE(std::size_t);
 //Q_DECLARE_METATYPE(std::ssize_t);
+
 // Some of ours.
+inline QDebug operator<<(QDebug debug, const std::optional<bool>& optbool)
+{
+	if(optbool.has_value())
+	{
+		debug << (optbool.value() ? "true" : "false");
+	}
+	else
+	{
+		debug << "(unknown)";
+	}
+	return debug;
+}
 Q_DECLARE_METATYPE(std::optional<bool>);
 
 

@@ -73,8 +73,8 @@
 #include <KIO/Job>
 #include <KIO/JobTracker>
 #include <KJobWidgets>
-#include <KIconButton>
-#include <KXmlGui/KEditToolBar>
+#include <KF6/KIconWidgets/KIconButton>
+#include <KF6/KXmlGui/KEditToolBar>
 
 // Ours
 #include "AMLMApp.h"
@@ -491,7 +491,7 @@ void MainWindow::createActions()
 	connect_trig(m_savePlaylistAct, this, &MainWindow::savePlaylistAs);
 	addAction("save_playlist_as", m_savePlaylistAct);
 
-#if HAVE_KF501
+#if HAVE_KF501 || HAVE_KF6
 	m_exitAction = make_action(QIcon::fromTheme("application-exit"), "E&xit", this,
                               QKeySequence::Quit,
                               "Exit application");
@@ -586,7 +586,7 @@ void MainWindow::createActionsEdit(KActionCollection *ac)
 {
 	// The cut/copy/paste action "sub-bundle".
     m_ab_cut_copy_paste_actions = new ActionBundle(ac);
-#if HAVE_KF501
+#if HAVE_KF501 || HAVE_KF6
 	// Specifying the ActionBundle as each QAction's parent automatically adds it to the bundle.
 	m_act_cut = make_action(Theme::iconFromTheme("edit-cut"), tr("Cu&t"), m_ab_cut_copy_paste_actions, QKeySequence::Cut,
                                                     tr("Cut the current selection to the clipboard"));
@@ -643,7 +643,7 @@ void MainWindow::createActionsView(KActionCollection *ac)
 
     m_ab_docks = new ActionBundle(ac);
 
-#if HAVE_KF501
+#if HAVE_KF501 || HAVE_KF6
 	m_act_lock_layout = make_action(Theme::iconFromTheme("emblem-locked"), tr("Lock layout"), this); // There's also an "emblem-unlocked"
 	m_act_reset_layout = make_action(Theme::iconFromTheme("view-multiple-objects"), tr("Reset layout"), this);
 #else
@@ -680,7 +680,7 @@ void MainWindow::createActionsTools(KActionCollection *ac)
 
 void MainWindow::createActionsSettings(KActionCollection *ac)
 {
-#if HAVE_KF501
+#if HAVE_KF501 || HAVE_KF6
 
 	// Styles KActionMenu menu.
 	addAction(QStringLiteral("styles_menu"), m_act_styles_kaction_menu);
@@ -711,7 +711,7 @@ void MainWindow::createActionsSettings(KActionCollection *ac)
 
 void MainWindow::createActionsHelp(KActionCollection* ac)
 {
-#if HAVE_KF501
+#if HAVE_KF501 || HAVE_KF6
 	// For KDE we use a derivation of KHelpMenu.
     Q_UNUSED(ac);
 #else
@@ -879,7 +879,7 @@ M_WARNING("TODO");
     menuBar()->addSeparator();
 
 	// Create the non-KDE help menu.
-#if !HAVE_KF501
+#if !(HAVE_KF501 || HAVE_KF6)
 	m_helpMenu = menuBar()->addMenu("&Help");
 	m_helpMenu->addSection("Help");
 	m_helpMenu->addAction(m_helpAct);
@@ -940,7 +940,7 @@ void MainWindow::createToolBars()
     /// KF5 button that opens an Icon select dialog.
     m_settingsToolBar->addWidget(new KIconButton(m_settingsToolBar));
 
-#if HAVE_KF501
+#if HAVE_KF501 || HAVE_KF6
     // Create a combo box where the user can change the style.
 	QComboBox* styleComboBox = new QComboBox;
 	styleComboBox->addItems(QStyleFactory::keys());
@@ -948,13 +948,13 @@ void MainWindow::createToolBars()
 	QString cur_style = amlmApp->style()->objectName();
 	styleComboBox->setCurrentIndex(styleComboBox->findText(cur_style, Qt::MatchFixedString));
 	m_settingsToolBar->addWidget(styleComboBox);
-	connect(styleComboBox, static_cast<void(QComboBox::*)(const QString&)>(&QComboBox::activated), this, &MainWindow::changeStyle);
+    connect_or_die(styleComboBox, &QComboBox::activated, this, &MainWindow::changeStyle);
 
     // Create a combo box with icon themes.
     QComboBox* iconThemeComboBox = new QComboBox;
     iconThemeComboBox->addItems(Theme::GetIconThemeNames());
     m_settingsToolBar->addWidget(iconThemeComboBox);
-    connect_or_die(iconThemeComboBox, static_cast<void(QComboBox::*)(const QString&)>(&QComboBox::activated), this, &MainWindow::changeIconTheme);
+    connect_or_die(iconThemeComboBox, &QComboBox::activated, this, &MainWindow::changeIconTheme);
 #endif
 
     // Create another toolbar for the player controls.
@@ -992,7 +992,7 @@ void MainWindow::createStatusBar()
 
 void MainWindow::createDockWidgets()
 {
-#if HAVE_KF501
+#if HAVE_KF501 || HAVE_KF6
     auto dock_parent = actionCollection();
 #else
     auto dock_parent = this;
@@ -1170,7 +1170,7 @@ bool MainWindow::maybeSaveOnClose()
 {
 	QStringList failures;
 
-	auto swl = m_mdi_area->subWindowList().toStdList();
+    auto swl = m_mdi_area->subWindowList();
 
 	for(const auto& child : swl)
 	{
@@ -1321,7 +1321,7 @@ MDIModelViewPair MainWindow::findSubWindowModelViewPair(QUrl url) const
 		{
 			if(lm->getLibRootDir() == url)
 			{
-				qDebug() << "Found existing LibraryModel:" << lm;
+                qDebug() << "Found existing LibraryModel:" << lm;
 				retval.m_model = lm;
 				retval.m_model_was_existing = true;
 			}
@@ -1502,7 +1502,7 @@ void MainWindow::readLibSettings(QSettings& settings)
 	/// @todo The playlist overlay.
 	QString overlay_filename = QDir::homePath() + "/AMLMDatabaseSerDes.xml";
 
-	auto extfuture_initial_lib_load = ExtAsync::qthread_async_with_cnr_future([=](ExtFuture<SerializableQVariantList> ef) {
+    auto extfuture_initial_lib_load = QtConcurrent::run([=](QPromise<SerializableQVariantList>& ef) {
 
 		qIn() << "###### READING XML DB:" << overlay_filename;
 		SerializableQVariantList list("library_list", "library_list_item");
@@ -1513,12 +1513,12 @@ void MainWindow::readLibSettings(QSettings& settings)
 			/// @todo This takes ~10 secs at the moment with a 300MB XML file.
 			xmlser.load(list, QUrl::fromLocalFile(overlay_filename));
 		}
-		ef.reportResult(list);
-		ef.reportFinished();
+        ef.addResult(list);
+        // ef.reportFinished();
 	})
 	.then(this, [=](ExtFuture<SerializableQVariantList> ef){
 
-		SerializableQVariantList list = ef.get_first();
+    SerializableQVariantList list = ef.result(); //.get_first();
 
 		qIn() << "###### READ" << list.size() << " libraries from XML DB:" << overlay_filename;
 
@@ -1999,13 +1999,13 @@ void MainWindow::addChildMDIModelViewPair_Playlist(const MDIModelViewPair& mvpai
 		// View is new, did the model already exist?
 		if(mvpair.m_model_was_existing)
 		{
-			qDebug() << "Model existed:" << mvpair.m_model << playlist_model->getLibRootDir() << playlist_model->getLibraryName();
+            qDebug() << "Model existed:" << mvpair.m_model.data() << playlist_model->getLibRootDir() << playlist_model->getLibraryName();
 			Q_ASSERT(model_really_already_existed);
 		}
 		else
 		{
 			// Model is new.
-			qDebug() << "Model is new:" << mvpair.m_model << playlist_model->getLibRootDir() << playlist_model->getLibraryName();
+            qDebug() << "Model is new:" << mvpair.m_model.data() << playlist_model->getLibRootDir() << playlist_model->getLibraryName();
 			Q_ASSERT(!model_really_already_existed);
 
 			// Add the underlying model to the PlaylistModel list.
@@ -2276,7 +2276,7 @@ void MainWindow::onTextFilterChanged()
 {
 	auto filterWidget = m_filterToolbar->findChild<FilterWidget*>();
 	Q_ASSERT(filterWidget != nullptr);
-	QRegExp regExp(filterWidget->text(),
+    QRegularExpression regExp(filterWidget->text(),
 					   filterWidget->caseSensitivity(),
 					   filterWidget->patternSyntax());
 
@@ -2284,7 +2284,7 @@ void MainWindow::onTextFilterChanged()
 	MDILibraryView* libtreeview = mdisubwin ? mdisubwin->findChild<MDILibraryView*>() : nullptr;
 	if(libtreeview)
 	{
-		libtreeview->proxy_model()->setFilterRegExp(regExp);
+        libtreeview->proxy_model()->setFilterRegularExpression(regExp);
 	}
 }
 

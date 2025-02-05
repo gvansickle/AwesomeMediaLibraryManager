@@ -141,7 +141,7 @@ static const strviw_type XMLTAG_HEADER_SECTION_LIST ("header_section_list");
 
 QVariant AbstractTreeModelHeaderItem::toVariant() const
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 
 	// Set some class meta-info.
 //	set_map_class_info(this, &map);
@@ -176,7 +176,7 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 
 void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 	qviomap_from_qvar_or_die(&map, variant);
 
 	// Read the number of header sections...

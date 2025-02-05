@@ -20,6 +20,8 @@
 #ifndef AWESOMEMEDIALIBRARYMANAGER_EXTASYNC_RUNINTHREAD_H
 #define AWESOMEMEDIALIBRARYMANAGER_EXTASYNC_RUNINTHREAD_H
 
+#if 0 // !QT6
+
 // Std C++
 #include <type_traits>
 #include <functional>
@@ -297,5 +299,7 @@ namespace detail
 	}
 
 }; // END namespace ExtAsync.
+
+#endif
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_EXTASYNC_RUNINTHREAD_H

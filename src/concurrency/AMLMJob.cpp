@@ -231,6 +231,7 @@ M_WARNING("I think we need 'already killed' reentrancy protection here or in kil
  * So what happens is:
  * - So then it's this:
  *
+ * @code
  * if (doKill())
  * {
       setError(KilledJobError);
@@ -242,9 +243,9 @@ M_WARNING("I think we need 'already killed' reentrancy protection here or in kil
    {
       return false;
    }
-
+	@endcode
     ... and this (which is also called directly by emitResult()):
-
+	@code
     void KJob::finishJob(bool emitResult)
     {
     Q_D(KJob);
@@ -265,7 +266,7 @@ M_WARNING("I think we need 'already killed' reentrancy protection here or in kil
         deleteLater();
     }
     }
-
+	@endcode
     So I think the answer is:
     - We need this object to survive doKill(),
     - We can't do anything else after that, due to finishJob() possibly destroying us.
@@ -333,7 +334,7 @@ void AMLMJob::dump_job_info(KJob* kjob, const QString& header)
     qIn() << "Progress info:";
     qIn() << "  Caps:" << kjob->capabilities();
     qIn() << "  percent:" << kjob->percent();
-    for(auto unit : {KJob::Unit::Bytes, KJob::Unit::Files, KJob::Unit::Directories})
+    for(auto unit : {KJob::Unit::Bytes, KJob::Unit::Files, KJob::Unit::Directories, KJob::Unit::Items})
     {
         qIn() << "  processedAmount:" << kjob->processedAmount(unit);
         qIn() << "  totalAmount:" << kjob->totalAmount(unit);

@@ -36,12 +36,12 @@
 AMLM_QREG_CALLBACK([](){
     qIn() << "Registering Fraction";
     /// @todo This isn't working (in or out) with QVariant.
-    qRegisterMetaType<Fraction>();
-	qRegisterMetaTypeStreamOperators<Fraction>();
-	QMetaType::registerConverter<Fraction, QString>([](const Fraction& frac){ return frac.toQString(); });
-	QMetaType::registerConverter<QString, Fraction>([](const QString& str){
-		return Fraction(str);
-	});
+//    qRegisterMetaType<Fraction>();
+//	qRegisterMetaTypeStreamOperators<Fraction>();
+//	QMetaType::registerConverter<Fraction, QString>([](const Fraction& frac){ return frac.toQString(); });
+//	QMetaType::registerConverter<QString, Fraction>([](const QString& str){
+//		return Fraction(str);
+//	});
 });
 
 /// Calculate the Greatest Common Divisor.

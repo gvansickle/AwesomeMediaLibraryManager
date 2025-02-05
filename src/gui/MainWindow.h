@@ -42,7 +42,8 @@ class QStandardItemModel;
 
 /// KF5
 
-#if HAVE_KF501
+//#if HAVE_KF501
+#if HAVE_KF6 || HAVE_KF501
 #include <KMainWindow>
 #include <KXmlGuiWindow>
 
@@ -488,7 +489,7 @@ private:
     /// @}
 
 	/// @name Help actions.
-#if !HAVE_KF501
+#if !(HAVE_KF501 || HAVE_KF6)
 	QAction* m_helpAct;
     QAction* m_whatsThisAct;
     QAction* m_aboutAct;
@@ -526,7 +527,7 @@ private:
     /// The MainWindow singleton.
     static QPointer<MainWindow> m_instance;
 
-#if HAVE_KF501
+#if HAVE_KF501 || HAVE_KF6
     /**
      * Master Tracker for all asynchronous activites.
      * Its widget is the progress bar in the status bar.

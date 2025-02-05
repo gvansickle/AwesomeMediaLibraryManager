@@ -24,16 +24,15 @@
 
 #include <QObject>
 #include <QLineEdit>
-#include <QRegExp>
+#include <QRegularExpression>
 
 class QAction;
 class QActionGroup;
 
-Q_DECLARE_METATYPE(QRegExp::PatternSyntax)
+// QT5 Q_DECLARE_METATYPE(QRegExp::PatternSyntax)
 
 class FilterWidget : public QLineEdit
 {
-	//W_OBJECT(FilterWidget)
 	Q_OBJECT
 
 	Q_PROPERTY(Qt::CaseSensitivity caseSensitivity READ caseSensitivity WRITE setCaseSensitivity)
@@ -41,19 +40,16 @@ class FilterWidget : public QLineEdit
 
 Q_SIGNALS:
 	void filterChanged();
-    //W_SIGNAL(filterChanged)
 
 public:
 	explicit FilterWidget(QWidget *parent = nullptr);
 
-	Qt::CaseSensitivity caseSensitivity() const;
+	QRegularExpression::PatternOptions caseSensitivity() const;
 	void setCaseSensitivity(Qt::CaseSensitivity cs);
 
-	QRegExp::PatternSyntax patternSyntax() const;
-	void setPatternSyntax(QRegExp::PatternSyntax s);
-
-	//W_PROPERTY(Qt::CaseSensitivity, caseSensitivity READ caseSensitivity WRITE setCaseSensitivity)
-	//W_PROPERTY(QRegExp::PatternSyntax, patternSyntax READ patternSyntax WRITE setPatternSyntax)
+#warning "QT6 TEMP FIX THIS"
+    // QRegExp::PatternSyntax patternSyntax() const;
+    // void setPatternSyntax(QRegExp::PatternSyntax s);
 
 public Q_SLOTS:
 

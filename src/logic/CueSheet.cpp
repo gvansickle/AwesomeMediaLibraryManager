@@ -222,7 +222,7 @@ uint8_t CueSheet::get_total_num_tracks() const
 
 QVariant CueSheet::toVariant() const
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 
 	// CD-level fields.
 #define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
@@ -250,7 +250,7 @@ QVariant CueSheet::toVariant() const
 
 void CueSheet::fromVariant(const QVariant& variant)
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 	qviomap_from_qvar_or_die(&map, variant);
 
 	// CD-level fields.
@@ -266,7 +266,7 @@ void CueSheet::fromVariant(const QVariant& variant)
 #if 0
 	list_read_all_fields_or_warn(qvar_track_list, &m_tracks);
 #else
-	for(const auto& track : qAsConst(qvar_track_list))
+	for(const auto& track : std::as_const(qvar_track_list))
 	{
 		TrackMetadata tm;
 		tm.fromVariant(track);

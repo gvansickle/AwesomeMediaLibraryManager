@@ -35,6 +35,7 @@
 
 #include <KCoreConfigSkeleton>
 
+#include <qregexp.h>
 #include <utils/DebugHelpers.h>
 #include "../MainWindow.h"
 
@@ -116,7 +117,7 @@ void SettingsDialog::parseWidgetsThatKDEForgotAbout()
 {
     // K/QComboBoxes
     // If there's a way to make combo boxes work with Enums without doing the setup by hand, I don't see it.
-    QRegExp re("^kcfg_.*");
+    QRegularExpression re("^kcfg_.*");
     auto children = findChildren<KComboBox*>(re, Qt::FindChildrenRecursively);
     if(children.size() == 0)
     {

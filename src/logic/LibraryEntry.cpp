@@ -301,7 +301,7 @@ QDebug operator<<(QDebug dbg, const LibraryEntry& obj)
 
 QVariant LibraryEntry::toVariant() const
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 
 	// Insert field values into the QVariantMap.
 #define X(field_tag, member_field)   map_insert_or_die(map, field_tag, member_field);
@@ -323,7 +323,7 @@ QVariant LibraryEntry::toVariant() const
 
 void LibraryEntry::fromVariant(const QVariant& variant)
 {
-	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
+	InsertionOrderedMap<QString, QVariant> map = variant.value<InsertionOrderedMap<QString, QVariant>>();
 
 	// Extract all the fields from the map, cast them to their type.
 #define X(field_tag, member_field)   map_read_field_or_warn(map, field_tag, &(member_field));

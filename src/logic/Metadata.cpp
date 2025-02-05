@@ -73,7 +73,7 @@
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering Metadata metatypes";
 	qRegisterMetaType<Metadata>();
-	qRegisterMetaTypeStreamOperators<Metadata>();
+//	qRegisterMetaTypeStreamOperators<Metadata>();
 //	QMetaType::registerDebugStreamOperator<Metadata>();
 //	QMetaType::registerConverter<Metadata, QString>([](const Metadata& obj){ return obj.name(); });
 });
@@ -165,7 +165,7 @@ Metadata Metadata::make_metadata(const QVariant& variant)
 {
 	Q_ASSERT(variant.isValid());
 
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 	qviomap_from_qvar_or_die(&map, variant);
 	Metadata retval = make_metadata();
 	retval.fromVariant(variant);
@@ -659,7 +659,7 @@ static const strviw_type XMLTAG_CUESHEET("m_cuesheet");
 
 QVariant Metadata::toVariant() const
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 
 #define X(field_tag, member_field)   map_insert_or_die(map, field_tag, member_field);
 	M_DATASTREAM_FIELDS(X);
@@ -690,7 +690,7 @@ QVariant Metadata::toVariant() const
 
 void Metadata::fromVariant(const QVariant& variant)
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 	qviomap_from_qvar_or_die(&map, variant);
 
 #define X(field_tag, member_field)   map_read_field_or_warn(map, field_tag, &(member_field));

@@ -56,6 +56,8 @@
 #include <utils/DebugHelpers.h>
 #include <utils/UniqueIDMixin.h>
 
+#if 0 // if !QT6
+
 #include "ExtFutureState.h"
 #include "ExtFutureProgressInfo.h"
 #include "ExtAsyncExceptions.h"
@@ -1535,6 +1537,54 @@ extern template class ExtFuture<QByteArray>;
 /// @}
 
 #include "impl/ExtFuture_impl.hpp"
+
+#endif // !QT6
+
+template <class T>
+using ExtFuture = QFuture<T>;
+
+// From ExtFuture work:
+//        {QFutureInterfaceBase::NoState, "NoState"},
+//        {QFutureInterfaceBase::Running, "Running"},
+//        {QFutureInterfaceBase::Started,  "Started"},
+//        {QFutureInterfaceBase::Finished,  "Finished"},
+//        {QFutureInterfaceBase::Canceled,  "Canceled"},
+//        {QFutureInterfaceBase::Paused,   "Paused"},
+//        {QFutureInterfaceBase::Throttled, "Throttled"}
+template <typename T>
+QString state_str(const ExtFuture<T>& future)
+{
+	QString retval {"state( "};
+
+	if(future.isRunning()) { retval += "R|"; }
+	if(future.isStarted()) { retval += "ST|"; }
+    if(future.isFinished()) { retval += "F|"; }
+    if(future.isCanceled()) { retval += "C|"; }
+    if(future.isSuspended()) { retval += "SU|"; }
+    if(future.isSuspending()) { retval += "SP|"; }
+    if(future.isValid()) { retval += "V|"; }
+
+	// Remove the last char, which should be a "|".
+	retval.chop(1);
+	retval += ")";
+	return retval;
+}
+
+/**
+ * QDebug stream operator.
+ */
+template <typename T>
+QDebug operator<<(QDebug dbg, const ExtFuture<T>& extfuture)
+{
+	QDebugStateSaver saver(dbg);
+
+	// .resultCount() does not cause a stored exception to be thrown.  It does acquire the mutex.
+    dbg << "ExtFuture<T>( id=" /*<< extfuture.m_extfuture_id_no << extfuture.m_name*/ << "state:" << state_str(extfuture)
+        /*<< "hasException():" << extfuture.hasException()*/ << ", resultCount():" << extfuture.resultCount() << ")";
+
+	return dbg;
+}
+
 
 #endif /* SRC_CONCURRENCY_EXTFUTURE_H_ */
 

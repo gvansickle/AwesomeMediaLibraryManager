@@ -382,7 +382,7 @@ using strviw_type = QLatin1String;
 
 QVariant AbstractTreeModelItem::toVariant() const
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 
 	// Write class info to the map.
 //	set_map_class_info(this, &map);
@@ -424,7 +424,7 @@ QVariant AbstractTreeModelItem::toVariant() const
 
 void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 {
-	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
+	InsertionOrderedMap<QString, QVariant> map = variant.value<InsertionOrderedMap<QString, QVariant>>();
 
 #define X(field_tag, tag_string, member_field) map_read_field_or_warn(map, field_tag, member_field);
 //	M_DATASTREAM_FIELDS(X);

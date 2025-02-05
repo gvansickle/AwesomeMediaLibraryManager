@@ -96,10 +96,12 @@ public:
 
 	void push_back( const QVariant& value ) { m_the_list.push_back(value); };
 
-	const_iterator cbegin() const { return std::cbegin(m_the_list); };
-	const_iterator begin() const { return this->cbegin(); }
-	const_iterator cend() const { return std::cend(m_the_list); };
-	const_iterator end() const { return this->cend(); }
+	const_iterator cbegin() const noexcept { return std::cbegin(m_the_list); }
+	iterator begin() { return m_the_list.begin(); }
+	const_iterator begin() const { return m_the_list.cbegin(); }
+	const_iterator cend() const noexcept { return std::cend(m_the_list); }
+	iterator end() { return m_the_list.end(); }
+	const_iterator end() const { return m_the_list.cend(); }
 
 	long size() const noexcept { return m_the_list.size(); }
 	bool empty() const noexcept { return m_the_list.empty(); }

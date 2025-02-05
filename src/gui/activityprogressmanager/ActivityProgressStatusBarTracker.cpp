@@ -332,7 +332,7 @@ void ActivityProgressStatusBarTracker::description(KJob *kjob, const QString &ti
 //    });
 }
 
-void ActivityProgressStatusBarTracker::infoMessage(KJob *job, const QString &plain, const QString &rich)
+void ActivityProgressStatusBarTracker::infoMessage(KJob *job, const QString &message)
 {
     // Prefer rich if it's given.
 //    with_widget_or_skip(job, [=](auto w){
@@ -340,7 +340,7 @@ void ActivityProgressStatusBarTracker::infoMessage(KJob *job, const QString &pla
 //        ;});
 }
 
-void ActivityProgressStatusBarTracker::warning(KJob *job, const QString &plain, const QString &rich)
+void ActivityProgressStatusBarTracker::warning(KJob *job, const QString &plain)
 {
 //    with_widget_or_skip(job, [=](auto w){
 //        w->warning(job, rich.isEmpty() ? plain : rich);

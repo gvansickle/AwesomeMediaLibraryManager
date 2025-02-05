@@ -30,8 +30,9 @@
 #include <QToolButton>
 #include <QWidgetAction>
 #include <QDebug>
+#include <QRegularExpression>
 
-//W_OBJECT_IMPL(FilterWidget)
+
 
 FilterWidget::FilterWidget(QWidget *parent) : QLineEdit(parent), m_patternGroup(new QActionGroup(this))
 {
@@ -78,9 +79,9 @@ FilterWidget::FilterWidget(QWidget *parent) : QLineEdit(parent), m_patternGroup(
 	addAction(optionsAction, QLineEdit::LeadingPosition);
 }
 
-Qt::CaseSensitivity FilterWidget::caseSensitivity() const
+QRegularExpression::PatternOptions FilterWidget::caseSensitivity() const
 {
-	return m_caseSensitivityAction->isChecked() ? Qt::CaseSensitive : Qt::CaseInsensitive;
+    return m_caseSensitivityAction->isChecked() ? QRegularExpression::NoPatternOption : QRegularExpression::CaseInsensitiveOption;
 }
 
 void FilterWidget::setCaseSensitivity(Qt::CaseSensitivity cs)

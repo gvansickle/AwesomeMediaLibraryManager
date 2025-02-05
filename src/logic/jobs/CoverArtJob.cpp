@@ -81,7 +81,7 @@ ExtFuture<QByteArray> CoverArtJob::make_task(QObject* parent, const QUrl& url)
 	return ret_future;
 #endif
 
-	return ExtAsync::run(&CoverArtJob::LoadCoverArt, nullptr, url);
+    return QtConcurrent::run(&CoverArtJob::LoadCoverArt, nullptr, url);
 }
 
 ///
@@ -133,7 +133,7 @@ static QByteArray getCoverArtBytes_FLAC(TagLib::FLAC::File* file)
     return QByteArray();
 }
 
-void CoverArtJob::LoadCoverArt(ExtFuture<QByteArray> ext_future, CoverArtJobPtr kjob, const QUrl& url)
+void CoverArtJob::LoadCoverArt(QPromise<QByteArray>& promise, CoverArtJobPtr kjob, const QUrl& url)
 {
 	// Mostly copy/paste from QByteArray MetadataTaglib::getCoverArtBytes() const
 
@@ -148,9 +148,10 @@ void CoverArtJob::LoadCoverArt(ExtFuture<QByteArray> ext_future, CoverArtJobPtr 
 	{
 		qWarning() << "Unable to open file" << url_as_local << "with TagLib";
 
+#if 0
 		/// @todo Should maybe throw?
-		ext_future.cancel();
-
+		promise.cancel();
+#endif
 		if(kjob != nullptr)
 		{
 			Q_EMIT kjob->SIGNAL_ImageBytes(retval);
@@ -190,7 +191,7 @@ void CoverArtJob::LoadCoverArt(ExtFuture<QByteArray> ext_future, CoverArtJobPtr 
 //        setSuccessFlag(false);
 	}
 
-	ext_future.reportFinished(&retval);
+	promise.addResult(retval);
 
 M_WARNING("TODO: Getting asserts here on app close during dir scan.");
 	if(kjob != nullptr)
@@ -199,8 +200,9 @@ M_WARNING("TODO: Getting asserts here on app close during dir scan.");
 	}
 }
 
+#if 0
 void CoverArtJob::runFunctor()
 {
 	this->LoadCoverArt(m_ext_future, this, m_audio_file_url);
 }
-
+#endif

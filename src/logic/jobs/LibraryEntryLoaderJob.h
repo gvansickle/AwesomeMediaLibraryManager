@@ -121,10 +121,13 @@ public:
     static LibraryEntryLoaderJobPtr make_job(QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry);
 
 	/// No AMLMJob, just an ExtFuture<>.
-	static ExtFuture<LibraryEntryLoaderJobResult> make_task(QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry);
+    static ExtFuture<LibraryEntryLoaderJobResult> make_task(QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry);
 
-	/// Loads the data for the given entry and sends it out via ext_future.
-	static void LoadEntry(ExtFuture<LibraryEntryLoaderJobResult> ext_future, LibraryEntryLoaderJob* kjob,
+    /**
+     * Worker function.
+     * Loads the data for the given entry and sends it out via @a promise.
+     */
+    static void LoadEntry(QPromise<LibraryEntryLoaderJobResult>& promise, LibraryEntryLoaderJob* kjob,
 						  QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry);
 
 

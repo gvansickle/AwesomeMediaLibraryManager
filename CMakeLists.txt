@@ -93,8 +93,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Min versions of Qt5, KF5, KF5/ECM.
-set(QT_MIN_VERSION "5.12.1")
-set(KF5_MIN_VERSION "5.67.0") ### @win temp: Only have 5.52.0
+set(QT_MIN_VERSION "6.8.0")
+set(KF5_MIN_VERSION "6.0.0") ### @win temp: Only have 5.52.0
 set(ECM_MIN_VERSION "6.0.0") #"5.57.0")
 
 ###
@@ -367,22 +367,30 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 ### @note CONFIG|MODULE: "If no module is found the command falls back to Config mode, described below.
 ###       This fall back is disabled if the MODULE option is given."
 ###
-find_package(Qt5 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
+find_package(Qt6 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
 	Core
 	Gui
 	Widgets
 	Multimedia
-	XmlPatterns
+#	XmlPatterns
 	Concurrent
 	Test # For Q...ModelTester.
+	Core5Compat
 	)
-set(QT5_LINK_LIB_TARGETS Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::XmlPatterns Qt5::Concurrent Qt5::Test)
+set(QT5_LINK_LIB_TARGETS Qt6::Core Qt6::Gui Qt6::Widgets
+	Qt6::Multimedia
+#	Qt6::XmlPatterns
+	Qt6::Concurrent
+	Qt6::Test
+	Qt6::Core5Compat
+)
 
 # Unix-only
 if(UNIX)
-    find_package(Qt5 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
-        X11Extras)
-    list(APPEND QT5_LINK_LIB_TARGETS Qt5::X11Extras)
+#    find_package(Qt6 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
+#        X11Extras
+#    )
+#    list(APPEND QT5_LINK_LIB_TARGETS Qt5::X11Extras)
 endif(UNIX)
 # Windows only
 if(WIN32)
@@ -398,8 +406,8 @@ print_qtinfo()
 set(KF5_LINK_LIB_TARGETS "")
 ### @note "Config" is both a find_package() keyword as well as the KF5Config components KF5::ConfigCore and KF5::ConfigGui.
 ###       We'll require KF5Config separately to avoid any ambiguity.
-find_package(KF5Config ${KF5_MIN_VERSION} REQUIRED)
-find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
+find_package(KF6Config ${KF5_MIN_VERSION} REQUIRED)
+find_package(KF6 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
 	Archive ### @todo TRYING THIS IN CASE IconThemes needs it to work properly, otherwise REMOVE
 	WidgetsAddons
 	CoreAddons ## USE_KF5_COREADDONS, git clone git://anongit.kde.org/kcoreaddons.git
@@ -413,10 +421,11 @@ find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
 	WindowSystem
 )
 set(HAVE_KF501 ${KF5_FOUND})
-list(APPEND KF5_LINK_LIB_TARGETS KF5::CoreAddons KF5::ConfigCore KF5::ConfigGui)
-list(APPEND KF5_LINK_LIB_TARGETS KF5::KIOCore KF5::KIOFileWidgets KF5::KIOWidgets KF5::KIONTLM)
-list(APPEND KF5_LINK_LIB_TARGETS KF5::WidgetsAddons KF5::XmlGui KF5::GuiAddons KF5::IconThemes KF5::ItemModels KF5::ItemViews)
-list(APPEND KF5_LINK_LIB_TARGETS KF5::WindowSystem)
+set(HAVE_KF6 ${KF6_FOUND})
+list(APPEND KF5_LINK_LIB_TARGETS KF6::CoreAddons KF6::ConfigCore KF6::ConfigGui)
+list(APPEND KF5_LINK_LIB_TARGETS KF6::KIOCore KF6::KIOFileWidgets KF6::KIOWidgets)# KF6::KIONTLM)
+list(APPEND KF5_LINK_LIB_TARGETS KF6::WidgetsAddons KF6::XmlGui KF6::GuiAddons KF6::IconThemes KF6::ItemModels KF6::ItemViews)
+list(APPEND KF5_LINK_LIB_TARGETS KF6::WindowSystem)
 
 ###### EXPERIMENT
 

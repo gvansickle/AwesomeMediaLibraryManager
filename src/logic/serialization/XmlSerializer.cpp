@@ -150,7 +150,7 @@ bool XmlSerializer::load(ISerializable& serializable, const QUrl &file_url)
 	return !xmlstream.error();
 }
 
-static const int f_iomap_id = qMetaTypeId<QVariantInsertionOrderedMap>();
+static const int f_iomap_id = qMetaTypeId<InsertionOrderedMap<QString, QVariant>>();
 static const int f_qvarlist_id = qMetaTypeId<QVariantHomogenousList>();
 static const int f_serqvarlist_id = qMetaTypeId<SerializableQVariantList>();
 
@@ -308,9 +308,9 @@ void XmlSerializer::writeVariantMapToStream(const QVariant &variant, QXmlStreamW
 void XmlSerializer::writeVariantOrderedMapToStream(const QVariant& variant, QXmlStreamWriter& xmlstream)
 {
 	Q_ASSERT(variant.isValid());
-	Q_ASSERT(variant.canConvert<QVariantInsertionOrderedMap>());
+	Q_ASSERT((variant.canConvert<InsertionOrderedMap<QString, QVariant>>()));
 
-	QVariantInsertionOrderedMap omap = variant.value<QVariantInsertionOrderedMap>();
+	InsertionOrderedMap<QString, QVariant> omap = variant.value<InsertionOrderedMap<QString, QVariant>>();
 
 	xmlstream.writeAttribute("metatype_id", toqstr(std::to_string(omap.m_id)));
 	xmlstream.writeAttribute("class", toqstr(omap.m_class));
@@ -377,7 +377,7 @@ QVariant XmlSerializer::InnerReadVariantFromStream(QString typeString, const QXm
 	QVariant variant;
 
 	// Copy the attributes, removing only "type".
-	std::vector<QXmlStreamAttribute> attributes_cp = attributes.toStdVector();
+	std::vector<QXmlStreamAttribute> attributes_cp(attributes.cbegin(), attributes.cend());// = attributes.toStdVector();
 	std::experimental::erase_if(attributes_cp, [](auto& attr){ return attr.qualifiedName() == "type" ? true : false; });
 
 	/// @todo QVariant::Type returned, switch is on QMetaType::Type.  OK but former is deprecated and clang-tidy warns.
@@ -607,7 +607,7 @@ QVariant XmlSerializer::readVariantMapFromStream(QXmlStreamReader& xmlstream)
 
 QVariant XmlSerializer::readVariantOrderedMapFromStream(std::vector<QXmlStreamAttribute> attributes, QXmlStreamReader& xmlstream)
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 
 	Q_ASSERT(xmlstream.isStartElement());
 

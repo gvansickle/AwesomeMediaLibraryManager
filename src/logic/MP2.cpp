@@ -23,28 +23,34 @@
 
 #include "utils/ConnectHelpers.h"
 
-#include <QMediaPlaylist>
+//#include <QMediaPlaylist>
 #include <QDebug>
 #include <QUrlQuery>
 
 #include <utils/Fraction.h>
 
-MP2::MP2(QObject* parent, Flags flags) : QMediaPlayer(parent, flags)
+MP2::MP2(QObject* parent) : QMediaPlayer(parent)
 {
-	setAudioRole(QAudio::MusicRole);
-	setNotifyInterval(10); // ms
+//	setAudioRole(QAudio::MusicRole);
+//	setNotifyInterval(10); // ms
 
 	createActions();
 
 	// Make initial connections from the underlying QMediaPlayer to slots in this.
-	connect(this, &QMediaPlayer::positionChanged, this, &MP2::onPositionChanged);
-	connect(this, &QMediaPlayer::durationChanged, this, &MP2::onDurationChanged);
-	connect(this, &QMediaPlayer::mediaChanged, this, &MP2::onMediaChanged);
-	connect(this, &QMediaPlayer::mediaStatusChanged, this, &MP2::onMediaStatusChanged);
-	connect(this, &QMediaPlayer::currentMediaChanged, this, &MP2::onCurrentMediaChanged);
-	connect(this, &QMediaPlayer::stateChanged, this, &MP2::onStateChanged);
-	connect(qobject_cast<QMediaPlayer*>(this), static_cast<void(QMediaPlayer::*)(QMediaPlayer::Error)>(&QMediaPlayer::error), this,
+	connect_or_die(this, &QMediaPlayer::positionChanged, this, &MP2::onPositionChanged);
+	connect_or_die(this, &QMediaPlayer::durationChanged, this, &MP2::onDurationChanged);
+//	connect_or_die(this, &QMediaPlayer::mediaChanged, this, &MP2::onMediaChanged);
+	connect_or_die(this, &QMediaPlayer::mediaStatusChanged, this, &MP2::onMediaStatusChanged);
+#if 0 // QT5
+	connect_or_die(this, &QMediaPlayer::currentMediaChanged, this, &MP2::onCurrentMediaChanged);
+	connect_or_die(this, &QMediaPlayer::stateChanged, this, &MP2::onStateChanged);
+	connect_or_die(qobject_cast<QMediaPlayer*>(this), static_cast<void(QMediaPlayer::*)(QMediaPlayer::Error)>(&QMediaPlayer::error), this,
 			static_cast<void(MP2::*)(QMediaPlayer::Error)>(&MP2::onPlayerError));
+#elif 1 // QT6
+	connect_or_die(this, &QMediaPlayer::sourceChanged, this, &MP2::onSourceChanged);
+#endif
+
+	m_audio_output = new QAudioOutput;
 }
 
 qint64 MP2::position() const
@@ -144,6 +150,7 @@ void MP2::stop()
 
 void MP2::setShuffleMode(bool shuffle_on)
 {
+#if 0 // QT5
 	// QMediaPlaylist doesn't have orthogonal support for Sequential/Shuffle and Repeat/Non-repeat playback.
 	// It's a single setting of QMediaPlaylist::PlaybackMode, which can be one of:
 	// QMediaPlaylist::Random == Shuffle + Repeat
@@ -175,10 +182,15 @@ void MP2::setShuffleMode(bool shuffle_on)
 			}
 		}
 	}
+#elif 1 // QT6
+	// QT6's MediaPlayer doesn't have a QMediaPlaylist, so we can't do much here directly.
+	M_WARNING("TODO: Add back playback mode support")
+#endif
 }
 
 void MP2::repeat(bool checked)
 {
+#if 0 // QT5
 	// QMediaPlaylist doesn't have orthogonal support for Sequential/Shuffle and Loop/Non-loop playback.
 	// It's a single setting of QMediaPlaylist::PlaybackMode, which can be one of:
 	// QMediaPlaylist::Random == Shuffle + Loop
@@ -206,6 +218,16 @@ void MP2::repeat(bool checked)
 			}
 		}
 	}
+#elif 1 // QT6
+	if(checked)
+	{
+		setLoops(QMediaPlayer::Infinite);
+	}
+	else
+	{
+		setLoops(1);
+	}
+#endif
 	// Regardless of whether we ignored it above or not, record the new state for setShuffleMode().
 	m_last_repeat_state = checked;
 }
@@ -278,11 +300,13 @@ void MP2::onDurationChanged(qint64 duration)
 	}
 }
 
+#if 0 /// !QT6
 void MP2::onMediaChanged(const QMediaContent& media)
 {
 	// This could be the playlist.
 	qDebug() << QString("onMediaChanged: %1").arg(media.canonicalUrl().toString());
 }
+#endif
 
 void MP2::onMediaStatusChanged(QMediaPlayer::MediaStatus status)
 {
@@ -297,6 +321,7 @@ void MP2::onMediaStatusChanged(QMediaPlayer::MediaStatus status)
 	}
 }
 
+#if 0 // !QT6
 void MP2::onCurrentMediaChanged(const QMediaContent& qmediacontent)
 {
 	// This is the active media content being played.  Could be Null.
@@ -312,7 +337,24 @@ void MP2::onCurrentMediaChanged(const QMediaContent& qmediacontent)
 		}
 	}
 }
+#elif 1 // QT6
+void MP2::onSourceChanged(const QUrl& url)
+{
+	qDebug() << QString("onSourceChanged:") << url;
+	updateSeekToEndInfoOnMediaChange();
+	if(1)//!qmediacontent.isNull())
+	{
+		if(1)//qmediacontent.playlist() == nullptr)
+		{
+			setTrackInfoFromUrl(source());
+			qDebug() << QString("track start: %1").arg(m_track_startpos_ms);
+			QMediaPlayer::setPosition(m_track_startpos_ms);
+		}
+	}
+}
+#endif
 
+#if 0 // QT6
 void MP2::onStateChanged(QMediaPlayer::State state)
 {
 	qDebug() << QString("onStateChanged (Player): %1").arg(/*PlayerStateMap[*/state/*]*/);
@@ -322,3 +364,4 @@ void MP2::onPlayerError(QMediaPlayer::Error error)
 {
 	qWarning() << "Player error" << error << ":" << this->errorString();
 }
+#endif

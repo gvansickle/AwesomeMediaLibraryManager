@@ -29,7 +29,7 @@
 
 #include "DragDropTreeViewStyleProxy.h"
 #include <QApplication>
-#include <QMediaPlaylist>
+//#include <QMediaPlaylist>
 #include <QHeaderView>
 #include <QToolTip>
 #include <QMessageBox>

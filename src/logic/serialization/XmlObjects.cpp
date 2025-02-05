@@ -26,13 +26,13 @@
 // Qt5
 #include <QtCore/QFile>
 #include <QtCore/QDir>
-#include <QtXmlPatterns/QXmlFormatter>
+//#include <QtXmlPatterns/QXmlFormatter> QT6
 
 // Ours
 #include <utils/DebugHelpers.h>
 #include "SerializationExceptions.h"
 
-
+#if 0 // QT version == QT5
 bool run_xquery(const QUrl& xquery_url, const QUrl& source_xml_url, const QUrl& dest_xml_url,
 		const std::function<void(QXmlQuery*)>& bind_callback)
 {
@@ -203,7 +203,7 @@ bool run_xquery(const QXmlQuery& xquery, QIODevice* xml_source, QIODevice* xml_s
 //bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QAbstractXmlReceiver *callback);
 //bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QXmlResultItems *result);
 
-
+#endif
 
 //void XmlElement::append(std::unique_ptr<XmlElement> child)
 //{

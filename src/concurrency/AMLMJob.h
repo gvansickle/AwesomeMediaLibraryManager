@@ -195,7 +195,8 @@ Q_SIGNALS:
 
 	/// @name Public KJob signals, quite a few:
     ///
-	// void 	description (KJob *job, const QString &title, const QPair< QString, QString > &field1=QPair< QString, QString >(), const QPair< QString, QString > &field2=QPair< QString, QString >())
+    // KF5: void 	description (KJob *job, const QString &title, const QPair< QString, QString > &field1=QPair< QString, QString >(), const QPair< QString, QString > &field2=QPair< QString, QString >())
+    // KF6:
 
     /// "Emitted when the job is finished, in any case.
     /// It is used to notify observers that the job is terminated and that progress can be hidden.
@@ -204,8 +205,10 @@ Q_SIGNALS:
     /// and they might get killed silently, then you must connect to this instead of result(), to avoid dangling pointers in your list."
     // void finished(KJob *job);
 
-    // void 	infoMessage (KJob *job, const QString &plain, const QString &rich=QString())
-    // void 	warning (KJob *job, const QString &plain, const QString &rich=QString())
+    // KF5: void 	infoMessage (KJob *job, const QString &plain, const QString &rich=QString())
+    // KF5: void 	warning (KJob *job, const QString &plain, const QString &rich=QString())
+    // KF6: void KJob::infoMessage ( KJob * job, const QString & message )
+    // KF6: void KJob::warning ( KJob * job, const QString & message )
 
 
     // void result (KJob *job)
@@ -386,7 +389,7 @@ protected:
      * Reporting and control should be handled via the derived class's m_ext_future member.
      *
      */
-    virtual void runFunctor() {};
+    virtual void runFunctor() {}
 
     /// @}
 

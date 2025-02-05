@@ -46,7 +46,6 @@ AMLM_QREG_CALLBACK([](){
 });
 
 
-
 DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_finfo)
 	: m_exturl_media(found_url, &found_url_finfo)
 {
@@ -68,7 +67,7 @@ DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_f
 
 QVariant DirScanResult::toVariant() const
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 
 	// Set the xml:id.
 	map.insert_attributes({{"xml:id", get_prefixed_uuid()}});
@@ -83,7 +82,7 @@ QVariant DirScanResult::toVariant() const
 
 void DirScanResult::fromVariant(const QVariant& variant)
 {
-	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
+	InsertionOrderedMap<QString, QVariant> map = variant.value<InsertionOrderedMap<QString, QVariant>>();
 
 	auto uuid = map.get_attr("xml:id", "");
 	set_prefixed_uuid(uuid);

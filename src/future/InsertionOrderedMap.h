@@ -29,9 +29,12 @@
 #include <map>
 #include <tuple>
 #include <vector>
+#include <utility> // For std::pair<>.
 
-// Qt5
+// Qt
 #include <QVariant>
+#include <QMetaType>
+#include <QDebug>
 
 // Ours
 #include <utils/QtHelpers.h>
@@ -241,10 +244,12 @@ public:
 
 	/// @}
 
-	const_iterator cbegin() const { return std::cbegin(m_vector_of_elements); };
-	const_iterator begin() const { return this->cbegin(); }
-	const_iterator cend() const { return std::cend(m_vector_of_elements); };
-	const_iterator end() const { return this->cend(); }
+	const_iterator cbegin() const noexcept { return std::cbegin(m_vector_of_elements); };
+	const_iterator begin() const { return m_vector_of_elements.begin(); }
+	iterator begin() { return m_vector_of_elements.begin(); }
+	iterator end()	{ return m_vector_of_elements.end(); }
+	const_iterator end() const noexcept	{ return m_vector_of_elements.end(); }
+	const_iterator cend() const noexcept { return std::cend(m_vector_of_elements); };
 
 	bool empty() const { return m_vector_of_elements.empty(); };
 	size_t size() const { return m_vector_of_elements.size(); };
@@ -274,14 +279,22 @@ protected:
 
 };
 
+template <typename KeyType, typename ValueType>
+QDebug operator<<(QDebug dbg, const InsertionOrderedMap<KeyType, ValueType>& map)
+{
+#warning TODO
+	return dbg;
+}
+
 #if 1 // Qt5
 
 
+//Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE(InsertionOrderedMap);
 //Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(InsertionOrderedMap);
-
-using QVariantInsertionOrderedMap = InsertionOrderedMap<QString, QVariant>;
-Q_DECLARE_METATYPE(QVariantInsertionOrderedMap);
-//Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(InsertionOrderedMap<QString, QVariant>);
+//using QVariantInsertionOrderedMap = InsertionOrderedMap<QString, QVariant>;
+Q_DECLARE_METATYPE_TEMPLATE_2ARG(InsertionOrderedMap);
+//Q_DECLARE_METATYPE(QVariantInsertionOrderedMap);
+//Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(InsertionOrderedMap);
 
 #endif // Qt5
 

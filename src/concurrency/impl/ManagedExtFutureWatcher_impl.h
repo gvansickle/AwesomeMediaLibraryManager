@@ -23,6 +23,8 @@
 #ifndef SRC_CONCURRENCY_IMPL_MANAGEDEXTFUTUREWATCHER_IMPL_H_
 #define SRC_CONCURRENCY_IMPL_MANAGEDEXTFUTUREWATCHER_IMPL_H_
 
+#if 0 // !QT6
+
 // Std C++
 #include <exception>
 
@@ -244,5 +246,6 @@ namespace ManagedExtFutureWatcher_detail
 
 } // namespace ManangedExtFutureWatcher_detail
 
+#endif
 
 #endif /* SRC_CONCURRENCY_IMPL_MANAGEDEXTFUTUREWATCHER_IMPL_H_ */

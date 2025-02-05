@@ -37,7 +37,7 @@
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering ExtUrl";
 	qRegisterMetaType<ExtUrl>();
-	qRegisterMetaTypeStreamOperators<ExtUrl>();
+//	qRegisterMetaTypeStreamOperators<ExtUrl>();
 });
 
 
@@ -62,7 +62,7 @@ ExtUrl::ExtUrl(const QUrl& qurl, const QFileInfo* qurl_finfo) : m_url(qurl)
 
 QVariant ExtUrl::toVariant() const
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 
 	// Add all the fields to the map.
 #define X(field_tag, field)   map_insert_or_die(map, field_tag, field );
@@ -74,7 +74,7 @@ QVariant ExtUrl::toVariant() const
 
 void ExtUrl::fromVariant(const QVariant& variant)
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 	qviomap_from_qvar_or_die(&map, variant);
 
 	// Extract all the fields from the map, cast them to their type.

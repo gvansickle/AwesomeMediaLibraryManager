@@ -31,12 +31,14 @@
 
 // Qt5
 #include <QXmlStreamWriter>
-#include <QXmlQuery>
+//#include <QXmlQuery>
 #include <QDateTime>
 #include <QUrl>
 
 // Ours
 #include <utils/DebugHelpers.h>
+
+#if NO_QT6_QXmlQuery
 
 /// @name run_query() overloads taking a QUrl pointing to an XQuery file.
 /// @{
@@ -103,7 +105,7 @@ bool run_xquery(const QXmlQuery& xquery, QIODevice* xml_source, QIODevice* xml_s
 //bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QString* out_string);
 //bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QAbstractXmlReceiver* callback);
 //bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QXmlResultItems* result);
-
+#endif
 /// @}
 
 /**

@@ -134,7 +134,7 @@ using strviw_type = QLatin1String;
 
 QVariant SRTMItem_LibEntry::toVariant() const
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 
 	// Overwrite any class info added by the above.
 //	set_map_class_info(this, &map);
@@ -162,7 +162,7 @@ QVariant SRTMItem_LibEntry::toVariant() const
 
 void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 {
-	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
+	InsertionOrderedMap<QString, QVariant> map = variant.value<InsertionOrderedMap<QString, QVariant>>();
 //	dump_map(map);
 
 	try

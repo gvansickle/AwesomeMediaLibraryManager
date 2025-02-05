@@ -195,7 +195,7 @@ int PlayerControls::volume() const
  * Slot connected to the player, which notifies us of its current state so we can set the control states appropriately.
  * @param state
  */
-void PlayerControls::setState(QMediaPlayer::State state)
+void PlayerControls::setState(QMediaPlayer::PlaybackState state)
 {
 	qDebug() << "new state:" << state;
 
@@ -256,7 +256,7 @@ void PlayerControls::setMuted(bool muted)
     }
 }
 
-QMediaPlayer::State PlayerControls::state() const
+QMediaPlayer::PlaybackState PlayerControls::state() const
 {
 	return m_playerState;
 }

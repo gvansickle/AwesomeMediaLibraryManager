@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -25,6 +25,48 @@
  * Some Qt5-based analogs to std::async().
  */
 
+
+#include <QFutureWatcher>
+
+/**
+ * Function which blocks on @a future and calls @a function with partial results as they become available.
+ *
+ * @tparam T  The value type of the QFuture<> to be waited on.
+ * @tparam Function  The callable type.  Must take two ints, the begin and end index of the range that is ready.
+ * @param future 
+ * @param function
+ */
+template <typename T, typename Function>
+void waitForResultsReady(QFuture<T>& future, Function function)
+{
+	QFutureWatcher<T> futureWatcher;
+	QObject::connect(&futureWatcher, &QFutureWatcher<T>::resultsReadyAt, function);
+
+	// Set the future to watch.
+	futureWatcher.setFuture(future);
+	future.waitForFinished();
+}
+
+/**
+ * Function which blocks on @a future and calls @a function with each partial result as it becomes available.
+ *
+ * @tparam T
+ * @tparam Function  The callable type.  Must take one int, the index that is ready.
+ * @param future
+ * @param function
+ */
+template <typename T, typename Function>
+void waitForResultReady(QFuture<T>& future, Function function)
+{
+	QFutureWatcher<T> futureWatcher;
+	QObject::connect(&futureWatcher, &QFutureWatcher<T>::resultReadyAt, function);
+
+	// Set the future to watch.
+	futureWatcher.setFuture(future);
+	future.waitForFinished();
+}
+
+#if 0 // !QT6
 
 #include <config.h>
 
@@ -810,5 +852,7 @@ static void runInObjectEventLoop(T * obj, R(T::* method)()) {
    QCoreApplication::postEvent(obj, new Event(obj, method));
 }
 #endif // OBSOLETE
+
+#endif
 
 #endif /* CONCURRENCY_EXTASYNC_H_ */

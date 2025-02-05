@@ -263,7 +263,7 @@ public Q_SLOTS:
 //        {
 //            static_assert("FAIL");
 //        }
-    };
+    }
 
     /**
      * From KJobTrackerInterface:
@@ -410,12 +410,12 @@ protected Q_SLOTS:
      * "Called to display state information about a job.
      * Examples of message are "Resolving host", "Connecting to host...", etc."
      */
-    void infoMessage(KJob *job, const QString &plain, const QString &rich) override;
+    void infoMessage(KJob *job, const QString &message) override;
     /**
      * Slot
      * "Emitted to display a warning about a job."
      */
-    void warning(KJob *job, const QString &plain, const QString &rich) override;
+    void warning(KJob *job, const QString &plain) override;
 
     /// @name Progress tracking protected slots
     /// @{

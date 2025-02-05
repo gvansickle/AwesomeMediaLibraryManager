@@ -101,7 +101,7 @@ int ScanResultsTreeModelItem::columnCount() const
 
 
 /// Strings to use for the tags.
-using strviw_type = QLatin1Literal;
+using strviw_type = QLatin1String;
 
 ///// Strings to use for the tags.
 #define X(field_tag, tag_string, var_name) static const strviw_type field_tag ( # tag_string );
@@ -111,7 +111,7 @@ using strviw_type = QLatin1Literal;
 
 QVariant ScanResultsTreeModelItem::toVariant() const
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 
 	// Overwrite any class info added by the above.
 //	set_map_class_info(this, &map);
@@ -141,7 +141,7 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 
 void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 {
-	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
+	InsertionOrderedMap<QString, QVariant> map = variant.value<InsertionOrderedMap<QString, QVariant>>();
 
 	// Overwrite any class info added by the above.
 //	dump_map_class_info(this, &map);

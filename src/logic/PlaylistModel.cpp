@@ -342,7 +342,7 @@ bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, i
                     qDebug() << "Moving";
                     // The dropped libentries should actually be PlaylistEntries.
                     std::shared_ptr<PlaylistModelItem> plmi = std::dynamic_pointer_cast<PlaylistModelItem>(libentry);
-                    Q_ASSERT(plmi != 0);
+                    Q_ASSERT(plmi != nullptr);
                     setData(index(beginRow, 0), QVariant::fromValue(plmi));
                     beginRow += 1;
             }

@@ -136,7 +136,8 @@ public:
 
 };
 
-Q_DECLARE_METATYPE(ISerializable*);
+Q_DECLARE_METATYPE(ISerializable);
+//Q_DECLARE_METATYPE(ISerializable*);
 //Q_DECLARE_METATYPE(ISerializable&);
 Q_DECLARE_INTERFACE(ISerializable, "ISerializable") // define this out of namespace scope
 

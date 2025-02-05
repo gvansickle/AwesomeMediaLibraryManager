@@ -21,6 +21,8 @@
  * @file ManagedExtFutureWatcher_impl.cpp
  */
 
+#if 0 // !QT6
+
 #include "ManagedExtFutureWatcher_impl.h"
 
 // Qt5
@@ -102,3 +104,5 @@ FutureWatcherParent* get_future_watcher_parent()
 }
 
 }; // END ns
+
+#endif // !QT6

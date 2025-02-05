@@ -20,6 +20,8 @@
 #ifndef SRC_GUI_ACTIVITYPROGRESSMANAGER_CUMULATIVEAMLMJOB_H_
 #define SRC_GUI_ACTIVITYPROGRESSMANAGER_CUMULATIVEAMLMJOB_H_
 
+#include <ExtFuture.h>
+
 /// Ours
 #include <concurrency/AMLMJob.h>
 #include <utils/TheSimplestThings.h>

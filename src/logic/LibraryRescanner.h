@@ -69,7 +69,7 @@ struct MetadataReturnVal
 
 Q_DECLARE_METATYPE(MetadataReturnVal)
 Q_DECLARE_METATYPE(QFuture<MetadataReturnVal>)
-Q_DECLARE_METATYPE(ExtFuture<MetadataReturnVal>)
+//Q_DECLARE_METATYPE(ExtFuture<MetadataReturnVal>)
 
 // Typedef registered in cpp file.
 using VecLibRescannerMapItems = QVector<LibraryRescannerMapItem>;

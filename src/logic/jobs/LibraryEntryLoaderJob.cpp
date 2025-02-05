@@ -88,8 +88,10 @@ ExtFuture<LibraryEntryLoaderJobResult> LibraryEntryLoaderJob::make_task(QPersist
 	QtConcurrent::run(&LibraryEntryLoaderJob::LoadEntry, ret_future, nullptr, pmi, libentry);
 
 	return ret_future;
-#else
+#elif 0 // This was the latest used here.
 	return ExtAsync::qthread_async_with_cnr_future(&LibraryEntryLoaderJob::LoadEntry, nullptr, pmi, libentry);
+#elif 1 // QT6
+    return QtConcurrent::run(&LibraryEntryLoaderJob::LoadEntry, nullptr, pmi, libentry);
 #endif
 }
 
@@ -110,7 +112,7 @@ LibraryEntryLoaderJob::~LibraryEntryLoaderJob()
 
 }
 
-void LibraryEntryLoaderJob::LoadEntry(ExtFuture<LibraryEntryLoaderJobResult> ext_future, LibraryEntryLoaderJob* kjob,
+void LibraryEntryLoaderJob::LoadEntry(QPromise<LibraryEntryLoaderJobResult>& promise, LibraryEntryLoaderJob* kjob,
 									  QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry)
 {
 //	qDb() << "START LibraryEntryLoaderJob LoadEntry" << pmi << libentry;
@@ -197,13 +199,12 @@ void LibraryEntryLoaderJob::LoadEntry(ExtFuture<LibraryEntryLoaderJobResult> ext
 
     Q_ASSERT(retval.m_num_tracks_found > 0);
 
-	ext_future.reportResult(retval);
-	ext_future.reportFinished();
+    promise.addResult(retval);
 }
 
 void LibraryEntryLoaderJob::runFunctor()
 {
     qDbo() << "START LibraryEntryLoaderJob RUNFUNCTOR" << m_pmi << m_libentry;
-
-    this->LoadEntry(m_ext_future, this, m_pmi, m_libentry);
+    Q_ASSERT(0);
+// QT6 TEMP?    this->LoadEntry(m_ext_future, this, m_pmi, m_libentry);
 }

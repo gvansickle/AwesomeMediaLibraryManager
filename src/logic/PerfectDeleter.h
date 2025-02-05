@@ -43,8 +43,8 @@ class AMLMJob;
 
 // Ours
 #include <utils/DebugHelpers.h>
-//#include <concurrency/ExtFuture.h>
-template <class T> class ExtFuture;
+#include <concurrency/ExtFuture.h>
+//template <class T> class ExtFuture; // !QT6
 
 class PerfectDeleter;
 
@@ -193,7 +193,7 @@ public:
 	void addQFuture(QFuture<void> f);
 
 	template <class T>
-	void addExtFuture(ExtFuture<T>& f) { addQFuture(qToVoidFuture(f)); };
+    void addExtFuture(ExtFuture<T>& f) { addQFuture(QFuture<void>(f)); }
 
 	void addKJob(KJob* kjob);
 
