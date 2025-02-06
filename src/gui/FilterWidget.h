@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -20,8 +20,6 @@
 #ifndef FILTERWIDGET_H
 #define FILTERWIDGET_H
 
-//#include <nomocdefs.h>
-
 #include <QObject>
 #include <QLineEdit>
 #include <QRegularExpression>
@@ -35,8 +33,8 @@ class FilterWidget : public QLineEdit
 {
 	Q_OBJECT
 
-	Q_PROPERTY(Qt::CaseSensitivity caseSensitivity READ caseSensitivity WRITE setCaseSensitivity)
-	Q_PROPERTY(QRegExp::PatternSyntax patternSyntax READ patternSyntax WRITE setPatternSyntax)
+    // QT5 Q_PROPERTY(Qt::CaseSensitivity caseSensitivity READ caseSensitivity WRITE setCaseSensitivity)
+    // QT5 Q_PROPERTY(QRegExp::PatternSyntax patternSyntax READ patternSyntax WRITE setPatternSyntax)
 
 Q_SIGNALS:
 	void filterChanged();
@@ -44,8 +42,8 @@ Q_SIGNALS:
 public:
 	explicit FilterWidget(QWidget *parent = nullptr);
 
-	QRegularExpression::PatternOptions caseSensitivity() const;
-	void setCaseSensitivity(Qt::CaseSensitivity cs);
+	QRegularExpression::PatternOptions caseSensitive() const;
+    void setCaseSensitive(bool case_sensitive);
 
 #warning "QT6 TEMP FIX THIS"
     // QRegExp::PatternSyntax patternSyntax() const;
@@ -58,6 +56,7 @@ private:
 
 	QAction *m_caseSensitivityAction;
 	QActionGroup *m_patternGroup;
+
 };
 
 #endif // FILTERWIDGET_H

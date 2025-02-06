@@ -142,6 +142,10 @@ protected:
 	Metadata m_metadata;
 };
 
+QTH_DECLARE_QDEBUG_OP(LibraryEntry);
+QTH_DECLARE_QDATASTREAM_OPS(LibraryEntry);
+// QTH_DECLARE_QDATASTREAM_OPS(std::shared_ptr<LibraryEntry>);
+
 /// So we can more easily pass ptrs in QVariants.
 Q_DECLARE_METATYPE(LibraryEntry);
 Q_DECLARE_METATYPE(LibraryEntry*);
@@ -149,14 +153,12 @@ Q_DECLARE_METATYPE(std::shared_ptr<LibraryEntry>);
 Q_DECLARE_METATYPE(std::vector<std::shared_ptr<LibraryEntry>>);
 Q_DECLARE_METATYPE(QSharedPointer<LibraryEntry>);
 
-QTH_DECLARE_QDEBUG_OP(LibraryEntry);
 
 inline QDebug operator<<(QDebug dbg, const std::shared_ptr<LibraryEntry> &libentry)
 {
 	return dbg << libentry.get();
 }
 
-QTH_DECLARE_QDATASTREAM_OPS(LibraryEntry);
-QTH_DECLARE_QDATASTREAM_OPS(std::shared_ptr<LibraryEntry>);
+
 
 #endif // LIBRARYENTRY_H

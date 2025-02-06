@@ -58,7 +58,7 @@ Q_SIGNALS:
     void changeMuting(bool);
 
 public Q_SLOTS:
-    void setState(QMediaPlayer::PlaybackState state);
+    void setPlaybackState(QMediaPlayer::PlaybackState state);
     void setVolume(int volume);
     void setMuted(bool muted);
 	void onDurationChanged(qint64 duration);

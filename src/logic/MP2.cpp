@@ -50,7 +50,7 @@ MP2::MP2(QObject* parent) : QMediaPlayer(parent)
 	connect_or_die(this, &QMediaPlayer::sourceChanged, this, &MP2::onSourceChanged);
 #endif
 
-	m_audio_output = new QAudioOutput;
+	m_audio_output = std::make_unique<QAudioOutput>();
 }
 
 qint64 MP2::position() const
@@ -75,6 +75,16 @@ qint64 MP2::duration() const
 	{
 		return QMediaPlayer::duration();
 	}
+}
+
+int MP2::muted() const
+{
+	return m_audio_output->isMuted();
+}
+
+int MP2::volume() const
+{
+	return m_audio_output->volume();
 }
 
 void MP2::createActions()
@@ -146,6 +156,16 @@ void MP2::stop()
 	{
 		QMediaPlayer::setPosition(m_track_startpos_ms);
 	}
+}
+
+void MP2::setMuted(bool muted)
+{
+	m_audio_output->setMuted(muted);
+}
+
+void MP2::setVolume(int volume)
+{
+	m_audio_output->setVolume(volume);
 }
 
 void MP2::setShuffleMode(bool shuffle_on)

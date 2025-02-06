@@ -654,7 +654,7 @@ void MainWindow::createActionsView(KActionCollection *ac)
 //	m_ab_docks->addAction(m_libraryDockWidget->toggleViewAction());
 //	m_ab_docks->addAction(m_metadataDockWidget->toggleViewAction());
 
-	m_act_ktog_show_tool_bar = new KToggleToolBarAction("FileToolbar", tr("Show File Toolbar"), ac);
+// @todo QT6/KF6 THIS IS BROKEN:    m_act_ktog_show_tool_bar = new KToggleToolBarAction(m_fileToolBar, /*"FileToolbar",*/ tr("Show File Toolbar"), ac);
 }
 
 void MainWindow::createActionsTools(KActionCollection *ac)
@@ -938,9 +938,9 @@ void MainWindow::createToolBars()
     m_settingsToolBar->addSeparator();
 	m_settingsToolBar->addAction(m_experimentalAct);
     /// KF5 button that opens an Icon select dialog.
-    m_settingsToolBar->addWidget(new KIconButton(m_settingsToolBar));
+/// @todo QT6 link error:    m_settingsToolBar->addWidget(new KIconButton(m_settingsToolBar));
 
-#if HAVE_KF501 || HAVE_KF6
+// #if HAVE_KF501 || HAVE_KF6
     // Create a combo box where the user can change the style.
 	QComboBox* styleComboBox = new QComboBox;
 	styleComboBox->addItems(QStyleFactory::keys());
@@ -948,13 +948,20 @@ void MainWindow::createToolBars()
 	QString cur_style = amlmApp->style()->objectName();
 	styleComboBox->setCurrentIndex(styleComboBox->findText(cur_style, Qt::MatchFixedString));
 	m_settingsToolBar->addWidget(styleComboBox);
+#if 0 // QT5
     connect_or_die(styleComboBox, &QComboBox::activated, this, &MainWindow::changeStyle);
+#else
+	connect_or_die(styleComboBox, &QComboBox::currentTextChanged, this, &MainWindow::changeStyle);
+#endif
 
     // Create a combo box with icon themes.
     QComboBox* iconThemeComboBox = new QComboBox;
     iconThemeComboBox->addItems(Theme::GetIconThemeNames());
     m_settingsToolBar->addWidget(iconThemeComboBox);
+#if 0 // QT5
     connect_or_die(iconThemeComboBox, &QComboBox::activated, this, &MainWindow::changeIconTheme);
+#else
+	connect_or_die(iconThemeComboBox, &QComboBox::currentTextChanged, this, &MainWindow::changeIconTheme);
 #endif
 
     // Create another toolbar for the player controls.
@@ -1073,7 +1080,7 @@ void MainWindow::connectPlayerAndControls(MP2 *player, PlayerControls *controls)
 	connect(controls, &PlayerControls::changeShuffle, player, &MP2::setShuffleMode);
 
 	// MP2 -> PlayerControls signals.
-	connect(player, &MP2::stateChanged, controls, &PlayerControls::setState);
+    connect(player, &MP2::playbackStateChanged, controls, &PlayerControls::setPlaybackState);
 	connect(player, &MP2::mutedChanged, controls, &PlayerControls::setMuted);
 	connect(player, &MP2::volumeChanged, controls, &PlayerControls::setVolume);
 	connect(player, &MP2::durationChanged2, controls, &PlayerControls::onDurationChanged);
@@ -1090,6 +1097,8 @@ void MainWindow::connectPlayerAndControls(MP2 *player, PlayerControls *controls)
 void MainWindow::connectPlayerAndPlaylistView(MP2 *player, MDIPlaylistView *playlist_view)
 {
 	/// @todo Hide qMediaPlaylist behind playlist_view?
+    M_TODO("QT6 NEEDS FIXING")
+#if 0 //Qt5
 	if(player->playlist() == playlist_view->getQMediaPlaylist())
 	{
 		qDebug() << "Already connected.";
@@ -1099,6 +1108,7 @@ void MainWindow::connectPlayerAndPlaylistView(MP2 *player, MDIPlaylistView *play
 		QMediaPlaylist* qmp = playlist_view->getQMediaPlaylist();
 		player->setPlaylist(qmp);
 	}
+#endif
 }
 
 void MainWindow::connectPlayerControlsAndPlaylistView(PlayerControls *controls, MDIPlaylistView *playlist_view)
@@ -1321,7 +1331,7 @@ MDIModelViewPair MainWindow::findSubWindowModelViewPair(QUrl url) const
 		{
 			if(lm->getLibRootDir() == url)
 			{
-                qDebug() << "Found existing LibraryModel:" << lm;
+                qDebug() << "Found existing LibraryModel:" << lm.data();
 				retval.m_model = lm;
 				retval.m_model_was_existing = true;
 			}
@@ -1330,7 +1340,7 @@ MDIModelViewPair MainWindow::findSubWindowModelViewPair(QUrl url) const
 		{
 			if(pm->getLibRootDir() == url)
 			{
-				qDebug() << "Found existing PlaylistModel:" << pm;
+                qDebug() << "Found existing PlaylistModel:" << pm.data();
 				retval.m_model = pm;
 				retval.m_model_was_existing = true;
 			}
@@ -1720,7 +1730,7 @@ void MainWindow::onShowLibrary(QPointer<LibraryModel> libmodel)
 
 void MainWindow::onRemoveDirFromLibrary(QPointer<LibraryModel> libmodel)
 {
-	qDebug() << QString("Removing libmodel from library:") << libmodel;
+    qDebug() << QString("Removing libmodel from library:") << libmodel.data();
 
 	// Find any open MDI Windows viewing this library.
 	auto window = findSubWindow(libmodel->getLibRootDir());
@@ -1735,7 +1745,7 @@ void MainWindow::onRemoveDirFromLibrary(QPointer<LibraryModel> libmodel)
 	{
 		if(m == libmodel)
 		{
-			qDebug() << QString("Removing libmodel:") << m << ", have" << m_libmodels.size() << "model(s).";
+            qDebug() << QString("Removing libmodel:") << m.data() << ", have" << m_libmodels.size() << "model(s).";
 			m->close(true);
 			m_libmodels.erase(m_libmodels.begin() + index);
 			// Delete the model.
@@ -1846,7 +1856,7 @@ void MainWindow::openPlaylist()
 
 void MainWindow::onSendEntryToPlaylist(std::shared_ptr<LibraryEntry> libentry, QPointer<PlaylistModel> playlist_model)
 {
-	qDebug() << QString("Sending entry to playlist:") << playlist_model;
+    qDebug() << QString("Sending entry to playlist:") << playlist_model.data();
 	if(!playlist_model.isNull())
 	{
 		auto new_playlist_entry = PlaylistModelItem::createFromLibraryEntry(libentry);
@@ -1928,13 +1938,13 @@ void MainWindow::addChildMDIModelViewPair_Library(const MDIModelViewPair& mvpair
 		// View is new, did the model already exist?
 		if(mvpair.m_model_was_existing)
 		{
-			qDebug() << "Model existed:" << mvpair.m_model << libmodel->getLibRootDir() << libmodel->getLibraryName();
+            qDebug() << "Model existed:" << mvpair.m_model.data() << libmodel->getLibRootDir() << libmodel->getLibraryName();
 			Q_ASSERT(model_really_already_existed);
 		}
 		else
 		{
 			// Model is new.
-			qDebug() << "Model is new:" << mvpair.m_model << libmodel->getLibRootDir() << libmodel->getLibraryName();
+            qDebug() << "Model is new:" << mvpair.m_model.data() << libmodel->getLibRootDir() << libmodel->getLibraryName();
 			Q_ASSERT(!model_really_already_existed);
 
 			m_libmodels.push_back(libmodel);
@@ -2276,9 +2286,7 @@ void MainWindow::onTextFilterChanged()
 {
 	auto filterWidget = m_filterToolbar->findChild<FilterWidget*>();
 	Q_ASSERT(filterWidget != nullptr);
-    QRegularExpression regExp(filterWidget->text(),
-					   filterWidget->caseSensitivity(),
-					   filterWidget->patternSyntax());
+    QRegularExpression regExp(filterWidget->text(), filterWidget->caseSensitive());
 
 	auto mdisubwin = m_mdi_area->currentSubWindow();
 	MDILibraryView* libtreeview = mdisubwin ? mdisubwin->findChild<MDILibraryView*>() : nullptr;

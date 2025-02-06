@@ -35,6 +35,11 @@
 #include <serialization/XmlSerializer.h>
 
 
+AMLM_QREG_CALLBACK([](){
+    qIn() << "Registering ScanResultsTreeModel";
+    qRegisterMetaType<ScanResultsTreeModel>()
+        ;});
+
 ScanResultsTreeModel::ScanResultsTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject *parent)
 	: BASE_CLASS(column_specs, parent)
 {
@@ -316,4 +321,18 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 	map_read_field_or_warn(map, XMLTAG_SRTM_ROOT_ITEM, &root_item_map);
 	m_root_item->fromVariant(root_item_map);
 	dump_map(map);
+}
+
+QDataStream &operator<<(QDataStream &out, const ScanResultsTreeModel &myObj)
+{
+    out << myObj.toVariant();
+    return out;
+}
+
+QDataStream &operator>>(QDataStream &in, ScanResultsTreeModel &myObj)
+{
+    QVariant var;
+    in >> var;
+    myObj.fromVariant(var);
+    return in;
 }

@@ -29,21 +29,28 @@ class MP2 : public QMediaPlayer
 {
 	Q_OBJECT
 
+	Q_PROPERTY(bool muted READ muted WRITE setMuted NOTIFY mutedChanged)
+    Q_PROPERTY(int volume READ volume WRITE setVolume NOTIFY volumeChanged)
+
 public:
 	MP2(QObject *parent = Q_NULLPTR);
 
 	/// Property overrides.
 	qint64 position() const;
 	qint64 duration() const;
+    int muted() const;
+    int volume() const;
 
 Q_SIGNALS:
 	void positionChanged2(qint64);
 	void durationChanged2(qint64);
+    void mutedChanged(bool);
+    void volumeChanged(int);
 
 private:
 	Q_DISABLE_COPY(MP2)
 
-	QAudioOutput *m_audio_output;
+	std::unique_ptr<QAudioOutput> m_audio_output;
 
 	/// @name State for use when we're playing a section of a larger sound file.
 	/// @{
@@ -70,6 +77,8 @@ private:
 public Q_SLOTS:
 	void play();
 	void stop();
+    void setMuted(bool muted);
+    void setVolume(int volume);
 	void setShuffleMode(bool shuffle_on);
 	void repeat(bool checked);
 

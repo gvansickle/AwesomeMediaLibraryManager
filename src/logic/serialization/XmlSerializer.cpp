@@ -85,6 +85,7 @@ void XmlSerializer::save(const ISerializable &serializable, const QUrl &file_url
 bool XmlSerializer::load(ISerializable& serializable, const QUrl &file_url)
 {
 	Stopwatch sw("###################### XmlSerializer::load()");
+    return false; /// @todo QT6
 
 	QString load_file_path = file_url.toLocalFile();
 	if(load_file_path.isEmpty())

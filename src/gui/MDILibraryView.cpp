@@ -118,7 +118,7 @@ MDIModelViewPair MDILibraryView::openFile(QUrl open_url, QWidget *parent, std::f
     if(mv_pair.m_view)
     {
         Q_ASSERT_X(mv_pair.m_view_was_existing == true, "openFile", "find_existing function returned a view but said it was not pre-existing.");
-        qDebug() << "View of" << open_url << "already exists, returning" << mv_pair.m_view;
+        qDebug() << "View of" << open_url << "already exists, returning" << mv_pair.m_view.data();
         return mv_pair;
     }
 
@@ -132,7 +132,7 @@ MDIModelViewPair MDILibraryView::openFile(QUrl open_url, QWidget *parent, std::f
 	{
 		Q_ASSERT_X(mv_pair.m_model_was_existing, "openFile", "find_exisiting returned a model but said it was not pre-existing.");
 
-		qDebug() << "Model exists:" << mv_pair.m_model;
+        qDebug() << "Model exists:" << mv_pair.m_model.data();
 		libmodel = qobject_cast<LibraryModel*>(mv_pair.m_model);
 	}
 	else

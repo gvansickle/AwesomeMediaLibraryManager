@@ -298,7 +298,7 @@ void BaseActivityProgressStatusBarWidget::INTERNAL_SLOT_emit_cancel_job()
 {
 //    QPointer<KJob> kjob = m_kjob;
 
-    qDb() << "CANCEL BUTTON CLICKED, JOB:" << m_kjob;
+    qDb() << "CANCEL BUTTON CLICKED, JOB:" << m_kjob.data();
     if(m_kjob.isNull())
     {
         qWr() << "KJOB WAS NULL, EMITTING cancel_job(nullptr)";
@@ -330,7 +330,7 @@ void BaseActivityProgressStatusBarWidget::INTERNAL_SLOT_SuspendResume(bool click
     }
 }
 
-void BaseActivityProgressStatusBarWidget::totalAmount(KJob *kjob, KJob::Unit unit, qulonglong amount)
+void BaseActivityProgressStatusBarWidget::SLOT_totalAmountChanged(KJob *kjob, KJob::Unit unit, qulonglong amount)
 {
     Q_CHECK_PTR(kjob);
 
@@ -352,10 +352,11 @@ void BaseActivityProgressStatusBarWidget::totalAmount(KJob *kjob, KJob::Unit uni
         // Size is measured in bytes
         /// @todo Bytes/size is already handled by the tracker.
         /// Don't quite know what to make of the time stuff here.
-        if (m_start_time.isNull())
-        {
-            m_start_time.start();
-        }
+// QT6 Needed?
+        // if (m_start_time.isNull())
+        // {
+        //     m_start_time.start();
+        // }
         break;
     case KJob::Files:
         // Shouldn't be getting signalled unless totalFiles() has actually changed.
@@ -366,12 +367,15 @@ void BaseActivityProgressStatusBarWidget::totalAmount(KJob *kjob, KJob::Unit uni
         // Shouldn't be getting signalled unless total dirs has actually changed.
         showTotals();
         break;
+    case KJob::Items:
+        showTotals();
+        break;
     }
 
     updateMainTooltip();
 }
 
-void BaseActivityProgressStatusBarWidget::processedAmount(KJob *kjob, KJob::Unit unit, qulonglong amount)
+void BaseActivityProgressStatusBarWidget::SLOT_processedAmountChanged(KJob *kjob, KJob::Unit unit, qulonglong amount)
 {
     Q_CHECK_PTR(kjob);
 
@@ -486,7 +490,7 @@ void BaseActivityProgressStatusBarWidget::processedSize(KJob *kjob, qulonglong a
 //    updateMainTooltip();
 }
 
-void BaseActivityProgressStatusBarWidget::percent(KJob *kjob, unsigned long percent)
+void BaseActivityProgressStatusBarWidget::SLOT_percentChanged(KJob *kjob, unsigned long percent)
 {
     Q_CHECK_PTR(kjob);
 

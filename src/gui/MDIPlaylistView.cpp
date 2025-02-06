@@ -141,11 +141,16 @@ void MDIPlaylistView::setModel(QAbstractItemModel* model)
 		MDITreeViewBase::setModel(m_sortfilter_model);
 		// Call selectionChanged when the user changes the selection.
 		/// @todo selectionModel().selectionChanged.connect(selectionChanged)
-		old_sel_model->deleteLater();
+        if(old_sel_model != nullptr)
+        {
+            old_sel_model->deleteLater();
+        }
 
+        M_TODO("QT6 FIX THIS")
+#if 0 // QT5
 		// Connect to the QMediaPlaylist's index changed notifications,
 		connect(m_underlying_model->qmplaylist(), &QMediaPlaylist::currentIndexChanged, this, &MDIPlaylistView::playlistPositionChanged);
-
+#endif
 		// Set up the TreeView's header.
 		header()->setStretchLastSection(false);
 		header()->setSectionResizeMode(QHeaderView::Stretch);
@@ -403,14 +408,20 @@ PlaylistModel* MDIPlaylistView::underlyingModel() const
 
 void MDIPlaylistView::next()
 {
+    M_TODO("QT6 FIX THIS")
+#if 0 // QT5
 	// Forward to the QMediaPlaylist.
 	m_underlying_model->qmplaylist()->next();
+#endif
 }
 
 void MDIPlaylistView::previous()
 {
+    M_TODO("QT6 FIX THIS")
+#if 0 // QT5
 	// Forward to the QMediaPlaylist.
 	m_underlying_model->qmplaylist()->previous();
+#endif
 }
 
 void MDIPlaylistView::onCut()
@@ -586,9 +597,10 @@ void MDIPlaylistView::startPlaying(const QModelIndex& index)
 	// Since m_underlying_model->qmplaylist() is connected to the player, we should only have to setCurrentIndex() to
 	// start the song.
 	/// @note See "jump()" etc in the Qt5 MediaPlyer example.
-
+    M_TODO("QT6 FIX THIS")
+#if 0 // QT5
 	m_underlying_model->qmplaylist()->setCurrentIndex(underlying_model_index.row());
-
+#endif
 	// If the player isn't already playing, the index change above won't start it.  Send a signal to it to
 	// make sure it starts.
 	Q_EMIT play();

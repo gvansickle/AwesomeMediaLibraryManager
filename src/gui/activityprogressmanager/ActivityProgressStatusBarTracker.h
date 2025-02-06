@@ -534,7 +534,8 @@ protected:
 protected: // Variable members
 
     /// Mutex for protecting the tracked job state.
-    QMutex m_tracked_job_state_mutex;
+    /// @todo Does this really need to be recursive?
+    QRecursiveMutex m_tracked_job_state_mutex;
 
     /// Map of all registered sub-jobs (KJob*) to sub-job-widgets (QPointer<BaseActivityProgressStatusBarWidget>'s).
     TSActiveActivitiesMap m_amlmjob_to_widget_map;

@@ -62,7 +62,7 @@ public:
 
 	~CoverArtJob() override;
 
-	void start() override;
+	// void start() override;
 
     static CoverArtJobPtr make_job(QObject *parent, const QUrl& url);
 

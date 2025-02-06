@@ -39,7 +39,7 @@
 #include <utils/RegisterQtMetatypes.h>
 #include <utils/Fraction.h>
 #include <future/InsertionOrderedMap.h>
-#include "utils/MapConverter.h"
+// #include "utils/MapConverter.h"
 #include "utils/DebugHelpers.h"
 #include "TrackMetadata.h"
 #include "ntp.h"
@@ -51,6 +51,7 @@
 AMLM_QREG_CALLBACK([](){
     qIn() << "Registering LibraryEntry metatypes";
     qRegisterMetaType<LibraryEntry>();
+    qRegisterMetaType<std::shared_ptr<LibraryEntry>>();
     });
 
 

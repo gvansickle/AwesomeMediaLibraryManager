@@ -92,7 +92,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Min versions of Qt5, KF5, KF5/ECM.
+# Min versions of Qt, KF, KF/ECM.
 set(QT_MIN_VERSION "6.8.0")
 set(KF5_MIN_VERSION "6.0.0") ### @win temp: Only have 5.52.0
 set(ECM_MIN_VERSION "6.0.0") #"5.57.0")

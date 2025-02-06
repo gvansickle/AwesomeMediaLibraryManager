@@ -176,3 +176,4 @@ QDataStream &operator>>(QDataStream &in, DirScanResult & myObj)
 }
 #endif
 
+

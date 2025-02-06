@@ -475,3 +475,17 @@ QDebug operator<<(QDebug dbg, const CueSheet &cuesheet)
 
     return dbg;
 }
+
+QDataStream &operator<<(QDataStream &out, const CueSheet &myObj)
+{
+    out << myObj.toVariant();
+    return out;
+}
+
+QDataStream &operator>>(QDataStream &in, CueSheet &myObj)
+{
+    QVariant var;
+    in >> var;
+    myObj.fromVariant(var);
+    return in;
+}

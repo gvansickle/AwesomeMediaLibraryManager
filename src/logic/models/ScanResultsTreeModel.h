@@ -139,6 +139,6 @@ private:
 	QPersistentModelIndex m_pmindex;
 };
 
-
+QTH_DECLARE_QDATASTREAM_OPS(ScanResultsTreeModel);
 
 #endif // SCANRESULTSTREEMODEL_H
