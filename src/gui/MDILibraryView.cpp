@@ -194,7 +194,10 @@ void MDILibraryView::setModel(QAbstractItemModel* model)
 	// This will create a new selection model.
 	MDITreeViewBase::setModel(m_sortfilter_model);
 	Q_ASSERT((void*)m_sortfilter_model != (void*)old_sel_model);
-	old_sel_model->deleteLater();
+    if(old_sel_model != nullptr)
+    {
+        old_sel_model->deleteLater();
+    }
 
 
 	// Set up the TreeView's header.

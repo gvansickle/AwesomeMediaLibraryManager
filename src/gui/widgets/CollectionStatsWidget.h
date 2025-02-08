@@ -23,10 +23,11 @@
 // Qt5
 #include <QDockWidget>
 #include <QLabel>
-#include <QPointer>
-#include <QStandardItemModel>
+// #include <QPointer>
+// #include <QStandardItemModel>
 #include <QTextEdit>
 #include <QWidget>
+#include <QSortFilterProxyModel>
 
 // Ours
 #include <logic/proxymodels/ModelChangeWatcher.h>

@@ -29,7 +29,7 @@
 // Future Std C++
 #include <future/future_algorithms.h> ///< For Uniform Container Erasure.
 
-// Qt5
+// Qt
 #include <QObject>
 #include <QStringList>
 #include <QFuture>
@@ -44,7 +44,9 @@ class AMLMJob;
 // Ours
 #include <utils/DebugHelpers.h>
 #include <concurrency/ExtFuture.h>
-//template <class T> class ExtFuture; // !QT6
+// template <class T> class ExtFuture; // !QT6
+template <class T>
+using ExtFuture = QFuture<T>;
 
 class PerfectDeleter;
 

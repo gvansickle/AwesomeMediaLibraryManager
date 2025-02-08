@@ -26,7 +26,7 @@
 #include <future/future_algorithms.h> ///< For Uniform Container Erasure.
 
 // Qt5
-
+#include <QtConcurrentFilter>
 
 // Ours
 #include <utils/DebugHelpers.h>

@@ -25,46 +25,15 @@
  * Some Qt5-based analogs to std::async().
  */
 
-
+// Qt
+#include <QtConcurrentRun>
 #include <QFutureWatcher>
 
-/**
- * Function which blocks on @a future and calls @a function with partial results as they become available.
- *
- * @tparam T  The value type of the QFuture<> to be waited on.
- * @tparam Function  The callable type.  Must take two ints, the begin and end index of the range that is ready.
- * @param future 
- * @param function
- */
-template <typename T, typename Function>
-void waitForResultsReady(QFuture<T>& future, Function function)
-{
-	QFutureWatcher<T> futureWatcher;
-	QObject::connect(&futureWatcher, &QFutureWatcher<T>::resultsReadyAt, function);
+// Ours
+#include <utils/ConnectHelpers.h>
+#include <utils/DebugHelpers.h>
 
-	// Set the future to watch.
-	futureWatcher.setFuture(future);
-	future.waitForFinished();
-}
 
-/**
- * Function which blocks on @a future and calls @a function with each partial result as it becomes available.
- *
- * @tparam T
- * @tparam Function  The callable type.  Must take one int, the index that is ready.
- * @param future
- * @param function
- */
-template <typename T, typename Function>
-void waitForResultReady(QFuture<T>& future, Function function)
-{
-	QFutureWatcher<T> futureWatcher;
-	QObject::connect(&futureWatcher, &QFutureWatcher<T>::resultReadyAt, function);
-
-	// Set the future to watch.
-	futureWatcher.setFuture(future);
-	future.waitForFinished();
-}
 
 #if 0 // !QT6
 

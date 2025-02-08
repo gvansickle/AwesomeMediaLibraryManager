@@ -27,15 +27,15 @@
 #include <QUrl>
 #include <QDir>
 #include <QDirIterator>
-#include <QWeakPointer>
-#include <QSharedPointer>
-#include <QPromise>
+// #include <QWeakPointer>
+// #include <QSharedPointer>
+// #include <QPromise>
 
 // Ours
 #include <logic/DirScanResult.h>
 #include "concurrency/AMLMJobT.h"
 #include <concurrency/ExtFuture.h>
-#include "utils/UniqueIDMixin.h"
+// #include "utils/UniqueIDMixin.h"
 
 /**
  * Worker function which scans a directory for files.

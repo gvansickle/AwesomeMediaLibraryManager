@@ -27,6 +27,7 @@
 #error "WE NEED A QT COMPILED WITH EXCEPTIONS ENABLED"
 #endif
 #include <QPromise>
+#include <QTimer>
 
 // Qt 5 / KDE backfill.
 #include <utils/QtHelpers.h>

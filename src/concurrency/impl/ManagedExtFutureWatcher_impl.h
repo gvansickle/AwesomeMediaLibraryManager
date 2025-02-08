@@ -23,24 +23,25 @@
 #ifndef SRC_CONCURRENCY_IMPL_MANAGEDEXTFUTUREWATCHER_IMPL_H_
 #define SRC_CONCURRENCY_IMPL_MANAGEDEXTFUTUREWATCHER_IMPL_H_
 
-#if 0 // !QT6
+#if 1 // !QT6
 
 // Std C++
 #include <exception>
 
-// Qt5
+// Qt
 #include <QFutureWatcher>
+#include <QFuture>
 #include <QThread>
 
 // Ours
 #include <utils/DebugHelpers.h>
 #include <utils/QtHelpers.h>
-#include <logic/PerfectDeleter.h>
+// #include <logic/PerfectDeleter.h>
 #include "../ExtFuture_traits.h"
 #include "ExtAsync_impl.h"
 
 template <class T>
-class ExtFuture;
+using ExtFuture = QFuture<T>;
 
 namespace ManagedExtFutureWatcher_detail
 {
