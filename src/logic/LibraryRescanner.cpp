@@ -288,11 +288,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
                         qDebug() << "IN LAMBDA, future: " << dirresults_future << M_NAME_VAL(begin) << M_NAME_VAL(end);
 #endif
 	auto tap_future = dirresults_future;
-            streaming_then(dirresults_future, [this](QFuture<DirScanResult> tap_future, int begin, int end){
-/// .then() ############################################
-//              .then(QtFuture::Launch::Async, [&, this](QFuture<DirScanResult> tap_future) mutable -> QFuture<DirScanResult>  { //, int begin, int end) mutable -> void {
-//                  waitForResultsReady(tap_future, [&, this](int begin, int end) {
-                               /// ^ .then() was ExtFuture.stap() pre-QT6.
+    streaming_then(dirresults_future, [](QFuture<DirScanResult> tap_future, int begin, int end){
 		// Start of the dirtrav tap callback.  This should be a non-main thread.
 		AMLM_ASSERT_NOT_IN_GUITHREAD();
 		// AMLM_ASSERT_IN_GUITHREAD();

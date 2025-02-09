@@ -1579,44 +1579,37 @@ QString state_str(const ExtFuture<T>& future)
 template <typename T, typename Function>
 QFuture<T> streaming_then(QFuture<T> future, Function function)
 {
-	auto ret_future = QtConcurrent::run([=](QFuture<T> future/*, Function function*/)
+    auto ret_future = QtConcurrent::run(QThreadPool::globalInstance(), [function](QFuture<T> future)
 	{
 		qDebug() << "HERE 1, future: " << future;
-		// QFutureWatcher<T>* futureWatcher = new QFutureWatcher<T>();
-		QFutureWatcher<T>* watcher = ManagedExtFutureWatcher_detail::get_managed_qfuture_watcher<T>("streaming_then");
-        // connect_or_die(watcher, &QFutureWatcher<T>::resultReadyAt, [future, function](int index)
-        // {
-  //           qDebug() << "HERE 2, future: " << future;
-        // 	function(future, index, index);
-        // });
-		connect_or_die(watcher, &QFutureWatcher<T>::resultsReadyAt,
+
+		QFutureWatcher<T>* watcher = new QFutureWatcher<T>();
+    	QEventLoop loop;
+		QObject::connect(watcher, &QFutureWatcher<T>::resultsReadyAt, watcher,
 						[future, function](int begin, int end)
 						{
 							qDebug() << "IN LAMBDA, future: " << future;
 							function(future, begin, end);
-						});
-		connect_or_die(watcher, &QFutureWatcher<T>::finished, [watcher]()
+						}, Qt::DirectConnection);
+		connect_or_die(watcher, &QFutureWatcher<T>::finished, [watcher, &loop]()
 		{
             qDebug() << "WATCHER FINISHED, DELETELATER";
 			watcher->deleteLater();
+			loop.quit();
 		});
 
 		watcher->setFuture(future);
 		qDb() << "AFTER SETFUTURE, future: " << future;
-		watcher->waitForFinished();
+    	loop.exec();
+		future.waitForFinished();
 		qDb() << "WAIT FOR FINISHED COMPLETE" << future;
-		// return future;
-	}, future/*, function*/);
+	}, future);
 
 	qDebug() << "RETURNING FUTURE" << future;
 	return future;
 }
 
-// auto DELETEME = []()
-// {
-// 	QFuture<int> f;
-// 	auto f2 = streaming_then(f, [](QFuture<int> future, int begin, int end){});
-// };
+
 
 /**
  * Function which blocks on @a future and calls @a function with partial results as they become available.
