@@ -1542,9 +1542,6 @@ extern template class ExtFuture<QByteArray>;
 
 #endif // !QT6
 
-// namespace ManagedExtFutureWatcher_detail
-// {
-// };
 template <class T>
 using ExtFuture = QFuture<T>;
 
@@ -1575,7 +1572,15 @@ QString state_str(const ExtFuture<T>& future)
 	return retval;
 }
 
-
+/**
+ * Works much like .then(), but uses a QFutureWatcher to call @a function when resultsReadyAt() fires.
+ *
+ * @tparam T
+ * @tparam Function
+ * @param future
+ * @param function
+ * @return  A copy of the passed-in @a future.
+ */
 template <typename T, typename Function>
 QFuture<T> streaming_then(QFuture<T> future, Function function)
 {
