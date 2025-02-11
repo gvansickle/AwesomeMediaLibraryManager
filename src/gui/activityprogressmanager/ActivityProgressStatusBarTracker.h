@@ -403,8 +403,8 @@ protected Q_SLOTS:
      *  The fields of the description can be "Source" with an URL, and, "Destination" with an URL for a "Copying" description."
      */
     void description(KJob *kjob, const QString &title,
-                             const QPair<QString, QString> &field1,
-                             const QPair<QString, QString> &field2) override;
+                             const std::pair<QString, QString> &field1,
+                             const std::pair<QString, QString> &field2) override;
     /**
      * Slot
      * "Called to display state information about a job.

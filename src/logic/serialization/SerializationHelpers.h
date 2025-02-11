@@ -26,7 +26,7 @@
 #include <type_traits>
 
 // Qt
-#include <QtConcurrent>
+#include <QtConcurrentMap>
 
 // Ours
 #include <future/future_type_traits.hpp>

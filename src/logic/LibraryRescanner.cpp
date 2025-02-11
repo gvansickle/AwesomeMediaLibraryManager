@@ -37,7 +37,7 @@
 // #include <QtCore5Compat/QXmlFormatter>
 // #include <QtCore5Compat/QXmlQuery>
 #include <QVariant>
-#include <QtConcurrent>
+#include <QtConcurrentRun>
 // #include <QtCore5Compat/QXmlResultItems>
 
 /// KF5
@@ -233,8 +233,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	                                                                                     QDirIterator::Subdirectories);
 	qDb() << "dirresults_future: " << dirresults_future;
 	// Create/Attach an AMLMJobT to the dirscan future.
-	M_WARNING("DEBUG FIX THIS")
-	QPointer<AMLMJobT<ExtFuture<DirScanResult>>> dirtrav_job = nullptr; //make_async_AMLMJobT(dirresults_future, "DirResultsAMLMJob", AMLMApp::instance());
+	QPointer<AMLMJobT<ExtFuture<DirScanResult>>> dirtrav_job = make_async_AMLMJobT(dirresults_future, "DirResultsAMLMJob", AMLMApp::instance());
 
 	// The future that we'll use to move the LibraryRescannerMapItems to the library_metadata_rescan_task().
     QPromise<VecLibRescannerMapItems> rescan_items_in_promise;
@@ -261,47 +260,36 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 
 	// Create a future so we can attach a watcher to get the QUrl results to the main thread.
 	/// @todo Obsoleting.
-	QPromise<QString> qurl_promise;
-	QFuture<QString> qurl_future = qurl_promise.future();
+	auto qurl_promise = std::make_shared<QPromise<QString>>();
+	QFuture<QString> qurl_future = qurl_promise->future();
 	// QT6 ExtFuture<QString> qurl_future = QtFuture::makeReadyValueFuture()// QT6 ExtAsync::make_started_only_future<QString>();
 
 	// Create a future so we can attach a continuation to get the results to the main thread.
-	QPromise<SharedItemContType> tree_model_item_promise;
-	QFuture<SharedItemContType> tree_model_item_future = tree_model_item_promise.future();
+	auto tree_model_item_promise = std::make_shared<QPromise<SharedItemContType>>();
+	QFuture<SharedItemContType> tree_model_item_future = tree_model_item_promise->future();
 	// QT6 ExtFuture<SharedItemContType> tree_model_item_future = ExtAsync::make_started_only_future<SharedItemContType>();
 
 	m_timer.lap("End setup, start continuation attachments");
 
+	qurl_promise->start();
+	tree_model_item_promise->start();
+
 	// Attach a streaming tap to the dirscan future.
     ExtFuture<Unit> tail_future;// = QtFuture::makeReadyValueFuture(unit);
-#if 0
-	QFutureWatcher<DirScanResult> *watcher = new QFutureWatcher<DirScanResult>(); //(this);
-	QObject::connect(watcher, &QFutureWatcher<DirScanResult>::finished, watcher, &QFutureWatcher<DirScanResult>::deleteLater);
-	QObject::connect(watcher, &QFutureWatcher<DirScanResult>::resultReadyAt, [](int index)
-	{
-		qDb() << "RESULT READY" << index << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!";
-	});
 
-	QObject::connect(watcher, &QFutureWatcher<DirScanResult>::resultsReadyAt,
-                    [dirresults_future](int begin, int end)
-					{
-                        qDebug() << "IN LAMBDA, future: " << dirresults_future << M_NAME_VAL(begin) << M_NAME_VAL(end);
-#endif
-	auto tap_future = dirresults_future;
-    streaming_then(dirresults_future, [](QFuture<DirScanResult> tap_future, int begin, int end){
+	// auto tap_future = dirresults_future;
+    streaming_then(dirresults_future, [this, qurl_promise, tree_model_item_promise](QFuture<DirScanResult> tap_future, int begin, int end){
 		// Start of the dirtrav tap callback.  This should be a non-main thread.
 		AMLM_ASSERT_NOT_IN_GUITHREAD();
 		// AMLM_ASSERT_IN_GUITHREAD();
-qDb() << "GOT HERE!!!!!!";
-        // qurl_promise.start();
-        // tree_model_item_promise.start();
+qDb() << "IN STREAMING TAP CALLBACK";
 
 		std::shared_ptr<ScanResultsTreeModel> tree_model_sptr = AMLM::Core::self()->getScanResultsTreeModel();
 		Q_ASSERT(tree_model_sptr);
 
 		if(begin == 0)
 		{
-            // expect_and_set(1, 2);
+            expect_and_set(1, 2);
 		}
 //		qDb() << "IN TAP:" << M_ID_VAL(tap_future.resultCount()) << M_ID_VAL(begin) << M_ID_VAL(end);
 
@@ -373,37 +361,29 @@ qDb() << "GOT HERE!!!!!!";
 		// Because of Qt5's model/view system not being threadsafeable, we have to do at least the final
 		// model item entry from the GUI thread.
 //		qIn() << "Sending" << new_items->size() << "scan results to models";
-#if 0 // DEBUG!!!
+#if 1 // DEBUG!!!
         /// @todo Obsoleting... very... slowly.
-		for(const std::shared_ptr<AbstractTreeModelItem>& entry : *new_items)
+		for(std::shared_ptr<AbstractTreeModelItem> entry : *new_items)
 		{
 			// Send the URL ~dsr.getMediaExtUrl().m_url.toString()) to the LibraryModel via the watcher.
-            qurl_promise.addResult(entry->data(1).toString());
+            qurl_promise->addResult(entry->data(1).toString());
 		}
-        qurl_promise.finish();
 
 		/// @note This could also be a signal emit.
 		Q_ASSERT(new_items->size() == 1);
-        tree_model_item_promise.addResult(new_items);
+        tree_model_item_promise->addResult(new_items);
 #endif
-    });
-
-	// DEBUG TEMP
-	// qDb() << "SETTING FUTURE";
-	// watcher->setFuture(dirresults_future);
+    })
 
 	/// DEBUG TEMP
-	return;
-	qDb() << "DEBUG START OF WAIT...";
-	dirresults_future.waitForFinished();
-	qDb() << "DEBUG END OF WAIT";
+	// return;
 
-	tail_future /// @todo QT6 TEMP
+	// tail_future /// @todo QT6 TEMP
 //		qDb() << "END OF DSR TAP:" << M_ID_VAL(tree_model_item_future);
         // return;
 	// }) // returns ExtFuture<DirScanResult> tail_future.
 /// .then() ############################################
-	.then([=](ExtFuture<Unit> fut_ignored) -> Unit {
+	.then([](ExtFuture<DirScanResult> fut_ignored) -> Unit {
                   fut_ignored.waitForFinished();
 		// The dirscan is complete.
 		qDb() << "DIRSCAN COMPLETE .then()";
@@ -412,7 +392,8 @@ qDb() << "GOT HERE!!!!!!";
 	})
 /// .then() ############################################
 	/// @then Finish the two output futures.
-    .then([&, this](ExtFuture<Unit> future) mutable {
+    .then([this, tree_model_item_future, tree_model_item_promise = std::move(tree_model_item_promise),
+    			qurl_future, qurl_promise=std::move(qurl_promise)](ExtFuture<Unit> future) mutable {
 
                   future.waitForFinished();
 		// Finish a couple futures we started in this, and since this is done, there should be no more
@@ -422,21 +403,24 @@ qDb() << "GOT HERE!!!!!!";
 		AMLM_ASSERT_NOT_IN_GUITHREAD();
 
 		qDb() << "FINISHING TREE MODEL FUTURE:" << M_ID_VAL(tree_model_item_future); // == (Running|Started)
-        tree_model_item_promise.finish();
+        tree_model_item_promise->finish();
 		qDb() << "FINISHED TREE MODEL FUTURE:" << M_ID_VAL(tree_model_item_future); // == (Started|Finished)
 		m_timer.lap("Finished tree_model_item_future");
 
 		qDb() << "FINISHING:" << M_ID_VAL(qurl_future);
-        qurl_promise.finish();
+        qurl_promise->finish();
 		qDb() << "FINISHED:" << M_ID_VAL(qurl_future);
 		m_timer.lap("Finished qurl_future");
 
         return unit;
 	});
 
+	/// @todo DEBUG QT6
+	// return;
 #if 1
 
-#define TREE_ITEM_MODEL_POP_NON_GUI_THREAD 0
+
+#define TREE_ITEM_MODEL_POP_NON_GUI_THREAD 1
 
 	/// Append TreeModelItems to the ScanResultsTreeModel tree_model.
 	Q_ASSERT(tree_model);
@@ -444,12 +428,11 @@ qDb() << "GOT HERE!!!!!!";
 	tree_model_item_future.stap(
 ///                        ^^ Pre QT6 this was .stap().
 #endif
-    tree_model_item_future.then(
-#if TREE_ITEM_MODEL_POP_NON_GUI_THREAD != 1
+    streaming_then(tree_model_item_future,
+#if TREE_ITEM_MODEL_POP_NON_GUI_THREAD != 0
                 // this,
 #endif
-                              [&](ExtFuture<SharedItemContType> new_items_future){
-				waitForResultsReady(new_items_future, [&](int begin_index, int end_index){
+                              [](ExtFuture<SharedItemContType> new_items_future, int begin, int end){
 #if TREE_ITEM_MODEL_POP_NON_GUI_THREAD != 1
 		AMLM_ASSERT_IN_GUITHREAD();
 #else
@@ -464,7 +447,7 @@ Stopwatch sw("Populate LibraryEntry");
 //		qDb() << "START: tree_model_item_future.stap(), new_items_future count:" << new_items_future.resultCount();
 
 		// For each QList<SharedItemContType> entry.
-		for(int index = begin_index; index < end_index; ++index)
+		for(int index = begin; index < end; ++index)
 		{
 			auto result = new_items_future.resultAt(index);
 			const SharedItemContType& new_items_vector_ptr = result;
@@ -527,9 +510,7 @@ sw.print_results();
 #endif
 //			qDb() << "TREEMODELPTR:" << M_ID_VAL(tree_model_ptr->rowCount());
 		}
-});
-    	return new_items_future;
-	})
+})
 #endif
 	.then([&](ExtFuture<SharedItemContType> f){
 		Q_ASSERT(f.isFinished());
@@ -539,9 +520,11 @@ sw.print_results();
 		m_timer.lap("TreeModelItems stap() finished.");
 		return unit;
 	})
-    .then(qApp, [&,
-				 tree_model_ptr=tree_model,
-                 kjob=FWD_DECAY_COPY(QPointer<AMLMJobT<ExtFuture<DirScanResult>>>, dirtrav_job)
+    .then(qApp, [this,
+		rescan_items_in_promise = std::move(rescan_items_in_promise),
+		tree_model_ptr=tree_model,
+                 // kjob=FWD_DECAY_COPY(QPointer<AMLMJobT<ExtFuture<DirScanResult>>>, dirtrav_job)
+                 kjob=dirtrav_job
 		  ](ExtFuture<Unit> future_unit) mutable {
 
 			AMLM_ASSERT_IN_GUITHREAD();
@@ -578,14 +561,15 @@ M_WARNING("kjob is now null here and we fail");
 
 		        Q_ASSERT(m_model_ready_to_save_to_db == true);
 		        m_model_ready_to_save_to_db = false;
-				m_timer.lap("Start of SaveDatabase");
 M_WARNING("PUT THIS BACK");
+#if 0 //// PUT BACK
+				m_timer.lap("Start of SaveDatabase");
 //				SaveDatabase(tree_model_ptr, database_filename);
 				tree_model_ptr->SaveDatabase(database_filename);
 				m_timer.lap("End of SaveDatabase");
 
 				////////// EXPERIMENTAL
-#if 1 //// PUT BACK
+
 				/// Try to load it back in and round-trip it.
 //				std::initializer_list<ColumnSpec> temp_initlist = {ColumnSpec(SectionID(0), "DirProps"), {SectionID(0), "MediaURL"}, {SectionID(0), "SidecarCueURL"}};
 //				std::shared_ptr<ScanResultsTreeModel> load_tree = ScanResultsTreeModel::construct({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
@@ -670,7 +654,7 @@ M_WARNING("PUT THIS BACK");
 #endif
 	/// @todo EXPERIMENTAL
 
-			m_timer.lap("GUI Thread dirtrav over partial, starting metadata rescan.");
+			m_timer.lap("dirtrav over partial, starting metadata rescan.");
 
 #if 1
             // Directory traversal complete, start rescan.
@@ -745,6 +729,8 @@ M_WARNING("PUT THIS BACK");
 			QString url_str = qurl_future.resultAt(i);
 			Q_EMIT SIGNAL_FileUrlQString(url_str);
 	});
+
+
 // QT6	// connect_or_die(this, &LibraryRescanner::SIGNAL_FileUrlQString, m_current_libmodel, &LibraryModel::SLOT_onIncomingFilename);
 	/// @todo Self-destruct.
 // QT6	efw->setFuture(qurl_future);
@@ -783,7 +769,7 @@ M_WARNING("PUT THIS BACK");
     // Start the asynchronous ball rolling.
 	//
 M_TODO("????");
-//	dirtrav_job->start();
+	dirtrav_job->start();
 
 	m_timer.lap("Leaving startAsyncDirTrav");
 
