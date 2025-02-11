@@ -37,7 +37,7 @@ class Fraction
 
 public:
     Fraction();
-	Fraction(const QString& s);
+	explicit Fraction(const QString& s);
 	Fraction(const Fraction& other);
 	Fraction(long num, long denom);
 	~Fraction();
@@ -65,9 +65,6 @@ private:
 	void reduce();
 };
 
-Q_DECLARE_METATYPE(Fraction);
-QTH_DECLARE_QDATASTREAM_OPS(Fraction);
-
 Fraction operator+(Fraction f1, Fraction f2);
 Fraction operator-(Fraction f1, Fraction f2);
 Fraction operator*(Fraction f1, Fraction f2);
@@ -76,7 +73,9 @@ bool operator<(Fraction f1, Fraction f2);
 QDebug operator<<(QDebug dbg, const Fraction& f);
 
 // For QVariant serialization.
-QDataStream &operator<<(QDataStream &out, const Fraction &f);
-QDataStream &operator>>(QDataStream &in, Fraction &f);
+QTH_DECLARE_QDATASTREAM_OPS(Fraction);
+
+Q_DECLARE_METATYPE(Fraction);
+// Q_DECLARE_METATYPE_CONVERTER(Fraction, QString, toQString);
 
 #endif // FRACTION_H

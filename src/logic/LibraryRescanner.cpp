@@ -562,7 +562,7 @@ M_WARNING("kjob is now null here and we fail");
 		        Q_ASSERT(m_model_ready_to_save_to_db == true);
 		        m_model_ready_to_save_to_db = false;
 M_WARNING("PUT THIS BACK");
-#if 0 //// PUT BACK
+#if 1 //// PUT BACK
 				m_timer.lap("Start of SaveDatabase");
 //				SaveDatabase(tree_model_ptr, database_filename);
 				tree_model_ptr->SaveDatabase(database_filename);
