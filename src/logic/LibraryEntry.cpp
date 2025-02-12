@@ -1,5 +1,5 @@
 /*
- * Copyright 2017, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2019, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -39,7 +39,6 @@
 #include <utils/RegisterQtMetatypes.h>
 #include <utils/Fraction.h>
 #include <future/InsertionOrderedMap.h>
-// #include "utils/MapConverter.h"
 #include "utils/DebugHelpers.h"
 #include "TrackMetadata.h"
 #include "ntp.h"

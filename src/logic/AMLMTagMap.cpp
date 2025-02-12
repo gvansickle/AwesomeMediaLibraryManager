@@ -207,8 +207,8 @@ void AMLMTagMap::fromVariant(const QVariant& variant)
 		QVariantHomogenousList qvector_of_values("values", "value");
 
 		QString key;
-		key = kvpair_map.value("key").toString();
-		QVariant qvar_values = kvpair_map.value("values");
+		key = kvpair_map.at("key").toString();
+		QVariant qvar_values = kvpair_map.at("values");
 		Q_ASSERT(qvar_values.isValid());
 		Q_ASSERT(qvar_values.canConvert<QVariantHomogenousList>());
 		qvector_of_values = qvar_values.value<QVariantHomogenousList>();

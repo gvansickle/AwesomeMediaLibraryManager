@@ -352,7 +352,7 @@ template <class MapType, class StringType, class RawMemberType>
 void map_read_field_or_warn(const MapType& map, const StringType& key, RawMemberType member)
 {
 	// Regardless, get the qvar out of the map.
-	QVariant qvar = map.value(key);
+	QVariant qvar = map.at(key);
 	if(!qvar.isValid())
 	{
 		qWr() << "NO SUCH KEY: '" << key << "' from map:" << map;

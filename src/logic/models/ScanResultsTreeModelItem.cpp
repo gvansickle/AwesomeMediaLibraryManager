@@ -156,7 +156,7 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 	map_read_field_or_warn(map, XMLTAG_DIRSCANRESULT, &m_dsr);
 
 	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
-	child_var_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
+	child_var_list = map.at(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
 	Q_ASSERT(child_var_list.size() > 0);
 
 	append_children_from_variant<SRTMItem_LibEntry>(this, child_var_list);

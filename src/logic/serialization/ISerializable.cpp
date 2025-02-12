@@ -25,6 +25,7 @@
 
 // Qt5
 #include <QDebug>
+#include <QMetaType>
 
 // Ours, Qt5/KF5 related.
 #include <utils/DebugHelpers.h>
@@ -33,9 +34,13 @@
 // Ours
 #include <future/InsertionOrderedMap.h>
 
+using std_pair_QString_QVariant = std::pair<const QString, QVariant>;
+Q_DECLARE_METATYPE(std_pair_QString_QVariant);
+
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering InsertionOrderedMap<QString, QVariant> alias QVariantInsertionOrderedMap";
 	qRegisterMetaType<InsertionOrderedMap<QString, QVariant>>();
+	qRegisterMetaType<std_pair_QString_QVariant>();
 //	qRegisterMetaType<InsertionOrderedMap<QString, QVariant>>("QVariantInsertionOrderedMap");
 //	AMLMRegisterQFlagQStringConverters<DirScanResult::DirPropFlags>();
 });
@@ -68,9 +73,9 @@ void SerializableQVariantList::fromVariant(const QVariant& variant)
 
 	Q_ASSERT(map.contains(m_list_tag));
 //	qDb() << M_ID_VAL(m_list_tag);
-	Q_ASSERT(map.value(m_list_tag).canConvert<QVariantHomogenousList>());
+	Q_ASSERT(QMetaType::canConvert(QMetaType::fromType<decltype(map.at(m_list_tag))>(),QMetaType::fromType<QVariantHomogenousList>()));
 
-	QVariantHomogenousList qvl = map.value(m_list_tag).value<QVariantHomogenousList>();
+	QVariantHomogenousList qvl = map.at(m_list_tag).value<QVariantHomogenousList>();
 
 	for(const auto& e : qvl)
 	{

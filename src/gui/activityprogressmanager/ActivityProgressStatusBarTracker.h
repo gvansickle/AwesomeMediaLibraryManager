@@ -111,7 +111,7 @@ Q_SIGNALS:
     void SIGNAL_finished(KJob*);// (also connected to the unregisterJob() slot)
     void SIGNAL_suspended(KJob*);
     void SIGNAL_resumed(KJob*);
-    void SIGNAL_description(KJob *kjob, const QString &title, const QPair<QString, QString> &field1, const QPair<QString, QString> &field2);
+    void SIGNAL_description(KJob *kjob, const QString &title, const std::pair<QString, QString> &field1, const std::pair<QString, QString> &field2);
     void SIGNAL_infoMessage(KJob*);
     void SIGNAL_totalAmount(KJob*, KJob::Unit unit, qulonglong amount);
     void SIGNAL_processedAmount(KJob *job, KJob::Unit unit, qulonglong amount);

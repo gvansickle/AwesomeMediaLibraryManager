@@ -184,7 +184,7 @@ void Theme::initialize()
     // QIcon::fallbackSearchPaths() Introduced in Qt5 5.11.0.
     qIn() << "Initial Icon Theme Fallback Search Paths:";
     auto fsp = QIcon::fallbackSearchPaths(); //.toStdList();
-	for(const auto& respath : fsp)
+	for(const auto& respath : std::as_const(fsp))
     {
         qIn() << "  " << respath;
     }

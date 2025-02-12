@@ -28,10 +28,12 @@
 #include <memory>
 #include <deque>
 #include <optional>
+#include <utility> // for pair.
 
-// Qt5
+// Qt
 #include <QObject>
 #include <QDebug>
+#include <QMetaType>
 
 // Qt5 metatype declarations for some std containers.
 Q_DECLARE_METATYPE(std::string);

@@ -216,7 +216,7 @@ void TrackMetadata::fromVariant(const QVariant& variant)
 #undef X
 
 M_TODO("REMOVE");
-#define X(id) m_ ## id = map.value( # id ).value<decltype( m_ ## id )>();
+#define X(id) m_ ## id = map.at( # id ).value<decltype( m_ ## id )>();
 	PTI_STR_LIST(X);
 #undef X
 

@@ -98,10 +98,10 @@ public:
 
 	const_iterator cbegin() const noexcept { return std::cbegin(m_the_list); }
 	iterator begin() { return m_the_list.begin(); }
-	const_iterator begin() const { return m_the_list.cbegin(); }
+	const_iterator begin() const { return m_the_list.begin(); }
 	const_iterator cend() const noexcept { return std::cend(m_the_list); }
 	iterator end() { return m_the_list.end(); }
-	const_iterator end() const { return m_the_list.cend(); }
+	const_iterator end() const { return m_the_list.end(); }
 
 	long size() const noexcept { return m_the_list.size(); }
 	bool empty() const noexcept { return m_the_list.empty(); }
@@ -124,6 +124,6 @@ protected:
 };
 
 Q_DECLARE_METATYPE(QVariantHomogenousList);
-//Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE(QVariantHomogenousList);
+// Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE(QVariantHomogenousList);
 
 #endif // QVARIANTHOMOGENOUSLIST_H

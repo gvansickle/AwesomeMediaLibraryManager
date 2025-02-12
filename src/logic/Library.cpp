@@ -199,11 +199,11 @@ void Library::fromVariant(const QVariant& variant)
 #undef X
 
 	// This is a local.
-	qint64 num_lib_entries = map.value(XMLTAG_NUM_LIBRARY_ENTRIES).value<qint64>();
+	qint64 num_lib_entries = map.at(XMLTAG_NUM_LIBRARY_ENTRIES).value<qint64>();
 
 	//QVariantHomogenousList list("library_entries", "library_entry");
 	//map_read_field_or_warn(map, XMLTAG_LIBRARY_ENTRIES, &list);
-	QVariant qvar_list = map.value(XMLTAG_LIBRARY_ENTRIES);
+	QVariant qvar_list = map.at(XMLTAG_LIBRARY_ENTRIES);
 	Q_ASSERT(qvar_list.isValid());
 	QVariantHomogenousList list("m_lib_entries", "library_entry");
 	list = qvar_list.value<QVariantHomogenousList>();

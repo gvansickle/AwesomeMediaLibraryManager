@@ -200,7 +200,7 @@ void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 #endif
 
 	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
-	child_var_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
+	child_var_list = map.at(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
 
 	append_children_from_variant<AbstractTreeModelItem>(this, child_var_list);
 

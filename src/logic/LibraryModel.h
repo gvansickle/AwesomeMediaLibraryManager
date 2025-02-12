@@ -183,7 +183,7 @@ public Q_SLOTS:
     void SLOT_onIncomingPopulateRowWithItems_Single(QPersistentModelIndex pindex, std::shared_ptr<LibraryEntry> item);
 	void SLOT_onIncomingPopulateRowWithItems_Multiple(QPersistentModelIndex pindex, LibraryModel::StdVecOfSharedPtrToLibEntry items);
 
-    virtual QVector<VecLibRescannerMapItems> getLibRescanItems();
+    virtual QList<VecLibRescannerMapItems> getLibRescanItems();
 
 	/// Let's try something different.
 	virtual void startRescan();

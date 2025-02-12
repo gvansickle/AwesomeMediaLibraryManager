@@ -282,7 +282,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 		// Start of the dirtrav tap callback.  This should be a non-main thread.
 		AMLM_ASSERT_NOT_IN_GUITHREAD();
 		// AMLM_ASSERT_IN_GUITHREAD();
-qDb() << "IN STREAMING TAP CALLBACK";
+qDb() << "IN STREAMING THEN CALLBACK";
 
 		std::shared_ptr<ScanResultsTreeModel> tree_model_sptr = AMLM::Core::self()->getScanResultsTreeModel();
 		Q_ASSERT(tree_model_sptr);
@@ -375,9 +375,6 @@ qDb() << "IN STREAMING TAP CALLBACK";
 #endif
     })
 
-	/// DEBUG TEMP
-	// return;
-
 	// tail_future /// @todo QT6 TEMP
 //		qDb() << "END OF DSR TAP:" << M_ID_VAL(tree_model_item_future);
         // return;
@@ -429,7 +426,7 @@ qDb() << "IN STREAMING TAP CALLBACK";
 ///                        ^^ Pre QT6 this was .stap().
 #endif
     streaming_then(tree_model_item_future,
-#if TREE_ITEM_MODEL_POP_NON_GUI_THREAD != 0
+#if TREE_ITEM_MODEL_POP_NON_GUI_THREAD != 1
                 // this,
 #endif
                               [](ExtFuture<SharedItemContType> new_items_future, int begin, int end){
@@ -510,7 +507,7 @@ sw.print_results();
 #endif
 //			qDb() << "TREEMODELPTR:" << M_ID_VAL(tree_model_ptr->rowCount());
 		}
-})
+    })
 #endif
 	.then([&](ExtFuture<SharedItemContType> f){
 		Q_ASSERT(f.isFinished());
@@ -524,7 +521,8 @@ sw.print_results();
 		rescan_items_in_promise = std::move(rescan_items_in_promise),
 		tree_model_ptr=tree_model,
                  // kjob=FWD_DECAY_COPY(QPointer<AMLMJobT<ExtFuture<DirScanResult>>>, dirtrav_job)
-                 kjob=dirtrav_job
+                 kjob=dirtrav_job,
+                 lib_rescan_job
 		  ](ExtFuture<Unit> future_unit) mutable {
 
 			AMLM_ASSERT_IN_GUITHREAD();
@@ -721,20 +719,15 @@ M_WARNING("PUT THIS BACK");
 	});
 #elif 1
 
-// QT6	// auto* efw = ManagedExtFutureWatcher_detail::get_managed_qfuture_watcher<QString>();
-// QT6	// connect_or_die(efw, &QFutureWatcher<QString>::resultReadyAt, efw, [this, qurl_future](int i){
-	connect_or_die(this, &LibraryRescanner::SIGNAL_FileUrlQString, m_current_libmodel, &LibraryModel::SLOT_onIncomingFilename);
-    streaming_then(qurl_future, [=](QFuture<QString> qurl_future, int i, int j) {
+    auto* efw = ManagedExtFutureWatcher_detail::get_managed_qfuture_watcher<QString>();
+    connect_or_die(efw, &QFutureWatcher<QString>::resultReadyAt, efw, [this, qurl_future, dirtrav_job, lib_rescan_future](int i){
 			/// @todo Maybe coming in out of order.
 			QString url_str = qurl_future.resultAt(i);
 			Q_EMIT SIGNAL_FileUrlQString(url_str);
 	});
-
-
-// QT6	// connect_or_die(this, &LibraryRescanner::SIGNAL_FileUrlQString, m_current_libmodel, &LibraryModel::SLOT_onIncomingFilename);
+    connect_or_die(this, &LibraryRescanner::SIGNAL_FileUrlQString, m_current_libmodel, &LibraryModel::SLOT_onIncomingFilename);
 	/// @todo Self-destruct.
-// QT6	efw->setFuture(qurl_future);
-
+    efw->setFuture(qurl_future);
 #else
 	qurl_future.then(this, [=](ExtFuture<QString> ef){
 		Q_ASSERT(ef.isFinished());
