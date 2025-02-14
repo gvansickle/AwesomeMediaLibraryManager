@@ -215,10 +215,10 @@ void TrackMetadata::fromVariant(const QVariant& variant)
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
-M_TODO("REMOVE");
-#define X(id) m_ ## id = map.at( # id ).value<decltype( m_ ## id )>();
-	PTI_STR_LIST(X);
-#undef X
+// M_TODO("REMOVE");
+// #define X(id) m_ ## id = map.at( # id ).value<decltype( m_ ## id )>();
+// 	PTI_STR_LIST(X);
+// #undef X
 
 	// Load the index list.
 	QVariantHomogenousList index_list("m_indexes", "index");

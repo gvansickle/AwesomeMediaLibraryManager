@@ -102,8 +102,12 @@ std::mutex CueSheet::m_libcue_mutex;
 
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering CueSheet";
-    qRegisterMetaType<CueSheet>()
-    ;});
+    qRegisterMetaType<CueSheet>();
+	QMetaType::registerConverter<std::__cxx11::basic_string<char>, QString>([](const std::__cxx11::basic_string<char>& str){ return QString::fromUtf8(str); });
+	QMetaType::registerConverter<QString, std::__cxx11::basic_string<char>>([](const QString& str){
+		return str.toStdString();
+		});
+	});
 
 using strviw_type = QLatin1String;
 

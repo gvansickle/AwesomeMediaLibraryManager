@@ -296,7 +296,8 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 {
 	std::unique_lock write_lock(m_rw_mutex);
 
-	InsertionOrderedMap<QString, QVariant> map;
+    // InsertionOrderedMap<QString, QVariant> map;
+    QVariantInsertionOrderedMap map;
 	qviomap_from_qvar_or_die(&map, variant);
 
 	/// @todo This should have a list of known base directory paths,

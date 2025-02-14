@@ -37,7 +37,7 @@
 #include <queue>
 
 // Qt5
-#include <QtWidgets>
+#include <QModelIndex>
 #include <QAbstractItemModelTester>
 
 // Ours

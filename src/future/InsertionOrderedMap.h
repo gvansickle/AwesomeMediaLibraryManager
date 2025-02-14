@@ -137,7 +137,7 @@ public:
 		auto it = this->find(key);
 		if(it == m_vector_of_elements.cend())
 		{
-			throw std::out_of_range(std::string("InsertionOrderedMap(): no such element at():")/* + std::to_string(key)*/);
+			throw std::out_of_range(std::string("InsertionOrderedMap(): no such element at():") + key.toUtf8().toStdString());
 		}
 		return it->second;
 	}
@@ -285,7 +285,7 @@ protected:
 template <typename KeyType, typename ValueType>
 QDebug operator<<(QDebug dbg, const InsertionOrderedMap<KeyType, ValueType>& map)
 {
-#warning TODO
+    // Q_ASSERT(0);// TODO
 	return dbg;
 }
 
@@ -293,9 +293,9 @@ QDebug operator<<(QDebug dbg, const InsertionOrderedMap<KeyType, ValueType>& map
 
 // Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE(InsertionOrderedMap);
 Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(InsertionOrderedMap);
-//using QVariantInsertionOrderedMap = InsertionOrderedMap<QString, QVariant>;
+using QVariantInsertionOrderedMap = InsertionOrderedMap<QString, QVariant>;
 // Q_DECLARE_METATYPE_TEMPLATE_2ARG(InsertionOrderedMap);
-//Q_DECLARE_METATYPE(QVariantInsertionOrderedMap);
+Q_DECLARE_METATYPE(QVariantInsertionOrderedMap);
 //Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(InsertionOrderedMap);
 
 

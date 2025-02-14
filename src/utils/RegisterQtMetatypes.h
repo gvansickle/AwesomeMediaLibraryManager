@@ -29,6 +29,7 @@
 #include <deque>
 #include <optional>
 #include <utility> // for pair.
+#include <string>
 
 // Qt
 #include <QObject>

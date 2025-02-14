@@ -28,7 +28,7 @@
 #include <utils/DebugHelpers.h>
 
 
-const QString f_split_str = QStringLiteral(R"(^)");
+static const QString f_split_str = QStringLiteral(R"(^)");
 
 static QStringList escape(const QStringList &strlist, const QString& char_to_escape)
 {

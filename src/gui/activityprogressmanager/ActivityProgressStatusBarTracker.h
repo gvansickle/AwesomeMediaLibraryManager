@@ -253,7 +253,7 @@ public Q_SLOTS:
      * @param kjob
      */
 //    template <class JobTypePtr>
-    void registerJob(/*JobTypePtr*/SHARED_PTR<AMLMJob> kjob)
+    void registerJob(/*JobTypePtr*/QSharedPointer<AMLMJob> kjob)
     {
 //        if constexpr (std::is_convertible_v</*JobTypePtr*/std::shared_ptr<AMLMJob>, std::weak_ptr<AMLMJob>>)
 //        {

@@ -1706,7 +1706,7 @@ M_WARNING("HACKISH, MAKE THIS BETTER");
 		onRemoveDirFromLibrary(l);
 	}
 
-	for(const auto& url : qAsConst(lib_root_urls))
+	for(const auto& url : std::as_const(lib_root_urls))
 	{
 		openFileLibrary(url);
 	}

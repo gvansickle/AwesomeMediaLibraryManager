@@ -44,7 +44,9 @@
 class LibraryEntry : public virtual ISerializable, public virtual enable_shared_from_this_virtual<LibraryEntry>
 {
 public:
-	M_GH_RULE_OF_FIVE_DEFAULT_C21(LibraryEntry);
+    M_GH_RULE_OF_THREE_DEFAULT_C21(LibraryEntry)
+    LibraryEntry(const LibraryEntry&& other) = delete;
+    LibraryEntry& operator=(LibraryEntry&& other) = delete;
 	~LibraryEntry() override = default;
 
     explicit LibraryEntry(const QUrl& m_url);

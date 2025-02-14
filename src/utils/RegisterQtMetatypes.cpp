@@ -173,6 +173,8 @@ void RegisterQtMetatypes()
 	// Register the types we want to be able to use in Qt's queued signal and slot connections or in QObject's property system.
 	qRegisterMetaType<LibraryEntry>();
 	qRegisterMetaType<PlaylistModelItem>();
+	qRegisterMetaType<std::string>();
+	// qRegisterMetaType<std::basic_string<char>>();
 	qRegisterMetaType<std::shared_ptr<LibraryEntry>>();
 	qRegisterMetaType<std::shared_ptr<PlaylistModelItem>>();
 	

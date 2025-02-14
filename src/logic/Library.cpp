@@ -23,7 +23,7 @@
 #include <QDateTime>
 #include <QDebug>
 #include <QFileDevice>
-#include <QtConcurrent>
+#include <QUrl>
 
 // Ours
 #include <utils/DebugHelpers.h>

@@ -253,7 +253,7 @@ void list_read_all_fields_or_warn(const ListType& list, OutListType<ListEntryTyp
 		return;
 	}
 
-	for(const QVariant& qvar : qAsConst(list))
+	for(const QVariant& qvar : std::as_const(list))
 	{
 		throwif<SerializationException>(!qvar.isValid(), "Invalid QVariant");
 //		throwif<SerializationException>(!qvar.canConvert<ListEntryType>(), "Can't convert QVariant contents of list to ListEntryType");

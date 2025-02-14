@@ -158,7 +158,7 @@ public:
 
 		// All connections have already been made, so set the watched future.
 		// "To avoid a race condition, it is important to call this function after doing the connections."
-        /// QT6 m_ext_watcher->setFuture(m_ext_future);
+        m_ext_watcher->setFuture(m_ext_future);
 	}
 
 protected: //Q_SLOTS:
@@ -323,7 +323,7 @@ protected:
     {
         /// @note We're in an arbitrary thread here probably without an event loop.
 
-        qDb() << "ExtFuture<T> state:" << m_ext_future; //.state();
+        qDb() << "ExtFuture<T> state:" << m_ext_future;
 
         // Check if we were canceled before we were started.
         if(m_ext_future.isCanceled())
@@ -379,8 +379,8 @@ protected:
         /// futureInterface.reportFinished();
         /// @endcode
         /// So it seems we should be safe doing the same thing.
-
-        if(m_ext_future.isPaused())
+        /// @note 20250212: Do we even need to care about suspend/resume here?  I'm not entire sure.
+        if(m_ext_future.isSuspending() || m_ext_future.isSuspended())
         {
             // ExtAsync::run<> is paused, so wait for it to be resumed.
             // It won't be paused here if the future was canceled.

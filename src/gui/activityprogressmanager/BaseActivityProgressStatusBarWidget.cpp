@@ -79,7 +79,8 @@ void BaseActivityProgressStatusBarWidget::addButton(QToolButton *new_button)
     layout()->addWidget(new_button);
 }
 
-void BaseActivityProgressStatusBarWidget::description(KJob *kjob, const QString &title, const QPair<QString, QString> &field1, const QPair<QString, QString> &field2)
+void BaseActivityProgressStatusBarWidget::description(KJob *kjob, const QString &title,
+    const std::pair<QString, QString> &field1, const std::pair<QString, QString> &field2)
 {
     qDb() << "GOT DESCRIPTION FROM KJOB:" << kjob << "TITLE:" << title;
     /// @todo Don't really have anywhere to put fields.

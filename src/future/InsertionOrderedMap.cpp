@@ -25,3 +25,8 @@
 // Qt5
 #include <utils/RegisterQtMetatypes.h>
 
+AMLM_QREG_CALLBACK([](){
+	qIn() << "Registering InsertionOrderedMap";
+	qRegisterMetaType<InsertionOrderedMap<QString, QVariant>>();
+	qRegisterMetaType<QVariantInsertionOrderedMap>();
+	});

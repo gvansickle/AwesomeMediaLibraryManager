@@ -89,8 +89,8 @@ public Q_SLOTS:
     virtual void resumed(KJob*);
 
     virtual void description(KJob* kjob, const QString& title,
-                             const QPair<QString, QString> &field1 = {QString(), QString()},
-                        const QPair<QString, QString> &field2 = {QString(), QString()});
+                             const std::pair<QString, QString> &field1 = {QString(), QString()},
+                        const std::pair<QString, QString> &field2 = {QString(), QString()});
     virtual void infoMessage(KJob* kjob, const QString &text);
     virtual void warning(KJob* kjob, const QString &text);
 

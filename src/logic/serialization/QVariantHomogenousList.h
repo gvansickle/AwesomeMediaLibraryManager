@@ -28,14 +28,16 @@
 // Std C++
 #include <deque>
 
-// Qt5
+// Qt
 #include <QString>
 #include <QVariantList>
 
 // Ours.
+// #include <ISerializable.h> //<< This includes this file.
 #include <utils/DebugHelpers.h>
 #include <future/guideline_helpers.h>
 
+// Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE(std::deque);
 
 class QVariantHomogenousList //: public QVariantList
 {
@@ -43,7 +45,7 @@ public:
 	/// @name Member types
 	/// @{
 	using value_type = QVariant;
-	using underlying_container_type = std::deque<value_type>;
+	using underlying_container_type = QList<value_type>;//std::deque<value_type>;
 	using const_iterator = typename underlying_container_type::const_iterator;
 	using iterator = typename underlying_container_type::iterator;
 	/// @}
@@ -115,6 +117,23 @@ public:
 		return QVariant::fromValue(*this);
 	}
 
+	// QVariant toVariant() const
+	// {
+	// 	QVariantList retval;
+	// 	retval.append(m_list_tag);
+	// 	retval.append(m_list_item_tag);
+	// 	retval.append(m_the_list);
+	// 	return retval;
+	// }
+	//
+	// void fromVariant(const QVariant& variant)// override;
+	// {
+	// 	QVariantList list = variant.toList();
+	//
+	// 	m_list_tag = list[0].toString();
+	// 	m_list_item_tag = list[1].toString();
+	// 	m_the_list = list[2].toList();
+	// }
 
 protected:
 	QString m_list_tag {};
@@ -124,6 +143,6 @@ protected:
 };
 
 Q_DECLARE_METATYPE(QVariantHomogenousList);
-// Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE(QVariantHomogenousList);
+// Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE(QVariantHomogenousList); // QVariantHomogenousList isn't a template, so this macro doesn't work.
 
 #endif // QVARIANTHOMOGENOUSLIST_H

@@ -276,9 +276,9 @@ protected:
 	static void set_map_class_info(const T* self, MapType* map)
 	{
 		int id = qMetaTypeId<T>();
-		qDb() << "QMetaType:" << id << QMetaType::typeName(id);// << QVariant(*this).typeName();
+        qDb() << "QMetaType:" << id << QMetaType::fromType<T>().name();// << QVariant(*this).typeName();
 		map->m_id = id;
-		map->m_class = QMetaType::typeName(id);
+		map->m_class = QMetaType::fromType<T>().name();
 	}
 
 	template <class MapType>
@@ -297,7 +297,7 @@ protected:
 	static void dump_map_class_info(const T* self, MapType* map)
 	{
 		int id = qMetaTypeId<T>();
-		qDb() << "QMetaType:" << id << QMetaType::typeName(id);
+		qDb() << "QMetaType:" << id << QMetaType::fromType<T>().name();
 //		map->m_id = id;
 //		map->m_class = QMetaType::typeName(id);
 	}

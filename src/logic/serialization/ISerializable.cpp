@@ -41,6 +41,7 @@ AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering InsertionOrderedMap<QString, QVariant> alias QVariantInsertionOrderedMap";
 	qRegisterMetaType<InsertionOrderedMap<QString, QVariant>>();
 	qRegisterMetaType<std_pair_QString_QVariant>();
+	qRegisterMetaType<SerializableQVariantList>();
 //	qRegisterMetaType<InsertionOrderedMap<QString, QVariant>>("QVariantInsertionOrderedMap");
 //	AMLMRegisterQFlagQStringConverters<DirScanResult::DirPropFlags>();
 });
@@ -54,11 +55,13 @@ QVariant SerializableQVariantList::toVariant() const
 	Q_ASSERT(!m_list_item_tag.isEmpty());
 
 	InsertionOrderedMap<QString, QVariant> map;
-	// Return a QMap with a single QVariant(QVariantHomogenousList) item.
+	// Return a QMap with a single QVariant(SerializableQVariantList) item.
 	/// @note Slicing warning, but this is ok here.
-	QVariantHomogenousList list = *this;
+	/// @note Is it really?
+	SerializableQVariantList list = *this;
 
-	map.insert(m_list_tag, QVariant::fromValue(list));
+	// map.insert(m_list_tag, QVariant::fromValue(list));
+	map.insert(m_list_tag, list);
 	return map;
 }
 
@@ -72,13 +75,17 @@ void SerializableQVariantList::fromVariant(const QVariant& variant)
 	InsertionOrderedMap<QString, QVariant> map = variant.value<InsertionOrderedMap<QString, QVariant>>();
 
 	Q_ASSERT(map.contains(m_list_tag));
-//	qDb() << M_ID_VAL(m_list_tag);
-	Q_ASSERT(QMetaType::canConvert(QMetaType::fromType<decltype(map.at(m_list_tag))>(),QMetaType::fromType<QVariantHomogenousList>()));
+    qDb() << M_ID_VAL(m_list_tag);
+    auto type1 = QMetaType::fromType<decltype(map.at(m_list_tag))>();
+    auto type2 = QMetaType::fromType<SerializableQVariantList>();
+    qDb() << M_ID_VAL(type1);
+    qDb() << M_ID_VAL(type2);
+    // Q_ASSERT(QMetaType::canConvert(type1, type2));
 
-	QVariantHomogenousList qvl = map.at(m_list_tag).value<QVariantHomogenousList>();
+	SerializableQVariantList qvl = map.at(m_list_tag).value<SerializableQVariantList>();
 
-	for(const auto& e : qvl)
+	for(const QVariant& entry : qvl)
 	{
-		this->push_back(e);
+		this->push_back(entry);
 	}
 }

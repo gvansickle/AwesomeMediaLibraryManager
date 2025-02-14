@@ -118,7 +118,7 @@ void MetadataDockWidget::connectToView(MDITreeViewBase* view)
     m_proxy_model->setSelectionModel(view->selectionModel());
 }
 
-void MetadataDockWidget::onDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles)
+void MetadataDockWidget::onDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QList<int>& roles)
 {
 	qDebug() << "Data changed:" << topLeft << bottomRight << roles;
 	

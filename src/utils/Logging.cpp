@@ -183,7 +183,7 @@ void Logging::dumpEnvVars()
 
 
 	qInfo() << "QT/KDE Environment variables:";
-	for(const auto& str : qAsConst(known_qt_kde_vars))
+	for(const auto& str : std::as_const(known_qt_kde_vars))
 	{
 		qInfo() << str + ":" << env.value(str, "<unset or empty>");
 	}
@@ -194,14 +194,14 @@ void Logging::dumpEnvVars()
 	qInfo() << "QGuiApplication::libraryPaths():" << QGuiApplication::libraryPaths();
 
 	qInfo() << "XDG Environment variables:";
-	for(const auto& str : qAsConst(known_env_vars))
+	for(const auto& str : std::as_const(known_env_vars))
 	{
 		qInfo() << str + ":" << env.value(str, "<unset or empty>");
 	}
 
 	qInfo() << "XDG Base Directory Specification environment variables:";
 
-	for(const auto& str : qAsConst(known_xdg_base_dir_spec_vars))
+	for(const auto& str : std::as_const(known_xdg_base_dir_spec_vars))
 	{
 		qInfo() << str + ":" << env.value(str, "<unset or empty>");
 	}

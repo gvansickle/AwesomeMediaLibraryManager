@@ -212,7 +212,7 @@ void AMLMTagMap::fromVariant(const QVariant& variant)
 		Q_ASSERT(qvar_values.isValid());
 		Q_ASSERT(qvar_values.canConvert<QVariantHomogenousList>());
 		qvector_of_values = qvar_values.value<QVariantHomogenousList>();
-		for(const auto& value : qAsConst(qvector_of_values))
+		for(const auto& value : std::as_const(qvector_of_values))
 		{
 			m_the_map.insert(std::make_pair(tostdstr(key), tostdstr(value.toString())));
 		}
