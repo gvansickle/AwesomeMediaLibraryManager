@@ -25,6 +25,7 @@
 #include "SettingsPageAppearance.h"
 #include "SettingsPageLibrary.h"
 
+// Qt
 #include <QApplication>
 #include <QLayout>
 #include <QtWidgets/QStackedWidget>
@@ -32,19 +33,20 @@
 #include <QDataWidgetMapper>
 #include <QDebug>
 #include <QStandardItem>
+#include <QComboBox>
+#include <QRegularExpression>
 
+// Kf
 #include <KCoreConfigSkeleton>
+#include <KComboBox>
 
-#include <qregexp.h>
 #include <utils/DebugHelpers.h>
 #include "../MainWindow.h"
 
 #include <AMLMSettings.h>
 #include <gui/Theme.h>
 
-#include <KComboBox>
-#include <QComboBox>
-#include <QRegularExpression>
+
 
 SettingsDialog::SettingsDialog(QWidget *parent, const char* name, KConfigSkeleton *config)
 	: KConfigDialog( parent, name, config )
@@ -57,7 +59,7 @@ SettingsDialog::SettingsDialog(QWidget *parent, const char* name, KConfigSkeleto
 //	addPage(new SettingsPageLibrary(this), tr("Music Library") );
 	/// ...
 
-	connect(this, &KConfigDialog::settingsChanged, this, &SettingsDialog::onSettingsChanged);
+	connect_or_die(this, &KConfigDialog::settingsChanged, this, &SettingsDialog::onSettingsChanged);
 
 ///// @todo experiment
 //    QRegExp re("^kcfg_.*");
@@ -157,7 +159,7 @@ void SettingsDialog::setupWidget(KComboBox *box, KConfigSkeletonItem *item)
 {
     if(box && item)
     {
-
+        /// @todo ??? This has always been empty.
     }
 }
 

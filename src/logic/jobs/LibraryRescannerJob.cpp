@@ -151,46 +151,53 @@ void library_metadata_rescan_task(QPromise<MetadataReturnVal>& promise, AMLMJob*
 #elif 1 //Qt6
     promise.setProgressValueAndText(0, status_text);
 #endif
-	// Wait for the work to come in.
-	qDb() << "Waiting for incoming items";
-    QList<VecLibRescannerMapItems> items_to_rescan = in_future.results();
-	qDb() << "Got items:" << items_to_rescan.size() << in_future;
 
-	/// @todo
-	//setTotalAmountAndSize(KJob::Unit::Files, m_items_to_rescan.size());
-
-	promise.setProgressRange(0, items_to_rescan.size());
-	promise.setProgressValueAndText(0, status_text);
-
-	qulonglong num_items = 0;
-	for(QList<VecLibRescannerMapItems>::const_iterator i = items_to_rescan.cbegin(); i != items_to_rescan.cend(); ++i)
-	{
-		qDb() << "Item number:" << num_items;
-
-		/// @todo eliminate the_job ptr.
-		MetadataReturnVal a = /*the_job->*/refresher_callback(*i);
-
-		// Report the new results to The Future.
-		promise.addResult(a);
-
-		num_items++;
-
-		/// @todo
-//		setProcessedAmountAndSize(KJob::Unit::Files, num_items);
-		/// @note New, temp.
-		promise.setProgressValue(num_items);
-
+	// while (!in_future.isCanceled())
+	// {
 		promise.suspendIfRequested();
-		if(promise.isCanceled())
+		if (promise.isCanceled())
 		{
 			// We've been cancelled.
 			qIn() << "CANCELLED";
-			break;
+			return;
 		}
-	}
 
+		// Wait for the work to come in.
+		qDb() << "Waiting for incoming items";
+	    QList<VecLibRescannerMapItems> items_to_rescan = in_future.results();
+		qDb() << "Got items:" << items_to_rescan.size() << in_future;
+
+		/// @todo
+		//setTotalAmountAndSize(KJob::Unit::Files, m_items_to_rescan.size());
+
+		promise.setProgressRange(0, items_to_rescan.size());
+		promise.setProgressValueAndText(0, status_text);
+
+		qulonglong num_items = 0;
+		for(QList<VecLibRescannerMapItems>::const_iterator i = items_to_rescan.cbegin(); i != items_to_rescan.cend(); ++i)
+		{
+			qDb() << "Item number:" << num_items;
+
+			/// @todo eliminate the_job ptr.
+			MetadataReturnVal a = /*the_job->*/refresher_callback(*i);
+
+			// Report the new results to The Future.
+			promise.addResult(a);
+
+			num_items++;
+
+			/// @todo
+			//		setProcessedAmountAndSize(KJob::Unit::Files, num_items);
+			/// @note New, temp.
+			promise.setProgressValue(num_items);
+		}
+
+		// if (in_future.isFinished())
+		// {
+		// 	break;
+		// }
+	// }
 	// And we're done.
-//	promise.reportFinished();
 }
 
 

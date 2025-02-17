@@ -42,7 +42,6 @@
 #include <QtConcurrentRun>
 #include <QFuture>
 #include <QFutureWatcher>
-// #include <QFutureInterface>
 #include <QThread>
 #include <QPair>
 #include <QStringList> // For template shenanigans.
@@ -1542,8 +1541,13 @@ extern template class ExtFuture<QByteArray>;
 
 #endif // !QT6
 
+// template <class T>
+// class ExtFuture<T> : public QFuture<T>
+// {
+// }
 template <class T>
 using ExtFuture = QFuture<T>;
+
 
 // From ExtFuture work:
 //        {QFutureInterfaceBase::NoState, "NoState"},
@@ -1581,7 +1585,8 @@ QString state_str(const ExtFuture<T>& future)
  * @param function
  * @return  A copy of the passed-in @a future.
  */
-template <typename T, typename Function>
+template <typename T, typename Function,
+	REQUIRES(std::is_invocable_r_v<void, Function, const QFuture<T>&, int, int>)>
 QFuture<T> streaming_then(QFuture<T> future, Function function)
 {
     auto ret_future = QtConcurrent::run(QThreadPool::globalInstance(), [function](QFuture<T> future)
@@ -1590,7 +1595,7 @@ QFuture<T> streaming_then(QFuture<T> future, Function function)
 
 		QFutureWatcher<T>* watcher = new QFutureWatcher<T>();
     	QEventLoop loop;
-		QObject::connect(watcher, &QFutureWatcher<T>::resultsReadyAt, watcher,
+		connect_or_die(watcher, &QFutureWatcher<T>::resultsReadyAt, watcher,
 						[future, function](int begin, int end)
 						{
 							qDebug() << "IN LAMBDA, future: " << future;

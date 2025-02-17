@@ -46,8 +46,8 @@ public:
 	/// @{
 	using value_type = QVariant;
 	using underlying_container_type = QList<value_type>;//std::deque<value_type>;
-	using const_iterator = typename underlying_container_type::const_iterator;
-	using iterator = typename underlying_container_type::iterator;
+	using const_iterator = underlying_container_type::const_iterator;
+	using iterator = underlying_container_type::iterator;
 	/// @}
 
 public:
@@ -116,24 +116,6 @@ public:
 	{
 		return QVariant::fromValue(*this);
 	}
-
-	// QVariant toVariant() const
-	// {
-	// 	QVariantList retval;
-	// 	retval.append(m_list_tag);
-	// 	retval.append(m_list_item_tag);
-	// 	retval.append(m_the_list);
-	// 	return retval;
-	// }
-	//
-	// void fromVariant(const QVariant& variant)// override;
-	// {
-	// 	QVariantList list = variant.toList();
-	//
-	// 	m_list_tag = list[0].toString();
-	// 	m_list_item_tag = list[1].toString();
-	// 	m_the_list = list[2].toList();
-	// }
 
 protected:
 	QString m_list_tag {};

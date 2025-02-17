@@ -42,7 +42,6 @@ AMLM_QREG_CALLBACK([](){
 	qRegisterMetaType<InsertionOrderedMap<QString, QVariant>>();
 	qRegisterMetaType<std_pair_QString_QVariant>();
 	qRegisterMetaType<SerializableQVariantList>();
-//	qRegisterMetaType<InsertionOrderedMap<QString, QVariant>>("QVariantInsertionOrderedMap");
 //	AMLMRegisterQFlagQStringConverters<DirScanResult::DirPropFlags>();
 });
 
@@ -60,7 +59,6 @@ QVariant SerializableQVariantList::toVariant() const
 	/// @note Is it really?
 	SerializableQVariantList list = *this;
 
-	// map.insert(m_list_tag, QVariant::fromValue(list));
 	map.insert(m_list_tag, list);
 	return map;
 }
@@ -75,11 +73,11 @@ void SerializableQVariantList::fromVariant(const QVariant& variant)
 	InsertionOrderedMap<QString, QVariant> map = variant.value<InsertionOrderedMap<QString, QVariant>>();
 
 	Q_ASSERT(map.contains(m_list_tag));
-    qDb() << M_ID_VAL(m_list_tag);
-    auto type1 = QMetaType::fromType<decltype(map.at(m_list_tag))>();
-    auto type2 = QMetaType::fromType<SerializableQVariantList>();
-    qDb() << M_ID_VAL(type1);
-    qDb() << M_ID_VAL(type2);
+    // qDb() << M_ID_VAL(m_list_tag);
+    // auto type1 = QMetaType::fromType<decltype(map.at(m_list_tag))>();
+    // auto type2 = QMetaType::fromType<SerializableQVariantList>();
+    // qDb() << M_ID_VAL(type1);
+    // qDb() << M_ID_VAL(type2);
     // Q_ASSERT(QMetaType::canConvert(type1, type2));
 
 	SerializableQVariantList qvl = map.at(m_list_tag).value<SerializableQVariantList>();

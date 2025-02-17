@@ -102,15 +102,6 @@ inline void PrintTo(const ExtFuture<T> &ef, ::std::ostream *os)
     PrintTo(str, os);
 }
 
-/// To let Google Test print QFutures.
-template <class T>
-inline void PrintTo(const QFuture<T> &qf, ::std::ostream *os)
-{
-	QString str;
-	QDebug dbg(&str);
-	dbg << toString(ExtFutureState::state(qf));
-	PrintTo(str, os);
-}
 
 QT_END_NAMESPACE
 

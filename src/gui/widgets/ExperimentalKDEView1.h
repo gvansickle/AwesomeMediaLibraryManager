@@ -10,7 +10,7 @@
 #include <KItemViews/KCategorizedSortFilterProxyModel>
 #include <KItemViews/KCategoryDrawer>
 #include <KItemModels/KRearrangeColumnsProxyModel>
-#elif 1 // QT6
+#elif 1 // KF6
 #include <KF6/KItemViews/KCategorizedSortFilterProxyModel>
 #include <KF6/KItemViews/KCategoryDrawer>
 #include <KF6/KItemModels/KRearrangeColumnsProxyModel>

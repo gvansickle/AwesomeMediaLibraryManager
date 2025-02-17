@@ -107,6 +107,7 @@ void DirScanFunction(QPromise<DirScanResult>& promise, AMLMJob* /*amlmJob*/,
 //            setProcessedAmountAndSize(KJob::Unit::Directories, num_discovered_dirs);
 //            setTotalAmountAndSize(KJob::Unit::Files, num_possible_files+1);
 			promise.setProgressRange(0, num_possible_files + 1);
+			promise.setProgressValue(num_files_found_so_far);
 		}
 		else if(file_info.isFile())
 		{
@@ -142,21 +143,15 @@ void DirScanFunction(QPromise<DirScanResult>& promise, AMLMJob* /*amlmJob*/,
 //                setTotalAmountAndSize(KJob::Unit::Files, num_possible_files);
 				promise.setProgressRange(0, num_possible_files);
 			}
-
-			/// @todo
-//			amlmJob->setProcessedAmountAndSize(KJob::Unit::Files, num_files_found_so_far);
-			/// NEW
 			promise.setProgressValue(num_files_found_so_far);
 
 			// Report the URL we found to the future.
-			/// @todo Commenting this out results in a responsive GUI.
             promise.addResult(dir_scan_result);
 M_TODO("QT6")
             qDb() << "NUM FILES:" << num_files_found_so_far; // << ", per promise:" << promise.resultCount();
 		}
 
 		// Have we been canceled?
-        // if(promise.HandlePauseResumeShouldICancel())
         promise.suspendIfRequested();
         if(promise.isCanceled())
 		{
@@ -176,12 +171,10 @@ M_TODO("QT6")
 		promise.setProgressValueAndText(num_files_found_so_far, status_text);
 	}
 
-// Qt6	promise.reportFinished();
-
 	sw.stop();
 	sw.print_results();
 
-// QT6    qDb() << "RETURNING, QPromise:" << promise; ///< STARTED only, last output of pool thread
+	// QtConcurrent::run() does the finish for us, so we just return here.
 	return;
 }
 

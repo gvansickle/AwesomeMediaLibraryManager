@@ -237,9 +237,6 @@ void XmlSerializer::InnerWriteVariantToStream(const QVariant& variant, QXmlStrea
 			case QMetaType::QVariantMap:
 				writeVariantMapToStream(variant, *xmlstream);
 				break;
-			// case QMetaType::QDateTime:
-			// 	writeQDateTimeToStream(variant, *xmlstream);
-			// 	break;
 			default:
 				writeVariantValueToStream(variant, *xmlstream);
 				break;
@@ -330,21 +327,6 @@ void XmlSerializer::writeVariantOrderedMapToStream(const QVariant& variant, QXml
 	for(const auto& i : omap)
 	{
 		writeVariantToStream(i.first, i.second, xmlstream);
-	}
-}
-
-void XmlSerializer::writeQDateTimeToStream(const QVariant& variant_datetime, QXmlStreamWriter& xmlstream)
-{
-	Q_ASSERT(variant_datetime.isValid());
-	QDateTime dt = variant_datetime.toDateTime();
-	if (dt.isValid())
-	{
-		xmlstream.writeAttribute("valid", "true");
-		xmlstream.writeCharacters(dt.toString(Qt::ISODate));
-	}
-	else
-	{
-		xmlstream.writeAttribute("valid", "false");
 	}
 }
 
@@ -568,28 +550,6 @@ QVariant XmlSerializer::readVariantOrderedMapFromStream(std::vector<QXmlStreamAt
 	return QVariant::fromValue(map);
 }
 
-QVariant XmlSerializer::readQDateTimeFromStream(QXmlStreamReader& xmlstream)
-{
-	QDateTime retval;
-
-	QXmlStreamAttributes attributes = xmlstream.attributes();
-	bool is_valid = attributes.value("valid").toString() == "true";
-
-	Q_ASSERT(xmlstream.isStartElement());
-
-	QString element_text = xmlstream.readElementText();
-
-	if (is_valid)
-	{
-		retval = QDateTime::fromString(xmlstream.name().toString(), Qt::ISODate);
-	}
-	else
-	{
-		retval = QDateTime();
-	}
-	return retval;
-}
-
 QVariant XmlSerializer::readVariantValueFromStream(QXmlStreamReader& xmlstream)
 {
 	// The lowest-level read function.
@@ -617,12 +577,8 @@ QVariant XmlSerializer::readVariantValueFromStream(QXmlStreamReader& xmlstream)
 	// QMetaType metatype_v = QVariant::nameToType(attr_type_str.toStdString().c_str());
 	QMetaType metatype = QMetaType::fromName(attr_type_str.toStdString().c_str());
 	const char* metatype_name = metatype.name();
-	// if (metatype != metatype_v)
-	// {
-	// 	// qWr() << "METATYPES DIFFER:" << M_NAME_VAL(metatype) << "(name: " << metatype_name << ") !="
-	// 	// 	<< M_NAME_VAL(metatype_v) << "(" << metatype_v << ")";
-	// }
-	qWr() << "READ FROM XML: Type:" << attr_type_str << ", Element text:" << element_text;
+
+	// qWr() << "READ FROM XML: Type:" << attr_type_str << ", Element text:" << element_text;
 	bool element_text_is_empty = element_text.isEmpty();
 
 	if (metatype.id() == QMetaType::UnknownType)

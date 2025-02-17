@@ -56,7 +56,6 @@ private:
 
 	QAction *m_caseSensitivityAction;
 	QActionGroup *m_patternGroup;
-
 };
 
 #endif // FILTERWIDGET_H

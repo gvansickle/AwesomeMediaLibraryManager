@@ -653,8 +653,8 @@ void MainWindow::createActionsView(KActionCollection *ac)
 	/// @todo These appear to be unreparentable, so we can't give them to an ActionBundle.
 //	m_ab_docks->addAction(m_libraryDockWidget->toggleViewAction());
 //	m_ab_docks->addAction(m_metadataDockWidget->toggleViewAction());
-
-// @todo QT6/KF6 THIS IS BROKEN:    m_act_ktog_show_tool_bar = new KToggleToolBarAction(m_fileToolBar, /*"FileToolbar",*/ tr("Show File Toolbar"), ac);
+// KF5 WAS THIS: m_act_ktog_show_tool_bar = new KToggleToolBarAction("FileToolbar", tr("Show File Toolbar"), ac);
+// KF6 This is broken:	m_act_ktog_show_tool_bar = new KToggleToolBarAction(m_fileToolBar, /*"FileToolbar",*/ tr("Show File Toolbar"), this);
 }
 
 void MainWindow::createActionsTools(KActionCollection *ac)
@@ -938,9 +938,9 @@ void MainWindow::createToolBars()
     m_settingsToolBar->addSeparator();
 	m_settingsToolBar->addAction(m_experimentalAct);
     /// KF5 button that opens an Icon select dialog.
-/// @todo QT6 link error:    m_settingsToolBar->addWidget(new KIconButton(m_settingsToolBar));
+// @todo This doesn't link for some reason:	 m_settingsToolBar->addWidget(new KIconButton(m_settingsToolBar));
 
-// #if HAVE_KF501 || HAVE_KF6
+#if HAVE_KF501 || HAVE_KF6
     // Create a combo box where the user can change the style.
 	QComboBox* styleComboBox = new QComboBox;
 	styleComboBox->addItems(QStyleFactory::keys());
@@ -963,7 +963,7 @@ void MainWindow::createToolBars()
 #else
 	connect_or_die(iconThemeComboBox, &QComboBox::currentTextChanged, this, &MainWindow::changeIconTheme);
 #endif
-
+#endif
     // Create another toolbar for the player controls.
     m_controlsToolbar = addToolBar(tr("Player Controls"), "PlayerControlsToolbar");
 
@@ -1528,7 +1528,7 @@ void MainWindow::readLibSettings(QSettings& settings)
 	})
 	.then(this, [=](ExtFuture<SerializableQVariantList> ef){
 
-    SerializableQVariantList list = ef.result(); //.get_first();
+		SerializableQVariantList list = ef.result(); //.get_first();
 
 		qIn() << "###### READ" << list.size() << " libraries from XML DB:" << overlay_filename;
 

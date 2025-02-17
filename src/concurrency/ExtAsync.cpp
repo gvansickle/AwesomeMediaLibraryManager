@@ -34,41 +34,6 @@
 #include <utils/DebugHelpers.h>
 
 
-// Static
-static QThread* CreateNewQThread(const char *name = "unknown")
-{
-	static QThread* backprop_thread = []
-	{
-		QThread* new_thread = new QThread;
-		new_thread->setObjectName("ExtFutureBackpropThread");
-		// PerfectDeleter::instance().addQThread(new_thread);
-#if 0
-		, [](QThread* the_qthread){
-			// Call exit(0) on the QThread.  We use Qt's invokeMethod() here.
-			ExtAsync::detail::run_in_event_loop(the_qthread, [the_qthread](){
-				qDb() << "Calling quit()+wait() on managed FutureWatcher QThread, FWParent has num children:" << ms_the_managed_fw_parent->children().size();
-				the_qthread->quit();
-				the_qthread->wait();
-				qDb() << "Finished quit()+wait() on managed FutureWatcher QThread";
-			});
-		});
-#endif
-		// No parent, this will be eventually deleted by the signal below.
-		// FutureWatcherParent* the_managed_fw_parent = get_future_watcher_parent();
-		// Q_ASSERT(the_managed_fw_parent != nullptr);
-		// Create and push the future watcher parent object into the new thread.
-		// the_managed_fw_parent->moveToThread(new_thread);
-		// Connect QThread::finished to QObject::deleteLater.
-		// connect_or_die(new_thread, &QThread::finished, the_managed_fw_parent, &QObject::deleteLater);
-
-		// Start the thread.
-		new_thread->start();
-		return new_thread;
-	}();
-
-	return backprop_thread;
-}
-
 /// Attic for experimental stuff that didn't pan out, but is too good to trash.
 #if 0
 ////// START EXPERIMENTAL

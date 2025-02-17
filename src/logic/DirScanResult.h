@@ -45,6 +45,11 @@ class ScanResultsTreeModelItem;
 
 /**
  * A single hit found during a directory scan.
+ * A single DirScanResult contains:
+ * - A URL to the directory the audio file was found in.
+ * - A URL to the media file itself.
+ * - A URL to an optional separate-file ("sidecar") Cuesheet.
+ * - Some flags indicating what of the above is valid and what isn't.
  */
 class DirScanResult : public virtual ISerializable
 {

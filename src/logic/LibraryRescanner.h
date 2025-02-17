@@ -26,7 +26,7 @@
 #include <memory>
 #include <vector>
 
-/// Qt5
+/// Qt
 #include <QObject>
 //#include <QElapsedTimer>
 #include <QPersistentModelIndex>
@@ -114,9 +114,6 @@ protected:
 	/// The map function for rescanning the library to reload metadata from the files.
 	/// Runs in an arbitrary thread context, so must be threadsafe.
 	MetadataReturnVal refresher_callback(const VecLibRescannerMapItems& mapitem);
-
-	/// Experimental: Run XQuery in a separate thread.
-	void ExpRunXQuery1(const QString& database_filename, const QString& in_filename);
 
 	void SaveDatabase(std::shared_ptr<ScanResultsTreeModel> tree_model_ptr, const QString& database_filename);
 	void LoadDatabase(std::shared_ptr<ScanResultsTreeModel> tree_model_ptr, const QString& database_filename);

@@ -42,6 +42,8 @@
 
 template <class T>
 using ExtFuture = QFuture<T>;
+// template <class T>
+// class ExtFuture<T>;
 
 namespace ManagedExtFutureWatcher_detail
 {
