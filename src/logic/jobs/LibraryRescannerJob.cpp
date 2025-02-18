@@ -136,7 +136,11 @@ void library_metadata_rescan_task(QPromise<MetadataReturnVal>& promise, AMLMJob*
                                   ExtFuture<VecLibRescannerMapItems> in_future,
                                   LibraryModel* current_libmodel)
 {
-	qDb() << "ENTER library_metadata_rescan_task";
+	qDb() << "ENTER library_metadata_rescan_task with" << M_ID_VAL(in_future.resultCount());
+
+	// Block until we have all the LibraryRescannerMapItem's.
+	/// @todo It would be better if we could do this in parallel with the directory scan.
+	in_future.waitForFinished();
 
 	// For now we'll count progress in terms of files scanned.
 	// Might want to change to tracks eventually.

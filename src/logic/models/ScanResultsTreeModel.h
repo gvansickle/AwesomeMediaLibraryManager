@@ -86,7 +86,7 @@ public:
      * Sets the base directory of the model.
      * @todo Not sure if we should support more than one or not, but should support "known alias paths".
      */
-    void setBaseDirectory(const QUrl& base_directory);
+    void setBaseDirectory(const QUrl& base_directory) override;
 
 	/// @name Serialization
 	/// @{
