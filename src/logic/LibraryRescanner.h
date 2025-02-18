@@ -134,8 +134,6 @@ private:
 //	using ItemContType = std::vector<std::shared_ptr<ScanResultsTreeModelItem>>;
 	using ItemContType = std::vector<std::shared_ptr<AbstractTreeModelItem>>;
 	using SharedItemContType = std::shared_ptr<ItemContType>;
-//	QFutureWatcher<SharedItemContType> m_efwatcher_tree_model_append;
-//	QFutureWatcher<MetadataReturnVal> m_extfuture_watcher_metadata;
 
 	Stopwatch m_timer;
 

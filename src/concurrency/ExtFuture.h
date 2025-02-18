@@ -1586,8 +1586,8 @@ QString state_str(const ExtFuture<T>& future)
  * @return  A copy of the passed-in @a future.
  */
 template <typename T, typename Function,
-	REQUIRES(std::is_invocable_r_v<void, Function, const QFuture<T>&, int, int>)>
-QFuture<T> streaming_then(QFuture<T> future, Function function)
+	REQUIRES(std::is_invocable_r_v<void, Function, QFuture<T>, int, int>)>
+auto streaming_then(QFuture<T> future, Function function)
 {
     auto ret_future = QtConcurrent::run(QThreadPool::globalInstance(), [function](QFuture<T> future)
 	{
@@ -1615,8 +1615,9 @@ QFuture<T> streaming_then(QFuture<T> future, Function function)
 		qDb() << "WAIT FOR FINISHED COMPLETE" << future;
 	}, future);
 
-	qDebug() << "RETURNING FUTURE" << future;
-	return future;
+	qDebug() << "RETURNING FUTURE" << ret_future;
+	// return future;
+	return ret_future;
 }
 
 

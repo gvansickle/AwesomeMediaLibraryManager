@@ -25,8 +25,7 @@
 #include <vector>
 #include <memory>
 
-// Qt5
-#include <QtConcurrent>
+// Qt
 #include <QFileDevice>
 #include <QStandardPaths>
 #include <QIcon>
@@ -1076,9 +1075,6 @@ QVector<VecLibRescannerMapItems> LibraryModel::getLibRescanItems()
             qDebug() << "PUSHING LAST MULTIENTRY, SIZE:" << multientry.size();
             multientry.clear();
         }
-
-//         Tell the scanner what to rescan.
-//        m_rescanner->startAsyncRescan(items_to_rescan);
     }
 
     qDb() << "RETURNING ITEMS:" << items_to_rescan.size();
