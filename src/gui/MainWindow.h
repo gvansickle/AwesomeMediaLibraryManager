@@ -29,7 +29,6 @@
 #include <memory>
 
 /// Qt5
-
 #include <QUrl>
 
 class QActionGroup;
@@ -40,9 +39,7 @@ class QSettings;
 class QStandardItem;
 class QStandardItemModel;
 
-/// KF5
-
-//#if HAVE_KF501
+// KF
 #if HAVE_KF6 || HAVE_KF501
 #include <KMainWindow>
 #include <KXmlGuiWindow>
@@ -531,7 +528,7 @@ private:
     /**
      * Master Tracker for all asynchronous activites.
      * Its widget is the progress bar in the status bar.
-     * Probably belongs in AMLMApp, but constructor needs a QWidget parent.
+     * Probably really belongs in AMLMApp, but constructor needs a QWidget parent.
      */
     ActivityProgressStatusBarTracker* m_activity_progress_tracker { nullptr };
 #endif

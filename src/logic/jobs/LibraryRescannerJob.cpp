@@ -132,9 +132,10 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
 	return retval;
 }
 
+
 void library_metadata_rescan_task(QPromise<MetadataReturnVal>& promise, AMLMJob* /*the_job*/,
-                                  ExtFuture<VecLibRescannerMapItems> in_future,
-                                  LibraryModel* current_libmodel)
+								ExtFuture<VecLibRescannerMapItems> in_future,
+								LibraryModel* current_libmodel)
 {
 	qDb() << "ENTER library_metadata_rescan_task with" << M_ID_VAL(in_future.resultCount());
 

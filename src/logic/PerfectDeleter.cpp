@@ -207,7 +207,7 @@ void PerfectDeleter::cancel_and_wait_for_all()
 	// First print some stats.
 	qIno() << "END OF PROGRAM SUMMARY OF OPEN RESOURCES";
 	auto stats_text = stats_internal();
-	for(const auto& line : qAsConst(stats_text))
+    for(const auto& line : std::as_const(stats_text))
 	{
 		qIno() << line;
 	}

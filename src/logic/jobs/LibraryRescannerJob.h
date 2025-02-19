@@ -35,7 +35,12 @@
 class LibraryModel;
 
 /**
- * Function taking a CnR future to rescan the metadata.
+ * Worker function which converts the LibraryRescanMapItems from @a in_future
+ * to MetadataReturnVal's which are sent to @a promise.
+ *
+ * @param promise
+ * @param in_future
+ * @param current_libmodel
  */
 void library_metadata_rescan_task(QPromise<MetadataReturnVal>& promise, AMLMJob*,
                                   ExtFuture<VecLibRescannerMapItems> in_future,

@@ -182,7 +182,8 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
 //	Qt::ItemDataRole id_role = Qt::ItemDataRole(role);
 //	qDebug() << "index:" << index.isValid() << index.row() << index.column() << "role:" << id_role;
 
-	Q_ASSERT(checkIndex(index, CheckIndexOption::IndexIsValid));
+    // Q_ASSERT(checkIndex(index, CheckIndexOption::IndexIsValid));
+AMLM_WARNIF_NOT(checkIndex(index, CheckIndexOption::IndexIsValid));
 
     // Handle invalid indexes.
 	if(!index.isValid())

@@ -245,7 +245,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
     ///
 	ExtFuture<MetadataReturnVal> lib_rescan_future = QtConcurrent::run(library_metadata_rescan_task,
 																							 nullptr, rescan_items_in_future,
-																							 m_current_libmodel);
+																							 nullptr /*m_current_libmodel*/);
 	// Make a new AMLMJobT for the metadata rescan.
 	AMLMJobT<ExtFuture<MetadataReturnVal>>* lib_rescan_job = make_async_AMLMJobT(lib_rescan_future, "LibRescanJob", AMLMApp::instance());
 
@@ -305,10 +305,7 @@ qDb() << "IN STREAMING THEN CALLBACK";
 			DirScanResult dsr = tap_future.resultAt(i);
 
 			// Add another entry to the vector we'll send to the model.
-//			new_items->emplace_back(std::make_shared<ScanResultsTreeModelItem>(dsr, tree_model));
-			/// @todo This is in a non-GUI thread.
 			Q_ASSERT(tree_model_sptr);
-//			auto new_item = ScanResultsTreeModelItem::construct(dsr);
 			auto new_item = std::make_shared<ScanResultsTreeModelItem>(dsr);
 			new_items->emplace_back(new_item);
 
@@ -403,8 +400,6 @@ qDb() << "POST WAIT" << M_NAME_VAL(future);
 
 #if 1
 
-#define TREE_ITEM_MODEL_POP_NON_GUI_THREAD 1
-
 	///
 	/// Convert SharedItemContainerType's into ???, then Append TreeModelItems to the ScanResultsTreeModel tree_model.
 	///
@@ -488,9 +483,6 @@ sw.print_results();
 	.then(qApp, [this,
 			rescan_items_in_promise = std::move(rescan_items_in_promise),
 			tree_model_ptr=tree_model
-			// kjob=FWD_DECAY_COPY(QPointer<AMLMJobT<ExtFuture<DirScanResult>>>, dirtrav_job)
-			// kjob=dirtrav_job,
-			// lib_rescan_job
 			](ExtFuture<Unit> future_unit) mutable {
 		AMLM_ASSERT_IN_GUITHREAD();
 
@@ -631,21 +623,19 @@ sw.print_results();
 	// Hook up future watchers.
 	//
 
-
-
 	//
 	// qurl_promise ->  ... -> LibraryModel::SLOT_onIncomingFilename [create and appendRow() as new unpopulated LibraryEntry]
 	//
-	auto* efw = ManagedExtFutureWatcher_detail::get_managed_qfuture_watcher<QString>();
-	connect_or_die(efw, &QFutureWatcher<QString>::resultReadyAt, efw, [this, qurl_future](int i){
+	auto* qurl_future_watcher = new QFutureWatcher<QString>();
+	connect_or_die(qurl_future_watcher, &QFutureWatcher<QString>::resultReadyAt, qurl_future_watcher, [this, qurl_future](int i){
 			/// @todo Maybe coming in out of order.
 			QString url_str = qurl_future.resultAt(i);
 			Q_EMIT SIGNAL_FileUrlQString(url_str);
 	});
 	connect_or_die(this, &LibraryRescanner::SIGNAL_FileUrlQString, m_current_libmodel, &LibraryModel::SLOT_onIncomingFilename);
 	// Set self-destruct.
-	connect_or_die(efw, &QFutureWatcher<QString>::finished, efw, &QFutureWatcher<QString>::deleteLater);
-	efw->setFuture(qurl_future);
+	connect_or_die(qurl_future_watcher, &QFutureWatcher<QString>::finished, qurl_future_watcher, &QFutureWatcher<QString>::deleteLater);
+	qurl_future_watcher->setFuture(qurl_future);
 
     streaming_then(lib_rescan_future, [this](QFuture<MetadataReturnVal> lib_rescan_future, int begin, int end){
     	// Q_ASSERT(lib_rescan_future.isFinished());
@@ -654,13 +644,17 @@ sw.print_results();
 			qDb() << "lib_rescan_future sthen:" << i;
 			this->SLOT_processReadyResults(lib_rescan_future.resultAt(i));
 		}
+	})
+	.then([]()
+	{
+		qDb() << "lib_rescan_future sthen complete.";
 	});
 
 	// Make sure the above job gets canceled and deleted.
     // AMLMApp::IPerfectDeleter().addQFuture(QFuture<void>(tail_future));
 
 M_TODO("???? I think we're already started");
-	dirtrav_job->start();
+	// dirtrav_job->start();
 
 	m_timer.lap("Leaving startAsyncDirTrav");
 

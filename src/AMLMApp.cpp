@@ -22,7 +22,7 @@
 #include "AMLMApp.h"
 
 // Std C++
-#include <memory>
+// #include <memory>
 
 // Qt5
 #include <QProcessEnvironment>
