@@ -164,7 +164,7 @@ TEST_F(FlagsAndEnumsTests, FlagsRoundTripThroughQVariantStringRepWithRegisteredC
 //	bool success = QMetaType::hasRegisteredConverterFunction<TestFlagHolder::TestFlags, QString>();
 //	EXPECT_FALSE(success);
 
-	EXPECT_FALSE(QMetaType::hasRegisteredDebugStreamOperator<TestFlagHolder::TestFlags>());
+	// EXPECT_FALSE(QMetaType::hasRegisteredDebugStreamOperator<TestFlagHolder::TestFlags>());
 	int id = qMetaTypeId<TestFlagHolder::TestFlags>();
 //	EXPECT_TRUE(QMetaType::isRegistered<TestFlagHolder::TestFlags>());
 

@@ -23,7 +23,9 @@
 #ifndef SRC_LOGIC_SERIALIZATION_SERIALIZATIONHELPERS_H_
 #define SRC_LOGIC_SERIALIZATION_SERIALIZATIONHELPERS_H_
 
+// Std C++
 #include <type_traits>
+#include <concepts>
 
 // Qt
 #include <QtConcurrentMap>
@@ -73,6 +75,41 @@ void dump_map(const MapType& map)
  * @param member  The ISerializer-derived member variable to insert.
  */
 template <class MapType, class StringType>
+void map_insert_or_die(MapType& map, const StringType& key, const ISerializable& member)
+{
+//	qDb() << "MIOD 2:" << key;
+	QVariant value = member.toVariant();
+	if (!value.isValid())
+	{
+		throw SerializationException("Failed to convert ISerializable member to QVariant.");
+	}
+    map.insert(key, value);
+}
+
+template <typename T>
+concept NonPointerType = !std::is_pointer_v<T>;
+template <typename T>
+concept MappableValueType = NonPointerType<T> && !std::is_same_v<ISerializable, T> &&
+	!std::is_base_of_v<ISerializable, T>;
+
+template <class MapType, class StringType, MappableValueType ValueType>//,
+// requires requires (ValueType v)
+// {
+// 	!std::is_same_v<ISerializable, ValueType>;
+// 	!std::is_base_of_v<ISerializable, ValueType>;
+// }
+void map_insert_or_die(MapType& map, const StringType& key, const ValueType& member)
+{
+//	qDb() << "MIOD 2b:" << key;
+	QVariant qvalue = QVariant::fromValue(member);
+	if (!qvalue.isValid())
+	{
+		throw SerializationException("Failed to convert member to QVariant.");
+	}
+    map.insert(key, qvalue);
+}
+
+template <class MapType, class StringType>
 void map_insert_or_die(MapType& map, const StringType& key, const std::nullptr_t member)
 {
 	(void)map;
@@ -80,22 +117,6 @@ void map_insert_or_die(MapType& map, const StringType& key, const std::nullptr_t
 	qDb() << "###### MIOD NULL, KEY:" << key;
 	// Do nothing.
 }
-
-template <class MapType, class StringType>
-void map_insert_or_die(MapType& map, const StringType& key, const ISerializable& member)
-{
-//	qDb() << "MIOD 2:" << key;
-	map.insert(key, member.toVariant());
-}
-
-template <class MapType, class StringType, class ValueType,
-		  REQUIRES(!std::is_base_of_v<ISerializable, ValueType>)>
-void map_insert_or_die(MapType& map, const StringType& key, const ValueType& member)
-{
-//	qDb() << "MIOD 2b:" << key;
-	map.insert(key, QVariant::fromValue(member));
-}
-
 
 
 /// @name Functions for pushing values/list-likes to a QList<QVariant>.
@@ -127,11 +148,11 @@ template <class ListType, class MemberType,
 void list_push_back_or_die(ListType& list, const MemberType& member)
 {
 	static_assert (!std::is_base_of_v<ISerializable, MemberType>, "DEDUCTION FAILED");
-
+	qDb() << QMetaType::fromType<MemberType>().name();
 	QVariant qvar = QVariant::fromValue<MemberType>( member );
 	if(!qvar.isValid())
 	{
-		throw SerializationException("Coudn't push_back() to list.");
+		throw SerializationException("Couldn't push_back() to list.");
 	}
 
 	list.push_back(qvar);

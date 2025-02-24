@@ -22,7 +22,10 @@
 
 #include <ExtFuture.h>
 
-/// Ours
+// Qt
+#include <QMetaType>
+
+// Ours
 #include <concurrency/AMLMJob.h>
 #include <utils/TheSimplestThings.h>
 
@@ -67,7 +70,8 @@ private:
 
 };
 
-Q_DECLARE_METATYPE(CumulativeAMLMJob*)
+Q_DECLARE_METATYPE(CumulativeAMLMJob);
+Q_DECLARE_METATYPE(CumulativeAMLMJob*);
 
 
 #endif /* SRC_GUI_ACTIVITYPROGRESSMANAGER_CUMULATIVEAMLMJOB_H_ */

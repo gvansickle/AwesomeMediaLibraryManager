@@ -84,7 +84,7 @@ public:
 		*this = variant.value< InsertionOrderedMap<KeyType, ValueType> >();
 	}
 
-	void insert(const KeyType key, const ValueType value)
+	void insert(const KeyType& key, const ValueType& value)
 	{
 		insert(std::make_pair(key, value));
 	}

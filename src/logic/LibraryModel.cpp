@@ -56,6 +56,7 @@
 
 AMLM_QREG_CALLBACK([](){
     qIn() << "Registering LibraryModel types";
+	qRegisterMetaType<LibraryModel>();
     qRegisterMetaType<VecOfUrls>();
 //    qRegisterMetaType<VecOfLEs>();
 	qRegisterMetaType<std::vector<std::shared_ptr<LibraryEntry>>>("VecOfLEs");
@@ -103,6 +104,8 @@ LibraryModel::~LibraryModel()
 
 QPointer<LibraryModel> LibraryModel::openFile(QUrl open_url, QObject* parent)
 {
+	// This is static.
+
     // Create the new LibraryModel.
 	auto lib = QPointer<LibraryModel>(new LibraryModel(parent));
 

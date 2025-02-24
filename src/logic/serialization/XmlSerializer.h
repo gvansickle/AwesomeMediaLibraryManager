@@ -87,21 +87,11 @@ private:
 	void writeVariantToStream(const QString& nodeName,
 	                          const QVariant& variant, QXmlStreamWriter& xmlstream);
 	void InnerWriteVariantToStream(const QVariant& variant, QXmlStreamWriter* xmlstream);
-//	void writeVariantToStream(const QString& nodeName,
-//							  const ISerializable& variant, QXmlStreamWriter* xmlstream);
-//	void writeVariantToStream(const QString& nodeName,
-//							  const ISerializable* variant, QXmlStreamWriter* xmlstream);
 
 	void writeQVariantHomogenousListToStream(const QVariant& variant, QXmlStreamWriter& xmlstream);
 	void writeVariantListToStream(const QVariant &variant, QXmlStreamWriter& xmlstream);
 	void writeVariantMapToStream(const QVariant& variant, QXmlStreamWriter& xmlstream);
 	void writeVariantOrderedMapToStream(const QVariant& variant, QXmlStreamWriter& xmlstream);
-	/**
-	 * QDateTime needs to be special-cased to support uninitialized objects.
-	 * @param variant_datetime
-	 * @param xmlstream
-	 */
-	void writeQDateTimeToStream(const QVariant& variant_datetime, QXmlStreamWriter& xmlstream);
 	void writeVariantValueToStream(const QVariant& variant, QXmlStreamWriter& xmlstream);
 
 	/// @}
@@ -117,12 +107,6 @@ private:
 	QVariant readVariantListFromStream(QXmlStreamReader& xmlstream);
 	QVariant readVariantMapFromStream(QXmlStreamReader& xmlstream);
 	QVariant readVariantOrderedMapFromStream(std::vector<QXmlStreamAttribute> attributes, QXmlStreamReader& xmlstream);
-	/**
-	 * QDateTime needs to be special-cased to support uninitialized objects.
-	 * @param variant_datetime
-	 * @param xmlstream
-	 */
-	QVariant readQDateTimeFromStream(QXmlStreamReader& xmlstream);
 	QVariant readVariantValueFromStream(QXmlStreamReader& xmlstream);
 
 	/// @}

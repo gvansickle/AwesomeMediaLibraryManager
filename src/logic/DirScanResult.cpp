@@ -61,7 +61,7 @@ DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_f
 	X(XMLTAG_EXTURL_CUESHEET, m_exturl_cuesheet)
 
 /// Strings to use for the tags.
-#define X(field_tag, member_field) static const QLatin1String field_tag ( # member_field );
+#define X(field_tag, member_field) static constexpr QLatin1String field_tag ( # member_field );
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
@@ -77,7 +77,9 @@ QVariant DirScanResult::toVariant() const
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
-	return map;// QVariant::fromValue(retval);
+	dump_map(map);
+
+	return map;
 }
 
 void DirScanResult::fromVariant(const QVariant& variant)
@@ -88,7 +90,7 @@ void DirScanResult::fromVariant(const QVariant& variant)
 	set_prefixed_uuid(uuid);
 
 	// Extract all the fields from the map.
-#define X(field_tag, member_field) map_read_field_or_warn(map, field_tag, &(member_field));
+#define X(field_tag, member_field) map_read_field_or_warn(map, field_tag, &member_field);
 	M_DATASTREAM_FIELDS(X);
 #undef X
 }

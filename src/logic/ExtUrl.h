@@ -24,9 +24,9 @@
 #define SRC_LOGIC_EXTURL_H_
 
 // Std C++
-#include <memory> // for std::unique_ptr<>.
+//#include <memory> // for std::unique_ptr<>.
 
-// Qt5
+// Qt
 #include <QUrl>
 #include <QDateTime>
 class QFileInfo;
@@ -77,7 +77,7 @@ Q_DECLARE_METATYPE(FileModificationInfo);
  * An extended URL class.
  * Extensions are data used to detect if the referenced item has changed.
  */
-class ExtUrl : public virtual ISerializable
+class ExtUrl : public ISerializable
 {
 	Q_GADGET
 
@@ -123,8 +123,10 @@ public:
      */
     Status getStatus();
 
-    /// @name Data members.
-    /// @{
+	/// @todo Can the data members be protected?
+
+	/// @name Data members.
+	/// @{
 
 	/// The QUrl.
 	QUrl m_url;
@@ -156,7 +158,6 @@ public:
 	/// @name Serialization
 	/// @{
 
-	/// @todo Can these be protected?
 	QVariant toVariant() const override;
 	void fromVariant(const QVariant& variant) override;
 

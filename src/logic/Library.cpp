@@ -19,7 +19,7 @@
 
 #include "Library.h"
 
-// Qt5
+// Qt
 #include <QDateTime>
 #include <QDebug>
 #include <QFileDevice>
@@ -30,6 +30,12 @@
 #include <future/preproc.h>
 #include <utils/Stopwatch.h>
 #include <logic/serialization/SerializationHelpers.h>
+
+AMLM_QREG_CALLBACK([](){
+	qIn() << "Registering Library";
+	qRegisterMetaType<Library>();
+});
+
 
 void Library::clear()
 {

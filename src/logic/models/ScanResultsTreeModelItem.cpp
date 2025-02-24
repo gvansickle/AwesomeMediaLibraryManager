@@ -114,8 +114,8 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 	InsertionOrderedMap<QString, QVariant> map;
 
 	// Overwrite any class info added by the above.
-//	set_map_class_info(this, &map);
-	set_map_class_info(std::string("ScanResultsTreeModelItem"), &map);
+	set_map_class_info(this, &map);
+	// set_map_class_info(std::string("ScanResultsTreeModelItem"), &map);
 
 	// Set the xml:id.
 	map.insert_attributes({{"xml:id", get_prefixed_uuid()}});
@@ -123,11 +123,11 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 	/// @todo Will be more fields, justifying the map vs. value?
 	/// @todo Need the parent here too?  Probably needs to be handled by the parent, but maybe for error detection.
 
-	map_insert_or_die(map, XMLTAG_DIRSCANRESULT, m_dsr.toVariant());
+	map_insert_or_die(map, XMLTAG_DIRSCANRESULT, m_dsr);
 
-#define X(field_tag, tag_string, var_name) map_insert_or_die(map, field_tag, var_name);
-	M_DATASTREAM_FIELDS(X);
-#undef X
+// #define X(field_tag, tag_string, var_name) map_insert_or_die(map, field_tag, var_name);
+// 	M_DATASTREAM_FIELDS(X);
+// #undef X
 
 	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
 	for(auto& it : m_child_items)
@@ -149,9 +149,9 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 	auto uuid = map.get_attr("xml:id", "");
 	set_prefixed_uuid(uuid);
 
-#define X(field_tag, tag_string, var_name) map_read_field_or_warn(map, field_tag, var_name);
-	M_DATASTREAM_FIELDS(X);
-#undef X
+// #define X(field_tag, tag_string, var_name) map_read_field_or_warn(map, field_tag, var_name);
+// 	M_DATASTREAM_FIELDS(X);
+// #undef X
 
 	map_read_field_or_warn(map, XMLTAG_DIRSCANRESULT, &m_dsr);
 

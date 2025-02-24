@@ -50,7 +50,7 @@ set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
 	message("ERROR: ${CMAKE_SOURCE_DIR} == ${CMAKE_BINARY_DIR}")
-	message(FATAL_ERROR "Prevented in-root-of-tree build. Please create a build directory outside of the source code root directory and call cmake from there. Thank you.")
+	message(FATAL_ERROR "Prevented in-root-of-tree build. Please create a build directory (inside or outside) of the source code root directory and call cmake from there. Thank you.")
 endif()
 
 if(FALSE)
@@ -85,17 +85,17 @@ set(FULL_COPYRIGHT_STRING "Copyright (c) 2017, 2018, 2019, 2024, 2025 ${PROJECT_
 include(CMakePrintHelpers)
 
 ### Set the required language standards.
-# C11
+# C
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
-# C++17
-set(CMAKE_CXX_STANDARD 17)
+# C++
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Min versions of Qt, KF, KF/ECM.
-set(QT_MIN_VERSION "6.8.0")
-set(KF5_MIN_VERSION "6.0.0") ### @win temp: Only have 5.52.0
-set(ECM_MIN_VERSION "6.0.0") #"5.57.0")
+set(QT_MIN_VERSION "6.8.2")
+set(KF5_MIN_VERSION "6.11.0") ### @win temp: Only have 5.52.0
+set(ECM_MIN_VERSION "6.3.0") #"5.57.0")
 
 ###
 ### IDE helper setup
@@ -200,7 +200,7 @@ include(ECMEnableSanitizers)
 include(ucm)
 # Target-focused compile settings.
 add_library(cxx_settings INTERFACE)
-target_compile_features(cxx_settings INTERFACE cxx_std_17)
+target_compile_features(cxx_settings INTERFACE) # cxx_std_23)
 add_library(cxx_definitions_qt INTERFACE)
 target_compile_definitions(cxx_definitions_qt INTERFACE)
 add_library(cxx_compile_options INTERFACE)
@@ -208,8 +208,12 @@ target_compile_options(cxx_compile_options INTERFACE)
 if(UNIX)
 	target_compile_options(cxx_compile_options
 		INTERFACE
-			-Og -ggdb3 -fno-omit-frame-pointer -fmessage-length=0 -pthread -Werror=return-type)
-	ucm_add_flags(-Og -ggdb3 -fno-omit-frame-pointer -fmessage-length=0 -pthread -Werror=return-type)
+			-Og -ggdb3 -fno-omit-frame-pointer -fmessage-length=0 -pthread -Werror=return-type
+		-fno-eliminate-unused-debug-symbols -gas-loc-support -gas-locview-support -gstatement-frontiers
+		-gvariable-location-views -ginline-points -fno-eliminate-unused-debug-types)
+	ucm_add_flags(-Og -ggdb3 -fno-omit-frame-pointer -fmessage-length=0 -pthread -Werror=return-type
+		-fno-eliminate-unused-debug-symbols -gas-loc-support -gas-locview-support -gstatement-frontiers
+		-gvariable-location-views -ginline-points -fno-eliminate-unused-debug-types)
 # Flags for GNU libstdc++
 ### @todo Detect that we're actually using GNU libstdc++
 # "compiles user code using the debug mode. When defined, _GLIBCXX_ASSERTIONS is defined automatically"
@@ -257,6 +261,7 @@ if(WIN32)
 endif(WIN32)
 target_link_libraries(cxx_settings INTERFACE cxx_compile_options)
 
+set(CMAKE_CXX_FLAGS_DEBUG "-ggdb3")
 message(STATUS "C compiler supported features = ${CMAKE_C_COMPILE_FEATURES}")
 message(STATUS "C++ compiler supported features = ${CMAKE_CXX_COMPILE_FEATURES}")
 message(STATUS "C++ CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS}")
@@ -271,7 +276,7 @@ include(CheckCXXCompilerFlag)
 include(PrintTargetProperties)
 include(helperfunctions)
 
-# Include some basic Qt5-related cmake functions
+# Include some basic Qt-related cmake functions
 include(QtCommon)
 set(CMAKE_INSTALL_UCRT_LIBRARIES TRUE) # Without this, Release builds won't include the MSVC C runtime.
 include(InstallRequiredSystemLibraries)
@@ -284,7 +289,7 @@ include(DownloadProject)
 set(CMAKE_VERBOSE_MAKEFILE  YES)
 # "CMake automatically analyzes the global inter-target dependency graph at the beginning of native build system generation.
 #  This property causes it to display details of its analysis to stderr."
-# GRVS: Dumps huge amounts of info.
+# GRVS: This dumps huge amounts of info.
 # set_property(GLOBAL PROPERTY GLOBAL_DEPENDS_DEBUG_MODE 1)
 set(CPACK_IFW_VERBOSE YES)
 #set(CMAKE_DEBUG_TARGET_PROPERTIES
@@ -328,7 +333,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # The.  Simplest.  Things.
 # Set default install location to "install" folder in build dir.
-# we do not want to install to /usr by default.
+# We do not want to install to /usr by default.
 # "CMake sets this variable to a TRUE value when the CMAKE_INSTALL_PREFIX has just been initialized to its default value,
 # typically on the first run of CMake within a new build tree. This can be used by project code to change the default 
 # without overriding a user-provided value"
@@ -363,7 +368,7 @@ endif()
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 ###
-### The Qt5 packages we require.
+### The Qt packages we require.
 ### @note CONFIG|MODULE: "If no module is found the command falls back to Config mode, described below.
 ###       This fall back is disabled if the MODULE option is given."
 ###
@@ -423,9 +428,9 @@ find_package(KF6 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
 set(HAVE_KF501 ${KF5_FOUND})
 set(HAVE_KF6 ${KF6_FOUND})
 list(APPEND KF5_LINK_LIB_TARGETS KF6::CoreAddons KF6::ConfigCore KF6::ConfigGui)
-list(APPEND KF5_LINK_LIB_TARGETS KF6::KIOCore KF6::KIOFileWidgets KF6::KIOWidgets)# KF6::KIONTLM)
-list(APPEND KF5_LINK_LIB_TARGETS KF6::WidgetsAddons KF6::XmlGui KF6::GuiAddons KF6::IconThemes KF6::ItemModels KF6::ItemViews)
-list(APPEND KF5_LINK_LIB_TARGETS KF6::WindowSystem)
+list(APPEND KF5_LINK_LIB_TARGETS KF6::KIOCore KF6::KIOFileWidgets KF6::KIOWidgets)
+list(APPEND KF5_LINK_LIB_TARGETS KF6::WidgetsAddons KF6::XmlGui KF6::GuiAddons KF6::ItemModels KF6::ItemViews)
+list(APPEND KF5_LINK_LIB_TARGETS KF6::IconThemes KF6::WindowSystem)
 
 ###### EXPERIMENT
 
@@ -435,7 +440,7 @@ find_package(SQLite3
 
 #find_package(BreezeIcons REQUIRED) # Doesn't exist yet.
 ### @todo Need to find a better way than hardcoding the path to the rcc file here.
-set(WITH_BUNDLED_BREEZE_ICONS true)
+set(WITH_BUNDLED_BREEZE_ICONS false)
 if(WIN32)
 	set(BREEZEICONS_DIR
 		# Craft has a couple of breeze-icons.rcc's, plus an icontheme.rcc in CraftRoot/bin/data/.
@@ -459,7 +464,7 @@ if(WITH_BUNDLED_BREEZE_ICONS)
 			"Full path to the breeze-icons.rcc file"
 			)
     if (NOT EXISTS ${BREEZEICONS_PATH})
-        message(FATAL_ERROR "Cannot find breeze-icons.rcc")
+        message(FATAL_ERROR "Cannot find breeze-icons.rcc, looked under paths: ${BREEZEICONS_DIR}")
     else()
     	message(STATUS "Found source default icon theme: ${BREEZEICONS_PATH}")
     	message(STATUS "Default icon theme will be installed in: ${AMLM_INSTALL_BUNDLED_ICON_THEME_DIR}")
@@ -612,7 +617,7 @@ set(IDENTIFIER "io.github.gvansickle")
 
 ### Generate configured headers.
 # @note The version info file is generated in the "resources" dir/target.
-# Generate the amlm-configure.h file.
+# Generate the config.h file.
 configure_file(${PROJECT_SOURCE_DIR}/src/config.h.in
 	${PROJECT_BINARY_DIR}/src/config.h
 	ESCAPE_QUOTES)

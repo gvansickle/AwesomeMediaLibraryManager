@@ -209,8 +209,6 @@ void LibraryRescanner::LoadDatabase(std::shared_ptr<ScanResultsTreeModel> tree_m
 
 void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 {
-	CALLGRIND_START_INSTRUMENTATION;
-
 /// throwif<SerializationException>(!status, "########## COULDN'T OPEN FILE");
 
 	expect_and_set(0, 1);
@@ -598,9 +596,6 @@ sw.print_results();
 			// Start the metadata scan.
 			qDb() << "STARTING RESCAN";
 			// lib_rescan_job->start();
-
-			CALLGRIND_STOP_INSTRUMENTATION;
-			CALLGRIND_DUMP_STATS;
 		}
 		//            lib_rescan_job->start();
 #endif

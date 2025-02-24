@@ -1453,7 +1453,7 @@ void MainWindow::readLibSettings(QSettings& settings)
 	// The primary database file.
 	QString database_filename = QDir::homePath() + "/AMLMDatabase.xml";
 
-	// Try to Load it asyncronously into a new model.
+	// Try to Load it asynchronously into a new model.
 	/// AMLM::Core::self()->getDefaultColumnSpecs()
 	auto temp_load_srtm_instance = ScanResultsTreeModel::make_ScanResultsTreeModel({});
 	bool success = temp_load_srtm_instance->LoadDatabase(database_filename);
@@ -1516,13 +1516,12 @@ void MainWindow::readLibSettings(QSettings& settings)
 
 		qIn() << "###### READING XML DB:" << overlay_filename;
 		SerializableQVariantList list("library_list", "library_list_item");
-		{
-			Stopwatch library_list_read(tostdstr(QString("############## READ OF ") + overlay_filename));
-			XmlSerializer xmlser;
-			xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
-			/// @todo This takes ~10 secs at the moment with a 300MB XML file.
-			xmlser.load(list, QUrl::fromLocalFile(overlay_filename));
-		}
+		Stopwatch library_list_read(tostdstr(QString("############## READ OF ") + overlay_filename));
+		XmlSerializer xmlser;
+		xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
+		/// @todo This takes ~10 secs at the moment with a 300MB XML file.
+		bool success = xmlser.load(list, QUrl::fromLocalFile(overlay_filename));
+    	qIn() << "Load of" << overlay_filename << "success: " << success;
         ef.addResult(list);
         // ef.reportFinished();
 	})
@@ -1530,7 +1529,7 @@ void MainWindow::readLibSettings(QSettings& settings)
 
 		SerializableQVariantList list = ef.result(); //.get_first();
 
-		qIn() << "###### READ" << list.size() << " libraries from XML DB:" << overlay_filename;
+		qIn() << "###### READ" << list.size() << "libraries from XML DB:" << overlay_filename;
 
 		for(const auto& list_entry : list)
 		{
@@ -1539,15 +1538,15 @@ void MainWindow::readLibSettings(QSettings& settings)
 			Q_ASSERT(!qv.isNull());
 
 
-			LibraryModel* lmp = new LibraryModel(this);
+			LibraryModel* library_model = new LibraryModel(this);
 			{
-				Stopwatch sw("lmp-from-variant");
-				lmp->fromVariant(qv);
+				Stopwatch sw("library_model-from-variant");
+				library_model->fromVariant(qv);
 			}
 
-			Q_ASSERT(lmp->getLibRootDir().isValid());
+			Q_ASSERT(library_model->getLibRootDir().isValid());
 
-			if(!lmp)
+			if(!library_model)
 			{
 				QMessageBox::critical(this, qApp->applicationDisplayName(), tr("Failed to open library"),
 									  QMessageBox::Ok);
@@ -1555,7 +1554,7 @@ void MainWindow::readLibSettings(QSettings& settings)
 			else
 			{
 				MDIModelViewPair mvpair;
-				mvpair.m_model = lmp;
+				mvpair.m_model = library_model;
 				mvpair.m_model_was_existing = false;
 
 				addChildMDIModelViewPair_Library(mvpair);

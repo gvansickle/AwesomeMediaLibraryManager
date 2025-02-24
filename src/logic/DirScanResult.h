@@ -51,7 +51,7 @@ class ScanResultsTreeModelItem;
  * - A URL to an optional separate-file ("sidecar") Cuesheet.
  * - Some flags indicating what of the above is valid and what isn't.
  */
-class DirScanResult : public virtual ISerializable
+class DirScanResult : public ISerializable
 {
 	Q_GADGET // Needed for DirProp enum below.
 

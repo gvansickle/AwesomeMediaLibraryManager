@@ -73,8 +73,8 @@ AMLMJob::~AMLMJob()
     // The KJob should have finished/been killed before we get deleted.
 //    Q_ASSERT(isFinished());
 
-//    Q_ASSERT(!m_i_was_deleted);
-//    m_i_was_deleted = true;
+    // Q_ASSERT(!m_i_was_deleted);
+    // m_i_was_deleted = true;
 
     // KJob destructor checks if KJob->isFinished and emits finished(this) if so.
     // Doesn't cancel the job.

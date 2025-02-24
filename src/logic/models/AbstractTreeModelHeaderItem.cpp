@@ -136,7 +136,7 @@ using strviw_type = QLatin1String;
 #define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
 	M_DATASTREAM_FIELDS(X);
 #undef X
-static const strviw_type XMLTAG_HEADER_SECTION_LIST ("header_section_list");
+static constexpr strviw_type XMLTAG_HEADER_SECTION_LIST ("header_section_list");
 
 
 QVariant AbstractTreeModelHeaderItem::toVariant() const
@@ -144,8 +144,8 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 	InsertionOrderedMap<QString, QVariant> map;
 
 	// Set some class meta-info.
-//	set_map_class_info(this, &map);
-	set_map_class_info(std::string("AbstractTreeModelHeaderItem"), &map);
+	set_map_class_info(this, &map);
+	// set_map_class_info(std::string("AbstractTreeModelHeaderItem"), &map);
 
 	QVariantHomogenousList header_section_list(XMLTAG_HEADER_SECTION_LIST, "section");
 

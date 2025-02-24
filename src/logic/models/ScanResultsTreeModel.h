@@ -130,8 +130,14 @@ protected:
 	QString getXmlStreamName() const override { return "AMLMScanResults"; };
 	QString getXmlStreamVersion() const override { return "0.1"; };
 
-	// The tree's base directory URL.
+	/// The tree's base directory URL.
     QUrl m_base_directory;
+	QString m_title {"XSPF playlist title goes HERE"};
+	QString m_creator {"XSPF playlist CREATOR GOES HERE"};
+	QDateTime m_creation_date;
+	QDateTime m_ts_last_scan_start;
+	QDateTime m_ts_last_scan_end;
+
 
 private:
 

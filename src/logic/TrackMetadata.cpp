@@ -226,7 +226,7 @@ void TrackMetadata::fromVariant(const QVariant& variant)
 
 	// Read the m_indexes TrackIndex'es out of the list.
 	// This is a QList<QVariant> where the qvar holds QVariantInsertionOrderedMap's.
-	for(const QVariant& qvar_index_entry : qAsConst(index_list))
+	for(const QVariant& qvar_index_entry : std::as_const(index_list))
 	{
 		Q_ASSERT(qvar_index_entry.isValid());
 		Q_ASSERT((qvar_index_entry.canConvert<InsertionOrderedMap<QString, QVariant>>()));

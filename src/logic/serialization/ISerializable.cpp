@@ -70,6 +70,8 @@ void SerializableQVariantList::fromVariant(const QVariant& variant)
 	Q_ASSERT(!m_list_item_tag.isNull());
 	Q_ASSERT(!m_list_item_tag.isEmpty());
 
+	Q_ASSERT((variant.canConvert<InsertionOrderedMap<QString, QVariant>>()));
+
 	InsertionOrderedMap<QString, QVariant> map = variant.value<InsertionOrderedMap<QString, QVariant>>();
 
 	Q_ASSERT(map.contains(m_list_tag));
