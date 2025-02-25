@@ -142,7 +142,6 @@ TEST_F(XmlSerializerTests, AMLMTagMapRoundTripping)
 
 TEST_F(XmlSerializerTests, ExtUrlRoundTripping)
 {
-#if 1
 	ExtUrl u1(QUrl("file:///test.com/somefile.flac"));
 	ExtUrl u2;
 
@@ -159,6 +158,4 @@ TEST_F(XmlSerializerTests, ExtUrlRoundTripping)
 	u2 = frommap.value("test_field_name").value<ExtUrl>();
 
 	EXPECT_EQ(u1.m_url, u2.m_url);
-
-#endif
 }

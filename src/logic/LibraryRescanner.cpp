@@ -1,5 +1,5 @@
 /*
- * Copyright 2017, 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018, 2019, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -32,19 +32,16 @@
 /// code, are under a BSD-style license so you may include them without worrying about license incompatibility."
 #include <valgrind/callgrind.h>
 
-/// Qt
+// Qt
 #include <QThread>
-// #include <QtCore5Compat/QXmlFormatter>
-// #include <QtCore5Compat/QXmlQuery>
 #include <QVariant>
 #include <QtConcurrentRun>
-// #include <QtCore5Compat/QXmlResultItems>
 
-/// KF5
+// KF
 #include <KJobUiDelegate>
 #include <KIO/DirectorySizeJob>
 
-/// Ours, Qt5/KF5-related
+/// Ours, Qt/KF-related
 #include <utils/TheSimplestThings.h>
 #include <utils/RegisterQtMetatypes.h>
 #include <utils/QtHelpers.h>
@@ -524,52 +521,9 @@ sw.print_results();
 #endif /////
 
 			/// @todo EXPERIMENTAL
-#if 0
-			QString filename = QDir::homePath() + "/AMLM_DeleteMe_XQuery.xml";
-			qIno() << "Writing model to XML file:" << filename;
-			QFile outfile(filename);
-			auto status = outfile.open(QFile::WriteOnly | QFile::Text);
-			if(!status)
-			{
-				qCro() << "########## COULDN'T WRITE TO FILE:" << filename;
-			}
-			else
-			{
-				{
-					/// Let's now try to read it back.
-					ScanResultsTreeModel* readback_tree_model;
-					{
-						qIn() << "###### READING BACK" << database_filename;
-
-						XmlSerializer xmlser_read;
-						xmlser_read.set_default_namespace("http://xspf.org/ns/0/", "1");
-						readback_tree_model = new ScanResultsTreeModel(this);//static_cast<QObject*>(tree_model_ptr)->parent());
-						// Load it.
-						xmlser_read.load(*readback_tree_model, QUrl::fromLocalFile(database_filename));
-
-						qIn() << "###### READBACK INFO:";
-						qIn() << "COLUMNS:" << readback_tree_model->columnCount()
-								<< "ROWS:" << readback_tree_model->rowCount();
-					}
-
-					/// And lets' try to reserialize it out.
-					{
-						QString filename = QDir::homePath() + "/AMLM_DeleteMe_TreeModelOut.xml";
-						qIn() << "###### WRITING WHAT WE READ TO" << filename;
-						XmlSerializer xmlser;
-						xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
-						xmlser.save(*readback_tree_model, QUrl::fromLocalFile(filename), "playlist");
-						qIn() << "###### WROTE" << filename;
-					}
-					readback_tree_model->deleteLater();
-
-				}
-			}
-#endif
 
 		m_timer.lap("dirtrav over partial, starting metadata rescan.");
 
-#if 1
 		// Directory traversal complete, start rescan.
 
 		QVector<VecLibRescannerMapItems> rescan_items;
@@ -598,7 +552,6 @@ sw.print_results();
 			// lib_rescan_job->start();
 		}
 		//            lib_rescan_job->start();
-#endif
     });
 
 	if(dirtrav_job.isNull())

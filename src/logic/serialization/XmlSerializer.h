@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -86,8 +86,8 @@ private:
 
 	void writeVariantToStream(const QString& nodeName,
 	                          const QVariant& variant, QXmlStreamWriter& xmlstream);
-	void InnerWriteVariantToStream(const QVariant& variant, QXmlStreamWriter* xmlstream);
 
+	void InnerWriteVariantToStream(const QVariant& variant, QXmlStreamWriter* xmlstream);
 	void writeQVariantHomogenousListToStream(const QVariant& variant, QXmlStreamWriter& xmlstream);
 	void writeVariantListToStream(const QVariant &variant, QXmlStreamWriter& xmlstream);
 	void writeVariantMapToStream(const QVariant& variant, QXmlStreamWriter& xmlstream);
@@ -100,9 +100,8 @@ private:
 	/// @{
 
 	QVariant readVariantFromStream(QXmlStreamReader& xmlstream);
+
 	QVariant InnerReadVariantFromStream(QString typeString, const QXmlStreamAttributes& attributes, QXmlStreamReader& xmlstream);
-
-
 	QVariant readHomogenousListFromStream(QXmlStreamReader& xmlstream);
 	QVariant readVariantListFromStream(QXmlStreamReader& xmlstream);
 	QVariant readVariantMapFromStream(QXmlStreamReader& xmlstream);

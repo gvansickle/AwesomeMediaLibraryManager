@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -36,7 +36,6 @@
 
 AMLM_QREG_CALLBACK([](){
     qIn() << "Registering Fraction";
-    /// @todo This isn't working (in or out) with QVariant.
     qRegisterMetaType<Fraction>();
 	// QMetaType::registerConverter<Fraction, QString> (&Fraction::toQString);
 	// qRegisterMetaTypeStreamOperators<Fraction>();

@@ -82,17 +82,7 @@ LibraryEntryLoaderJobPtr LibraryEntryLoaderJob::make_job(QPersistentModelIndex p
 
 ExtFuture<LibraryEntryLoaderJobResult> LibraryEntryLoaderJob::make_task(QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry)
 {
-#if 0
-	ExtFuture<LibraryEntryLoaderJobResult> ret_future;
-
-	QtConcurrent::run(&LibraryEntryLoaderJob::LoadEntry, ret_future, nullptr, pmi, libentry);
-
-	return ret_future;
-#elif 0 // This was the latest used here.
-	return ExtAsync::qthread_async_with_cnr_future(&LibraryEntryLoaderJob::LoadEntry, nullptr, pmi, libentry);
-#elif 1 // QT6
     return QtConcurrent::run(&LibraryEntryLoaderJob::LoadEntry, nullptr, pmi, libentry);
-#endif
 }
 
 LibraryEntryLoaderJob::LibraryEntryLoaderJob(QObject *parent, QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry)
@@ -202,9 +192,4 @@ void LibraryEntryLoaderJob::LoadEntry(QPromise<LibraryEntryLoaderJobResult>& pro
     promise.addResult(retval);
 }
 
-void LibraryEntryLoaderJob::runFunctor()
-{
-    qDbo() << "START LibraryEntryLoaderJob RUNFUNCTOR" << m_pmi << m_libentry;
-    Q_ASSERT(0);
-// QT6 TEMP?    this->LoadEntry(m_ext_future, this, m_pmi, m_libentry);
-}
+

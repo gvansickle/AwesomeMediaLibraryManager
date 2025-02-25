@@ -133,7 +133,6 @@ public:
 
 protected:
 
-    void runFunctor() override;
 
 private:
 

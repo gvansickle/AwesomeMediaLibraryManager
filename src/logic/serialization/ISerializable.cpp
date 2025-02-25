@@ -75,12 +75,6 @@ void SerializableQVariantList::fromVariant(const QVariant& variant)
 	InsertionOrderedMap<QString, QVariant> map = variant.value<InsertionOrderedMap<QString, QVariant>>();
 
 	Q_ASSERT(map.contains(m_list_tag));
-    // qDb() << M_ID_VAL(m_list_tag);
-    // auto type1 = QMetaType::fromType<decltype(map.at(m_list_tag))>();
-    // auto type2 = QMetaType::fromType<SerializableQVariantList>();
-    // qDb() << M_ID_VAL(type1);
-    // qDb() << M_ID_VAL(type2);
-    // Q_ASSERT(QMetaType::canConvert(type1, type2));
 
 	SerializableQVariantList qvl = map.at(m_list_tag).value<SerializableQVariantList>();
 

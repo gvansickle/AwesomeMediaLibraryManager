@@ -283,7 +283,7 @@ bool NetworkAwareFileDialog::use_qfiledialog() const
 bool NetworkAwareFileDialog::use_native_dlg() const
 {
     if(user_pref_native_file_dialog() ||
-        ((QSysInfo::kernelType() == "winnt")))// @todo qt5->qt6, remove: && (QSysInfo::windowsVersion() & QSysInfo::WV_NT_based)) )
+        ((QSysInfo::kernelType() == "winnt")))
     {
         // Use the native file dialogs.
         return true;
@@ -296,11 +296,7 @@ bool NetworkAwareFileDialog::use_native_dlg() const
 
 bool NetworkAwareFileDialog::isDirSelectDialog() const
 {
-#if 0 // QT5
-	return in(std::set<QFileDialog::FileMode>({QFileDialog::Directory, QFileDialog::DirectoryOnly}), m_the_qfiledialog->fileMode());
-#elif 1 // QT6
 	return (m_the_qfiledialog->fileMode() == QFileDialog::Directory);
-#endif
 }
 
 void NetworkAwareFileDialog::setDefaultSidebarUrls()

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017, 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -28,7 +28,6 @@
 
 /// Qt
 #include <QObject>
-//#include <QElapsedTimer>
 #include <QPersistentModelIndex>
 #include <QFuture>
 #include <QFutureWatcher>
@@ -69,7 +68,6 @@ struct MetadataReturnVal
 
 Q_DECLARE_METATYPE(MetadataReturnVal)
 Q_DECLARE_METATYPE(QFuture<MetadataReturnVal>)
-//Q_DECLARE_METATYPE(ExtFuture<MetadataReturnVal>)
 
 // Typedef registered in cpp file.
 using VecLibRescannerMapItems = QVector<LibraryRescannerMapItem>;

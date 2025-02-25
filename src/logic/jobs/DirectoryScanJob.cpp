@@ -92,7 +92,7 @@ void DirScanFunction(QPromise<DirScanResult>& promise, AMLMJob* /*amlmJob*/,
 		// First check that we have a valid file or dir: Currently exists and is readable by current user.
 		if(!(file_info.exists() && file_info.isReadable()))
 		{
-//			qWr() << "UNREADABLE/NON-EXISTENT FILE:" << file_info.absoluteFilePath();
+			qWr() << "UNREADABLE/NON-EXISTENT FILE:" << file_info.absoluteFilePath();
 			/// @todo Collect errors
 		}
 		else if(file_info.isDir())
@@ -124,11 +124,8 @@ void DirScanFunction(QPromise<DirScanResult>& promise, AMLMJob* /*amlmJob*/,
 			DirScanResult dir_scan_result(file_url, file_info);
 //			qDb() << "DIRSCANRESULT:" << dir_scan_result;
 
-#if 0 // Qt5
-			promise.reportInfoMessage(QObject::tr("File: %1").arg(file_url.toString()), QObject::tr("File: %1").arg(file_url.toString()));
-#elif 1 // Qt6
             promise.setProgressValueAndText(num_files_found_so_far, QObject::tr("File: %1").arg(file_url.toString()));
-#endif
+
 			// Update progress.
 			/// @note Bytes is being used for "Size" == progress by the system.
 			/// No real need to accumulate that here anyway.
@@ -147,7 +144,7 @@ void DirScanFunction(QPromise<DirScanResult>& promise, AMLMJob* /*amlmJob*/,
 
 			// Report the URL we found to the future.
             promise.addResult(dir_scan_result);
-M_TODO("QT6")
+
             qDb() << "NUM FILES:" << num_files_found_so_far; // << ", per promise:" << promise.resultCount();
 		}
 
@@ -157,8 +154,6 @@ M_TODO("QT6")
 		{
 			// We've been cancelled.
 			qIn() << "CANCELLED";
-			// It's already been handled, we'd be reporting it twice here.
-//			ext_future.reportCanceled();
 			break;
 		}
 	}

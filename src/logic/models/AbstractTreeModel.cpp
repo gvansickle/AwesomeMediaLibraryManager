@@ -36,7 +36,7 @@
 #include <unordered_set>
 #include <queue>
 
-// Qt5
+// Qt
 #include <QModelIndex>
 #include <QAbstractItemModelTester>
 

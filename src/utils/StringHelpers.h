@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -205,16 +205,6 @@ operator<<(LHSType& out, const T& str)
 
 static inline bool isValidUTF8(const char* bytes)
 {
-#if 0 // Qt version == Qt5
-	QTextCodec::ConverterState state;
-	QTextCodec *codec = QTextCodec::codecForName("UTF-8");
-    const QString text = codec->toUnicode(bytes, std::strlen(bytes), &state);
-	Q_UNUSED(text);
-	if (state.invalidChars > 0)
-	{
-		return false;
-	}
-#endif
 	auto toUtf16 = QStringDecoder(QStringDecoder::Utf8);
 	QString text = toUtf16(bytes);
 	Q_UNUSED(text);

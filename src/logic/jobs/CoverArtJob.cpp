@@ -148,9 +148,9 @@ void CoverArtJob::LoadCoverArt(QPromise<QByteArray>& promise, CoverArtJobPtr kjo
 	{
 		qWarning() << "Unable to open file" << url_as_local << "with TagLib";
 
-#if 0
+#if 1
 		/// @todo Should maybe throw?
-		promise.cancel();
+		promise.finish();
 #endif
 		if(kjob != nullptr)
 		{
@@ -200,9 +200,3 @@ M_WARNING("TODO: Getting asserts here on app close during dir scan.");
 	}
 }
 
-#if 0
-void CoverArtJob::runFunctor()
-{
-	this->LoadCoverArt(m_ext_future, this, m_audio_file_url);
-}
-#endif

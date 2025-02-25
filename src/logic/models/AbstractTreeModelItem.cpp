@@ -386,7 +386,6 @@ QVariant AbstractTreeModelItem::toVariant() const
 
 	// Write class info to the map.
 	set_map_class_info(this, &map);
-	// set_map_class_info(std::string("AbstractTreeModelItem"), &map);
 
 #define X(field_tag, tag_string, var_name) map_insert_or_die(map, field_tag, var_name);
 	M_DATASTREAM_FIELDS(X);
@@ -450,7 +449,6 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 	qDb() << XMLTAG_NUM_CHILDREN << num_children;
 
 
-//	QVariantHomogenousList child_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
 	QVariantHomogenousList child_list(XMLTAG_CHILD_NODE_LIST, "child");
 	child_list = map.at(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
 	qDb() << M_ID_VAL(child_list.size());

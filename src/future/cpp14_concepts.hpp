@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -61,7 +61,7 @@ struct compiles : std::false_type {};
 template <typename T, template <typename> class Expression>
 struct compiles<T, Expression, std::void_t<Expression<T>>> : std::true_type {};
 
-#if __cpp_lib_concepts >= 202207L
+#if __cpp_lib_concepts < 202207L
 /**
  * SFINAE-based "requires".
  * Return type is ResultType if all Concepts applied to CheckType are fulfilled, otherwise it's ill-formed and template

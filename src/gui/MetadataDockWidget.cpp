@@ -22,7 +22,7 @@
 // Std C++
 #include <functional>
 
-// Qt5
+// Qt
 #include <QItemSelection>
 #include <QTreeView>
 #include <QTreeWidget>

@@ -21,7 +21,6 @@
 #define AWESOMEMEDIALIBRARYMANAGER_ABOUTDATASETUP_H
 
 
-//#include <KCoreAddons/KAboutData>
 #include <KAboutData>
 
 class AboutDataSetup

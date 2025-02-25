@@ -1,5 +1,5 @@
 /*
- * Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2019, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -85,7 +85,6 @@ void XmlSerializer::save(const ISerializable &serializable, const QUrl &file_url
 bool XmlSerializer::load(ISerializable& serializable, const QUrl &file_url)
 {
 	Stopwatch sw("###################### XmlSerializer::load()");
-    // return false; /// @todo QT6
 
 	QString load_file_path = file_url.toLocalFile();
 	if(load_file_path.isEmpty())
@@ -222,10 +221,6 @@ void XmlSerializer::InnerWriteVariantToStream(const QVariant& variant, QXmlStrea
 		switch(metatypeId)
 		{
 			case QMetaType::QVariantList:
-				/// @link http://doc.qt.io/qt-5/qvariant.html#toList
-				/// "Returns the variant as a QVariantList if the variant has userType() QMetaType::QVariantList
-				/// or QMetaType::QStringList"
-			// case QMetaType::QStringList:
 				writeVariantListToStream(variant, *xmlstream);
 				break;
 			case QMetaType::QVariantMap:
@@ -396,10 +391,6 @@ QVariant XmlSerializer::InnerReadVariantFromStream(QString typeString, const QXm
 		switch(metatype.id())
 		{
 			case QMetaType::QVariantList:
-				/// @link http://doc.qt.io/qt-5/qvariant.html#toList
-				/// "Returns the variant as a QVariantList if the variant has userType() QMetaType::QVariantList
-				/// or QMetaType::QStringList"
-			// case QMetaType::QStringList:
 				variant = readVariantListFromStream(xmlstream);
 				break;
 			case QMetaType::QVariantMap:

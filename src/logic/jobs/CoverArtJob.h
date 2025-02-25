@@ -62,8 +62,6 @@ public:
 
 	~CoverArtJob() override;
 
-	// void start() override;
-
     static CoverArtJobPtr make_job(QObject *parent, const QUrl& url);
 
 	/// No AMLMJob, just an ExtFuture<>.
@@ -79,9 +77,6 @@ protected:
 	 */
 	static void LoadCoverArt(QPromise<QByteArray> & promise, CoverArtJobPtr kjob, const QUrl& url);
 
-protected:
-
-//    void runFunctor() override;
 
 private:
 

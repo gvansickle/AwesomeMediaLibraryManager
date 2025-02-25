@@ -145,7 +145,6 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 
 	// Set some class meta-info.
 	set_map_class_info(this, &map);
-	// set_map_class_info(std::string("AbstractTreeModelHeaderItem"), &map);
 
 	QVariantHomogenousList header_section_list(XMLTAG_HEADER_SECTION_LIST, "section");
 

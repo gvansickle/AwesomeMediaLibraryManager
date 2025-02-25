@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2019, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -77,7 +77,7 @@
 	/** Move constructor. */ \
 	classname(classname &&) = default_or_delete; \
 	/** Move assignment. */ \
-classname& operator=(classname &&) = default_or_delete;
+	classname& operator=(classname &&) = default_or_delete;
 
 ///
 

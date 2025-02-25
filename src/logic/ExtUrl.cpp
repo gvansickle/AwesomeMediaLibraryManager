@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -23,10 +23,10 @@
 
 #include "ExtUrl.h"
 
-// Qt5
+// Qt
 #include <QFileInfo>
 
-// Ours, Qt5 Support
+// Ours, Qt Support
 #include <utils/RegisterQtMetatypes.h>
 
 // Ours
@@ -36,7 +36,7 @@
 
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering ExtUrl";
-	qRegisterMetaType<ExtUrl>("ExtUrl");
+	qRegisterMetaType<ExtUrl>();
 });
 
 

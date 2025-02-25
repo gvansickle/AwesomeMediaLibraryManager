@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -115,7 +115,6 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 
 	// Overwrite any class info added by the above.
 	set_map_class_info(this, &map);
-	// set_map_class_info(std::string("ScanResultsTreeModelItem"), &map);
 
 	// Set the xml:id.
 	map.insert_attributes({{"xml:id", get_prefixed_uuid()}});

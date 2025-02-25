@@ -21,8 +21,6 @@
 #define SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSPOPUP_H_
 
 /// Qt
-// class QWidget;
-// #include <QWidgetAction>
 #include <QWidget>
 
 /**

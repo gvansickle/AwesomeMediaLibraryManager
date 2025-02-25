@@ -20,12 +20,11 @@
 #ifndef SRC_GUI_ACTIVITYPROGRESSMANAGER_CUMULATIVEAMLMJOB_H_
 #define SRC_GUI_ACTIVITYPROGRESSMANAGER_CUMULATIVEAMLMJOB_H_
 
-#include <ExtFuture.h>
-
 // Qt
 #include <QMetaType>
 
 // Ours
+#include <ExtFuture.h>
 #include <concurrency/AMLMJob.h>
 #include <utils/TheSimplestThings.h>
 

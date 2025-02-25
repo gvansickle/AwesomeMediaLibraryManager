@@ -37,8 +37,8 @@
 
 AMLM_QREG_CALLBACK([](){
     qIn() << "Registering ScanResultsTreeModel";
-    qRegisterMetaType<ScanResultsTreeModel>()
-        ;});
+    qRegisterMetaType<ScanResultsTreeModel>();
+});
 
 ScanResultsTreeModel::ScanResultsTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject *parent)
 	: BASE_CLASS(column_specs, parent)
