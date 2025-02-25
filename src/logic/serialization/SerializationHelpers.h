@@ -92,12 +92,7 @@ template <typename T>
 concept MappableValueType = NonPointerType<T> && !std::is_same_v<ISerializable, T> &&
 	!std::is_base_of_v<ISerializable, T>;
 
-template <class MapType, class StringType, MappableValueType ValueType>//,
-// requires requires (ValueType v)
-// {
-// 	!std::is_same_v<ISerializable, ValueType>;
-// 	!std::is_base_of_v<ISerializable, ValueType>;
-// }
+template <class MapType, class StringType, MappableValueType ValueType>
 void map_insert_or_die(MapType& map, const StringType& key, const ValueType& member)
 {
 //	qDb() << "MIOD 2b:" << key;

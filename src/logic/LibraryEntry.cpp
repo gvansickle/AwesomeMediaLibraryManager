@@ -354,7 +354,7 @@ void LibraryEntry::fromVariant(const QVariant& variant)
 //			m_is_populated = false;
 //		}
 	}
-	qDb() << "LIBRRAYENTRY:" << *this;
+	qDb() << "LIBRARYENTRY:" << *this;
 }
 
 #undef M_DATASTREAM_FIELDS

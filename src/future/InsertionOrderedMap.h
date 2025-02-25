@@ -44,10 +44,9 @@
 
 
 /**
- * A map which maintains the insertion order of its keys.  The only operational difference between this and
+ * A map which maintains the insertion order of its keys.  The main operational difference between this and
  * std::map is that iteration over [begin(), end()) will be done in insertion order, not key-sorted order.
- *
- */
+  */
 template <typename KeyType, typename ValueType>
 class InsertionOrderedMap
 {
@@ -130,6 +129,13 @@ public:
 		{
 			qWr() << "NO MAP KEY FOUND TO ERASE:" << key;
 		}
+	}
+
+	void clear() noexcept
+	{
+		m_vector_of_elements.clear();
+		m_map_of_keys_to_vector_indices.clear();
+		m_attribute_map.clear();
 	}
 
 	const mapped_type& at(const KeyType& key) const
@@ -272,12 +278,15 @@ public:
 #endif // Qt5
 
 
-protected:
+private:
 
+	/// Storage for the Key/Value pairs.
 	underlying_container_type m_vector_of_elements;
-	// Map of keys to indexes in the vector.
+
+	/// Map of keys to indexes in the vector.
 	std::map<KeyType, uc_size_type> m_map_of_keys_to_vector_indices;
 
+	/// Map of attributes.
 	std::map<std::string, std::string> m_attribute_map;
 
 };

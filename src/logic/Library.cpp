@@ -175,7 +175,7 @@ QVariant Library::toVariant() const
 
 	// Write some derived info re: the Library.
 	map_insert_or_die(map, XMLTAG_WRITE_TIMESTAMP_MS, QDateTime::currentMSecsSinceEpoch());
-	map_insert_or_die(map, XMLTAG_WRITE_TIMESTAMP_UTC, QDateTime::currentDateTimeUtc()/*.toString()*/);
+	map_insert_or_die(map, XMLTAG_WRITE_TIMESTAMP_UTC, QDateTime::currentDateTimeUtc());
 	map_insert_or_die(map, XMLTAG_NUM_LIBRARY_ENTRIES, static_cast<qint64>(m_lib_entries.size()));
 	if(!m_lib_entries.empty())
 	{
@@ -197,6 +197,8 @@ void Library::fromVariant(const QVariant& variant)
 {
 	Stopwatch sw("################### Library::fromVariant()");
 
+	clear();
+
 	InsertionOrderedMap<QString, QVariant> map; // = variant.value<QVariantInsertionOrderedMap>();
 	qviomap_from_qvar_or_die(&map, variant);
 
@@ -217,7 +219,6 @@ void Library::fromVariant(const QVariant& variant)
 	// Concurrency.  Vs. the loop we used to have here, we went from 2.x secs to 0.5 secs.
 	list_blocking_map_reduce_read_all_entries_or_warn(list, &m_lib_entries);
 
-	qDb() << "NUM LIB ENTRIES:" << m_lib_entries.size() << "VS:" << num_lib_entries;
 	AMLM_WARNIF(m_lib_entries.size() != num_lib_entries);
 }
 

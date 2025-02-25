@@ -37,7 +37,6 @@
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering ExtUrl";
 	qRegisterMetaType<ExtUrl>("ExtUrl");
-//	qRegisterMetaTypeStreamOperators<ExtUrl>();
 });
 
 
@@ -68,9 +67,6 @@ QVariant ExtUrl::toVariant() const
 #define X(field_tag, field)   map_insert_or_die(map, field_tag, field);
 	M_DATASTREAM_FIELDS(X)
 #undef X
-
-	/// DEBUG
-	dump_map(map);
 
 	return map;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -22,7 +22,7 @@
 #include <config.h>
 #include <logic/serialization/ExtEnum.h>
 
-// Qt5
+// Qt
 #include <QUrl>
 #include <QFileInfo>
 #include <QDir>
@@ -76,8 +76,6 @@ QVariant DirScanResult::toVariant() const
 #define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
 	M_DATASTREAM_FIELDS(X);
 #undef X
-
-	dump_map(map);
 
 	return map;
 }
