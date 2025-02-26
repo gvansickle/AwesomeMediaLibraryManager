@@ -1115,20 +1115,20 @@ void MainWindow::connectPlayerControlsAndPlaylistView(PlayerControls *controls, 
 {
 	/// @note Qt::ConnectionType() cast here is due to the mixed flag/enum nature of the type.  Qt::UniqueConnection (0x80) can be bitwise-
 	/// OR-ed in with any other connection type, which are 0,1,2,3.
-    connect(controls, &PlayerControls::next, playlist_view, &MDIPlaylistView::next, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
-    connect(controls, &PlayerControls::previous, playlist_view, &MDIPlaylistView::previous, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
+    connect_or_die(controls, &PlayerControls::next, playlist_view, &MDIPlaylistView::next, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
+    connect_or_die(controls, &PlayerControls::previous, playlist_view, &MDIPlaylistView::previous, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
 
 	// Connect play() signal-to-signal.
-    connect(playlist_view, &MDIPlaylistView::play, controls, &PlayerControls::play, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
+    connect_or_die(playlist_view, &MDIPlaylistView::play, controls, &PlayerControls::play, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
 }
 
 void MainWindow::connectLibraryViewAndMainWindow(MDILibraryView *lv)
 {
     qDebug() << "Connecting" << lv << "and" << this;
-	connect(lv, &MDILibraryView::sendEntryToPlaylist, this, &MainWindow::onSendEntryToPlaylist);
-	connect(lv, &MDILibraryView::sendToNowPlaying, this, &MainWindow::onSendToNowPlaying);
+	connect_or_die(lv, &MDILibraryView::sendEntryToPlaylist, this, &MainWindow::onSendEntryToPlaylist);
+	connect_or_die(lv, &MDILibraryView::sendToNowPlaying, this, &MainWindow::onSendToNowPlaying);
 
-	connect(this, &MainWindow::settingsChanged, lv, &MDILibraryView::onSettingsChanged);
+	connect_or_die(this, &MainWindow::settingsChanged, lv, &MDILibraryView::onSettingsChanged);
 }
 
 void MainWindow::connectPlaylistViewAndMainWindow(MDIPlaylistView* plv)
@@ -1141,8 +1141,8 @@ M_WARNING("TODO: connect");
 void MainWindow::connectNowPlayingViewAndMainWindow(MDINowPlayingView* now_playing_view)
 {
     qDebug() << "Connecting";
-	connect(this, &MainWindow::sendToNowPlaying, now_playing_view, &MDINowPlayingView::onSendToNowPlaying);
-	connect(this, &MainWindow::settingsChanged, now_playing_view, &MDILibraryView::onSettingsChanged);
+	connect_or_die(this, &MainWindow::sendToNowPlaying, now_playing_view, &MDINowPlayingView::onSendToNowPlaying);
+	connect_or_die(this, &MainWindow::settingsChanged, now_playing_view, &MDILibraryView::onSettingsChanged);
 
 
 	connectPlayerAndPlaylistView(m_player, now_playing_view);

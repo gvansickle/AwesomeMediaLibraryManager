@@ -380,14 +380,12 @@ find_package(Qt6 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
 #	XmlPatterns
 	Concurrent
 	Test # For Q...ModelTester.
-	Core5Compat
 	)
 set(QT5_LINK_LIB_TARGETS Qt6::Core Qt6::Gui Qt6::Widgets
 	Qt6::Multimedia
 #	Qt6::XmlPatterns
 	Qt6::Concurrent
 	Qt6::Test
-	Qt6::Core5Compat
 )
 
 # Unix-only

@@ -408,7 +408,31 @@ PlaylistModel* MDIPlaylistView::underlyingModel() const
 
 void MDIPlaylistView::next()
 {
-    M_TODO("QT6 FIX THIS")
+    // M_TODO("QT6 FIX THIS")
+
+	QModelIndex current_index = currentIndex();
+	if (!current_index.isValid())
+	{
+		/// @todo Not immediately clear how we recover form this situation.
+		qDb() << "Model's current item is invalid.  Maybe no items in current playlist?";
+		return;
+	}
+
+	auto next_index = current_index.sibling(current_index.row() + 1, current_index.column());
+
+	// Check if the next index is valid
+	if (next_index.isValid())
+	{
+		// Set the next index as the current item.
+		setCurrentIndex(next_index);
+	}
+	else
+	{
+		// Wrap.
+		next_index = model()->index(0,0);
+		setCurrentIndex(next_index);
+		// qCr() << "No next item available.";
+	}
 #if 0 // QT5
 	// Forward to the QMediaPlaylist.
 	m_underlying_model->qmplaylist()->next();
@@ -418,6 +442,29 @@ void MDIPlaylistView::next()
 void MDIPlaylistView::previous()
 {
     M_TODO("QT6 FIX THIS")
+	QModelIndex current_index = currentIndex();
+	if (!current_index.isValid())
+	{
+		/// @todo Not immediately clear how we recover form this situation.
+		qDb() << "Model's current item is invalid.  Maybe no items in current playlist?";
+		return;
+	}
+
+	auto prev_index = current_index.sibling(current_index.row() - 1, current_index.column());
+
+	// Check if the calculated prev index is valid
+	if (prev_index.isValid())
+	{
+		// Set the next index as the current item.
+		setCurrentIndex(prev_index);
+	}
+	else
+	{
+		// Wrap.
+		prev_index = model()->index(model()->rowCount()-1, 0);
+		setCurrentIndex(prev_index);
+		// qCr() << "No next item available.";
+	}
 #if 0 // QT5
 	// Forward to the QMediaPlaylist.
 	m_underlying_model->qmplaylist()->previous();
