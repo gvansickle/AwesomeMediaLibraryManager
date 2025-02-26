@@ -328,6 +328,12 @@ target_link_libraries(${PROJECT_NAME}
 		libapp
 )
 
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+	COMMAND cloc --no-autogen "--not-match-d=/(build-|\\.).*/" "--exclude-ext=moc,xml,ui" ${PROJECT_SOURCE_DIR}
+	VERBATIM
+	COMMENT "Running cloc..."
+)
+
 ### @todo breeze
 #add_dependencies(${PROJECT_NAME} icons_oxygen)
 
