@@ -1089,6 +1089,7 @@ void MainWindow::connectPlayerAndControls(MP2 *player, PlayerControls *controls)
 	// Final setup.
 	// Set volume control to the current player volume.
 	controls->setVolume(player->volume());
+	controls->setMuted(player->muted());
 }
 
 /**
@@ -1097,7 +1098,7 @@ void MainWindow::connectPlayerAndControls(MP2 *player, PlayerControls *controls)
 void MainWindow::connectPlayerAndPlaylistView(MP2 *player, MDIPlaylistView *playlist_view)
 {
 	/// @todo Hide qMediaPlaylist behind playlist_view?
-    M_TODO("QT6 NEEDS FIXING")
+M_TODO("QT6 NEEDS FIXING")
 #if 0 //Qt5
 	if(player->playlist() == playlist_view->getQMediaPlaylist())
 	{
@@ -1109,6 +1110,9 @@ void MainWindow::connectPlayerAndPlaylistView(MP2 *player, MDIPlaylistView *play
 		player->setPlaylist(qmp);
 	}
 #endif
+M_WARNING("CRIT: Do we even need this?")
+	auto selection_model = playlist_view->selectionModel();
+	connect_or_die(selection_model, &QItemSelectionModel::currentChanged, player, &MP2::playlistPositionChanged);
 }
 
 void MainWindow::connectPlayerControlsAndPlaylistView(PlayerControls *controls, MDIPlaylistView *playlist_view)
@@ -1133,9 +1137,9 @@ void MainWindow::connectLibraryViewAndMainWindow(MDILibraryView *lv)
 
 void MainWindow::connectPlaylistViewAndMainWindow(MDIPlaylistView* plv)
 {
-	qDebug() << "Connecting";
+	qDebug() << "TODO Connecting";
 M_WARNING("TODO: connect");
-	qDebug() << "Connected";
+	qDebug() << "TODO Connected";
 }
 
 void MainWindow::connectNowPlayingViewAndMainWindow(MDINowPlayingView* now_playing_view)

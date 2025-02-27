@@ -17,22 +17,40 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <gui/actions/ActionHelpers.h>
+
 #include "MP2.h"
-#include "ntp.h"
 
-#include "utils/ConnectHelpers.h"
-
+// Qt
 //#include <QMediaPlaylist>
 #include <QDebug>
 #include <QUrlQuery>
+#include <QAudioDevice>
+#include <QMediaDevices>
 
+// Ours
+#include <ModelUserRoles.h>
+#include <PlaylistModelItem.h>
 #include <utils/Fraction.h>
+#include "utils/ConnectHelpers.h"
+#include "ntp.h"
+#include <gui/actions/ActionHelpers.h>
+
 
 MP2::MP2(QObject* parent) : QMediaPlayer(parent)
 {
 //	setAudioRole(QAudio::MusicRole);
 //	setNotifyInterval(10); // ms
+
+	auto dev_list = QMediaDevices::audioOutputs();
+	for (auto& dev : dev_list)
+	{
+		qDb() << "AUDIODEV:" << dev.description() << "ID:" << dev.id();
+	}
+	qDb() << M_ID_VAL(QMediaDevices::defaultAudioOutput().description());
+
+	m_audio_output = std::make_unique<QAudioOutput>(this);
+	m_audio_output->setDevice(QAudioDevice());
+	setAudioOutput(m_audio_output.get());
 
 	createActions();
 
@@ -46,11 +64,12 @@ MP2::MP2(QObject* parent) : QMediaPlayer(parent)
 	connect_or_die(this, &QMediaPlayer::stateChanged, this, &MP2::onStateChanged);
 	connect_or_die(qobject_cast<QMediaPlayer*>(this), static_cast<void(QMediaPlayer::*)(QMediaPlayer::Error)>(&QMediaPlayer::error), this,
 			static_cast<void(MP2::*)(QMediaPlayer::Error)>(&MP2::onPlayerError));
-#elif 1 // QT6
-	connect_or_die(this, &QMediaPlayer::sourceChanged, this, &MP2::onSourceChanged);
 #endif
 
-	m_audio_output = std::make_unique<QAudioOutput>();
+	connect_or_die(this, &QMediaPlayer::sourceChanged, this, &MP2::onSourceChanged);
+
+	// connect_or_die(m_audio_output, &QAudioOutput::volumeChanged, )
+
 }
 
 qint64 MP2::position() const
@@ -145,6 +164,7 @@ void MP2::seekToEnd()
 
 void MP2::play()
 {
+	qDb() << "play(), current media URL:" << source();
 	QMediaPlayer::play();
 }
 
@@ -160,7 +180,9 @@ void MP2::stop()
 
 void MP2::setMuted(bool muted)
 {
-	m_audio_output->setMuted(muted);
+M_WARNING("TODO")
+	m_audio_output->setMuted(false);
+	// m_audio_output->setMuted(muted);
 }
 
 void MP2::setVolume(int volume)
@@ -331,48 +353,65 @@ void MP2::onMediaChanged(const QMediaContent& media)
 void MP2::onMediaStatusChanged(QMediaPlayer::MediaStatus status)
 {
 	qDebug() << QString("onMediaStatusChanged:") << status;
-	if(status == QMediaPlayer::NoMedia)
+
+	switch(status)
 	{
-		updateSeekToEndInfoOnMediaChange();
-	}
-	else if(status == QMediaPlayer::EndOfMedia)
-	{
-		updateSeekToEndInfoOnMediaChange();
+		case QMediaPlayer::NoMedia:
+		{
+			updateSeekToEndInfoOnMediaChange();
+		}
+		case QMediaPlayer::EndOfMedia:
+		{
+			updateSeekToEndInfoOnMediaChange();
+			// m_playlist->next();
+		}
 	}
 }
 
 #if 0 // !QT6
-void MP2::onCurrentMediaChanged(const QMediaContent& qmediacontent)
+void MP2::onCurrentMediaChanged(const QUrl& media_url)
 {
 	// This is the active media content being played.  Could be Null.
-	qDebug() << QString("onCurrentMediaChanged:") << qmediacontent.canonicalUrl();
+	qDebug() << QString("onCurrentMediaChanged:") << media_url;
 	updateSeekToEndInfoOnMediaChange();
-	if(!qmediacontent.isNull())
+	if(media_url.isValid() && !media_url.isEmpty())
 	{
-		if(qmediacontent.playlist() == nullptr)
-		{
-			setTrackInfoFromUrl(qmediacontent.canonicalUrl());
-			qDebug() << QString("track start: %1").arg(m_track_startpos_ms);
-			QMediaPlayer::setPosition(m_track_startpos_ms);
-		}
+		setTrackInfoFromUrl(media_url);
+		qDebug() << QString("track start: %1").arg(m_track_startpos_ms);
+		QMediaPlayer::setPosition(m_track_startpos_ms);
 	}
 }
 #elif 1 // QT6
-void MP2::onSourceChanged(const QUrl& url)
+void MP2::onSourceChanged(const QUrl& media_url)
 {
-	qDebug() << QString("onSourceChanged:") << url;
+	qDebug() << QString("onSourceChanged:") << media_url;
 	updateSeekToEndInfoOnMediaChange();
-	if(1)//!qmediacontent.isNull())
+	if(media_url.isValid() && !media_url.isEmpty())
 	{
-		if(1)//qmediacontent.playlist() == nullptr)
-		{
-			setTrackInfoFromUrl(source());
-			qDebug() << QString("track start: %1").arg(m_track_startpos_ms);
-			QMediaPlayer::setPosition(m_track_startpos_ms);
-		}
+		setTrackInfoFromUrl(source());
+		qDebug() << QString("track start: %1").arg(m_track_startpos_ms);
+		QMediaPlayer::setPosition(m_track_startpos_ms);
 	}
 }
 #endif
+
+void MP2::playlistPositionChanged(const QModelIndex& current, const QModelIndex& previous)
+{
+	qDb() << "playlistPosChanged:" << current;
+
+	if (!current.isValid())
+	{
+		qWr() << "Invalid QModelIndex: " << current;
+	}
+	else
+	{
+		QVariant libentry = current.siblingAtColumn(0).data(ModelUserRoles::PointerToItemRole);
+		std::shared_ptr<PlaylistModelItem> item = libentry.value<std::shared_ptr<PlaylistModelItem>>();
+		auto new_url = item->getUrl();
+		qDb() << M_ID_VAL(new_url);
+		setSource(new_url);
+	}
+}
 
 #if 0 // QT6
 void MP2::onStateChanged(QMediaPlayer::State state)

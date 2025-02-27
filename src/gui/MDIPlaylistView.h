@@ -59,6 +59,9 @@ public:
     /// Playlists are not read-only.
     bool isReadOnly() const override { return false; }
 
+	// QMediaPlaylist-like member functions.
+	QUrl currentMedia() const;
+
 public Q_SLOTS:
 
 	/// @name Slots for player-connected messages.
@@ -66,7 +69,7 @@ public Q_SLOTS:
 
 	/**
 	 * Start next song.
-	 * makes the next item in the model the current item in the view.
+	 * Makes the next item in the model the current item in the view.
 	 */
     void next();
 
@@ -134,8 +137,10 @@ protected:
 	 */
     void keyPressEvent(QKeyEvent *event) override;
 
+public Q_SLOTS:
+	virtual void playlistPositionChanged(qint64 position);
+
 protected Q_SLOTS:
-    virtual void playlistPositionChanged(qint64 position);
 
 	void onContextMenuSelectedRows(QContextMenuEvent* event, const QPersistentModelIndexVec& row_indexes) override;
 	void onContextMenuViewport(QContextMenuEvent* event) override;

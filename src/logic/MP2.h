@@ -85,18 +85,21 @@ public Q_SLOTS:
 	void setPosition(qint64 position);
 	void onPositionChanged(qint64 pos);
 	void onDurationChanged(qint64 duration);
-//	void onMediaChanged(const QMediaContent &media);
+	// void onMediaChanged(const QUrl& media);
 	void onMediaStatusChanged(QMediaPlayer::MediaStatus status);
+	void playlistPositionChanged(const QModelIndex& current, const QModelIndex& previous);
 
 #if 0 // QT5
-	void onCurrentMediaChanged(const QMediaContent &qmediacontent);
+	void onCurrentMediaChanged(const QUrl &media_url);
 #elif 1 // QT6
-	void onSourceChanged(const QUrl& url);
+	void onSourceChanged(const QUrl& media_url);
 #endif
 #if 0 // @todo QT6
 	void onStateChanged(QMediaPlayer::State state);
 	void onPlayerError(QMediaPlayer::Error error);
 #endif
 };
+
+
 
 #endif // MP2_H

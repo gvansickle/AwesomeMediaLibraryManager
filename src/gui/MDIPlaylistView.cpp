@@ -146,11 +146,11 @@ void MDIPlaylistView::setModel(QAbstractItemModel* model)
             old_sel_model->deleteLater();
         }
 
-        M_TODO("QT6 FIX THIS")
-#if 0 // QT5
+M_TODO("QT6 Does this need fixing?")
+
 		// Connect to the QMediaPlaylist's index changed notifications,
-		connect(m_underlying_model->qmplaylist(), &QMediaPlaylist::currentIndexChanged, this, &MDIPlaylistView::playlistPositionChanged);
-#endif
+		// connect_or_die(m_underlying_model->qmplaylist(), &QMediaPlaylist::currentIndexChanged, this, &MDIPlaylistView::playlistPositionChanged);
+
 		// Set up the TreeView's header.
 		header()->setStretchLastSection(false);
 		header()->setSectionResizeMode(QHeaderView::Stretch);
@@ -402,9 +402,23 @@ PlaylistModel* MDIPlaylistView::underlyingModel() const
 }
 
 
+QUrl MDIPlaylistView::currentMedia() const
+{
+	QModelIndex current_index = currentIndex();
+	if (!current_index.isValid())
+	{
+		return QUrl();
+	}
+	else
+	{
+		return current_index.data(Qt::DisplayRole ).toUrl();
+	}
+}
+
 //
 // Public slots
 //
+
 
 void MDIPlaylistView::next()
 {
@@ -586,6 +600,7 @@ M_WARNING("TODO: This mostly works, but can start the wrong row if e.g. this vie
 
 void MDIPlaylistView::playlistPositionChanged(qint64 position)
 {
+M_WARNING("CRIT: Do we even need this?")
 	// Notification from the QMediaPlaylist that the current selection has changed.
 	// Since we have a QSortFilterProxyModel between us and the underlying model, we need to convert the position,
 	// which is in underlying-model coordinates, to proxy model coordinates.
@@ -648,6 +663,7 @@ void MDIPlaylistView::startPlaying(const QModelIndex& index)
 #if 0 // QT5
 	m_underlying_model->qmplaylist()->setCurrentIndex(underlying_model_index.row());
 #endif
+	setCurrentIndex(underlying_model_index);
 	// If the player isn't already playing, the index change above won't start it.  Send a signal to it to
 	// make sure it starts.
 	Q_EMIT play();
