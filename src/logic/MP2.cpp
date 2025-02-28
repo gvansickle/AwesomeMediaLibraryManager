@@ -66,7 +66,7 @@ MP2::MP2(QObject* parent) : QMediaPlayer(parent)
 			static_cast<void(MP2::*)(QMediaPlayer::Error)>(&MP2::onPlayerError));
 #endif
 
-	connect_or_die(this, &QMediaPlayer::sourceChanged, this, &MP2::onSourceChanged);
+	// connect_or_die(this, &QMediaPlayer::sourceChanged, this, &MP2::onSourceChanged);
 
 	// connect_or_die(m_audio_output, &QAudioOutput::volumeChanged, )
 
@@ -96,7 +96,7 @@ qint64 MP2::duration() const
 	}
 }
 
-int MP2::muted() const
+bool MP2::muted() const
 {
 	return m_audio_output->isMuted();
 }
@@ -187,7 +187,9 @@ M_WARNING("TODO")
 
 void MP2::setVolume(int volume)
 {
-	m_audio_output->setVolume(volume);
+	float scaled_vol = static_cast<float>(volume)/100.0f;
+	scaled_vol = scaled_vol * scaled_vol;
+	m_audio_output->setVolume(scaled_vol);
 }
 
 void MP2::setShuffleMode(bool shuffle_on)
@@ -359,11 +361,13 @@ void MP2::onMediaStatusChanged(QMediaPlayer::MediaStatus status)
 		case QMediaPlayer::NoMedia:
 		{
 			updateSeekToEndInfoOnMediaChange();
+			break;
 		}
 		case QMediaPlayer::EndOfMedia:
 		{
 			updateSeekToEndInfoOnMediaChange();
-			// m_playlist->next();
+			//m_playlist->next();
+			break;
 		}
 	}
 }
@@ -388,7 +392,10 @@ void MP2::onSourceChanged(const QUrl& media_url)
 	updateSeekToEndInfoOnMediaChange();
 	if(media_url.isValid() && !media_url.isEmpty())
 	{
-		setTrackInfoFromUrl(source());
+		setTrackInfoFromUrl(media_url);
+		// Remove the Fragment before we pass the URL to QMediaPlayer.
+		QUrl url_minus_fragment = media_url.toString(QUrl::RemoveFragment);
+		setSource(url_minus_fragment);
 		qDebug() << QString("track start: %1").arg(m_track_startpos_ms);
 		QMediaPlayer::setPosition(m_track_startpos_ms);
 	}
@@ -407,9 +414,9 @@ void MP2::playlistPositionChanged(const QModelIndex& current, const QModelIndex&
 	{
 		QVariant libentry = current.siblingAtColumn(0).data(ModelUserRoles::PointerToItemRole);
 		std::shared_ptr<PlaylistModelItem> item = libentry.value<std::shared_ptr<PlaylistModelItem>>();
-		auto new_url = item->getUrl();
+		auto new_url = item->getM2Url();
 		qDb() << M_ID_VAL(new_url);
-		setSource(new_url);
+		onSourceChanged(new_url);
 	}
 }
 

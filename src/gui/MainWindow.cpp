@@ -1071,20 +1071,20 @@ void MainWindow::createConnections()
 void MainWindow::connectPlayerAndControls(MP2 *player, PlayerControls *controls)
 {
 	// PlayerControls -> MP2 signals.
-	connect(controls, &PlayerControls::play, player, &MP2::play);
-	connect(controls, &PlayerControls::pause, player, &MP2::pause);
-	connect(controls, &PlayerControls::stop, player, &MP2::stop);
-	connect(controls, &PlayerControls::changeRepeat, player, &MP2::repeat);
-	connect(controls, &PlayerControls::changeMuting, player, &MP2::setMuted);
-	connect(controls, &PlayerControls::changeVolume, player, &MP2::setVolume);
-	connect(controls, &PlayerControls::changeShuffle, player, &MP2::setShuffleMode);
+	connect_or_die(controls, &PlayerControls::play, player, &MP2::play);
+	connect_or_die(controls, &PlayerControls::pause, player, &MP2::pause);
+	connect_or_die(controls, &PlayerControls::stop, player, &MP2::stop);
+	connect_or_die(controls, &PlayerControls::changeRepeat, player, &MP2::repeat);
+	connect_or_die(controls, &PlayerControls::changeMuting, player, &MP2::setMuted);
+	connect_or_die(controls, &PlayerControls::changeVolume, player, &MP2::setVolume);
+	connect_or_die(controls, &PlayerControls::changeShuffle, player, &MP2::setShuffleMode);
 
 	// MP2 -> PlayerControls signals.
-    connect(player, &MP2::playbackStateChanged, controls, &PlayerControls::setPlaybackState);
-	connect(player, &MP2::mutedChanged, controls, &PlayerControls::setMuted);
-	connect(player, &MP2::volumeChanged, controls, &PlayerControls::setVolume);
-	connect(player, &MP2::durationChanged2, controls, &PlayerControls::onDurationChanged);
-	connect(player, &MP2::positionChanged2, controls, &PlayerControls::onPositionChanged);
+    connect_or_die(player, &MP2::playbackStateChanged, controls, &PlayerControls::setPlaybackState);
+	connect_or_die(player, &MP2::mutedChanged, controls, &PlayerControls::setMuted);
+	connect_or_die(player, &MP2::volumeChanged, controls, &PlayerControls::setVolume);
+	connect_or_die(player, &MP2::durationChanged2, controls, &PlayerControls::onDurationChanged);
+	connect_or_die(player, &MP2::positionChanged2, controls, &PlayerControls::onPositionChanged);
 
 	// Final setup.
 	// Set volume control to the current player volume.
@@ -1110,7 +1110,7 @@ M_TODO("QT6 NEEDS FIXING")
 		player->setPlaylist(qmp);
 	}
 #endif
-M_WARNING("CRIT: Do we even need this?")
+
 	auto selection_model = playlist_view->selectionModel();
 	connect_or_die(selection_model, &QItemSelectionModel::currentChanged, player, &MP2::playlistPositionChanged);
 }
@@ -1882,10 +1882,10 @@ void MainWindow::addChildMDIView(MDITreeViewBase* child)
 	// Connect Cut, Copy, Delete, and Select All actions to the availability signals emitted by the child.
 	/// @note This works because only the active child will send these signals.
 	/// Otherwise we'd need to swap which child was connected to the actions.
-	connect(child, &MDITreeViewBase::cutAvailable, m_act_cut, &QAction::setEnabled);
-	connect(child, &MDITreeViewBase::cutAvailable, m_act_delete, &QAction::setEnabled);
-	connect(child, &MDITreeViewBase::copyAvailable, m_act_copy, &QAction::setEnabled);
-	connect(child, &MDITreeViewBase::selectAllAvailable, m_act_select_all, &QAction::setEnabled);
+	connect_or_die(child, &MDITreeViewBase::cutAvailable, m_act_cut, &QAction::setEnabled);
+	connect_or_die(child, &MDITreeViewBase::cutAvailable, m_act_delete, &QAction::setEnabled);
+	connect_or_die(child, &MDITreeViewBase::copyAvailable, m_act_copy, &QAction::setEnabled);
+	connect_or_die(child, &MDITreeViewBase::selectAllAvailable, m_act_select_all, &QAction::setEnabled);
 
 	/// @todo Same thing with undo/redo.
 	// child.undoAvailable.connect(editUndoAct.setEnabled)
@@ -2118,7 +2118,7 @@ void MainWindow::startSettingsDialog()
 		// KConfigDialog didn't find an instance of this dialog, so lets create it:
 		dialog = new SettingsDialog(this, "settings", AMLMSettings::self());
 
-		connect(dialog, &KConfigDialog::settingsChanged, this, &MainWindow::onSettingsChanged);
+		connect_or_die(dialog, &KConfigDialog::settingsChanged, this, &MainWindow::onSettingsChanged);
 	}
     dialog->show( /*page*/);
 //    dialog->exec();
@@ -2248,7 +2248,7 @@ void MainWindow::onConfigureToolbars()
 
 	KEditToolBar dialog(factory(), this);
 
-	connect(&dialog, &KEditToolBar::newToolBarConfig, this, &MainWindow::onApplyToolbarConfig);
+	connect_or_die(&dialog, &KEditToolBar::newToolBarConfig, this, &MainWindow::onApplyToolbarConfig);
 
 	dialog.exec();
 }
