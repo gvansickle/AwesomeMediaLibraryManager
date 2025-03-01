@@ -73,7 +73,7 @@ private:
 	bool m_last_repeat_state = false;
 
 	void createActions();
-	void setTrackInfoFromUrl(QUrl url);
+	void getTrackInfoFromUrl(QUrl url);
 	void updateSeekToEndInfoOnMediaChange();
 	void seekToEnd();
 

@@ -109,7 +109,7 @@ void MP2::createActions()
 
 }
 
-void MP2::setTrackInfoFromUrl(QUrl url)
+void MP2::getTrackInfoFromUrl(QUrl url)
 {
 	qDebug() << QString("URL: '%1'").arg(url.toString());
 	if(url.hasFragment())
@@ -126,7 +126,7 @@ void MP2::setTrackInfoFromUrl(QUrl url)
 	{
 		m_is_subtrack = false;
 	}
-	updateSeekToEndInfoOnMediaChange();
+	// updateSeekToEndInfoOnMediaChange();
 }
 
 void MP2::updateSeekToEndInfoOnMediaChange()
@@ -157,19 +157,31 @@ void MP2::seekToEnd()
 	m_pending_seek_msg = true;
 	m_ignore_seek_msg = false;
 	// Queue up a message to seek to the end of the current media.
-	QMetaObject::invokeMethod(this, "setPosition", Qt::QueuedConnection, Q_ARG(qint64, -1));
+	// QMetaObject::invokeMethod(this, "setPosition", Qt::QueuedConnection, Q_ARG(qint64, -1));
+	if (m_is_subtrack)
+	{
+		QMediaPlayer::setPosition(-1);
+	}
 }
 
 void MP2::play()
 {
-	qDb() << "play(), current media URL:" << source();
+	qDb() << "play(), current media URL:" << source() << M_ID_VAL(m_track_startpos_ms) << M_ID_VAL(m_track_endpos_ms);
+	auto playback_state = QMediaPlayer::playbackState();
+	if (playback_state == QMediaPlayer::StoppedState)
+	{
+		if (m_is_subtrack)
+		{
+			QMediaPlayer::setPosition(m_track_startpos_ms);
+		}
+	}
 	QMediaPlayer::play();
 }
 
 void MP2::stop()
 {
 	QMediaPlayer::stop();
-	updateSeekToEndInfoOnMediaChange();
+	// updateSeekToEndInfoOnMediaChange();
 	if(m_is_subtrack)
 	{
 		QMediaPlayer::setPosition(m_track_startpos_ms);
@@ -277,6 +289,7 @@ void MP2::repeat(bool checked)
 void MP2::setPosition(qint64 position)
 {
 	qDebug() << "setPosition:" << position;
+#if 0
 	if(position == -1)
 	{
 		// This is an incoming "seek_to_end" msg.
@@ -298,6 +311,7 @@ void MP2::setPosition(qint64 position)
 		m_pending_seek_msg = false;
 	}
 	else
+#endif
 	{
 		// It's a normal setPosition() message.  Just forward to the superclass.
 		QMediaPlayer::setPosition(position);
@@ -315,6 +329,7 @@ void MP2::onPositionChanged(qint64 pos)
 	{
 		Q_EMIT positionChanged2(pos);
 	}
+#if 0
 	if(!m_seek_to_end_mode)
 	{
 		// We're not already trying to seek to the end of the track.
@@ -326,6 +341,12 @@ void MP2::onPositionChanged(qint64 pos)
 				seekToEnd();
 			}
 		}
+	}
+#endif
+	if (QMediaPlayer::position() >= m_track_endpos_ms)
+	{
+		qDb() << "Subtrack position past the end, seeking to end.";
+		QMediaPlayer::setPosition(QMediaPlayer::duration());
 	}
 }
 
@@ -342,28 +363,22 @@ void MP2::onDurationChanged(qint64 duration)
 	}
 }
 
-#if 0 /// !QT6
-void MP2::onMediaChanged(const QMediaContent& media)
-{
-	// This could be the playlist.
-	qDebug() << QString("onMediaChanged: %1").arg(media.canonicalUrl().toString());
-}
-#endif
-
 void MP2::onMediaStatusChanged(QMediaPlayer::MediaStatus status)
 {
 	qDebug() << QString("onMediaStatusChanged:") << status;
+
+	updateSeekToEndInfoOnMediaChange();
 
 	switch(status)
 	{
 		case QMediaPlayer::NoMedia:
 		{
-			updateSeekToEndInfoOnMediaChange();
+			// updateSeekToEndInfoOnMediaChange();
 			break;
 		}
 		case QMediaPlayer::EndOfMedia:
 		{
-			updateSeekToEndInfoOnMediaChange();
+			// updateSeekToEndInfoOnMediaChange();
 			Q_EMIT playlistToNext();
 			break;
 		}
@@ -371,16 +386,19 @@ void MP2::onMediaStatusChanged(QMediaPlayer::MediaStatus status)
 }
 
 #if 0 // !QT6
-void MP2::onCurrentMediaChanged(const QUrl& media_url)
+void MP2::onCurrentMediaChanged(const QMediaContent& qmediacontent)
 {
 	// This is the active media content being played.  Could be Null.
-	qDebug() << QString("onCurrentMediaChanged:") << media_url;
+	qDebug() << QString("onCurrentMediaChanged:") << qmediacontent.canonicalUrl();
 	updateSeekToEndInfoOnMediaChange();
-	if(media_url.isValid() && !media_url.isEmpty())
+	if(!qmediacontent.isNull())
 	{
-		setTrackInfoFromUrl(media_url);
-		qDebug() << QString("track start: %1").arg(m_track_startpos_ms);
-		QMediaPlayer::setPosition(m_track_startpos_ms);
+		if(qmediacontent.playlist() == nullptr)
+		{
+			setTrackInfoFromUrl(qmediacontent.canonicalUrl());
+			qDebug() << QString("track start: %1").arg(m_track_startpos_ms);
+			QMediaPlayer::setPosition(m_track_startpos_ms);
+		}
 	}
 }
 #elif 1 // QT6
@@ -390,7 +408,7 @@ void MP2::onSourceChanged(const QUrl& media_url)
 	updateSeekToEndInfoOnMediaChange();
 	if(media_url.isValid() && !media_url.isEmpty())
 	{
-		setTrackInfoFromUrl(media_url);
+		getTrackInfoFromUrl(media_url);
 		// Remove the Fragment before we pass the URL to QMediaPlayer.
 		QUrl url_minus_fragment = media_url.toString(QUrl::RemoveFragment);
 		setSource(url_minus_fragment);
@@ -402,6 +420,11 @@ void MP2::onSourceChanged(const QUrl& media_url)
 
 void MP2::playlistPositionChanged(const QModelIndex& current, const QModelIndex& previous)
 {
+	// We get in here when the Playlist view sends the QItemSelectionModel::currentChanged signal.
+	// That signal can come from:
+	// - User input on the playlist view.
+	// - The MP2::playlistToNext signal emitted by us.
+
 	qDb() << "playlistPosChanged:" << current;
 
 	if (!current.isValid())
@@ -410,7 +433,9 @@ void MP2::playlistPositionChanged(const QModelIndex& current, const QModelIndex&
 	}
 	else
 	{
+		// Set up to play the newly-selected track.
 		QVariant libentry = current.siblingAtColumn(0).data(ModelUserRoles::PointerToItemRole);
+		Q_ASSERT(libentry.isValid());
 		std::shared_ptr<PlaylistModelItem> item = libentry.value<std::shared_ptr<PlaylistModelItem>>();
 		auto new_url = item->getM2Url();
 		qDb() << M_ID_VAL(new_url);

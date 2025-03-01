@@ -82,7 +82,7 @@ QVariant PlaylistModel::data(const QModelIndex& index, int role) const
 		{
 			// Return a pointer to the item.
 			std::shared_ptr<PlaylistModelItem> item = std::dynamic_pointer_cast<PlaylistModelItem>(getItem(index));
-			qDebug() << "Returning pointer to item with Url:" << item->getUrl();
+			qDebug() << "Returning pointer to PlaylistModelItem with Url:" << item->getM2Url();
 			return QVariant::fromValue<std::shared_ptr<PlaylistModelItem>>(item);
 		}
 	}

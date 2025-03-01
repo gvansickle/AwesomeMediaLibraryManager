@@ -1094,9 +1094,13 @@ void MainWindow::connectPlayerAndControls(MP2 *player, PlayerControls *controls)
 
 void MainWindow::connectPlayerAndPlaylistView(MP2 *player, MDIPlaylistView *playlist_view)
 {
+	// Connection for the player to tell the playlist to go to the next item when the current one is over.
+	// This in turn will cause a QItemSelectionModel::currentChanged to be emitted, which the player
+	// receives and sets up the now-current track.
+	connect_or_die(player, &MP2::playlistToNext, playlist_view, &MDIPlaylistView::next);
+
 	auto selection_model = playlist_view->selectionModel();
 	connect_or_die(selection_model, &QItemSelectionModel::currentChanged, player, &MP2::playlistPositionChanged);
-	connect_or_die(player, &MP2::playlistToNext, playlist_view, &MDIPlaylistView::next);
 }
 
 void MainWindow::connectPlayerControlsAndPlaylistView(PlayerControls *controls, MDIPlaylistView *playlist_view)
