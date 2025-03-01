@@ -68,8 +68,6 @@ MP2::MP2(QObject* parent) : QMediaPlayer(parent)
 
 	// connect_or_die(this, &QMediaPlayer::sourceChanged, this, &MP2::onSourceChanged);
 
-	// connect_or_die(m_audio_output, &QAudioOutput::volumeChanged, )
-
 }
 
 qint64 MP2::position() const
@@ -103,7 +101,7 @@ bool MP2::muted() const
 
 int MP2::volume() const
 {
-	return m_audio_output->volume();
+	return m_audio_output->volume()*100;
 }
 
 void MP2::createActions()
@@ -366,7 +364,7 @@ void MP2::onMediaStatusChanged(QMediaPlayer::MediaStatus status)
 		case QMediaPlayer::EndOfMedia:
 		{
 			updateSeekToEndInfoOnMediaChange();
-			//m_playlist->next();
+			Q_EMIT playlistToNext();
 			break;
 		}
 	}
@@ -396,7 +394,7 @@ void MP2::onSourceChanged(const QUrl& media_url)
 		// Remove the Fragment before we pass the URL to QMediaPlayer.
 		QUrl url_minus_fragment = media_url.toString(QUrl::RemoveFragment);
 		setSource(url_minus_fragment);
-		qDebug() << QString("track start: %1").arg(m_track_startpos_ms);
+		qDebug() << QString("track start: %1 ms").arg(m_track_startpos_ms);
 		QMediaPlayer::setPosition(m_track_startpos_ms);
 	}
 }

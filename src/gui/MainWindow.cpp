@@ -1092,27 +1092,11 @@ void MainWindow::connectPlayerAndControls(MP2 *player, PlayerControls *controls)
 	controls->setMuted(player->muted());
 }
 
-/**
- * @note This actually connects the player to the playlist's QMediaPlaylist.  Should probably encapsulate this better.
- */
 void MainWindow::connectPlayerAndPlaylistView(MP2 *player, MDIPlaylistView *playlist_view)
 {
-	/// @todo Hide qMediaPlaylist behind playlist_view?
-M_TODO("QT6 NEEDS FIXING")
-#if 0 //Qt5
-	if(player->playlist() == playlist_view->getQMediaPlaylist())
-	{
-		qDebug() << "Already connected.";
-	}
-	else
-	{
-		QMediaPlaylist* qmp = playlist_view->getQMediaPlaylist();
-		player->setPlaylist(qmp);
-	}
-#endif
-
 	auto selection_model = playlist_view->selectionModel();
 	connect_or_die(selection_model, &QItemSelectionModel::currentChanged, player, &MP2::playlistPositionChanged);
+	connect_or_die(player, &MP2::playlistToNext, playlist_view, &MDIPlaylistView::next);
 }
 
 void MainWindow::connectPlayerControlsAndPlaylistView(PlayerControls *controls, MDIPlaylistView *playlist_view)

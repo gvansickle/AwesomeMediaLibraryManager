@@ -38,7 +38,7 @@ Q_SIGNALS:
 	/// @name Signals for player-connected messages.
 	/// @{
 	/// Start playing the current song.
-    void play();
+	void play();
 	/// @}
 
 public:

@@ -33,7 +33,7 @@ class MP2 : public QMediaPlayer
     Q_PROPERTY(int volume READ volume WRITE setVolume NOTIFY volumeChanged)
 
 public:
-	MP2(QObject *parent = Q_NULLPTR);
+	explicit MP2(QObject *parent = Q_NULLPTR);
 
 	/// Property overrides.
 	qint64 position() const;
@@ -46,6 +46,9 @@ Q_SIGNALS:
 	void durationChanged2(qint64);
     void mutedChanged(bool);
     void volumeChanged(int);
+	/// Signal which tells the playlist to go to the next item
+	/// because of a media status change of QMediaPlayer::EndOfMedia.
+	void playlistToNext();
 
 private:
 	Q_DISABLE_COPY(MP2)

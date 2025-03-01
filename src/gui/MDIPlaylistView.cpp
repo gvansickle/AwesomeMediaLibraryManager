@@ -422,8 +422,6 @@ QUrl MDIPlaylistView::currentMedia() const
 
 void MDIPlaylistView::next()
 {
-    // M_TODO("QT6 FIX THIS")
-
 	QModelIndex current_index = currentIndex();
 	if (!current_index.isValid())
 	{
@@ -432,7 +430,7 @@ void MDIPlaylistView::next()
 		return;
 	}
 
-	auto next_index = current_index.sibling(current_index.row() + 1, current_index.column());
+	auto next_index = current_index.sibling(current_index.row() + 1, 0);
 
 	// Check if the next index is valid
 	if (next_index.isValid())
@@ -447,15 +445,10 @@ void MDIPlaylistView::next()
 		setCurrentIndex(next_index);
 		// qCr() << "No next item available.";
 	}
-#if 0 // QT5
-	// Forward to the QMediaPlaylist.
-	m_underlying_model->qmplaylist()->next();
-#endif
 }
 
 void MDIPlaylistView::previous()
 {
-    M_TODO("QT6 FIX THIS")
 	QModelIndex current_index = currentIndex();
 	if (!current_index.isValid())
 	{
@@ -479,10 +472,6 @@ void MDIPlaylistView::previous()
 		setCurrentIndex(prev_index);
 		// qCr() << "No next item available.";
 	}
-#if 0 // QT5
-	// Forward to the QMediaPlaylist.
-	m_underlying_model->qmplaylist()->previous();
-#endif
 }
 
 void MDIPlaylistView::onCut()
@@ -663,6 +652,7 @@ void MDIPlaylistView::startPlaying(const QModelIndex& index)
 #if 0 // QT5
 	m_underlying_model->qmplaylist()->setCurrentIndex(underlying_model_index.row());
 #endif
+	Q_ASSERT(underlying_model_index.model() == m_underlying_model);
 	setCurrentIndex(underlying_model_index);
 	// If the player isn't already playing, the index change above won't start it.  Send a signal to it to
 	// make sure it starts.
