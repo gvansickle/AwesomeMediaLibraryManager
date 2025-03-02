@@ -30,7 +30,14 @@ class MP2 : public QMediaPlayer
 	Q_OBJECT
 
 	Q_PROPERTY(bool muted READ muted WRITE setMuted NOTIFY mutedChanged)
-    Q_PROPERTY(int volume READ volume WRITE setVolume NOTIFY volumeChanged)
+	Q_PROPERTY(int volume READ volume WRITE setVolume NOTIFY volumeChanged)
+
+public:
+	enum ShuffleSetting {Shuffle, Sequential};
+	Q_ENUM(ShuffleSetting)
+
+	enum LoopSetting {Loop, NoLoop};
+	Q_ENUM(LoopSetting)
 
 public:
 	explicit MP2(QObject *parent = Q_NULLPTR);
@@ -38,14 +45,14 @@ public:
 	/// Property overrides.
 	qint64 position() const;
 	qint64 duration() const;
-    bool muted() const;
-    int volume() const;
+	bool muted() const;
+	int volume() const;
 
-Q_SIGNALS:
-	void positionChanged2(qint64);
+	Q_SIGNALS:
+		void positionChanged2(qint64);
 	void durationChanged2(qint64);
-    void mutedChanged(bool);
-    void volumeChanged(float);
+	void mutedChanged(bool);
+	void volumeChanged(float);
 	/// Signal which tells the playlist to go to the next item
 	/// because of a media status change of QMediaPlayer::EndOfMedia.
 	void playlistToNext();
@@ -62,15 +69,11 @@ private:
 	qint64 m_track_endpos_ms = 0;
 	/// @}
 
-	/// @name Seek-to-end control variables for managing subtrack playback.
-	/// @{
-	bool m_seek_to_end_mode = false;
-	bool m_pending_seek_msg = false;
-	bool m_ignore_seek_msg = false;
-	/// @}
-
 	/// For managing transitions between Shuffle/Sequential+Stop/Sequential+Repeat.
-	bool m_last_repeat_state = false;
+	// bool m_last_repeat_state = false;
+	ShuffleSetting m_shuffle_setting {Shuffle};
+	LoopSetting m_loop_setting {Loop};
+	bool m_playing { false };
 
 	void createActions();
 	void getTrackInfoFromUrl(QUrl url);
@@ -81,7 +84,7 @@ public Q_SLOTS:
     void setMuted(bool muted);
     void setVolume(float volume);
 	void setShuffleMode(bool shuffle_on);
-	void repeat(bool checked);
+	void repeat(bool loop);
 
 	void setPosition(qint64 position);
 	void onPositionChanged(qint64 pos);
@@ -89,12 +92,9 @@ public Q_SLOTS:
 	// void onMediaChanged(const QUrl& media);
 	void onMediaStatusChanged(QMediaPlayer::MediaStatus status);
 	void onPlaylistPositionChanged(const QModelIndex& current, const QModelIndex& previous);
-
-#if 0 // QT5
-	void onCurrentMediaChanged(const QUrl &media_url);
-#elif 1 // QT6
 	void onSourceChanged(const QUrl& media_url);
-#endif
+	void onErrorOccurred(QMediaPlayer::Error error, const QString& errorString);
+
 #if 0 // @todo QT6
 	void onStateChanged(QMediaPlayer::State state);
 	void onPlayerError(QMediaPlayer::Error error);
