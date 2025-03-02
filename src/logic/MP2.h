@@ -45,7 +45,7 @@ Q_SIGNALS:
 	void positionChanged2(qint64);
 	void durationChanged2(qint64);
     void mutedChanged(bool);
-    void volumeChanged(int);
+    void volumeChanged(float);
 	/// Signal which tells the playlist to go to the next item
 	/// because of a media status change of QMediaPlayer::EndOfMedia.
 	void playlistToNext();
@@ -74,14 +74,12 @@ private:
 
 	void createActions();
 	void getTrackInfoFromUrl(QUrl url);
-	void updateSeekToEndInfoOnMediaChange();
-	void seekToEnd();
 
 public Q_SLOTS:
 	void play();
 	void stop();
     void setMuted(bool muted);
-    void setVolume(int volume);
+    void setVolume(float volume);
 	void setShuffleMode(bool shuffle_on);
 	void repeat(bool checked);
 
@@ -90,7 +88,7 @@ public Q_SLOTS:
 	void onDurationChanged(qint64 duration);
 	// void onMediaChanged(const QUrl& media);
 	void onMediaStatusChanged(QMediaPlayer::MediaStatus status);
-	void playlistPositionChanged(const QModelIndex& current, const QModelIndex& previous);
+	void onPlaylistPositionChanged(const QModelIndex& current, const QModelIndex& previous);
 
 #if 0 // QT5
 	void onCurrentMediaChanged(const QUrl &media_url);

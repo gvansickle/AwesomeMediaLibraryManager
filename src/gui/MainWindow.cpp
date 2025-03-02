@@ -1100,7 +1100,7 @@ void MainWindow::connectPlayerAndPlaylistView(MP2 *player, MDIPlaylistView *play
 	connect_or_die(player, &MP2::playlistToNext, playlist_view, &MDIPlaylistView::next);
 
 	auto selection_model = playlist_view->selectionModel();
-	connect_or_die(selection_model, &QItemSelectionModel::currentChanged, player, &MP2::playlistPositionChanged);
+	connect_or_die(selection_model, &QItemSelectionModel::currentChanged, player, &MP2::onPlaylistPositionChanged);
 }
 
 void MainWindow::connectPlayerControlsAndPlaylistView(PlayerControls *controls, MDIPlaylistView *playlist_view)
