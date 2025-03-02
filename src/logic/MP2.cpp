@@ -200,8 +200,12 @@ void MP2::onPositionChanged(qint64 pos)
 	{
 		// Subtrack, and the position is past its end.  Stop playback and tell the playlist we're connected to
 		// to send us the next media URL to play.
-		QMediaPlayer::stop();
-		Q_EMIT playlistToNext();
+		if (!m_EndOfMedia_sending_playlistToNext)
+		{
+			m_onPositionChanged_sending_playlistToNext = true;
+			QMediaPlayer::stop();
+			Q_EMIT playlistToNext();
+		}
 	}
 }
 
@@ -243,11 +247,19 @@ void MP2::onMediaStatusChanged(QMediaPlayer::MediaStatus status)
 		}
 		case QMediaPlayer::EndOfMedia:
 		{
-			// We aren't get these msgs from subtracks when we do the seek-to-end for some reason.
-			/// @todo See the playlistToNext() emit in onPositionChanged().  I can forsee that we could end up with
-			/// a subtrack at the end of the file triggering both of these emits, and hence doing a double skip.
-			/// We should prevent that somehow.
-			Q_EMIT playlistToNext();
+			// Player should be in StoppedState here.
+			// Note: We aren't get these msgs from subtracks when we do a seek-to-end for some reason.
+			/// We have two separate things which will emit playlistToNext() (see the other playlistToNext() emit in
+			/// onPositionChanged()).  We could end up with a subtrack at the end of its file triggering
+			/// both of these emits, and hence doing a double skip.  This logic here and in onPositionChanged()
+			/// prevents that race and guarantees only one playlistToNext() is sent.
+			/// These two flags allow only one to send the signal, which comes back to us via the
+			/// onPlaylistPositionChanged() slot.  That slot clears the flags to reset this mechanism for the next track.
+			if(!m_onPositionChanged_sending_playlistToNext)
+			{
+				m_EndOfMedia_sending_playlistToNext = true;
+				Q_EMIT playlistToNext();
+			}
 			break;
 		}
 	}
@@ -280,7 +292,10 @@ void MP2::onPlaylistPositionChanged(const QModelIndex& current, const QModelInde
 	// We get in here when the Playlist view sends the QItemSelectionModel::currentChanged signal.
 	// That signal can come from:
 	// - User input on the playlist view.
-	// - The MP2::playlistToNext signal emitted by us.
+	// - The MP2::playlistToNext signal emitted by us (in two different places).
+
+	m_onPositionChanged_sending_playlistToNext = false;
+	m_EndOfMedia_sending_playlistToNext = false;
 
 	qDb() << "playlistPosChanged:" << current;
 
@@ -302,17 +317,5 @@ void MP2::onPlaylistPositionChanged(const QModelIndex& current, const QModelInde
 
 void MP2::onErrorOccurred(QMediaPlayer::Error error, const QString& errorString)
 {
-	qCr() << "ERROR:" << error << errorString;
+	qCr() << "PLAYER ERROR:" << error << errorString;
 }
-
-#if 0 // QT6
-void MP2::onStateChanged(QMediaPlayer::State state)
-{
-	qDebug() << QString("onStateChanged (Player): %1").arg(/*PlayerStateMap[*/state/*]*/);
-}
-
-void MP2::onPlayerError(QMediaPlayer::Error error)
-{
-	qWarning() << "Player error" << error << ":" << this->errorString();
-}
-#endif

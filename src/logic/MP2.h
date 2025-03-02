@@ -48,8 +48,8 @@ public:
 	bool muted() const;
 	int volume() const;
 
-	Q_SIGNALS:
-		void positionChanged2(qint64);
+Q_SIGNALS:
+	void positionChanged2(qint64);
 	void durationChanged2(qint64);
 	void mutedChanged(bool);
 	void volumeChanged(float);
@@ -69,11 +69,14 @@ private:
 	qint64 m_track_endpos_ms = 0;
 	/// @}
 
-	/// For managing transitions between Shuffle/Sequential+Stop/Sequential+Repeat.
-	// bool m_last_repeat_state = false;
 	ShuffleSetting m_shuffle_setting {Shuffle};
 	LoopSetting m_loop_setting {Loop};
 	bool m_playing { false };
+
+	/// We need to keep track of who gets to the end-of-(sub)track first, so we can block the other one
+	/// from emitting the same playlistToNext signal.
+	bool m_EndOfMedia_sending_playlistToNext {false};
+	bool m_onPositionChanged_sending_playlistToNext {false};
 
 	void createActions();
 	void getTrackInfoFromUrl(QUrl url);
@@ -89,16 +92,10 @@ public Q_SLOTS:
 	void setPosition(qint64 position);
 	void onPositionChanged(qint64 pos);
 	void onDurationChanged(qint64 duration);
-	// void onMediaChanged(const QUrl& media);
 	void onMediaStatusChanged(QMediaPlayer::MediaStatus status);
 	void onPlaylistPositionChanged(const QModelIndex& current, const QModelIndex& previous);
 	void onSourceChanged(const QUrl& media_url);
 	void onErrorOccurred(QMediaPlayer::Error error, const QString& errorString);
-
-#if 0 // @todo QT6
-	void onStateChanged(QMediaPlayer::State state);
-	void onPlayerError(QMediaPlayer::Error error);
-#endif
 };
 
 
