@@ -1,5 +1,5 @@
 # AwesomeMediaLibraryManager
-An Audio Media Library Manager using the Qt 5 GUI framework
+An Audio Media Library Manager using the Qt GUI framework
 
 Because the world needs a Media Library Manager which is Awesome.
 
@@ -17,4 +17,5 @@ Really this is just me experimenting with a number of things:
 
 The Windows installer [here](https://github.com/gvansickle/AwesomeMediaLibraryManager/releases/tag/0.0.1.1) worked the last time I tried it and gave you a not-completely-useless media player for your troubles.
 
-I should maybe get back to this project some day....
+~~I should maybe get back to this project some day....~~
+I'm starting to get back to this project again....
