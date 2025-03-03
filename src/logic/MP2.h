@@ -46,7 +46,7 @@ public:
 	qint64 position() const;
 	qint64 duration() const;
 	bool muted() const;
-	int volume() const;
+	float volume() const;
 
 Q_SIGNALS:
 	void positionChanged2(qint64);
@@ -89,7 +89,6 @@ public Q_SLOTS:
 	void setShuffleMode(bool shuffle_on);
 	void repeat(bool loop);
 
-	void setPosition(qint64 position);
 	void onPositionChanged(qint64 pos);
 	void onDurationChanged(qint64 duration);
 	void onMediaStatusChanged(QMediaPlayer::MediaStatus status);

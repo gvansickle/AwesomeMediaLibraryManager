@@ -33,9 +33,6 @@ class FilterWidget : public QLineEdit
 {
 	Q_OBJECT
 
-    // QT5 Q_PROPERTY(Qt::CaseSensitivity caseSensitivity READ caseSensitivity WRITE setCaseSensitivity)
-    // QT5 Q_PROPERTY(QRegExp::PatternSyntax patternSyntax READ patternSyntax WRITE setPatternSyntax)
-
 Q_SIGNALS:
 	void filterChanged();
 
@@ -45,7 +42,7 @@ public:
 	QRegularExpression::PatternOptions caseSensitive() const;
     void setCaseSensitive(bool case_sensitive);
 
-#warning "QT6 TEMP FIX THIS"
+    /// @todo QT6 broke this, fix.
     // QRegExp::PatternSyntax patternSyntax() const;
     // void setPatternSyntax(QRegExp::PatternSyntax s);
 

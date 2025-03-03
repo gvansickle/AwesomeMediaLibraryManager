@@ -38,9 +38,6 @@
 
 MP2::MP2(QObject* parent) : QMediaPlayer(parent)
 {
-//	setAudioRole(QAudio::MusicRole);
-//	setNotifyInterval(10); // ms
-
 	auto dev_list = QMediaDevices::audioOutputs();
 	for (auto& dev : dev_list)
 	{
@@ -64,9 +61,6 @@ MP2::MP2(QObject* parent) : QMediaPlayer(parent)
 	// This avoids having to expose m_audio_output for a third party to make connections to.
 	connect_or_die(m_audio_output.get(), &QAudioOutput::volumeChanged, this, &MP2::volumeChanged);
 	connect_or_die(m_audio_output.get(), &QAudioOutput::mutedChanged, this, &MP2::mutedChanged);
-
-	// connect_or_die(this, &QMediaPlayer::sourceChanged, this, &MP2::onSourceChanged);
-
 }
 
 qint64 MP2::position() const
@@ -98,9 +92,9 @@ bool MP2::muted() const
 	return m_audio_output->isMuted();
 }
 
-int MP2::volume() const
+float MP2::volume() const
 {
-	return m_audio_output->volume()*100;
+	return m_audio_output->volume();
 }
 
 void MP2::createActions()
@@ -132,7 +126,7 @@ void MP2::play()
 {
 	qDb() << "play(), current media URL:" << source() << M_ID_VAL(m_track_startpos_ms) << M_ID_VAL(m_track_endpos_ms);
 	auto playback_state = QMediaPlayer::playbackState();
-	if (playback_state == QMediaPlayer::StoppedState)  //<= This is PlayingState / LoadedMedia.
+	if (playback_state == QMediaPlayer::StoppedState)  //<= This is usually PlayingState / LoadedMedia.
 	{
 		if (m_is_subtrack)
 		{
@@ -171,17 +165,6 @@ void MP2::setShuffleMode(bool shuffle_on)
 void MP2::repeat(bool loop)
 {
 	m_loop_setting = loop ? MP2::Loop : MP2::NoLoop;
-}
-
-void MP2::setPosition(qint64 position)
-{
-	/// @todo Not clear that we even need this anymore.  If we do we have to take subtracks into account.
-	/// No callers currently.
-	///
-	qDebug() << "setPosition:" << position;
-
-	// Just forward to the superclass.
-	QMediaPlayer::setPosition(position);
 }
 
 void MP2::onPositionChanged(qint64 pos)

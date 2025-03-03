@@ -713,7 +713,7 @@ void MainWindow::createActionsHelp(KActionCollection* ac)
 {
 #if HAVE_KF501 || HAVE_KF6
 	// For KDE we use a derivation of KHelpMenu.
-    Q_UNUSED(ac);
+    Q_UNUSED(ac)
 #else
 	m_helpAct = make_action(Theme::iconFromTheme("help-contents"), tr("&Help"), this,
 							QKeySequence::HelpContents,
@@ -741,7 +741,7 @@ void MainWindow::createActionsHelp(KActionCollection* ac)
  */
 void MainWindow::addViewMenuActions()
 {
-M_WARNING("TODO");
+M_WARNING("TODO")
 
 	m_act_lock_layout->setChecked(AMLMSettings::layoutIsLocked());
 //	connect(m_act_lock_layout, &QAction::toggled, this, &MainWindow::setLayoutLocked);
@@ -827,7 +827,7 @@ void MainWindow::createMenus()
 	m_menu_edit->addAction(m_act_find_prev);
 
     // Create the View menu.
-M_WARNING("TODO");
+M_WARNING("TODO")
     m_menu_view = menuBar()->addMenu(tr("&View"));
 //	menuBar()->addMenu(m_menu_view);
 //	m_ab_docks->appendToMenu(m_menu_view);
@@ -888,7 +888,7 @@ M_WARNING("TODO");
 	m_helpMenu->addAction(m_aboutAct);
 	m_helpMenu->addAction(m_aboutQtAct);
 #else
-	// Create a help menu based on KF5 KHelpMenu.
+    // Create a help menu based on KF KHelpMenu.
 	auto help_menu = new HelpMenu(this, KAboutData::applicationData());
 	menuBar()->addMenu(help_menu->menu());
 #endif // !HAVE_KF5
@@ -1517,7 +1517,7 @@ void MainWindow::readLibSettings(QSettings& settings)
         ef.addResult(list);
         // ef.reportFinished();
 	})
-	.then(this, [=](ExtFuture<SerializableQVariantList> ef){
+    .then(this, [this, overlay_filename, prog](ExtFuture<SerializableQVariantList> ef){
 
 		SerializableQVariantList list = ef.result(); //.get_first();
 
@@ -1821,14 +1821,14 @@ void MainWindow::newCollectionView()
 
 //    child->getTableView()->setModel(model);
 //    child->setPane2Model(AMLMApp::instance()->cdb2_model_instance());
-M_WARNING("SHARED PTR");
+M_WARNING("SHARED PTR")
 //	child->setPane2Model(AMLMApp::instance()->IScanResultsTreeModel().get());
 //	child->setPane2Model(AMLM::Core::self()->getScanResultsTreeModel().get());
 	child->setPane2Model(AMLM::Core::self()->getEditableTreeModel().get());
 
 	m_exp_second_child_view = new ExperimentalKDEView1(this);
 	auto second_mdi_child = m_mdi_area->addSubWindow(m_exp_second_child_view);
-M_WARNING("SHARED PTR");
+M_WARNING("SHARED PTR")
 auto srtmodel = AMLM::Core::self()->getScanResultsTreeModel().get();
 	m_exp_second_child_view->setModel(srtmodel);
 

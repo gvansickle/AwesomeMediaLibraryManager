@@ -272,7 +272,7 @@ M_TODO("Not getting some field here");
 			/// @todo I'm not clear on why we need to explicitly capture a copy of future...
 			/// Oh wait, probably lambda isn't mutable.
 // Qt6			ExtAsync::detail::run_in_event_loop(this, [=, future_copy=future](){
-        .then(this, [=](QImage image){
+        .then(this, [this](QImage image){
 			AMLM_ASSERT_IN_GUITHREAD();
 
 			if(image.isNull())

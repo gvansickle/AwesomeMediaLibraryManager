@@ -216,7 +216,7 @@ void ActivityProgressStatusBarTracker::registerJob(KJob* kjob)
     // KWidgetJobTracker does almost the following.
     // It does not pass the job ptr though.
     /// @todo Is that part of our problems?
-    QTimer::singleShot(500, this, [=](){SLOT_onShowProgressWidget(kjob);});
+    QTimer::singleShot(500, this, [this, kjob](){SLOT_onShowProgressWidget(kjob);});
 }
 
 void ActivityProgressStatusBarTracker::unregisterJob(KJob* kjob)

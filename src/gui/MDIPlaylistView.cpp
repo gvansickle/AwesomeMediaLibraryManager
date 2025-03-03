@@ -146,7 +146,7 @@ void MDIPlaylistView::setModel(QAbstractItemModel* model)
             old_sel_model->deleteLater();
         }
 
-M_TODO("QT6 Does this need fixing?")
+M_TODO("QT6 Pretty sure this needs fixing to update connections")
 
 		// Connect to the QMediaPlaylist's index changed notifications,
 		// connect_or_die(m_underlying_model->qmplaylist(), &QMediaPlaylist::currentIndexChanged, this, &MDIPlaylistView::playlistPositionChanged);
@@ -578,7 +578,7 @@ M_WARNING("TODO: This mostly works, but can start the wrong row if e.g. this vie
 	{
 		// Activate the index to start playing it.
 		auto proxy_index = model()->index(last_row, 0, QModelIndex());
-#warning "According to clazy, this isn't a signal."
+        /// @todo This is a slot, not a signal.
 		Q_EMIT onActivated(proxy_index);
 	}
 
@@ -645,14 +645,10 @@ void MDIPlaylistView::startPlaying(const QModelIndex& index)
 
 	qDebug() << "Underlying index:" << underlying_model_index;
 
-	// Since m_underlying_model->qmplaylist() is connected to the player, we should only have to setCurrentIndex() to
-	// start the song.
-	/// @note See "jump()" etc in the Qt5 MediaPlyer example.
-    M_TODO("QT6 FIX THIS")
-#if 0 // QT5
-	m_underlying_model->qmplaylist()->setCurrentIndex(underlying_model_index.row());
-#endif
-	Q_ASSERT(underlying_model_index.model() == m_underlying_model);
+    // Since m_underlying_model->qmplaylist() is connected to the player, we should only have to setCurrentIndex() to
+    // start the song.
+    /// @note See "jump()" etc in the Qt5 MediaPlyer example.
+    Q_ASSERT(underlying_model_index.model() == m_underlying_model);
 	setCurrentIndex(underlying_model_index);
 	// If the player isn't already playing, the index change above won't start it.  Send a signal to it to
 	// make sure it starts.

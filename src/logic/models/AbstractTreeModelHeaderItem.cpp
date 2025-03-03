@@ -99,9 +99,8 @@ void AbstractTreeModelHeaderItem::clear()
 
 bool AbstractTreeModelHeaderItem::setColumnSpecs(std::initializer_list<ColumnSpec> column_specs)
 {
-	M_WARNING("TODO This should take a list of ColumnSpecs, NEEDS TO INSERT COLUMNS");
+    M_WARNING("TODO This should take a list of ColumnSpecs, NEEDS TO INSERT COLUMNS")
 	Q_ASSERT_X(childCount() == 0, __PRETTY_FUNCTION__, "Model has children already");
-#warning "INSERT COLUMNS"
 //	m_column_specs.clear();
 	m_item_data.clear();
 //	std::copy(column_specs.begin(), column_specs.end(), std::back_inserter(m_column_specs));
