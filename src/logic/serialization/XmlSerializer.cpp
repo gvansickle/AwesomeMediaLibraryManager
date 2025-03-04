@@ -169,36 +169,6 @@ void XmlSerializer::InnerWriteVariantToStream(const QVariant& variant, QXmlStrea
 	// Handles the QVariant type dispatch and basically everything between the writing of the node name and type
 	// and the end element.
 
-	/**
-	 * @note Uhhhhhh..... QMetaType sometimes != QVariant.type().
-	 *
-	 * This looks like a complete fiasco.  Seriously, from the Qt 5.11.1 docs:
-	 * UPDATE: Qt6 may or may not have fixed this.  Much of the QVariant related stuff is obsoleted, looks like they're
-	 * leaning into QMetaType instead.
-	 *
-	 * @link http://doc.qt.io/qt-5/qvariant.html#type
-	 * "QVariant::Type QVariant::type() const
-	 *    Although this function is declared as returning QVariant::Type, the return value should be
-	 * interpreted as QMetaType::Type. [...]
-	 * Note that return values in the ranges QVariant::Char through QVariant::RegExp and QVariant::Font
-	 * through QVariant::Transform correspond to the values in the ranges QMetaType::QChar through QMetaType::QRegExp
-	 * and QMetaType::QFont through QMetaType::QQuaternion. [...huh?] Pay particular attention when working
-	 * with char and QChar variants. [...whu...?] Also note that the types void*, long, short, unsigned long,
-	 * unsigned short, unsigned char, float, QObject*, and QWidget* are represented in QMetaType::Type but not
-	 * in QVariant::Type, and they can be returned by this function. [...???] However, they are considered to
-	 * be user defined types when tested against QVariant::Type. [$*&^$%*#@@#!???]".
-	 *
-	 * ...oh, ok, a partial explanation:
-	 * From qvariant.h:495:
-	 * "// QVariant::Type is marked as \obsolete, but we don't want to
-	// provide a constructor from its intended replacement,
-	// QMetaType::Type, instead, because the idea behind these
-	// constructors is flawed in the first place. But we also don't
-	// want QVariant(QMetaType::String) to compile and falsely be an
-	// int variant, so delete this constructor:
-	QVariant(QMetaType::Type) Q_DECL_EQ_DELETE;"
-	 */
-
 	QMetaType metatype = variant.metaType();
 	int metatypeId = metatype.id();
 

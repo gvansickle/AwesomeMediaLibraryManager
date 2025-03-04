@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2019, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -37,7 +37,6 @@
 #include <utils/DebugHelpers.h>
 #include <future/guideline_helpers.h>
 
-// Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE(std::deque);
 
 class QVariantHomogenousList //: public QVariantList
 {
@@ -125,6 +124,7 @@ protected:
 };
 
 Q_DECLARE_METATYPE(QVariantHomogenousList);
-// Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE(QVariantHomogenousList); // QVariantHomogenousList isn't a template, so this macro doesn't work.
+// QVariantHomogenousList isn't a template, so this macro doesn't work:
+// Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE(QVariantHomogenousList);
 
 #endif // QVARIANTHOMOGENOUSLIST_H

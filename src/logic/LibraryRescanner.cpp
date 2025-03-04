@@ -233,7 +233,6 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	// The future that we'll use to move the LibraryRescannerMapItems to the library_metadata_rescan_task().
     QPromise<VecLibRescannerMapItems> rescan_items_in_promise;
     QFuture<VecLibRescannerMapItems> rescan_items_in_future = rescan_items_in_promise.future();
-// QT6	ExtFuture<VecLibRescannerMapItems> rescan_items_in_future = ExtAsync::make_started_only_future<VecLibRescannerMapItems>();
 
     ///
     /// Start the library_metadata_rescan_task.
@@ -257,12 +256,10 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	/// @todo Obsoleting.
 	auto qurl_promise = std::make_shared<QPromise<QString>>();
 	QFuture<QString> qurl_future = qurl_promise->future();
-	// QT6 ExtFuture<QString> qurl_future = QtFuture::makeReadyValueFuture()// QT6 ExtAsync::make_started_only_future<QString>();
 
 	// Create a future so we can attach a continuation to get the results to the main thread.
 	auto tree_model_item_promise = std::make_shared<QPromise<SharedItemContType>>();
 	QFuture<SharedItemContType> tree_model_item_future = tree_model_item_promise->future();
-	// QT6 ExtFuture<SharedItemContType> tree_model_item_future = ExtAsync::make_started_only_future<SharedItemContType>();
 
 	m_timer.lap("End setup, start continuation attachments");
 
@@ -396,7 +393,7 @@ qDb() << "POST WAIT" << M_NAME_VAL(future);
 #if 1
 
 	///
-	/// Convert SharedItemContainerType's into ???, then Append TreeModelItems to the ScanResultsTreeModel tree_model.
+	/// Convert SharedItemContainerType's into TreeModelItems, then Append TreeModelItems to the ScanResultsTreeModel tree_model.
 	///
 	Q_ASSERT(tree_model);
 /// streaming_then() ############################################

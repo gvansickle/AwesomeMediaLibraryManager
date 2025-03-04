@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -23,7 +23,7 @@
 #include <tuple>
 #include <string>
 
-/// Qt
+// Qt
 #include <QIcon>
 #include <QStyle>
 #include <QStyleFactory>
@@ -42,7 +42,7 @@
 #include <QMimeType>
 #include <QToolButton>
 
-/// KF
+// KF
 #if HAVE_KF6
 #include <KIconTheme>
 #include <KActionMenu>

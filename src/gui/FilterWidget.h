@@ -27,7 +27,6 @@
 class QAction;
 class QActionGroup;
 
-// QT5 Q_DECLARE_METATYPE(QRegExp::PatternSyntax)
 
 class FilterWidget : public QLineEdit
 {

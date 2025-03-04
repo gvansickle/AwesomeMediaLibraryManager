@@ -22,7 +22,7 @@
  */
 #include <InsertionOrderedMap.h>
 
-// Qt5
+// Qt
 #include <utils/RegisterQtMetatypes.h>
 
 AMLM_QREG_CALLBACK([](){

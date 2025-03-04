@@ -1,5 +1,5 @@
 /*
- * Copyright 2017, 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -28,7 +28,7 @@
 #include <utility> // For std::pair<>
 #include <memory>
 
-/// Qt5
+// Qt
 #include <QUrl>
 
 class QActionGroup;

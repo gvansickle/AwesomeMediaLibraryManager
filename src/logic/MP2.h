@@ -30,7 +30,7 @@ class MP2 : public QMediaPlayer
 	Q_OBJECT
 
 	Q_PROPERTY(bool muted READ muted WRITE setMuted NOTIFY mutedChanged)
-	Q_PROPERTY(int volume READ volume WRITE setVolume NOTIFY volumeChanged)
+	Q_PROPERTY(float volume READ volume WRITE setVolume NOTIFY volumeChanged)
 
 public:
 	enum ShuffleSetting {Shuffle, Sequential};

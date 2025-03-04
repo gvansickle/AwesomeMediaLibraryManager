@@ -1,5 +1,5 @@
 /*
- * Copyright 2017, 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018, 2019, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -73,8 +73,6 @@
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering Metadata metatypes";
 	qRegisterMetaType<Metadata>();
-//	qRegisterMetaTypeStreamOperators<Metadata>();
-//	QMetaType::registerDebugStreamOperator<Metadata>();
 //	QMetaType::registerConverter<Metadata, QString>([](const Metadata& obj){ return obj.name(); });
 });
 

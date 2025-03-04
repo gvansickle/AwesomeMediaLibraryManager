@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -199,7 +199,7 @@ void Library::fromVariant(const QVariant& variant)
 
 	clear();
 
-	InsertionOrderedMap<QString, QVariant> map; // = variant.value<QVariantInsertionOrderedMap>();
+	InsertionOrderedMap<QString, QVariant> map;
 	qviomap_from_qvar_or_die(&map, variant);
 
 #define X(field_tag, member_field)   map_read_field_or_warn(map, field_tag, &member_field);

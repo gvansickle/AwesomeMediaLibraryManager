@@ -1,5 +1,5 @@
 /*
- * Copyright 2017, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2019, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -29,7 +29,6 @@
 
 #include "DragDropTreeViewStyleProxy.h"
 #include <QApplication>
-//#include <QMediaPlaylist>
 #include <QHeaderView>
 #include <QToolTip>
 #include <QMessageBox>
@@ -425,7 +424,7 @@ void MDIPlaylistView::next()
 	QModelIndex current_index = currentIndex();
 	if (!current_index.isValid())
 	{
-		/// @todo Not immediately clear how we recover form this situation.
+		/// @todo Not immediately clear how we recover from this situation.
 		qDb() << "Model's current item is invalid.  Maybe no items in current playlist?";
 		return;
 	}

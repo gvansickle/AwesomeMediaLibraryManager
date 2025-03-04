@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -17,31 +17,24 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "LibraryEntryMimeData.h"
 #include "PlaylistModel.h"
 
-M_TODO("QT6 FIX THIS")
-#if 0 // QT5
-#include <QMediaPlaylist>
-#endif
+// Qt
 #include <QMimeData>
 #include <QDebug>
 #include <QXmlStreamWriter>
 
+// Ours.
 #include "utils/StringHelpers.h"
 #include "utils/DebugHelpers.h"
-
+#include "LibraryEntryMimeData.h"
 #include "logic/ModelUserRoles.h"
 
 
 PlaylistModel::PlaylistModel(QObject* parent) : LibraryModel(parent)
 {
-    M_TODO("QT6 FIX THIS")
-#if 0 // QT5
-	// The QMediaPlaylist we need for QMediaPlayer's consumption.
-	m_qmplaylist = new QMediaPlaylist(this);
-	m_qmplaylist->setPlaybackMode(QMediaPlaylist::Sequential);
-#endif
+	/// @todo Qt5->6: Default playlist to Sequential/Loop mode.
+	//m_qmplaylist->setPlaybackMode(QMediaPlaylist::Sequential);
 	m_columnSpecs.push_back({SectionID(PlaylistSectionID::Rating), "Rating", {"rating"}});
 	m_columnSpecs.push_back({SectionID(PlaylistSectionID::Blacklist), "Blacklist", {"blacklist"}});
 }
@@ -429,69 +422,16 @@ bool PlaylistModel::serializeToFileAsXSPF(QFileDevice& filedev) const
 
 void PlaylistModel::subclassesInsertRows(int first_row, int num_rows, const QModelIndex& parent)
 {
-    qDebug() << QString("Inserting rows %1 through %2 into QMPlaylist, mediaCount=%3").arg(first_row).arg(first_row+num_rows-1).arg(/*m_qmplaylist->mediaCount()*/"FIXME-QT6");
-	for(auto i = first_row; i<first_row+num_rows; ++i)
-	{
-		auto child_index = index(i, 0, QModelIndex());
-		std::shared_ptr<PlaylistModelItem> playlist_entry = std::dynamic_pointer_cast<PlaylistModelItem>(getItem(child_index));
-M_TODO("QT6 FIX THIS")
-#if 0 // QT5
-		QMediaContent* qmediacontent = new QMediaContent(playlist_entry->getM2Url());
-		if(!m_qmplaylist->insertMedia(i, *qmediacontent))
-		{
-			qFatal("Insertion failed: %s", m_qmplaylist->errorString().toStdString().c_str());
-		}
-#endif
-	}
-	qDebug() << "complete";
+
 }
 
 void PlaylistModel::subclassesRemoveRows(int first_row, int num_rows, const QModelIndex& parent)
 {
-	qDebug() << QString("Removing rows %1 through %2 from QMPlaylist").arg(first_row).arg(first_row+num_rows-1);
-    M_TODO("QT6 FIX THIS")
-#if 0 // QT5
-	if(!m_qmplaylist->removeMedia(first_row, first_row+num_rows-1))
-	{
-		qFatal("Remove failed: %s", m_qmplaylist->errorString().toStdString().c_str());
-	}
-#endif
-	qDebug("complete");
+
 }
 
 void PlaylistModel::subclassesSetData(const QModelIndex& index, const QVariant& value, int role)
 {
-//	qDebug() << "onSetData()" << index << Qt::ItemDataRole(role);
 
-	// QMediaPlaylist has no analog to setData(), so we have to remove and insert here.
-M_TODO("QT6 FIX THIS")
-#if 0 // QT5
-	qDebug() << QString("Replacing row %1 of QMPlaylist, mediaCount=%2").arg(index.row()).arg(m_qmplaylist->mediaCount());
-	if(m_qmplaylist->mediaCount() < index.row()+1)
-	{
-		qFatal("no such row in QMediaPlaylist: %d", index.row());
-		return;
-	}
-	if(!index.isValid())
-	{
-		qFatal("Invalid index");
-	}
-	if(!m_qmplaylist->removeMedia(index.row()))
-	{
-		qFatal("Replace-remove failed:");/// << QString("Replace-remove failed:") << m_qmplaylist->errorString();
-	}
-#endif
-	Q_ASSERT(value.canConvert<std::shared_ptr<LibraryEntry>>() == true);
-
-	std::shared_ptr<PlaylistModelItem> playlist_entry = PlaylistModelItem::createFromLibraryEntry(value.value<std::shared_ptr<LibraryEntry>>());
-    M_TODO("QT6 FIX THIS")
-#if 0 // QT5
-	QMediaContent* qmediacontent = new QMediaContent(playlist_entry->getM2Url());
-	if(!m_qmplaylist->insertMedia(index.row(), *qmediacontent))
-	{
-		qFatal("Replace-insert failed: %s", m_qmplaylist->errorString().toStdString().c_str());
-	}
-#endif
-	qDebug("QMediaPlaylist replace-insert complete");
 }
 

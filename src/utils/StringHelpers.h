@@ -227,7 +227,7 @@ static inline bool isValidUTF8(const char* bytes)
  * @param value  Any Q_ENUM() or Q_FLAG().
  * @return A QString representing that Q_ENUM/Q_FLAG.
  */
-template<typename QEnumType> //, REQUIRES(QtPrivate::IsQEnumHelper<QEnumType>::Value)>
+template<typename QEnumType>
 requires requires (QEnumType){ QtPrivate::IsQEnumHelper<QEnumType>::Value; }
 QString toqstr(const QEnumType value)
 {

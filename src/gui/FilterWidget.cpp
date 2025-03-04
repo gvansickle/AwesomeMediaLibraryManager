@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -19,10 +19,7 @@
 
 #include "FilterWidget.h"
 
-//#include <nomocimpl.h>
-
 #include <QIcon>
-//#include <QPixmap>
 #include <QImage>
 #include <QMenu>
 #include <QAction>

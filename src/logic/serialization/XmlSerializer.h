@@ -34,7 +34,6 @@
 #include <QXmlStreamReader>
 #include <QVariant>
 class QString;
-//class QStringList;
 class QVariantHomogenousList;
 
 // Ours

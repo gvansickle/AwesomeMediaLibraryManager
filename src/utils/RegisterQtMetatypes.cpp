@@ -1,5 +1,5 @@
 /*
- * Copyright 2017, 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -25,7 +25,7 @@
 #include <string>
 #include <cstdint>
 
-// KF5
+// KF
 #include <KJob>
 
 // Ours.
@@ -91,7 +91,7 @@ Q_GLOBAL_STATIC(QtRegCallbackRegistry, f_qt_reg_callback_registry);
 
 
 /**
- * Register a number of general-purpose Qt5 converters etc.
+ * Register a number of general-purpose Qt converters etc.
  */
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering std::string->QString converter";
@@ -199,7 +199,7 @@ int* QtRegCallbackRegistry::register_callback(std::function<void(void)> callback
     m_registered_callbacks.push_back(callback);
     std::cerr << "Registering callback:" << &callback << ", size now:" << m_registered_callbacks.size() << "\n";
     // Return a dummy pointer.
-	return reinterpret_cast<int*>(&callback);
+    return nullptr; //reinterpret_cast<int*>(nullptr);
 }
 
 int* QtRegCallbackRegistry::register_callback(const char* name, std::function<void(void)> callback)

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017, 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -87,7 +87,7 @@
 #include "MDIPlaylistView.h"
 #include "MDINowPlayingView.h"
 
-// For KF5 KConfig infrastructure.
+// For KF KConfig infrastructure.
 #include <AMLMSettings.h>
 #include <gui/actions/ActionHelpers.h>
 #include <gui/settings/SettingsDialog.h>
@@ -948,21 +948,14 @@ void MainWindow::createToolBars()
 	QString cur_style = amlmApp->style()->objectName();
 	styleComboBox->setCurrentIndex(styleComboBox->findText(cur_style, Qt::MatchFixedString));
 	m_settingsToolBar->addWidget(styleComboBox);
-#if 0 // QT5
-    connect_or_die(styleComboBox, &QComboBox::activated, this, &MainWindow::changeStyle);
-#else
+
 	connect_or_die(styleComboBox, &QComboBox::currentTextChanged, this, &MainWindow::changeStyle);
-#endif
 
     // Create a combo box with icon themes.
     QComboBox* iconThemeComboBox = new QComboBox;
     iconThemeComboBox->addItems(Theme::GetIconThemeNames());
     m_settingsToolBar->addWidget(iconThemeComboBox);
-#if 0 // QT5
-    connect_or_die(iconThemeComboBox, &QComboBox::activated, this, &MainWindow::changeIconTheme);
-#else
 	connect_or_die(iconThemeComboBox, &QComboBox::currentTextChanged, this, &MainWindow::changeIconTheme);
-#endif
 #endif
     // Create another toolbar for the player controls.
     m_controlsToolbar = addToolBar(tr("Player Controls"), "PlayerControlsToolbar");
@@ -1847,7 +1840,7 @@ void MainWindow::openPlaylist()
 
 void MainWindow::onSendEntryToPlaylist(std::shared_ptr<LibraryEntry> libentry, QPointer<PlaylistModel> playlist_model)
 {
-    qDebug() << QString("Sending entry to playlist:") << playlist_model.data();
+    qDebug() << "Sending entry to playlist:" << playlist_model.data();
 	if(!playlist_model.isNull())
 	{
 		auto new_playlist_entry = PlaylistModelItem::createFromLibraryEntry(libentry);

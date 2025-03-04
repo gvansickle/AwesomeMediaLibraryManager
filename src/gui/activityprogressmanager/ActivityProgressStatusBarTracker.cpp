@@ -167,7 +167,7 @@ void ActivityProgressStatusBarTracker::registerJob(KJob* kjob)
 
     /// @todo enqueue on a widgets-to-be-shown queue?  Not clear why that exists in KWidgetJobTracker.
 
-    // Add the new widget to the expanging frame.
+    // Add the new widget to the expanding frame.
     m_expanding_frame_widget->addWidget(wdgt);
     m_expanding_frame_widget->reposition();
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -26,7 +26,6 @@
 // Qt5
 #include <QtCore/QFile>
 #include <QtCore/QDir>
-//#include <QtXmlPatterns/QXmlFormatter> QT6
 
 // Ours
 #include <utils/DebugHelpers.h>

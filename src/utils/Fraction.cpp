@@ -37,8 +37,6 @@
 AMLM_QREG_CALLBACK([](){
     qIn() << "Registering Fraction";
     qRegisterMetaType<Fraction>();
-	// QMetaType::registerConverter<Fraction, QString> (&Fraction::toQString);
-	// qRegisterMetaTypeStreamOperators<Fraction>();
 	QMetaType::registerConverter<Fraction, QString>([](const Fraction& frac){ return frac.toQString(); });
 	QMetaType::registerConverter<QString, Fraction>([](const QString& str){
 		return Fraction(str);
