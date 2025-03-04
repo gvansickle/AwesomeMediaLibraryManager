@@ -27,29 +27,30 @@
 #include <QUrl>
 #include <QDir>
 #include <QDirIterator>
-#include <QWeakPointer>
-#include <QSharedPointer>
+// #include <QWeakPointer>
+// #include <QSharedPointer>
+// #include <QPromise>
 
 // Ours
 #include <logic/DirScanResult.h>
 #include "concurrency/AMLMJobT.h"
 #include <concurrency/ExtFuture.h>
-#include "utils/UniqueIDMixin.h"
+// #include "utils/UniqueIDMixin.h"
 
 /**
- * Function which scans a directory for files.
+ * Worker function which scans a directory for files.
  *
- * @param ext_future  The in/out/control ExtFuture.
+ * @param promise  The in/out/control ExtFuture.
  * @param amlmJob     The associated AMLMJob, if any.
  * @param dir_url     The URL pointing at the directory to recursively scan.
  * @param name_filters
  * @param dir_filters
  * @param iterator_flags
  */
-void DirScanFunction(ExtFuture<DirScanResult> ext_future, AMLMJob* amlmJob,
-		const QUrl& dir_url,
-		const QStringList &name_filters,
-		const QDir::Filters dir_filters = QDir::NoFilter,
-		const QDirIterator::IteratorFlags iterator_flags = QDirIterator::NoIteratorFlags);
+void DirScanFunction(QPromise<DirScanResult>& promise, AMLMJob* amlmJob,
+                     const QUrl& dir_url,
+                     const QStringList &name_filters,
+                     const QDir::Filters dir_filters = QDir::NoFilter,
+                     const QDirIterator::IteratorFlags iterator_flags = QDirIterator::NoIteratorFlags);
 
 #endif /* SRC_CONCURRENCY_DIRECTORYSCANJOB_H_ */

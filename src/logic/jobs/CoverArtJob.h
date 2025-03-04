@@ -22,8 +22,9 @@
 
 #include <config.h>
 
-// Qt5
+// Qt
 #include <QUrl>
+#include <QPromise>
 
 // Ours
 #include "concurrency/AMLMJobT.h"
@@ -66,11 +67,16 @@ public:
 	/// No AMLMJob, just an ExtFuture<>.
 	static ExtFuture<QByteArray> make_task(QObject *parent, const QUrl& url);
 
-	static void LoadCoverArt(ExtFuture<QByteArray> ext_future, CoverArtJobPtr kjob, const QUrl& url);
-
 protected:
+	/**
+	 * The worker function.
+	 *
+	 * @param promise
+	 * @param kjob
+	 * @param url
+	 */
+	static void LoadCoverArt(QPromise<QByteArray> & promise, CoverArtJobPtr kjob, const QUrl& url);
 
-    void runFunctor() override;
 
 private:
 

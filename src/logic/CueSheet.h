@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -66,8 +66,8 @@ class QUrl;
 class CueSheet : public virtual ISerializable
 {
 public:
-	M_GH_RULE_OF_FIVE_DEFAULT_C21(CueSheet);
-	~CueSheet() override {};
+    M_GH_RULE_OF_FIVE_DEFAULT_C21(CueSheet)
+    ~CueSheet() override = default;
 
     /**
      * Factory function.
@@ -176,12 +176,13 @@ private:
     std::map<int, TrackMetadata> m_tracks;
 };
 
-Q_DECLARE_METATYPE(CueSheet);
-
 
 QDebug operator<<(QDebug dbg, const CueSheet &cuesheet);
 
 QDataStream &operator<<(QDataStream &out, const CueSheet &myObj);
 QDataStream &operator>>(QDataStream &in, CueSheet &myObj);
+
+Q_DECLARE_METATYPE(CueSheet);
+
 
 #endif /* SRC_LOGIC_CUESHEET_H_ */

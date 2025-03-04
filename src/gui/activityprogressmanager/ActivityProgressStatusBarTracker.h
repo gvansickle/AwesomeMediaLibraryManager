@@ -111,7 +111,7 @@ Q_SIGNALS:
     void SIGNAL_finished(KJob*);// (also connected to the unregisterJob() slot)
     void SIGNAL_suspended(KJob*);
     void SIGNAL_resumed(KJob*);
-    void SIGNAL_description(KJob *kjob, const QString &title, const QPair<QString, QString> &field1, const QPair<QString, QString> &field2);
+    void SIGNAL_description(KJob *kjob, const QString &title, const std::pair<QString, QString> &field1, const std::pair<QString, QString> &field2);
     void SIGNAL_infoMessage(KJob*);
     void SIGNAL_totalAmount(KJob*, KJob::Unit unit, qulonglong amount);
     void SIGNAL_processedAmount(KJob *job, KJob::Unit unit, qulonglong amount);
@@ -253,7 +253,7 @@ public Q_SLOTS:
      * @param kjob
      */
 //    template <class JobTypePtr>
-    void registerJob(/*JobTypePtr*/SHARED_PTR<AMLMJob> kjob)
+    void registerJob(/*JobTypePtr*/QSharedPointer<AMLMJob> kjob)
     {
 //        if constexpr (std::is_convertible_v</*JobTypePtr*/std::shared_ptr<AMLMJob>, std::weak_ptr<AMLMJob>>)
 //        {
@@ -263,7 +263,7 @@ public Q_SLOTS:
 //        {
 //            static_assert("FAIL");
 //        }
-    };
+    }
 
     /**
      * From KJobTrackerInterface:
@@ -403,19 +403,19 @@ protected Q_SLOTS:
      *  The fields of the description can be "Source" with an URL, and, "Destination" with an URL for a "Copying" description."
      */
     void description(KJob *kjob, const QString &title,
-                             const QPair<QString, QString> &field1,
-                             const QPair<QString, QString> &field2) override;
+                             const std::pair<QString, QString> &field1,
+                             const std::pair<QString, QString> &field2) override;
     /**
      * Slot
      * "Called to display state information about a job.
      * Examples of message are "Resolving host", "Connecting to host...", etc."
      */
-    void infoMessage(KJob *job, const QString &plain, const QString &rich) override;
+    void infoMessage(KJob *job, const QString &message) override;
     /**
      * Slot
      * "Emitted to display a warning about a job."
      */
-    void warning(KJob *job, const QString &plain, const QString &rich) override;
+    void warning(KJob *job, const QString &plain) override;
 
     /// @name Progress tracking protected slots
     /// @{
@@ -534,7 +534,8 @@ protected:
 protected: // Variable members
 
     /// Mutex for protecting the tracked job state.
-    QMutex m_tracked_job_state_mutex;
+    /// @todo Does this really need to be recursive?
+    QRecursiveMutex m_tracked_job_state_mutex;
 
     /// Map of all registered sub-jobs (KJob*) to sub-job-widgets (QPointer<BaseActivityProgressStatusBarWidget>'s).
     TSActiveActivitiesMap m_amlmjob_to_widget_map;

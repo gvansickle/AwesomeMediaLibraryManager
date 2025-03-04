@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2019, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -59,6 +59,14 @@
 	/** Move assignment. */ \
 	classname& operator=(classname&&) = default_or_delete;
 
+#define IMPL_RULE_OF_THREE(classname, default_or_delete) \
+/** Default constructor. */ \
+    classname() = default_or_delete; \
+    /** Copy constructor. */ \
+    classname(const classname&) = default_or_delete; \
+    /** Copy assignment. */ \
+    classname& operator=(const classname&) = default_or_delete;
+
 #define IMPL_RULE_OF_FIVE(classname, default_or_delete) \
 	/** Default constructor. */ \
 	classname() = default_or_delete; \
@@ -76,6 +84,7 @@
 #define M_GH_DELETE_COPY(classname)  M_GH_IMPL_DEFAULT_OR_DELETE_COPY(classname, delete)
 #define M_GH_DELETE_COPY_AND_MOVE(classname) M_GH_IMPL_DEFAULT_OR_DELETE_COPY_AND_MOVE(classname, delete)
 
+#define M_GH_RULE_OF_THREE_DEFAULT_C21(classname) IMPL_RULE_OF_THREE(classname, default)
 #define M_GH_RULE_OF_FIVE_DEFAULT_C21(classname) IMPL_RULE_OF_FIVE(classname, default)
 #define M_GH_RULE_OF_FIVE_DELETE_C21(classname) IMPL_RULE_OF_FIVE(classname, delete)
 

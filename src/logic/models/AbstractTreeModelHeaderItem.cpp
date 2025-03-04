@@ -99,9 +99,8 @@ void AbstractTreeModelHeaderItem::clear()
 
 bool AbstractTreeModelHeaderItem::setColumnSpecs(std::initializer_list<ColumnSpec> column_specs)
 {
-	M_WARNING("TODO This should take a list of ColumnSpecs, NEEDS TO INSERT COLUMNS");
+    M_WARNING("TODO This should take a list of ColumnSpecs, NEEDS TO INSERT COLUMNS")
 	Q_ASSERT_X(childCount() == 0, __PRETTY_FUNCTION__, "Model has children already");
-#warning "INSERT COLUMNS"
 //	m_column_specs.clear();
 	m_item_data.clear();
 //	std::copy(column_specs.begin(), column_specs.end(), std::back_inserter(m_column_specs));
@@ -136,16 +135,15 @@ using strviw_type = QLatin1String;
 #define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
 	M_DATASTREAM_FIELDS(X);
 #undef X
-static const strviw_type XMLTAG_HEADER_SECTION_LIST ("header_section_list");
+static constexpr strviw_type XMLTAG_HEADER_SECTION_LIST ("header_section_list");
 
 
 QVariant AbstractTreeModelHeaderItem::toVariant() const
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 
 	// Set some class meta-info.
-//	set_map_class_info(this, &map);
-	set_map_class_info(std::string("AbstractTreeModelHeaderItem"), &map);
+	set_map_class_info(this, &map);
 
 	QVariantHomogenousList header_section_list(XMLTAG_HEADER_SECTION_LIST, "section");
 
@@ -176,7 +174,7 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 
 void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 	qviomap_from_qvar_or_die(&map, variant);
 
 	// Read the number of header sections...
@@ -185,7 +183,7 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 
 	// Read the header sections.
 	QVariantHomogenousList header_section_list(XMLTAG_HEADER_SECTION_LIST, "section");
-	header_section_list = map.value(XMLTAG_HEADER_SECTION_LIST).value<QVariantHomogenousList>();
+	header_section_list = map.at(XMLTAG_HEADER_SECTION_LIST).value<QVariantHomogenousList>();
 
 	AMLM_ASSERT_EQ(header_num_sections, header_section_list.size());
 
@@ -222,7 +220,7 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	/// contains a single <scan_res_tree_model_item type="QVariantMap">, which in turn
 	/// contains a single <dirscanresult>/QVariantMap.
 	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
-	child_var_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
+	child_var_list = map.at(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
 	Q_ASSERT(child_var_list.size() > 0);
 	qDb() << "Number of children read:" << child_var_list.size();
 

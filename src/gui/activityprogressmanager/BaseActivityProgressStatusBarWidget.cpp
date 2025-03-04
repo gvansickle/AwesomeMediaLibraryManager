@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -79,7 +79,8 @@ void BaseActivityProgressStatusBarWidget::addButton(QToolButton *new_button)
     layout()->addWidget(new_button);
 }
 
-void BaseActivityProgressStatusBarWidget::description(KJob *kjob, const QString &title, const QPair<QString, QString> &field1, const QPair<QString, QString> &field2)
+void BaseActivityProgressStatusBarWidget::description(KJob *kjob, const QString &title,
+    const std::pair<QString, QString> &field1, const std::pair<QString, QString> &field2)
 {
     qDb() << "GOT DESCRIPTION FROM KJOB:" << kjob << "TITLE:" << title;
     /// @todo Don't really have anywhere to put fields.
@@ -298,7 +299,7 @@ void BaseActivityProgressStatusBarWidget::INTERNAL_SLOT_emit_cancel_job()
 {
 //    QPointer<KJob> kjob = m_kjob;
 
-    qDb() << "CANCEL BUTTON CLICKED, JOB:" << m_kjob;
+    qDb() << "CANCEL BUTTON CLICKED, JOB:" << m_kjob.data();
     if(m_kjob.isNull())
     {
         qWr() << "KJOB WAS NULL, EMITTING cancel_job(nullptr)";
@@ -330,7 +331,7 @@ void BaseActivityProgressStatusBarWidget::INTERNAL_SLOT_SuspendResume(bool click
     }
 }
 
-void BaseActivityProgressStatusBarWidget::totalAmount(KJob *kjob, KJob::Unit unit, qulonglong amount)
+void BaseActivityProgressStatusBarWidget::SLOT_totalAmountChanged(KJob *kjob, KJob::Unit unit, qulonglong amount)
 {
     Q_CHECK_PTR(kjob);
 
@@ -352,10 +353,11 @@ void BaseActivityProgressStatusBarWidget::totalAmount(KJob *kjob, KJob::Unit uni
         // Size is measured in bytes
         /// @todo Bytes/size is already handled by the tracker.
         /// Don't quite know what to make of the time stuff here.
-        if (m_start_time.isNull())
-        {
-            m_start_time.start();
-        }
+// QT6 Needed?
+        // if (m_start_time.isNull())
+        // {
+        //     m_start_time.start();
+        // }
         break;
     case KJob::Files:
         // Shouldn't be getting signalled unless totalFiles() has actually changed.
@@ -366,12 +368,15 @@ void BaseActivityProgressStatusBarWidget::totalAmount(KJob *kjob, KJob::Unit uni
         // Shouldn't be getting signalled unless total dirs has actually changed.
         showTotals();
         break;
+    case KJob::Items:
+        showTotals();
+        break;
     }
 
     updateMainTooltip();
 }
 
-void BaseActivityProgressStatusBarWidget::processedAmount(KJob *kjob, KJob::Unit unit, qulonglong amount)
+void BaseActivityProgressStatusBarWidget::SLOT_processedAmountChanged(KJob *kjob, KJob::Unit unit, qulonglong amount)
 {
     Q_CHECK_PTR(kjob);
 
@@ -486,7 +491,7 @@ void BaseActivityProgressStatusBarWidget::processedSize(KJob *kjob, qulonglong a
 //    updateMainTooltip();
 }
 
-void BaseActivityProgressStatusBarWidget::percent(KJob *kjob, unsigned long percent)
+void BaseActivityProgressStatusBarWidget::SLOT_percentChanged(KJob *kjob, unsigned long percent)
 {
     Q_CHECK_PTR(kjob);
 

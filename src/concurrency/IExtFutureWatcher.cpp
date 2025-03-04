@@ -21,10 +21,14 @@
  * @file IExtFutureWatcher.cpp
  */
 
+#if 0 // QT6?
+
 #include "IExtFutureWatcher.h"
 
 IExtFutureWatcher::~IExtFutureWatcher()
 {
 
 }
+
+#endif
 

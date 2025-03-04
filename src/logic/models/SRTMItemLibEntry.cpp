@@ -134,11 +134,10 @@ using strviw_type = QLatin1String;
 
 QVariant SRTMItem_LibEntry::toVariant() const
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 
 	// Overwrite any class info added by the above.
-//	set_map_class_info(this, &map);
-	set_map_class_info(std::string("SRTMItem_LibEntry"), &map);
+	set_map_class_info(this, &map);
 
 	// Set the xml:id.
 	map.insert_attributes({{"xml:id", get_prefixed_uuid()}});
@@ -162,7 +161,7 @@ QVariant SRTMItem_LibEntry::toVariant() const
 
 void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 {
-	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
+	InsertionOrderedMap<QString, QVariant> map = variant.value<InsertionOrderedMap<QString, QVariant>>();
 //	dump_map(map);
 
 	try
@@ -200,7 +199,7 @@ void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 #endif
 
 	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
-	child_var_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
+	child_var_list = map.at(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
 
 	append_children_from_variant<AbstractTreeModelItem>(this, child_var_list);
 

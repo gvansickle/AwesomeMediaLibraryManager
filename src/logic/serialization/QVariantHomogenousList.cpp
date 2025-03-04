@@ -23,4 +23,9 @@
 
 #include "QVariantHomogenousList.h"
 
+#include <utils/RegisterQtMetatypes.h>
 
+AMLM_QREG_CALLBACK ([](){
+ qIn() << "Registering QVariantHomogenousList";
+ qRegisterMetaType<QVariantHomogenousList>();
+});

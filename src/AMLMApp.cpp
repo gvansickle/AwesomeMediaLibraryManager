@@ -22,9 +22,8 @@
 #include "AMLMApp.h"
 
 // Std C++
-#include <memory>
 
-// Qt5
+// Qt
 #include <QProcessEnvironment>
 #include <QStandardPaths>
 #include <QUrl>

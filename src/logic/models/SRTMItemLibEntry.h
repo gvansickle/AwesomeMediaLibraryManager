@@ -49,7 +49,6 @@ public:
 //	                                                    const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr, UUIncD id = UUIncD::null());
 //	static std::shared_ptr<SRTMItem_LibEntry> construct(const QVariant& variant,
 //	                                                    const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr, UUIncD id = UUIncD::null());
-//	SRTMItem_LibEntry() {};
 	~SRTMItem_LibEntry() override = default;
 
 	QVariant data(int column, int role = Qt::DisplayRole) const override;

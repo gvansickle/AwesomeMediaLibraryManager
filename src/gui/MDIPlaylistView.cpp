@@ -1,5 +1,5 @@
 /*
- * Copyright 2017, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2019, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -29,7 +29,6 @@
 
 #include "DragDropTreeViewStyleProxy.h"
 #include <QApplication>
-#include <QMediaPlaylist>
 #include <QHeaderView>
 #include <QToolTip>
 #include <QMessageBox>
@@ -141,10 +140,15 @@ void MDIPlaylistView::setModel(QAbstractItemModel* model)
 		MDITreeViewBase::setModel(m_sortfilter_model);
 		// Call selectionChanged when the user changes the selection.
 		/// @todo selectionModel().selectionChanged.connect(selectionChanged)
-		old_sel_model->deleteLater();
+        if(old_sel_model != nullptr)
+        {
+            old_sel_model->deleteLater();
+        }
+
+M_TODO("QT6 Pretty sure this needs fixing to update connections")
 
 		// Connect to the QMediaPlaylist's index changed notifications,
-		connect(m_underlying_model->qmplaylist(), &QMediaPlaylist::currentIndexChanged, this, &MDIPlaylistView::playlistPositionChanged);
+		// connect_or_die(m_underlying_model->qmplaylist(), &QMediaPlaylist::currentIndexChanged, this, &MDIPlaylistView::playlistPositionChanged);
 
 		// Set up the TreeView's header.
 		header()->setStretchLastSection(false);
@@ -397,20 +401,76 @@ PlaylistModel* MDIPlaylistView::underlyingModel() const
 }
 
 
+QUrl MDIPlaylistView::currentMedia() const
+{
+	QModelIndex current_index = currentIndex();
+	if (!current_index.isValid())
+	{
+		return QUrl();
+	}
+	else
+	{
+		return current_index.data(Qt::DisplayRole ).toUrl();
+	}
+}
+
 //
 // Public slots
 //
 
+
 void MDIPlaylistView::next()
 {
-	// Forward to the QMediaPlaylist.
-	m_underlying_model->qmplaylist()->next();
+	QModelIndex current_index = currentIndex();
+	if (!current_index.isValid())
+	{
+		/// @todo Not immediately clear how we recover from this situation.
+		qDb() << "Model's current item is invalid.  Maybe no items in current playlist?";
+		return;
+	}
+
+	auto next_index = current_index.sibling(current_index.row() + 1, 0);
+
+	// Check if the next index is valid
+	if (next_index.isValid())
+	{
+		// Set the next index as the current item.
+		setCurrentIndex(next_index);
+	}
+	else
+	{
+		// Wrap.
+		next_index = model()->index(0,0);
+		setCurrentIndex(next_index);
+		// qCr() << "No next item available.";
+	}
 }
 
 void MDIPlaylistView::previous()
 {
-	// Forward to the QMediaPlaylist.
-	m_underlying_model->qmplaylist()->previous();
+	QModelIndex current_index = currentIndex();
+	if (!current_index.isValid())
+	{
+		/// @todo Not immediately clear how we recover form this situation.
+		qDb() << "Model's current item is invalid.  Maybe no items in current playlist?";
+		return;
+	}
+
+	auto prev_index = current_index.sibling(current_index.row() - 1, current_index.column());
+
+	// Check if the calculated prev index is valid
+	if (prev_index.isValid())
+	{
+		// Set the next index as the current item.
+		setCurrentIndex(prev_index);
+	}
+	else
+	{
+		// Wrap.
+		prev_index = model()->index(model()->rowCount()-1, 0);
+		setCurrentIndex(prev_index);
+		// qCr() << "No next item available.";
+	}
 }
 
 void MDIPlaylistView::onCut()
@@ -517,7 +577,7 @@ M_WARNING("TODO: This mostly works, but can start the wrong row if e.g. this vie
 	{
 		// Activate the index to start playing it.
 		auto proxy_index = model()->index(last_row, 0, QModelIndex());
-#warning "According to clazy, this isn't a signal."
+        /// @todo This is a slot, not a signal.
 		Q_EMIT onActivated(proxy_index);
 	}
 
@@ -528,6 +588,7 @@ M_WARNING("TODO: This mostly works, but can start the wrong row if e.g. this vie
 
 void MDIPlaylistView::playlistPositionChanged(qint64 position)
 {
+M_WARNING("CRIT: Do we even need this?")
 	// Notification from the QMediaPlaylist that the current selection has changed.
 	// Since we have a QSortFilterProxyModel between us and the underlying model, we need to convert the position,
 	// which is in underlying-model coordinates, to proxy model coordinates.
@@ -583,12 +644,11 @@ void MDIPlaylistView::startPlaying(const QModelIndex& index)
 
 	qDebug() << "Underlying index:" << underlying_model_index;
 
-	// Since m_underlying_model->qmplaylist() is connected to the player, we should only have to setCurrentIndex() to
-	// start the song.
-	/// @note See "jump()" etc in the Qt5 MediaPlyer example.
-
-	m_underlying_model->qmplaylist()->setCurrentIndex(underlying_model_index.row());
-
+    // Since m_underlying_model->qmplaylist() is connected to the player, we should only have to setCurrentIndex() to
+    // start the song.
+    /// @note See "jump()" etc in the Qt5 MediaPlyer example.
+    Q_ASSERT(underlying_model_index.model() == m_underlying_model);
+	setCurrentIndex(underlying_model_index);
 	// If the player isn't already playing, the index change above won't start it.  Send a signal to it to
 	// make sure it starts.
 	Q_EMIT play();

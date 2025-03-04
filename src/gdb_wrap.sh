@@ -18,7 +18,8 @@
 # - helper.py
 # - gdbinit
 
+notify-send "PWD: $(pwd)";
 pwd
-source ../prefix.sh
+source ../../prefix.sh
 
 exec "$@"

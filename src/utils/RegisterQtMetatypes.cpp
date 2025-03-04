@@ -1,5 +1,5 @@
 /*
- * Copyright 2017, 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -25,7 +25,7 @@
 #include <string>
 #include <cstdint>
 
-// KF5
+// KF
 #include <KJob>
 
 // Ours.
@@ -85,13 +85,13 @@
 #define ADD_T(base_type) TOKENPASTE2(base_type, _t)
 #define DUP_NS_AND_NOT(X, base_type) X(base_type) X(std::base_type)
 
-/// Qt5's take on construct-on-first-use.  Not sure we need it here, see reginstance() below.
+/// Qt's take on construct-on-first-use.  Not sure we need it here, see reginstance() below.
 /// @link https://doc.qt.io/qt-5/qglobalstatic.html
 Q_GLOBAL_STATIC(QtRegCallbackRegistry, f_qt_reg_callback_registry);
 
 
 /**
- * Register a number of general-purpose Qt5 converters etc.
+ * Register a number of general-purpose Qt converters etc.
  */
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering std::string->QString converter";
@@ -173,6 +173,8 @@ void RegisterQtMetatypes()
 	// Register the types we want to be able to use in Qt's queued signal and slot connections or in QObject's property system.
 	qRegisterMetaType<LibraryEntry>();
 	qRegisterMetaType<PlaylistModelItem>();
+	qRegisterMetaType<std::string>();
+	// qRegisterMetaType<std::basic_string<char>>();
 	qRegisterMetaType<std::shared_ptr<LibraryEntry>>();
 	qRegisterMetaType<std::shared_ptr<PlaylistModelItem>>();
 	
@@ -197,7 +199,7 @@ int* QtRegCallbackRegistry::register_callback(std::function<void(void)> callback
     m_registered_callbacks.push_back(callback);
     std::cerr << "Registering callback:" << &callback << ", size now:" << m_registered_callbacks.size() << "\n";
     // Return a dummy pointer.
-	return reinterpret_cast<int*>(&callback);
+    return nullptr; //reinterpret_cast<int*>(nullptr);
 }
 
 int* QtRegCallbackRegistry::register_callback(const char* name, std::function<void(void)> callback)

@@ -104,7 +104,7 @@ inline static StreamType operator<<(StreamType outstream, const T& obj)
 
 #define IMPL_QTH_DECLARE_STREAM_OPS(friend_placeholder, outstream_class_plus_ref, instream_class_plus_ref, classname) \
 	friend_placeholder outstream_class_plus_ref operator<<(outstream_class_plus_ref out, const classname & myObj); \
-	friend_placeholder instream_class_plus_ref operator>>(instream_class_plus_ref in, classname & myObj);
+    friend_placeholder instream_class_plus_ref operator>>(instream_class_plus_ref in, classname & myObj)
 
 #define IMPL_QTH_DECLARE_QDATASTREAM_OPS(friend_placeholder, classname) \
 	IMPL_QTH_DECLARE_STREAM_OPS(friend_placeholder, QDataStream&, QDataStream&, classname)

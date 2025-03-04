@@ -36,8 +36,8 @@
 #include <unordered_set>
 #include <queue>
 
-// Qt5
-#include <QtWidgets>
+// Qt
+#include <QModelIndex>
 #include <QAbstractItemModelTester>
 
 // Ours

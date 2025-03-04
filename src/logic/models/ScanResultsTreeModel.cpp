@@ -35,6 +35,11 @@
 #include <serialization/XmlSerializer.h>
 
 
+AMLM_QREG_CALLBACK([](){
+    qIn() << "Registering ScanResultsTreeModel";
+    qRegisterMetaType<ScanResultsTreeModel>();
+});
+
 ScanResultsTreeModel::ScanResultsTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject *parent)
 	: BASE_CLASS(column_specs, parent)
 {
@@ -215,7 +220,7 @@ void ScanResultsTreeModel::DERIVED_set_default_namespace()
 	m_default_namespace_version = "1";
 }
 
-/// Qt5 ids for the TreeItems it can hold.
+/// Qt ids for the TreeItems it can hold.
 //static const int f_atmi_id = qMetaTypeId<AbstractTreeModelItem>();
 //static const int f_strmi_id = qMetaTypeId<ScanResultsTreeModelItem>();
 //static const int f_strmile_id = qMetaTypeId<SRTMItem_LibEntry>();
@@ -225,13 +230,15 @@ void ScanResultsTreeModel::DERIVED_set_default_namespace()
  * ScanResultsTreeModel XML tags.
  */
 #define M_DATASTREAM_FIELDS(X) \
-	X(XMLTAG_SRTM_ROOT_ITEM, tree_model_root_item) \
-	X(XMLTAG_SRTM_BASE_DIRECTORY, base_directory) \
-	X(XMLTAG_SRTM_TITLE, title) \
-	X(XMLTAG_SRTM_CREATOR, creator) \
-	X(XMLTAG_SRTM_DATE, date) \
-	X(XMLTAG_SRTM_TS_LAST_SCAN_START, ts_last_scan_start) \
-	X(XMLTAG_SRTM_TS_LAST_SCAN_END, ts_last_scan_end)
+	X(XMLTAG_SRTM_BASE_DIRECTORY, m_base_directory) \
+	X(XMLTAG_SRTM_TITLE, m_title) \
+	X(XMLTAG_SRTM_CREATOR, m_creator) \
+	X(XMLTAG_SRTM_DATE, m_creation_date) \
+	X(XMLTAG_SRTM_TS_LAST_SCAN_START, m_ts_last_scan_start) \
+	X(XMLTAG_SRTM_TS_LAST_SCAN_END, m_ts_last_scan_end) \
+	// X(XMLTAG_SRTM_ROOT_ITEM, tree_model_root_item)
+
+constexpr static QLatin1String XMLTAG_SRTM_ROOT_ITEM {"tree_model_root_item"};
 
 /// Strings to use for the tags.
 #define X(field_tag, member_field) static const QLatin1String field_tag ( # member_field );
@@ -240,14 +247,14 @@ void ScanResultsTreeModel::DERIVED_set_default_namespace()
 
 QVariant ScanResultsTreeModel::toVariant() const
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 
 	std::unique_lock write_lock(m_rw_mutex);
 
 #define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
-//	M_DATASTREAM_FIELDS(X)
+	M_DATASTREAM_FIELDS(X)
 #undef X
-
+#if 0
 	// The one piece of data we really need here, non-xspf.
 	map_insert_or_die(map, XMLTAG_SRTM_BASE_DIRECTORY, m_base_directory);
 
@@ -283,6 +290,13 @@ QVariant ScanResultsTreeModel::toVariant() const
 	qDb() << "START tree serialize";
 	map_insert_or_die(map, XMLTAG_SRTM_ROOT_ITEM, m_root_item->toVariant());
 	qDb() << "END tree serialize";
+#endif
+
+	// Insert the invisible root item, which will recursively add all children.
+	/// @todo It also serves as the model's header, not sure that's a good overloading.
+	qDb() << "START tree serialize";
+	map_insert_or_die(map, XMLTAG_SRTM_ROOT_ITEM, *m_root_item);
+	qDb() << "END tree serialize";
 
 	return map;
 }
@@ -291,7 +305,13 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 {
 	std::unique_lock write_lock(m_rw_mutex);
 
-	QVariantInsertionOrderedMap map;
+    InsertionOrderedMap<QString, QVariant> map = variant.value<InsertionOrderedMap<QString, QVariant>>();
+
+#define X(field_tag, var_name) map_read_field_or_warn(map, field_tag, var_name);
+	M_DATASTREAM_FIELDS(X);
+#undef X
+#if 0
+	// QVariantInsertionOrderedMap map;
 	qviomap_from_qvar_or_die(&map, variant);
 
 	/// @todo This should have a list of known base directory paths,
@@ -312,8 +332,30 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 	map_read_field_or_warn(map, XMLTAG_SRTM_TS_LAST_SCAN_END, &last_scan_end);
 
 	/// @note This is a QVariantMap, contains abstract_tree_model_header as a QVariantList.
-	QVariantInsertionOrderedMap root_item_map;
+	InsertionOrderedMap<QString, QVariant> root_item_map;
 	map_read_field_or_warn(map, XMLTAG_SRTM_ROOT_ITEM, &root_item_map);
 	m_root_item->fromVariant(root_item_map);
+
+#endif
+
+	/// @note This is a QVariantMap, contains abstract_tree_model_header as a QVariantList.
+	InsertionOrderedMap<QString, QVariant> root_item_map;
+	map_read_field_or_warn(map, XMLTAG_SRTM_ROOT_ITEM, &root_item_map);
+	m_root_item->fromVariant(root_item_map);
+
 	dump_map(map);
+}
+
+QDataStream &operator<<(QDataStream &out, const ScanResultsTreeModel &myObj)
+{
+    out << myObj.toVariant();
+    return out;
+}
+
+QDataStream &operator>>(QDataStream &in, ScanResultsTreeModel &myObj)
+{
+    QVariant var;
+    in >> var;
+    myObj.fromVariant(var);
+    return in;
 }

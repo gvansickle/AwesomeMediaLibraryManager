@@ -104,7 +104,7 @@ static ExtFuture<QString> delayed_string_func()
 	EXPECT_TRUE(retval.isStarted());
 	EXPECT_FALSE(retval.isFinished());
 
-	TCOUT << "delayed_string_func() returning" << tostdstr(retval);
+	// TCOUT << "delayed_string_func() returning" << tostdstr(retval);
 
 	return ExtFuture<QString>(retval);
 }
@@ -178,7 +178,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, AsynchronizeBasic)
 INSTANTIATE_TEST_SUITE_P(ExtAsyncParameterizedTests,
 						ExtAsyncTestsParameterized,
 						::testing::Bool());
-
+#if 0
 TEST_P(ExtAsyncTestsParameterized, ExtAsyncQthreadAsyncException)
 {
 	TC_ENTER();
@@ -1876,3 +1876,4 @@ TEST_F(ExtAsyncTestsSuiteFixture, StaticChecks)
 
 }
 
+#endif

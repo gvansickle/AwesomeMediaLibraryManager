@@ -20,13 +20,12 @@
 #ifndef COLLECTIONSTATSWIDGET_H
 #define COLLECTIONSTATSWIDGET_H
 
-// Qt5
+// Qt
 #include <QDockWidget>
 #include <QLabel>
-#include <QPointer>
-#include <QStandardItemModel>
 #include <QTextEdit>
 #include <QWidget>
+#include <QSortFilterProxyModel>
 
 // Ours
 #include <logic/proxymodels/ModelChangeWatcher.h>

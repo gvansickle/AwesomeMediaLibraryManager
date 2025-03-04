@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -34,7 +34,6 @@
 #include <QXmlStreamReader>
 #include <QVariant>
 class QString;
-class QStringList;
 class QVariantHomogenousList;
 
 // Ours
@@ -86,17 +85,12 @@ private:
 
 	void writeVariantToStream(const QString& nodeName,
 	                          const QVariant& variant, QXmlStreamWriter& xmlstream);
-	void InnerWriteVariantToStream(const QVariant& variant, QXmlStreamWriter* xmlstream);
-//	void writeVariantToStream(const QString& nodeName,
-//							  const ISerializable& variant, QXmlStreamWriter* xmlstream);
-//	void writeVariantToStream(const QString& nodeName,
-//							  const ISerializable* variant, QXmlStreamWriter* xmlstream);
 
+	void InnerWriteVariantToStream(const QVariant& variant, QXmlStreamWriter* xmlstream);
 	void writeQVariantHomogenousListToStream(const QVariant& variant, QXmlStreamWriter& xmlstream);
 	void writeVariantListToStream(const QVariant &variant, QXmlStreamWriter& xmlstream);
 	void writeVariantMapToStream(const QVariant& variant, QXmlStreamWriter& xmlstream);
 	void writeVariantOrderedMapToStream(const QVariant& variant, QXmlStreamWriter& xmlstream);
-
 	void writeVariantValueToStream(const QVariant& variant, QXmlStreamWriter& xmlstream);
 
 	/// @}
@@ -105,14 +99,12 @@ private:
 	/// @{
 
 	QVariant readVariantFromStream(QXmlStreamReader& xmlstream);
+
 	QVariant InnerReadVariantFromStream(QString typeString, const QXmlStreamAttributes& attributes, QXmlStreamReader& xmlstream);
-
-
 	QVariant readHomogenousListFromStream(QXmlStreamReader& xmlstream);
 	QVariant readVariantListFromStream(QXmlStreamReader& xmlstream);
 	QVariant readVariantMapFromStream(QXmlStreamReader& xmlstream);
 	QVariant readVariantOrderedMapFromStream(std::vector<QXmlStreamAttribute> attributes, QXmlStreamReader& xmlstream);
-
 	QVariant readVariantValueFromStream(QXmlStreamReader& xmlstream);
 
 	/// @}

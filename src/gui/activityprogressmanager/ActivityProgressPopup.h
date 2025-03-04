@@ -20,10 +20,8 @@
 #ifndef SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSPOPUP_H_
 #define SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSPOPUP_H_
 
-/// Qt5
-class QWidget;
-#include <QWidgetAction>
-
+/// Qt
+#include <QWidget>
 
 /**
  * From https://community.kde.org/Frameworks/Porting_Notes#Application:

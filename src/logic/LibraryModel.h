@@ -183,7 +183,11 @@ public Q_SLOTS:
     void SLOT_onIncomingPopulateRowWithItems_Single(QPersistentModelIndex pindex, std::shared_ptr<LibraryEntry> item);
 	void SLOT_onIncomingPopulateRowWithItems_Multiple(QPersistentModelIndex pindex, LibraryModel::StdVecOfSharedPtrToLibEntry items);
 
-    virtual QVector<VecLibRescannerMapItems> getLibRescanItems();
+	/**
+	 * 
+	 * @return  A QList of all the items in the LibraryModel which need to be populated with metadata.
+	 */
+	virtual QList<VecLibRescannerMapItems> getLibRescanItems();
 
 	/// Let's try something different.
 	virtual void startRescan();
@@ -253,6 +257,7 @@ private:
 	mutable ThreadsafeMap<QPersistentModelIndex, bool> m_pending_async_item_loads;
 };
 
-Q_DECLARE_METATYPE(LibraryModel*)
+Q_DECLARE_METATYPE(LibraryModel);
+Q_DECLARE_METATYPE(LibraryModel*);
 
 #endif // LIBRARYMODEL_H

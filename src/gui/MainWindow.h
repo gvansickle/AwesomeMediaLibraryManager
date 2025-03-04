@@ -1,5 +1,5 @@
 /*
- * Copyright 2017, 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -28,8 +28,7 @@
 #include <utility> // For std::pair<>
 #include <memory>
 
-/// Qt5
-
+// Qt
 #include <QUrl>
 
 class QActionGroup;
@@ -40,9 +39,8 @@ class QSettings;
 class QStandardItem;
 class QStandardItemModel;
 
-/// KF5
-
-#if HAVE_KF501
+// KF
+#if HAVE_KF6 || HAVE_KF501
 #include <KMainWindow>
 #include <KXmlGuiWindow>
 
@@ -488,7 +486,7 @@ private:
     /// @}
 
 	/// @name Help actions.
-#if !HAVE_KF501
+#if !(HAVE_KF501 || HAVE_KF6)
 	QAction* m_helpAct;
     QAction* m_whatsThisAct;
     QAction* m_aboutAct;
@@ -526,11 +524,11 @@ private:
     /// The MainWindow singleton.
     static QPointer<MainWindow> m_instance;
 
-#if HAVE_KF501
+#if HAVE_KF501 || HAVE_KF6
     /**
      * Master Tracker for all asynchronous activites.
      * Its widget is the progress bar in the status bar.
-     * Probably belongs in AMLMApp, but constructor needs a QWidget parent.
+     * Probably really belongs in AMLMApp, but constructor needs a QWidget parent.
      */
     ActivityProgressStatusBarTracker* m_activity_progress_tracker { nullptr };
 #endif

@@ -102,7 +102,7 @@ PlayerControls::PlayerControls(QWidget *parent) : QWidget(parent)
 	connect_trig(m_mute_act, this, &PlayerControls::muteClicked);
 
     // Position slider
-	m_positionSlider = new QSlider(Qt::Horizontal);
+	m_positionSlider = new QSlider(Qt::Horizontal, this);
     //slider->setRange(0, player.duration() / 1000)
     //slider->sliderMoved.connect(seek)
 
@@ -110,11 +110,12 @@ PlayerControls::PlayerControls(QWidget *parent) : QWidget(parent)
 	m_labelDuration = new QLabel(this);
 
     // Volume slider.
-	m_volumeSlider = new QSlider(Qt::Horizontal);
+	m_volumeSlider = new QSlider(Qt::Horizontal, this);
 	m_volumeSlider->setToolTip(tr("Volume"));
 	m_volumeSlider->setRange(0, 100);
 	// Signal-to-signal connection, emit a changeVolume(int) signal when the user moves the slider.
-	connect(m_volumeSlider, &QSlider::sliderMoved, this, &PlayerControls::changeVolume);
+	connect(m_volumeSlider, &QSlider::valueChanged, this, [this](int value)
+		{ Q_EMIT PlayerControls::changeVolume(volume()); });
 
     auto layout = new QHBoxLayout();
     layout->setContentsMargins(0, 0, 0, 0);
@@ -186,16 +187,19 @@ void PlayerControls::registerMediaKeySequences()
 #endif
 }
 
-int PlayerControls::volume() const
+float PlayerControls::volume() const
 {
-	return m_volumeSlider->value();
+	qreal linearVol = QAudio::convertVolume(m_volumeSlider->value()/qreal(100),
+		QAudio::LogarithmicVolumeScale,
+		QAudio::LinearVolumeScale);
+	return linearVol;
 }
 
 /**
  * Slot connected to the player, which notifies us of its current state so we can set the control states appropriately.
  * @param state
  */
-void PlayerControls::setState(QMediaPlayer::State state)
+void PlayerControls::setPlaybackState(QMediaPlayer::PlaybackState state)
 {
 	qDebug() << "new state:" << state;
 
@@ -235,9 +239,13 @@ void PlayerControls::setState(QMediaPlayer::State state)
     }
 }
 
-void PlayerControls::setVolume(int volume)
+void PlayerControls::setVolume(float volume)
 {
-	m_volumeSlider->setValue(volume);
+	qreal logvol = QAudio::convertVolume(volume,
+		QAudio::LinearVolumeScale,
+			QAudio::LogarithmicVolumeScale);
+
+	m_volumeSlider->setValue(qRound(logvol * 100));
 }
 
 void PlayerControls::setMuted(bool muted)
@@ -256,7 +264,7 @@ void PlayerControls::setMuted(bool muted)
     }
 }
 
-QMediaPlayer::State PlayerControls::state() const
+QMediaPlayer::PlaybackState PlayerControls::state() const
 {
 	return m_playerState;
 }

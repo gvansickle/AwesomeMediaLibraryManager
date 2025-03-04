@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -22,11 +22,12 @@
 
 // Std C++
 
-// Qt5
-
+// Qt
 #ifdef QT_NO_EXCEPTIONS
 #error "WE NEED A QT COMPILED WITH EXCEPTIONS ENABLED"
 #endif
+#include <QPromise>
+#include <QTimer>
 
 // Qt 5 / KDE backfill.
 #include <utils/QtHelpers.h>
@@ -46,14 +47,19 @@ class AMLMJobT : public AMLMJob
 
 public:
 	using ExtFutureType = ExtFutureT;
-    using ExtFutureWatcherT = QFutureWatcher<typename ExtFutureType::value_type>;
+    using T = decltype(ExtFutureT().result());
+    using ExtPromiseType = QPromise<T>;
+    using ExtFutureWatcherT = QFutureWatcher<decltype(ExtFutureT().result())>;
 
 	explicit AMLMJobT(QObject* parent = nullptr) : BASE_CLASS(parent)
 	{
-        qDbo() << "Constructor, m_ext_future:" << m_ext_future.state();
+//        qDbo() << "Constructor, m_ext_future:" << m_ext_future.state();
         // Watcher creation is here vs. in start() to mitigate against cancel-before-start races and segfaults.  Seems to work.
 	    // We could get a doKill() call at any time after we leave this constructor.
 		m_ext_watcher = new ExtFutureWatcherT(this);
+
+		// @todo Add throttling if necessary.
+//		m_ext_watcher->setPendingResultsLimit(10);
 
 		// Create a new 1 sec speed update QTimer.
 		m_speed_timer = new QTimer(this);
@@ -70,7 +76,7 @@ public:
 					  KJob::Capabilities capabilities = KJob::Capability::Killable | KJob::Capability::Suspendable)
 			: BASE_CLASS(parent), m_ext_future(extfuture), m_hacky_way_to_ignore_start(true)
 	{
-		qDbo() << "Constructor, m_ext_future:" << m_ext_future.state();
+        // qDbo() << "Constructor, m_ext_future:" << m_ext_future.state();
 
 		/// @todo This should be coming through the ExtFuture.
 		setProgressUnit(units);
@@ -131,7 +137,8 @@ public:
 
 		// Hook up signals and such to the ExtFutureWatcher<T>,
 		// start the speed calculation timer.
-		pre_start();
+        /// QT6 This has already been done in the constructor.
+        /// QT6 pre_start();
 
 		// Just let ExtAsync run the run() function, which will in turn run the runFunctor().
 		// Note that we do not use the returned ExtFuture<Unit> here; that control and reporting
@@ -140,14 +147,18 @@ public:
 		// http://doc.qt.io/qt-5/qfuture.html#dtor.QFuture
 		// "Note that this neither waits nor cancels the asynchronous computation."
 
+#if QT_VERSION < QT_VERSION_CHECK(6,0,0)
 		// Run.
 		ExtFutureT future = ExtAsync::run_class_noarg(this, &std::remove_reference_t<decltype(*this)>::run /*&AMLMJobT::run*/);
-
-		m_ext_future = future;
+#else
+        /// QT6 This has already been done in the constructor.
+        ///QT6  ExtFutureT future = QtConcurrent::run(&std::remove_reference_t<decltype(*this)>::run);
+#endif
+        /// QT6 m_ext_future = future;
 
 		// All connections have already been made, so set the watched future.
 		// "To avoid a race condition, it is important to call this function after doing the connections."
-		m_ext_watcher->setFuture(m_ext_future);
+        m_ext_watcher->setFuture(m_ext_future);
 	}
 
 protected: //Q_SLOTS:
@@ -225,15 +236,32 @@ protected: //Q_SLOTS:
 		{
 		case ExtFutureProgressInfo::EncodedType::DESC:
 			AMLM_ASSERT_EQ(strl.size(), 5);
-			Q_EMIT this->description(this, strl[0], QPair(strl[1], strl[2]), QPair(strl[3], strl[4]));
+#if 0 // KF5
+			Q_EMIT this->description(this, strl[0],
+                                     std::pair<QList<QString>, QList<QString>>(strl[1], strl[2]),
+									 std::pair<QList<QString>, QList<QString>>(strl[3], strl[4]));
+#elif 1 // KF6
+			/**
+			 * From the KF6 docs: https://api.kde.org/frameworks/kcoreaddons/html/classKJob.html#a145f7a7648f06ef79cf526a2c6125b88
+			 * "Examples of titles are "Copying", "Creating resource", etc. The fields of the description
+			 * can be "Source" with an URL, and, "Destination" with an URL for a "Copying" description."
+			 */
+            Q_EMIT this->description(this,
+                                     // Title, 	the general description of the job.
+                                     strl[0],
+                                     // field1, first field (localized name and value)
+                                     std::pair(strl[1], strl[2]),
+                                     // field2,	second field (localized name and value)
+                                     std::pair(strl[3], strl[4]));
+#endif
 			break;
 		case ExtFutureProgressInfo::EncodedType::INFO:
-			AMLM_ASSERT_EQ(strl.size(), 2);
-			Q_EMIT this->infoMessage(this, strl[0], strl[1]);
+            AMLM_ASSERT_EQ(strl.size(), 1);
+            Q_EMIT this->infoMessage(this, strl[0]);//, strl[1]);
 			break;
 		case ExtFutureProgressInfo::EncodedType::WARN:
 			AMLM_ASSERT_EQ(strl.size(), 2);
-			Q_EMIT this->warning(this, strl[0], strl[1]);
+            Q_EMIT this->warning(this, strl[0]);//, strl[1]);
 			break;
 		case ExtFutureProgressInfo::EncodedType::SET_PROGRESS_UNIT:
 		{
@@ -295,25 +323,33 @@ protected:
     {
         /// @note We're in an arbitrary thread here probably without an event loop.
 
-		qDb() << "ExtFuture<T> state:" << m_ext_future.state();
+        qDb() << "ExtFuture<T> state:" << m_ext_future;
 
         // Check if we were canceled before we were started.
         if(m_ext_future.isCanceled())
         {
             // We were canceled before we were started.
+#if QT_VERSION < QT_VERSION_CHECK(6,0,0)
             // Report (STARTED | CANCELED | FINISHED) and just return.
             /// @note Canceling alone won't finish the extfuture, so we finish it manually here.
             m_ext_future.reportCanceled();
             m_ext_future.reportFinished();
             AMLM_ASSERT_EQ(ExtFutureState::state(m_ext_future), (ExtFutureState::Started | ExtFutureState::Canceled | ExtFutureState::Finished));
-
+#else
+            AMLM_ASSERT_EQ(m_ext_future.isStarted(), true);
+            AMLM_ASSERT_EQ(m_ext_future.isCanceled(), true);
+            AMLM_ASSERT_EQ(m_ext_future.isFinished(), true);
+#endif
 			/// @todo Do we really need an emitResult() here?
             emitResult();
             return;
         }
         try
         {
+            //
             // Start the work by calling the functor.  We should be in the Running state if we're in here.
+            //
+
             /// @todo But we're not Running here.  Not sure why.
     //        AMLM_ASSERT_EQ(ef.isRunning(), true);
 //            qDb() << "Pre-functor ExtFutureState:" << ExtFutureState::state(m_ext_future);
@@ -323,12 +359,14 @@ protected:
         catch(QException &e)
         {
             /// @note RunFunctionTask has QFutureInterface<T>::reportException(e); here.
-            m_ext_future.reportException(e);
+// QT6 m_ext_future.reportException(e);
+            assert(0);
         }
         catch(...)
         {
             /// @note RunFunctionTask has QFutureInterface<T>::reportException(e); here.
-            m_ext_future.reportException(QUnhandledException());
+// QT6 m_ext_future.reportException(QUnhandledException());
+            assert(0);
         }
 
         /// @note Ok, runFunctor() has either completed successfully, been canceled, or thrown an exception, so what do we do here?
@@ -341,18 +379,19 @@ protected:
         /// futureInterface.reportFinished();
         /// @endcode
         /// So it seems we should be safe doing the same thing.
-
-        if(m_ext_future.isPaused())
+        /// @note 20250212: Do we even need to care about suspend/resume here?  I'm not entire sure.
+        if(m_ext_future.isSuspending() || m_ext_future.isSuspended())
         {
             // ExtAsync::run<> is paused, so wait for it to be resumed.
             // It won't be paused here if the future was canceled.
             Q_ASSERT(m_ext_future.isFinished() || m_ext_future.isCanceled());
 			qWr() << "ExtAsync<> is paused, waiting for it to be resumed....";
-            m_ext_future.waitForResume();
+/// QT6 No such function anywhere, would need to listen for signal QFutureWatcher::suspending().
+/// QT6            m_ext_future.waitForResume();
         }
 
 		qDb() << "AMLMJOBT REPORTING FINISHED";
-        m_ext_future.reportFinished();
+// QT6        m_ext_future.reportFinished();
 
         // We should only have two possible states here, excl. exceptions for the moment:
         // - Started | Finished
@@ -483,7 +522,7 @@ protected:
     {
         /// KJob::doSuspend().
         Q_ASSERT_X(capabilities() & KJob::Capability::Suspendable, __func__, "Trying to suspend an unsuspendable AMLMJob.");
-        m_ext_future.setPaused(true);
+        m_ext_future.setSuspended(true);
         return true;
     }
 
@@ -491,7 +530,7 @@ protected:
     {
         /// KJob::doResume().
         Q_ASSERT_X(capabilities() & KJob::Capability::Suspendable, __func__, "Trying to resume an unresumable AMLMJob.");
-        m_ext_future.setPaused(false);
+        m_ext_future.setSuspended(false);
         return true;
     }
 
@@ -585,8 +624,12 @@ protected:
 
     /// The ExtFuture<T>.
     /// This is always a copy of an ExtFuture<T> created somewhere outside this class instance.
+#if QT_VERSION < QT_VERSION_CHECK(6,0,0)
 	ExtFutureT m_ext_future { ExtAsync::make_started_only_future<typename ExtFutureT::inner_t>() };
-
+#else
+    ExtPromiseType m_promise;
+	ExtFutureT m_ext_future {};
+#endif
 	/// The watcher for the ExtFuture.
 	/// @note Would like to use a std::unique_ptr here, but it screws with the QObject parent/child delete mechanism
 	///       (we get double deletes).

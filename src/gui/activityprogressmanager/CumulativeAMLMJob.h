@@ -20,7 +20,11 @@
 #ifndef SRC_GUI_ACTIVITYPROGRESSMANAGER_CUMULATIVEAMLMJOB_H_
 #define SRC_GUI_ACTIVITYPROGRESSMANAGER_CUMULATIVEAMLMJOB_H_
 
-/// Ours
+// Qt
+#include <QMetaType>
+
+// Ours
+#include <ExtFuture.h>
 #include <concurrency/AMLMJob.h>
 #include <utils/TheSimplestThings.h>
 
@@ -65,7 +69,8 @@ private:
 
 };
 
-Q_DECLARE_METATYPE(CumulativeAMLMJob*)
+Q_DECLARE_METATYPE(CumulativeAMLMJob);
+Q_DECLARE_METATYPE(CumulativeAMLMJob*);
 
 
 #endif /* SRC_GUI_ACTIVITYPROGRESSMANAGER_CUMULATIVEAMLMJOB_H_ */

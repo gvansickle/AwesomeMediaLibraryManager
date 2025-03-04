@@ -221,9 +221,9 @@ target_link_libraries(src
 #qt5_add_binary_resources(build_AppIcon_rcc ${AppIcon_qrc} DESTINATION ${AppIcon_rcc})
 
 # Qt5 non-binary Resource files.
-qt5_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/AppIcon.qrc")
-qt5_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/amlm.qrc")
-qt5_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/xquery_files.qrc")
+qt_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/AppIcon.qrc")
+qt_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/amlm.qrc")
+qt_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/xquery_files.qrc")
 
 
 # The link lib targets common to app and test builds.
@@ -326,6 +326,12 @@ target_link_libraries(${PROJECT_NAME}
 		cxx_definitions_qt
 	PRIVATE
 		libapp
+)
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+	COMMAND cloc --no-autogen "--not-match-d=/(third_party|build-|\\.).*/" "--exclude-ext=moc,xml,ui" ${PROJECT_SOURCE_DIR}
+	VERBATIM
+	COMMENT "Running cloc..."
 )
 
 ### @todo breeze

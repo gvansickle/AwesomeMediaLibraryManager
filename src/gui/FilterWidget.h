@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -20,40 +20,30 @@
 #ifndef FILTERWIDGET_H
 #define FILTERWIDGET_H
 
-//#include <nomocdefs.h>
-
 #include <QObject>
 #include <QLineEdit>
-#include <QRegExp>
+#include <QRegularExpression>
 
 class QAction;
 class QActionGroup;
 
-Q_DECLARE_METATYPE(QRegExp::PatternSyntax)
 
 class FilterWidget : public QLineEdit
 {
-	//W_OBJECT(FilterWidget)
 	Q_OBJECT
-
-	Q_PROPERTY(Qt::CaseSensitivity caseSensitivity READ caseSensitivity WRITE setCaseSensitivity)
-	Q_PROPERTY(QRegExp::PatternSyntax patternSyntax READ patternSyntax WRITE setPatternSyntax)
 
 Q_SIGNALS:
 	void filterChanged();
-    //W_SIGNAL(filterChanged)
 
 public:
 	explicit FilterWidget(QWidget *parent = nullptr);
 
-	Qt::CaseSensitivity caseSensitivity() const;
-	void setCaseSensitivity(Qt::CaseSensitivity cs);
+	QRegularExpression::PatternOptions caseSensitive() const;
+    void setCaseSensitive(bool case_sensitive);
 
-	QRegExp::PatternSyntax patternSyntax() const;
-	void setPatternSyntax(QRegExp::PatternSyntax s);
-
-	//W_PROPERTY(Qt::CaseSensitivity, caseSensitivity READ caseSensitivity WRITE setCaseSensitivity)
-	//W_PROPERTY(QRegExp::PatternSyntax, patternSyntax READ patternSyntax WRITE setPatternSyntax)
+    /// @todo QT6 broke this, fix.
+    // QRegExp::PatternSyntax patternSyntax() const;
+    // void setPatternSyntax(QRegExp::PatternSyntax s);
 
 public Q_SLOTS:
 

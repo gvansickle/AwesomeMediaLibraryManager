@@ -38,10 +38,10 @@
 #include <future/cpp14_concepts.hpp>
 #include <future/Unit.hpp>
 
-// Qt5
-#include <QtConcurrent>
+// Qt
+#include <QtConcurrentRun>
 #include <QFuture>
-#include <QFutureInterface>
+#include <QFutureWatcher>
 #include <QThread>
 #include <QPair>
 #include <QStringList> // For template shenanigans.
@@ -55,6 +55,9 @@
 #include <utils/StringHelpers.h>
 #include <utils/DebugHelpers.h>
 #include <utils/UniqueIDMixin.h>
+#include "impl/ManagedExtFutureWatcher_impl.h"
+
+#if 0 // if !QT6
 
 #include "ExtFutureState.h"
 #include "ExtFutureProgressInfo.h"
@@ -1535,6 +1538,157 @@ extern template class ExtFuture<QByteArray>;
 /// @}
 
 #include "impl/ExtFuture_impl.hpp"
+
+#endif // !QT6
+
+// template <class T>
+// class ExtFuture<T> : public QFuture<T>
+// {
+// }
+template <class T>
+using ExtFuture = QFuture<T>;
+
+
+// From ExtFuture work:
+//        {QFutureInterfaceBase::NoState, "NoState"},
+//        {QFutureInterfaceBase::Running, "Running"},
+//        {QFutureInterfaceBase::Started,  "Started"},
+//        {QFutureInterfaceBase::Finished,  "Finished"},
+//        {QFutureInterfaceBase::Canceled,  "Canceled"},
+//        {QFutureInterfaceBase::Paused,   "Paused"},
+//        {QFutureInterfaceBase::Throttled, "Throttled"}
+template <typename T>
+QString state_str(const ExtFuture<T>& future)
+{
+	QString retval {"state("};
+
+	if(future.isRunning()) { retval += "RUN|"; }
+	if(future.isStarted()) { retval += "START|"; }
+    if(future.isFinished()) { retval += "FINISHED|"; }
+    if(future.isCanceled()) { retval += "CANCELED|"; }
+    if(future.isSuspended()) { retval += "SUSPENDED|"; }
+    if(future.isSuspending()) { retval += "SUSPENDING|"; }
+    if(future.isValid()) { retval += "VALID|"; }
+
+	// Remove the last char, which should be a "|".
+	retval.chop(1);
+	retval += ")";
+	return retval;
+}
+
+/**
+ * Works much like .then(), but uses a QFutureWatcher to call @a function when resultsReadyAt() fires.
+ *
+ * @tparam T
+ * @tparam Function
+ * @param future
+ * @param function
+ * @return  A copy of the passed-in @a future.
+ */
+template <typename T, typename Function,
+	REQUIRES(std::is_invocable_r_v<void, Function, QFuture<T>, int, int>)>
+auto streaming_then(QFuture<T> future, Function function)
+{
+    auto ret_future = QtConcurrent::run(QThreadPool::globalInstance(), [function](QFuture<T> future)
+	{
+		qDebug() << "HERE 1, future: " << future;
+
+		QFutureWatcher<T>* watcher = new QFutureWatcher<T>();
+    	QEventLoop loop;
+		connect_or_die(watcher, &QFutureWatcher<T>::resultsReadyAt, watcher,
+						[future, function](int begin, int end)
+						{
+							qDebug() << "IN LAMBDA, future: " << future;
+							function(future, begin, end);
+						}, Qt::DirectConnection);
+		connect_or_die(watcher, &QFutureWatcher<T>::finished, [watcher, &loop]()
+		{
+            qDebug() << "WATCHER FINISHED, DELETELATER";
+			watcher->deleteLater();
+			loop.quit();
+		});
+
+		watcher->setFuture(future);
+		qDb() << "AFTER SETFUTURE, future: " << future;
+    	loop.exec();
+		future.waitForFinished();
+		qDb() << "WAIT FOR FINISHED COMPLETE" << future;
+	}, future);
+
+	qDebug() << "RETURNING FUTURE" << ret_future;
+	// return future;
+	return ret_future;
+}
+
+
+
+/**
+ * Function which blocks on @a future and calls @a function with partial results as they become available.
+ *
+ * @tparam T  The value type of the QFuture<> to be waited on.
+ * @tparam Function  The callable type.  Must take two ints, the begin and end index of the range that is ready.
+ * @param future
+ * @param function
+ */
+template <typename T, typename Function>
+void waitForResultsReady(QFuture<T>& future, Function function)
+{
+	QFutureWatcher<T> futureWatcher;
+	QObject::connect(&futureWatcher, &QFutureWatcher<T>::resultsReadyAt, function);
+
+	// Set the future to watch.
+	futureWatcher.setFuture(future);
+	future.waitForFinished();
+
+	/*
+		Q_ASSERT(future.isValid());
+
+		int index = 0;
+
+		while(!future.isFinished() && !future.isCanceled())
+		{
+			auto result = future.resultAt(index);
+			function(index, index);
+			++index;
+		}
+	*/
+}
+
+
+/**
+ * Function which blocks on @a future and calls @a function with each partial result as it becomes available.
+ *
+ * @tparam T
+ * @tparam Function  The callable type.  Must take one int, the index that is ready.
+ * @param future
+ * @param function
+ */
+template <typename T, typename Function>
+void waitForResultReady(QFuture<T>& future, Function function)
+{
+	QFutureWatcher<T> futureWatcher;
+	QObject::connect(&futureWatcher, &QFutureWatcher<T>::resultReadyAt, function);
+
+	// Set the future to watch.
+	futureWatcher.setFuture(future);
+	future.waitForFinished();
+}
+
+/**
+ * QDebug stream operator.
+ */
+template <typename T>
+QDebug operator<<(QDebug dbg, const ExtFuture<T>& extfuture)
+{
+	QDebugStateSaver saver(dbg);
+
+	// .resultCount() does not cause a stored exception to be thrown.  It does acquire the mutex.
+    dbg << "ExtFuture<T>( id=" /*<< extfuture.m_extfuture_id_no << extfuture.m_name*/ << "state:" << state_str(extfuture)
+        /*<< "hasException():" << extfuture.hasException()*/ << ", resultCount():" << extfuture.resultCount() << ")";
+
+	return dbg;
+}
+
 
 #endif /* SRC_CONCURRENCY_EXTFUTURE_H_ */
 
