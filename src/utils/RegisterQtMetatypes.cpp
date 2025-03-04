@@ -85,7 +85,7 @@
 #define ADD_T(base_type) TOKENPASTE2(base_type, _t)
 #define DUP_NS_AND_NOT(X, base_type) X(base_type) X(std::base_type)
 
-/// Qt5's take on construct-on-first-use.  Not sure we need it here, see reginstance() below.
+/// Qt's take on construct-on-first-use.  Not sure we need it here, see reginstance() below.
 /// @link https://doc.qt.io/qt-5/qglobalstatic.html
 Q_GLOBAL_STATIC(QtRegCallbackRegistry, f_qt_reg_callback_registry);
 
