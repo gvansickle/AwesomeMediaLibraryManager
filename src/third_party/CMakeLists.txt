@@ -41,9 +41,6 @@ find_package(FLEX REQUIRED)
 
 #include(GNUInstallDirs)
 
-#add_subdirectory(function2)
-
-
 set(LIBCUE_SRC_DIR libcue)
 
 set(HEADERS
