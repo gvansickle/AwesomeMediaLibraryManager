@@ -6,7 +6,7 @@
 [subrepo]
 	remote = https://github.com/onqtam/ucm.git
 	branch = master
-	commit = aa0d65239434496eb96e5b10ebd38e94b506b117
+	commit = 36bfe13fb85affab6b45acd5a0ab620c93b89797
 	parent = b15d1b61ba1671b234cefa25d43bbb29e4239ae1
-	cmdver = 0.4.0
+	cmdver = 0.4.9
 	method = merge
