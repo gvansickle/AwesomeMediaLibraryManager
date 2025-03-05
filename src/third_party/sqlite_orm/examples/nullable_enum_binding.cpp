@@ -1,4 +1,4 @@
-
+#include <sqlite3.h>
 #include <sqlite_orm/sqlite_orm.h>
 #include <iostream>
 #include <memory>
@@ -20,17 +20,21 @@ enum class Gender {
 };
 
 std::unique_ptr<std::string> GenderToString(Gender gender) {
-    switch(gender){
-        case Gender::Female:return std::make_unique<std::string>("female");
-        case Gender::Male:return std::make_unique<std::string>("male");
-        case Gender::None:return {};
+    switch (gender) {
+        case Gender::Female:
+            return std::make_unique<std::string>("female");
+        case Gender::Male:
+            return std::make_unique<std::string>("male");
+        case Gender::None:
+            return {};
     }
+    throw std::domain_error("Invalid Gender enum");
 }
 
-std::unique_ptr<Gender> GenderFromString(const std::string &s) {
-    if(s == "female") {
+std::unique_ptr<Gender> GenderFromString(const std::string& s) {
+    if (s == "female") {
         return std::make_unique<Gender>(Gender::Female);
-    }else if(s == "male") {
+    } else if (s == "male") {
         return std::make_unique<Gender>(Gender::Male);
     }
     return nullptr;
@@ -50,10 +54,10 @@ namespace sqlite_orm {
     template<>
     struct statement_binder<Gender> {
 
-        int bind(sqlite3_stmt *stmt, int index, const Gender &value) {
-            if(auto str = GenderToString(value)){
+        int bind(sqlite3_stmt* stmt, int index, const Gender& value) {
+            if (auto str = GenderToString(value)) {
                 return statement_binder<std::string>().bind(stmt, index, *str);
-            }else{
+            } else {
                 return statement_binder<std::nullptr_t>().bind(stmt, index, nullptr);
             }
         }
@@ -61,10 +65,10 @@ namespace sqlite_orm {
 
     template<>
     struct field_printer<Gender> {
-        std::string operator()(const Gender &t) const {
-            if(auto res = GenderToString(t)){
+        std::string operator()(const Gender& t) const {
+            if (auto res = GenderToString(t)) {
                 return *res;
-            }else{
+            } else {
                 return "None";
             }
         }
@@ -72,19 +76,19 @@ namespace sqlite_orm {
 
     template<>
     struct row_extractor<Gender> {
-        Gender extract(const char *row_value) {
-            if(row_value){
-                if(auto gender = GenderFromString(row_value)){
+        Gender extract(const char* columnText) const {
+            if (columnText) {
+                if (auto gender = GenderFromString(columnText)) {
                     return *gender;
-                }else{
-                    throw std::runtime_error("incorrect gender string (" + std::string(row_value) + ")");
+                } else {
+                    throw std::runtime_error("incorrect gender string (" + std::string(columnText) + ")");
                 }
-            }else{
+            } else {
                 return Gender::None;
             }
         }
 
-        Gender extract(sqlite3_stmt *stmt, int columnIndex) {
+        Gender extract(sqlite3_stmt* stmt, int columnIndex) const {
             auto str = sqlite3_column_text(stmt, columnIndex);
             return this->extract((const char*)str);
         }
@@ -95,16 +99,16 @@ namespace sqlite_orm {
      *  specializing type_is_nullable<T> and deriving from std::true_type.
      */
     template<>
-    struct type_is_nullable<Gender> : public std::true_type {
+    struct type_is_nullable<Gender> : std::true_type {
 
         //  this function must return whether value null or not (false is null). Don't forget to implement it
-        bool operator()(const Gender &g) const {
+        bool operator()(const Gender& g) const {
             return g != Gender::None;
         }
     };
 }
 
-int main(int argc, char **argv) {
+int main(int, char**) {
     using namespace sqlite_orm;
     auto storage = make_storage("nullable_enum.sqlite",
                                 make_table("users",
@@ -131,19 +135,19 @@ int main(int argc, char **argv) {
     });
 
     cout << "All users :" << endl;
-    for(auto &user : storage.iterate<User>()) {
+    for (auto& user: storage.iterate<User>()) {
         cout << storage.dump(user) << endl;
     }
 
     auto allWithNoneGender = storage.get_all<User>(where(is_null(&User::gender)));
     cout << "allWithNoneGender = " << allWithNoneGender.size() << endl;
-    for(auto &user : allWithNoneGender) {
+    for (auto& user: allWithNoneGender) {
         cout << storage.dump(user) << endl;
     }
 
     auto allWithGender = storage.get_all<User>(where(is_not_null(&User::gender)));
     cout << "allWithGender = " << allWithGender.size() << endl;
-    for(auto &user : allWithGender) {
+    for (auto& user: allWithGender) {
         cout << storage.dump(user) << endl;
     }
 

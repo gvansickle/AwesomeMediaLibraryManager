@@ -6,7 +6,7 @@
 [subrepo]
 	remote = https://github.com/fnc12/sqlite_orm.git
 	branch = master
-	commit = 24283f62266039777c304d234a7d772e16169a87
+	commit = 69917bd09a84970881d755828d60d8edf79728c6
 	parent = 599847defaa35788d951444626ad71c544fba242
 	method = merge
-	cmdver = 0.4.0
+	cmdver = 0.4.9

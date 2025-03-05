@@ -1,23 +1,31 @@
 #pragma once
 
-#include "alias.h"
+#include <type_traits>  //  std::remove_const
+
+#include "type_traits.h"
+#include "table_reference.h"
+#include "alias_traits.h"
 
 namespace sqlite_orm {
-    
+
     namespace internal {
-        
+
         /**
-         *  If T is alias than mapped_type_proxy<T>::type is alias::type
-         *  otherwise T is T.
+         *  If T is a table reference or recordset alias then the typename mapped_type_proxy<T>::type is the unqualified aliased type,
+         *  otherwise unqualified T.
          */
-        template<class T, class sfinae = void>
-        struct mapped_type_proxy {
-            using type = T;
-        };
-        
+        template<class T, class SFINAE = void>
+        struct mapped_type_proxy : std::remove_const<T> {};
+
+#ifdef SQLITE_ORM_WITH_CPP20_ALIASES
+        template<orm_table_reference R>
+        struct mapped_type_proxy<R, void> : R {};
+#endif
+
+        template<class A>
+        struct mapped_type_proxy<A, match_if<is_recordset_alias, A>> : std::remove_const<type_t<A>> {};
+
         template<class T>
-        struct mapped_type_proxy<T, typename std::enable_if<std::is_base_of<alias_tag, T>::value>::type> {
-            using type = typename T::type;
-        };
+        using mapped_type_proxy_t = typename mapped_type_proxy<T>::type;
     }
 }
