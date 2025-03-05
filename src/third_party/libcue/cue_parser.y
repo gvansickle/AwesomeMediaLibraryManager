@@ -193,6 +193,8 @@ new_track
 		prev_track = track;
 
 		track = cd_add_track(cd);
+		if (prev_track == track)
+			prev_track = NULL;
 		cdtext = track_get_cdtext(track);
 		rem = track_get_rem(track);
 
@@ -348,7 +350,11 @@ Cd *cue_parse_file(FILE *fp)
 	Cd *ret_cd = NULL;
 
 	if (0 == yyparse()) ret_cd = cd;
-	else ret_cd = NULL;
+	else
+	{
+		ret_cd = NULL;
+		if (cd) cd_delete(cd);
+	}
 
 	yy_delete_buffer(buffer);
 	reset_static_vars();
@@ -365,7 +371,11 @@ Cd *cue_parse_string(const char* string)
 	Cd *ret_cd = NULL;
 
 	if (0 == yyparse()) ret_cd = cd;
-	else ret_cd = NULL;
+	else
+	{
+		ret_cd = NULL;
+		if (cd) cd_delete(cd);
+	}
 
 	yy_delete_buffer(buffer);
 	reset_static_vars();
