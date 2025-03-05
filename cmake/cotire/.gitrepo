@@ -6,6 +6,7 @@
 [subrepo]
 	remote = https://github.com/sakra/cotire.git
 	branch = master
-	commit = 391bf6b7609e14f5976bd5247b68d63cbf8d4d12
+	commit = 9d8e3f7b584b934edfe2410d87728137a00e4d8b
 	parent = 83f4ccacb8be673b261048a18d731c09b8430d6e
-	cmdver = 0.3.1
+	cmdver = 0.4.9
+	method = merge
