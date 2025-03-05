@@ -23,6 +23,7 @@ nonws		[^ \t\r\n]
 %option noyywrap
 %option noinput
 %option nounput
+%option caseless
 
 %s NAME
 %x REM
@@ -44,8 +45,8 @@ nonws		[^ \t\r\n]
 <NAME>{nonws}+	{
 		yylval.sval = strncpy(	yy_buffer,
 					yytext,
-					(yyleng > sizeof(yy_buffer) ? sizeof(yy_buffer) : yyleng));
-		yylval.sval[(yyleng > sizeof(yy_buffer) ? sizeof(yy_buffer) : yyleng)] = '\0';
+					sizeof(yy_buffer) - 1 );
+		yylval.sval[sizeof(yy_buffer) - 1] = '\0';
 		BEGIN(INITIAL);
 		return STRING;
 		}
@@ -135,5 +136,8 @@ REM		{ BEGIN(REM); /* exclusive rules for special exceptions */ }
 ^{ws}*\n	{ yylineno++; /* blank line */ }
 \n		{ yylineno++; return '\n'; }
 .		{ fprintf(stderr, "bad character '%c'\n", yytext[0]); }
+
+<<EOF>> { static int once = 0; return (once = !once) ? '\n' : 0; }
+
 
 %%

@@ -1,5 +1,5 @@
 #
-# Copyright 2017, 2024 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2017, 2024, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -17,7 +17,7 @@
 # along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.28 FATAL_ERROR)
 
 project(libcue)
 
@@ -40,12 +40,6 @@ find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
 
 #include(GNUInstallDirs)
-
-# The continuable library.
-# Cannot make this work, so we'll just include the two header dirs.
-#set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR} ${CMAKE_MODULE_PATH})
-#add_subdirectory(function2)
-#add_subdirectory(continuable)
 
 set(LIBCUE_SRC_DIR libcue)
 
