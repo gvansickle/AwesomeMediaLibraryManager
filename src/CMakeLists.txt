@@ -79,12 +79,6 @@ get_property(AMLM_LIBCUE_TARGET_SRCS TARGET ${AMLM_LIBCUE_TARGET} PROPERTY SOURC
 set_property(SOURCE ${AMLM_LIBCUE_TARGET_SRCS} PROPERTY SKIP_AUTOGEN ON)
 #message(STATUS "AMLM_LIBCUE_TARGET:SOURCES: ${AMLM_LIBCUE_TARGET_SRCS}")
 
-# Verdigris is just two headers.
-set(USE_BUNDLED_VERDIGRIS 1)
-set(INCLUDE_DIR_VERDIGRIS ${PROJECT_SOURCE_DIR}/src/third_party/verdigris/src)
-add_library(verdigris_target INTERFACE)
-target_include_directories(verdigris_target INTERFACE ${PROJECT_SOURCE_DIR}/src/third_party/verdigris/src)
-
 
 # We make the generated KConfig settings files into their own library so dependencies get handled correctly.
 # The generated files are AwesomeMediaLibraryManagerSettings.cpp and .h.
@@ -112,7 +106,6 @@ set(PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS
 		${AMLM_TAGLIB_TARGET}
 		${AMLM_LIBCUE_TARGET}
 #		callable_traits
-		verdigris_target
 #		Boost::thread
 		${Boost_LIBRARIES}
 		)
@@ -163,7 +156,6 @@ set(PROJECT_COMMON_INTERNAL_LINK_LIB_TARGETS
 		logic
 		resources
 		utils
-		${AMLM_WT_LIBRARIES}
         SQLite::SQLite3
 )
 
@@ -198,7 +190,6 @@ target_link_libraries(src
 		gui
 		kconfig_target
 		utils
-		${AMLM_WT_LIBRARIES}
 		SQLite::SQLite3
 	PRIVATE
 		# Boost
