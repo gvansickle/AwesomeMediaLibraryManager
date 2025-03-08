@@ -28,7 +28,7 @@
 
 #include <utils/ConnectHelpers.h>
 
-HelpMenu::HelpMenu(QWidget* parent, const KAboutData& aboutData, bool showWhatsThis) : KHelpMenu(parent, aboutData, showWhatsThis)
+HelpMenu::HelpMenu(QWidget* parent, const KAboutData& aboutData) : KHelpMenu(parent, aboutData)
 {
 	setObjectName("main_help_menu");
 
@@ -59,7 +59,4 @@ HelpMenu::HelpMenu(QWidget* parent, const KAboutData& aboutData, bool showWhatsT
 
 }
 
-HelpMenu::~HelpMenu()
-{
-
-}
+HelpMenu::~HelpMenu() = default;
