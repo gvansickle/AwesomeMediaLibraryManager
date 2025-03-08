@@ -11,7 +11,7 @@ Really this is just me experimenting with a number of things:
   - A portable installer
   - Unit testing via GoogleTest and QTest
   - Coordinating all build duties with CMake.
-- Adding continuations (".then()") to QFuture()s.
+- Adding continuations (".then()") to Qt5's QFuture()s.
 - Identifying and playing individual tracks from a full-CD FLAC rip.
 - ...and I'm sure a bunch of other stuff I've forgotten since I last touched this.
 
