@@ -220,7 +220,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
     auto extensions = SupportedMimeTypes::instance().supportedAudioMimeTypesAsSuffixStringList();
 
 	// Run the directory scan in another thread.
-    QFuture<DirScanResult> dirresults_future = QtConcurrent::run(DirScanFunction, nullptr,
+    QFuture<DirScanResult> dirresults_future = QtConcurrent::run(DirScanFunction,
 	                                                                                     dir_url,
 	                                                                                     extensions,
 	                                                                                     QDir::Filters(QDir::Files |

@@ -200,10 +200,13 @@ const QFuture<void> ImportProjectJob::get_extfuture() const
 
 ////////////////////////
 
-#if 0
+
 
 class TestAMLMJob1;
 using TestAMLMJob1Ptr = QPointer<TestAMLMJob1>;
+
+#if 0
+
 /**
  * Test job derived from AMLMJob.
  */
@@ -277,6 +280,7 @@ protected:
 		AMLMTEST_COUT << "Returning, m_ext_future:" << m_ext_future;
     }
 };
+
 
 #endif
 
@@ -378,7 +382,9 @@ TEST_P(AMLMJobTestsParameterized, DISABLED_SynchronousExecTestAMLMJob1PAutoDelet
 
     TC_EXIT();
 }
+#endif
 
+#if 0
 TEST_P(AMLMJobTestsParameterized, DISABLED_AsynchronousExecTestAMLMJob1PAutoDelete)
 {
     TC_ENTER();
@@ -417,6 +423,9 @@ TEST_P(AMLMJobTestsParameterized, DISABLED_AsynchronousExecTestAMLMJob1PAutoDele
 
     TC_EXIT();
 }
+#endif
+
+#if 0
 
 #if 0 // OBSOLETE
 TEST_F(AMLMJobTests, DISABLED_ThenTest) // NOLINT

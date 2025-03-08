@@ -22,7 +22,6 @@
 
 #include "MDITreeViewBase.h"
 #include <logic/PlaylistModel.h>
-// #include "DragDropTreeViewStyleProxy.h"
 
 class QMediaPlaylist;
 class LibrarySortFilterProxyModel;

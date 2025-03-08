@@ -95,7 +95,7 @@ public:
 
 	void clear() noexcept { m_the_list.clear(); }
 
-	void push_back( const QVariant& value ) { m_the_list.push_back(value); };
+    void push_back( const QVariant& value ) { m_the_list.push_back(value); }
 
 	const_iterator cbegin() const noexcept { return std::cbegin(m_the_list); }
 	iterator begin() { return m_the_list.begin(); }

@@ -175,7 +175,7 @@ void tst_QString::DirScanCancelTestPAutodelete()
 	                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 #endif
 	// Run the directory scan in another thread.
-	ExtFuture<DirScanResult> dirresults_future = QtConcurrent::run(DirScanFunction, nullptr,
+	ExtFuture<DirScanResult> dirresults_future = QtConcurrent::run(DirScanFunction,
 																						 dir_url,
 																						 QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
 																						 QDir::Filters(QDir::Files |

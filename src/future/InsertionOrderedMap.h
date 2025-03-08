@@ -305,7 +305,6 @@ Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(InsertionOrderedMap);
 using QVariantInsertionOrderedMap = InsertionOrderedMap<QString, QVariant>;
 // Q_DECLARE_METATYPE_TEMPLATE_2ARG(InsertionOrderedMap);
 Q_DECLARE_METATYPE(QVariantInsertionOrderedMap);
-//Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(InsertionOrderedMap);
 
 
 #endif /* SRC_FUTURE_INSERTIONORDEREDMAP_H_ */

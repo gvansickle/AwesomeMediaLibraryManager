@@ -25,7 +25,7 @@
 // Std C++
 #include <deque>
 
-// Qt5
+// Qt
 #include <QObject>
 #include <QPointer>
 #include <QWeakPointer>
@@ -35,12 +35,13 @@
 #include <QWaitCondition>
 #include <QSemaphore>
 
-// KF5
+// KF
 #include <KJob>
 #include <KJobUiDelegate>
 
 // Ours
 #include <future/function_traits.hpp>
+#include <future/guideline_helpers.h>
 #include <utils/UniqueIDMixin.h>
 #include "utils/ConnectHelpers.h"
 #include "IExtFutureWatcher.h"
@@ -265,6 +266,7 @@ protected:
 
 public:
     AMLMJob() = delete;
+    M_GH_POLYMORPHIC_SUPPRESS_COPYING_C67(AMLMJob);
     /// Destructor.
     ~AMLMJob() override;
 
@@ -455,8 +457,6 @@ protected Q_SLOTS:
 //    void SLOT_onResultsReadyAt(T ef, int begin, int end);
     /// @}
 
-private:
-    Q_DISABLE_COPY(AMLMJob)
 
 private Q_SLOTS:
 

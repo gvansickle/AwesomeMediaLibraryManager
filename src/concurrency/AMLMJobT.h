@@ -29,7 +29,7 @@
 #include <QPromise>
 #include <QTimer>
 
-// Qt 5 / KDE backfill.
+// Qt / KF backfill.
 #include <utils/QtHelpers.h>
 
 // Ours
@@ -622,14 +622,11 @@ protected:
 
 	bool m_hacky_way_to_ignore_start {false};
 
-    /// The ExtFuture<T>.
+    /// The promise and future.
     /// This is always a copy of an ExtFuture<T> created somewhere outside this class instance.
-#if QT_VERSION < QT_VERSION_CHECK(6,0,0)
-	ExtFutureT m_ext_future { ExtAsync::make_started_only_future<typename ExtFutureT::inner_t>() };
-#else
     ExtPromiseType m_promise;
 	ExtFutureT m_ext_future {};
-#endif
+
 	/// The watcher for the ExtFuture.
 	/// @note Would like to use a std::unique_ptr here, but it screws with the QObject parent/child delete mechanism
 	///       (we get double deletes).

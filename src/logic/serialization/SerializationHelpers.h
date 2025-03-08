@@ -143,7 +143,7 @@ template <class ListType, class MemberType,
 void list_push_back_or_die(ListType& list, const MemberType& member)
 {
 	static_assert (!std::is_base_of_v<ISerializable, MemberType>, "DEDUCTION FAILED");
-	qDb() << QMetaType::fromType<MemberType>().name();
+	// qDb() << QMetaType::fromType<MemberType>().name();
 	QVariant qvar = QVariant::fromValue<MemberType>( member );
 	if(!qvar.isValid())
 	{

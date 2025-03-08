@@ -88,7 +88,7 @@ void DirScanResult::fromVariant(const QVariant& variant)
 	set_prefixed_uuid(uuid);
 
 	// Extract all the fields from the map.
-#define X(field_tag, member_field) map_read_field_or_warn(map, field_tag, &member_field);
+#define X(field_tag, member_field) map_read_field_or_warn(map, field_tag, &(member_field));
 	M_DATASTREAM_FIELDS(X);
 #undef X
 }

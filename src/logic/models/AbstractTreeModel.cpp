@@ -756,7 +756,7 @@ QModelIndex AbstractTreeModel::index(int row, int column, const QModelIndex &par
 	{
 		return createIndex(row, column, quintptr(child_item->getId()));
 	}
-    else
+	else
 	{
         return QModelIndex();
 	}

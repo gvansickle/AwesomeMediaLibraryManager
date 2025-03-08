@@ -122,12 +122,11 @@ set(CMAKE_AUTOUIC ON)
 find_package(PkgConfig REQUIRED) # @note I see PkgConfig just before ECM in a few KDE scripts.
 find_package(ECM ${ECM_MIN_VERSION} REQUIRED NO_MODULE)
 
-# Add dirs where we keep support *.cmake's, ucm, cotire, ECM, etc.
+# Add dirs where we keep support *.cmake's, ucm, ECM, etc.
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake
-		#${CMAKE_SOURCE_DIR}/cmake/cotire/CMake
 		${CMAKE_SOURCE_DIR}/cmake/ucm/cmake
 		${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR}
-		${CMAKE_SOURCE_DIR}/src/third_party/continuable/cmake)
+)
 
 ###
 ### ECM Macros
@@ -163,7 +162,7 @@ include(ECMQtDeclareLoggingCategory)
 # "leak" requires the "address" sanitizer.
 ### @note KDECompileFlags includes include(ECMEnableSanitizers).
 #set(ECM_ENABLE_SANITIZERS "leak;address")
-include(ECMEnableSanitizers)
+#include(ECMEnableSanitizers)
 
 # KDE macros.
 # @see https://api.kde.org/ecm/manual/ecm-kde-modules.7.html

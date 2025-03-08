@@ -293,7 +293,7 @@ using strviw_type = QLatin1String;
 QDebug operator<<(QDebug dbg, const LibraryEntry& obj)
 {
 	QDebugStateSaver saver(dbg);
-#define X(field_tag, member_field) << field_tag << obj.member_field << ","
+#define X(field_tag, member_field) << (field_tag) << obj.member_field << ","
 	dbg M_DATASTREAM_FIELDS(X);
 #undef X
 	return dbg;

@@ -32,7 +32,7 @@
 #include <utils/Stopwatch.h>
 
 
-void DirScanFunction(QPromise<DirScanResult>& promise, AMLMJob* /*amlmJob*/,
+void DirScanFunction(QPromise<DirScanResult>& promise,
                      const QUrl& dir_url, // The URL pointing at the directory to recursively scan.
                      const QStringList &name_filters,
 		             const QDir::Filters dir_filters,

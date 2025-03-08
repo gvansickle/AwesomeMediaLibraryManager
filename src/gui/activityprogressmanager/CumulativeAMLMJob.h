@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -26,6 +26,7 @@
 // Ours
 #include <ExtFuture.h>
 #include <concurrency/AMLMJob.h>
+#include <future/guideline_helpers.h>
 #include <utils/TheSimplestThings.h>
 
 class CumulativeAMLMJob;
@@ -46,6 +47,7 @@ class CumulativeAMLMJob : public AMLMJob, public UniqueIDMixin<CumulativeAMLMJob
     using UniqueIDMixin<CumulativeAMLMJob>::uniqueQObjectName;
 
 public:
+    M_GH_POLYMORPHIC_SUPPRESS_COPYING_C67(CumulativeAMLMJob)
 
     using ExtFutureType = ExtFuture<Unit>;
 

@@ -46,7 +46,7 @@ class Core : public QObject
 	Q_OBJECT
 
 public:
-	M_GH_DELETE_COPY_AND_MOVE(Core);
+    M_GH_DELETE_COPY_AND_MOVE(Core)
 	~Core() override;
 
 	/**

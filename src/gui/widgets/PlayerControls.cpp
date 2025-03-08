@@ -113,7 +113,7 @@ PlayerControls::PlayerControls(QWidget *parent) : QWidget(parent)
 	m_volumeSlider = new QSlider(Qt::Horizontal, this);
 	m_volumeSlider->setToolTip(tr("Volume"));
 	m_volumeSlider->setRange(0, 100);
-	// Signal-to-signal connection, emit a changeVolume(int) signal when the user moves the slider.
+	// Signal-to-signal connection, emit a changeVolume(float) signal when the user moves the slider.
 	connect(m_volumeSlider, &QSlider::valueChanged, this, [this](int value)
 		{ Q_EMIT PlayerControls::changeVolume(volume()); });
 
