@@ -95,7 +95,6 @@ target_sources(${TEST_EXE_TARGET}
 target_include_directories(${TEST_EXE_TARGET}
                            PRIVATE
                            "utils/nomoc"
-                           ${INCLUDE_DIR_VERDIGRIS}
                            "../src/logic"
                            "../src"
                            # For config.h
@@ -108,7 +107,6 @@ target_compile_definitions(${TEST_EXE_TARGET}
                            # Enable the libstdc++ debug mode.
                            #_GLIBCXX_DEBUG
                            PRIVATE
-                           "USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
                            "TEST_FWK_IS_GTEST=1"
 )
 target_compile_definitions(${TEST_EXE_TARGET} PRIVATE "GTEST_LANGUAGE_CXX11")

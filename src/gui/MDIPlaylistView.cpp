@@ -50,8 +50,9 @@
 
 MDIPlaylistView::MDIPlaylistView(QWidget* parent) : MDITreeViewBase(parent)
 {
-	// Set up a Style Proxy to draw a more natural drop indicator.
-	this->setStyle(new DragDropTreeViewStyleProxy);
+    // Set up a Style Proxy to draw a more natural drop indicator.  setStyle doesn't take ownership of it, so we delete it in the destructor.
+    m_the_dragdropstyleproxy = std::make_unique<DragDropTreeViewStyleProxy>();
+    this->setStyle(m_the_dragdropstyleproxy.get());
 
 	// Give our Window Menu action an icon.
 	m_act_window->setIcon(QIcon::fromTheme("view-media-playlist"));
@@ -106,6 +107,8 @@ MDIPlaylistView::MDIPlaylistView(QWidget* parent) : MDITreeViewBase(parent)
     // Show the user where the item will be dropped.
 	setDropIndicatorShown(true);
 }
+
+MDIPlaylistView::~MDIPlaylistView() = default;
 
 MDIModelViewPair MDIPlaylistView::openModel(QPointer<PlaylistModel> model, QWidget* parent)
 {

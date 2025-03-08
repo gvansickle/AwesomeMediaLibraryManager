@@ -26,6 +26,7 @@
 class QMediaPlaylist;
 class LibrarySortFilterProxyModel;
 class ItemDelegateLength;
+class DragDropTreeViewStyleProxy;
 
 
 class MDIPlaylistView : public MDITreeViewBase
@@ -43,6 +44,7 @@ Q_SIGNALS:
 
 public:
     explicit MDIPlaylistView(QWidget *parent = Q_NULLPTR);
+    ~MDIPlaylistView() override;
 
 
     /**
@@ -165,6 +167,8 @@ private:
      * @param index
      */
     void startPlaying(const QModelIndex& index);
+
+    std::unique_ptr<DragDropTreeViewStyleProxy> m_the_dragdropstyleproxy;
 
     QPointer<PlaylistModel> m_underlying_model;
     LibrarySortFilterProxyModel* m_sortfilter_model;

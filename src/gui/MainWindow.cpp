@@ -197,6 +197,7 @@ M_WARNING("LOOKS LIKE WE'RE HANGING HERE");
     instance()->m_activity_progress_tracker = nullptr;
 #endif
 
+	Q_CHECK_PTR(m_player);
 	delete m_player;
 
     m_instance = nullptr;

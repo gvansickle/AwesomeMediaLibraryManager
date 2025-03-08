@@ -41,13 +41,12 @@
  * Worker function which scans a directory for files.
  *
  * @param promise  The in/out/control ExtFuture.
- * @param amlmJob     The associated AMLMJob, if any.
  * @param dir_url     The URL pointing at the directory to recursively scan.
  * @param name_filters
  * @param dir_filters
  * @param iterator_flags
  */
-void DirScanFunction(QPromise<DirScanResult>& promise, AMLMJob* amlmJob,
+void DirScanFunction(QPromise<DirScanResult>& promise,
                      const QUrl& dir_url,
                      const QStringList &name_filters,
                      const QDir::Filters dir_filters = QDir::NoFilter,

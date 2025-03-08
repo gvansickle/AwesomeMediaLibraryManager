@@ -38,11 +38,10 @@ using std_pair_QString_QVariant = std::pair<const QString, QVariant>;
 Q_DECLARE_METATYPE(std_pair_QString_QVariant);
 
 AMLM_QREG_CALLBACK([](){
-	qIn() << "Registering InsertionOrderedMap<QString, QVariant> alias QVariantInsertionOrderedMap";
+	qIn() << "Registering InsertionOrderedMap<QString, QVariant>";
 	qRegisterMetaType<InsertionOrderedMap<QString, QVariant>>();
 	qRegisterMetaType<std_pair_QString_QVariant>();
 	qRegisterMetaType<SerializableQVariantList>();
-//	AMLMRegisterQFlagQStringConverters<DirScanResult::DirPropFlags>();
 });
 
 

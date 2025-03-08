@@ -54,7 +54,7 @@ public Q_SLOTS:
 private:
 	Q_DISABLE_COPY(CumulativeStatusWidget)
 
-    QToolButton* m_button_show_all_jobs;
+    QToolButton* m_button_show_all_jobs {};
 
     /// @todo Do we need a no-operation-in-progress child widget?
 

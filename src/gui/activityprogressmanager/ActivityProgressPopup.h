@@ -20,7 +20,7 @@
 #ifndef SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSPOPUP_H_
 #define SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSPOPUP_H_
 
-/// Qt
+// Qt
 #include <QWidget>
 
 /**
@@ -34,8 +34,11 @@
  */
 class ActivityProgressPopup : public QWidget
 {
+    Q_OBJECT
 public:
 	explicit ActivityProgressPopup(QWidget* parent = nullptr);
 };
+
+Q_DECLARE_METATYPE(ActivityProgressPopup)
 
 #endif /* SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSPOPUP_H_ */

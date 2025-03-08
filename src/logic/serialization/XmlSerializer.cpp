@@ -28,7 +28,7 @@
 // Std C++ from The Future
 #include <future/overloaded.h>
 
-// Qt5
+// Qt
 #include <QFile>
 #include <QSaveFile>
 #include <QVariant>
@@ -340,7 +340,7 @@ QVariant XmlSerializer::InnerReadVariantFromStream(QString typeString, const QXm
 
 	// Copy the attributes, removing only "type".
 	std::vector<QXmlStreamAttribute> attributes_cp(attributes.cbegin(), attributes.cend());
-	std::experimental::erase_if(attributes_cp, [](auto& attr){ return attr.qualifiedName() == "type" ? true : false; });
+	std::erase_if(attributes_cp, [](auto& attr){ return attr.qualifiedName() == "type" ? true : false; });
 
 	QMetaType metatype = QMetaType::fromName(typeString.toStdString().c_str());
 

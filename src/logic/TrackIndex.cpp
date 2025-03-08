@@ -71,7 +71,7 @@ void TrackIndex::fromVariant(const QVariant& variant)
 {
 	InsertionOrderedMap<QString, QVariant> map = variant.value<InsertionOrderedMap<QString, QVariant>>();
 
-#define X(field_tag, field_tag_str, member_field) map_read_field_or_warn(map, field_tag, &member_field);
+#define X(field_tag, field_tag_str, member_field) map_read_field_or_warn(map, field_tag, &(member_field));
 	M_TRACK_INDEX_DATASTREAM_FIELDS(X)
 #undef X
 }

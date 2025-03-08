@@ -22,7 +22,7 @@
 
 #include <config.h>
 
-// Qt5
+// Qt
 class QWidget;
 class QLabel;
 class QToolButton;
@@ -33,7 +33,7 @@ class QProgressBar;
 #include <QSharedPointer>
 #include <QMutex>
 
-// KF5
+// KF
 class KJob;
 #include <KAbstractWidgetJobTracker>
 
