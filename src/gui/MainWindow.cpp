@@ -916,6 +916,9 @@ void MainWindow::createToolBars()
     const auto& actionlist = m_fileToolBar->actions();
     for(const auto& a : actionlist)
     {
+        auto cold = a->associatedObjects().count();
+        auto cnew = a->associatedWidgets().count();
+        Q_ASSERT(cold == cnew);
         if(a->associatedWidgets().empty())
         {
             qWr() << "File toolbar action" << a << "has no associatedWidgets()";
@@ -1428,6 +1431,8 @@ void MainWindow::readLibSettings(QSettings& settings)
 {
 	int num_libs;
 
+	qIn() << "START readLibSettings";
+
 	// Throw up a progress dialog indicating that we're loading the database.
 	auto* prog = new QProgressDialog(tr("Opening database..."), tr("Abort open"), 0, 0, this);
 
@@ -1437,7 +1442,10 @@ void MainWindow::readLibSettings(QSettings& settings)
 	prog->show();
 
 	// The primary database file.
+	/// @todo Get this from settings.
 	QString database_filename = QDir::homePath() + "/AMLMDatabase.xml";
+
+	qIn() << "Loading" << database_filename;
 
 	// Try to Load it asynchronously into a new model.
 	/// AMLM::Core::self()->getDefaultColumnSpecs()
@@ -1446,14 +1454,15 @@ void MainWindow::readLibSettings(QSettings& settings)
 	if(success)
 	{
 		// Swap in the new model.
-		qDb() << "!!!!!!!!!!!!!!!!!!!!!!! TODO: Load succeeded, swapping in the new model.";
+		qDb() << "TODO: Load succeeded, swapping in the new model.";
 		temp_load_srtm_instance->dump_model_info();
-#warning "TODO"
+/// @TODO
 		qDb() << "Detaching old model from view";
 
 //		auto oldselmodel = m_exp_second_child_view->selectionModel();
 
-		AMLM::Core::self()->swapScanResultsTreeModel(temp_load_srtm_instance);
+		auto old_model = AMLM::Core::self()->swapScanResultsTreeModel(temp_load_srtm_instance);
+		old_model->deleteLater();
 
 		auto srtmodel = AMLM::Core::self()->getScanResultsTreeModel().get();
 		m_exp_second_child_view->setModel(srtmodel);
@@ -1462,7 +1471,7 @@ void MainWindow::readLibSettings(QSettings& settings)
 	}
 	else
 	{
-		qWr() << "Load failed";
+		qWr() << "Database load failed:" << database_filename;
 //				auto default_columnspecs = AMLM::Core::self()->getDefaultColumnSpecs();
 //				AMLM::Core::self()->getScanResultsTreeModel()->setColumnSpecs(default_columnspecs);
 	}
@@ -1495,14 +1504,15 @@ void MainWindow::readLibSettings(QSettings& settings)
 	PerfectDeleter::instance().addExtFuture(fut_load_db);
 #endif
 
-	/// @todo The playlist overlay.
+	/// @todo The playlist
+	/// @todo Get this path from settings.
 	QString overlay_filename = QDir::homePath() + "/AMLMDatabaseSerDes.xml";
 
     auto extfuture_initial_lib_load = QtConcurrent::run([=](QPromise<SerializableQVariantList>& ef) {
 
-		qIn() << "###### READING XML DB:" << overlay_filename;
+		qIn() << "READING XML DB:" << overlay_filename;
 		SerializableQVariantList list("library_list", "library_list_item");
-		Stopwatch library_list_read(tostdstr(QString("############## READ OF ") + overlay_filename));
+		Stopwatch library_list_read(tostdstr(QString("Loading: ") + overlay_filename));
 		XmlSerializer xmlser;
 		xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
 		/// @todo This takes ~10 secs at the moment with a 300MB XML file.
@@ -1555,6 +1565,8 @@ void MainWindow::readLibSettings(QSettings& settings)
 	// Set extfuture_initial_lib_load to the PerfectDeleter.
 	PerfectDeleter::instance().addExtFuture(extfuture_initial_lib_load);
 
+	qIn() << "END readLibSettings";
+
 }
 
 void MainWindow::writeSettings()
@@ -1576,7 +1588,7 @@ void MainWindow::writeLibSettings(QSettings& settings)
 {
 	qDebug() << "writeLibSettings() start";
 
-	Stopwatch libsave_sw("################ Library save");
+	Stopwatch libsave_sw("writeLibSettings()");
 
 	// First it seems we have to remove the array.
 	/// @todo Remove, unneeded?
@@ -1584,7 +1596,7 @@ void MainWindow::writeLibSettings(QSettings& settings)
 
 	QString database_filename = QDir::homePath() + "/AMLMDatabaseSerDes.xml";
 
-	qIn() << "###### WRITING XML DB:" << database_filename;
+	qIn() << "WRITING" << m_libmodels.size() << "libmodels to XML file:" << database_filename;
 
 	XmlSerializer xmlser;
 	xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
@@ -1613,7 +1625,7 @@ void MainWindow::writeLibSettings(QSettings& settings)
  */
 void MainWindow::openWindows()
 {
-	qInfo() << "Opening windows which were open at end of last session...";
+	qInfo() << "Opening" << m_libmodels.size() << "windows which were open at end of last session...";
 
 	for(const auto& m : m_libmodels)
 	{
@@ -1637,7 +1649,7 @@ void MainWindow::openWindows()
 //////
 
 /**
- * Top-level menu/toolbar action for creating a new Library view by picking a library root directory.
+ * Top-level menu/toolbar action for creating a new Library model+view by picking a library root directory.
  * ~= "File->Open...".
  */
 void MainWindow::importLib()
@@ -1938,7 +1950,7 @@ void MainWindow::addChildMDIModelViewPair_Library(const MDIModelViewPair& mvpair
 			dynamic_cast<CollectionStatsWidget*>(m_collection_stats_dock_widget->widget())->setModel(libmodel);
 
 			// Add the new library to the ModelViewPairs Model.
-			// The Collection Doc Widget uses this among others.
+			// The Collection Dock Widget uses this among others.
 			QStandardItem* new_lib_row_item = new QStandardItem(libmodel->getLibraryName());
 			new_lib_row_item->setData(QVariant::fromValue(libmodel));
 			new_lib_row_item->setData(QIcon::fromTheme("folder"), Qt::DecorationRole);

@@ -51,7 +51,7 @@ Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(std::multimap);
 /**
  * Multimap of std::string key/std::string value pairs.
  */
-class AMLMTagMap : public virtual ISerializable
+class AMLMTagMap final : public virtual ISerializable
 {
 
 	/// Member Types
@@ -69,7 +69,7 @@ public:
 
 	/// Member functions.
 public:
-	M_GH_RULE_OF_FIVE_DEFAULT_C21(AMLMTagMap);
+    M_GH_RULE_OF_FIVE_DEFAULT_C21(AMLMTagMap)
 	~AMLMTagMap() override = default;
 
 	/**

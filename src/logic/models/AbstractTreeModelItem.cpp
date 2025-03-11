@@ -187,7 +187,7 @@ int AbstractTreeModelItem::childNumber() const
 
 bool AbstractTreeModelItem::insertColumns(int insert_before_column, int num_columns)
 {
-	// Check if caller is trying to inser a column out of bounds.
+	// Check if caller is trying to insert a column out of bounds.
 	if (insert_before_column < 0 || insert_before_column > m_item_data.size())
 	{
 		qWr() << "Ignoring insertColumns() with bad insert_before_column:" << insert_before_column;

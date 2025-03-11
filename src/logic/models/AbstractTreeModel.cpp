@@ -84,7 +84,7 @@ void AbstractTreeModel::postConstructorFinalization(const std::shared_ptr<Abstra
 	AMLM_ASSERT_X(retval_shptr->m_root_item->isInModel(), "ROOT ITEM NOT IN MODEL");
 
 	/// TODO Keep trying to get this to not barf all over the place.
-//	retval_shptr->m_model_tester = new QAbstractItemModelTester(retval_shptr.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, retval_shptr.get());
+//    retval_shptr->m_model_tester = new QAbstractItemModelTester(retval_shptr.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, retval_shptr.get());
 	AMLM_ASSERT_X(retval_shptr->checkConsistency(), "MODEL INCONSISTENT");
 }
 
@@ -467,6 +467,7 @@ M_WARNING("Not right, this needs ColumnSpecs added initially from somewhere");
 	clear();
 
 	bool success = xmlser.load(*this, QUrl::fromLocalFile(database_filename));
+	endResetModel();
 
 	qIn() << "###### TREEMODELPTR HAS NUM ROWS:" << rowCount();
 	qIn() << "###### FINISHED READING AbstractTreeModel from:" << database_filename << "STATUS:" << success;

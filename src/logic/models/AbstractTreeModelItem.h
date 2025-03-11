@@ -119,7 +119,7 @@ public:
 	/**
 	 * Insert new default-constructed columns into this item/row.
 	 */
-M_WARNING("NEED TO BE OVERRIDDEN IN HeaderItem");
+	/// @warning NEED TO BE OVERRIDDEN IN HeaderItem
 	 // ETM, no KDEN
 	virtual bool insertColumns(int insert_before_column, int num_columns);
 	// ETM, no KDEN
@@ -415,7 +415,7 @@ void append_children_from_variant(ParentItemType* parent_item, const QVariantHom
 		auto new_child = std::make_shared<ChildItemType>();
 		Q_ASSERT(new_child);
 
-		/// @note Cuurently we need to add the empty item to the model before reading it in, so that
+		/// @note Curently we need to add the empty item to the model before reading it in, so that
 		/// its children will be set up correctly model-wise.  This is almost certainly more efficient anyway.
 		bool append_success = parent_item->appendChild(new_child);
 		AMLM_ASSERT_X(append_success, "FAILED TO APPEND NEW ITEM TO PARENT");

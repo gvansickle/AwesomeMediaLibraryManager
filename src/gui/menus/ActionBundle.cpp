@@ -56,10 +56,11 @@ void ActionBundle::appendToMenu(QMenu* menu, bool elide_separators)
 void ActionBundle::prependToMenu(QMenu* menu, bool elide_separators)
 {
 	// We insert our contained actions in reverse order to the top of @a menu.
-	auto first_action_in_menu = menu->actions()[0];
-	for(auto i = 0; i < actions().size(); ++i)
+    auto menu_actions = menu->actions();
+    auto first_action_in_menu = menu_actions[0];
+    for(auto i = 0; i < menu_actions.size(); ++i)
 	{
-		auto action = actions()[actions().size()-i-1];
+        auto action = menu_actions[menu_actions.size()-i-1];
 		if(!elide_separators || action->isSeparator() == false)
 		{
 			menu->insertAction(first_action_in_menu, action);

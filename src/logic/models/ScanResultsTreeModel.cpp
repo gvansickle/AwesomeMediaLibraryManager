@@ -307,7 +307,7 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 
     InsertionOrderedMap<QString, QVariant> map = variant.value<InsertionOrderedMap<QString, QVariant>>();
 
-#define X(field_tag, var_name) map_read_field_or_warn(map, field_tag, var_name);
+#define X(field_tag, var_name) map_read_field_or_warn(map, field_tag, &var_name);
 	M_DATASTREAM_FIELDS(X);
 #undef X
 #if 0
@@ -337,6 +337,9 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 	m_root_item->fromVariant(root_item_map);
 
 #endif
+	qDb() << M_ID_VAL(m_base_directory);
+	Q_ASSERT(m_base_directory.isValid());
+	Q_ASSERT(!m_base_directory.isEmpty());
 
 	/// @note This is a QVariantMap, contains abstract_tree_model_header as a QVariantList.
 	InsertionOrderedMap<QString, QVariant> root_item_map;

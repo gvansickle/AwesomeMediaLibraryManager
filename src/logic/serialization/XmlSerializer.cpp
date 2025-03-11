@@ -344,6 +344,11 @@ QVariant XmlSerializer::InnerReadVariantFromStream(QString typeString, const QXm
 
 	QMetaType metatype = QMetaType::fromName(typeString.toStdString().c_str());
 
+	if (metatype.id() == QMetaType::QUrl)
+	{
+		qDb() << "READING QURL";
+	}
+
 	if(metatype.id() == f_iomap_id)
 	{
 		variant = readVariantOrderedMapFromStream(attributes_cp, xmlstream);
@@ -383,6 +388,11 @@ QVariant XmlSerializer::InnerReadVariantFromStream(QString typeString, const QXm
 //		// Not at an end element, parsing went wrong somehow.
 //		xmlstream.raiseError("#### NOT AT END ELEMENT, Reading xml stream failed, skipping to next start element");
 //	}
+
+	if (metatype.id() == QMetaType::QUrl)
+	{
+		qDb() << "READ QURL:" << variant.toString();
+	}
 
 	return variant;
 }

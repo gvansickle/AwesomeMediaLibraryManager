@@ -365,6 +365,7 @@ void list_blocking_map_reduce_read_all_entries_or_warn(const InListType& in_list
 /// @{
 
 template <class MapType, class StringType, class RawMemberType>
+requires std::is_lvalue_reference_v<RawMemberType> || std::is_pointer_v<RawMemberType>
 void map_read_field_or_warn(const MapType& map, const StringType& key, RawMemberType member)
 {
 	// Regardless, get the qvar out of the map.

@@ -36,8 +36,8 @@
 class Metadata : public virtual ISerializable
 {
 public:
-	M_GH_RULE_OF_FIVE_DEFAULT_C21(Metadata);
-	~Metadata() override {};
+    M_GH_RULE_OF_FIVE_DEFAULT_C21(Metadata)
+    ~Metadata() override {}
 
 	/// @name Static Factory Functions
 	/// @{
@@ -79,7 +79,7 @@ public:
 	bool hasRIFFInfo() const { return m_has_riff_info; }
 	bool hasDiscCuesheet() const { return !m_tm_cuesheet_disc.empty(); }
 
-	AMLMTagMap tagmap_generic() const { return m_tm_generic; };
+    AMLMTagMap tagmap_generic() const { return m_tm_generic; }
 	AMLMTagMap tagmap_id3v1() const { return m_tm_id3v1; }
 	AMLMTagMap tagmap_id3v2() const { return m_tm_id3v2; }
 	AMLMTagMap tagmap_ape() const { return m_tm_ape; }

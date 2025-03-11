@@ -117,13 +117,12 @@ Qt::ItemFlags TreeModel::flags(const QModelIndex &index) const
 std::shared_ptr<TreeItem> TreeModel::getItem(const QModelIndex &index) const
 {
 	/**
-	 * There's a fail here.  Trying to do a mapping from QModelIndex->TreeItem*, but we're going through
+     * @warning There's a fail here.  Trying to do a mapping from QModelIndex->TreeItem*, but we're going through
 	 * getItemById() to do it (index.internalId() -> TreeItem*).  In e.g. insertChild(), this results in the
 	 * second lookup being done before the item is in the map, == error.
 	 */
     if (index.isValid())
     {
-#warning "SEE ABOVE"
 //	    std::shared_ptr<TreeItem> item = static_cast<TreeItem*>(index.internalPointer());
 	    std::shared_ptr<TreeItem> item = getItemById(UUIncD(index.internalId()));
         if (item)

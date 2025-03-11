@@ -10,8 +10,13 @@ python
 import sys, os.path
 sys.path.insert(0, os.path.expanduser('~/.gdb'))
 sys.path.insert(0, os.path.expanduser('../install/bin'))
-import qt6printers
-qt6printers.register_printers(gdb.current_objfile())
+from qt import register_qt_printers
+from kde import register_kde_printers
+
+register_qt_printers (None)
+register_kde_printers (None)
+#import qt6printers
+#qt6printers.register_printers(gdb.current_objfile())
 end
 
 # Recommendations from the libstdc++ page @link https://gcc.gnu.org/onlinedocs/gcc-8.2.0/libstdc++/manual/manual/debug.html

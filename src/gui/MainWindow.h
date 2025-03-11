@@ -414,9 +414,9 @@ private:
     /// The MDI area.
     MDIArea* m_mdi_area;
 
-    /// Actions
+    // Actions
 
-    /// @name File actions
+    /// File actions
     /// @{
     QAction* m_importLibAct;
     QAction* m_saveLibraryAsAct;
@@ -428,7 +428,7 @@ private:
     QAction* m_scanLibraryAction;
     /// @}
 
-    /// @name Edit actions.
+    /// Edit actions.
     /// @{
 public:
 	ActionBundle* m_ab_cut_copy_paste_actions;
@@ -532,9 +532,6 @@ private:
      */
     ActivityProgressStatusBarTracker* m_activity_progress_tracker { nullptr };
 #endif
-
-    /// The Settings (AKA Preferences, AKA Config) dialog.
-    QSharedPointer<SettingsDialog> m_settings_dlg;
 };
 
 #endif // AWESOMEMEDIALIBRARYMANAGER_SRC_GUI_MAINWINDOW_H
