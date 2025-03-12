@@ -22,10 +22,13 @@
 
 #include <config.h>
 
-// Qt5
+// Std C++
+#include <memory>
+
+// Qt
 #include <QApplication>
 
-// KF5
+// KF
 #include <KConfigGroup>
 #include <QMimeDatabase>
 
@@ -109,8 +112,6 @@ public:
 
 //    ActivityProgressStatusBarTracker == see MainWindow, this currently needs a parent widget.
 
-	static ScanResultsTreeModel* IScanResultsTreeModel() { return amlmApp->m_srtm_instance; };
-
 	QMimeDatabase& mime_db();
 
 	AbstractTreeModel* cdb2_model_instance() { return m_cdb2_model_instance; }
@@ -170,9 +171,10 @@ private:
 
     MainWindow* m_the_main_window {nullptr};
 
-	AbstractTreeModel* m_cdb2_model_instance;
+	AbstractTreeModel* m_cdb2_model_instance {nullptr};
 
-    ScanResultsTreeModel* m_srtm_instance {nullptr};
+//	// Copy of the singleton shared_ptr so we can delete it on the way down.
+//	std::shared_ptr<ScanResultsTreeModel> m_srtm_instance {};
 
     // This shouldn't be needed to destroy the PD singleton, since it's parented to this.
 //	PerfectDeleter *m_perfect_deleter;

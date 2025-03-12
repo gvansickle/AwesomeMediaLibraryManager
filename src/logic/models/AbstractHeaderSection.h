@@ -23,23 +23,28 @@
 #ifndef SRC_LOGIC_MODELS_ABSTRACTHEADERSECTION_H_
 #define SRC_LOGIC_MODELS_ABSTRACTHEADERSECTION_H_
 
-#include <QVariant>
+// Std C++
 #include <map>
+#include <memory>
+
+// Qt5
+#include <QVariant>
 
 /**
- * Class representing a single model header section (column).
+ * Class representing a single model header section (column).  An array of these would be held in the
+ * model's AbstractTreeModelHeaderItem as its values.
  */
 class AbstractHeaderSection
 {
 public:
 
-	enum HeaderItemDataRole
-	{
-		XmlTagName = Qt::UserRole+1, ///< string
-		XmlAttributes, ///< QXmlStreamAttributes, ~QVector of QString pairs.
-		/// In derived classes, start any new ItemDataRoles at this value.
-		NextHeaderItemDataRole
-	};
+//	enum HeaderItemDataRole
+//	{
+//		XmlTagName = Qt::ItemDataRole::UserRole+1, ///< string
+//		XmlAttributes, ///< QXmlStreamAttributes, ~QVector of QString pairs.
+//		/// In derived classes, start any new ItemDataRoles at this value.
+//		NextHeaderItemDataRole
+//	};
 
 public:
 	AbstractHeaderSection();
@@ -52,6 +57,8 @@ public:
 	virtual QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) = 0;
 
 	/**
+	 * This gets called via:
+	 * Model::setHeaderData()->ModelHeaderItem::setHeaderData()->root_item->setData(section, orientation, value, role).
 	 * Override in derived classes to set the header data corresponding to the given section number, orientation, and role.
 	 */
 	virtual bool setHeaderData(int section, Qt::Orientation orientation,
@@ -62,6 +69,9 @@ public:
 	virtual int section() = 0;
 	virtual Qt::Orientation orientation() = 0;
 };
+
+//Q_DECLARE_METATYPE(AbstractHeaderSection);
+Q_DECLARE_METATYPE(std::shared_ptr<AbstractHeaderSection>);
 
 /**
  * Class representing a "dumb" header section, i.e. no more functionality than

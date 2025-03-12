@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -25,6 +25,7 @@
 #include "SettingsPageAppearance.h"
 #include "SettingsPageLibrary.h"
 
+// Qt
 #include <QApplication>
 #include <QLayout>
 #include <QtWidgets/QStackedWidget>
@@ -32,8 +33,12 @@
 #include <QDataWidgetMapper>
 #include <QDebug>
 #include <QStandardItem>
+#include <QComboBox>
+#include <QRegularExpression>
 
+// Kf
 #include <KCoreConfigSkeleton>
+#include <KComboBox>
 
 #include <utils/DebugHelpers.h>
 #include "../MainWindow.h"
@@ -41,9 +46,7 @@
 #include <AMLMSettings.h>
 #include <gui/Theme.h>
 
-#include <KComboBox>
-#include <QComboBox>
-#include <QRegularExpression>
+
 
 SettingsDialog::SettingsDialog(QWidget *parent, const char* name, KConfigSkeleton *config)
 	: KConfigDialog( parent, name, config )
@@ -56,7 +59,7 @@ SettingsDialog::SettingsDialog(QWidget *parent, const char* name, KConfigSkeleto
 //	addPage(new SettingsPageLibrary(this), tr("Music Library") );
 	/// ...
 
-	connect(this, &KConfigDialog::settingsChanged, this, &SettingsDialog::onSettingsChanged);
+	connect_or_die(this, &KConfigDialog::settingsChanged, this, &SettingsDialog::onSettingsChanged);
 
 ///// @todo experiment
 //    QRegExp re("^kcfg_.*");
@@ -116,7 +119,7 @@ void SettingsDialog::parseWidgetsThatKDEForgotAbout()
 {
     // K/QComboBoxes
     // If there's a way to make combo boxes work with Enums without doing the setup by hand, I don't see it.
-    QRegExp re("^kcfg_.*");
+    QRegularExpression re("^kcfg_.*");
     auto children = findChildren<KComboBox*>(re, Qt::FindChildrenRecursively);
     if(children.size() == 0)
     {
@@ -126,7 +129,7 @@ void SettingsDialog::parseWidgetsThatKDEForgotAbout()
     {
         qDb() << "CHILDREN:" << children;
 
-        for(auto combo : children)
+        for(auto combo : std::as_const(children))
         {
             // Get the name we need to look up the corresponding KConfigSkeletonItem.
             QString kskel_item_name = combo->objectName().mid(5);
@@ -156,7 +159,7 @@ void SettingsDialog::setupWidget(KComboBox *box, KConfigSkeletonItem *item)
 {
     if(box && item)
     {
-
+        /// @todo ??? This has always been empty.
     }
 }
 

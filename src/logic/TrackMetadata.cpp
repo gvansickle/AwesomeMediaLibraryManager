@@ -37,6 +37,7 @@ extern "C" {
 #include <utils/RegisterQtMetatypes.h>
 
 #include "AMLMTagMap.h"
+#include <logic/serialization/SerializationHelpers.h>
 
 
 
@@ -49,26 +50,7 @@ AMLM_QREG_CALLBACK([](){
 //Q_DECLARE_METATYPE(std::string);
 
 
-using strviw_type = QLatin1Literal;
-
-#define M_DATASTREAM_FIELDS(X) \
-	X(XMLTAG_TRACK_META_TRACK_NUM, m_track_number) \
-	X(XMLTAG_TRACK_META_LEN_PREGAP, m_length_pre_gap) \
-	X(XMLTAG_TRACK_META_START_FRAMES, m_start_frames) \
-	X(XMLTAG_TRACK_META_LENGTH_FRAMES, m_length_frames) \
-	X(XMLTAG_TRACK_META_LENGTH_POST_GAP, m_length_post_gap) \
-	X(XMLTAG_TRACK_META_ISRC, m_isrc) \
-	X(XMLTAG_TRACK_META_IS_PART_OF_GAPLESS_SET, m_is_part_of_gapless_set) \
-	X(XMLTAG_TRACK_PTI_VALUES, m_tm_track_pti)
-
-#define M_DATASTREAM_FIELDS_SPECIAL_HANDLING(X) \
-	X(XMLTAG_TRACK_META_INDEXES, m_indexes)
-
-/// Strings to use for the tags.
-#define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
-	M_DATASTREAM_FIELDS(X);
-	M_DATASTREAM_FIELDS_SPECIAL_HANDLING(X);
-#undef X
+using strviw_type = QLatin1String;
 
 
 std::unique_ptr<TrackMetadata> TrackMetadata::make_track_metadata(const Track* track_ptr, int track_number)
@@ -169,10 +151,35 @@ std::string TrackMetadata::toStdString() const
 	return retval;
 }
 
+#define M_DATASTREAM_FIELDS(X) \
+	X(XMLTAG_TRACK_META_TRACK_NUM, m_track_number) \
+	X(XMLTAG_TRACK_META_LEN_PREGAP, m_length_pre_gap) \
+	X(XMLTAG_TRACK_META_START_FRAMES, m_start_frames) \
+	X(XMLTAG_TRACK_META_LENGTH_FRAMES, m_length_frames) \
+	X(XMLTAG_TRACK_META_LENGTH_POST_GAP, m_length_post_gap) \
+	X(XMLTAG_TRACK_META_ISRC, m_isrc) \
+	X(XMLTAG_TRACK_META_IS_PART_OF_GAPLESS_SET, m_is_part_of_gapless_set) \
+	X(XMLTAG_TRACK_PTI_VALUES, m_tm_track_pti)
+
+#define M_DATASTREAM_FIELDS_SPECIAL_HANDLING(X) \
+	X(XMLTAG_TRACK_META_INDEXES, m_indexes)
+
+/// Strings to use for the tags.
+#define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
+	M_DATASTREAM_FIELDS(X);
+	M_DATASTREAM_FIELDS_SPECIAL_HANDLING(X);
+#undef X
+
 
 QVariant TrackMetadata::toVariant() const
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedMap<QString, QVariant> map;
+
+	// Set some extra class info to the attributes.
+//	set_map_class_info(this, &map);
+
+	// Set the xml:id.
+	map.insert_attributes({{"xml:id", get_prefixed_uuid()}});
 
 #define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
 	M_DATASTREAM_FIELDS(X);
@@ -192,16 +199,26 @@ QVariant TrackMetadata::toVariant() const
 
 void TrackMetadata::fromVariant(const QVariant& variant)
 {
-	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
+	InsertionOrderedMap<QString, QVariant> map = variant.value<InsertionOrderedMap<QString, QVariant>>();
+
+	auto uuid = map.get_attr("xml:id", {});
+	if(uuid.empty())
+	{
+		qWr() << "UUID EMPTY";
+	}
+	else
+	{
+		set_prefixed_uuid(uuid);
+	}
 
 #define X(field_tag, member_field) map_read_field_or_warn(map, field_tag, & (member_field) );
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
-M_TODO("REMOVE");
-#define X(id) m_ ## id = map.value( # id ).value<decltype( m_ ## id )>();
-	PTI_STR_LIST(X);
-#undef X
+// M_TODO("REMOVE");
+// #define X(id) m_ ## id = map.at( # id ).value<decltype( m_ ## id )>();
+// 	PTI_STR_LIST(X);
+// #undef X
 
 	// Load the index list.
 	QVariantHomogenousList index_list("m_indexes", "index");
@@ -209,12 +226,12 @@ M_TODO("REMOVE");
 
 	// Read the m_indexes TrackIndex'es out of the list.
 	// This is a QList<QVariant> where the qvar holds QVariantInsertionOrderedMap's.
-	for(const QVariant& qvar_index_entry : qAsConst(index_list))
+	for(const QVariant& qvar_index_entry : std::as_const(index_list))
 	{
 		Q_ASSERT(qvar_index_entry.isValid());
-		Q_ASSERT(qvar_index_entry.canConvert<QVariantInsertionOrderedMap>());
+		Q_ASSERT((qvar_index_entry.canConvert<InsertionOrderedMap<QString, QVariant>>()));
 
-		QVariantInsertionOrderedMap qvmap_index_entry = qvar_index_entry.value<QVariantInsertionOrderedMap>();
+		InsertionOrderedMap<QString, QVariant> qvmap_index_entry = qvar_index_entry.value<InsertionOrderedMap<QString, QVariant>>();
 		TrackIndex ti;
 		ti.fromVariant(qvmap_index_entry);
 		m_indexes.push_back(ti);
@@ -238,46 +255,3 @@ QDebug operator<<(QDebug dbg, const TrackMetadata &tm)
     return dbg;
 }
 
-#define M_TRACK_INDEX_DATASTREAM_FIELDS(X) \
-	X(XMLTAG_TRACK_INDEX_NUM, "index_num", m_index_num) \
-	X(XMLTAG_TRACK_INDEX_FRAMES, "index_frames", m_index_frames)
-
-/// Strings to use for the tags.
-#define X(field_tag, field_tag_str, member_field) static const strviw_type field_tag ( field_tag_str );
-	M_TRACK_INDEX_DATASTREAM_FIELDS(X);
-#undef X
-
-//struct MapEntry
-//{
-//	template <class T>
-//	MapEntry(const char* str, T m_ptr_to_member);
-//	const char* m_str;
-////	const std::any m_ptr_to_member;
-//	const T m_ptr_to_member;
-
-//	auto get_ptr_to_member() -> decltype(m_ptr_to_member) { return std::any_cast<decltype(m_ptr_to_member)>(m_ptr_to_member); };
-//};
-
-//static const MapEntry f_map[] = {
-//	{"index_num", &TrackIndex::m_index_num},
-//	{"index_frames", &TrackIndex::m_index_frames}
-//};
-
-QVariant TrackIndex::toVariant() const
-{
-	QVariantInsertionOrderedMap map;
-
-	map_insert_or_die(map, XMLTAG_TRACK_INDEX_NUM, m_index_num);
-	map_insert_or_die(map, XMLTAG_TRACK_INDEX_FRAMES, m_index_frames);
-
-	return map;
-}
-
-void TrackIndex::fromVariant(const QVariant& variant)
-{
-	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
-
-	map_read_field_or_warn(map, XMLTAG_TRACK_INDEX_NUM, &m_index_num);
-	map_read_field_or_warn(map, XMLTAG_TRACK_INDEX_FRAMES, &m_index_frames);
-
-}

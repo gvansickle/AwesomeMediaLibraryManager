@@ -65,7 +65,7 @@ inline static QPersistentModelIndexVec pindexes(const QItemSelection& selection,
 	QModelIndexList retval;
 	if(col != -1)
 	{
-		for(auto i : index_vec)
+		for(auto i : std::as_const(index_vec))
 		{
 			if(i.isValid())
 			{

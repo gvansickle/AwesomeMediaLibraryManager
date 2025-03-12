@@ -52,7 +52,7 @@ public Q_SLOTS:
      * Invoked when a setData() happens on the EntryToMetadataTreeProxyModel.
 	 * @note The model indexes will be relative to m_proxy_model.
      */
-    void onDataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles = QVector<int>());
+    void onDataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QList<int>& roles = QList<int>());
 
 protected:
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -27,18 +27,18 @@
 // Std C++
 #include <functional>
 #include <variant>
-
+#include <vector>
 
 // Qt5
 #include <QXmlStreamWriter>
 #include <QXmlStreamReader>
 #include <QVariant>
 class QString;
-class QStringList;
 class QVariantHomogenousList;
 
 // Ours
 #include "ISerializer.h"
+
 
 /**
  * Concrete ISerializer class for serializing ISerializables as XML.
@@ -62,18 +62,21 @@ public:
 			std::function<void(void)> extra_save_actions = nullptr
 			) override;
 
-	void load(ISerializable& serializable, const QUrl& file_url) override;
+	bool load(ISerializable& serializable, const QUrl& file_url) override;
+
+	void HACK_skip_extra(bool hack_skip) { m_HACK_SKIP = hack_skip; };
 
 	/**
 	 * Call this before save() to set the default XML namespace.
 	 * @param default_ns
 	 * @param default_ns_version
 	 */
-	void set_default_namespace(const QString& default_ns, const QString& default_ns_version);
+	void set_default_namespace(const std::string& default_ns, const std::string& default_ns_version);
 
 protected:
 
 	void save_extra_start_info(QXmlStreamWriter& xmlstream);
+	void load_extra_start_info(QXmlStreamReader* xmlstream);
 
 private:
 
@@ -83,6 +86,7 @@ private:
 	void writeVariantToStream(const QString& nodeName,
 	                          const QVariant& variant, QXmlStreamWriter& xmlstream);
 
+	void InnerWriteVariantToStream(const QVariant& variant, QXmlStreamWriter* xmlstream);
 	void writeQVariantHomogenousListToStream(const QVariant& variant, QXmlStreamWriter& xmlstream);
 	void writeVariantListToStream(const QVariant &variant, QXmlStreamWriter& xmlstream);
 	void writeVariantMapToStream(const QVariant& variant, QXmlStreamWriter& xmlstream);
@@ -96,10 +100,11 @@ private:
 
 	QVariant readVariantFromStream(QXmlStreamReader& xmlstream);
 
+	QVariant InnerReadVariantFromStream(QString typeString, const QXmlStreamAttributes& attributes, QXmlStreamReader& xmlstream);
 	QVariant readHomogenousListFromStream(QXmlStreamReader& xmlstream);
 	QVariant readVariantListFromStream(QXmlStreamReader& xmlstream);
 	QVariant readVariantMapFromStream(QXmlStreamReader& xmlstream);
-	QVariant readVariantOrderedMapFromStream(QXmlStreamReader& xmlstream);
+	QVariant readVariantOrderedMapFromStream(std::vector<QXmlStreamAttribute> attributes, QXmlStreamReader& xmlstream);
 	QVariant readVariantValueFromStream(QXmlStreamReader& xmlstream);
 
 	/// @}
@@ -124,8 +129,11 @@ private:
 	QString error_string(QXmlStreamWriter& xmlstream) const;
 
 	QString m_root_name;
-	QString m_default_ns;
-	QString m_default_ns_version;
+
+	std::string m_default_ns;
+	std::string m_default_ns_version;
+
+	bool m_HACK_SKIP {true};
 };
 
 #endif /* SRC_LOGIC_SERIALIZATION_XMLSERIALIZER_H_ */

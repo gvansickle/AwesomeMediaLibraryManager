@@ -102,15 +102,6 @@ inline void PrintTo(const ExtFuture<T> &ef, ::std::ostream *os)
     PrintTo(str, os);
 }
 
-/// To let Google Test print QFutures.
-template <class T>
-inline void PrintTo(const QFuture<T> &qf, ::std::ostream *os)
-{
-	QString str;
-	QDebug dbg(&str);
-	dbg << toString(ExtFutureState::state(qf));
-	PrintTo(str, os);
-}
 
 QT_END_NAMESPACE
 
@@ -119,6 +110,7 @@ QT_END_NAMESPACE
 #define GTEST_COUT_ORIGINAL std::cout << "[          ] [ INFO ] "
 #define GTEST_COUT GTEST_COUT_ORIGINAL
 
+#if 0 ///@todo To get past compile errors: error: ‘ColoredPrintf’ is not a member of ‘testing::internal’
 /// @name Hopefully less quick-and-dirty way to add information to test output.
 /// Based on @link https://stackoverflow.com/a/45344932
 /// @{
@@ -164,6 +156,7 @@ public:
 		return m_qdebug_obj;
 	}
 };
+#endif
 
 /// Macro which exposes a new TestCout object to stream messages to, e.g.:
 /// @code

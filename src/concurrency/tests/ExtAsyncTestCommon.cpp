@@ -68,7 +68,7 @@ QString delayed_string_func_1(ExtAsyncTestsSuiteFixtureBase *fixture)
 	Q_ASSERT(!retval.isCanceled());
 	Q_ASSERT(!retval.isFinished());
 
-    TCOUT << "delayed_string_func_1() returning future:" << retval.state();
+    // TCOUT << "delayed_string_func_1() returning future:" << retval.state();
 
     return retval.result();
 }

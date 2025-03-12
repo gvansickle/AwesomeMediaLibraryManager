@@ -1,5 +1,5 @@
 #
-# Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2018, 2024 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -20,20 +20,22 @@
 # @file src/logic/jobs/CMakeLists.txt
 
 set(jobs_SOURCE_FILES
+		CoverArtJob.cpp
 		DirectoryScanJob.cpp
 		LibraryEntryLoaderJob.cpp
 		LibraryRescannerJob.cpp
 	)
 set(jobs_HEADER_FILES
+		CoverArtJob.h
 		DirectoryScanJob.h
 		LibraryEntryLoaderJob.h
 		LibraryRescannerJob.h
 	)
 
-target_sources_local(jobs
-	PUBLIC
-		${jobs_HEADER_FILES}
+add_library(jobs STATIC EXCLUDE_FROM_ALL)
+target_sources(jobs
 	PRIVATE
+		${jobs_HEADER_FILES}
 		${jobs_SOURCE_FILES}
 	)
 
@@ -42,14 +44,15 @@ target_link_libraries(jobs
 	    #${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS}
 		${QT5_LINK_LIB_TARGETS}
 		${KF5_LINK_LIB_TARGETS}
-	PRIVATE
+    PRIVATE
+		${AMLM_TAGLIB_TARGET}
 		concurrency
+        logic
 		)
 target_include_directories(jobs
-	PUBLIC
+	PRIVATE
 	    # For config.h
 		${PROJECT_BINARY_DIR}/src
-	PRIVATE
 		# For anything under src: utils/, logic/, etc.
 		${PROJECT_SOURCE_DIR}/src
 	)

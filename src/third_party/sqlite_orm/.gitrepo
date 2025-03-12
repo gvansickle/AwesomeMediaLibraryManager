@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/fnc12/sqlite_orm.git
+	branch = master
+	commit = 69917bd09a84970881d755828d60d8edf79728c6
+	parent = 599847defaa35788d951444626ad71c544fba242
+	method = merge
+	cmdver = 0.4.9

@@ -21,7 +21,7 @@
 
 #include "AMLMApp.h"
 
-/// Qt5
+// Qt
 #include <QtGlobal>
 #include <QSettings>
 #include <QIcon>
@@ -32,27 +32,24 @@
 #include <QImageReader>
 #include <QDebug>
 
-/// KF5
+// KF
 #include <KAboutData>
 #include <KIconTheme>
 #include <KSharedConfig>
 #include <KConfigGroup>
 
 #if HAVE_GTKMM01
-/// GTK
+// GTK
 #include <gtk/gtk.h>
 #endif
 
-/// Ours
+// Ours
+#include "Core.h"
 #include <gui/Theme.h>
 #include <utils/AboutDataSetup.h>
 #include "utils/DebugHelpers.h"
-#include "utils/StringHelpers.h"
-
 #include "gui/MainWindow.h"
-
 #include "resources/VersionInfo.h"
-
 #include "utils/Logging.h"
 
 // Compile-time info/sanity checks.
@@ -106,6 +103,8 @@ int main(int argc, char *argv[])
 	/// @note Must be set before Q(Gui)Application is constructed.
     AMLMApp::setAttribute(Qt::AA_EnableHighDpiScaling);
     // Use HighDPI pixmaps as long as we're supporting High DPI scaling.
+    // "After setting this attribute, application code that uses pixmap sizes in layout geometry calculations should
+    // typically divide by devicePixelRatio() to get device-independent layout geometry."
     /// @note Must be set before Q(Gui)Application is constructed.
     AMLMApp::setAttribute(Qt::AA_UseHighDpiPixmaps, true);
 	/// @todo Look at:
@@ -150,7 +149,7 @@ int main(int argc, char *argv[])
 	}
 
     // If we're forcing Breeze icons, force them here.
-    M_WARNING("Not picking up these icons FWICT.  Also interfering with user selected icon theme, and doesn't get saved.");
+    M_WARNING("Not picking up these icons FWICT.  Also interfering with user selected icon theme, and doesn't get saved.")
     bool forceBreeze = grp.readEntry("force_breeze", QVariant(false)).toBool();
     if (forceBreeze)
     {
@@ -240,6 +239,15 @@ int main(int argc, char *argv[])
 		mainWin->show();
 	}
 
-    return app.exec();
+	AMLM::Core::build();
+	AMLM::Core::self()->initGUI();
+    int result = app.exec();
+	AMLM::Core::clean();
+
+	/*
+	 * Look at the retval and see if we should restart, etc.
+	 */
+
+	return result;
 }
 

@@ -132,6 +132,8 @@
  *  - At the innermost future (the root async "generator"), calling .cancel(), which will propagate down.
  */
 
+#if 0 // !QT6
+
 // Associated header.
 #include "ExtFuture.h"
 
@@ -155,6 +157,7 @@ template class ExtFuture<Unit>;
 template class ExtFuture<bool>;
 template class ExtFuture<int>;
 template class ExtFuture<long>;
+template class ExtFuture<unsigned>;
 template class ExtFuture<unsigned long>;
 template class ExtFuture<unsigned long long>;
 template class ExtFuture<std::string>;
@@ -216,3 +219,4 @@ static_assert(!std::is_trivially_copy_assignable_v<ExtFuture<long>>);
 static_assert(!std::is_trivially_move_constructible_v<ExtFuture<long>>);
 static_assert(!std::is_trivially_move_assignable_v<ExtFuture<long>>);
 
+#endif // !QT6

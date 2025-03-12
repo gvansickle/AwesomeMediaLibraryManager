@@ -20,7 +20,7 @@
 #ifndef UTILS_CONCURRENCY_ASYNCTASKMANAGER_H_
 #define UTILS_CONCURRENCY_ASYNCTASKMANAGER_H_
 
-#include <QtConcurrent>
+// #include <QtConcurrent>
 #include <QObject>
 #include <QVector>
 #include <QFuture>

@@ -20,16 +20,16 @@
 #ifndef SRC_UTILS_UNIQUEIDMIXIN_H_
 #define SRC_UTILS_UNIQUEIDMIXIN_H_
 
-/// Standard C++
+// Standard C++
 #include <atomic>
 #include <mutex>
 #include <unordered_set>
 #include <string>
 
-/// Qt5
+// Qt
 #include <QString>
 
-/// Ours
+// Ours
 #include "crtp.h"
 #include "DebugHelpers.h"
 

@@ -92,7 +92,7 @@ QString MDILibraryView::getDisplayName() const
  */
 MDIModelViewPair MDILibraryView::open(QWidget *parent, std::function<MDIModelViewPair(QUrl)> find_existing_view_func)
 {
-	auto liburl = NetworkAwareFileDialog::getExistingDirectoryUrl(parent, "Select a directory to import", QUrl(), "import_dir");
+	auto liburl = NetworkAwareFileDialog::getExistingDirectoryUrl(parent, "Select a directory to import", QUrl(""), "import_dir");
     QUrl lib_url = liburl.first;
 
     if(lib_url.isEmpty())
@@ -118,7 +118,7 @@ MDIModelViewPair MDILibraryView::openFile(QUrl open_url, QWidget *parent, std::f
     if(mv_pair.m_view)
     {
         Q_ASSERT_X(mv_pair.m_view_was_existing == true, "openFile", "find_existing function returned a view but said it was not pre-existing.");
-        qDebug() << "View of" << open_url << "already exists, returning" << mv_pair.m_view;
+        qDebug() << "View of" << open_url << "already exists, returning" << mv_pair.m_view.data();
         return mv_pair;
     }
 
@@ -132,7 +132,7 @@ MDIModelViewPair MDILibraryView::openFile(QUrl open_url, QWidget *parent, std::f
 	{
 		Q_ASSERT_X(mv_pair.m_model_was_existing, "openFile", "find_exisiting returned a model but said it was not pre-existing.");
 
-		qDebug() << "Model exists:" << mv_pair.m_model;
+        qDebug() << "Model exists:" << mv_pair.m_model.data();
 		libmodel = qobject_cast<LibraryModel*>(mv_pair.m_model);
 	}
 	else
@@ -194,7 +194,10 @@ void MDILibraryView::setModel(QAbstractItemModel* model)
 	// This will create a new selection model.
 	MDITreeViewBase::setModel(m_sortfilter_model);
 	Q_ASSERT((void*)m_sortfilter_model != (void*)old_sel_model);
-	old_sel_model->deleteLater();
+    if(old_sel_model != nullptr)
+    {
+        old_sel_model->deleteLater();
+    }
 
 
 	// Set up the TreeView's header.
@@ -444,7 +447,7 @@ std::vector<MDIPlaylistView*> MDILibraryView::getAllMdiPlaylistViews()
 {
 	auto subwindows = getQMdiSubWindow()->mdiArea()->subWindowList(QMdiArea::ActivationHistoryOrder);
 	std::vector<MDIPlaylistView*> retval;
-	for(auto s : subwindows)
+	for(const auto& s : std::as_const(subwindows))
 	{
 		auto w = s->widget();
 		if(w != nullptr)

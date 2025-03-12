@@ -20,6 +20,8 @@
 #ifndef AMLM_CONFIGURE_H
 #define AMLM_CONFIGURE_H
 
+/// Define to 1 if KF6 libraries were found.
+#cmakedefine01 HAVE_KF6
 /// Define to 1 if KF5 libraries were found.
 #cmakedefine01 HAVE_KF501
 

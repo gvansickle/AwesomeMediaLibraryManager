@@ -22,7 +22,7 @@
 // Std C++
 #include <functional>
 
-// Qt5
+// Qt
 #include <QItemSelection>
 #include <QTreeView>
 #include <QTreeWidget>
@@ -43,6 +43,7 @@
 #include <logic/LibraryModel.h>
 #include <gui/MDITreeViewBase.h>
 #include <gui/Theme.h>
+#include <jobs/CoverArtJob.h>
 #include <logic/proxymodels/ModelChangeWatcher.h>
 #include <logic/proxymodels/ModelHelpers.h>
 #include <logic/proxymodels/SelectionFilterProxyModel.h>
@@ -50,7 +51,6 @@
 
 #include <utils/StringHelpers.h>
 
-#include <logic/CoverArtJob.h>
 #include <logic/proxymodels/LibrarySortFilterProxyModel.h>
 
 MetadataDockWidget::MetadataDockWidget(const QString& title, QWidget *parent, Qt::WindowFlags flags) : QDockWidget(title, parent, flags)
@@ -118,7 +118,7 @@ void MetadataDockWidget::connectToView(MDITreeViewBase* view)
     m_proxy_model->setSelectionModel(view->selectionModel());
 }
 
-void MetadataDockWidget::onDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles)
+void MetadataDockWidget::onDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QList<int>& roles)
 {
 	qDebug() << "Data changed:" << topLeft << bottomRight << roles;
 	
@@ -169,7 +169,8 @@ M_TODO("Not getting some field here");
             m_metadata_widget->addTopLevelItem(metadata_types);
             metadata_types->setExpanded(true);
             metadata_types->setFirstColumnSpanned(true);
-            m_metadata_widget->setFirstItemColumnSpanned(metadata_types, true);
+            /// @todo QT6 Change here, not sure if it was ever needed due to immediately above.
+            m_metadata_widget->setFirstColumnSpanned(0, m_metadata_widget->indexFromItem(metadata_types).parent(), true);
 
             std::vector<std::tuple<QString, QVariant, AMLMTagMap>> md_list = {
 				{"hasGeneric?", md.hasGeneric(), md.tagmap_generic()},
@@ -228,23 +229,25 @@ M_TODO("Not getting some field here");
 
 		// Load and Display the cover image.
 
-		// Create the asynchronous Cover Art loader task.";
+		// Create the asynchronous Cover Art loader task.
 		ExtFuture<QByteArray> coverart_future = CoverArtJob::make_task(this, libentry->getUrl());
 
 		//qDb() << "CoverArtCallback: Adding to perfect deleter.";
 		/// @todo Is there a race here? Should this be part of the make_, so we never see it if it gets deleted?
-		AMLMApp::IPerfectDeleter().addQFuture(coverart_future);
+        AMLMApp::IPerfectDeleter().addQFuture(QFuture<void>(coverart_future));
 
 		qDb() << "CoverArtCallback: Adding .then()..";
-		coverart_future.then([=](ExtFuture<QByteArray> future) -> bool {
-
+		coverart_future.then([=](ExtFuture<QByteArray> future) -> QImage
+		{
 			// Do as much as we can in the arbitrary non-GUI context we're called in.
 #warning "NEED TO FIX get() returning nothing"
+#if 0 // QT6
 			if(future.hasException())
 			{
 
 			}
-			QList<QByteArray> cover_image_bytes = future.get();
+#endif
+			QList<QByteArray> cover_image_bytes = future.results();
 			QImage image;
 
 			if(!future.isCanceled() && !cover_image_bytes.empty() && cover_image_bytes[0].size() > 0)
@@ -255,7 +258,7 @@ M_TODO("Not getting some field here");
 				if(image.loadFromData(cover_image_bytes[0]) == true)
 				{
 					// It was a valid image.
-//					m_cover_image_label->setPixmap(QPixmap::fromImage(image));
+					qDb() << "Valid cover image loaded";
 				}
 				else
 				{
@@ -263,42 +266,30 @@ M_TODO("Not getting some field here");
 					/// @todo Set error state on the QURL.
 				}
 			}
-
+			return image;
+		})
 			/// @note Anything QPixmap needs to be in run the GUI thread.
 			/// @todo I'm not clear on why we need to explicitly capture a copy of future...
 			/// Oh wait, probably lambda isn't mutable.
-			ExtAsync::detail::run_in_event_loop(this, [=, future_copy=future](){
+// Qt6			ExtAsync::detail::run_in_event_loop(this, [=, future_copy=future](){
+        .then(this, [this](QImage image){
+			AMLM_ASSERT_IN_GUITHREAD();
 
-				AMLM_ASSERT_IN_GUITHREAD();
-
-				if(image.isNull())
-				{
-					// Error.  Load the "No image available" icon.
-	//				qWr() << "ASYNC GetCoverArt FAILED:" << kjob->error() << ":" << kjob->errorText() << ":" << kjob->errorString();
-					QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
-					m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
-				}
-				else
-				{
-					// Succeeded, convert QImage to QPixmap.
-
-					if(!cover_image_bytes.empty())
-					{
-						qDb() << "Valid cover image found"; ///@todo << cover_image.mime_type;
-						m_cover_image_label->setPixmap(QPixmap::fromImage(image));
-						//m_cover_image_label.adjustSize()
-						/// @todo Probably need to handle setPixmap() error.
-					}
-					else
-					{
-						// No image available.
-						QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
-						m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
-					}
-				};
-			});
-
-			return true;
+			if(image.isNull())
+			{
+				// Error.  Load the "No image available" icon.
+                qWr() << "ASYNC GetCoverArt FAILED"; // << kjob->error() << ":" << kjob->errorText() << ":" << kjob->errorString();
+				QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
+				m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
+			}
+			else
+			{
+				// Succeeded, convert QImage to QPixmap.
+				qDb() << "Valid cover image found"; ///@todo << cover_image.mime_type;
+				m_cover_image_label->setPixmap(QPixmap::fromImage(image));
+				//m_cover_image_label.adjustSize()
+				/// @todo Probably need to handle setPixmap() error.
+            }
 		});
 	}
 	else

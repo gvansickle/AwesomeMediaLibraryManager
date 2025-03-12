@@ -21,80 +21,30 @@
 #define SRC_LOGIC_JOBS_LIBRARYRESCANNERJOB_H_
 
 
-/// Qt5
+// Qt
 #include <QVector>
-#include <QWeakPointer>
-#include <QSharedPointer>
+#include <QPromise>
 
-/// Ours
+// Ours
 #include "LibraryRescannerMapItem.h"
 #include "LibraryRescanner.h" ///< For MetadataReturnVal
-#include <concurrency/AMLMJobT.h>
+#include "ExtFuture.h"
+#include "AMLMJob.h"
+
 
 class LibraryModel;
-class LibraryRescannerJob;
-using LibraryRescannerJobPtr = QPointer<LibraryRescannerJob>;
 
-/*
+/**
+ * Worker function which converts the LibraryRescanMapItems from @a in_future
+ * to MetadataReturnVal's which are sent to @a promise.
  *
+ * @param promise
+ * @param in_future
+ * @param current_libmodel
  */
-class LibraryRescannerJob: public AMLMJobT<ExtFuture<MetadataReturnVal>>, public UniqueIDMixin<LibraryRescannerJob>
-{
-    Q_OBJECT
+void library_metadata_rescan_task(QPromise<MetadataReturnVal>& promise, AMLMJob*,
+                                  ExtFuture<VecLibRescannerMapItems> in_future,
+                                  LibraryModel* current_libmodel);
 
-    using BASE_CLASS = AMLMJobT<ExtFuture<MetadataReturnVal>>;
-
-    /**
-     * @note CRTP: Still need this to avoid ambiguous name resolution.
-     * @see https://stackoverflow.com/a/46916924
-     */
-    using UniqueIDMixin<LibraryRescannerJob>::uniqueQObjectName;
-
-Q_SIGNALS:
-//    void SLOT_processReadyResults(MetadataReturnVal lritem_vec);
-
-protected:
-    explicit LibraryRescannerJob(QObject* parent);
-
-public:
-
-    /// @name Public types
-    /// @{
-    using ExtFutureType = ExtFuture<MetadataReturnVal>;
-    /// @}
-
-    ~LibraryRescannerJob() override;
-
-    static LibraryRescannerJobPtr make_job(QObject *parent);
-    static LibraryRescannerJobPtr make_job(QObject *parent, LibraryRescannerMapItem item_to_refresh, const LibraryModel *current_libmodel);
-//	static LibraryRescannerJobPtr make_job(QObject *parent, LibraryRescannerMapItem-future-iterators item_to_refresh, const LibraryModel *current_libmodel);
-
-	void run_async_rescan();
-
-	/// The map function for rescanning the library to reload metadata from the files.
-	/// Runs in an arbitrary thread context, so must be threadsafe.
-	MetadataReturnVal refresher_callback(const VecLibRescannerMapItems& mapitem);
-
-public Q_SLOTS:
-
-    void setDataToMap(QVector<VecLibRescannerMapItems> items_to_rescan, const LibraryModel* current_libmodel);
-
-protected:
-
-    void runFunctor() override;
-
-private:
-    Q_DISABLE_COPY(LibraryRescannerJob)
-
-    QVector<VecLibRescannerMapItems> m_items_to_rescan;
-    const LibraryModel* m_current_libmodel;
-};
-
-
-void library_metadata_rescan_task(ExtFuture<MetadataReturnVal> ext_future, LibraryRescannerJob* job,
-                                  QVector<VecLibRescannerMapItems> items_to_rescan);
-
-
-Q_DECLARE_METATYPE(LibraryRescannerJobPtr);
 
 #endif /* SRC_LOGIC_JOBS_LIBRARYRESCANNERJOB_H_ */

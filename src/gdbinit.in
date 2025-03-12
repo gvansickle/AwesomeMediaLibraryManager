@@ -5,13 +5,13 @@ echo ======================\n\n
 echo === Setting exec-wrapper to 'gdb_wrap.sh'\n
 set exec-wrapper 'gdb_wrap.sh'
 
-echo === Loading Qt5 Pretty Printers\n
+echo === Loading Qt6 Pretty Printers\n
 python
 import sys, os.path
 sys.path.insert(0, os.path.expanduser('~/.gdb'))
 sys.path.insert(0, os.path.expanduser('../install/bin'))
-import qt5printers
-qt5printers.register_printers(gdb.current_objfile())
+import qt6printers
+qt6printers.register_printers(gdb.current_objfile())
 end
 
 # Recommendations from the libstdc++ page @link https://gcc.gnu.org/onlinedocs/gcc-8.2.0/libstdc++/manual/manual/debug.html

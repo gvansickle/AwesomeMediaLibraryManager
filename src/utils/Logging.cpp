@@ -24,6 +24,7 @@
 
 // Std C++
 #include <iostream>
+#include <regex>
 
 // Qt5
 #include <QGuiApplication>
@@ -62,7 +63,7 @@ void printDebugMessagesWhileDebuggingHandler(QtMsgType type, const QMessageLogCo
         // No name yet, last-ditch we'll print the native thread ID.
 
         auto cur_thread_id = QThread::currentThreadId();
-		thread_name = QString("%1").arg(reinterpret_cast<uintptr_t>(cur_thread_id));
+		thread_name = QStringLiteral("%1").arg(reinterpret_cast<uintptr_t>(cur_thread_id));
     }
     // Fit thread name to 15 chars, fixed width.
     thread_name = thread_name.leftJustified(15, '_', true);
@@ -71,17 +72,29 @@ void printDebugMessagesWhileDebuggingHandler(QtMsgType type, const QMessageLogCo
 
     debug_str.replace(QStringLiteral("%threadname15"), thread_name);
 
-    // Log a short form of the function name.  With templates, %{function} becomes enormous.
-    // Unfortunately we can't use __FUNCTION__ here because QMessageLogContext captures only __PRETTY_FUNCTION__,.
-    // and even that already gets cleaned up by %{function}. So we have to simply truncate what we get.
-	/// @todo This needs to be smarter, we mostly only get the return and linkage types.
-	debug_str.replace(QStringLiteral("%shortfunction"), [&context]{
-		QString retval = context.function;
-		retval.remove(QRegularExpression(R"!(^[\s]*(static|void|template|virtual|\*))!"));
-		retval.remove(QRegularExpression(R"!(\w+\s+)!"));
-		retval.remove(QRegularExpression(R"!(^([\s]+))!"));
-		return retval.left(32);
-	}());
+	if(context.function != nullptr && debug_str.contains(QLatin1String("%shortfunction")))
+	{
+		// Log a short form of the function name.  With templates, %{function} becomes enormous.
+		// Unfortunately we can't use __FUNCTION__ here because QMessageLogContext captures only __PRETTY_FUNCTION__,.
+		// and even that already gets cleaned up by %{function}. So we have to simply truncate what we get.
+		/// @todo This needs to be smarter, we mostly only get the return and linkage types.
+#if 0
+		QString shortfunction = context.function;
+		shortfunction.remove(QRegularExpression(QStringLiteral(uR"!(^[\s]*(static|void|template|virtual|\*))!")));
+		shortfunction.remove(QRegularExpression(QStringLiteral(uR"!(\w+\s+)!")));
+		shortfunction.remove(QRegularExpression(QStringLiteral(uR"!(^([\s]+))!")));
+		shortfunction = shortfunction.left(32);
+#else
+		std::string shortfunction = context.function;
+		shortfunction = std::regex_replace(shortfunction, std::regex(R"!(^[\s]*(static|void|template|virtual|\*))!"), "");
+		// Strip trailing whitespace.
+		shortfunction = std::regex_replace(shortfunction, std::regex(R"!(\w+\s+)!"), "");
+		// Strip leading whitespace.
+		shortfunction = std::regex_replace(shortfunction, std::regex(R"!(^([\s]+))!"), "");
+		shortfunction.resize(32, u8' ');
+#endif
+		debug_str.replace(QStringLiteral("%shortfunction"), toqstr(shortfunction));
+	}
 
     /// @todo I must be missing a header on Windows, all I get is "OutputDebugString not defined" here.
 #if 0 //def Q_OS_WIN
@@ -95,6 +108,7 @@ void Logging::SetFilterRules()
 {
 	// Allow us to see qDebug() messages, except for mouse movement.
 	QLoggingCategory::setFilterRules(
+			"qt.modeltest.*\n"
 			"*.debug=true\n"
 			"qt.qpa.input*.debug=false\n"
 			"qt.*=false\n"
@@ -169,7 +183,7 @@ void Logging::dumpEnvVars()
 
 
 	qInfo() << "QT/KDE Environment variables:";
-	for(const auto& str : qAsConst(known_qt_kde_vars))
+	for(const auto& str : std::as_const(known_qt_kde_vars))
 	{
 		qInfo() << str + ":" << env.value(str, "<unset or empty>");
 	}
@@ -180,14 +194,14 @@ void Logging::dumpEnvVars()
 	qInfo() << "QGuiApplication::libraryPaths():" << QGuiApplication::libraryPaths();
 
 	qInfo() << "XDG Environment variables:";
-	for(const auto& str : qAsConst(known_env_vars))
+	for(const auto& str : std::as_const(known_env_vars))
 	{
 		qInfo() << str + ":" << env.value(str, "<unset or empty>");
 	}
 
 	qInfo() << "XDG Base Directory Specification environment variables:";
 
-	for(const auto& str : qAsConst(known_xdg_base_dir_spec_vars))
+	for(const auto& str : std::as_const(known_xdg_base_dir_spec_vars))
 	{
 		qInfo() << str + ":" << env.value(str, "<unset or empty>");
 	}

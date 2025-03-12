@@ -1,5 +1,5 @@
 /*
- * Copyright 2017, 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -28,8 +28,7 @@
 #include <utility> // For std::pair<>
 #include <memory>
 
-/// Qt5
-
+// Qt
 #include <QUrl>
 
 class QActionGroup;
@@ -40,12 +39,12 @@ class QSettings;
 class QStandardItem;
 class QStandardItemModel;
 
-/// KF5
-
-#if HAVE_KF501
+// KF
+#if HAVE_KF6 || HAVE_KF501
 #include <KMainWindow>
 #include <KXmlGuiWindow>
 
+// Ours
 #include <gui/widgets/CollectionStatsWidget.h>
 
 class KJob;
@@ -87,6 +86,7 @@ class ActionBundle;
 class PlayerControls;
 class MDINowPlayingView;
 class Experimental;
+class ExperimentalKDEView1;
 class SettingsDialog;
 class LibraryModel;
 class PlaylistModel;
@@ -382,10 +382,13 @@ private:
     QUrl m_appdatadir;
 
     /// The media player instance.
-	MP2* m_player;
+	QPointer<MP2> m_player {};
 
     /// Experimental "scratch" widget for doing development experiments.
     Experimental* m_experimental;
+	ExperimentalKDEView1* m_exp_second_child_view;
+
+
 
 	/// The "model of models", used for the collection dock widget.
 	QPointer<QStandardItemModel> m_model_of_model_view_pairs;
@@ -483,7 +486,7 @@ private:
     /// @}
 
 	/// @name Help actions.
-#if !HAVE_KF501
+#if !(HAVE_KF501 || HAVE_KF6)
 	QAction* m_helpAct;
     QAction* m_whatsThisAct;
     QAction* m_aboutAct;
@@ -518,14 +521,14 @@ public:
 
 private:
 
-    /// The MainWindow signleton.
+    /// The MainWindow singleton.
     static QPointer<MainWindow> m_instance;
 
-#if HAVE_KF501
+#if HAVE_KF501 || HAVE_KF6
     /**
      * Master Tracker for all asynchronous activites.
      * Its widget is the progress bar in the status bar.
-     * Probably belongs in AMLMApp, but constructor needs a QWidget parent.
+     * Probably really belongs in AMLMApp, but constructor needs a QWidget parent.
      */
     ActivityProgressStatusBarTracker* m_activity_progress_tracker { nullptr };
 #endif

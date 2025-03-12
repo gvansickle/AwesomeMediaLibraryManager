@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -32,19 +32,27 @@
 // Ours
 #include <utils/DebugHelpers.h>
 #include <logic/DirScanResult.h>
+#include "AbstractTreeModelHeaderItem.h"
+#include "ScanResultsTreeModel.h"
+#include "SRTMItemLibEntry.h"
 #include <LibraryEntry.h>
+#include <serialization/SerializationHelpers.h>
 
 
-ScanResultsTreeModelItem::ScanResultsTreeModelItem(const DirScanResult& dsr, AbstractTreeModel *parent_model, bool is_root)
-	: AbstractTreeModelItem(std::vector<QVariant>(), parent_model, is_root)
+ScanResultsTreeModelItem::ScanResultsTreeModelItem(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id)
+	: BASE_CLASS({}, parent, id), m_dsr(dsr)
 {
-	m_dsr = dsr;
 }
 
-ScanResultsTreeModelItem::ScanResultsTreeModelItem(AbstractTreeModel* parent_model, bool is_root)
-	: AbstractTreeModelItem(std::vector<QVariant>(), parent_model, is_root)
+ScanResultsTreeModelItem::ScanResultsTreeModelItem(const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id)
+	: BASE_CLASS({}, parent, id)
 {
+}
 
+ScanResultsTreeModelItem::ScanResultsTreeModelItem(const QVariant& variant, const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id)
+	: BASE_CLASS({}, parent, id)
+{
+//	M_WARNING("TODO: DECODE VARIANT");
 }
 
 ScanResultsTreeModelItem::~ScanResultsTreeModelItem()
@@ -70,6 +78,7 @@ QVariant ScanResultsTreeModelItem::data(int column, int role) const
 		return QUrl(m_dsr.getSidecarCuesheetExtUrl());
 	default:
 		qWr() << "data() request for unknown column:" << column;
+		return BASE_CLASS::data(column, role);
 		break;
 	}
 
@@ -81,163 +90,105 @@ int ScanResultsTreeModelItem::columnCount() const
 	return 3;
 }
 
-using strviw_type = QLatin1Literal;
 
 #define M_DATASTREAM_FIELDS(X) \
-	X(XMLTAG_DIRSCANRESULT, m_dsr)
+	/* TAG_IDENTIFIER, tag_string, member_field, var_name */ \
+	X(XMLTAG_DIRSCANRESULT, m_dsr, nullptr) \
+	/*X(XMLTAG_NUM_COLUMNS, num_columns, (qulonglong)m_item_data.size())*/ \
+	/*X(XMLTAG_ITEM_DATA_SIZE, item_data_size, (qulonglong)m_item_data.size())*/ \
+	/*X(XMLTAG_NUM_CHILDREN, num_children, (qulonglong)m_child_items.size())*/ \
+	X(XMLTAG_CHILD_NODE_LIST, child_node_list, nullptr)
+
 
 /// Strings to use for the tags.
-#define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
+using strviw_type = QLatin1String;
+
+///// Strings to use for the tags.
+#define X(field_tag, tag_string, var_name) static const strviw_type field_tag ( # tag_string );
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
+
 QVariant ScanResultsTreeModelItem::toVariant() const
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedMap<QString, QVariant> map;
+
+	// Overwrite any class info added by the above.
+	set_map_class_info(this, &map);
+
+	// Set the xml:id.
+	map.insert_attributes({{"xml:id", get_prefixed_uuid()}});
 
 	/// @todo Will be more fields, justifying the map vs. value?
 	/// @todo Need the parent here too?  Probably needs to be handled by the parent, but maybe for error detection.
 
-#define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
-	M_DATASTREAM_FIELDS(X);
-#undef X
+	map_insert_or_die(map, XMLTAG_DIRSCANRESULT, m_dsr);
 
-	// Children to variant list.
-	QVariantHomogenousList vl("children", "child");
-	for(int i=0; i<childCount(); i++)
+// #define X(field_tag, tag_string, var_name) map_insert_or_die(map, field_tag, var_name);
+// 	M_DATASTREAM_FIELDS(X);
+// #undef X
+
+	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
+	for(auto& it : m_child_items)
 	{
-		auto* child_ptr = child(i);
-//		list_push_back_or_die(vl, child_ptr);
-		vl.push_back(child_ptr->toVariant());
+		list_push_back_or_die(child_var_list, it->toVariant());
 	}
-	map.insert("children", vl);
+	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, child_var_list);
 
 	return map;
 }
 
 void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 {
-	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
+	InsertionOrderedMap<QString, QVariant> map = variant.value<InsertionOrderedMap<QString, QVariant>>();
 
-#define X(field_tag, member_field) map_read_field_or_warn(map, field_tag, &(member_field));
-	M_DATASTREAM_FIELDS(X);
-#undef X
+	// Overwrite any class info added by the above.
+//	dump_map_class_info(this, &map);
 
-	// Children to variant list.
-	QVariantHomogenousList vl("children", "child");
-	map_read_field_or_warn(map, "children", &vl);
-//	for(const auto& ch : vl)
-//	{
-//		appendChild(ch.fromVariant());
-//	}
-}
+	auto uuid = map.get_attr("xml:id", "");
+	set_prefixed_uuid(uuid);
 
-AbstractTreeModelItem *
-ScanResultsTreeModelItem::do_create_default_constructed_child_item(AbstractTreeModel* parent_model, int num_columns)
-{
-	SRTMItem_LibEntry* child_item;
+// #define X(field_tag, tag_string, var_name) map_read_field_or_warn(map, field_tag, var_name);
+// 	M_DATASTREAM_FIELDS(X);
+// #undef X
 
-	child_item = new SRTMItem_LibEntry(parent_model);
+	map_read_field_or_warn(map, XMLTAG_DIRSCANRESULT, &m_dsr);
 
-	return child_item;
-}
+	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
+	child_var_list = map.at(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
+	Q_ASSERT(child_var_list.size() > 0);
 
-bool ScanResultsTreeModelItem::derivedClassSetData(int column, const QVariant& value)
-{
-	// We have at the moment only a DirScanResult, not sure we need to set data by column.
-	return true;
-}
+	append_children_from_variant<SRTMItem_LibEntry>(this, child_var_list);
 
-bool ScanResultsTreeModelItem::derivedClassInsertColumns(int insert_before_column, int num_columns)
-{
-	/// @todo Again only a DirScanResult.  Not sure what to do here.
-	/// Qt5 TreeModel has this:
-	///   bool TreeModel::insertColumns(int position, int columns, const QModelIndex &parent)
-	///		beginInsertColumns(parent, position, position + columns - 1);
-	///		success = rootItem->insertColumns(position, columns);
-	///		endInsertColumns();
-	/// So it's up to the root item to decide what to do, not the model.
-	/// The root item calls child items and they add/remove QVariant's as required.
+#if 0////
+	auto model_ptr_base = m_model.lock();
+	Q_ASSERT(model_ptr_base);
+	auto model_ptr = std::dynamic_pointer_cast<ScanResultsTreeModel>(model_ptr_base);
+	auto parent_id = getId();
 
-	return true;
-}
+	/// NEEDS TO BE IN MODEL HERE.
+	Q_ASSERT(isInModel());
 
-bool ScanResultsTreeModelItem::derivedClassRemoveColumns(int first_column_to_remove, int num_columns)
-{
-	/// @todo Again only a DirScanResult.  Not sure what to do here.
-	/// Qt5 TreeModel has this:
-	///   bool TreeModel::insertColumns(int position, int columns, const QModelIndex &parent)
-	///		beginInsertColumns(parent, position, position + columns - 1);
-	///		success = rootItem->insertColumns(position, columns);
-	///		endInsertColumns();
-	/// So it's up to the root item to decide what to do, not the model.
-
-	return true;
-}
-
-
-/////////// @todo SRTMItem_LibEntry
-
-bool SRTMItem_LibEntry::derivedClassSetData(int column, const QVariant& value)
-{
-	return ScanResultsTreeModelItem::derivedClassSetData(column, value);
-}
-
-bool SRTMItem_LibEntry::derivedClassInsertColumns(int insert_before_column, int num_columns)
-{
-	return ScanResultsTreeModelItem::derivedClassInsertColumns(insert_before_column, num_columns);
-}
-
-bool SRTMItem_LibEntry::derivedClassRemoveColumns(int first_column_to_remove, int num_columns)
-{
-	return ScanResultsTreeModelItem::derivedClassRemoveColumns(first_column_to_remove, num_columns);
-}
-
-QVariant SRTMItem_LibEntry::data(int column, int role) const
-{
-	if((role != Qt::ItemDataRole::DisplayRole) && (role != Qt::ItemDataRole::EditRole))
+	std::vector<std::shared_ptr<AbstractTreeModelItem>> new_child_item_vec;
+	for(const QVariant& child_variant : child_list)
 	{
-		return QVariant();
+		qDb() << "READING CHILD ITEM INTO ScanResultsTreeModelItem:" << child_variant.typeName();
+
+		auto id = model_ptr->requestAddSRTMLibEntryItem(child_variant, parent_id);
+		auto new_child = model_ptr->getItemById(id);
+		Q_ASSERT(new_child);
 	}
-	switch(column)
-	{
-		case 0:
-			return QVariant::fromValue(toqstr(m_key));
-			break;
-		case 1:
-			return QVariant::fromValue(toqstr(m_val));
-			break;
-		default:
-			return QVariant();
-			break;
-	}
+#endif
 }
 
-int SRTMItem_LibEntry::columnCount() const
+//std::shared_ptr<ScanResultsTreeModel> ScanResultsTreeModelItem::getTypedModel() const
+//{
+//	return std::dynamic_pointer_cast<ScanResultsTreeModel>(m_model.lock());
+//}
+
+void ScanResultsTreeModelItem::setDirscanResults(const DirScanResult& dsr)
 {
-	return 2;
+	m_dsr = dsr;
 }
 
-QVariant SRTMItem_LibEntry::toVariant() const
-{
-	QVariantHomogenousList list("library_entries", "m_library_entry");
 
-	/// @todo Need the parent here too?  Probably needs to be handled by the parent, but maybe for error detection.
-
-	if(auto libentry = m_library_entry.get(); libentry != nullptr)
-	{
-		list_push_back_or_die(list, m_library_entry->toVariant());
-	}
-
-	return list;
-}
-
-void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
-{
-	QVariantHomogenousList list = variant.value<QVariantHomogenousList>();
-
-	/// @todo Incomplete.
-	Q_ASSERT(0);
-}
-
-/////////// @todo SRTMItem_LibEntry

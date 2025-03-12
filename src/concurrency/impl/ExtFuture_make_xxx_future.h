@@ -23,6 +23,8 @@
 #ifndef SRC_CONCURRENCY_IMPL_EXTFUTURE_MAKE_XXX_FUTURE_H_
 #define SRC_CONCURRENCY_IMPL_EXTFUTURE_MAKE_XXX_FUTURE_H_
 
+#if 0 // !Qt6
+
 // Std C++
 #include <type_traits>
 #include <atomic>
@@ -125,6 +127,6 @@ auto make_started_only_future() -> ExtFuture<std::decay_t<T>>
 
 } // END ExtAsync
 
-
+#endif // !Qt6
 
 #endif /* SRC_CONCURRENCY_IMPL_EXTFUTURE_MAKE_XXX_FUTURE_H_ */

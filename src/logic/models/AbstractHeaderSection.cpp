@@ -26,13 +26,11 @@
 
 AbstractHeaderSection::AbstractHeaderSection()
 {
-	// TODO Auto-generated constructor stub
 
 }
 
 AbstractHeaderSection::~AbstractHeaderSection()
 {
-	// TODO Auto-generated destructor stub
 }
 
 

@@ -25,16 +25,23 @@
 
 // Qt5
 #include <QDebug>
+#include <QMetaType>
 
 // Ours, Qt5/KF5 related.
 #include <utils/DebugHelpers.h>
 #include <utils/RegisterQtMetatypes.h>
 
+// Ours
+#include <future/InsertionOrderedMap.h>
+
+using std_pair_QString_QVariant = std::pair<const QString, QVariant>;
+Q_DECLARE_METATYPE(std_pair_QString_QVariant);
 
 AMLM_QREG_CALLBACK([](){
-	qIn() << "Registering InsertionOrderedMap<QString, QVariant> alias QVariantInsertionOrderedMap";
-	qRegisterMetaType<InsertionOrderedMap<QString, QVariant>>("QVariantInsertionOrderedMap");
-//	AMLMRegisterQFlagQStringConverters<DirScanResult::DirPropFlags>();
+	qIn() << "Registering InsertionOrderedMap<QString, QVariant>";
+	qRegisterMetaType<InsertionOrderedMap<QString, QVariant>>();
+	qRegisterMetaType<std_pair_QString_QVariant>();
+	qRegisterMetaType<SerializableQVariantList>();
 });
 
 
@@ -45,12 +52,13 @@ QVariant SerializableQVariantList::toVariant() const
 	Q_ASSERT(!m_list_item_tag.isNull());
 	Q_ASSERT(!m_list_item_tag.isEmpty());
 
-	QVariantMap map;
-	// Return a QMap with a single QVariant(QVariantHomogenousList) item.
+	InsertionOrderedMap<QString, QVariant> map;
+	// Return a QMap with a single QVariant(SerializableQVariantList) item.
 	/// @note Slicing warning, but this is ok here.
-	QVariantHomogenousList list = *this;
+	/// @note Is it really?
+	SerializableQVariantList list = *this;
 
-	map.insert(m_list_tag, QVariant::fromValue(list));
+	map.insert(m_list_tag, list);
 	return map;
 }
 
@@ -61,15 +69,16 @@ void SerializableQVariantList::fromVariant(const QVariant& variant)
 	Q_ASSERT(!m_list_item_tag.isNull());
 	Q_ASSERT(!m_list_item_tag.isEmpty());
 
-	QVariantMap map = variant.toMap();
+	Q_ASSERT((variant.canConvert<InsertionOrderedMap<QString, QVariant>>()));
+
+	InsertionOrderedMap<QString, QVariant> map = variant.value<InsertionOrderedMap<QString, QVariant>>();
 
 	Q_ASSERT(map.contains(m_list_tag));
-	Q_ASSERT(map.value(m_list_tag).canConvert<QVariantHomogenousList>());
 
-	QVariantHomogenousList qvl = map.value(m_list_tag).value<QVariantHomogenousList>();
+	SerializableQVariantList qvl = map.at(m_list_tag).value<SerializableQVariantList>();
 
-	for(const auto& e : qvl)
+	for(const QVariant& entry : qvl)
 	{
-		this->push_back(e);
+		this->push_back(entry);
 	}
 }

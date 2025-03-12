@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -25,8 +25,7 @@
 #include <vector>
 #include <memory>
 
-// Qt5
-#include <QtConcurrent>
+// Qt
 #include <QFileDevice>
 #include <QStandardPaths>
 #include <QIcon>
@@ -52,9 +51,12 @@
 #include <gui/Theme.h>
 #include <jobs/LibraryEntryLoaderJob.h>
 #include <jobs/LibraryRescannerJob.h>
+#include <logic/serialization/SerializationHelpers.h>
+
 
 AMLM_QREG_CALLBACK([](){
     qIn() << "Registering LibraryModel types";
+	qRegisterMetaType<LibraryModel>();
     qRegisterMetaType<VecOfUrls>();
 //    qRegisterMetaType<VecOfLEs>();
 	qRegisterMetaType<std::vector<std::shared_ptr<LibraryEntry>>>("VecOfLEs");
@@ -102,6 +104,8 @@ LibraryModel::~LibraryModel()
 
 QPointer<LibraryModel> LibraryModel::openFile(QUrl open_url, QObject* parent)
 {
+	// This is static.
+
     // Create the new LibraryModel.
 	auto lib = QPointer<LibraryModel>(new LibraryModel(parent));
 
@@ -172,7 +176,7 @@ Qt::ItemFlags LibraryModel::flags(const QModelIndex &index) const
 	}
 	else
 	{
-		return 0;
+        return Qt::NoItemFlags;
 	}
 }
 
@@ -181,7 +185,8 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
 //	Qt::ItemDataRole id_role = Qt::ItemDataRole(role);
 //	qDebug() << "index:" << index.isValid() << index.row() << index.column() << "role:" << id_role;
 
-	Q_ASSERT(checkIndex(index, CheckIndexOption::IndexIsValid));
+    // Q_ASSERT(checkIndex(index, CheckIndexOption::IndexIsValid));
+AMLM_WARNIF_NOT(checkIndex(index, CheckIndexOption::IndexIsValid));
 
     // Handle invalid indexes.
 	if(!index.isValid())
@@ -412,12 +417,12 @@ QVariant LibraryModel::headerData(int section, Qt::Orientation orientation, int 
 			{
 				return QVariant();
 			}
-			auto dn = m_columnSpecs[section].display_name;
+			auto dn = m_columnSpecs[section].m_display_name;
 			return QVariant(dn);
 		}
 		case ModelUserRoles::HeaderViewSectionID:
 		{
-			return QVariant::fromValue(m_columnSpecs[section].section_id);
+			return QVariant::fromValue(m_columnSpecs[section].m_section_id);
 		}
 		case ModelUserRoles::HeaderViewSectionShouldFitWidthToContents:
 		{
@@ -613,7 +618,7 @@ int LibraryModel::getColFromSection(SectionID section_id) const
 {
 	for(size_t i = 0; i<m_columnSpecs.size(); ++i)
 	{
-		if(m_columnSpecs[i].section_id == section_id)
+		if(m_columnSpecs[i].m_section_id == section_id)
 		{
 			return i;
 		}
@@ -624,7 +629,7 @@ int LibraryModel::getColFromSection(SectionID section_id) const
 
 SectionID LibraryModel::getSectionFromCol(int col) const
 {
-	return m_columnSpecs[col].section_id;
+	return m_columnSpecs[col].m_section_id;
 }
 
 QUrl LibraryModel::getLibRootDir() const
@@ -677,7 +682,7 @@ void LibraryModel::close(bool delete_cache)
 
 QVariant LibraryModel::toVariant() const
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 
 	map_insert_or_die(map, "the_models_library", m_library);
 
@@ -686,13 +691,13 @@ QVariant LibraryModel::toVariant() const
 
 void LibraryModel::fromVariant(const QVariant& variant)
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 	qviomap_from_qvar_or_die(&map, variant);
 
-	QVariant temp = map.value("the_models_library");
+	QVariant temp = map.at("the_models_library");
 
-	Q_ASSERT(temp.canConvert<QVariantInsertionOrderedMap>());
-	QVariantInsertionOrderedMap qvar_temp_lib = temp.value<QVariantInsertionOrderedMap>();
+	Q_ASSERT((temp.canConvert<InsertionOrderedMap<QString, QVariant>>()));
+	InsertionOrderedMap<QString, QVariant> qvar_temp_lib = temp.value<InsertionOrderedMap<QString, QVariant>>();
 	Library temp_lib;
 
 	temp_lib.fromVariant(qvar_temp_lib);
@@ -753,7 +758,7 @@ QMimeData* LibraryModel::mimeData(const QModelIndexList& indexes) const
 void LibraryModel::SLOT_onIncomingFilename(QString filename)
 {
     auto new_entry = LibraryEntry::fromUrl(filename);
-	qDb() << "URL:" << new_entry->getUrl();
+//	qDb() << "URL:" << new_entry->getUrl();
 	appendRow(new_entry);
 }
 
@@ -1074,9 +1079,6 @@ QVector<VecLibRescannerMapItems> LibraryModel::getLibRescanItems()
             qDebug() << "PUSHING LAST MULTIENTRY, SIZE:" << multientry.size();
             multientry.clear();
         }
-
-//         Tell the scanner what to rescan.
-//        m_rescanner->startAsyncRescan(items_to_rescan);
     }
 
     qDb() << "RETURNING ITEMS:" << items_to_rescan.size();

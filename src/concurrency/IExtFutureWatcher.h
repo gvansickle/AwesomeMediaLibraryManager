@@ -24,6 +24,8 @@
 #ifndef SRC_CONCURRENCY_IEXTFUTUREWATCHER_H_
 #define SRC_CONCURRENCY_IEXTFUTUREWATCHER_H_
 
+#if 0 // QT6?
+
 #include <QObject>
 class KJob;
 
@@ -55,5 +57,7 @@ Q_SIGNALS:
 };
 Q_DECLARE_METATYPE(IExtFutureWatcher*)
 Q_DECLARE_INTERFACE(IExtFutureWatcher, "io.github.gvansickle.awesomemedialibrarymanager.IExtFutureWatcher")
+
+#endif
 
 #endif /* SRC_CONCURRENCY_IEXTFUTUREWATCHER_H_ */

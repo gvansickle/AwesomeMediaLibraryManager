@@ -1,5 +1,5 @@
 /*
- * Copyright 2017, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2019, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -24,26 +24,29 @@
 #include <vector>
 #include <memory>
 
-// Qt5
+// Qt
 #include <QMetaType>
 #include <QObject>
 #include <QUrl>
 
-// Qt5 Helpers
+// Qt Helpers
 #include <utils/QtHelpers.h>
 
 // Ours
 #include <future/guideline_helpers.h>
+#include <future/enable_shared_from_this_virtual.h>
 #include "ExtMimeType.h"
 #include "Metadata.h"
 #include <utils/Fraction.h>
 #include "serialization/ISerializable.h"
 
 
-class LibraryEntry : public std::enable_shared_from_this<LibraryEntry>, public ISerializable
+class LibraryEntry : public virtual ISerializable, public virtual enable_shared_from_this_virtual<LibraryEntry>
 {
 public:
-	M_GH_RULE_OF_FIVE_DEFAULT_C21(LibraryEntry);
+    M_GH_RULE_OF_THREE_DEFAULT_C21(LibraryEntry)
+    LibraryEntry(const LibraryEntry&& other) = delete;
+    LibraryEntry& operator=(LibraryEntry&& other) = delete;
 	~LibraryEntry() override = default;
 
     explicit LibraryEntry(const QUrl& m_url);
@@ -141,22 +144,25 @@ protected:
 	Metadata m_metadata;
 };
 
-/// So we can more easily pass ptrs in QVariants.
-Q_DECLARE_METATYPE(LibraryEntry);
-Q_DECLARE_METATYPE(LibraryEntry*);
-Q_DECLARE_SMART_POINTER_METATYPE(std::shared_ptr);
-Q_DECLARE_METATYPE(std::shared_ptr<LibraryEntry>);
-Q_DECLARE_METATYPE(std::vector<std::shared_ptr<LibraryEntry>>);
-Q_DECLARE_METATYPE(QSharedPointer<LibraryEntry>);
-
-QTH_DECLARE_QDEBUG_OP(LibraryEntry);
-
-inline QDebug operator<<(QDebug dbg, const std::shared_ptr<LibraryEntry> &libentry)
+inline QDebug operator<<(QDebug dbg, const std::shared_ptr<LibraryEntry>& libentry)
 {
 	return dbg << libentry.get();
 }
 
+QTH_DECLARE_QDEBUG_OP(LibraryEntry);
 QTH_DECLARE_QDATASTREAM_OPS(LibraryEntry);
-QTH_DECLARE_QDATASTREAM_OPS(std::shared_ptr<LibraryEntry>);
+// QTH_DECLARE_QDATASTREAM_OPS(std::shared_ptr<LibraryEntry>);
+
+/// So we can more easily pass ptrs in QVariants.
+Q_DECLARE_METATYPE(LibraryEntry);
+Q_DECLARE_METATYPE(LibraryEntry*);
+Q_DECLARE_METATYPE(std::shared_ptr<LibraryEntry>);
+Q_DECLARE_METATYPE(std::vector<std::shared_ptr<LibraryEntry>>);
+Q_DECLARE_METATYPE(QSharedPointer<LibraryEntry>);
+
+
+
+
+
 
 #endif // LIBRARYENTRY_H

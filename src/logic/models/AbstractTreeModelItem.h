@@ -1,5 +1,5 @@
-/*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+﻿/*
+ * Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -18,65 +18,19 @@
  */
 
 /**
- * Adapted from the "Editable Tree Model Example" shipped with Qt5.
+ * @file AbstractTreeModelItem.cpp
+ * Implementation of AbstractTreeModelItem.
  */
-
-/****************************************************************************
-**
-** Copyright (C) 2016 The Qt Company Ltd.
-** Contact: https://www.qt.io/licensing/
-**
-** This file is part of the examples of the Qt Toolkit.
-**
-** $QT_BEGIN_LICENSE:BSD$
-** Commercial License Usage
-** Licensees holding valid commercial Qt licenses may use this file in
-** accordance with the commercial license agreement provided with the
-** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see https://www.qt.io/terms-conditions. For further
-** information use the contact form at https://www.qt.io/contact-us.
-**
-** BSD License Usage
-** Alternatively, you may use this file under the terms of the BSD license
-** as follows:
-**
-** "Redistribution and use in source and binary forms, with or without
-** modification, are permitted provided that the following conditions are
-** met:
-**   * Redistributions of source code must retain the above copyright
-**     notice, this list of conditions and the following disclaimer.
-**   * Redistributions in binary form must reproduce the above copyright
-**     notice, this list of conditions and the following disclaimer in
-**     the documentation and/or other materials provided with the
-**     distribution.
-**   * Neither the name of The Qt Company Ltd nor the names of its
-**     contributors may be used to endorse or promote products derived
-**     from this software without specific prior written permission.
-**
-**
-** THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-** "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-** LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-** A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-** OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-** SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-** LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-** DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-** THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-** (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-** OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
-**
-** $QT_END_LICENSE$
-**
-****************************************************************************/
 
 #ifndef ABSTRACTTREEMODELITEM_H
 #define ABSTRACTTREEMODELITEM_H
 
 // Std C++
 #include <memory>
+#include <deque>
 #include <vector>
+#include <mutex>
+#include <iterator>
 
 // Qt5
 #include <QList>
@@ -84,175 +38,392 @@
 #include <QVector>
 
 // Ours
+#include <utils/RegisterQtMetatypes.h>
 #include <utils/QtHelpers.h>
 #include <utils/StaticAnalysis.h>
 #include <future/guideline_helpers.h>
-#include <future/cloneable.h>
+#include <future/enable_shared_from_this_virtual.h>
+#include <logic/UUIncD.h>
 #include <logic/serialization/ISerializable.h>
+#include "UndoRedoHelper.h"
 class AbstractTreeModel;
 
 /**
  * Base class for AbstractItemTreeModel items.
+ * This class is heavily influenced and adapted from at least the following:
+ * - The "Editable Tree Model Example" shipped with Qt5.
+ * - KDenLive's TreeItem and AbstractProjectItem classes.
+ * - My own original work.
+ * - Hundreds of nuggets of information from all over the Internet.
  * @note Not derived from QObject.
- * @note base clone_inherit<> Would add covariant plus smart pointer clone() support to the derived class hierarchy,
- *       but I can't get it to work.
  */
-class AbstractTreeModelItem :
-		public virtual ISerializable, public virtual std::enable_shared_from_this<AbstractTreeModelItem>
+class AbstractTreeModelItem : public virtual ISerializable, public enable_shared_from_this_virtual<AbstractTreeModelItem>
 {
-public:
-	/// Virtual constructor.
-	/// @note Probably shouldn't take the columns here.
-	static AbstractTreeModelItem* make_tree_item(const std::vector<QVariant>& columns, AbstractTreeModel* model, bool is_root, int id = -1);
+protected:
 
 	friend class AbstractTreeModel;
 
-protected:
-	/**
-	 * Default constructor is protected.
-	 */
-	explicit AbstractTreeModelItem(const std::vector<QVariant>& columns, AbstractTreeModel* model, bool is_root, int id = -1);
-
-	static void base_finish_construction(const AbstractTreeModelItem* self);
+public:
+	AbstractTreeModelItem();
 
 public:
-	M_GH_RULE_OF_FIVE_DEFAULT_C21(AbstractTreeModelItem);
-
+	explicit AbstractTreeModelItem(const std::vector<QVariant>& data,
+			const std::shared_ptr<AbstractTreeModelItem>& parent_item = nullptr, UUIncD id = UUIncD::null());
 	~AbstractTreeModelItem() override;
+
+	/**
+	 * Because we have a mutex member.
+	 */
+//	AbstractTreeModelItem(const AbstractTreeModelItem& other);
+
+	virtual void clear();
+
+	/**
+	 * From KDenLive:
+	 * "This function executes what should be done when the item is deleted but without deleting effectively.
+	 * For example, the item will deregister itself from the model and delete the clips from the timeline.
+	 * However, the object is NOT actually deleted, and the tree structure is preserved.
+	 * @param Undo,Redo are the lambdas accumulating the update.
+	 */
+	virtual bool selfSoftDelete(Fun &undo, Fun &redo);
 
     /// Return a pointer to the number'th child of this item.
     /// @returns If @a number is not valid, a pointer to a default constructed AbstractTreeModelItem,
     /// 			which is not added to the QVector.
-	/// @todo That seems all kinds of wrong, should probably return a nullptr or throw or something.
-	AbstractTreeModelItem* child(int number);
+    // ETM+KDEN
+	std::shared_ptr<AbstractTreeModelItem> child(int number);
 
-	/// @copydoc AbstractTreeModelItem::child(int)
-	/// Const version.
-	[[nodiscard]] const AbstractTreeModelItem* child(int number) const;
-
+    /// ETM+KDEN
     /// @returns The number of children this item has.
     virtual int childCount() const;
 
+    /// ETM+KDEN
     /// @returns The number of columns of data this item has.
-    /// This is the max of the column count of all child items.
-	/// @todo FIX THIS, TEMP IMPLEMENTATION.
-	virtual int columnCount() const { return m_column_data.size(); };
+	virtual int columnCount() const;
 
     /**
      * Read access to the data of this item.
      * @param column  The column of data to return.
      * @return A QVariant containing all the data in @a column.
      */
-	[[nodiscard]] virtual QVariant data(int column, int role = Qt::DisplayRole) const;
+     // Both ETM&KDEN have this, but they don't take a role param.
+	virtual QVariant data(int column, int role = Qt::DisplayRole) const;
 
+	/// @todo NEW: Return the QVariant in @a column.  Not sure if this is needed.
+	// KDEN, see data().
+	QVariant dataColumn(int column) const;
+
+	// ETM+KDEN
 	bool setData(int column, const QVariant &value);
 
 	/**
-	 * Insert @a count default-constructed (i.e. empty) child items (rows), starting after child index @a position.
-	 * Default construction is via the create_default_constructed_child_item() function (pure virtual here).
-	 * @return true if successful.
+	 * Insert new default-constructed columns into this item/row.
 	 */
-    virtual bool insertChildren(int position, int count, int columns);
+M_WARNING("NEED TO BE OVERRIDDEN IN HeaderItem");
+	 // ETM, no KDEN
+	virtual bool insertColumns(int insert_before_column, int num_columns);
+	// ETM, no KDEN
+	virtual bool removeColumns(int position, int columns);
 
-    virtual bool insertColumns(int insert_before_column, int num_columns);
+	/// Returns a weak pointer to this item's parent.
+	/// ETM+KDEN
+	std::weak_ptr<AbstractTreeModelItem> parent_item() const;
+	/// Returns a shared_ptr to the parent item.
+	std::shared_ptr<AbstractTreeModelItem> parent() const;
 
-    /// Returns a pointer to this item's parent.
-    AbstractTreeModelItem *parent();
-	/// Returns a const pointer to this item's parent.
-	const AbstractTreeModelItem *parent() const;
+
+	// KDEN, seems unused.
+	int depth() const;
 
 	/**
-	 * Remove and delete the @a count children starting at @a position.
+	 * Return the UUIncD of this item.
+	 * @note Asserts if the UUIncD is ::null().
 	 */
-    bool removeChildren(int position, int count);
-    bool removeColumns(int position, int columns);
+	// GRVS
+	UUIncD getId() const;
+	void setId(UUIncD id);
 
-    /// The row number of this item in its parent's list of children.
-    int childNumber() const;
+	// KDEN
+	bool isInModel() const;
+
+	/// @name Operators
+
+	/// Returns true if this and other are the same node, i.e. have the same UUIncD.
+	// GRVS
+	bool operator==(const AbstractTreeModelItem& other) const;
+
+	/// The row number of this item in its parent's list of children.
+	// ETM+KDEN (row())
+	int childNumber() const;
+
+	/// @name Child append/insert functions.
+	/// @{
 
 	/**
-	 * Append the given @a new_children to this item.  This item takes ownership of the children via std::unique_ptr<>,
-	 * and is set as the parent of the child items.
-	 * @param new_children
-	 * @return
+	 * @note This is where all(?) children are ultimately created.
 	 */
-	bool appendChildren(std::vector<std::shared_ptr<AbstractTreeModelItem> > new_children);
-	bool appendChild(std::shared_ptr<AbstractTreeModelItem> new_child);
+	std::vector<std::shared_ptr<AbstractTreeModelItem>> insertChildren(int position, int count, int columns);
+
+	///AQP, ETM has something like this in MainWindow which just inserts a new default child and returns void.
+	void insertChild(int row, std::shared_ptr<AbstractTreeModelItem> item);
+
+	/**
+	 * Append the given @a new_children to this item.
+	 */
+	// GRVS+KDEN
+	bool appendChildren(std::vector<std::shared_ptr<AbstractTreeModelItem>> new_children);
+	/**
+	 * Append an already-created child item to this item.
+	 */
+	// GRVS+KDEN,AQP has this as addChild().
+	bool appendChild(const std::shared_ptr<AbstractTreeModelItem>& new_child);
+	/**
+	 * Construct and Append a new child item to this item, initializing it from @a data.
+	 */
+	// KDEN
+	std::shared_ptr<AbstractTreeModelItem> appendChild(const std::vector<QVariant>& data = {});
+
+	/// @} // END Child append/insert functions.
+
+
+	// KDEN
+	void moveChild(int ix, const std::shared_ptr<AbstractTreeModelItem> &child);
+
+	/**
+     * Remove and delete the @a count children starting at @a position.
+     */
+	// ETM, KDEN no plural, see removeChild().
+	bool removeChildren(int position, int count);
+
+	/**
+	 * Remove given child from children list. The parent of the child is updated accordingly.
+	 */
+	// KDEN, ETM no singular.
+	void removeChild(const std::shared_ptr<AbstractTreeModelItem>& child);
+
+	/**
+	 * Change the parent of the current item. Structures are modified accordingly
+	 */
+	// KDEN/GRVS
+	virtual bool changeParent(std::shared_ptr<AbstractTreeModelItem> newParent);
 
 	/// @name Serialization
 	/// These are from the ISerializable interface.
 	/// Be sure to override these in derived classes.
 	/// @{
 
-	/// @todo TEMP DUMMY DEFS TO GET IT TO BUILD.
-	virtual QVariant toVariant() const { return QVariant(); };
-	virtual void fromVariant(const QVariant& variant) {};
+	 QVariant toVariant() const override;
+	 void fromVariant(const QVariant& variant) override;
+
+	/// KDEN
+	/**
+	 *
+	 * @tparam T
+	 * @tparam BinOp
+	 * @param init
+	 * @param op      Operation applied to each subtree item.  Signature: T BinOp(T, std::shared_ptr<AbstractTreeModelItem>)
+	 * @return
+	 */
+	template <class T, class BinOp>
+	T accumulate(T init, BinOp op);
+	template <class T, class BinOp>
+	T accumulate_const(T init, BinOp op) const;
+
 
     /// @}
 
-	/**
-	 * Sets this item's parent item to parent_item.
-	 * Primarily for use in appendChildren().
-	 */
-	virtual void setParentItem(AbstractTreeModelItem* new_parent_item);
+    /**
+     * Returns true if @a this has @a id as an ancestor.
+     */
+    bool has_ancestor(UUIncD id);
+
+	/* @brief Return true if the item thinks it is a root.
+   Note that it should be consistent with what the model thinks, but it may have been
+   messed up at some point if someone wrongly constructed the object with isRoot = true */
+	bool isRoot() const;
 
     // Debug stream op free func friender.
     QTH_DECLARE_FRIEND_QDEBUG_OP(AbstractTreeModelItem);
 
 protected:
 
-	/**
-	 * Non-virtual Interface factory function for creating default-constructed child nodes.
-	 * Used by insertChildren().  Do not attempt to override in derived classes.
-	 */
-	std::unique_ptr<AbstractTreeModelItem>
-	create_default_constructed_child_item(AbstractTreeModelItem* parent, int num_columns);
 
 	/**
-	 * The covariant-return-type factory function for child items.  Override in derived classes.
+	 * Helper functions to handle registration / deregistration to the model.
 	 */
-M_WARNING("TEMP: WAS PURE VIRTUAL");
-	virtual AbstractTreeModelItem*
-	do_create_default_constructed_child_item(AbstractTreeModelItem* parent, int num_columns) { return nullptr; };
+	static void register_self(const std::shared_ptr<AbstractTreeModelItem>& self);
+	void deregister_self();
 
-	/// @name Virtual functions called by the base class to complete certain operations.
-	///       The base class will have error-checked function parameters.
+	/**
+	 * Reflect update of the parent ptr (for example set this's correct depth).
+     * This is called on the child when (re)parented, and meant to be overridden in derived classes.
+     * @param ptr is the pointer to the new parent
+	 */
+	virtual void updateParent(std::shared_ptr<AbstractTreeModelItem> parent);
+
+	/// @name Pre/Post-condition checks
 	/// @{
-M_WARNING("TEMP: WAS PURE VIRTUAL");
-	virtual bool derivedClassSetData(int column, const QVariant &value) { return true; };
-	virtual bool derivedClassInsertColumns(int insert_before_column, int num_columns) { return true;};
-	virtual bool derivedClassRemoveColumns(int first_column_to_remove, int num_columns) { return true; };
+
+	/**
+	 * Verify postconditions after a child item is added or inserted to this item.
+	 * @param inserted_child
+	 */
+	void verify_post_add_ins_child(const std::shared_ptr<AbstractTreeModelItem>& inserted_child);
+
 	/// @}
 
+	template <class T, class MapType>
+	static void set_map_class_info(const T* self, MapType* map)
+	{
+		int id = qMetaTypeId<T>();
+        qDb() << "QMetaType:" << id << QMetaType::fromType<T>().name();
+		map->m_id = id;
+		map->m_class = QMetaType::fromType<T>().name();
+	}
+
+#if 0
+	template <class MapType>
+	static void set_map_class_info(const std::string& classname, MapType* map)
+	{
+//		int id = qMetaTypeId<T>();
+		int id = 0;
+//		qDb() << "QMetaType:" << id << QMetaType::typeName(id);// << QVariant(*this).typeName();
+		qDb() << "No QMetaType, class:" << classname << "id:" << id;
+		map->m_id = id;
+//		map->m_class = QMetaType::typeName(id);
+		map->m_class = classname;
+	}
+#endif
+
+	template <class T, class MapType>
+	static void dump_map_class_info(const T* self, MapType* map)
+	{
+		int id = qMetaTypeId<T>();
+		qDb() << "QMetaType:" << id << QMetaType::fromType<T>().name();
+//		map->m_id = id;
+//		map->m_class = QMetaType::typeName(id);
+	}
+
+
+	/**
+	 * Mutex in support of undo/redo, specifically in selfSoftDelete().
+	 * Note that this is separate from the mutex in the model.
+	 * @todo The KDenLive code has/needs this to be recursive, but we should try to un-recurse it.
+	 */
+//	mutable std::shared_mutex m_rw_mutex;
+//	mutable std::recursive_mutex m_rw_mutex;
+
+	/// Our guaranteed-to-be unique-to-this-run-of-the-program numeric ID.
+	UUIncD m_uuincid;
+
+	/// The actual number of columns this item (row) has.
+//	int m_num_columns {0};
+	/// The number of columns this item's parent has, and hence the maximum (column-1) we should
+	/// ever see in a model index.  -1 if unknown.
+//	int m_num_parent_columns {-1};
+
+	/// The data for each column of this row.
+	std::vector<QVariant> m_item_data;
+
+	std::weak_ptr<AbstractTreeModel> m_model;
+//	bool m_is_in_model {false};
+
+	bool m_is_root {false};
+
+	/// Deque of shared_ptr's to child items.
+	std::deque<std::shared_ptr<AbstractTreeModelItem>> m_child_items;
+
 private:
+
+	using ChildItemContainerType = std::deque<std::shared_ptr<AbstractTreeModelItem>>;
+	using CICTIteratorType = ChildItemContainerType::iterator;
+
+	/**
+	 * Returns an iterator pointing to the item with id @a id in @var m_child_items, or m_child_items.end() if not found.
+	 * @param id
+	 * @return
+	 */
+	CICTIteratorType get_m_child_items_iterator(UUIncD id);
 
 	/// Pointer to our parent AbstractTreeModelItem.
 	/// For items in a tree model (i.e. not being copy/pasted or mid-construction), this will always
 	/// be non-null as long as this item is not the invisible root item.
-	/// @todo std::weak_ptr<>.
-	AbstractTreeModelItem* m_parent_item { nullptr };
+	std::weak_ptr<AbstractTreeModelItem> m_parent_item;
 
-	/// Vector of child items.
-	/// This item owns its children for memory-management purposes.
-	std::vector<std::shared_ptr<AbstractTreeModelItem>> m_child_items;
-
-	/// @note AbstractTreeModelItem contains no data members for actual item data.
-	/// Any actual item data beyond the child items is the responsibility of derived classes.
-	/// @todo ....um, well, just for temp:
-	std::vector<QVariant> m_column_data;
-
-	// Misc. info.
-
-	/// @todo std::weak<>.
-	AbstractTreeModel* m_model {nullptr};
-
-	/// @todo Make this a real id, e.g. UUID.
-	int m_id {0};
-
-	bool m_is_root {false};
+//	int m_depth {-1};
 };
+
+//Q_DECLARE_METATYPE(AbstractTreeModelItem);
+Q_DECLARE_METATYPE(std::vector<QVariant>);
+Q_DECLARE_METATYPE(std::weak_ptr<AbstractTreeModelItem>);
+Q_DECLARE_METATYPE(std::shared_ptr<AbstractTreeModelItem>);
 
 // Debug stream op free func declaration.
 QTH_DECLARE_QDEBUG_OP(AbstractTreeModelItem);
+
+
+template <class T, class BinOp>
+T AbstractTreeModelItem::accumulate(T init, BinOp op)
+{
+	T res = op(init, shared_from_this());
+	for (const auto &c : m_child_items)
+	{
+		res = c->accumulate(res, op);
+	}
+	return res;
+}
+template <class T, class BinOp>
+T AbstractTreeModelItem::accumulate_const(T init, BinOp op) const
+{
+	T res = op(init, shared_from_this());
+	for (const auto &c : m_child_items)
+	{
+		res = c->accumulate_const(res, op);
+	}
+	return res;
+}
+
+/**
+ * Attempt to use The Power Of Templates(tm) to make a factory factory.
+ */
+template <class T, class... Args>
+std::shared_ptr<T> TreeItemFactory(Args... args)
+{
+	std::shared_ptr<T> retval = std::make_shared<T>(std::forward<Args>(args)...);
+	retval->postConstructorFinalization();
+
+  return retval;
+}
+
+/**
+ * Function template for trying to commonalize the loading of an item's children.
+ * @tparam ChildItemType
+ * @tparam ParentItemType
+ * @param parent_item
+ * @param child_var_list
+ */
+template <class ChildItemType, class ParentItemType = AbstractTreeModelItem>
+void append_children_from_variant(ParentItemType* parent_item, const QVariantHomogenousList& child_var_list)
+{
+	Q_ASSERT(parent_item->isInModel());
+	auto starting_childcount = parent_item->childCount();
+
+	for(const QVariant& child_variant : child_var_list)
+	{
+		qDb() << "READING CHILD ITEM:" << child_variant << " INTO PARENT ITEM:" << parent_item;
+
+		auto new_child = std::make_shared<ChildItemType>();
+		Q_ASSERT(new_child);
+
+		/// @note Cuurently we need to add the empty item to the model before reading it in, so that
+		/// its children will be set up correctly model-wise.  This is almost certainly more efficient anyway.
+		bool append_success = parent_item->appendChild(new_child);
+		AMLM_ASSERT_X(append_success, "FAILED TO APPEND NEW ITEM TO PARENT");
+
+		new_child->fromVariant(child_variant);
+	}
+
+	AMLM_ASSERT_EQ(starting_childcount+child_var_list.size(), parent_item->childCount());
+}
 
 #endif // ABSTRACTTREEMODELITEM_H

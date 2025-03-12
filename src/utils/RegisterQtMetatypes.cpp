@@ -1,5 +1,5 @@
 /*
- * Copyright 2017, 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -25,7 +25,7 @@
 #include <string>
 #include <cstdint>
 
-// KF5
+// KF
 #include <KJob>
 
 // Ours.
@@ -85,19 +85,58 @@
 #define ADD_T(base_type) TOKENPASTE2(base_type, _t)
 #define DUP_NS_AND_NOT(X, base_type) X(base_type) X(std::base_type)
 
-/// Qt5's take on construct-on-first-use.  Not sure we need it here, see reginstance() below.
+/// Qt's take on construct-on-first-use.  Not sure we need it here, see reginstance() below.
 /// @link https://doc.qt.io/qt-5/qglobalstatic.html
 Q_GLOBAL_STATIC(QtRegCallbackRegistry, f_qt_reg_callback_registry);
 
 
 /**
- * Register a number of general-purpose Qt5 converters etc.
+ * Register a number of general-purpose Qt converters etc.
  */
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering std::string->QString converter";
 
 	QMetaType::registerConverter<std::string, QString>([](const std::string& str){ return toqstr(str); });
 	QMetaType::registerConverter<QString, std::string>([](const QString& str){ return tostdstr(str); });
+
+	qIn() << "Registering std::optional<bool><->QString converters";
+	QMetaType::registerConverter<std::optional<bool>, QString>([](const std::optional<bool>& optbool)
+			{
+				if(optbool.has_value())
+				{
+					return optbool.value() ? "true" : "false";
+				}
+				else
+				{
+					return "(unknown)";
+				}
+			});
+	QMetaType::registerConverter<QString, std::optional<bool>>([](const QString& str)
+			{
+				std::optional<bool> retval;
+				if(!str.isEmpty())
+				{
+					if(str == "true")
+					{
+						retval = true;
+					}
+					else if(str == "false")
+					{
+						retval = false;
+					}
+					else if(str == "(unknown)")
+					{
+						// Indeterminate.
+						retval.reset();
+					}
+					else
+					{
+						// Invaid string for an optional<bool>.
+						throw QException();
+					}
+				}
+				return retval;
+			});
 
 	qIn() << "Registering <cstdint> metatypes";
 
@@ -107,6 +146,7 @@ AMLM_QREG_CALLBACK([](){
 	DUP_NS_AND_NOT(RMT, uint32_t);
 	DUP_NS_AND_NOT(RMT, int64_t);
 	DUP_NS_AND_NOT(RMT, uint64_t);
+	DUP_NS_AND_NOT(RMT, size_t);
 });
 /// @todo Compile breaks if this is in the lambda.
 #undef RMT
@@ -133,6 +173,8 @@ void RegisterQtMetatypes()
 	// Register the types we want to be able to use in Qt's queued signal and slot connections or in QObject's property system.
 	qRegisterMetaType<LibraryEntry>();
 	qRegisterMetaType<PlaylistModelItem>();
+	qRegisterMetaType<std::string>();
+	// qRegisterMetaType<std::basic_string<char>>();
 	qRegisterMetaType<std::shared_ptr<LibraryEntry>>();
 	qRegisterMetaType<std::shared_ptr<PlaylistModelItem>>();
 	
@@ -157,7 +199,7 @@ int* QtRegCallbackRegistry::register_callback(std::function<void(void)> callback
     m_registered_callbacks.push_back(callback);
     std::cerr << "Registering callback:" << &callback << ", size now:" << m_registered_callbacks.size() << "\n";
     // Return a dummy pointer.
-	return reinterpret_cast<int*>(&callback);
+    return nullptr; //reinterpret_cast<int*>(nullptr);
 }
 
 int* QtRegCallbackRegistry::register_callback(const char* name, std::function<void(void)> callback)

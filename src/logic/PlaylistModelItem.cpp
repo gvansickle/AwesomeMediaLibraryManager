@@ -58,7 +58,7 @@ toNewPlaylistModelItems(const std::vector<std::shared_ptr<LibraryEntry>>& libent
 {
 	std::vector<std::shared_ptr<PlaylistModelItem>> retval;
 
-	for(auto i : libentries)
+	for(const auto& i : libentries)
 	{
 		auto playlist_model_item = std::make_shared<PlaylistModelItem>(*i);
 		if(!playlist_model_item)

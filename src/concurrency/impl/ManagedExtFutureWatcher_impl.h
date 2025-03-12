@@ -23,21 +23,27 @@
 #ifndef SRC_CONCURRENCY_IMPL_MANAGEDEXTFUTUREWATCHER_IMPL_H_
 #define SRC_CONCURRENCY_IMPL_MANAGEDEXTFUTUREWATCHER_IMPL_H_
 
+#if 1 // !QT6
+
 // Std C++
 #include <exception>
 
-// Qt5
+// Qt
 #include <QFutureWatcher>
+#include <QFuture>
 #include <QThread>
 
 // Ours
 #include <utils/DebugHelpers.h>
 #include <utils/QtHelpers.h>
-#include <logic/PerfectDeleter.h>
+// #include <logic/PerfectDeleter.h>
 #include "../ExtFuture_traits.h"
+#include "ExtAsync_impl.h"
 
 template <class T>
-class ExtFuture;
+using ExtFuture = QFuture<T>;
+// template <class T>
+// class ExtFuture<T>;
 
 namespace ManagedExtFutureWatcher_detail
 {
@@ -66,8 +72,7 @@ namespace ManagedExtFutureWatcher_detail
 		void resultReady(int result);
 	};
 
-	/// This is semi-gross, it's the QObject which will be the parent of all managed future watchers.
-	static inline FutureWatcherParent* f_the_managed_fw_parent = nullptr;
+
 
 	/**
 	 * The BackpropThreadManager class.
@@ -82,13 +87,18 @@ namespace ManagedExtFutureWatcher_detail
 		 */
 		QThread* get_backprop_qthread();
 
+		FutureWatcherParent* getFutureWatcherParent();
+
 	private:
 		static QThread* priv_instance();
+//		static FutureWatcherParent* get_fwp();
 	};
 
 	/// Returns the pointer to the QThread which is to be used for running QFutureWatchers which
 	/// implement inter-future status propagation (cancellation and exceptions).
 	QThread* get_backprop_qthread();
+
+	FutureWatcherParent* get_future_watcher_parent();
 
 	/**
 	 * Part of the system by which we get an exception from one ExtFuture<> into the state of another.
@@ -162,6 +172,7 @@ namespace ManagedExtFutureWatcher_detail
 	QFutureWatcher<T>* get_managed_qfuture_watcher(const char* watcher_name = "[watcher]")
 	{
 		QThread* bp_thread = get_backprop_qthread();
+		FutureWatcherParent* fwp = get_future_watcher_parent();
 		// Create the new watcher, unparented so we can move it to the backprop thread.
 		QFutureWatcher<T>* watcher = new QFutureWatcher<T>();
 
@@ -169,12 +180,17 @@ namespace ManagedExtFutureWatcher_detail
 
 		// Move the watcher to the backprop thread.
 		/// @note Per Qt5: "The object cannot be moved if it has a parent."
+		/// @note Note that we do not have an event loop in the bp_thread.
+//		Q_ASSERT(bp_thread->eventDispatcher() != nullptr);
 		watcher->moveToThread(bp_thread);
 
 		// Ok, now it's in the other thread but has no parent.
 		// We'll give it one.
-		watcher->setParent(f_the_managed_fw_parent);
-		qDb() << "FutureWatcher" << watcher << "has parent:" << watcher->parent();
+		Q_ASSERT(fwp != nullptr);
+		watcher->setParent(fwp);
+		Q_ASSERT(watcher->parent() != nullptr);
+		Q_ASSERT(fwp->thread() == watcher->thread());
+//		qDb() << "FutureWatcher" << watcher << "has parent:" << watcher->parent();
 
 		return watcher;
 	}
@@ -226,12 +242,13 @@ namespace ManagedExtFutureWatcher_detail
 		// Note that the signals above may fire immediately upon the setFuture().
 		if(down.has_exception())
 		{
-			qWr() << "ABOUT TO SET EXCEPTION FUTURE:" << down;
+			qWr() << "ABOUT TO SET WATCHER ON EXCEPTION FUTURE:" << down;
 		}
 		fw_down->setFuture(down);
 	}
 
-} // END ns ManangedExtFutureWatcher_detail
+} // namespace ManangedExtFutureWatcher_detail
 
+#endif
 
 #endif /* SRC_CONCURRENCY_IMPL_MANAGEDEXTFUTUREWATCHER_IMPL_H_ */

@@ -60,16 +60,16 @@ bool PixmapLabel::hasHeightForWidth() const
 {
 	AMLM_ASSERT_IN_GUITHREAD();
 
-	return pixmap() != nullptr;
+	return !pixmap().isNull();// != nullptr;
 }
 
 int PixmapLabel::heightForWidth(int) const
 {
 	AMLM_ASSERT_IN_GUITHREAD();
 
-	if(pixmap() != nullptr && pixmap()->width() > 0)
+	if(!pixmap().isNull() && pixmap().width() > 0)
 	{
-		return int(width() * pixmap()->height() / pixmap()->width());
+		return int(width() * pixmap().height() / pixmap().width());
 	}
 	else
 	{

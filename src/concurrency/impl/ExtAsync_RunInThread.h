@@ -20,6 +20,8 @@
 #ifndef AWESOMEMEDIALIBRARYMANAGER_EXTASYNC_RUNINTHREAD_H
 #define AWESOMEMEDIALIBRARYMANAGER_EXTASYNC_RUNINTHREAD_H
 
+#if 0 // !QT6
+
 // Std C++
 #include <type_traits>
 #include <functional>
@@ -76,7 +78,7 @@ namespace detail
 	 * Common QThread-based async() executor.
 	 *
 	 * Runs @a callback(args...) in a new QThread.  If return type is not void, it will be reported to
-	 * the returned future as a result.
+	 * the returned future as the result.
 	 *
 	 * @param retfuture  The future which will be both copied to the first-level callback as the first parameter,
 	 *                   and immediately returned to the caller.
@@ -205,11 +207,10 @@ namespace detail
 			/// @note Unconditional finish here.
 			retfuture_copy.reportFinished();
 		});
-		// When the worker QObject is finished, tell the thread to quit, and register the worker to be deleted.
+		// When the worker QObject is finished, tell the thread to quit, and register the worker and QThread to be deleted.
 		connect_or_die(worker, &WorkerQObject::finished, thread, &QThread::quit);
 		connect_or_die(worker, &WorkerQObject::finished, worker, &QObject::deleteLater);
 		// Connect the QThread's finished signal to the deleteLater() slot so that it gets scheduled for deletion.
-		/// @note I think this connection allows us to ignore the thread once we've started it, and it won't leak.
 		connect_or_die(thread, &QThread::finished, thread, &QThread::deleteLater);
 
 		// Start the new thread.
@@ -241,7 +242,7 @@ namespace detail
 		ExtFuture<R> retfuture = make_started_only_future<R>();
 		retfuture.setName("qthread_asyncRetFuture");
 
-		return detail::qthread_async(retfuture, FWD_DECAY_COPY(CallbackType, callback), args...);
+		return detail::qthread_async(retfuture, FWD_DECAY_COPY(CallbackType, callback), std::forward<Args>(args)...);
 	}
 
 
@@ -298,5 +299,7 @@ namespace detail
 	}
 
 }; // END namespace ExtAsync.
+
+#endif
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_EXTASYNC_RUNINTHREAD_H

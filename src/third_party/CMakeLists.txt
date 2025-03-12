@@ -1,5 +1,5 @@
 #
-# Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2017, 2024, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -17,28 +17,29 @@
 # along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.28 FATAL_ERROR)
 
 project(libcue)
 
 message(STATUS "Processing third_party/CMakeLists.txt")
 
 if(WIN32)
-    ### NOTE: Make sure CMAKE_PREFIX_PATH has the path to the QtCreator directory, so cmake can find win_flex and win_bison.
+    ### NOTE: Make sure CMAKE_PREFIX_PATH has the path to the directory, so cmake can find win_flex and win_bison.
+    ### On Windows they're in a couple places, e.g.:
+    # C:\Qt\5.12.0\Src\gnuwin32\bin\bison.exe
+    # C:\CraftRoot\build\dev-utils\flexbison\work\win_bison.exe
+    # C:\CraftRoot\build\dev-utils\flexbison\image-Debug-2.5.14\dev-utils\bin\win_bison.exe
+        # We also need png2ico on Windows, which is here:
+        # C:\CraftRoot\dev-utils\bin\png2ico.exe
     set(CMAKE_VERBOSE_MAKEFILE ON)
     set(FLEX_FLAGS_EXTRA --wincompat)
+    set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH};C:/CraftRoot/dev-utils/bin;C:/Qt/5.12.0/Src/gnuwin32/bin)
 endif()
 
 find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
 
 #include(GNUInstallDirs)
-
-# The continuable library.
-# Cannot make this work, so we'll just include the two header dirs.
-#set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR} ${CMAKE_MODULE_PATH})
-#add_subdirectory(function2)
-#add_subdirectory(continuable)
 
 set(LIBCUE_SRC_DIR libcue)
 
@@ -66,9 +67,12 @@ flex_target(CueScanner
         COMPILE_FLAGS ${FLEX_FLAGS_EXTRA})
 ADD_FLEX_BISON_DEPENDENCY(CueScanner CueParser)
 
-# Generated file doesn't want AUTOMOC etc. applied to it.
+# Generated files don't want AUTOMOC etc. applied to them.
 # Actually this whole directory should be excluded.
 set_property(SOURCE "${libcue_BINARY_DIR}/cue_parser.h" PROPERTY SKIP_AUTOGEN ON)
+set_property(SOURCE "${libcue_BINARY_DIR}/cue_parser.c" PROPERTY SKIP_AUTOGEN ON)
+set_property(SOURCE "${libcue_BINARY_DIR}/cue_scanner.c" PROPERTY SKIP_AUTOGEN ON)
+
 
 # Create the "libcue" target.
 add_library(libcue STATIC ${CUE_SOURCES}

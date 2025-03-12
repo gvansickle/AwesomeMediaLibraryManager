@@ -36,6 +36,8 @@
 #include "../XmlSerializer.h"
 #include <AMLMTagMap.h>
 
+#include "ExtUrl.h"
+
 
 /**
  * Test Suite (ISTQB) or "Test Case" (Google) for ExtAsyncTests.
@@ -76,7 +78,7 @@ public:
 			std::function<void(void)> extra_save_actions = nullptr
 			) override;
 
-	void load(ISerializable& serializable, const QUrl& file_url) override;
+	bool load(ISerializable& serializable, const QUrl& file_url) override;
 
 };
 
@@ -136,4 +138,24 @@ TEST_F(XmlSerializerTests, AMLMTagMapRoundTripping)
 	auto vec = tm2.equal_range_vector("Hello");
 	EXPECT_FALSE(vec.empty());
 	EXPECT_EQ(vec[0], std::string("Goodbye"));
+}
+
+TEST_F(XmlSerializerTests, ExtUrlRoundTripping)
+{
+	ExtUrl u1(QUrl("file:///test.com/somefile.flac"));
+	ExtUrl u2;
+
+	EXPECT_NE(u1.m_url, u2.m_url);
+
+	QVariantMap map;
+	map.insert("test_field_name", QVariant::fromValue(u1));
+	QVariant retval = map;
+
+	EXPECT_TRUE(retval.isValid());
+
+	QVariantMap frommap = retval.toMap();
+
+	u2 = frommap.value("test_field_name").value<ExtUrl>();
+
+	EXPECT_EQ(u1.m_url, u2.m_url);
 }

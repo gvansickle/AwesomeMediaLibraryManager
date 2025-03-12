@@ -38,7 +38,6 @@
  */
 class DragDropTreeViewStyleProxy : public QProxyStyle
 {
-//    W_OBJECT(DragDropTreeViewStyleProxy)
 	Q_OBJECT
 public:
 

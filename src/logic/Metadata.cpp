@@ -1,5 +1,5 @@
 /*
- * Copyright 2017, 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018, 2019, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -67,13 +67,12 @@
 #include <utils/DebugHelpers.h>
 #include <utils/RegisterQtMetatypes.h>
 #include "CueSheet.h"
+#include <logic/serialization/SerializationHelpers.h>
 
 
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering Metadata metatypes";
 	qRegisterMetaType<Metadata>();
-	qRegisterMetaTypeStreamOperators<Metadata>();
-//	QMetaType::registerDebugStreamOperator<Metadata>();
 //	QMetaType::registerConverter<Metadata, QString>([](const Metadata& obj){ return obj.name(); });
 });
 
@@ -164,7 +163,7 @@ Metadata Metadata::make_metadata(const QVariant& variant)
 {
 	Q_ASSERT(variant.isValid());
 
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 	qviomap_from_qvar_or_die(&map, variant);
 	Metadata retval = make_metadata();
 	retval.fromVariant(variant);
@@ -357,7 +356,7 @@ M_WARNING("BUG: Pulls data from bad cuesheet embeds in FLAC, such as some produc
 	//
 	// Cuesheet handling, using libcue.
 	//
-	std::unique_ptr<CueSheet> cuesheet;
+	std::shared_ptr<CueSheet> cuesheet;
 	cuesheet.reset();
 
 	// Did we find an embedded cue sheet?
@@ -619,7 +618,7 @@ std::string Metadata::operator[](const std::string& key) const
 	}
 }
 
-using strviw_type = QLatin1Literal;
+using strviw_type = QLatin1String;
 
 #define M_DATASTREAM_FIELDS(X) \
 	/*X(XMLTAG_AUDIO_FILE_TYPE, m_audio_file_type)*/ \
@@ -642,19 +641,23 @@ using strviw_type = QLatin1Literal;
 	X(XMLTAG_TM_GENERIC, m_tm_generic) \
 	X(XMLTAG_DISC_CUESHEET, m_tm_cuesheet_disc)
 
+#define M_DATASTREAM_FIELDS_LISTS(X) \
+	X(XMLTAG_TRACKS, m_tracks)
+
 /// Strings to use for the tags.
 #define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
 	M_DATASTREAM_FIELDS(X);
 	M_DATASTREAM_FIELDS_MAPS(X);
+	M_DATASTREAM_FIELDS_LISTS(X);
 #undef X
-static const strviw_type XMLTAG_TRACKS("m_tracks");
+//static const strviw_type XMLTAG_TRACKS("m_tracks");
 static const strviw_type XMLTAG_CUESHEET("m_cuesheet");
 
 
 
 QVariant Metadata::toVariant() const
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 
 #define X(field_tag, member_field)   map_insert_or_die(map, field_tag, member_field);
 	M_DATASTREAM_FIELDS(X);
@@ -662,7 +665,8 @@ QVariant Metadata::toVariant() const
 #undef X
 
 	// Track-level fields.
-
+#warning "FIX TRACK DUPS"
+#if 0 /// @todo This info gets duplicated (complete with should-be-unique xml:id's)	in the CueSheet.
 	// Add the track list to the return map.
 	QVariantHomogenousList qvar_track_map("m_track", "track");
 
@@ -674,6 +678,7 @@ QVariant Metadata::toVariant() const
 
 	// All tracks on the disc.
 	map_insert_or_die(map, XMLTAG_TRACKS, qvar_track_map);
+#endif
 	// The cuesheet, which will duplicate the track list.
 	/// @todo Somehow eliminate duplication here.
 	map_insert_or_die(map, XMLTAG_CUESHEET, m_cuesheet);
@@ -683,7 +688,7 @@ QVariant Metadata::toVariant() const
 
 void Metadata::fromVariant(const QVariant& variant)
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 	qviomap_from_qvar_or_die(&map, variant);
 
 #define X(field_tag, member_field)   map_read_field_or_warn(map, field_tag, &(member_field));
@@ -693,6 +698,8 @@ void Metadata::fromVariant(const QVariant& variant)
 
 	map_read_field_or_warn(map, XMLTAG_CUESHEET, &m_cuesheet);
 
+#warning "FIX TRACK DUPS"
+#if 0 /// @todo This info gets duplicated (complete with should-be-unique xml:id's)	in the CueSheet.
 	// Read in the track list.
 	QVariantHomogenousList qvar_track_list("m_track", "track");
 	map_read_field_or_warn(map, XMLTAG_TRACKS, &qvar_track_list);
@@ -710,6 +717,7 @@ void Metadata::fromVariant(const QVariant& variant)
 
 		m_tracks.insert(std::make_pair(track_num, tm));
 	}
+#endif
 #endif
 	m_read_has_been_attempted = true;
 	m_is_error = false;

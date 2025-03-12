@@ -50,7 +50,7 @@ set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
 	message("ERROR: ${CMAKE_SOURCE_DIR} == ${CMAKE_BINARY_DIR}")
-	message(FATAL_ERROR "Prevented in-root-of-tree build. Please create a build directory outside of the source code root directory and call cmake from there. Thank you.")
+	message(FATAL_ERROR "Prevented in-root-of-tree build. Please create a build directory (inside or outside) of the source code root directory and call cmake from there. Thank you.")
 endif()
 
 if(FALSE)
@@ -76,13 +76,6 @@ project(AwesomeMediaLibraryManager
         DESCRIPTION "The Awesome Media Library Manager"
         LANGUAGES C CXX)
 
-# Prevent an in-root-of-src-tree build.
-set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
-if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
-        message("ERROR: ${CMAKE_SOURCE_DIR} == ${CMAKE_BINARY_DIR}")
-	message(FATAL_ERROR "Prevented in-root-of-tree build. Please create a build directory outside of the source code root directory and call cmake from there. Thank you.")
-endif()
-
 # Additional project info.
 set(PROJECT_AUTHOR "Gary R. Van Sickle")
 set(PROJECT_AUTHOR_EMAIL "grvs@users.sourceforge.net")
@@ -92,17 +85,17 @@ set(FULL_COPYRIGHT_STRING "Copyright (c) 2017, 2018, 2019, 2024, 2025 ${PROJECT_
 include(CMakePrintHelpers)
 
 ### Set the required language standards.
-# C11
+# C
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
-# C++17
-set(CMAKE_CXX_STANDARD 17)
+# C++
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Min versions of Qt5, KF5, KF5/ECM.
-set(QT_MIN_VERSION "5.12.1")
-set(KF5_MIN_VERSION "5.67.0") ### @win temp: Only have 5.52.0
-set(ECM_MIN_VERSION "6.0.0") #"5.57.0")
+# Min versions of Qt, KF, KF/ECM.
+set(QT_MIN_VERSION "6.8.2")
+set(KF5_MIN_VERSION "6.11.0") ### @win temp: Only have 5.52.0
+set(ECM_MIN_VERSION "6.3.0") #"5.57.0")
 
 ###
 ### IDE helper setup
@@ -111,6 +104,10 @@ source_group(TREE ${CMAKE_SOURCE_DIR})
 set(AUTOGEN_SOURCE_GROUP autogen)
 set(AUTOMOC_SOURCE_GROUP automoc)
 set(AUTORCC_SOURCE_GROUP autorcc)
+
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
 
 ###
 ### ECM Setup ====================================================================================================
@@ -121,15 +118,15 @@ set(AUTORCC_SOURCE_GROUP autorcc)
 # "Config mode provides an elaborate interface and search procedure. Much of the interface is provided for completeness
 #  and for use internally by find-modules loaded by Module mode. Most user code should simply call:
 #    find_package(<package> [major[.minor]] [EXACT] [REQUIRED|QUIET])"
+### @todo NO WIN:
 find_package(PkgConfig REQUIRED) # @note I see PkgConfig just before ECM in a few KDE scripts.
 find_package(ECM ${ECM_MIN_VERSION} REQUIRED NO_MODULE)
 
-# Add dirs where we keep support *.cmake's, ucm, cotire, ECM, etc.
+# Add dirs where we keep support *.cmake's, ucm, ECM, etc.
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake
-		#${CMAKE_SOURCE_DIR}/cmake/cotire/CMake
 		${CMAKE_SOURCE_DIR}/cmake/ucm/cmake
 		${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR}
-		${CMAKE_SOURCE_DIR}/src/third_party/continuable/cmake)
+)
 
 ###
 ### ECM Macros
@@ -165,7 +162,7 @@ include(ECMQtDeclareLoggingCategory)
 # "leak" requires the "address" sanitizer.
 ### @note KDECompileFlags includes include(ECMEnableSanitizers).
 #set(ECM_ENABLE_SANITIZERS "leak;address")
-include(ECMEnableSanitizers)
+#include(ECMEnableSanitizers)
 
 # KDE macros.
 # @see https://api.kde.org/ecm/manual/ecm-kde-modules.7.html
@@ -202,12 +199,20 @@ include(ECMEnableSanitizers)
 include(ucm)
 # Target-focused compile settings.
 add_library(cxx_settings INTERFACE)
-target_compile_features(cxx_settings INTERFACE cxx_std_17)
+target_compile_features(cxx_settings INTERFACE) # cxx_std_23)
 add_library(cxx_definitions_qt INTERFACE)
 target_compile_definitions(cxx_definitions_qt INTERFACE)
+add_library(cxx_compile_options INTERFACE)
+target_compile_options(cxx_compile_options INTERFACE)
 if(UNIX)
-	ucm_add_flags(-fmessage-length=0 -pthread -Werror=return-type -fno-omit-frame-pointer)
-	ucm_add_flags(-Og -ggdb3)
+	target_compile_options(cxx_compile_options
+		INTERFACE
+			-Og -ggdb3 -fno-omit-frame-pointer -fmessage-length=0 -pthread -Werror=return-type
+		-fno-eliminate-unused-debug-symbols -gas-loc-support -gas-locview-support -gstatement-frontiers
+		-gvariable-location-views -ginline-points -fno-eliminate-unused-debug-types)
+	ucm_add_flags(-Og -ggdb3 -fno-omit-frame-pointer -fmessage-length=0 -pthread -Werror=return-type
+		-fno-eliminate-unused-debug-symbols -gas-loc-support -gas-locview-support -gstatement-frontiers
+		-gvariable-location-views -ginline-points -fno-eliminate-unused-debug-types)
 # Flags for GNU libstdc++
 ### @todo Detect that we're actually using GNU libstdc++
 # "compiles user code using the debug mode. When defined, _GLIBCXX_ASSERTIONS is defined automatically"
@@ -217,7 +222,14 @@ endif(UNIX)
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	message(STATUS "C++ Compiler is GCC")
 	ucm_add_flags(-fvar-tracking -fvar-tracking-assignments -gpubnames -ggnu-pubnames)
-	ucm_add_flags(-grecord-gcc-switches -gas-loc-support -gstatement-frontiers -ginline-points -femit-struct-debug-detailed=any)
+	# Max debug flags
+	target_compile_options(cxx_compile_options
+		INTERFACE
+			-gvariable-location-views
+			-gas-loc-support -gstatement-frontiers -ginline-points -femit-struct-debug-detailed=any
+		)
+	#ucm_add_flags(-gvariable-location-views)
+	ucm_add_flags(-grecord-gcc-switches)
 	ucm_add_flags(-fno-eliminate-unused-debug-types -fno-inline)
 	ucm_add_flags(-Wmaybe-uninitialized -Werror=maybe-uninitialized -fdiagnostics-show-template-tree -fdiagnostics-show-option)
 	ucm_add_flags(-fuse-ld=gold) # Let's try the gold linker.
@@ -228,12 +240,27 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	target_link_libraries(cxx_settings INTERFACE cxx_suggestions)
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	message(STATUS "C++ Compiler is Clang")
-	ucm_add_flags(-Wthread-safety -fdebug-macro -fdiagnostics-show-template-tree)
+	target_compile_options(cxx_compile_options
+		INTERFACE
+			-fforce-emit-vtables
+			)
+	ucm_add_flags(-Wthread-safety -fdebug-macro -fdiagnostics-show-template-tree -mno-omit-leaf-frame-pointer)
 	#ucm_add_flags(-fdelayed-template-parsing -frelaxed-template-template-args)
 endif()
 if(WIN32)
-#ucm_add_flags(/showIncludes)
+	#ucm_add_flags(/showIncludes)
+	### NOTE: Make sure CMAKE_PREFIX_PATH has the path to the directory, so cmake can find win_flex and win_bison.
+	### On Windows they're in a couple places, e.g.:
+	# C:\Qt\5.12.0\Src\gnuwin32\bin\bison.exe
+	# C:\CraftRoot\build\dev-utils\flexbison\work\win_bison.exe
+	# C:\CraftRoot\build\dev-utils\flexbison\image-Debug-2.5.14\dev-utils\bin\win_bison.exe
+	# We also need png2ico on Windows, which is here:
+	# C:\CraftRoot\dev-utils\bin\png2ico.exe
+	set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH};C:/CraftRoot/dev-utils/bin;C:/Qt/5.12.0/Src/gnuwin32/bin)
 endif(WIN32)
+target_link_libraries(cxx_settings INTERFACE cxx_compile_options)
+
+set(CMAKE_CXX_FLAGS_DEBUG "-ggdb3")
 message(STATUS "C compiler supported features = ${CMAKE_C_COMPILE_FEATURES}")
 message(STATUS "C++ compiler supported features = ${CMAKE_CXX_COMPILE_FEATURES}")
 message(STATUS "C++ CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS}")
@@ -247,8 +274,8 @@ message(STATUS "C++ CMAKE_CXX_FLAGS_DEBUG = ${CMAKE_CXX_FLAGS_DEBUG}")
 include(CheckCXXCompilerFlag)
 include(PrintTargetProperties)
 include(helperfunctions)
-include(add_subdir_lib)
-# Include some basic Qt5-related cmake functions
+
+# Include some basic Qt-related cmake functions
 include(QtCommon)
 set(CMAKE_INSTALL_UCRT_LIBRARIES TRUE) # Without this, Release builds won't include the MSVC C runtime.
 include(InstallRequiredSystemLibraries)
@@ -261,6 +288,7 @@ include(DownloadProject)
 set(CMAKE_VERBOSE_MAKEFILE  YES)
 # "CMake automatically analyzes the global inter-target dependency graph at the beginning of native build system generation.
 #  This property causes it to display details of its analysis to stderr."
+# GRVS: This dumps huge amounts of info.
 # set_property(GLOBAL PROPERTY GLOBAL_DEPENDS_DEBUG_MODE 1)
 set(CPACK_IFW_VERBOSE YES)
 #set(CMAKE_DEBUG_TARGET_PROPERTIES
@@ -304,7 +332,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # The.  Simplest.  Things.
 # Set default install location to "install" folder in build dir.
-# we do not want to install to /usr by default.
+# We do not want to install to /usr by default.
 # "CMake sets this variable to a TRUE value when the CMAKE_INSTALL_PREFIX has just been initialized to its default value,
 # typically on the first run of CMake within a new build tree. This can be used by project code to change the default 
 # without overriding a user-provided value"
@@ -339,26 +367,37 @@ endif()
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 ###
-### The Qt5 packages we require.
+### The Qt packages we require.
 ### @note CONFIG|MODULE: "If no module is found the command falls back to Config mode, described below.
 ###       This fall back is disabled if the MODULE option is given."
 ###
-find_package(Qt5 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
+find_package(Qt6 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
 	Core
 	Gui
 	Widgets
 	Multimedia
-	XmlPatterns
+#	XmlPatterns
 	Concurrent
+	Test # For Q...ModelTester.
 	)
-set(QT5_LINK_LIB_TARGETS Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::XmlPatterns Qt5::Concurrent)
+set(QT5_LINK_LIB_TARGETS Qt6::Core Qt6::Gui Qt6::Widgets
+	Qt6::Multimedia
+#	Qt6::XmlPatterns
+	Qt6::Concurrent
+	Qt6::Test
+)
 
 # Unix-only
 if(UNIX)
-    find_package(Qt5 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
-        X11Extras)
-    list(APPEND QT5_LINK_LIB_TARGETS Qt5::X11Extras)
+#    find_package(Qt6 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
+#        X11Extras
+#    )
+#    list(APPEND QT5_LINK_LIB_TARGETS Qt5::X11Extras)
 endif(UNIX)
+# Windows only
+if(WIN32)
+	list(APPEND QT5_LINK_LIB_TARGETS Qt5::WinMain)
+endif(WIN32)
 
 print_qtinfo()
 
@@ -369,8 +408,8 @@ print_qtinfo()
 set(KF5_LINK_LIB_TARGETS "")
 ### @note "Config" is both a find_package() keyword as well as the KF5Config components KF5::ConfigCore and KF5::ConfigGui.
 ###       We'll require KF5Config separately to avoid any ambiguity.
-find_package(KF5Config ${KF5_MIN_VERSION} REQUIRED)
-find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
+find_package(KF6Config ${KF5_MIN_VERSION} REQUIRED)
+find_package(KF6 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
 	Archive ### @todo TRYING THIS IN CASE IconThemes needs it to work properly, otherwise REMOVE
 	WidgetsAddons
 	CoreAddons ## USE_KF5_COREADDONS, git clone git://anongit.kde.org/kcoreaddons.git
@@ -384,21 +423,26 @@ find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
 	WindowSystem
 )
 set(HAVE_KF501 ${KF5_FOUND})
-list(APPEND KF5_LINK_LIB_TARGETS KF5::CoreAddons KF5::ConfigCore KF5::ConfigGui)
-list(APPEND KF5_LINK_LIB_TARGETS KF5::KIOCore KF5::KIOFileWidgets KF5::KIOWidgets KF5::KIONTLM)
-list(APPEND KF5_LINK_LIB_TARGETS KF5::WidgetsAddons KF5::XmlGui KF5::GuiAddons KF5::IconThemes KF5::ItemModels KF5::ItemViews)
-list(APPEND KF5_LINK_LIB_TARGETS KF5::WindowSystem)
+set(HAVE_KF6 ${KF6_FOUND})
+list(APPEND KF5_LINK_LIB_TARGETS KF6::CoreAddons KF6::ConfigCore KF6::ConfigGui)
+list(APPEND KF5_LINK_LIB_TARGETS KF6::KIOCore KF6::KIOFileWidgets KF6::KIOWidgets)
+list(APPEND KF5_LINK_LIB_TARGETS KF6::WidgetsAddons KF6::XmlGui KF6::GuiAddons KF6::ItemModels KF6::ItemViews)
+list(APPEND KF5_LINK_LIB_TARGETS KF6::IconThemes KF6::WindowSystem)
 
 ###### EXPERIMENT
 
+# SQLite3
+find_package(SQLite3
+             REQUIRED)
+
 #find_package(BreezeIcons REQUIRED) # Doesn't exist yet.
 ### @todo Need to find a better way than hardcoding the path to the rcc file here.
-set(WITH_BUNDLED_BREEZE_ICONS true)
+set(WITH_BUNDLED_BREEZE_ICONS false)
 if(WIN32)
 	set(BREEZEICONS_DIR
 		# Craft has a couple of breeze-icons.rcc's, plus an icontheme.rcc in CraftRoot/bin/data/.
 		C:/CraftRoot/bin/data/icons/breeze
-	) 
+	)
 else()
 	set(BREEZEICONS_DIR
 		/usr/share/icons/breeze
@@ -408,7 +452,7 @@ endif()
 if(WITH_BUNDLED_BREEZE_ICONS)
 	### @todo SOMETHING IS WRONG HERE, FIX THIS 
 	set(AMLM_INSTALL_BUNDLED_ICON_THEME_DIR "${KDE_INSTALL_FULL_DATAROOTDIR}/gvansickle/AwesomeMediaLibraryManager")
-	find_file(BREEZEICONS_PATH breeze-icons.rcc 
+	find_file(BREEZEICONS_PATH breeze-icons.rcc
 		HINTS
 			${BREEZEICONS_DIR}
 		PATH_SUFFIXES
@@ -417,7 +461,7 @@ if(WITH_BUNDLED_BREEZE_ICONS)
 			"Full path to the breeze-icons.rcc file"
 			)
     if (NOT EXISTS ${BREEZEICONS_PATH})
-        message(FATAL_ERROR "Cannot find breeze-icons.rcc")
+        message(FATAL_ERROR "Cannot find breeze-icons.rcc, looked under paths: ${BREEZEICONS_DIR}")
     else()
     	message(STATUS "Found source default icon theme: ${BREEZEICONS_PATH}")
     	message(STATUS "Default icon theme will be installed in: ${AMLM_INSTALL_BUNDLED_ICON_THEME_DIR}")
@@ -484,6 +528,7 @@ endif()
 endif()
 
 # Boost
+if(TRUE)
 # See @link https://cmake.org/cmake/help/latest/module/FindBoost.html
 #set(BOOST_THREAD_VERSION          5) # Latest in 1.69 as of this writing, defaults to "2".
 #set(BOOST_THREAD_PROVIDES_FUTURE ON)
@@ -514,71 +559,12 @@ if(Boost_FOUND)
 	add_library(amlm_boost_settings_target INTERFACE)
 	target_link_libraries(amlm_boost_settings_target INTERFACE ${Boost_LIBRARIES})
 	target_compile_definitions(amlm_boost_settings_target
-		INTERFACE 
+		INTERFACE
 			BOOST_THREAD_VERSION=5)
 	add_definitions(${Boost_LIB_DIAGNOSTIC_DEFINITIONS})
 endif()
+endif() # BOOST
 
-if(FALSE)
-# Ok, we're going to try to pull in just Wt::Dbo.
-# Following instructions here: @link https://www.webtoolkit.eu/wt/doc/tutorial/dbo.html#_installation :
-# "Starting from a Wt source package (and on a UNIX-like environment), 
-# you would do the following to build and install only Wt::Dbo:
-# $ cd wt-xxx
-# $ mkdir build
-# $ cd build
-# $ cmake ../ # extra options may be needed, see instructions
-# $ cd src/Wt/Dbo
-# $ make
-# $ sudo make install"
-#
-# Also @link https://www.webtoolkit.eu/wt/doc/reference/html/InstallationUnix.html for the "see instructions" above.
-#
-#download_project
-include(ExternalProject)
-ExternalProject_Add(
-	wt_dbo # Creates variables wt_dbo_{SOURCE,BINARY}_DIR
-	GIT_REPOSITORY https://github.com/emweb/wt.git
-	GIT_TAG        master
-	GIT_PROGRESS  true
-	${UPDATE_DISCONNECTED_IF_AVAILABLE}
-	# Configuration
-	CMAKE_ARGS
-		${CMAKE_ARGS}
-		"-DCMAKE_BUILD_TYPE=$<CONFIG>"
-		"-DCMAKE_CONFIGURATION_TYPES=$<CONFIG>"
-		"-DBUILD_EXAMPLES=OFF"
-		"-DINSTALL_RESOURCES=OFF"
-		"-DENABLE_SSL=OFF"
-		"-DENABLE_HARU=OFF"
-		"-DENABLE_PANGO=OFF"
-		"-DENABLE_SQLITE=ON"
-		"-DENABLE_POSTGRES=OFF"
-		"-DENABLE_FIREBIRD=OFF"
-		"-DENABLE_MYSQL=OFF"
-		"-DENABLE_MSSQLSERVER=OFF"
-		"-DENABLE_QT4=OFF"
-		"-DENABLE_LIBWTTEST=OFF"
-		"-DENABLE_LIBWTDBO=ON"
-		"-DENABLE_OPENGL=OFF"
-		"-DBUILD_TESTS=OFF"
-		"-DCONNECTOR_ISAPI=OFF"
-		"-DCONNECTOR_HTTP=OFF"
-		"-DCONNECTOR_FCGI=OFF"
-	# Build step options
-	BUILD_COMMAND "" #${CMAKE_COMMAND} -E echo "Starting $<CONFIG> build of Wt::Dbo in binary dir: <BINARY_DIR>"
-  	#COMMAND       ${CMAKE_COMMAND} --build <BINARY_DIR> --config $<CONFIG> --target wt-target-dbo # wtdbo
-  	#COMMAND       ${CMAKE_COMMAND} -E echo "$<CONFIG> build of Wt::Dbo complete"
-	
-	# Install
-	# This target is exported: wt-target-dbo, target is wtdbo
-	INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "Starting $<CONFIG> install of Wt::Dbo to install dir: <INSTALL_DIR>"
-	COMMAND			${CMAKE_COMMAND} --build <BINARY_DIR> --config $<CONFIG> --target install
- 	COMMAND			${CMAKE_COMMAND} -E echo "$<CONFIG> install of Wt::Dbo complete"
-	)
-#add_subdirectory(${wt_dbo_SOURCE_DIR} ${wt_dbo_BINARY_DIR} EXCLUDE_FROM_ALL)
-#print_varlist(wt_dbo_SOURCE_DIR wt_dbo_BINARY_DIR)
-endif()
 
 # Qt logging categories.
 # @link https://api.kde.org/ecm/module/ECMQtDeclareLoggingCategory.html
@@ -596,7 +582,7 @@ ecm_qt_declare_logging_category(QT5_LOGGING_CATEGORY_SOURCE_FILES
                                 )
 
 # Qt-specific compiler definitions.                               
-target_compile_definitions(cxx_definitions_qt 
+target_compile_definitions(cxx_definitions_qt
 	INTERFACE
 		-DQT_DEPRECATED_WARNINGS
 		-DQT_SHAREDPOINTER_TRACK_POINTERS=1
@@ -628,24 +614,32 @@ set(IDENTIFIER "io.github.gvansickle")
 
 ### Generate configured headers.
 # @note The version info file is generated in the "resources" dir/target.
-# Generate the amlm-configure.h file.
+# Generate the config.h file.
 configure_file(${PROJECT_SOURCE_DIR}/src/config.h.in
 	${PROJECT_BINARY_DIR}/src/config.h
 	ESCAPE_QUOTES)
 
+# Create a graphviz dep graph.
+# add_custom_target(graphviz ALL
+# 	${CMAKE_COMMAND} .. "--graphviz=graphviz.dot" .
+# 	WORKING_DIRECTORY .)
 
 ###
 ### Add the project subdirs.
 ###
 #set(amlm_APP_ICONS "re-set this in resources_subdir")
-add_subdir_lib(resources STATIC EXCLUDE_FROM_ALL)
+add_subdirectory(resources EXCLUDE_FROM_ALL)
 message(AUTHOR_WARNING "amlm_APP_ICONS: ${amlm_APP_ICONS}")
-add_subdir_lib(src STATIC EXCLUDE_FROM_ALL)
+add_subdirectory(src)
 
-### @todo Google Test creates a target named "tests" as well, and I can't seem to disable/work around it other than
-###    by using add_subdirectory() vs. add_subdir_lib().  Maybe this is better anyway.
-add_subdir_lib(tests EXCLUDE_FROM_ALL)
-#add_subdirectory(tests EXCLUDE_FROM_ALL)
+###
+### Testing
+###
+include(CTest)
+### This var comes from CTest, and is True by default.
+if(BUILD_TESTING)
+	add_subdirectory(tests)
+endif()
 
 #include(resources/CMakeLists.txt)
 #print_varlist(amlm_ICONS amlm_SRCS)
@@ -656,6 +650,10 @@ add_subdir_lib(tests EXCLUDE_FROM_ALL)
 # needed for a windows build (essentially just the configured .rc file).
 add_project_meta(META_FILES_TO_INCLUDE)
 
+###
+### Install
+###
+# In subdirs.
 
 
 ###
@@ -741,6 +739,9 @@ add_custom_target(graphviz ALL
 endif()
 
 
+
+
+
 ###
 ### Print summary.
 ###
@@ -756,7 +757,7 @@ print_varlist(
 	CMAKE_CXX_FLAGS
 	CMAKE_CXX_FLAGS_DEBUG
 	CMAKE_EXPORT_COMPILE_COMMANDS
-	CMAKE_INSTALL_PREFIX 
+	CMAKE_INSTALL_PREFIX
 	KDE_INSTALL_BINDIR
 	KDE_INSTALL_DATADIR
 	KDE_INSTALL_ICONDIR

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017, 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -25,17 +25,44 @@
 #include <vector>
 #include <iostream>
 #include <cstdint>
+#include <memory>
+#include <deque>
+#include <optional>
+#include <utility> // for pair.
+#include <string>
 
-// Qt5
+// Qt
 #include <QObject>
+#include <QDebug>
+#include <QMetaType>
 
 // Qt5 metatype declarations for some std containers.
 Q_DECLARE_METATYPE(std::string);
+Q_DECLARE_SMART_POINTER_METATYPE(std::shared_ptr);
+Q_DECLARE_SMART_POINTER_METATYPE(std::weak_ptr);
+Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE(std::deque);
 // Qt5 metatype declarations for metatypes for <cstdint>.
 Q_DECLARE_METATYPE(std::int32_t);
 Q_DECLARE_METATYPE(std::uint32_t);
 Q_DECLARE_METATYPE(std::int64_t);
 Q_DECLARE_METATYPE(std::uint64_t);
+//Q_DECLARE_METATYPE(std::size_t);
+//Q_DECLARE_METATYPE(std::ssize_t);
+
+// Some of ours.
+inline QDebug operator<<(QDebug debug, const std::optional<bool>& optbool)
+{
+	if(optbool.has_value())
+	{
+		debug << (optbool.value() ? "true" : "false");
+	}
+	else
+	{
+		debug << "(unknown)";
+	}
+	return debug;
+}
+Q_DECLARE_METATYPE(std::optional<bool>);
 
 
 void RegisterQtMetatypes();

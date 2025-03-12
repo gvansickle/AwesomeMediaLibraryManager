@@ -26,7 +26,7 @@
 #include <future/future_algorithms.h> ///< For Uniform Container Erasure.
 
 // Qt5
-
+#include <QtConcurrentFilter>
 
 // Ours
 #include <utils/DebugHelpers.h>
@@ -207,7 +207,7 @@ void PerfectDeleter::cancel_and_wait_for_all()
 	// First print some stats.
 	qIno() << "END OF PROGRAM SUMMARY OF OPEN RESOURCES";
 	auto stats_text = stats_internal();
-	for(const auto& line : qAsConst(stats_text))
+    for(const auto& line : std::as_const(stats_text))
 	{
 		qIno() << line;
 	}
@@ -336,7 +336,7 @@ void PerfectDeleter::addQObject(QObject* object)
 	std::shared_ptr<DeletableQObject> deletable_qobject = std::make_shared<DeletableQObject>(this, &m_watched_QObjects, object);
 
 	// This connection is a bit odd.  We need to accept the QObject*, turn that into a DeletableQObject*, and remove that.
-	connect_or_die(object, &QObject::destroyed, this, [=](QObject* deleted_object){
+    connect_or_die(object, &QObject::destroyed, this, [this, deletable_qobject](QObject* deleted_object){
 		std::scoped_lock lock(m_mutex);
 		// Is this the same QObject that we put in?
 		Q_ASSERT(deletable_qobject->holds_object(deleted_object) == true);
@@ -373,7 +373,7 @@ void PerfectDeleter::addKJob(KJob* kjob)
 
 	QPointer<KJob> qpkjob = kjob;
 
-	auto remover_lambda = [=, qpkjob=qpkjob]() {
+    auto remover_lambda = [this, qpkjob=qpkjob]() {
 			std::lock_guard lock(m_mutex);
 			qIn() << "Destroying KJob:" << qpkjob;
 			if(qpkjob.isNull())
@@ -408,7 +408,7 @@ void PerfectDeleter::addAMLMJob(AMLMJob* amlmjob)
 
 	std::shared_ptr<DeletableAMLMJob> deletable_amlmjob = std::make_shared<DeletableAMLMJob>(this, &m_watched_AMLMJobs, amlmjob);
 
-	auto remover_lambda = [=](){
+    auto remover_lambda = [this, deletable_amlmjob](){
 		std::scoped_lock lock(m_mutex);
 		deletable_amlmjob->remove();
 	};
@@ -439,7 +439,7 @@ void PerfectDeleter::addQThread(QThread* qthread)
 		// From Qt docs:
 		// "When this signal is emitted, the event loop has already stopped running. No more events will be processed in the thread,
 		// except for deferred deletion events. This signal can be connected to QObject::deleteLater(), to free objects in that thread."
-		connect_or_die(qthread, &QThread::finished, this, [=](){
+        connect_or_die(qthread, &QThread::finished, this, [this, qthread, deletable_qthread](){
 			std::scoped_lock lock(m_mutex);
 			qIn() << "Deleting QThread:" << qthread;
 			std::experimental::erase(m_watched_QThreads, deletable_qthread);
@@ -493,7 +493,7 @@ M_TODO("This doesn't look like it's livelocking on exit, but it seems like we ne
 	do
 	{
 		// One pass through the AMLMJob list.
-		for(const std::shared_ptr<DeletableBase> i : m_watched_AMLMJobs)
+		for(const std::shared_ptr<DeletableBase>& i : m_watched_AMLMJobs)
 		{
 			// Do nothing, the connections should take care of the deletion.
 			remaining_amlmjobs++;

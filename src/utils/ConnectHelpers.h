@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -73,6 +73,10 @@ template <class TPMF, class T = ct::class_of_t<TPMF>, class UPMF, class U = ct::
 void connect_or_die(const T* t, TPMF tpmf, const U* u, UPMF upmf, Qt::ConnectionType connection_type = Qt::AutoConnection)
 {
     QMetaObject::Connection retval;
+
+	// Assert off the bat if we get null ptrs.
+	Q_CHECK_PTR(t);
+	Q_CHECK_PTR(u);
 
     retval = QObject::connect(t, tpmf, u, upmf, Qt::ConnectionType(connection_type | Qt::UniqueConnection));
     Q_ASSERT(static_cast<bool>(retval) != false);

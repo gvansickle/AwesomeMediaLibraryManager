@@ -6,6 +6,7 @@
 
 // Ours
 #include <logic/dbmodels/ScanResultsTableModel.h>
+#include <logic/models/treemodel.h>
 
 namespace Ui
 {
@@ -25,7 +26,7 @@ public:
 
 	void setMainModel2(ScanResultsTableModel* model);
 
-	void setPane2Model(AbstractTreeModel* tmp);
+	void setPane2Model(TreeModel* tmp);
 
 
 private:

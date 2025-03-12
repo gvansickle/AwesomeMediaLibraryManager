@@ -37,15 +37,14 @@ class QFileDevice;
 // Ours
 #include <logic/serialization/ISerializable.h>
 #include <logic/dbmodels/CollectionDatabaseModel.h>
-
 #include <concurrency/ThreadsafeMap.h>
-
-#include "ColumnSpec.h"
+#include <models/ColumnSpec.h>
 #include "Library.h"
 #include "LibraryRescanner.h" ///< For MetadataReturnVal
 #include "LibraryEntry.h"
 #include <jobs/LibraryEntryLoaderJob.h>
 #include "LibraryRescannerMapItem.h"
+#include <utils/RegisterQtMetatypes.h> ///< For common metatype declarations of C++ std types.
 
 
 class LibraryRescanner;
@@ -56,8 +55,6 @@ using VecOfPMIs = QVector<QPersistentModelIndex>;
 struct LibraryRescannerMapItem;
 
 Q_DECLARE_METATYPE(VecOfUrls);
-//Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE(std::vector);
-//Q_DECLARE_SMART_POINTER_METATYPE(std::shared_ptr);
 //Q_DECLARE_METATYPE(std::vector<std::shared_ptr<LibraryEntry>>);
 //Q_DECLARE_METATYPE(VecOfLEs);
 Q_DECLARE_METATYPE(VecOfPMIs);
@@ -69,6 +66,7 @@ Q_DECLARE_METATYPE(VecOfPMIs);
 class LibraryModel : public QAbstractItemModel, public virtual ISerializable
 {
     Q_OBJECT
+	Q_INTERFACES(ISerializable);
 
 	using BASE_CLASS = QAbstractItemModel;
 
@@ -78,7 +76,7 @@ Q_SIGNALS:
 
     /// Signal-to-self for async loading of metadata for a single LibraryEntry.
 //    void SIGNAL_selfSendReadyResults(MetadataReturnVal results) const;
-	void SIGNAL_selfSendReadyResults(LibraryEntryLoaderJobResult results) const;
+	void SIGNAL_selfSendReadyResults(LibraryEntryLoaderJobResult results);
 
 public:
 	explicit LibraryModel(QObject *parent = nullptr);
@@ -174,14 +172,22 @@ public:
     QStringList mimeTypes() const override;
     QMimeData* mimeData(const QModelIndexList &indexes) const override;
 
+	// This is FBO clazy.  Without this, it'll flag the slot using this below with:
+	// "warning: slot arguments need to be fully-qualified [...] [-Wclazy-fully-qualified-moc-types]"
+	using StdVecOfSharedPtrToLibEntry = std::vector<std::shared_ptr<LibraryEntry>>;
+
 public Q_SLOTS:
 	/// All this is for reading the metadata from a non-GUI thread.
     void SLOT_processReadyResults(MetadataReturnVal lritem_vec);
     void SLOT_processReadyResults(LibraryEntryLoaderJobResult loader_results);
     void SLOT_onIncomingPopulateRowWithItems_Single(QPersistentModelIndex pindex, std::shared_ptr<LibraryEntry> item);
-	void SLOT_onIncomingPopulateRowWithItems_Multiple(QPersistentModelIndex pindex, std::vector<std::shared_ptr<LibraryEntry>> items);
+	void SLOT_onIncomingPopulateRowWithItems_Multiple(QPersistentModelIndex pindex, LibraryModel::StdVecOfSharedPtrToLibEntry items);
 
-    virtual QVector<VecLibRescannerMapItems> getLibRescanItems();
+	/**
+	 * 
+	 * @return  A QList of all the items in the LibraryModel which need to be populated with metadata.
+	 */
+	virtual QList<VecLibRescannerMapItems> getLibRescanItems();
 
 	/// Let's try something different.
 	virtual void startRescan();
@@ -251,6 +257,7 @@ private:
 	mutable ThreadsafeMap<QPersistentModelIndex, bool> m_pending_async_item_loads;
 };
 
-Q_DECLARE_METATYPE(LibraryModel*)
+Q_DECLARE_METATYPE(LibraryModel);
+Q_DECLARE_METATYPE(LibraryModel*);
 
 #endif // LIBRARYMODEL_H

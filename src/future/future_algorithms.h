@@ -34,9 +34,23 @@
 #if __has_include(<experimental/deque>)
 #include <experimental/deque>
 #else
+#define BACKFILL 1
+#endif
+#if __has_include(<experimental/vector>)
+#include <experimental/vector>
+#else
+#define BACKFILL 1
+#endif
+#if __has_include(<experimental/map>)
+#include <experimental/map>
+#else
+#define BACKFILL 1
+#endif
 
+#if BACKFILL == 1
 // Backfill.
 #include <deque>
+#include <vector>
 namespace std // Yeah yeah.
 {
 namespace experimental
@@ -46,6 +60,12 @@ template <class ContainerType, class T, class A, class U>
 void erase(ContainerType<T, A>& c, const U& value)
 {
 	c.erase(std::remove(c.begin(), c.end(), value), c.end());
+}
+
+template <class ContainerType, class T, class Alloc, class Pred >
+void erase_if(ContainerType<T, Alloc>& c, Pred pred)
+{
+	c.erase(std::remove_if(c.begin(), c.end(), pred), c.end());
 }
 
 } // END experimental

@@ -58,7 +58,6 @@ AMLMJob::AMLMJob(QObject *parent) : KJob(parent)
     KJobWidgets::setWindow(this, MainWindow::instance());
     setUiDelegate(new KDialogJobUiDelegate());
 
-    connect_or_die(this, &KJob::finished, this, &AMLMJob::SLOT_kjob_finished);
     connect_or_die(this, &KJob::result, this, &AMLMJob::SLOT_kjob_result);
 
     // Master app shutdown signal connection.
@@ -73,8 +72,8 @@ AMLMJob::~AMLMJob()
     // The KJob should have finished/been killed before we get deleted.
 //    Q_ASSERT(isFinished());
 
-//    Q_ASSERT(!m_i_was_deleted);
-//    m_i_was_deleted = true;
+    // Q_ASSERT(!m_i_was_deleted);
+    // m_i_was_deleted = true;
 
     // KJob destructor checks if KJob->isFinished and emits finished(this) if so.
     // Doesn't cancel the job.
@@ -96,37 +95,39 @@ qulonglong AMLMJob::processedSize() const
  *
  * - On normal completion:
  * - Subclass calls emitResult(), which directly calls finishJob(true).
- * -- Shoudn't be any kjob error.
- * -- finishJob(true):
- * -- then d->isFinished = true;
- * -- then the signals are emitted.
- * -- signal finished() is always emitted
- * ++ signal result() is emitted()
- * -- if job is autodelete, deleteLater.
+ *      - Shoudn't be any kjob error.
+ *      - finishJob(true):
+ *      - then d->isFinished = true;
+ *      - then the signals are emitted.
+ *      - signal finished() is always emitted
+ *      - signal result() is emitted()
+ *      - if job is autodelete, deleteLater.
  *
  * - On a KJob::kill():
- * -- the kjob error will first be set to KilledJobError,
- * -- finishJob(emitResult = (verbosity != Quietly)):
- * -- then d->isFinished = true;
- * -- then the signals are emitted:
- * -- signal finished() is always emitted
- * XX signal result() may not be emitted, if this is a kill(quietly).
- * -- if job is autodelete, deleteLater.
+ *      - the kjob error will first be set to KilledJobError,
+ *      - finishJob(emitResult = (verbosity != Quietly)):
+ *      - then d->isFinished = true;
+ *      - then the signals are emitted:
+ *      - signal finished() is always emitted
+ *      - XX signal result() may not be emitted, if this is a kill(quietly).
+ *      - if job is autodelete, deleteLater.
  *
  * - On error:
- * -- Same as normal completion but with an error code?
+ *      - Same as normal completion but with an error code?
  *
  * - On KJob destruction, its destructor does this:
- * -- if(d->isFinished)
- *   {
- *     emit finished(this);
- *   }
- *   delete d_ptr, speedtimer, and uiDelegate.
+ *      - @code
+ *          if(d->isFinished)
+ *          {
+ *              emit finished(this);
+ *          }
+ *          @endcode
+ *      - delete d_ptr, speedtimer, and uiDelegate.
  *
  * - signal finished() is always emitted, and always before result(), which won't be emitted on cancel.
  *
  * - Regarding QObject::deleteLater():
- * -- @link http://doc.qt.io/qt-5/qobject.html#deleteLater
+ *      - @link http://doc.qt.io/qt-5/qobject.html#deleteLater
  *    "if deleteLater() is called on an object that lives in a thread with no running event loop, the object
  *    will be destroyed when the thread finishes."
  *
@@ -172,6 +173,7 @@ qulonglong AMLMJob::processedSize() const
  *
  * ...except they call it with mapReduce().
  */
+
 /// @note Canceling alone won't finish the extfuture, so we finish it manually here.
 /// I think this is the right thing to do.
 ///
@@ -231,6 +233,7 @@ M_WARNING("I think we need 'already killed' reentrancy protection here or in kil
  * So what happens is:
  * - So then it's this:
  *
+ * @code
  * if (doKill())
  * {
       setError(KilledJobError);
@@ -242,9 +245,9 @@ M_WARNING("I think we need 'already killed' reentrancy protection here or in kil
    {
       return false;
    }
-
+	@endcode
     ... and this (which is also called directly by emitResult()):
-
+	@code
     void KJob::finishJob(bool emitResult)
     {
     Q_D(KJob);
@@ -265,7 +268,7 @@ M_WARNING("I think we need 'already killed' reentrancy protection here or in kil
         deleteLater();
     }
     }
-
+	@endcode
     So I think the answer is:
     - We need this object to survive doKill(),
     - We can't do anything else after that, due to finishJob() possibly destroying us.
@@ -333,7 +336,7 @@ void AMLMJob::dump_job_info(KJob* kjob, const QString& header)
     qIn() << "Progress info:";
     qIn() << "  Caps:" << kjob->capabilities();
     qIn() << "  percent:" << kjob->percent();
-    for(auto unit : {KJob::Unit::Bytes, KJob::Unit::Files, KJob::Unit::Directories})
+    for(auto unit : {KJob::Unit::Bytes, KJob::Unit::Files, KJob::Unit::Directories, KJob::Unit::Items})
     {
         qIn() << "  processedAmount:" << kjob->processedAmount(unit);
         qIn() << "  totalAmount:" << kjob->totalAmount(unit);

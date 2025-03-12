@@ -35,6 +35,7 @@ class QFileDevice;
 
 class Library : public virtual ISerializable
 {
+	Q_GADGET
 public:
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(Library);
 	~Library() override = default;
@@ -80,7 +81,7 @@ public:
 Q_DECLARE_METATYPE(Library);
 Q_DECLARE_METATYPE(Library*);
 
-QDataStream &operator<<(QDataStream &out, const Library &myObj);
-QDataStream &operator>>(QDataStream &in, Library &myObj);
+// QDataStream &operator<<(QDataStream &out, const Library &myObj);
+// QDataStream &operator>>(QDataStream &in, Library &myObj);
 
 #endif // LIBRARY_H

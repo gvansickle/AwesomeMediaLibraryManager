@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2019, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -28,11 +28,12 @@
 // Std C++
 #include <deque>
 
-// Qt5
+// Qt
 #include <QString>
 #include <QVariantList>
 
 // Ours.
+// #include <ISerializable.h> //<< This includes this file.
 #include <utils/DebugHelpers.h>
 #include <future/guideline_helpers.h>
 
@@ -43,9 +44,9 @@ public:
 	/// @name Member types
 	/// @{
 	using value_type = QVariant;
-	using underlying_container_type = std::deque<value_type>;
-	using const_iterator = typename underlying_container_type::const_iterator;
-	using iterator = typename underlying_container_type::iterator;
+	using underlying_container_type = QList<value_type>;//std::deque<value_type>;
+	using const_iterator = underlying_container_type::const_iterator;
+	using iterator = underlying_container_type::iterator;
 	/// @}
 
 public:
@@ -94,12 +95,14 @@ public:
 
 	void clear() noexcept { m_the_list.clear(); }
 
-	void push_back( const QVariant& value ) { m_the_list.push_back(value); };
+    void push_back( const QVariant& value ) { m_the_list.push_back(value); }
 
-	const_iterator cbegin() const { return std::cbegin(m_the_list); };
-	const_iterator begin() const { return this->cbegin(); }
-	const_iterator cend() const { return std::cend(m_the_list); };
-	const_iterator end() const { return this->cend(); }
+	const_iterator cbegin() const noexcept { return std::cbegin(m_the_list); }
+	iterator begin() { return m_the_list.begin(); }
+	const_iterator begin() const { return m_the_list.begin(); }
+	const_iterator cend() const noexcept { return std::cend(m_the_list); }
+	iterator end() { return m_the_list.end(); }
+	const_iterator end() const { return m_the_list.end(); }
 
 	long size() const noexcept { return m_the_list.size(); }
 	bool empty() const noexcept { return m_the_list.empty(); }
@@ -121,6 +124,7 @@ protected:
 };
 
 Q_DECLARE_METATYPE(QVariantHomogenousList);
-//Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE(QVariantHomogenousList);
+// QVariantHomogenousList isn't a template, so this macro doesn't work:
+// Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE(QVariantHomogenousList);
 
 #endif // QVARIANTHOMOGENOUSLIST_H

@@ -20,6 +20,8 @@
 #ifndef UTILS_CONCURRENCY_IMPL_EXTASYNC_TRAITS_H_
 #define UTILS_CONCURRENCY_IMPL_EXTASYNC_TRAITS_H_
 
+#if 0 // !QT6
+
 #include <type_traits>
 #include <future/future_type_traits.hpp>
 #include <future/function_traits.hpp>
@@ -106,13 +108,13 @@ template <class F, class T>
 using has_extfuture_as_first_param_type = decltype(std::declval<F>()(std::declval<ExtFuture<T>>()));
 
 template <class F, class T>
-using has_extfuture_as_first_param = std::is_detected<has_extfuture_as_first_param_type, F, T>;
+using has_extfuture_as_first_param = future_detection::is_detected<has_extfuture_as_first_param_type, F, T>;
 
 template <class F, class T>
 using has_extfuture_ref_as_first_param_type = decltype(std::declval<F>()(std::declval<ExtFuture<T>&>()));
 
 template <class F, class T>
-using has_extfuture_ref_as_first_param = std::is_detected<has_extfuture_ref_as_first_param_type, F, T>;
+using has_extfuture_ref_as_first_param = future_detection::is_detected<has_extfuture_ref_as_first_param_type, F, T>;
 
 /**
  * .then() helper for ExtFuture implicit unwrapping.  Determines the type of the ExtFuture returned by .then().
@@ -145,5 +147,7 @@ template <class ThenCallbackType, class ExtFutureType>
 using then_return_type_from_callback_and_future_t = then_return_future_type_t<Unit::LiftT<
         std::invoke_result_t<ThenCallbackType, ExtFutureType>
         >>;
+
+#endif
 
 #endif /* UTILS_CONCURRENCY_IMPL_EXTASYNC_TRAITS_H_ */

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -22,7 +22,7 @@
 #include <config.h>
 #include <logic/serialization/ExtEnum.h>
 
-// Qt5
+// Qt
 #include <QUrl>
 #include <QFileInfo>
 #include <QDir>
@@ -35,13 +35,15 @@
 // Ours
 #include "models/ScanResultsTreeModel.h"
 #include <utils/EnumFlagHelpers.h>
+#include <logic/serialization/SerializationHelpers.h>
+
 
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering DirScanResult";
+	qRegisterMetaType<DirScanResult>();
 	qRegisterMetaType<DirScanResult::DirPropFlags>("DirScanResult::DirPropFlags");
 	AMLMRegisterQFlagQStringConverters<DirScanResult::DirPropFlags>();
 });
-
 
 
 DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_finfo)
@@ -52,18 +54,23 @@ DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_f
 
 #define M_DATASTREAM_FIELDS(X) \
 	X(XMLTAG_FLAGS_DIRPROPS, m_flags_dirprops) \
+	X(XMLTAG_HAS_SIDECAR_CUESHEET, m_has_sidecar_cuesheet) \
+	X(XMLTAG_HAS_EMBEDDED_CUESHEET, m_has_embedded_cuesheet) \
 	X(XMLTAG_EXTURL_DIR, m_exturl_dir_url) \
 	X(XMLTAG_EXTURL_MEDIA, m_exturl_media) \
 	X(XMLTAG_EXTURL_CUESHEET, m_exturl_cuesheet)
 
 /// Strings to use for the tags.
-#define X(field_tag, member_field) static const QLatin1Literal field_tag ( # member_field );
+#define X(field_tag, member_field) static constexpr QLatin1String field_tag ( # member_field );
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
 QVariant DirScanResult::toVariant() const
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedMap<QString, QVariant> map;
+
+	// Set the xml:id.
+	map.insert_attributes({{"xml:id", get_prefixed_uuid()}});
 
 	// Add all the fields to the map.
 #define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
@@ -75,7 +82,10 @@ QVariant DirScanResult::toVariant() const
 
 void DirScanResult::fromVariant(const QVariant& variant)
 {
-	QVariantInsertionOrderedMap map(variant);
+	InsertionOrderedMap<QString, QVariant> map = variant.value<InsertionOrderedMap<QString, QVariant>>();
+
+	auto uuid = map.get_attr("xml:id", "");
+	set_prefixed_uuid(uuid);
 
 	// Extract all the fields from the map.
 #define X(field_tag, member_field) map_read_field_or_warn(map, field_tag, &(member_field));
@@ -112,6 +122,11 @@ void DirScanResult::determineDirProps(const QFileInfo &found_url_finfo)
 			// Set the flag and the path relative to the directory (should be just the filename).
 			m_exturl_cuesheet = ExtUrl(possible_cue_url.m_url, &fi);
 			m_flags_dirprops |= HasSidecarCueSheet;
+	        m_has_sidecar_cuesheet = true;
+        }
+        else
+        {
+        	m_has_sidecar_cuesheet = false;
         }
     }
     else
@@ -127,6 +142,13 @@ QVector<ExtUrl> DirScanResult::otherMediaFilesInDir(const QFileInfo& finfo)
 Q_ASSERT(0);
 M_WARNING("TODO");
     return QVector<ExtUrl>();
+}
+
+template <class stream>
+stream operator<<(stream s, std::optional<bool> val)
+{
+	s << val.value_or("unknown");
+	return s;
 }
 
 QDebug operator<<(QDebug dbg, const DirScanResult & obj) // NOLINT(performance-unnecessary-value-param)
@@ -153,4 +175,5 @@ QDataStream &operator>>(QDataStream &in, DirScanResult & myObj)
 #undef X
 }
 #endif
+
 

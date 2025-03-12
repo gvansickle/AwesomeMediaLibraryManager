@@ -29,7 +29,7 @@
 // Future Std C++
 #include <future/future_algorithms.h> ///< For Uniform Container Erasure.
 
-// Qt5
+// Qt
 #include <QObject>
 #include <QStringList>
 #include <QFuture>
@@ -43,7 +43,10 @@ class AMLMJob;
 
 // Ours
 #include <utils/DebugHelpers.h>
-
+#include <concurrency/ExtFuture.h>
+// template <class T> class ExtFuture; // !QT6
+template <class T>
+using ExtFuture = QFuture<T>;
 
 class PerfectDeleter;
 
@@ -191,6 +194,9 @@ public:
 	 */
 	void addQFuture(QFuture<void> f);
 
+	template <class T>
+    void addExtFuture(ExtFuture<T>& f) { addQFuture(QFuture<void>(f)); }
+
 	void addKJob(KJob* kjob);
 
 	void addAMLMJob(AMLMJob* amlmjob);
@@ -203,7 +209,7 @@ public:
 		/*std::shared_ptr<Deletable>*/
 //		auto deletable = std::make_shared<Deletable<QThread*,DestroyerCallbackType,void(*)(QThread*)>>(qthread, destroyer_cb, [](QThread*){});
 		auto deletable = make_shared_DeletableBase(qthread, destroyer_cb, [](QThread*) {/** @todo */ return true;}, [](QThread*){  });
-		connect_or_die(qthread, &QObject::destroyed, this, [=](){
+        connect_or_die(qthread, &QObject::destroyed, this, [this, qthread](){
 			std::lock_guard lock(m_mutex);
 			qIn() << "Deleting QThread:" << qthread;
 			/// @todo Uniquify, don't rely on pointer.

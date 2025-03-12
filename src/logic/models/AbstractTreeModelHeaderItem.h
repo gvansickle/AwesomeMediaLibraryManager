@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -25,40 +25,60 @@
 
 // Std C++
 #include <vector>
+#include <deque>
 
-// Qt5
+// Qt
 #include <QVector>
 #include <QVariant>
-#include <logic/ColumnSpec.h>
 
 // Ours
+#include <future/enable_shared_from_this_virtual.h>
 #include "AbstractTreeModelItem.h"
 #include "AbstractHeaderSection.h"
 #include "ScanResultsTreeModelItem.h"
 class AbstractTreeModel;
+#include <models/ColumnSpec.h>
+
 
 /**
- * Abstract base class for tree model header items.
+ * Type representing a tree model's invisible root item which also doubles as the model's header item.
+ * KDEN doesn't use a special derived class for this, just the base class.
  */
-class AbstractTreeModelHeaderItem : public AbstractTreeModelItem
+class AbstractTreeModelHeaderItem: public AbstractTreeModelItem, public enable_shared_from_this_virtual<AbstractTreeModelHeaderItem>
 {
 	using BASE_CLASS = AbstractTreeModelItem;
 
+//protected:
 public:
-	explicit AbstractTreeModelHeaderItem(AbstractTreeModel* parent_model, bool is_root = false);
+
+	friend class AbstractTreeModel;
+	/**
+	 * Note: This is always the root item of a tree model, no parent item.
+	 * @param column_specs
+	 * @param parent_model
+	 * @param id
+	 */
+	AbstractTreeModelHeaderItem(std::initializer_list<ColumnSpec> column_specs,
+	                                     const std::shared_ptr<AbstractTreeModel>& parent_model = nullptr, UUIncD id = UUIncD::null());
+
+public:
+//	/**
+//	 * Named constructor.
+//	 */
+//	static std::shared_ptr<AbstractTreeModelHeaderItem> construct(std::initializer_list<ColumnSpec> column_specs,
+//																  const std::shared_ptr<AbstractTreeModel>& parent_model = nullptr, UUIncD id = UUIncD::null());
+////	AbstractTreeModelHeaderItem() {};
 	~AbstractTreeModelHeaderItem() override;
 
+	void clear() override;
+
 	 /**
+	  * Replaces any existing column_specs with the given @a column_specs.
 	  * @warning This must be called before any child items are added to the model.
-	  * @param column_specs
-	  * @return
 	  */
-	virtual bool setColumnSpecs(std::initializer_list<QString> column_specs);
+	virtual bool setColumnSpecs(std::initializer_list<ColumnSpec> column_specs);
 
 	QVariant data(int column, int role = Qt::DisplayRole) const override;
-
-	int columnCount() const override;
-
 
 	/// @name Serialization
 	/// @{
@@ -75,24 +95,18 @@ public:
 
 protected:
 
-	/// @todo THESE do_create_'s ARE ALL NOW TAKING A MODEL vs. AN ITEM, SO ARE CERTAINLY BROKEN.
-	ScanResultsTreeModelItem* do_create_default_constructed_child_item(AbstractTreeModel *parent_model, int num_columns);
+	std::shared_ptr<AbstractHeaderSection> getHeaderSection(int column);
 
-	/// @name Virtual functions called by the base class to complete certain operations.
-	///       The base class will have error-checked function parameters.
-	/// @{
-	bool derivedClassSetData(int column, const QVariant &value) override;
-	bool derivedClassInsertColumns(int insert_before_column, int num_columns) override;
-	bool derivedClassRemoveColumns(int first_column_to_remove, int num_columns) override;
-	/// @}
+private:
 
-	/// @todo This is where we're ultimately headed, but QStrings in the interim.
+	/**
+	 * This header's (and hence the model's) ColumnSpecs.
+	 */
 //	std::vector<ColumnSpec> m_column_specs;
-	std::vector<QString> m_column_specs {};
 
-	// The model we belong to.
-	/// @note Not sure we actually need this for anything.
-	AbstractTreeModel* m_parent_model;
 };
+
+Q_DECLARE_METATYPE(AbstractTreeModelHeaderItem);
+Q_DECLARE_METATYPE(std::shared_ptr<AbstractTreeModelHeaderItem>)
 
 #endif /* SRC_LOGIC_MODELS_ABSTRACTTREEMODELHEADERITEM_H_ */

@@ -20,7 +20,7 @@
 #ifndef ENTRYTOMETADATATREEPROXYMODEL_H
 #define ENTRYTOMETADATATREEPROXYMODEL_H
 
-// Qt5
+// Qt
 #include <QSortFilterProxyModel>
 #include <QPersistentModelIndex>
 #include <QPointer>
@@ -47,12 +47,12 @@ Q_SIGNALS:
 
 public:
 	explicit SelectionFilterProxyModel(QObject *parent = Q_NULLPTR);
-	virtual ~SelectionFilterProxyModel();
+	~SelectionFilterProxyModel() override;
     
 	void setSourceModel(QAbstractItemModel* sourceModel) override;
 
 	void setSelectionModel(QItemSelectionModel *selectionModel);
-    QItemSelectionModel *selectionModel() const;
+    QItemSelectionModel* selectionModel() const;
 
 	/**
 	 * Call this to set the one sourceIndex to pass through this proxy.
