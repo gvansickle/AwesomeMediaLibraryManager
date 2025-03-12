@@ -31,7 +31,7 @@
 #include <vector>
 #include <map>
 
-// Qt5
+// Qt
 #include <QAbstractItemModel>
 #include <QModelIndex>
 #include <QVariant>

@@ -128,7 +128,7 @@ int SRTMItem_LibEntry::columnCount() const
 using strviw_type = QLatin1String;
 
 ///// Strings to use for the tags.
-#define X(field_tag, tag_string, var_name) static const strviw_type field_tag ( # tag_string );
+#define X(field_tag, tag_string, var_name) static constexpr strviw_type field_tag ( # tag_string );
 	M_DATASTREAM_FIELDS(X);
 #undef X
 

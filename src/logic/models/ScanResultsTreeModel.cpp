@@ -337,7 +337,6 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 	m_root_item->fromVariant(root_item_map);
 
 #endif
-	qDb() << M_ID_VAL(m_base_directory);
 	Q_ASSERT(m_base_directory.isValid());
 	Q_ASSERT(!m_base_directory.isEmpty());
 

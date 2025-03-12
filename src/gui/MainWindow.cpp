@@ -1476,41 +1476,14 @@ void MainWindow::readLibSettings(QSettings& settings)
 //				AMLM::Core::self()->getScanResultsTreeModel()->setColumnSpecs(default_columnspecs);
 	}
 
-#if 0///
-	auto fut_load_db = ExtAsync::qthread_async_with_cnr_future([=, &temp_load_srtm_instance](ExtFuture<Unit> fut_cnr, QString overlay_filename){
-			// Load the primary database.
-//		AMLM::Core::self()->getScanResultsTreeModel()->clear();
-//			bool success = AMLM::Core::self()->getScanResultsTreeModel()->LoadDatabase(database_filename);
-//			bool success = temp_load_srtm_instance->LoadDatabase(database_filename);
-//			// Re-set default columnspecs if load failed.
-//			M_TODO("We should be loading a new model instead here.");
-			if(success)
-			{
-				// Swap in the new model.
-				qDb() << "Load succeeded, swapping in the new model.";
-#warning "TODO"
-			}
-			else
-			{
-				qWr() << "Load failed";
-//				auto default_columnspecs = AMLM::Core::self()->getDefaultColumnSpecs();
-//				AMLM::Core::self()->getScanResultsTreeModel()->setColumnSpecs(default_columnspecs);
-			}
-			Q_ASSERT(AMLM::Core::self()->getScanResultsTreeModel()->columnCount() > 0);
-			// Complete.
-			fut_cnr.reportFinished();
-	}, database_filename);
-
-	PerfectDeleter::instance().addExtFuture(fut_load_db);
-#endif
-
 	/// @todo The playlist
 	/// @todo Get this path from settings.
 	QString overlay_filename = QDir::homePath() + "/AMLMDatabaseSerDes.xml";
 
     auto extfuture_initial_lib_load = QtConcurrent::run([=](QPromise<SerializableQVariantList>& ef) {
 
-		qIn() << "READING XML DB:" << overlay_filename;
+		qIn() << "READING XML DB FROM FILE:" << overlay_filename;
+
 		SerializableQVariantList list("library_list", "library_list_item");
 		Stopwatch library_list_read(tostdstr(QString("Loading: ") + overlay_filename));
 		XmlSerializer xmlser;
@@ -1519,11 +1492,10 @@ void MainWindow::readLibSettings(QSettings& settings)
 		bool success = xmlser.load(list, QUrl::fromLocalFile(overlay_filename));
     	qIn() << "Load of" << overlay_filename << "success: " << success;
         ef.addResult(list);
-        // ef.reportFinished();
 	})
     .then(this, [this, overlay_filename, prog](ExtFuture<SerializableQVariantList> ef){
 
-		SerializableQVariantList list = ef.result(); //.get_first();
+		SerializableQVariantList list = ef.result();
 
 		qIn() << "###### READ" << list.size() << "libraries from XML DB:" << overlay_filename;
 
