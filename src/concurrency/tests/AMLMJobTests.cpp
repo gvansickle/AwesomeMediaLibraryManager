@@ -48,6 +48,8 @@
 class ProjectFolderItem;
 class IProjectFileManager;
 
+#if 0
+
 /**
  * Test KJob-derived class.
  */
@@ -148,6 +150,7 @@ ImportProjectJob::~ImportProjectJob()
     delete d;
 }
 
+
 void ImportProjectJob::start()
 {
     connect(d->m_watcher, &QFutureWatcher<void>::finished, this, &ImportProjectJob::importDone);
@@ -193,11 +196,17 @@ const QFuture<void> ImportProjectJob::get_extfuture() const
     return d->m_watcher->future();
 }
 
+#endif
+
 ////////////////////////
+
 
 
 class TestAMLMJob1;
 using TestAMLMJob1Ptr = QPointer<TestAMLMJob1>;
+
+#if 0
+
 /**
  * Test job derived from AMLMJob.
  */
@@ -272,6 +281,9 @@ protected:
     }
 };
 
+
+#endif
+
 ///
 /// Test Cases
 ///
@@ -288,6 +300,8 @@ TEST_F(AMLMJobTests, ThisShouldPass) // NOLINT
 
     TC_EXIT();
 }
+
+#if 0
 
 TEST_P(AMLMJobTestsParameterized, ImportProjectJobSyncExecPAutoDelete) // NOLINT
 {
@@ -329,6 +343,7 @@ TEST_P(AMLMJobTestsParameterized, ImportProjectJobSyncExecPAutoDelete) // NOLINT
     TC_EXIT();
 }
 
+
 TEST_P(AMLMJobTestsParameterized, DISABLED_SynchronousExecTestAMLMJob1PAutoDelete)
 {
     TC_ENTER();
@@ -367,7 +382,9 @@ TEST_P(AMLMJobTestsParameterized, DISABLED_SynchronousExecTestAMLMJob1PAutoDelet
 
     TC_EXIT();
 }
+#endif
 
+#if 0
 TEST_P(AMLMJobTestsParameterized, DISABLED_AsynchronousExecTestAMLMJob1PAutoDelete)
 {
     TC_ENTER();
@@ -406,6 +423,9 @@ TEST_P(AMLMJobTestsParameterized, DISABLED_AsynchronousExecTestAMLMJob1PAutoDele
 
     TC_EXIT();
 }
+#endif
+
+#if 0
 
 #if 0 // OBSOLETE
 TEST_F(AMLMJobTests, DISABLED_ThenTest) // NOLINT
@@ -684,5 +704,7 @@ TEST_F(AMLMJobTests, ImportProjectJobCancelBeforeStart) // NOLINT
 
     TC_EXIT();
 }
+
+#endif
 
 #include "AMLMJobTests.moc"

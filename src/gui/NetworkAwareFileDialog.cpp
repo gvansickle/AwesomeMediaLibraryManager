@@ -174,13 +174,13 @@ std::pair<QUrl, QString> NetworkAwareFileDialog::getExistingDirectoryUrl(QWidget
 
     auto &dlg = nafdlg; //->m_the_qfiledialog;
 
-	if(options)
-	{
-		dlg->setOptions(options);
-	}
-
 	// User must select a directory.
 	dlg->setFileMode(QFileDialog::Directory);
+	if(options)
+	{
+		// Set options after doing setFileMode(), or we'll get a popup saying "Can't determine file extension".
+		dlg->setOptions(options);
+	}
 	// List all directories and drives.  System is to allow KDE dialogs to see gvfs mounts.
 	dlg->setFilter(QDir::Dirs | QDir::NoDotAndDotDot | QDir::Drives | QDir::System);
 	dlg->setAcceptMode(QFileDialog::AcceptOpen);
@@ -283,7 +283,7 @@ bool NetworkAwareFileDialog::use_qfiledialog() const
 bool NetworkAwareFileDialog::use_native_dlg() const
 {
     if(user_pref_native_file_dialog() ||
-        ((QSysInfo::kernelType() == "winnt") && (QSysInfo::windowsVersion() & QSysInfo::WV_NT_based)) )
+        ((QSysInfo::kernelType() == "winnt")))
     {
         // Use the native file dialogs.
         return true;
@@ -296,7 +296,7 @@ bool NetworkAwareFileDialog::use_native_dlg() const
 
 bool NetworkAwareFileDialog::isDirSelectDialog() const
 {
-	return in(std::set<QFileDialog::FileMode>({QFileDialog::Directory, QFileDialog::DirectoryOnly}), m_the_qfiledialog->fileMode());
+	return (m_the_qfiledialog->fileMode() == QFileDialog::Directory);
 }
 
 void NetworkAwareFileDialog::setDefaultSidebarUrls()
@@ -319,7 +319,7 @@ void NetworkAwareFileDialog::setDefaultSidebarUrls()
 
 void NetworkAwareFileDialog::onFilterSelected(const QString& filter)
 {
-	if(m_the_qfiledialog->fileMode() != QFileDialog::Directory && m_the_qfiledialog->fileMode() != QFileDialog::DirectoryOnly)
+	if(m_the_qfiledialog->fileMode() != QFileDialog::Directory && m_the_qfiledialog->options() != QFileDialog::ShowDirsOnly)
 	{
 		qDebug() << "Filter selected:" << filter;
 		m_the_qfiledialog->setDefaultSuffix(filter_to_suffix(filter));

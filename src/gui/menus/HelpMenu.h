@@ -31,9 +31,8 @@ class HelpMenu : public KHelpMenu
 	using BASE_CLASS = KHelpMenu;
 
 public:
-	explicit HelpMenu(QWidget *parent, const KAboutData &aboutData,
-					  bool showWhatsThis = true);
-	~HelpMenu();
+	explicit HelpMenu(QWidget *parent, const KAboutData &aboutData);
+	~HelpMenu() override;
 };
 
 

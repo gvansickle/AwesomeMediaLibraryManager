@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -26,6 +26,7 @@
 class QMediaPlaylist;
 class LibrarySortFilterProxyModel;
 class ItemDelegateLength;
+class DragDropTreeViewStyleProxy;
 
 
 class MDIPlaylistView : public MDITreeViewBase
@@ -38,11 +39,12 @@ Q_SIGNALS:
 	/// @name Signals for player-connected messages.
 	/// @{
 	/// Start playing the current song.
-    void play();
+	void play();
 	/// @}
 
 public:
     explicit MDIPlaylistView(QWidget *parent = Q_NULLPTR);
+    ~MDIPlaylistView() override;
 
 
     /**
@@ -59,12 +61,20 @@ public:
     /// Playlists are not read-only.
     bool isReadOnly() const override { return false; }
 
+	// QMediaPlaylist-like member functions.
+	QUrl currentMedia() const;
+
 public Q_SLOTS:
 
 	/// @name Slots for player-connected messages.
 	/// @{
-	/// Start next song.
+
+	/**
+	 * Start next song.
+	 * Makes the next item in the model the current item in the view.
+	 */
     void next();
+
 	/// Start previous song.
     void previous();
 	/// @}
@@ -129,8 +139,10 @@ protected:
 	 */
     void keyPressEvent(QKeyEvent *event) override;
 
+public Q_SLOTS:
+	virtual void playlistPositionChanged(qint64 position);
+
 protected Q_SLOTS:
-    virtual void playlistPositionChanged(qint64 position);
 
 	void onContextMenuSelectedRows(QContextMenuEvent* event, const QPersistentModelIndexVec& row_indexes) override;
 	void onContextMenuViewport(QContextMenuEvent* event) override;
@@ -156,9 +168,17 @@ private:
      */
     void startPlaying(const QModelIndex& index);
 
+    std::unique_ptr<DragDropTreeViewStyleProxy> m_the_dragdropstyleproxy;
+
     QPointer<PlaylistModel> m_underlying_model;
     LibrarySortFilterProxyModel* m_sortfilter_model;
     ItemDelegateLength* m_length_delegate;
+
+	/// true == shuffle, false == sequential.
+	bool m_shuffle {false};
+
+	/// PMI to the current track to be played/is being played.
+	QPersistentModelIndex m_current_track_index;
 };
 
 #endif // MDIPLAYLISTVIEW_H

@@ -20,6 +20,8 @@
 #ifndef UTILS_CONCURRENCY_IMPL_EXTASYNC_TRAITS_H_
 #define UTILS_CONCURRENCY_IMPL_EXTASYNC_TRAITS_H_
 
+#if 0 // !QT6
+
 #include <type_traits>
 #include <future/future_type_traits.hpp>
 #include <future/function_traits.hpp>
@@ -145,5 +147,7 @@ template <class ThenCallbackType, class ExtFutureType>
 using then_return_type_from_callback_and_future_t = then_return_future_type_t<Unit::LiftT<
         std::invoke_result_t<ThenCallbackType, ExtFutureType>
         >>;
+
+#endif
 
 #endif /* UTILS_CONCURRENCY_IMPL_EXTASYNC_TRAITS_H_ */

@@ -1,2 +1,0 @@
-INCLUDEPATH += $$PWD
-CONFIG += c++14

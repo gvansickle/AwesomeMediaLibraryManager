@@ -132,61 +132,77 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
 	return retval;
 }
 
-void library_metadata_rescan_task(ExtFuture<MetadataReturnVal> ext_future, AMLMJob* /*the_job*/,
-									ExtFuture<VecLibRescannerMapItems> in_future,
-								  LibraryModel* current_libmodel)
+
+void library_metadata_rescan_task(QPromise<MetadataReturnVal>& promise, AMLMJob* /*the_job*/,
+								ExtFuture<VecLibRescannerMapItems> in_future,
+								LibraryModel* current_libmodel)
 {
-	qDb() << "ENTER library_metadata_rescan_task";
+	qDb() << "ENTER library_metadata_rescan_task with" << M_ID_VAL(in_future.resultCount());
+
+	// Block until we have all the LibraryRescannerMapItem's.
+	/// @todo It would be better if we could do this in parallel with the directory scan.
+	in_future.waitForFinished();
 
 	// For now we'll count progress in terms of files scanned.
 	// Might want to change to tracks eventually.
-	ext_future.setProgressUnit(KJob::Unit::Files);
+// QT6	promise.setProgressUnit(KJob::Unit::Files);
 
 	// Send out progress text.
 	QString status_text = QObject::tr("Refreshing metadata");
-	ext_future.reportDescription(status_text,
-                                QPair<QString,QString>(QObject::tr("Root URL"), ""),
-                                QPair<QString,QString>(QObject::tr("Current file"), QObject::tr("")));
+#if 0 // Qt5
+	promise.reportDescription(status_text,
+	                          QPair<QString,QString>(QObject::tr("Root URL"), ""),
+	                          QPair<QString,QString>(QObject::tr("Current file"), QObject::tr("")));
+#elif 1 //Qt6
+    promise.setProgressValueAndText(0, status_text);
+#endif
 
-	// Wait for the work to come in.
-	qDb() << "Waiting for incoming items";
-	QList<VecLibRescannerMapItems> items_to_rescan = in_future.get();
-	qDb() << "Got items:" << items_to_rescan.size() << in_future;
-
-	/// @todo
-	//setTotalAmountAndSize(KJob::Unit::Files, m_items_to_rescan.size());
-
-	ext_future.setProgressRange(0, items_to_rescan.size());
-	ext_future.setProgressValueAndText(0, status_text);
-
-	qulonglong num_items = 0;
-	for(QList<VecLibRescannerMapItems>::const_iterator i = items_to_rescan.cbegin(); i != items_to_rescan.cend(); ++i)
-	{
-		qDb() << "Item number:" << num_items;
-
-		/// @todo eliminate the_job ptr.
-		MetadataReturnVal a = /*the_job->*/refresher_callback(*i);
-
-		// Report the new results to The Future.
-		ext_future.reportResult(a);
-
-		num_items++;
-
-		/// @todo
-//		setProcessedAmountAndSize(KJob::Unit::Files, num_items);
-		/// @note New, temp.
-		ext_future.setProgressValue(num_items);
-
-		if(ext_future.HandlePauseResumeShouldICancel())
+	// while (!in_future.isCanceled())
+	// {
+		promise.suspendIfRequested();
+		if (promise.isCanceled())
 		{
 			// We've been cancelled.
 			qIn() << "CANCELLED";
-			break;
+			return;
 		}
-	}
 
+		// Wait for the work to come in.
+		qDb() << "Waiting for incoming items";
+	    QList<VecLibRescannerMapItems> items_to_rescan = in_future.results();
+		qDb() << "Got items:" << items_to_rescan.size() << in_future;
+
+		/// @todo
+		//setTotalAmountAndSize(KJob::Unit::Files, m_items_to_rescan.size());
+
+		promise.setProgressRange(0, items_to_rescan.size());
+		promise.setProgressValueAndText(0, status_text);
+
+		qulonglong num_items = 0;
+		for(QList<VecLibRescannerMapItems>::const_iterator i = items_to_rescan.cbegin(); i != items_to_rescan.cend(); ++i)
+		{
+			qDb() << "Item number:" << num_items;
+
+			/// @todo eliminate the_job ptr.
+			MetadataReturnVal a = /*the_job->*/refresher_callback(*i);
+
+			// Report the new results to The Future.
+			promise.addResult(a);
+
+			num_items++;
+
+			/// @todo
+			//		setProcessedAmountAndSize(KJob::Unit::Files, num_items);
+			/// @note New, temp.
+			promise.setProgressValue(num_items);
+		}
+
+		// if (in_future.isFinished())
+		// {
+		// 	break;
+		// }
+	// }
 	// And we're done.
-	ext_future.reportFinished();
 }
 
 

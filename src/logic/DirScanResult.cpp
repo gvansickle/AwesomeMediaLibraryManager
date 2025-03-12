@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -22,7 +22,7 @@
 #include <config.h>
 #include <logic/serialization/ExtEnum.h>
 
-// Qt5
+// Qt
 #include <QUrl>
 #include <QFileInfo>
 #include <QDir>
@@ -47,7 +47,6 @@ AMLM_QREG_CALLBACK([](){
 });
 
 
-
 DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_finfo)
 	: m_exturl_media(found_url, &found_url_finfo)
 {
@@ -63,13 +62,13 @@ DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_f
 	X(XMLTAG_EXTURL_CUESHEET, m_exturl_cuesheet)
 
 /// Strings to use for the tags.
-#define X(field_tag, member_field) static const QLatin1String field_tag ( # member_field );
+#define X(field_tag, member_field) static constexpr QLatin1String field_tag ( # member_field );
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
 QVariant DirScanResult::toVariant() const
 {
-	InsertionOrderedStrVarMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 
 	// Set the xml:id.
 	map.insert_attributes({{"xml:id", get_prefixed_uuid()}});
@@ -79,12 +78,12 @@ QVariant DirScanResult::toVariant() const
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
-	return QVariant::fromValue(map);
+	return map;
 }
 
 void DirScanResult::fromVariant(const QVariant& variant)
 {
-	InsertionOrderedStrVarMap map = variant.value<InsertionOrderedStrVarMap>();
+	InsertionOrderedMap<QString, QVariant> map = variant.value<InsertionOrderedMap<QString, QVariant>>();
 
 	auto uuid = map.get_attr("xml:id", "");
 	set_prefixed_uuid(uuid);
@@ -194,4 +193,5 @@ QDataStream &operator>>(QDataStream &in, DirScanResult & myObj)
 #undef X
 }
 #endif
+
 

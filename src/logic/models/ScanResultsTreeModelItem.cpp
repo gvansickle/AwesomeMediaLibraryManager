@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -108,7 +108,7 @@ using strviw_type = QLatin1String;
 
 QVariant ScanResultsTreeModelItem::toVariant() const
 {
-	InsertionOrderedStrVarMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 
 	// Add class info to the map we'll return.
 	set_map_class_info(this, &map);
@@ -119,15 +119,11 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 	// Add the m_item_data QVariants to the map under key XMLTAG_ITEM_DATA_LIST/"<item_data_list>".
 	item_data_to_variant(&map);
 
-#define X(field_tag, tag_string, var_name) map_insert_or_die(map, field_tag, var_name);
-	M_DATASTREAM_FIELDS(X);
-#undef X
-#define X(field_tag, tag_string, var_name) map_insert_or_die(map, field_tag, (qulonglong)(var_name).size());
-	M_DATASTREAM_FIELDS_CONTSIZES(X);
-#undef X
+	map_insert_or_die(map, XMLTAG_DIRSCANRESULT, m_dsr);
 
-	// Class-specific data.
-	map_insert_or_die(map, XMLTAG_DIRSCANRESULT, m_dsr.toVariant());
+// #define X(field_tag, tag_string, var_name) map_insert_or_die(map, field_tag, var_name);
+// 	M_DATASTREAM_FIELDS(X);
+// #undef X
 
 	// Serialize out Child nodes.
 	children_to_variant(&map);
@@ -137,7 +133,7 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 
 void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 {
-	InsertionOrderedStrVarMap map = variant.value<InsertionOrderedStrVarMap>();
+	InsertionOrderedMap<QString, QVariant> map = variant.value<InsertionOrderedMap<QString, QVariant>>();
 
 	// Overwrite any class info added by the above.
 //	dump_map_class_info(this, &map);
@@ -145,30 +141,26 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 	auto uuid = map.get_attr("xml:id", "");
 	set_prefixed_uuid(uuid);
 
-#define X(field_tag, tag_string, var_name) map_read_field_or_warn(map, field_tag, var_name);
-//	M_DATASTREAM_FIELDS(X);
-#undef X
+// #define X(field_tag, tag_string, var_name) map_read_field_or_warn(map, field_tag, var_name);
+// 	M_DATASTREAM_FIELDS(X);
+// #undef X
 
 	// Read in this class's additional fields.
 	map_read_field_or_warn(map, XMLTAG_DIRSCANRESULT, &m_dsr);
 
-	// Get the number of item_data entries.
-	std::vector<QVariant>::size_type item_data_size = 0;
-	map_read_field_or_warn(map, XMLTAG_ITEM_DATA_LIST_SIZE, &item_data_size);
+	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
+	child_var_list = map.at(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
+	Q_ASSERT(child_var_list.size() > 0);
 
-	// Get this item's data from variant list.
-	int item_data_retval = item_data_from_variant(map);
+	append_children_from_variant<SRTMItem_LibEntry>(this, child_var_list);
 
-	// Get this item's children.
-	qulonglong num_children = 0;
-	map_read_field_or_warn(map, XMLTAG_NUM_CHILDREN, &num_children);
+#if 0////
+	auto model_ptr_base = m_model.lock();
+	Q_ASSERT(model_ptr_base);
+	auto model_ptr = std::dynamic_pointer_cast<ScanResultsTreeModel>(model_ptr_base);
+	auto parent_id = getId();
 
-	qDb() << XMLTAG_NUM_CHILDREN << num_children;
-
-	// Now read in our children.  We need this Item to be in a model for that to work.
-	/// @todo Add to model, Will this finally work?
-//	auto parent_item_ptr = this->parent_item().lock();
-//WRONG:	appendChild(this->shared_from_this());
+	/// NEEDS TO BE IN MODEL HERE.
 	Q_ASSERT(isInModel());
 	auto model_ptr = m_model.lock();
 	Q_ASSERT(model_ptr);

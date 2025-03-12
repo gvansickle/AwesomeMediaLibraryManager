@@ -24,7 +24,7 @@
 
 
 static inline QAction* make_action(const QIcon &icon, const QString &text, QObject *parent = nullptr,
-							QKeySequence shortcut = QKeySequence(), const QString& status_tip = "")
+                                   QKeySequence shortcut = QKeySequence(), const QString& status_tip = QLatin1String(""))
 {
 	QAction* retval = new QAction(icon, text, parent);
 	retval->setShortcut(shortcut);

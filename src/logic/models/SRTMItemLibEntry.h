@@ -44,7 +44,10 @@ public:
 	explicit SRTMItem_LibEntry(std::shared_ptr<LibraryEntry> libentry, const std::shared_ptr<AbstractTreeModelItem>& parent_item = nullptr, UUIncD id = UUIncD::null());
 
 public:
-	M_GH_RULE_OF_FIVE_DEFAULT_C21(SRTMItem_LibEntry);
+//	static std::shared_ptr<SRTMItem_LibEntry> construct(std::shared_ptr<LibraryEntry> libentry,
+//	                                                    const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr, UUIncD id = UUIncD::null());
+//	static std::shared_ptr<SRTMItem_LibEntry> construct(const QVariant& variant,
+//	                                                    const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr, UUIncD id = UUIncD::null());
 	~SRTMItem_LibEntry() override = default;
 
 	QVariant data(int column, int role = Qt::DisplayRole) const override;

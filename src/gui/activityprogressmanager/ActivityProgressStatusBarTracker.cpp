@@ -40,7 +40,7 @@
 #include <gui/MainWindow.h>
 
 ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *parent) : BASE_CLASS(parent),
-    m_tracked_job_state_mutex(QMutex::Recursive /** @todo Shouldn't need to do recursive, but it does make things easier at the moment. */)
+    m_tracked_job_state_mutex()
 {
     // Save the parent widget.
     m_parent_widget = parent;
@@ -167,7 +167,7 @@ void ActivityProgressStatusBarTracker::registerJob(KJob* kjob)
 
     /// @todo enqueue on a widgets-to-be-shown queue?  Not clear why that exists in KWidgetJobTracker.
 
-    // Add the new widget to the expanging frame.
+    // Add the new widget to the expanding frame.
     m_expanding_frame_widget->addWidget(wdgt);
     m_expanding_frame_widget->reposition();
 
@@ -216,7 +216,7 @@ void ActivityProgressStatusBarTracker::registerJob(KJob* kjob)
     // KWidgetJobTracker does almost the following.
     // It does not pass the job ptr though.
     /// @todo Is that part of our problems?
-    QTimer::singleShot(500, this, [=](){SLOT_onShowProgressWidget(kjob);});
+    QTimer::singleShot(500, this, [this, kjob](){SLOT_onShowProgressWidget(kjob);});
 }
 
 void ActivityProgressStatusBarTracker::unregisterJob(KJob* kjob)
@@ -260,7 +260,7 @@ M_WARNING("BUG: The kjob could be finished and deleted before we get here.");
     // Look up the widget associated with this kjob.
     // If it's been unregistered before we get here, this will return nullptr.
     with_widget_or_skip(kjob, [=](auto w){
-        qDb() << "SHOWING WIDGET:" << w;
+    qDb() << "SHOWING WIDGET:" << w.data();
         // Don't steal the focus from the current widget (e. g. Kate)
         w->setAttribute(Qt::WA_ShowWithoutActivating);
         w->show();
@@ -287,7 +287,7 @@ void ActivityProgressStatusBarTracker::SLOT_CancelAllKJobs()
         }
 		if(kjob->capabilities() & KJob::Killable)
         {
-            qIno() << "Killing KJob:" << kjob;
+            qIno() << "Killing KJob:" << kjob.data();
             // Synchronous call of KJob::kill().
             /// @todo Don't know if we want EmitResult here or not.
             kjob->kill(KJob::EmitResult);
@@ -332,7 +332,7 @@ void ActivityProgressStatusBarTracker::description(KJob *kjob, const QString &ti
 //    });
 }
 
-void ActivityProgressStatusBarTracker::infoMessage(KJob *job, const QString &plain, const QString &rich)
+void ActivityProgressStatusBarTracker::infoMessage(KJob *job, const QString &message)
 {
     // Prefer rich if it's given.
 //    with_widget_or_skip(job, [=](auto w){
@@ -340,7 +340,7 @@ void ActivityProgressStatusBarTracker::infoMessage(KJob *job, const QString &pla
 //        ;});
 }
 
-void ActivityProgressStatusBarTracker::warning(KJob *job, const QString &plain, const QString &rich)
+void ActivityProgressStatusBarTracker::warning(KJob *job, const QString &plain)
 {
 //    with_widget_or_skip(job, [=](auto w){
 //        w->warning(job, rich.isEmpty() ? plain : rich);
@@ -424,7 +424,7 @@ void ActivityProgressStatusBarTracker::percent(KJob *job, unsigned long percent)
         /// @todo Notify summary widget of the change.
 
             auto cumulative_pct = calculate_summary_percent();
-            m_cumulative_status_widget->percent(m_cumulative_status_job, cumulative_pct);
+            m_cumulative_status_widget->SLOT_percentChanged(m_cumulative_status_job, cumulative_pct);
         }
 //    });
 }
@@ -536,13 +536,13 @@ void ActivityProgressStatusBarTracker::make_connections_with_newly_registered_jo
     connect_or_die(kjob, &KJob::description, wdgt_type, &BaseActivityProgressStatusBarWidget::description);
     connect_or_die(kjob, &KJob::infoMessage, wdgt_type, &BaseActivityProgressStatusBarWidget::infoMessage);
     connect_or_die(kjob, &KJob::warning, wdgt_type, &BaseActivityProgressStatusBarWidget::warning);
-    connect_or_die(kjob, qOverload<KJob*, KJob::Unit, qulonglong>(&KJob::totalAmount),
-                   wdgt_type, &BaseActivityProgressStatusBarWidget::totalAmount);
-    connect_or_die(kjob, qOverload<KJob*, KJob::Unit, qulonglong>(&KJob::processedAmount),
-                   wdgt_type, &BaseActivityProgressStatusBarWidget::processedAmount);
+    connect_or_die(kjob, &KJob::totalAmountChanged,
+                   wdgt_type, &BaseActivityProgressStatusBarWidget::SLOT_totalAmountChanged);
+    connect_or_die(kjob, &KJob::processedAmountChanged,
+                   wdgt_type, &BaseActivityProgressStatusBarWidget::SLOT_processedAmountChanged);
     connect_or_die(kjob, &KJob::totalSize, wdgt_type, &BaseActivityProgressStatusBarWidget::totalSize);
     connect_or_die(kjob, &KJob::processedSize, wdgt_type, &BaseActivityProgressStatusBarWidget::processedSize);
-    connect_or_die(kjob, qOverload<KJob*, unsigned long>(&KJob::percent), wdgt_type, &BaseActivityProgressStatusBarWidget::percent);
+    connect_or_die(kjob, &KJob::percentChanged, wdgt_type, &BaseActivityProgressStatusBarWidget::SLOT_percentChanged);
     connect_or_die(kjob, &KJob::speed, wdgt_type, &BaseActivityProgressStatusBarWidget::speed);
     // Suspend/resume state.
     connect_or_die(kjob, &KJob::suspended, wdgt_type, &BaseActivityProgressStatusBarWidget::suspended);
@@ -570,7 +570,7 @@ void ActivityProgressStatusBarTracker::INTERNAL_unregisterJob(KJob *kjob)
 M_WARNING("Could KJob* already be finished and autoDeleted here?");
     Q_CHECK_PTR(kjob_qp);
 
-    qIno() << "UNREGISTERING JOB:" << kjob_qp;
+    qIno() << "UNREGISTERING JOB:" << kjob_qp.data();
 
     Q_CHECK_PTR(this);
     Q_CHECK_PTR(kjob_qp);
@@ -585,7 +585,7 @@ M_WARNING("Could KJob* already be finished and autoDeleted here?");
 
     Q_CHECK_PTR(kjob_qp);
 
-    qIno() << "SIGNALS DISCONNECTED:" << kjob_qp;
+    qIno() << "SIGNALS DISCONNECTED:" << kjob_qp.data();
 
     // If kjob was never registered, something's broken.
     AMLM_ASSERT_EQ(m_amlmjob_to_widget_map.keys().contains(kjob_qp), true);
@@ -593,7 +593,7 @@ M_WARNING("Could KJob* already be finished and autoDeleted here?");
     // Get ptr to the widget, if any.
     auto w = m_amlmjob_to_widget_map.value(kjob_qp, nullptr);
 
-    qDb() << "REMOVING FROM MAP:" << kjob << w;
+    qDb() << "REMOVING FROM MAP:" << kjob << w.data();
     if(w == nullptr)
     {
         qWro() << "KJob" << kjob << "was registered but has no widget.";
@@ -623,7 +623,7 @@ M_WARNING("Could KJob* already be finished and autoDeleted here?");
 
     Q_EMIT number_of_jobs_changed(m_amlmjob_to_widget_map.size());
 
-    qDb() << "JOB UNREGISTERED:" << kjob_qp;
+    qDb() << "JOB UNREGISTERED:" << kjob_qp.data();
 }
 
 int ActivityProgressStatusBarTracker::calculate_summary_percent()

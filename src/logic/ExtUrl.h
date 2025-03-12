@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -24,9 +24,9 @@
 #define SRC_LOGIC_EXTURL_H_
 
 // Std C++
-#include <memory> // for std::unique_ptr<>.
+//#include <memory> // for std::unique_ptr<>.
 
-// Qt5
+// Qt
 #include <QUrl>
 #include <QDateTime>
 class QFileInfo;
@@ -77,7 +77,7 @@ Q_DECLARE_METATYPE(FileModificationInfo);
  * An extended URL class.
  * Extensions are data used to detect if the referenced item has changed.
  */
-class ExtUrl : public virtual ISerializable
+class ExtUrl : public ISerializable
 {
 	Q_GADGET
 
@@ -123,22 +123,10 @@ public:
      */
     Status getStatus();
 
-	/// @name Serialization
+	/// @todo Can the data members be protected?
+
+	/// @name Data members.
 	/// @{
-
-	/// @todo Can these be protected?
-	QVariant toVariant() const override;
-	void fromVariant(const QVariant& variant) override;
-
-	QTH_FRIEND_QDATASTREAM_OPS(ExtUrl);
-	QTH_DECLARE_FRIEND_QDEBUG_OP(ExtUrl);
-
-	/// @}
-
-private:
-
-    /// @name Data members.
-    /// @{
 
 	/// The QUrl.
 	QUrl m_url;
@@ -166,6 +154,16 @@ private:
 	/// @}
 
 //	bool isValid() { return m_url.isValid(); }
+
+	/// @name Serialization
+	/// @{
+
+	QVariant toVariant() const override;
+	void fromVariant(const QVariant& variant) override;
+
+	QTH_FRIEND_QDATASTREAM_OPS(ExtUrl);
+
+	/// @}
 
 protected:
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2019, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -130,14 +130,14 @@ public:
 	 */
 	std::vector<mapped_type> operator[](const Key& key) __attribute__((deprecated));
 
-	iterator insert(const value_type& value) { return m_the_map.insert(value); };
+    iterator insert(const value_type& value) { return m_the_map.insert(value); }
 
 	/**
 	 * Insert @a value under @a key.
 	 * @note A two-parameter insert() is conspicuously absent from std::map/multimap and QMap.  I'm sure I'll
 	 *       discover the reason after this interface is fully entrenched in the codebase.
 	 */
-	iterator insert(const key_type& key, const mapped_type& value) { return m_the_map.insert({key, value}); };
+    iterator insert(const key_type& key, const mapped_type& value) { return m_the_map.insert({key, value}); }
 
 
 	/// @name Lookup.
@@ -171,10 +171,10 @@ public:
 
 	iterator begin() { return m_the_map.begin(); }
 	iterator end() { return m_the_map.end(); }
-	const_iterator begin() const { return m_the_map.begin(); };
-	const_iterator end() const { return m_the_map.end(); };
-	const_iterator cbegin() const noexcept { return m_the_map.cbegin(); };
-	const_iterator cend() const noexcept { return m_the_map.cend(); };
+    const_iterator begin() const { return m_the_map.begin(); }
+    const_iterator end() const { return m_the_map.end(); }
+    const_iterator cbegin() const noexcept { return m_the_map.cbegin(); }
+    const_iterator cend() const noexcept { return m_the_map.cend(); }
 
 	template <class CallbackType>
 	void foreach_pair(CallbackType&& t) const

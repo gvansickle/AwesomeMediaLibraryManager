@@ -22,12 +22,11 @@
  */
 #include "InsertionOrderedMap.h"
 
-// Qt5
+// Qt
 #include <utils/RegisterQtMetatypes.h>
 
-// Ours
-#include <utils/DebugHelpers.h>
-
-QTH_DEFINE_QDEBUG_OP(InsertionOrderedStrVarMap, );
-
-
+AMLM_QREG_CALLBACK([](){
+	qIn() << "Registering InsertionOrderedMap";
+	qRegisterMetaType<InsertionOrderedMap<QString, QVariant>>();
+	qRegisterMetaType<QVariantInsertionOrderedMap>();
+	});

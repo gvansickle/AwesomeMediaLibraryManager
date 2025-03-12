@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -23,7 +23,7 @@
 #include <tuple>
 #include <string>
 
-/// Qt5
+// Qt
 #include <QIcon>
 #include <QStyle>
 #include <QStyleFactory>
@@ -42,8 +42,8 @@
 #include <QMimeType>
 #include <QToolButton>
 
-/// KF5
-#if HAVE_KF501
+// KF
+#if HAVE_KF6
 #include <KIconTheme>
 #include <KActionMenu>
 #endif
@@ -183,8 +183,8 @@ void Theme::initialize()
 #if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
     // QIcon::fallbackSearchPaths() Introduced in Qt5 5.11.0.
     qIn() << "Initial Icon Theme Fallback Search Paths:";
-	auto fsp = QIcon::fallbackSearchPaths().toStdList();
-	for(const auto& respath : fsp)
+    auto fsp = QIcon::fallbackSearchPaths(); //.toStdList();
+	for(const auto& respath : std::as_const(fsp))
     {
         qIn() << "  " << respath;
     }
@@ -445,7 +445,7 @@ QActionGroup * Theme::getWidgetStylesActionGroup(MainWindow *main_window)
 	}
 
 	// Add all available styles to the menu, checking the currently selected one.
-	for(const QString &style : qAsConst(m_available_qstyles))
+    for(const QString &style : std::as_const(m_available_qstyles))
 	{
         QAction *a = new QAction(style, stylesGroup);
 		a->setCheckable(true);
@@ -469,7 +469,7 @@ QString Theme::getUserDefaultQStyle(const char* fallback)
 
 QStringList Theme::FindIconThemes()
 {
-#if HAVE_KF501
+#if HAVE_KF501 || HAVE_KF6
     // List all icon themes installed on the system, global and local.
     QStringList retlist = KIconTheme::list();
 #else

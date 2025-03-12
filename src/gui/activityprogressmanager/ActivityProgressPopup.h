@@ -20,10 +20,8 @@
 #ifndef SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSPOPUP_H_
 #define SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSPOPUP_H_
 
-/// Qt5
-class QWidget;
-#include <QWidgetAction>
-
+// Qt
+#include <QWidget>
 
 /**
  * From https://community.kde.org/Frameworks/Porting_Notes#Application:
@@ -36,8 +34,11 @@ class QWidget;
  */
 class ActivityProgressPopup : public QWidget
 {
+    Q_OBJECT
 public:
 	explicit ActivityProgressPopup(QWidget* parent = nullptr);
 };
+
+Q_DECLARE_METATYPE(ActivityProgressPopup)
 
 #endif /* SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSPOPUP_H_ */

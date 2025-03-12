@@ -39,7 +39,7 @@ ExpandingFrameWidget::ExpandingFrameWidget(QWidget *main_progress_bar_widget, QW
     Q_ASSERT(layout() == nullptr);
     setLayout(new QVBoxLayout());
     layout()->setSpacing(0);
-    layout()->setMargin(0);
+//QT6 No member: layout()->setMargin(0);
     layout()->setSizeConstraint(QLayout::SetFixedSize);
 
     setBackgroundRole( QPalette::Window );
@@ -49,7 +49,7 @@ ExpandingFrameWidget::ExpandingFrameWidget(QWidget *main_progress_bar_widget, QW
     setMinimumHeight( 26 );
 
     setContentsMargins( 4, 4, 4, 4 );
-    // Make the widget size confirm to the size of the contained widgets,
+    // Make the widget size conform to the size of the contained widgets,
     // i.e. the user can't resize it.
     layout()->setSizeConstraint(QLayout::SetFixedSize);
 

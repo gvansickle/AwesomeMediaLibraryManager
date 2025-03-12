@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -35,7 +35,8 @@
 #include <QString>
 #include <QStringList>
 #include <QTime>
-#include <QTextCodec>
+//#include <QTextCodec>
+#include <text_encoding> // C++26.
 #include <QUrl>
 #include <QDebug>
 #include <QMetaEnum>
@@ -55,7 +56,7 @@ enum /*QLocale::*/DataSizeFormats
 #endif
 
 // KF5
-#if HAVE_KF501
+#if HAVE_KF501 || HAVE_KF6
 #   ifndef HAVE_QLOCALE_FORMATTEDDATASIZE
     /// Needed to format numbers into "12.3 GB" etc. until we can rely on Qt 5.10, which supports
     /// it in QLocale.
@@ -177,7 +178,17 @@ operator<<(LHSType& out, const T& str)
 //	return out << LHSType::fromUtf8(strlist.toString().toCString(true));
 //}
 
-bool isValidUTF8(const char* bytes);
+static inline bool isValidUTF8(const char* bytes)
+{
+	auto toUtf16 = QStringDecoder(QStringDecoder::Utf8);
+	QString text = toUtf16(bytes);
+	Q_UNUSED(text);
+	if(toUtf16.hasError())
+	{
+		return false;
+	}
+	return true;
+}
 
 /// @}
 
@@ -191,7 +202,8 @@ bool isValidUTF8(const char* bytes);
  * @param value  Any Q_ENUM() or Q_FLAG().
  * @return A QString representing that Q_ENUM/Q_FLAG.
  */
-template<typename QEnumType, REQUIRES(QtPrivate::IsQEnumHelper<QEnumType>::Value)>
+template<typename QEnumType>
+requires requires (QEnumType){ QtPrivate::IsQEnumHelper<QEnumType>::Value; }
 QString toqstr(const QEnumType value)
 {
 	QMetaEnum me = QMetaEnum::fromType<QEnumType>();

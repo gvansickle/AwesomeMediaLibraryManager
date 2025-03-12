@@ -94,7 +94,7 @@ ExtFutureState::State ExtFuture<T>::state() const
 		{QFutureInterfaceBase::Started,  "Started"},
 		{QFutureInterfaceBase::Finished,  "Finished"},
 		{QFutureInterfaceBase::Canceled,  "Canceled"},
-		{QFutureInterfaceBase::Paused,   "Paused"},
+//		{QFutureInterfaceBase::Paused,   "Paused"},
 		{QFutureInterfaceBase::Throttled, "Throttled"}
 	};
 

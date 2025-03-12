@@ -11,6 +11,11 @@ using std::endl;
 struct DeptMaster {
     int deptId = 0;
     std::string deptName;
+
+#ifndef SQLITE_ORM_AGGREGATE_NSDMI_SUPPORTED
+    DeptMaster() = default;
+    DeptMaster(int deptId, std::string deptName) : deptId{deptId}, deptName{std::move(deptName)} {}
+#endif
 };
 
 struct EmpMaster {
@@ -19,17 +24,27 @@ struct EmpMaster {
     std::string lastName;
     long salary;
     decltype(DeptMaster::deptId) deptId;
+
+#ifndef SQLITE_ORM_AGGREGATE_NSDMI_SUPPORTED
+    EmpMaster() = default;
+    EmpMaster(int empId,
+              std::string firstName,
+              std::string lastName,
+              long salary,
+              decltype(DeptMaster::deptId) deptId) :
+        empId{empId}, firstName{std::move(firstName)}, lastName{std::move(lastName)}, salary{salary}, deptId{deptId} {}
+#endif
 };
 
 int main() {
     using namespace sqlite_orm;
-    
+
     auto storage = make_storage("",
                                 make_table("dept_master",
-                                           make_column("dept_id", &DeptMaster::deptId, autoincrement(), primary_key()),
+                                           make_column("dept_id", &DeptMaster::deptId, primary_key().autoincrement()),
                                            make_column("dept_name", &DeptMaster::deptName)),
                                 make_table("emp_master",
-                                           make_column("emp_id", &EmpMaster::empId, autoincrement(), primary_key()),
+                                           make_column("emp_id", &EmpMaster::empId, primary_key().autoincrement()),
                                            make_column("first_name", &EmpMaster::firstName),
                                            make_column("last_name", &EmpMaster::lastName),
                                            make_column("salary", &EmpMaster::salary),
@@ -61,10 +76,9 @@ int main() {
         //  EXCEPT
         //  SELECT dept_id
         //  FROM emp_master
-        auto rows = storage.select(except(select(&DeptMaster::deptId),
-                                          select(&EmpMaster::deptId)));
+        auto rows = storage.select(except(select(&DeptMaster::deptId), select(&EmpMaster::deptId)));
         cout << "rows count = " << rows.size() << endl;
-        for(auto id : rows) {
+        for (auto id: rows) {
             cout << id << endl;
         }
     }
@@ -74,13 +88,12 @@ int main() {
         //  INTERSECT
         //  SELECT dept_id
         //  FROM emp_master
-        auto rows = storage.select(intersect(select(&DeptMaster::deptId),
-                                             select(&EmpMaster::deptId)));
+        auto rows = storage.select(intersect(select(&DeptMaster::deptId), select(&EmpMaster::deptId)));
         cout << "rows count = " << rows.size() << endl;
-        for(auto id : rows) {
+        for (auto id: rows) {
             cout << id << endl;
         }
     }
-    
+
     return 0;
 }

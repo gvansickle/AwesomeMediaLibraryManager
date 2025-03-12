@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2019, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -29,9 +29,12 @@
 #include <map>
 #include <tuple>
 #include <vector>
+#include <utility> // For std::pair<>.
 
-// Qt5
+// Qt
 #include <QVariant>
+#include <QMetaType>
+#include <QDebug>
 
 // Ours
 #include <utils/QtHelpers.h>
@@ -51,21 +54,22 @@ template <class KeyType, class ValueType> class InsertionOrderedMap;
 template <class KeyType, class ValueType> QDebug operator<<(QDebug out, const InsertionOrderedMap<KeyType, ValueType>& obj);
 
 /**
- * A map which maintains the insertion order of its keys.  The only operational difference between this and
+ * A map which maintains the insertion order of its keys.  The main operational difference between this and
  * std::map is that iteration over [begin(), end()) will be done in insertion order, not key-sorted order.
- *
- */
+  */
 template <typename KeyType, typename ValueType>
 class InsertionOrderedMap
 {
-
 public:
 	/// @name Member types
 	/// @{
 	using key_type = KeyType;
 	using mapped_type = ValueType;
-	using value_type = std::pair</*const*/ KeyType, ValueType>;
-//	using value_type = value_type_grvs<KeyType, ValueType>;
+	using value_type = std::pair<KeyType, ValueType>;
+	using size_type = std::size_t;
+	using difference_type = std::ptrdiff_t;
+	using reference = ValueType&;
+	using const_reference = const ValueType&;
 	using underlying_container_type = std::deque<value_type>;
 	using const_iterator = typename underlying_container_type::const_iterator;
 	using iterator = typename underlying_container_type::iterator;
@@ -79,7 +83,7 @@ private:
 
 public:
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(InsertionOrderedMap);
-	~InsertionOrderedMap() = default; ///@note Not virtual because templates and slicing.
+	~InsertionOrderedMap() = default;
 
 	/// Copy-through-QVariant constructor.
 	explicit InsertionOrderedMap(const QVariant& variant)
@@ -90,17 +94,7 @@ public:
 		*this = variant.value< InsertionOrderedMap<KeyType, ValueType> >();
 	}
 
-	void set_name(const std::string& name_str)
-	{
-		m_name = name_str;
-	}
-
-	const std::string& get_name() const
-	{
-		return m_name;
-	}
-
-	void insert(const KeyType key, const ValueType value)
+	void insert(const KeyType& key, const ValueType& value)
 	{
 		insert(std::make_pair(key, value));
 	}
@@ -148,14 +142,33 @@ public:
 		}
 	}
 
+	void clear() noexcept
+	{
+		m_vector_of_elements.clear();
+		m_map_of_keys_to_vector_indices.clear();
+		m_attribute_map.clear();
+	}
+
 	const mapped_type& at(const KeyType& key) const
 	{
 		auto it = this->find(key);
 		if(it == m_vector_of_elements.cend())
 		{
-			throw std::out_of_range(std::string("InsertionOrderedMap(): no such element at():")/* + std::to_string(key)*/);
+			throw std::out_of_range(std::string("InsertionOrderedMap(): no such element at():") + key.toUtf8().toStdString());
 		}
 		return it->second;
+	}
+
+	iterator find(const key_type& key)
+	{
+		auto it_index = m_map_of_keys_to_vector_indices.find(key);
+		if (it_index == m_map_of_keys_to_vector_indices.end())
+		{
+			return m_vector_of_elements.end();
+		}
+
+		Q_ASSERT(it_index->first == m_vector_of_elements[it_index->second].first);
+		return m_vector_of_elements.begin() + it_index->second;
 	}
 
 	const_iterator find( const key_type& key ) const
@@ -170,11 +183,6 @@ public:
 		return m_vector_of_elements.cbegin() + it_index->second;
 	}
 
-//	const_iterator find( const KeyType& key ) const
-//	{
-//		return m_vector_of_elements.find(key);
-//	}
-
 	bool contains(const KeyType& key) const
 	{
 		auto it = this->find(key);
@@ -186,7 +194,7 @@ public:
 		return true;
 	}
 
-	const ValueType value(const KeyType& key, const ValueType& default_value = ValueType()) const
+	const value_type value(const KeyType& key, const ValueType& default_value = ValueType()) const
 	{
 		auto cit = this->find(key);
 		if(cit == this->cend())
@@ -265,10 +273,13 @@ public:
 
 	/// @}
 
-	const_iterator cbegin() const { return std::cbegin(m_vector_of_elements); };
-	const_iterator begin() const { return this->cbegin(); }
-	const_iterator cend() const { return std::cend(m_vector_of_elements); };
-	const_iterator end() const { return this->cend(); }
+	iterator begin() { return m_vector_of_elements.begin(); }
+	const_iterator begin() const { return m_vector_of_elements.begin(); }
+	const_iterator cbegin() const noexcept { return std::cbegin(m_vector_of_elements); };
+
+	iterator end()	{ return m_vector_of_elements.end(); }
+	const_iterator end() const { return m_vector_of_elements.end(); }
+	const_iterator cend() const noexcept { return std::cend(m_vector_of_elements); };
 
 	bool empty() const { return m_vector_of_elements.empty(); };
 	size_t size() const { return m_vector_of_elements.size(); };
@@ -298,9 +309,7 @@ public:
 #endif // Qt5
 
 
-protected:
-//	class InsertionOrderedStrVarMap;
-//	friend QDebug operator<<(QDebug dbg, const InsertionOrderedStrVarMap & obj);
+private:
 
 	/// Arbitrary "name" string.  Mainly for debug, happy path shouldn't try to use this for anything.
 	std::string m_name {"[name_not_set]"};
@@ -309,45 +318,25 @@ protected:
 	// Map of keys to indexes in the vector.
 	std::map<KeyType, uc_size_type> m_map_of_keys_to_vector_indices;
 
+	/// Map of attributes.
 	std::map<std::string, std::string> m_attribute_map;
 
 };
 
-#if 1 // Qt5
-
-//Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(InsertionOrderedMap);
-
-using InsertionOrderedStrVarMap = InsertionOrderedMap<QString, QVariant>;
-Q_DECLARE_METATYPE(InsertionOrderedStrVarMap);
-
-QTH_DECLARE_QDEBUG_OP(InsertionOrderedStrVarMap);
-
-template <class KeyType, class ValueType>
-QDebug operator<<(QDebug dbg, const InsertionOrderedMap<KeyType, ValueType>& obj)
+template <typename KeyType, typename ValueType>
+QDebug operator<<(QDebug dbg, const InsertionOrderedMap<KeyType, ValueType>& map)
 {
-	QDebugStateSaver saver(dbg);
-
-#define M_DATASTREAM_FIELDS(X) \
-	X(m_name)/* \
-	X(m_vector_of_elements) \
-	X(m_map_of_keys_to_vector_indices) \
-	X(m_attribute_map)*/
-
-	dbg << "InsertionOrderedMap\n(";
-	dbg << M_ID_VAL(obj.size());
-
-#define X(field) dbg << M_ID_VAL(obj.field) ;
-	M_DATASTREAM_FIELDS(X);
-#undef X
-
-	dbg << ")";
-
+    // Q_ASSERT(0);// TODO
 	return dbg;
-#undef M_DATASTREAM_FIELDS
 }
 
+// Q_DECLARE_METATYPE(InsertionOrderedMap)
 
+// Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE(InsertionOrderedMap);
+Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(InsertionOrderedMap);
+using QVariantInsertionOrderedMap = InsertionOrderedMap<QString, QVariant>;
+// Q_DECLARE_METATYPE_TEMPLATE_2ARG(InsertionOrderedMap);
+Q_DECLARE_METATYPE(QVariantInsertionOrderedMap);
 
-#endif // Qt5
 
 #endif /* SRC_FUTURE_INSERTIONORDEREDMAP_H_ */

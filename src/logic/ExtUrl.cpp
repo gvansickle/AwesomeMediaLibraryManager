@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -23,10 +23,10 @@
 
 #include "ExtUrl.h"
 
-// Qt5
+// Qt
 #include <QFileInfo>
 
-// Ours, Qt5 Support
+// Ours, Qt Support
 #include <utils/RegisterQtMetatypes.h>
 
 // Ours
@@ -37,7 +37,6 @@
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering ExtUrl";
 	qRegisterMetaType<ExtUrl>();
-	qRegisterMetaTypeStreamOperators<ExtUrl>();
 });
 
 
@@ -62,10 +61,10 @@ ExtUrl::ExtUrl(const QUrl& qurl, const QFileInfo* qurl_finfo) : m_url(qurl)
 
 QVariant ExtUrl::toVariant() const
 {
-	InsertionOrderedStrVarMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 
 	// Add all the fields to the map.
-#define X(field_tag, field)   map_insert_or_die(map, field_tag, field );
+#define X(field_tag, field)   map_insert_or_die(map, field_tag, field);
 	M_DATASTREAM_FIELDS(X)
 #undef X
 
@@ -74,8 +73,8 @@ QVariant ExtUrl::toVariant() const
 
 void ExtUrl::fromVariant(const QVariant& variant)
 {
-	InsertionOrderedStrVarMap map;
-	qviomap_from_qvar_or_die(&map, variant);
+	InsertionOrderedMap<QString, QVariant> map = variant.value<InsertionOrderedMap<QString, QVariant>>();
+	// qviomap_from_qvar_or_die(&map, variant);
 
 	// Extract all the fields from the map, cast them to their type.
 #define X(field_tag, field)    map_read_field_or_warn(map, field_tag, &field);

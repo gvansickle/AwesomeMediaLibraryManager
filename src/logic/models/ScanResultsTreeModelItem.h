@@ -93,8 +93,6 @@ protected:
 	DirScanResult m_dsr;
 };
 
-/// @todo Need this here for QVariant::fromValue().
-//Q_DECLARE_METATYPE(std::string);
 Q_DECLARE_METATYPE(ScanResultsTreeModelItem);
 Q_DECLARE_METATYPE(std::shared_ptr<ScanResultsTreeModelItem>);
 

@@ -113,7 +113,7 @@ using strviw_type = QLatin1String;
 
 QVariant SRTMItem_LibEntry::toVariant() const
 {
-	InsertionOrderedStrVarMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 
 	// Overwrite any class info added by the above.
 	set_map_class_info(this, &map);
@@ -148,7 +148,7 @@ QVariant SRTMItem_LibEntry::toVariant() const
 
 void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 {
-	InsertionOrderedStrVarMap map = variant.value<InsertionOrderedStrVarMap>();
+	InsertionOrderedMap<QString, QVariant> map = variant.value<InsertionOrderedMap<QString, QVariant>>();
 //	dump_map(map);
 
 	try
@@ -183,6 +183,10 @@ void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 		m_library_entry = std::make_shared<LibraryEntry>();
 		m_library_entry->fromVariant(it);
 	}
+#endif
+
+	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
+	child_var_list = map.at(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
 
 
 	// Get this item's children.

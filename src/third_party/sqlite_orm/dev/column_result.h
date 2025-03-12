@@ -1,310 +1,349 @@
 #pragma once
 
-#include <type_traits>  //  std::enable_if, std::is_same, std::decay
-#include <tuple>    //  std::tuple
+#include <type_traits>  //  std::enable_if, std::is_same, std::decay, std::is_arithmetic, std::is_base_of
+#include <functional>  //  std::reference_wrapper
 
+#include "functional/cxx_type_traits_polyfill.h"
+#include "functional/mpl.h"
+#include "tuple_helper/tuple_traits.h"
+#include "tuple_helper/tuple_fy.h"
+#include "tuple_helper/tuple_filter.h"
+#include "tuple_helper/tuple_transformer.h"
+#include "tuple_helper/same_or_void.h"
+#include "type_traits.h"
+#include "member_traits/member_traits.h"
+#include "mapped_type_proxy.h"
 #include "core_functions.h"
-#include "aggregate_functions.h"
 #include "select_constraints.h"
 #include "operators.h"
 #include "rowid.h"
+#include "column_result_proxy.h"
 #include "alias.h"
-#include "column.h"
+#include "cte_types.h"
 #include "storage_traits.h"
+#include "function.h"
+#include "ast/special_keywords.h"
 
 namespace sqlite_orm {
-    
+
     namespace internal {
-        
+
         /**
+         *  Obtains the result type of expressions that form the columns of a select statement.
+         *  
          *  This is a proxy class used to define what type must have result type depending on select
          *  arguments (member pointer, aggregate functions, etc). Below you can see specializations
-         *  for different types. E.g. specialization for core_functions::length_t has `type` int cause
+         *  for different types. E.g. specialization for internal::length_t has `type` int cause
          *  LENGTH returns INTEGER in sqlite. Every column_result_t must have `type` type that equals
          *  c++ SELECT return type for T
+         *  DBOs - db_objects_tuple type
          *  T - C++ type
          *  SFINAE - sfinae argument
          */
-        template<class St, class T, class SFINAE = void>
-        struct column_result_t;
-        
-        template<class St, class O, class F>
-        struct column_result_t<St, F O::*, typename std::enable_if<std::is_member_pointer<F O::*>::value && !std::is_member_function_pointer<F O::*>::value>::type> {
-            using type = F;
+        template<class DBOs, class T, class SFINAE = void>
+        struct column_result_t {
+#ifdef __FUNCTION__
+            // produce an error message that reveals `T` and `DBOs`
+            static constexpr bool reveal() {
+                static_assert(polyfill::always_false_v<T>, "T not found in DBOs - " __FUNCTION__);
+            }
+            static constexpr bool trigger = reveal();
+#endif
         };
-        
-        /**
-         *  Common case for all getter types. Getter types are defined in column.h file
-         */
-        template<class St, class T>
-        struct column_result_t<St, T, typename std::enable_if<is_getter<T>::value>::type> {
-            using type = typename getter_traits<T>::field_type;
+
+        template<class DBOs, class T>
+        using column_result_of_t = typename column_result_t<DBOs, T>::type;
+
+        template<class DBOs, class Tpl>
+        using column_result_for_tuple_t =
+            transform_tuple_t<Tpl, mpl::bind_front_fn<column_result_of_t, DBOs>::template fn>;
+
+#ifdef SQLITE_ORM_OPTIONAL_SUPPORTED
+        template<class DBOs, class T>
+        struct column_result_t<DBOs, as_optional_t<T>, void> {
+            using type = std::optional<column_result_of_t<DBOs, T>>;
         };
-        
-        /**
-         *  Common case for all setter types. Setter types are defined in column.h file
-         */
-        template<class St, class T>
-        struct column_result_t<St, T, typename std::enable_if<is_setter<T>::value>::type> {
-            using type = typename setter_traits<T>::field_type;
+
+        template<class DBOs, class T>
+        struct column_result_t<DBOs, std::optional<T>, void> {
+            using type = std::optional<T>;
         };
-        
-        template<class St, class T>
-        struct column_result_t<St, core_functions::length_t<T>, void> {
+#endif  //  SQLITE_ORM_OPTIONAL_SUPPORTED
+
+        template<class DBOs, class L, class A>
+        struct column_result_t<DBOs, dynamic_in_t<L, A>, void> {
+            using type = bool;
+        };
+
+        template<class DBOs, class L, class... Args>
+        struct column_result_t<DBOs, in_t<L, Args...>, void> {
+            using type = bool;
+        };
+
+        template<class DBOs>
+        struct column_result_t<DBOs, current_time_t, void> {
+            using type = std::string;
+        };
+
+        template<class DBOs>
+        struct column_result_t<DBOs, current_date_t, void> {
+            using type = std::string;
+        };
+
+        template<class DBOs>
+        struct column_result_t<DBOs, current_timestamp_t, void> {
+            using type = std::string;
+        };
+
+        template<class DBOs, class T>
+        struct column_result_t<DBOs, T, match_if<std::is_member_pointer, T>> : member_field_type<T> {};
+
+        template<class DBOs, class R, class S, class... Args>
+        struct column_result_t<DBOs, built_in_function_t<R, S, Args...>, void> {
+            using type = R;
+        };
+
+        template<class DBOs, class R, class S, class... Args>
+        struct column_result_t<DBOs, built_in_aggregate_function_t<R, S, Args...>, void> {
+            using type = R;
+        };
+
+        template<class DBOs, class F, class... Args>
+        struct column_result_t<DBOs, function_call<F, Args...>, void> {
+            using type = typename callable_arguments<F>::return_type;
+        };
+
+        template<class DBOs, class X, class... Rest, class S>
+        struct column_result_t<DBOs, built_in_function_t<unique_ptr_result_of<X>, S, X, Rest...>, void> {
+            using type = std::unique_ptr<column_result_of_t<DBOs, X>>;
+        };
+
+        template<class DBOs, class X, class S>
+        struct column_result_t<DBOs, built_in_aggregate_function_t<unique_ptr_result_of<X>, S, X>, void> {
+            using type = std::unique_ptr<column_result_of_t<DBOs, X>>;
+        };
+
+        template<class DBOs, class T>
+        struct column_result_t<DBOs, count_asterisk_t<T>, void> {
             using type = int;
         };
-        
-#if SQLITE_VERSION_NUMBER >= 3007016
-        
-        template<class St, class ...Args>
-        struct column_result_t<St, core_functions::char_t_<Args...>, void> {
+
+        template<class DBOs>
+        struct column_result_t<DBOs, nullptr_t, void> {
+            using type = nullptr_t;
+        };
+
+        template<class DBOs>
+        struct column_result_t<DBOs, count_asterisk_without_type, void> {
+            using type = int;
+        };
+
+        template<class DBOs, class T>
+        struct column_result_t<DBOs, distinct_t<T>, void> : column_result_t<DBOs, T> {};
+
+        template<class DBOs, class T>
+        struct column_result_t<DBOs, all_t<T>, void> : column_result_t<DBOs, T> {};
+
+        template<class DBOs, class L, class R>
+        struct column_result_t<DBOs, conc_t<L, R>, void> {
             using type = std::string;
+        };
+
+        template<class DBOs, class T>
+        struct column_result_t<DBOs, unary_minus_t<T>, void> {
+            using type = double;
+        };
+
+        template<class DBOs, class L, class R>
+        struct column_result_t<DBOs, add_t<L, R>, void> {
+            using type = double;
+        };
+
+        template<class DBOs, class L, class R>
+        struct column_result_t<DBOs, sub_t<L, R>, void> {
+            using type = double;
+        };
+
+        template<class DBOs, class L, class R>
+        struct column_result_t<DBOs, mul_t<L, R>, void> {
+            using type = double;
+        };
+
+        template<class DBOs, class L, class R>
+        struct column_result_t<DBOs, div_t<L, R>, void> {
+            using type = double;
+        };
+
+        template<class DBOs, class L, class R>
+        struct column_result_t<DBOs, mod_t<L, R>, void> {
+            using type = double;
+        };
+
+        template<class DBOs, class L, class R>
+        struct column_result_t<DBOs, bitwise_shift_left_t<L, R>, void> {
+            using type = int;
+        };
+
+        template<class DBOs, class L, class R>
+        struct column_result_t<DBOs, bitwise_shift_right_t<L, R>, void> {
+            using type = int;
+        };
+
+        template<class DBOs, class L, class R>
+        struct column_result_t<DBOs, bitwise_and_t<L, R>, void> {
+            using type = int;
+        };
+
+        template<class DBOs, class L, class R>
+        struct column_result_t<DBOs, bitwise_or_t<L, R>, void> {
+            using type = int;
+        };
+
+        template<class DBOs, class T>
+        struct column_result_t<DBOs, bitwise_not_t<T>, void> {
+            using type = int;
+        };
+
+        template<class DBOs>
+        struct column_result_t<DBOs, rowid_t, void> {
+            using type = int64;
+        };
+
+        template<class DBOs>
+        struct column_result_t<DBOs, oid_t, void> {
+            using type = int64;
+        };
+
+        template<class DBOs>
+        struct column_result_t<DBOs, _rowid_t, void> {
+            using type = int64;
+        };
+
+        template<class DBOs, class T>
+        struct column_result_t<DBOs, table_rowid_t<T>, void> {
+            using type = int64;
+        };
+
+        template<class DBOs, class T>
+        struct column_result_t<DBOs, table_oid_t<T>, void> {
+            using type = int64;
+        };
+
+        template<class DBOs, class T>
+        struct column_result_t<DBOs, table__rowid_t<T>, void> {
+            using type = int64;
+        };
+
+        template<class DBOs, class T, class C>
+        struct column_result_t<DBOs, alias_column_t<T, C>, void> : column_result_t<DBOs, C> {};
+
+        template<class DBOs, class T, class F>
+        struct column_result_t<DBOs, column_pointer<T, F>, void> : column_result_t<DBOs, F> {};
+
+#if (SQLITE_VERSION_NUMBER >= 3008003) && defined(SQLITE_ORM_WITH_CTE)
+        template<class DBOs, class Moniker, class ColAlias>
+        struct column_result_t<DBOs, column_pointer<Moniker, alias_holder<ColAlias>>, void> {
+            using table_type = storage_pick_table_t<Moniker, DBOs>;
+            using cte_mapper_type = cte_mapper_type_t<table_type>;
+
+            // lookup ColAlias in the final column references
+            using colalias_index =
+                find_tuple_type<typename cte_mapper_type::final_colrefs_tuple, alias_holder<ColAlias>>;
+            static_assert(colalias_index::value < std::tuple_size_v<typename cte_mapper_type::final_colrefs_tuple>,
+                          "No such column mapped into the CTE.");
+            using type = std::tuple_element_t<colalias_index::value, typename cte_mapper_type::fields_type>;
         };
 #endif
-        
-        template<class St>
-        struct column_result_t<St, core_functions::random_t, void> {
-            using type = int;
+
+        template<class DBOs, class... Args>
+        struct column_result_t<DBOs, columns_t<Args...>, void>
+            : conc_tuple<tuplify_t<column_result_of_t<DBOs, std::decay_t<Args>>>...> {};
+
+        template<class DBOs, class T, class... Args>
+        struct column_result_t<DBOs, struct_t<T, Args...>, void> {
+            using type = structure<T, tuple_cat_t<tuplify_t<column_result_of_t<DBOs, std::decay_t<Args>>>...>>;
         };
-        
-        template<class St>
-        struct column_result_t<St, core_functions::changes_t, void> {
-            using type = int;
+
+        template<class DBOs, class T, class... Args>
+        struct column_result_t<DBOs, select_t<T, Args...>> : column_result_t<DBOs, T> {};
+
+        template<class DBOs, class T>
+        struct column_result_t<DBOs, T, match_if<is_compound_operator, T>> {
+            using type =
+                polyfill::detected_t<common_type_of_t, column_result_for_tuple_t<DBOs, typename T::expressions_tuple>>;
+            static_assert(!std::is_same<type, polyfill::nonesuch>::value,
+                          "Compound select statements must return a common type");
         };
-        
-        template<class St, class T>
-        struct column_result_t<St, core_functions::abs_t<T>, void> {
-            using type = std::unique_ptr<double>;
+
+        template<class DBOs, class T>
+        struct column_result_t<DBOs, T, match_if<is_binary_condition, T>> {
+            using type = typename T::result_type;
         };
-        
-        template<class St, class T>
-        struct column_result_t<St, core_functions::lower_t<T>, void> {
+
+        template<class DBOs, class T, class X, class Y, class Z>
+        struct column_result_t<DBOs, highlight_t<T, X, Y, Z>, void> {
             using type = std::string;
         };
-        
-        template<class St, class T>
-        struct column_result_t<St, core_functions::upper_t<T>, void> {
-            using type = std::string;
-        };
-        
-        template<class St, class X>
-        struct column_result_t<St, core_functions::trim_single_t<X>, void> {
-            using type = std::string;
-        };
-        
-        template<class St, class X, class Y>
-        struct column_result_t<St, core_functions::trim_double_t<X, Y>, void> {
-            using type = std::string;
-        };
-        
-        template<class St, class X>
-        struct column_result_t<St, core_functions::ltrim_single_t<X>, void> {
-            using type = std::string;
-        };
-        
-        template<class St, class X, class Y>
-        struct column_result_t<St, core_functions::ltrim_double_t<X, Y>, void> {
-            using type = std::string;
-        };
-        
-        template<class St, class X>
-        struct column_result_t<St, core_functions::rtrim_single_t<X>, void> {
-            using type = std::string;
-        };
-        
-        template<class St, class X, class Y>
-        struct column_result_t<St, core_functions::rtrim_double_t<X, Y>, void> {
-            using type = std::string;
-        };
-        
-        template<class St, class T, class ...Args>
-        struct column_result_t<St, core_functions::date_t<T, Args...>, void> {
-            using type = std::string;
-        };
-        
-        template<class St, class T, class ...Args>
-        struct column_result_t<St, core_functions::julianday_t<T, Args...>, void> {
-            using type = double;
-        };
-        
-        template<class St, class T, class ...Args>
-        struct column_result_t<St, core_functions::datetime_t<T, Args...>, void> {
-            using type = std::string;
-        };
-        
-        template<class St, class T>
-        struct column_result_t<St, aggregate_functions::avg_t<T>, void> {
-            using type = double;
-        };
-        
-        template<class St, class T>
-        struct column_result_t<St, aggregate_functions::count_t<T>, void> {
-            using type = int;
-        };
-        
-        template<class St, class T>
-        struct column_result_t<St, aggregate_functions::count_asterisk_t<T>, void> {
-            using type = int;
-        };
-        
-        template<class St, class T>
-        struct column_result_t<St, aggregate_functions::sum_t<T>, void> {
-            using type = std::unique_ptr<double>;
-        };
-        
-        template<class St, class T>
-        struct column_result_t<St, aggregate_functions::total_t<T>, void> {
-            using type = double;
-        };
-        
-        template<class St, class T>
-        struct column_result_t<St, aggregate_functions::group_concat_single_t<T>, void> {
-            using type = std::string;
-        };
-        
-        template<class St, class T>
-        struct column_result_t<St, aggregate_functions::group_concat_double_t<T>, void> {
-            using type = std::string;
-        };
-        
-        template<class St, class T>
-        struct column_result_t<St, aggregate_functions::max_t<T>, void> {
-            using type = std::unique_ptr<typename column_result_t<St, T>::type>;
-        };
-        
-        template<class St, class T>
-        struct column_result_t<St, aggregate_functions::min_t<T>, void> {
-            using type = std::unique_ptr<typename column_result_t<St, T>::type>;
-        };
-        
-        template<class St>
-        struct column_result_t<St, aggregate_functions::count_asterisk_without_type, void> {
-            using type = int;
-        };
-        
-        template<class St, class T>
-        struct column_result_t<St, distinct_t<T>, void> {
-            using type = typename column_result_t<St, T>::type;
-        };
-        
-        template<class St, class T>
-        struct column_result_t<St, all_t<T>, void> {
-            using type = typename column_result_t<St, T>::type;
-        };
-        
-        template<class St, class L, class R>
-        struct column_result_t<St, conc_t<L, R>, void> {
-            using type = std::string;
-        };
-        
-        template<class St, class L, class R>
-        struct column_result_t<St, add_t<L, R>, void> {
-            using type = double;
-        };
-        
-        template<class St, class L, class R>
-        struct column_result_t<St, sub_t<L, R>, void> {
-            using type = double;
-        };
-        
-        template<class St, class L, class R>
-        struct column_result_t<St, mul_t<L, R>, void> {
-            using type = double;
-        };
-        
-        template<class St, class L, class R>
-        struct column_result_t<St, internal::div_t<L, R>, void> {
-            using type = double;
-        };
-        
-        template<class St, class L, class R>
-        struct column_result_t<St, mod_t<L, R>, void> {
-            using type = double;
-        };
-        
-        template<class St>
-        struct column_result_t<St, rowid_t, void> {
-            using type = int64;
-        };
-        
-        template<class St>
-        struct column_result_t<St, oid_t, void> {
-            using type = int64;
-        };
-        
-        template<class St>
-        struct column_result_t<St, _rowid_t, void> {
-            using type = int64;
-        };
-        
-        template<class St, class T>
-        struct column_result_t<St, table_rowid_t<T>, void> {
-            using type = int64;
-        };
-        
-        template<class St, class T>
-        struct column_result_t<St, table_oid_t<T>, void> {
-            using type = int64;
-        };
-        
-        template<class St, class T>
-        struct column_result_t<St, table__rowid_t<T>, void> {
-            using type = int64;
-        };
-        
-        template<class St, class T, class C>
-        struct column_result_t<St, alias_column_t<T, C>, void> {
-            using type = typename column_result_t<St, C>::type;
-        };
-        
-        template<class St, class T, class F>
-        struct column_result_t<St, column_pointer<T, F>> : column_result_t<St, F, void> {};
-        
-        template<class St, class ...Args>
-        struct column_result_t<St, columns_t<Args...>, void> {
-            using type = std::tuple<typename column_result_t<St, typename std::decay<Args>::type>::type...>;
-        };
-        
-        template<class St, class T, class ...Args>
-        struct column_result_t<St, select_t<T, Args...>> : column_result_t<St, T, void> {};
-        
-        template<class St, class T>
-        struct column_result_t<St, T, typename std::enable_if<is_base_of_template<T, compound_operator>::value>::type> {
-            using left_type = typename T::left_type;
-            using right_type = typename T::right_type;
-            using left_result = typename column_result_t<St, left_type>::type;
-            using right_result = typename column_result_t<St, right_type>::type;
-            static_assert(std::is_same<left_result, right_result>::value, "Compound subselect queries must return same types");
-            using type = left_result;
-        };
-        
+
         /**
          *  Result for the most simple queries like `SELECT 1`
          */
-        template<class St, class T>
-        struct column_result_t<St, T, typename std::enable_if<std::is_arithmetic<T>::value>::type> {
+        template<class DBOs, class T>
+        struct column_result_t<DBOs, T, match_if<std::is_arithmetic, T>> {
             using type = T;
         };
-        
+
         /**
          *  Result for the most simple queries like `SELECT 'ototo'`
          */
-        template<class St>
-        struct column_result_t<St, const char*, void> {
+        template<class DBOs>
+        struct column_result_t<DBOs, const char*, void> {
             using type = std::string;
         };
-        
-        template<class St, class T, class E>
-        struct column_result_t<St, as_t<T, E>, void> : column_result_t<St, typename std::decay<E>::type, void> {};
-        
-        template<class St, class T>
-        struct column_result_t<St, asterisk_t<T>, void> {
-            using type = typename storage_traits::storage_mapped_columns<St, T>::type;
+
+        template<class DBOs>
+        struct column_result_t<DBOs, std::string, void> {
+            using type = std::string;
         };
-        
-        template<class St, class T, class E>
-        struct column_result_t<St, conditions::cast_t<T, E>, void> {
+
+        template<class DBOs, class T, class E>
+        struct column_result_t<DBOs, as_t<T, E>, void> : column_result_t<DBOs, std::decay_t<E>> {};
+
+        template<class DBOs, class T>
+        struct column_result_t<DBOs, asterisk_t<T>, void>
+            : storage_traits::storage_mapped_columns<DBOs, mapped_type_proxy_t<T>> {};
+
+        template<class DBOs, class T>
+        struct column_result_t<DBOs, object_t<T>, void> {
+            using type = table_reference<T>;
+        };
+
+        template<class DBOs, class T, class E>
+        struct column_result_t<DBOs, cast_t<T, E>, void> {
             using type = T;
         };
+
+        template<class DBOs, class R, class T, class E, class... Args>
+        struct column_result_t<DBOs, simple_case_t<R, T, E, Args...>, void> {
+            using type = R;
+        };
+
+        template<class DBOs, class A, class T, class E>
+        struct column_result_t<DBOs, like_t<A, T, E>, void> {
+            using type = bool;
+        };
+
+        template<class DBOs, class A, class T>
+        struct column_result_t<DBOs, glob_t<A, T>, void> {
+            using type = bool;
+        };
+
+        template<class DBOs, class C>
+        struct column_result_t<DBOs, negated_condition_t<C>, void> {
+            using type = bool;
+        };
+
+        template<class DBOs, class T>
+        struct column_result_t<DBOs, std::reference_wrapper<T>, void> : column_result_t<DBOs, T> {};
     }
 }

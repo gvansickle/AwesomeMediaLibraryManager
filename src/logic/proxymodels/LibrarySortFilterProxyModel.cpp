@@ -50,7 +50,7 @@ bool LibrarySortFilterProxyModel::filterAcceptsRow(int sourceRow, const QModelIn
 	for(auto c = 0; c < sourceModel()->columnCount(); c++)
 	{
 		QModelIndex index = sourceModel()->index(sourceRow, c, sourceParent);
-		retval |= sourceModel()->data(index).toString().contains(filterRegExp());
+		retval |= sourceModel()->data(index).toString().contains(filterRegularExpression());
 		if (retval)
 		{
 			break;

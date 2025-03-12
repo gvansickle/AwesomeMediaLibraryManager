@@ -27,7 +27,7 @@
 #include <vector>
 #include <deque>
 
-// Qt5
+// Qt
 #include <QVector>
 #include <QVariant>
 

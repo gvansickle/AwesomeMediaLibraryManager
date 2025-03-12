@@ -85,8 +85,7 @@ public:
      * Sets the base directory of the model.
      * @todo Not sure if we should support more than one or not, but should support "known alias paths".
      */
-    void setBaseDirectory(const QUrl& base_directory);
-    QStringList getBaseDirectoryList() const;
+    void setBaseDirectory(const QUrl& base_directory) override;
 
 	/// @name Serialization
 	/// @{
@@ -122,14 +121,20 @@ protected:
 	QString getXmlStreamName() const override { return "AMLMScanResults"; };
 	QString getXmlStreamVersion() const override { return "0.1"; };
 
-	// The tree's base directory URL.
+	/// The tree's base directory URL.
     QUrl m_base_directory;
+	QString m_title {"XSPF playlist title goes HERE"};
+	QString m_creator {"XSPF playlist CREATOR GOES HERE"};
+	QDateTime m_creation_date;
+	QDateTime m_ts_last_scan_start;
+	QDateTime m_ts_last_scan_end;
+
 
 private:
 
 
 };
 
-
+QTH_DECLARE_QDATASTREAM_OPS(ScanResultsTreeModel);
 
 #endif // SCANRESULTSTREEMODEL_H

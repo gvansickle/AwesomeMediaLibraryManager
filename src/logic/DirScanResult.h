@@ -46,8 +46,13 @@ class ScanResultsTreeModelItem;
 
 /**
  * A single hit found during a directory scan.
+ * A single DirScanResult contains:
+ * - A URL to the directory the audio file was found in.
+ * - A URL to the media file itself.
+ * - A URL to an optional separate-file ("sidecar") Cuesheet.
+ * - Some flags indicating what of the above is valid and what isn't.
  */
-class DirScanResult : public virtual ISerializable
+class DirScanResult : public ISerializable
 {
 	Q_GADGET // Needed for DirProp enum below.
 
@@ -155,6 +160,6 @@ Q_DECLARE_METATYPE(DirScanResult);
 Q_DECLARE_OPERATORS_FOR_FLAGS(DirScanResult::DirPropFlags);
 
 QTH_DECLARE_QDEBUG_OP(DirScanResult);
-//QTH_DECLARE_QDATASTREAM_OPS(DirScanResult);
+// QTH_DECLARE_QDATASTREAM_OPS(DirScanResult);
 
 #endif /* SRC_LOGIC_DIRSCANRESULT_H_ */

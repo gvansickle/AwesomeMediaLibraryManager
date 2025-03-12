@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -26,6 +26,7 @@
 #include "SettingsPageAppearance.h"
 #include "SettingsPageLibrary.h"
 
+// Qt
 #include <QApplication>
 #include <QLayout>
 #include <QtWidgets/QStackedWidget>
@@ -35,7 +36,9 @@
 #include <QStandardItem>
 #include <QListWidget>
 
+// Kf
 #include <KCoreConfigSkeleton>
+#include <KComboBox>
 
 #include <utils/DebugHelpers.h>
 #include "../MainWindow.h"
@@ -43,9 +46,7 @@
 #include <AMLMSettings.h>
 #include <gui/Theme.h>
 
-#include <KComboBox>
-#include <QComboBox>
-#include <QRegularExpression>
+
 
 SettingsDialog::SettingsDialog(QWidget *parent, const char* name, KConfigSkeleton *config)
 	: KConfigDialog( parent, name, config )
@@ -59,24 +60,7 @@ SettingsDialog::SettingsDialog(QWidget *parent, const char* name, KConfigSkeleto
 //	addPage(new SettingsPageLibrary(this), tr("Music Library") );
 	/// ...
 
-	connect(this, &KConfigDialog::settingsChanged, this, &SettingsDialog::onSettingsChanged);
-
-	auto cfg_file_list_edit = findChild<QListWidget*>("kcfg_configFileLocationListLineEdit");
-	auto list = DefaultSettingsHelper::getSettingsFileList();
-
-//	KSharedConfigPtr config = KSharedConfig::openConfig();
-//	QString str = AMLMSettings::self()->;
-	QStandardPaths::StandardLocation std_loc = config->config()->locationType();
-	QStringList std_config_list = QStandardPaths::standardLocations(std_loc);
-	QStringList additional_sources = config->config()->additionalConfigSources();
-	QString str = config->config()->name();
-	cfg_file_list_edit->addItem("Name:");
-	cfg_file_list_edit->addItem(str);
-	cfg_file_list_edit->addItem("Paths:");
-	cfg_file_list_edit->addItems(std_config_list);
-	cfg_file_list_edit->addItem("Additional Sources:");
-	cfg_file_list_edit->addItems(additional_sources);
-
+	connect_or_die(this, &KConfigDialog::settingsChanged, this, &SettingsDialog::onSettingsChanged);
 
 ///// @todo experiment
 //    QRegExp re("^kcfg_.*");
@@ -136,7 +120,7 @@ void SettingsDialog::parseWidgetsThatKDEForgotAbout()
 {
     // K/QComboBoxes
     // If there's a way to make combo boxes work with Enums without doing the setup by hand, I don't see it.
-    QRegExp re("^kcfg_.*");
+    QRegularExpression re("^kcfg_.*");
     auto children = findChildren<KComboBox*>(re, Qt::FindChildrenRecursively);
     if(children.size() == 0)
     {
@@ -176,7 +160,7 @@ void SettingsDialog::setupWidget(KComboBox *box, KConfigSkeletonItem *item)
 {
     if(box && item)
     {
-
+        /// @todo ??? This has always been empty.
     }
 }
 

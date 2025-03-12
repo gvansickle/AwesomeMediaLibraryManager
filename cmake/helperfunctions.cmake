@@ -1,5 +1,5 @@
 #
-# Copyright 2017, 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2017, 2018, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -62,24 +62,24 @@ endfunction()
 
 
 function(print_qtinfo)
-	get_target_property(Qt5Core_location Qt5::Core LOCATION)
-	message(STATUS "* Found Qt version ${Qt5_VERSION} at ${Qt5Core_location}")
-	message(STATUS "*   Qt5_VERSION: ${Qt5_VERSION}")
-	message(STATUS "*   Qt5_DIR: ${Qt5_DIR}")
-	message(STATUS "*   Qt5Core_FOUND: \"${Qt5Core_FOUND}\"")
-	message(STATUS "*   Qt5Core_EXECUTABLE_COMPILE_FLAGS: \"${Qt5Core_EXECUTABLE_COMPILE_FLAGS}\"")
+	get_target_property(Qt6Core_location Qt6::Core LOCATION)
+	message(STATUS "* Found Qt version ${Qt6_VERSION} at ${Qt6Core_location}")
+	message(STATUS "*   Qt6_VERSION: ${Qt6_VERSION}")
+	message(STATUS "*   Qt6_DIR: ${Qt6_DIR}")
+	message(STATUS "*   Qt6Core_FOUND: \"${Qt6Core_FOUND}\"")
+	message(STATUS "*   Qt6Core_EXECUTABLE_COMPILE_FLAGS: \"${Qt6Core_EXECUTABLE_COMPILE_FLAGS}\"")
 	# For access to QPA headers.
-	message(STATUS "*   Qt5Core_PRIVATE_INCLUDE_DIRS: ${Qt5Core_PRIVATE_INCLUDE_DIRS}")
-	message(STATUS "*   Qt5Gui_PRIVATE_INCLUDE_DIRS: ${Qt5Gui_PRIVATE_INCLUDE_DIRS}")
+	message(STATUS "*   Qt6Core_PRIVATE_INCLUDE_DIRS: ${Qt6Core_PRIVATE_INCLUDE_DIRS}")
+	message(STATUS "*   Qt6Gui_PRIVATE_INCLUDE_DIRS: ${Qt6Gui_PRIVATE_INCLUDE_DIRS}")
 	if(FALSE)
 		# List plugin info.
-		message(STATUS "*  Qt5::Gui Plugins:")
-		foreach(plugin ${Qt5Gui_PLUGINS})
+		message(STATUS "*  Qt6::Gui Plugins:")
+		foreach(plugin ${Qt6Gui_PLUGINS})
 		  get_target_property(_loc ${plugin} LOCATION)
 		  message(STATUS "*    Plugin ${plugin} is at location ${_loc}")
 		endforeach()
-		message(STATUS "*  Qt5::Widgets Plugins:")
-		foreach(plugin ${Qt5Widgets_PLUGINS})
+		message(STATUS "*  Qt6::Widgets Plugins:")
+		foreach(plugin ${Qt6Widgets_PLUGINS})
 		  get_target_property(_loc ${plugin} LOCATION)
 		  message(STATUS "*    Plugin ${plugin} is at location ${_loc}")
 		endforeach()

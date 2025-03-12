@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -27,7 +27,10 @@
 // Future Std C++
 #include "future_type_traits.hpp" // For is_detected<> etc.
 
-#if 1 /// @todo if these haven't been standardized/aren't supported.
+/// Our low-rent C++2x "requires" "keyword".
+#define REQUIRES(...) typename std::enable_if_t<(__VA_ARGS__), int> = 0
+
+#if 0 /// @todo if these haven't been standardized/aren't supported.
 
 /// @name Detectors.
 /// @{
@@ -58,7 +61,7 @@ struct compiles : std::false_type {};
 template <typename T, template <typename> class Expression>
 struct compiles<T, Expression, std::void_t<Expression<T>>> : std::true_type {};
 
-#if 0///
+#if __cpp_lib_concepts < 202207L
 /**
  * SFINAE-based "requires".
  * Return type is ResultType if all Concepts applied to CheckType are fulfilled, otherwise it's ill-formed and template
@@ -71,7 +74,7 @@ struct compiles<T, Expression, std::void_t<Expression<T>>> : std::true_type {};
  */
 template <typename ResultType, typename CheckType, template <typename> class ... Concepts>
 using requires = std::enable_if_t<std::conjunction<Concepts<CheckType>...>::value, ResultType>;
-#endif///
+#endif
 
 /**
  * fallback is valid only if all conditions are false.  You want this as the compliment to
@@ -122,8 +125,6 @@ namespace concepts
 			> : std::true_type {};
 #endif///
 
-	/// Our low-rent C++2x "requires" "keyword".
-	#define REQUIRES(...) typename std::enable_if_t<(__VA_ARGS__), int> = 0
 
 #if 0///
 	/// Helper function for reducing the need for dectype().
@@ -150,8 +151,8 @@ namespace concepts
 
 }
 
-
 #endif /// @todo if these haven't been standardized.
+
 
 
 #endif /* UTILS_CONCURRENCY_CPP14_CONCEPTS_HPP_ */

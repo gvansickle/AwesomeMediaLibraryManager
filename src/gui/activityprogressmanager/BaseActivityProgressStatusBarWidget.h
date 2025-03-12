@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -89,8 +89,8 @@ public Q_SLOTS:
     virtual void resumed(KJob*);
 
     virtual void description(KJob* kjob, const QString& title,
-                             const QPair<QString, QString> &field1 = {QString(), QString()},
-                        const QPair<QString, QString> &field2 = {QString(), QString()});
+                             const std::pair<QString, QString> &field1 = {QString(), QString()},
+                        const std::pair<QString, QString> &field2 = {QString(), QString()});
     virtual void infoMessage(KJob* kjob, const QString &text);
     virtual void warning(KJob* kjob, const QString &text);
 
@@ -108,14 +108,14 @@ public Q_SLOTS:
      * - public qulonglong processedAmount(Unit unit) const;
      * - var in KJobPrivate.
      */
-    virtual void totalAmount(KJob *kjob, KJob::Unit unit, qulonglong amount);
+    virtual void SLOT_totalAmountChanged(KJob *kjob, KJob::Unit unit, qulonglong amount);
 
     /**
      * KJob Slot
      * @warning Also a regular public function with the same name.
      *  Directly supported by KJob::processedAmount() (setProcessedAmount(Unit,amount), var in KJobPrivate).
      */
-    virtual void processedAmount(KJob *kjob, KJob::Unit unit, qulonglong amount);
+    virtual void SLOT_processedAmountChanged(KJob *kjob, KJob::Unit unit, qulonglong amount);
 
     /**
      * Ours: Slots for "Size" progress.
@@ -131,7 +131,7 @@ public Q_SLOTS:
      * Directly supported by KJob::percent() (var in KJobPrivate).
      * Also a KJob Q_PROPERTY().
      */
-    virtual void percent(KJob *job, unsigned long percent);
+    virtual void SLOT_percentChanged(KJob *job, unsigned long percent);
 
     /**
      * Slot which receives the KJob's speed in bytes/sec.
@@ -185,7 +185,7 @@ protected:
     bool m_is_total_size_known {false};
 
     /// @todo KJobs each have one of these in KJobPrivate.
-    QTime m_start_time;
+// QT6 Needed?    QTime m_start_time;
 
     /// @}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -25,6 +25,17 @@
  * Some Qt5-based analogs to std::async().
  */
 
+// Qt
+#include <QtConcurrentRun>
+#include <QFutureWatcher>
+
+// Ours
+#include <utils/ConnectHelpers.h>
+#include <utils/DebugHelpers.h>
+
+
+
+#if 0 // !QT6
 
 #include <config.h>
 
@@ -810,5 +821,7 @@ static void runInObjectEventLoop(T * obj, R(T::* method)()) {
    QCoreApplication::postEvent(obj, new Event(obj, method));
 }
 #endif // OBSOLETE
+
+#endif
 
 #endif /* CONCURRENCY_EXTASYNC_H_ */

@@ -78,23 +78,9 @@ void AbstractTreeModelHeaderItem::clear()
 
 bool AbstractTreeModelHeaderItem::setColumnSpecs(std::initializer_list<ColumnSpec> column_specs)
 {
-	M_WARNING("TODO: NEED TO INSERT COLUMNS?");
+    M_WARNING("TODO This should take a list of ColumnSpecs, NEEDS TO INSERT COLUMNS")
 	Q_ASSERT_X(childCount() == 0, __PRETTY_FUNCTION__, "Model has children already");
-#warning "INSERT COLUMNS?"
-
-	std::vector<ColumnSpec> temp_item_data;
-
-	for(auto& it : column_specs)
-	{
-		temp_item_data.push_back(it);
-	}
-
-	this->setColumnSpecs(temp_item_data);
-	return true;
-}
-
-bool AbstractTreeModelHeaderItem::setColumnSpecs(std::vector<ColumnSpec> column_specs)
-{
+//	m_column_specs.clear();
 	m_item_data.clear();
 
 	for(auto& it : column_specs)
@@ -134,12 +120,12 @@ using strviw_type = QLatin1String;
 	M_DATASTREAM_FIELDS(X);
 	M_DATASTREAM_FIELDS_CONTSIZES(X);
 #undef X
-static const strviw_type XMLTAG_HEADER_SECTION_LIST ("header_section_list");
+static constexpr strviw_type XMLTAG_HEADER_SECTION_LIST ("header_section_list");
 
 
 QVariant AbstractTreeModelHeaderItem::toVariant() const
 {
-	InsertionOrderedStrVarMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 
 	// Set some class meta-info.
 	set_map_class_info(this, &map);
@@ -178,7 +164,7 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 
 void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 {
-	InsertionOrderedStrVarMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 	qviomap_from_qvar_or_die(&map, variant);
 
 	// Read the number of header sections...
@@ -187,7 +173,7 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 
 	// Read the header sections.
 	QVariantHomogenousList header_section_list(XMLTAG_HEADER_SECTION_LIST, "section");
-	header_section_list = map.value(XMLTAG_HEADER_SECTION_LIST).value<QVariantHomogenousList>();
+	header_section_list = map.at(XMLTAG_HEADER_SECTION_LIST).value<QVariantHomogenousList>();
 
 	AMLM_ASSERT_EQ(header_num_sections, header_section_list.size());
 
@@ -218,9 +204,39 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	auto parent_id = getId();
 	Q_ASSERT(parent_id != UUIncD::null());
 
-	qDb() << "START: HeaderItem: Trying to read in child items";
-	children_from_str_var_map(map);
-	qDb() << "END: HeaderItem: Trying to read in child items";
+	/// @todo This is a QVariantList containing <item>/QVariantMap's, each of which
+	/// contains a single <scan_res_tree_model_item type="QVariantMap">, which in turn
+	/// contains a single <dirscanresult>/QVariantMap.
+	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
+	child_var_list = map.at(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
+	Q_ASSERT(!child_var_list.empty());
+	qDb() << "Number of children read:" << child_var_list.size();
+
+#if 1///
+	append_children_from_variant<ScanResultsTreeModelItem/*, AbstractTreeModelHeaderItem*/>(this, child_var_list);
+#else
+	auto starting_childcount = childCount();
+
+	for(const QVariant& child_variant : child_var_list)
+	{
+		qDb() << "READING CHILD ITEM INTO HEADERITEM:" << child_variant;
+
+		auto new_child = std::make_shared<ScanResultsTreeModelItem>();
+		Q_ASSERT(new_child);
+		/// @note Cuurently we need to add the empty item to the model before reading it in, so that
+		/// its children will be set up correctly model-wise.  This is almost certainly more efficient anyway.
+		this->appendChild(new_child);
+		new_child->fromVariant(child_variant);
+
+//		std::shared_ptr<AbstractTreeModelItem> new_child_item = model_ptr->make_item_from_variant(child);
+//		bool ok = appendChild(new_child_item);
+//		Q_ASSERT(ok);
+//		auto id = model_ptr->requestAddScanResultsTreeModelItem(child_variant, parent_id);
+//		Q_ASSERT(id != UUIncD::null());
+//		auto new_child = model_ptr->getItemById(id);
+//		Q_ASSERT(new_child);
+//		new_child->fromVariant(variant);
+	}
 
 }
 

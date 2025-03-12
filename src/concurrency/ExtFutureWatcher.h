@@ -360,7 +360,7 @@ void ExtFutureWatcher<T>::connectReportResultCallbacks()
 		/// @note The second "this" is the context pointer for the lambda, which does two things:
 		/// 1. Disconnects this connection when this is destroyed.
 		/// 2. Determines whether the connection will be queued or not.
-		QObject::connect(this, &ExtFutureWatcher::resultReadyAt, this, [=](int index){
+		connect_queued_or_die(this, &ExtFutureWatcher::resultReadyAt, this, [=](int index) {
 			//qDebug() << M_THREADNAME() << "resultReadyAt";
 
 			// Get the result from the future.  It's guaranteed to be available.

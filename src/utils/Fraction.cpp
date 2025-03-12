@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -27,6 +27,7 @@
 /// Qt5
 #include <QString>
 #include <QDataStream>
+#include <QMetaType>
 
 /// Ours
 #include "utils/TheSimplestThings.h"
@@ -35,9 +36,7 @@
 
 AMLM_QREG_CALLBACK([](){
     qIn() << "Registering Fraction";
-    /// @todo This isn't working (in or out) with QVariant.
     qRegisterMetaType<Fraction>();
-	qRegisterMetaTypeStreamOperators<Fraction>();
 	QMetaType::registerConverter<Fraction, QString>([](const Fraction& frac){ return frac.toQString(); });
 	QMetaType::registerConverter<QString, Fraction>([](const QString& str){
 		return Fraction(str);

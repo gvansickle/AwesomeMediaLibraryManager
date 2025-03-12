@@ -68,7 +68,7 @@ private:
 	Q_DISABLE_COPY(CollectionDockWidget)
 
 	QPointer<QStandardItemModel> m_sources_model;
-	QTreeView* m_collection_tree_view;
+    QPointer<QTreeView> m_collection_tree_view;
 
 	QPointer<LibraryModel> modelIndexToLibraryModelPtr(const QModelIndex& modelindex) const;
 

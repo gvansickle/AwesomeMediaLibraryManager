@@ -417,7 +417,7 @@ using strviw_type = QLatin1String;
 
 QVariant AbstractTreeModelItem::toVariant() const
 {
-	InsertionOrderedStrVarMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 
 	// Write class info to the map.
 	set_map_class_info(this, &map);
@@ -443,7 +443,7 @@ QVariant AbstractTreeModelItem::toVariant() const
 
 void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 {
-	InsertionOrderedStrVarMap map = variant.value<InsertionOrderedStrVarMap>();
+	InsertionOrderedMap<QString, QVariant> map = variant.value<InsertionOrderedMap<QString, QVariant>>();
 
 #define X(field_tag, tag_string, member_field) map_read_field_or_warn(map, field_tag, member_field);
 //	M_DATASTREAM_FIELDS(X);
@@ -458,6 +458,19 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 
 	qDb() << XMLTAG_NUM_CHILDREN << num_children;
 
+
+	QVariantHomogenousList child_list(XMLTAG_CHILD_NODE_LIST, "child");
+	child_list = map.at(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
+	qDb() << M_ID_VAL(child_list.size());
+
+	AMLM_ASSERT_EQ(num_children, child_list.size());
+
+	// Read in our children.
+	/// @todo ???
+//	childrenFromVariant(child_list);
+
+	////////////////////////////////////
+#if 0
 	// Now read in our children.  We need this Item to be in a model for that to work.
 	/// @todo Add to model, Will this finally work?
 //	auto parent_item_ptr = this->parent_item().lock();

@@ -87,9 +87,9 @@ public:
 //		set_prefixed_uuid(uuid);
 //	}
 
-	explicit operator QVariant() const { return toVariant(); };
+    explicit operator QVariant() const { return toVariant(); }
 
-	bool isUuidNull() const { return m_uuid.isNull() || m_uuid_prefix.empty(); };
+    bool isUuidNull() const { return m_uuid.isNull() || m_uuid_prefix.empty(); }
 
 //	void set_prefix(std::string prefix)
 //	{
@@ -136,7 +136,8 @@ public:
 
 };
 
-Q_DECLARE_METATYPE(ISerializable*);
+Q_DECLARE_METATYPE(ISerializable);
+//Q_DECLARE_METATYPE(ISerializable*);
 //Q_DECLARE_METATYPE(ISerializable&);
 Q_DECLARE_INTERFACE(ISerializable, "ISerializable") // define this out of namespace scope
 
@@ -189,12 +190,12 @@ void qviomap_from_qvar_or_die(OutMapType* map_out, const QVariant& var_in)
 class SerializableQVariantList : public QVariantHomogenousList, public virtual ISerializable
 {
 public:
-	M_GH_RULE_OF_FIVE_DEFAULT_C21(SerializableQVariantList);
+    M_GH_RULE_OF_FIVE_DEFAULT_C21(SerializableQVariantList)
 	~SerializableQVariantList() override = default;
 
 	SerializableQVariantList(const QString& list_tag, const QString& list_item_tag)
 		: QVariantHomogenousList(list_tag, list_item_tag)
-		{};
+        {}
 
 	QVariant toVariant() const override;
 	void fromVariant(const QVariant& variant) override;

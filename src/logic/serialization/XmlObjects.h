@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -31,80 +31,11 @@
 
 // Qt5
 #include <QXmlStreamWriter>
-#include <QXmlQuery>
 #include <QDateTime>
 #include <QUrl>
 
 // Ours
 #include <utils/DebugHelpers.h>
-
-/// @name run_query() overloads taking a QUrl pointing to an XQuery file.
-/// @{
-
-/**
- * Run the XQuery at @a xquery_url against the source XML at @a source_xml_url, and write the results to the
- * file @a dest_xml_url.
- *
- * @return true on success.
- */
-bool run_xquery(const QUrl& xquery_url, const QUrl& source_xml_url, const QUrl& dest_xml_url,
-                const std::function<void(QXmlQuery*)>& bind_callback = [](QXmlQuery*){});
-
-/**
- * Run the XQuery at @a xquery_url against the source XML at @a source_xml_url, and write the results to the
- * QStringList @a out_stringlist.
- *
- * @param bind_callback  Pass a lambda here to do any variable bindings to the QXmlQuery.
- *
- * @return true on success.
- */
-bool run_xquery(const QUrl& xquery_url, const QUrl& source_xml_url, QStringList* out_stringlist,
-				const std::function<void(QXmlQuery*)>& bind_callback = [](QXmlQuery*){});
-
-/**
- *
- * @param xquery_url
- * @param xml_source
- * @param xml_sink
- * @param bind_callback Pass a lambda here to do any variable bindings to the QXmlQuery.
- * @return
- */
-bool run_xquery(const QUrl& xquery_url, QIODevice* xml_source, QIODevice* xml_sink,
-                const std::function<void(QXmlQuery*)>& bind_callback = [](QXmlQuery*){});
-
-//bool run_xquery(const QUrl& xquery_url, const QUrl& xml_source_url, QString* out_string);
-//bool run_xquery(const QUrl& xquery_url, const QUrl& xml_source_url, QAbstractXmlReceiver* callback);
-//bool run_xquery(const QUrl& xquery_url, const QUrl& xml_source_url, QXmlResultItems* result);
-
-/// @}
-
-/// @name run_query() overloads taking a prepared QXmlQuery.
-/// @{
-
-/**
- * Run the QXmlQuery @a xquery against the source XML at @a source_xml_url, and write the results to the
- * file @a dest_xml_url.
- *
- * @param xquery
- * @param source_xml_url
- * @param dest_xml_url
- * @return true on success.
- */
-bool run_xquery(const QXmlQuery& xquery, const QUrl& dest_xml_url);
-
-bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QStringList* out_stringlist);
-
-/**
- * Run the QXmlQuery @a xquery against the source XML read from device @a xml_source, and write the results to the
- * device @a xml_sink.
- */
-bool run_xquery(const QXmlQuery& xquery, QIODevice* xml_source, QIODevice* xml_sink);
-
-//bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QString* out_string);
-//bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QAbstractXmlReceiver* callback);
-//bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QXmlResultItems* result);
-
-/// @}
 
 /**
  * QXmlQuery notes:

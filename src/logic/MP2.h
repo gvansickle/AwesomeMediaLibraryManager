@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -22,26 +22,45 @@
 
 #include <QAction>
 #include <QMediaPlayer>
-
+#include <QAudioOutput>
 
 
 class MP2 : public QMediaPlayer
 {
 	Q_OBJECT
 
+	Q_PROPERTY(bool muted READ muted WRITE setMuted NOTIFY mutedChanged)
+	Q_PROPERTY(float volume READ volume WRITE setVolume NOTIFY volumeChanged)
+
 public:
-	MP2(QObject *parent = Q_NULLPTR, Flags flags = Flags());
+	enum ShuffleSetting {Shuffle, Sequential};
+	Q_ENUM(ShuffleSetting)
+
+	enum LoopSetting {Loop, NoLoop};
+	Q_ENUM(LoopSetting)
+
+public:
+	explicit MP2(QObject *parent = Q_NULLPTR);
 
 	/// Property overrides.
 	qint64 position() const;
 	qint64 duration() const;
+	bool muted() const;
+	float volume() const;
 
 Q_SIGNALS:
 	void positionChanged2(qint64);
 	void durationChanged2(qint64);
+	void mutedChanged(bool);
+	void volumeChanged(float);
+	/// Signal which tells the playlist to go to the next item
+	/// because of a media status change of QMediaPlayer::EndOfMedia.
+	void playlistToNext();
 
 private:
 	Q_DISABLE_COPY(MP2)
+
+	std::unique_ptr<QAudioOutput> m_audio_output;
 
 	/// @name State for use when we're playing a section of a larger sound file.
 	/// @{
@@ -50,35 +69,34 @@ private:
 	qint64 m_track_endpos_ms = 0;
 	/// @}
 
-	/// @name Seek-to-end control variables for managing subtrack playback.
-	/// @{
-	bool m_seek_to_end_mode = false;
-	bool m_pending_seek_msg = false;
-	bool m_ignore_seek_msg = false;
-	/// @}
+	ShuffleSetting m_shuffle_setting {Shuffle};
+	LoopSetting m_loop_setting {Loop};
+	bool m_playing { false };
 
-	/// For managing transitions between Shuffle/Sequential+Stop/Sequential+Repeat.
-	bool m_last_repeat_state = false;
+	/// We need to keep track of who gets to the end-of-(sub)track first, so we can block the other one
+	/// from emitting the same playlistToNext signal.
+	bool m_EndOfMedia_sending_playlistToNext {false};
+	bool m_onPositionChanged_sending_playlistToNext {false};
 
 	void createActions();
-	void setTrackInfoFromUrl(QUrl url);
-	void updateSeekToEndInfoOnMediaChange();
-	void seekToEnd();
+	void getTrackInfoFromUrl(QUrl url);
 
 public Q_SLOTS:
 	void play();
 	void stop();
+    void setMuted(bool muted);
+    void setVolume(float volume);
 	void setShuffleMode(bool shuffle_on);
-	void repeat(bool checked);
+	void repeat(bool loop);
 
-	void setPosition(qint64 position);
 	void onPositionChanged(qint64 pos);
 	void onDurationChanged(qint64 duration);
-	void onMediaChanged(const QMediaContent &media);
 	void onMediaStatusChanged(QMediaPlayer::MediaStatus status);
-	void onCurrentMediaChanged(const QMediaContent &qmediacontent);
-	void onStateChanged(QMediaPlayer::State state);
-	void onPlayerError(QMediaPlayer::Error error);
+	void onPlaylistPositionChanged(const QModelIndex& current, const QModelIndex& previous);
+	void onSourceChanged(const QUrl& media_url);
+	void onErrorOccurred(QMediaPlayer::Error error, const QString& errorString);
 };
+
+
 
 #endif // MP2_H

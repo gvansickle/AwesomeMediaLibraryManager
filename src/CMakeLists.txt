@@ -79,12 +79,6 @@ get_property(AMLM_LIBCUE_TARGET_SRCS TARGET ${AMLM_LIBCUE_TARGET} PROPERTY SOURC
 set_property(SOURCE ${AMLM_LIBCUE_TARGET_SRCS} PROPERTY SKIP_AUTOGEN ON)
 #message(STATUS "AMLM_LIBCUE_TARGET:SOURCES: ${AMLM_LIBCUE_TARGET_SRCS}")
 
-# Verdigris is just two headers.
-set(USE_BUNDLED_VERDIGRIS 1)
-set(INCLUDE_DIR_VERDIGRIS ${PROJECT_SOURCE_DIR}/src/third_party/verdigris/src)
-add_library(verdigris_target INTERFACE)
-target_include_directories(verdigris_target INTERFACE ${PROJECT_SOURCE_DIR}/src/third_party/verdigris/src)
-
 
 # We make the generated KConfig settings files into their own library so dependencies get handled correctly.
 # The generated files are AwesomeMediaLibraryManagerSettings.cpp and .h.
@@ -112,7 +106,6 @@ set(PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS
 		${AMLM_TAGLIB_TARGET}
 		${AMLM_LIBCUE_TARGET}
 #		callable_traits
-		verdigris_target
 #		Boost::thread
 		${Boost_LIBRARIES}
 		)
@@ -163,7 +156,6 @@ set(PROJECT_COMMON_INTERNAL_LINK_LIB_TARGETS
 		logic
 		resources
 		utils
-		${AMLM_WT_LIBRARIES}
         SQLite::SQLite3
 )
 
@@ -198,7 +190,6 @@ target_link_libraries(src
 		gui
 		kconfig_target
 		utils
-		${AMLM_WT_LIBRARIES}
 		SQLite::SQLite3
 	PRIVATE
 		# Boost
@@ -221,9 +212,9 @@ target_link_libraries(src
 #qt5_add_binary_resources(build_AppIcon_rcc ${AppIcon_qrc} DESTINATION ${AppIcon_rcc})
 
 # Qt5 non-binary Resource files.
-qt5_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/AppIcon.qrc")
-qt5_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/amlm.qrc")
-qt5_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/xquery_files.qrc")
+qt_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/AppIcon.qrc")
+qt_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/amlm.qrc")
+qt_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/xquery_files.qrc")
 
 
 # The link lib targets common to app and test builds.
@@ -326,6 +317,16 @@ target_link_libraries(${PROJECT_NAME}
 		cxx_definitions_qt
 	PRIVATE
 		libapp
+)
+
+# Sanitizers.  @todo Make this a CMake option.
+#add_compile_options(-fsanitize=address)
+#target_link_options(${PROJECT_NAME} PRIVATE -static-libasan)
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+	COMMAND cloc --no-autogen "--not-match-d=/(third_party|build-|\\.).*/" "--exclude-ext=moc,xml,ui" ${PROJECT_SOURCE_DIR}
+	VERBATIM
+	COMMENT "Running cloc..."
 )
 
 ### @todo breeze
