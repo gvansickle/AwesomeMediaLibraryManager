@@ -1,5 +1,5 @@
 #
-# Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2018, 2019, 2024, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -79,25 +79,22 @@ get_property(AMLM_LIBCUE_TARGET_SRCS TARGET ${AMLM_LIBCUE_TARGET} PROPERTY SOURC
 set_property(SOURCE ${AMLM_LIBCUE_TARGET_SRCS} PROPERTY SKIP_AUTOGEN ON)
 #message(STATUS "AMLM_LIBCUE_TARGET:SOURCES: ${AMLM_LIBCUE_TARGET_SRCS}")
 
-# Verdigris is just two headers.
-set(USE_BUNDLED_VERDIGRIS 1)
-set(INCLUDE_DIR_VERDIGRIS ${PROJECT_SOURCE_DIR}/src/third_party/verdigris/src)
-add_library(verdigris_target INTERFACE)
-target_include_directories(verdigris_target INTERFACE ${PROJECT_SOURCE_DIR}/src/third_party/verdigris/src)
 
-
-
-kconfig_add_kcfg_files(amlm_settings_SRCS AwesomeMediaLibraryManagerSettings.kcfgc)
 # We make the generated KConfig settings files into their own library so dependencies get handled correctly.
-# amlm_settings_SRCS == AwesomeMediaLibraryManagerSettings.cpp and .h.
-add_library(kconfig_target
-		STATIC EXCLUDE_FROM_ALL
-		${amlm_settings_SRCS}
-		)
-#		${CMAKE_CURRENT_BINARY_DIR}/AwesomeMediaLibraryManagerSettings.h)
+# The generated files are AwesomeMediaLibraryManagerSettings.cpp and .h.
+# This is an OBJECT library to get it to link.  There's a circular dependency between this and gui.
+# For some reason, CMake isn't able to handle that if this is a STATIC lib.
+add_library(kconfig_target OBJECT EXCLUDE_FROM_ALL)
+kconfig_add_kcfg_files(kconfig_target AwesomeMediaLibraryManagerSettings.kcfgc)
+target_include_directories(kconfig_target
+	PUBLIC
+		${CMAKE_CURRENT_BINARY_DIR}
+)
 target_link_libraries(kconfig_target
+	PUBLIC
 		${KF5_LINK_LIB_TARGETS}
-		)
+)
+
 
 ###
 ### Collect all the external link lib targets into one variable. 
@@ -109,7 +106,6 @@ set(PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS
 		${AMLM_TAGLIB_TARGET}
 		${AMLM_LIBCUE_TARGET}
 #		callable_traits
-		verdigris_target
 #		Boost::thread
 		${Boost_LIBRARIES}
 		)
@@ -137,14 +133,13 @@ list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_NOMOC})
 
 
 #
-# Subdir targets.
+# Subdirs
 #
-add_subdir_lib(concurrency STATIC EXCLUDE_FROM_ALL)
-add_subdir_lib(future STATIC EXCLUDE_FROM_ALL)
-add_subdir_lib(gui STATIC EXCLUDE_FROM_ALL)
-add_subdir_lib(logic STATIC EXCLUDE_FROM_ALL)
-add_subdir_lib(utils STATIC EXCLUDE_FROM_ALL)
-
+add_subdirectory(concurrency)
+add_subdirectory(future)
+add_subdirectory(gui)
+add_subdirectory(logic)
+add_subdirectory(utils)
 
 #
 # Append all the SOURCE_* subsets.
@@ -155,19 +150,15 @@ add_subdir_lib(utils STATIC EXCLUDE_FROM_ALL)
 
 # Collect all the project-common internal and external link library targets into a single variable.
 set(PROJECT_COMMON_INTERNAL_LINK_LIB_TARGETS
-		kconfig_target
 		concurrency
 		future
 		gui
 		logic
 		resources
 		utils
-		${AMLM_WT_LIBRARIES}
         SQLite::SQLite3
 )
 
-### @OBSOLETE Models
-#list(APPEND SOURCE_FILES ${SOURCE_FILES_LOGIC_MODELS})
 
 # QT5_LOGGING_CATEGORY_SOURCE_FILES
 list(APPEND SOURCE_FILES ${QT5_LOGGING_CATEGORY_SOURCE_FILES})
@@ -185,11 +176,22 @@ list(APPEND amlm_SRCS ${SOURCE_FILES} ${HEADER_FILES}
 # See:
 # @link https://api.kde.org/ecm/module/ECMAddAppIcon.html
 # @link http://kfunk.org/2017/12/20/tips-streamlining-kde-application-for-deployment-microsoft-windows/
+add_library(src STATIC EXCLUDE_FROM_ALL)
+target_include_directories(src
+   PRIVATE
+       logic
+       utils
+)
 target_link_libraries(src
 	PUBLIC
 		logic
+		concurrency
+		future
+		gui
+		kconfig_target
+		utils
+		SQLite::SQLite3
 	PRIVATE
-		resources
 		# Boost
 		Boost::boost					# Target for header-only dependencies
 		Boost::diagnostic_definitions # For information about Boost's automatic linking
@@ -210,9 +212,9 @@ target_link_libraries(src
 #qt5_add_binary_resources(build_AppIcon_rcc ${AppIcon_qrc} DESTINATION ${AppIcon_rcc})
 
 # Qt5 non-binary Resource files.
-qt5_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/AppIcon.qrc")
-qt5_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/amlm.qrc")
-qt5_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/xquery_files.qrc")
+qt_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/AppIcon.qrc")
+qt_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/amlm.qrc")
+qt_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/xquery_files.qrc")
 
 
 # The link lib targets common to app and test builds.
@@ -229,6 +231,49 @@ elseif (WIN32)
 endif()
 
 
+add_library(libapp STATIC EXCLUDE_FROM_ALL)
+target_sources(libapp
+		PRIVATE
+               ${amlm_SRCS}
+               ${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
+)
+target_compile_definitions(libapp
+                           PRIVATE
+                           # libstdc++ defs: @link https://gcc.gnu.org/onlinedocs/gcc-9.1.0/libstdc++/manual/
+                           # Enable the libstdc++ debug mode.
+                           #_GLIBCXX_DEBUG
+                           "KXMLGUI_NO_DEPRECATED=1"
+                           "USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
+)
+target_include_directories(libapp
+								PUBLIC
+									${Wt_INCLUDE_DIRS}
+									"utils/nomoc"
+									${INCLUDE_DIR_VERDIGRIS}
+									${PROJECT_SOURCE_DIR}/src ### @todo For <future/...>
+									${PROJECT_BINARY_DIR}/src
+)
+target_compile_options(libapp PUBLIC ${EXTRA_CXX_COMPILE_FLAGS})
+set_target_properties(libapp
+                      PROPERTIES
+                      AUTOMOC ON
+                      AUTOUIC ON
+                      #CXX_CLANG_TIDY "clang-tidy;-checks=-*,readability-*"
+)
+target_link_libraries(libapp
+                      PUBLIC
+	                      # Targetized C++ compile settings.
+	                      cxx_settings
+	                      cxx_definitions_qt
+                      src
+#                      PRIVATE
+#	                      src
+#	                      utils
+	                      #		logic
+	                      #		gui
+	                      #		concurrency
+)
+
 ###
 ### The main executable.
 ###
@@ -236,10 +281,7 @@ endif()
 ###
 add_executable(${PROJECT_NAME} ${WIN32_OR_MACOS_BUNDLE}
 		main.cpp
-		${amlm_SRCS}
-		${amlm_settings_SRCS}
-		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
-	)
+)
 # Compiler features FBO Verdigris (esp. on Windows/MSVC).  -D__cpp_constexpr=201304 -D__cpp_variable_templates=201304.
 ### @todo No longer required?
 #target_compile_features(${PROJECT_NAME} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
@@ -252,7 +294,7 @@ target_compile_definitions(${PROJECT_NAME}
 		"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
 	)
 target_include_directories(${PROJECT_NAME}
-	PUBLIC 
+	PRIVATE
 		${Wt_INCLUDE_DIRS}
 		"utils/nomoc"
 		${INCLUDE_DIR_VERDIGRIS}
@@ -273,10 +315,19 @@ target_link_libraries(${PROJECT_NAME}
 		# Targetized C++ compile settings.
 		cxx_settings
 		cxx_definitions_qt
-		src
-		logic
 	PRIVATE
-		${PROJECT_COMMON_LINK_LIBS})
+		libapp
+)
+
+# Sanitizers.  @todo Make this a CMake option.
+#add_compile_options(-fsanitize=address)
+#target_link_options(${PROJECT_NAME} PRIVATE -static-libasan)
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+	COMMAND cloc --no-autogen "--not-match-d=/(third_party|build-|\\.).*/" "--exclude-ext=moc,xml,ui" ${PROJECT_SOURCE_DIR}
+	VERBATIM
+	COMMENT "Running cloc..."
+)
 
 ### @todo breeze
 #add_dependencies(${PROJECT_NAME} icons_oxygen)
@@ -303,162 +354,23 @@ find_package(Qt5Test REQUIRED)
 # @todo Also per the docs, this has to be in the source directory root, but it seems to work here:
 # "Note that ctest expects to find a test file in the build directory root.
 # Therefore, this command should be in the source directory root."
-enable_testing()
+#enable_testing()
 # We do not want to include CTest or CDash.  They result in hundreds of top-level targets
 # that we have no use for.  Per @link https://stackoverflow.com/questions/45169854/cmake-in-qtcreator-4-3-shows-many-automatic-targets-how-to-remove-hide-them,
 # The above enable_testing() is enough.
 #include(CTest)
 
-
-###
-### Google Test
-###
-find_package(Threads REQUIRED)
-download_project(PROJ                googletest
-                 GIT_REPOSITORY      https://github.com/google/googletest.git
-                 GIT_TAG             main
-                 ${UPDATE_DISCONNECTED_IF_AVAILABLE}
-)
-# Prevent GoogleTest from overriding our compiler/linker options
-# when building with Visual Studio
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-# Try to disable Google Test/Mock's own tests.
-set(gmock_build_tests OFF CACHE BOOL "" FORCE)
-set(gtest_build_samples OFF CACHE BOOL "" FORCE)
-set(gtest_build_tests OFF CACHE BOOL "" FORCE)
-# Add googletest directly to our build. This adds
-# the following targets: gtest, gtest_main, gmock
-# and gmock_main.
-add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR}
-	EXCLUDE_FROM_ALL)
-# Now we should be able to link our targets against gtest, gmock, etc. as appropriate
-message(STATUS "GOOGLETEST-------------------------------")
-print_varlist(googletest_SOURCE_DIR googletest_BINARY_DIR)
-message(STATUS "GOOGLETEST-------------------------------")
-
-###
-### The "alltests" Google Test-based test exe.
-###
-set(TEST_EXE_TARGET alltests)
-set(AMLM_SOURCE_FILES_TEST "")
-set(AMLM_HEADER_FILES_TEST "")
-list(APPEND AMLM_SOURCE_FILES_TEST
-	logic/serialization/tests/XmlSerializerTest.cpp
-	${PROJECT_SOURCE_DIR}/tests/FlagsAndEnumsTests.cpp
-	concurrency/tests/ExtAsyncTaskTests.cpp
-	concurrency/tests/ExtAsyncTests.cpp
-	concurrency/tests/ExtAsyncTestCommon.cpp
-	concurrency/tests/ExtFutureTests.cpp
-	concurrency/tests/AMLMJobTests.cpp
-	)
-list(APPEND AMLM_HEADER_FILES_TEST
-#	${PROJECT_SOURCE_DIR}/tests/TestHelpers.h
-	${PROJECT_SOURCE_DIR}/tests/FlagsAndEnumsTests.h
-	concurrency/tests/ExtAsyncTaskTests.h
-	concurrency/tests/ExtAsyncTests.h
-	concurrency/tests/ExtAsyncTestCommon.h
-	concurrency/tests/ExtFutureTests.h
-	concurrency/tests/AMLMJobTests.h
-	)
-
-add_executable(${TEST_EXE_TARGET} ${WIN32_OR_MACOS_BUNDLE} "")
-target_sources(${TEST_EXE_TARGET}
-	PRIVATE
-	    alltests.cpp ${AMLM_SOURCE_FILES_TEST} ${AMLM_HEADER_FILES_TEST}
-		${amlm_SRCS} ### @todo ${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
-		${amlm_settings_SRCS}
-		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
-	)
-#target_compile_features(${TEST_EXE_TARGET} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
-target_compile_definitions(${TEST_EXE_TARGET}
-	PUBLIC
-		# libstdc++ defs: @link https://gcc.gnu.org/onlinedocs/gcc-9.1.0/libstdc++/manual/
-		# Enable the libstdc++ debug mode.
-		#_GLIBCXX_DEBUG 
-	PRIVATE
-		"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
-		"TEST_FWK_IS_GTEST=1"
-	)
-target_include_directories(${TEST_EXE_TARGET} PRIVATE
-	"utils/nomoc"
-	${INCLUDE_DIR_VERDIGRIS}
-	)
-target_compile_definitions(${TEST_EXE_TARGET} PRIVATE "GTEST_LANGUAGE_CXX11")
-target_compile_options(${TEST_EXE_TARGET} PRIVATE ${EXTRA_CXX_COMPILE_FLAGS})
-set_target_properties(${TEST_EXE_TARGET} PROPERTIES
-	AUTOMOC ON
-	AUTOUIC ON)
-# We don't want AUTOMOC etc. applied to googletest.
-set_property(DIRECTORY ${googletest_SOURCE_DIR}
-	PROPERTY SKIP_AUTOGEN ON
-	EXCLUDE_FROM_ALL)
-set_property(TARGET gtest PROPERTY SKIP_AUTOGEN ON)
-set_property(TARGET gmock PROPERTY SKIP_AUTOGEN ON)
-set_property(TARGET gtest_main PROPERTY SKIP_AUTOGEN ON)
-set_property(TARGET gmock_main PROPERTY SKIP_AUTOGEN ON)
-target_link_libraries(${TEST_EXE_TARGET}
-	PRIVATE
-		Threads::Threads gtest gmock tests)
-target_link_libraries(${TEST_EXE_TARGET}
-	PRIVATE
-        Qt5::Test ${PROJECT_COMMON_LINK_LIBS}
-	PUBLIC
-		# Targetized C++ compile settings.
-		cxx_settings
-		# Qt-specific -D's.
-		cxx_definitions_qt
-	)
-add_test(NAME ${TEST_EXE_TARGET} COMMAND $<TARGET_FILE:${TEST_EXE_TARGET}>)
-ecm_mark_as_test(${TEST_EXE_TARGET})
-
-if(TRUE)
-###
-### Qt5 QTests
-###
-#set(test_qtestamlmjobtests_SRCS concurrency/tests/QTestAMLMJobTests.cpp)
-add_executable(test_qtestamlmjobtests "") #${test_qtestamlmjobtests_SRCS} ${} ${amlm_settings_SRCS})
-target_sources(test_qtestamlmjobtests
-	PRIVATE
-	    concurrency/tests/QTestAMLMJobTests.cpp
-	    concurrency/tests/ExtAsyncTestCommon.cpp
-	    concurrency/tests/ExtAsyncTestCommon.h
-		#${AMLM_SOURCE_FILES_TEST} ${AMLM_HEADER_FILES_TEST}
-		${amlm_SRCS} ### @todo ${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
-		${amlm_settings_SRCS}
-		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
-	)
-target_compile_definitions(test_qtestamlmjobtests PRIVATE
-	"QT_SHAREDPOINTER_TRACK_POINTERS=1"
-	"QT_DEPRECATED_WARNINGS"
-#	"QT_NO_KEYWORDS"
-	"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
-	"TEST_FWK_IS_QTEST=1"
-	)
-target_include_directories(test_qtestamlmjobtests PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
-target_link_libraries(test_qtestamlmjobtests Qt5::Test ${PROJECT_COMMON_LINK_LIBS}
-	# Qt-specific -D's.
-	cxx_definitions_qt)
-set_target_properties(test_qtestamlmjobtests PROPERTIES
-	AUTOMOC ON
-	AUTOUIC ON)
-add_test(NAME test_qtestamlmjobtests COMMAND $<TARGET_FILE:test_qtestamlmjobtests>)
-ecm_mark_as_test(test_qtestamlmjobtests)
-###
-### END Qt5 QTests
-###
-endif()
-
 endif() # END Enable test target.
 
 ###
-### Installation.
+### Installation. (@todo icons are still in top level, prob should all be in one place)
 ###
 
 ### The AMLM binary.
 ### @note ${KDE_INSTALL_TARGETS_DEFAULT_ARGS} "should be used when libraries or user-executable applications are installed,
 ###        [...] It MUST NOT be used for installing plugins, system admin executables or executables only intended for use internally by
 ###        other code.  Those should use KDE_INSTALL_PLUGINDIR, KDE_INSTALL_SBINDIR or KDE_INSTALL_LIBEXECDIR respectively."
-### @see https://api.kde.org/ecm/kde-module/KDEInstallDirs.html?highlight=kde_install_targets_default_args#kdeinstalldirs
+#### @see https://api.kde.org/ecm/kde-module/KDEInstallDirs.html?highlight=kde_install_targets_default_args#kdeinstalldirs
 install(TARGETS ${PROJECT_NAME} ${KDE_INSTALL_TARGETS_DEFAULT_ARGS}
 				#RUNTIME DESTINATION . # Default is /usr/local/${PROJECT_NAME} on UNIX and c:/Program Files/${PROJECT_NAME}/${PROJECT_NAME} on Windows.
 				#LIBRARY DESTINATION .

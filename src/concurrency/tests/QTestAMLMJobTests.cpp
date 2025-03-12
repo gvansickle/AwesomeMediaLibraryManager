@@ -46,7 +46,7 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations/*, ExtAsyncT
         for(int i=0; i<num_iterations; i++)
         {
 			/// @todo Not sure if we want this to work or not.
-			AMLMTEST_EXPECT_FALSE(ExtFutureState::state(future) & ExtFutureState::Canceled);
+			// AMLMTEST_EXPECT_FALSE(ExtFutureState::state(future) & ExtFutureState::Canceled);
 
             // Sleep for a second.
 			AMLMTEST_COUT << "SLEEPING FOR 1 SEC";
@@ -74,7 +74,7 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations/*, ExtAsyncT
         retval = make_startedNotCanceled_QFuture<int>();
     }
 
-    AMLMTEST_COUT << "ReturnFuture initial state:" << ExtFutureState::state(retval);
+    // AMLMTEST_COUT << "ReturnFuture initial state:" << ExtFutureState::state(retval);
 
 //	AMLMTEST_EXPECT_TRUE(retval.isStarted());
 //	AMLMTEST_EXPECT_FALSE(retval.isFinished());
@@ -87,10 +87,10 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations/*, ExtAsyncT
     else
     {
     	AMLMTEST_COUT << "ExtAsync::run_efarg()";
-		retval = ExtAsync::run(std::move(lambda));
+		retval = QtConcurrent::run(std::move(lambda));
     }
 
-    AMLMTEST_COUT << "RETURNING future:" << ExtFutureState::state(retval);
+    // AMLMTEST_COUT << "RETURNING future:" << ExtFutureState::state(retval);
 
 //    AMLMTEST_EXPECT_TRUE(retval.isStarted());
 //    if constexpr (std::is_same_v<ReturnFutureT, QFuture<int>>)
@@ -175,7 +175,7 @@ void tst_QString::DirScanCancelTestPAutodelete()
 	                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 #endif
 	// Run the directory scan in another thread.
-	ExtFuture<DirScanResult> dirresults_future = ExtAsync::qthread_async_with_cnr_future(DirScanFunction, nullptr,
+	ExtFuture<DirScanResult> dirresults_future = QtConcurrent::run(DirScanFunction,
 																						 dir_url,
 																						 QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
 																						 QDir::Filters(QDir::Files |

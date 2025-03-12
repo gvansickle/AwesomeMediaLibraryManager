@@ -36,13 +36,14 @@ public:
 	/**
 	 * Named constructor.
 	 */
-	static std::shared_ptr<PlaceholderTreeModelItem> construct(std::vector<QVariant> data, std::shared_ptr<AbstractTreeModel> model,
-	                                                           bool isRoot = false, UUIncD id = UUIncD::null());
+//	static std::shared_ptr<PlaceholderTreeModelItem> construct(std::vector<QVariant> data, std::shared_ptr<AbstractTreeModel> model,
+//	                                                           bool isRoot = false, UUIncD id = UUIncD::null());
 
-protected:
+//protected:
 	/// Sets the model and UUIncD.
-	PlaceholderTreeModelItem(std::vector<QVariant> data, const std::shared_ptr<AbstractTreeModel>& model,
-	                         bool is_root = false, UUIncD id = UUIncD::null());
+//	PlaceholderTreeModelItem(std::vector<QVariant> data, const std::shared_ptr<AbstractTreeModel>& model,
+//	                         bool is_root = false, UUIncD id = UUIncD::null());
+	explicit PlaceholderTreeModelItem(const std::vector<QVariant>& data, const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr, UUIncD id = UUIncD::null());
 
 public:
 	~PlaceholderTreeModelItem() override = default;

@@ -47,19 +47,20 @@ ThreadsafeTreeModel::ThreadsafeTreeModel(std::initializer_list<ColumnSpec> colum
 
 }
 
-std::shared_ptr<ThreadsafeTreeModel> ThreadsafeTreeModel::construct(std::initializer_list<ColumnSpec> column_specs,
-		QObject* parent)
-{
-	std::shared_ptr<ThreadsafeTreeModel> self(new ThreadsafeTreeModel(column_specs, parent));
-	self->m_root_item = AbstractTreeModelHeaderItem::construct(column_specs, self);
-	return self;
-}
+//std::shared_ptr<ThreadsafeTreeModel> ThreadsafeTreeModel::construct(std::initializer_list<ColumnSpec> column_specs,
+//		QObject* parent)
+//{
+//	std::shared_ptr<ThreadsafeTreeModel> self(new ThreadsafeTreeModel(column_specs, parent));
+//	self->m_root_item = AbstractTreeModelHeaderItem::construct(column_specs, self);
+//	return self;
+//}
 
 ThreadsafeTreeModel::~ThreadsafeTreeModel()
 {
 	// Same as KdenLive's ProjectModelItem, it's destructor is defaulted.
 }
 
+#if 0
 void ThreadsafeTreeModel::clear()
 {
 	std::unique_lock write_lock(m_rw_mutex);
@@ -84,9 +85,11 @@ void ThreadsafeTreeModel::clear()
 	// One last thing, our hidden root node / header node still has ColumnSpecs.
 	m_root_item->clear();
 }
+#endif
 
 bool ThreadsafeTreeModel::requestDeleteItem(const std::shared_ptr<AbstractTreeModelItem>& item, Fun& undo, Fun& redo)
 {
+	#if 0///
 	std::unique_lock write_locker(m_rw_mutex);
 	Q_ASSERT(item);
 	if (!item)
@@ -123,7 +126,10 @@ bool ThreadsafeTreeModel::requestDeleteItem(const std::shared_ptr<AbstractTreeMo
 //		}
 		UPDATE_UNDO_REDO(m_rw_mutex, operation, reverse, undo, redo);
 	}
+
 	return request_was_successful;
+#endif///
+	return false;
 }
 
 QVariant ThreadsafeTreeModel::data(const QModelIndex& index, int role) const
@@ -132,61 +138,65 @@ QVariant ThreadsafeTreeModel::data(const QModelIndex& index, int role) const
 	return BASE_CLASS::data(index, role);
 }
 
-UUIncD ThreadsafeTreeModel::requestAddItem(std::vector<QVariant> values, UUIncD parent_id, Fun undo, Fun redo)
-{
-	std::unique_lock write_lock(m_rw_mutex);
+//UUIncD ThreadsafeTreeModel::requestAddItem(std::vector<QVariant> values, UUIncD parent_id, Fun undo, Fun redo)
+//{
+//	std::unique_lock write_lock(m_rw_mutex);
+//
+//	std::shared_ptr<AbstractTreeModelItem> new_item = AbstractTreeModelItem::construct(values, std::static_pointer_cast<ThreadsafeTreeModel>(shared_from_this()), /*root?*/false);
+//
+//	bool status = addItem(new_item, parent_id, undo, redo);
+//
+//	if(!status)
+//	{
+//		// Add failed for some reason, return a null UUIncD.
+//		return UUIncD::null();
+//	}
+//	return new_item->getId();
+//}
 
-	std::shared_ptr<AbstractTreeModelItem> new_item = AbstractTreeModelItem::construct(values, std::static_pointer_cast<ThreadsafeTreeModel>(shared_from_this()), /*root?*/false);
+//void ThreadsafeTreeModel::register_item(const std::shared_ptr<AbstractTreeModelItem>& item)
+//{
+//	std::unique_lock write_lock(m_rw_mutex);
+//
+//	BASE_CLASS::register_item(item);
+//}
 
-	bool status = addItem(new_item, parent_id, undo, redo);
+//void ThreadsafeTreeModel::deregister_item(UUIncD id, AbstractTreeModelItem* item)
+//{
+//	std::unique_lock write_lock(m_rw_mutex);
+//
+//	// Per KdenLive:
+//	// "here, we should suspend jobs belonging to the item we delete. They can be restarted if the item is reinserted by undo"
+//
+//	BASE_CLASS::deregister_item(id, item);
+//
+//}
 
-	if(!status)
-	{
-		// Add failed for some reason, return a null UUIncD.
-		return UUIncD::null();
-	}
-	return new_item->getId();
-}
-
-void ThreadsafeTreeModel::register_item(const std::shared_ptr<AbstractTreeModelItem>& item)
-{
-	std::unique_lock write_lock(m_rw_mutex);
-
-	BASE_CLASS::register_item(item);
-}
-
-void ThreadsafeTreeModel::deregister_item(UUIncD id, AbstractTreeModelItem* item)
-{
-	std::unique_lock write_lock(m_rw_mutex);
-
-	// Per KdenLive:
-	// "here, we should suspend jobs belonging to the item we delete. They can be restarted if the item is reinserted by undo"
-
-	BASE_CLASS::deregister_item(id, item);
-
-}
-
-bool ThreadsafeTreeModel::addItem(const std::shared_ptr<AbstractTreeModelItem>& item, UUIncD parent_id, Fun& undo, Fun& redo)
-{
-	std::unique_lock write_lock(m_rw_mutex);
-
-	std::shared_ptr<AbstractTreeModelItem> parent_item = getItemById(parent_id);
-
-	if(!parent_item)
-	{
-		qCr() << "ERROR, BAD PARENT ITEM with ID:" << parent_id;// << "," << item;
-		return false;
-	}
-
-	Fun operation = addItem_lambda(item, parent_item->getId());
-
-	UUIncD itemId = item->getId();
-	Fun reverse = removeItem_lambda(itemId);
-	bool res = operation();
-	Q_ASSERT(item->isInModel());
-	if (res)
-	{
-		UPDATE_UNDO_REDO(m_rw_mutex, operation, reverse, undo, redo);
-	}
-	return res;
-}
+//bool ThreadsafeTreeModel::addItem(const std::shared_ptr<AbstractTreeModelItem>& item, UUIncD parent_id, Fun& undo, Fun& redo)
+//{
+//	Q_ASSERT(0);
+//#if 0/// GRVS
+//	std::unique_lock write_lock(m_rw_mutex);
+//
+//	std::shared_ptr<AbstractTreeModelItem> parent_item = getItemById(parent_id);
+//
+//	if(!parent_item)
+//	{
+//		qCr() << "ERROR, BAD PARENT ITEM with ID:" << parent_id;// << "," << item;
+//		return false;
+//	}
+//
+//	Fun operation = addItem_lambda(item, parent_item->getId());
+//
+//	UUIncD itemId = item->getId();
+//	Fun reverse = removeItem_lambda(itemId);
+//	bool res = operation();
+//	Q_ASSERT(item->isInModel());
+//	if (res)
+//	{
+//		UPDATE_UNDO_REDO(m_rw_mutex, operation, reverse, undo, redo);
+//	}
+//	return res;
+//#endif
+//	return true;
+//}

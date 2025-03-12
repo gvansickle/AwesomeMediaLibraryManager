@@ -25,10 +25,10 @@
 // Std C++
 #include <memory>
 
-// Qt5
+// Qt
 #include <QApplication>
 
-// KF5
+// KF
 #include <KConfigGroup>
 #include <QMimeDatabase>
 
@@ -171,7 +171,7 @@ private:
 
     MainWindow* m_the_main_window {nullptr};
 
-	AbstractTreeModel* m_cdb2_model_instance;
+	AbstractTreeModel* m_cdb2_model_instance {nullptr};
 
 //	// Copy of the singleton shared_ptr so we can delete it on the way down.
 //	std::shared_ptr<ScanResultsTreeModel> m_srtm_instance {};

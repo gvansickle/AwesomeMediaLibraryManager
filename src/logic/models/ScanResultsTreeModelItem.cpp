@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -34,34 +34,25 @@
 #include <logic/DirScanResult.h>
 #include "AbstractTreeModelHeaderItem.h"
 #include "ScanResultsTreeModel.h"
+#include "SRTMItemLibEntry.h"
 #include <LibraryEntry.h>
 #include <serialization/SerializationHelpers.h>
 
-std::shared_ptr<ScanResultsTreeModelItem> ScanResultsTreeModelItem::construct(const DirScanResult& dsr, std::shared_ptr<ScanResultsTreeModel> model, bool is_root)
-{
-	std::shared_ptr<ScanResultsTreeModelItem> self(new ScanResultsTreeModelItem(dsr, model, is_root));
-	baseFinishConstruct(self);
-	return self;
-}
 
-std::shared_ptr<ScanResultsTreeModelItem> ScanResultsTreeModelItem::construct(const QVariant& variant,
-																			  std::shared_ptr<ScanResultsTreeModel> model)
-{
-	std::shared_ptr<ScanResultsTreeModelItem> self(new ScanResultsTreeModelItem(model, false));
-	baseFinishConstruct(self);
-	/// @note Can't call fromVariant() here, for some reason self still isn't in the model here.
-//	self->fromVariant(variant);
-	return self;
-}
-
-ScanResultsTreeModelItem::ScanResultsTreeModelItem(const DirScanResult& dsr, const std::shared_ptr<ScanResultsTreeModel> model, bool is_root)
-	: BASE_CLASS(model, is_root), m_dsr(dsr)
+ScanResultsTreeModelItem::ScanResultsTreeModelItem(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id)
+	: BASE_CLASS({}, parent, id), m_dsr(dsr)
 {
 }
 
-ScanResultsTreeModelItem::ScanResultsTreeModelItem(std::shared_ptr<ScanResultsTreeModel> model, bool is_root)
-	: BASE_CLASS(model, is_root)
+ScanResultsTreeModelItem::ScanResultsTreeModelItem(const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id)
+	: BASE_CLASS({}, parent, id)
 {
+}
+
+ScanResultsTreeModelItem::ScanResultsTreeModelItem(const QVariant& variant, const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id)
+	: BASE_CLASS({}, parent, id)
+{
+//	M_WARNING("TODO: DECODE VARIANT");
 }
 
 ScanResultsTreeModelItem::~ScanResultsTreeModelItem()
@@ -110,7 +101,7 @@ int ScanResultsTreeModelItem::columnCount() const
 
 
 /// Strings to use for the tags.
-using strviw_type = QLatin1Literal;
+using strviw_type = QLatin1String;
 
 ///// Strings to use for the tags.
 #define X(field_tag, tag_string, var_name) static const strviw_type field_tag ( # tag_string );
@@ -120,7 +111,7 @@ using strviw_type = QLatin1Literal;
 
 QVariant ScanResultsTreeModelItem::toVariant() const
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 
 	// Overwrite any class info added by the above.
 	set_map_class_info(this, &map);
@@ -131,11 +122,11 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 	/// @todo Will be more fields, justifying the map vs. value?
 	/// @todo Need the parent here too?  Probably needs to be handled by the parent, but maybe for error detection.
 
-	map_insert_or_die(map, XMLTAG_DIRSCANRESULT, m_dsr.toVariant());
+	map_insert_or_die(map, XMLTAG_DIRSCANRESULT, m_dsr);
 
-#define X(field_tag, tag_string, var_name) map_insert_or_die(map, field_tag, var_name);
-	M_DATASTREAM_FIELDS(X);
-#undef X
+// #define X(field_tag, tag_string, var_name) map_insert_or_die(map, field_tag, var_name);
+// 	M_DATASTREAM_FIELDS(X);
+// #undef X
 
 	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
 	for(auto& it : m_child_items)
@@ -149,23 +140,27 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 
 void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 {
-	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
+	InsertionOrderedMap<QString, QVariant> map = variant.value<InsertionOrderedMap<QString, QVariant>>();
 
 	// Overwrite any class info added by the above.
-	dump_map_class_info(this, &map);
+//	dump_map_class_info(this, &map);
 
 	auto uuid = map.get_attr("xml:id", "");
 	set_prefixed_uuid(uuid);
 
-#define X(field_tag, tag_string, var_name) map_read_field_or_warn(map, field_tag, var_name);
-	M_DATASTREAM_FIELDS(X);
-#undef X
+// #define X(field_tag, tag_string, var_name) map_read_field_or_warn(map, field_tag, var_name);
+// 	M_DATASTREAM_FIELDS(X);
+// #undef X
 
 	map_read_field_or_warn(map, XMLTAG_DIRSCANRESULT, &m_dsr);
 
-	QVariantHomogenousList child_list = map.value(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
-	Q_ASSERT(child_list.size() > 0);
+	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
+	child_var_list = map.at(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
+	Q_ASSERT(child_var_list.size() > 0);
 
+	append_children_from_variant<SRTMItem_LibEntry>(this, child_var_list);
+
+#if 0////
 	auto model_ptr_base = m_model.lock();
 	Q_ASSERT(model_ptr_base);
 	auto model_ptr = std::dynamic_pointer_cast<ScanResultsTreeModel>(model_ptr_base);
@@ -183,6 +178,7 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 		auto new_child = model_ptr->getItemById(id);
 		Q_ASSERT(new_child);
 	}
+#endif
 }
 
 //std::shared_ptr<ScanResultsTreeModel> ScanResultsTreeModelItem::getTypedModel() const

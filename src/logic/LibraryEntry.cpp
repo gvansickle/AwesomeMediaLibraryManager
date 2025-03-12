@@ -1,5 +1,5 @@
 /*
- * Copyright 2017, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2019, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -39,7 +39,6 @@
 #include <utils/RegisterQtMetatypes.h>
 #include <utils/Fraction.h>
 #include <future/InsertionOrderedMap.h>
-#include "utils/MapConverter.h"
 #include "utils/DebugHelpers.h"
 #include "TrackMetadata.h"
 #include "ntp.h"
@@ -51,6 +50,7 @@
 AMLM_QREG_CALLBACK([](){
     qIn() << "Registering LibraryEntry metatypes";
     qRegisterMetaType<LibraryEntry>();
+    qRegisterMetaType<std::shared_ptr<LibraryEntry>>();
     });
 
 
@@ -282,7 +282,7 @@ QUrl LibraryEntry::getM2Url() const
 	X(XMLTAG_LENGTH_SECS, m_length_secs) \
 	X(XMLTAG_METADATA, m_metadata)
 
-using strviw_type = QLatin1Literal;
+using strviw_type = QLatin1String;
 
 /// Strings to use for the tags.
 #define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
@@ -293,7 +293,7 @@ using strviw_type = QLatin1Literal;
 QDebug operator<<(QDebug dbg, const LibraryEntry& obj)
 {
 	QDebugStateSaver saver(dbg);
-#define X(field_tag, member_field) << field_tag << obj.member_field << ","
+#define X(field_tag, member_field) << (field_tag) << obj.member_field << ","
 	dbg M_DATASTREAM_FIELDS(X);
 #undef X
 	return dbg;
@@ -301,7 +301,7 @@ QDebug operator<<(QDebug dbg, const LibraryEntry& obj)
 
 QVariant LibraryEntry::toVariant() const
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 
 	// Insert field values into the QVariantMap.
 #define X(field_tag, member_field)   map_insert_or_die(map, field_tag, member_field);
@@ -323,7 +323,7 @@ QVariant LibraryEntry::toVariant() const
 
 void LibraryEntry::fromVariant(const QVariant& variant)
 {
-	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
+	InsertionOrderedMap<QString, QVariant> map = variant.value<InsertionOrderedMap<QString, QVariant>>();
 
 	// Extract all the fields from the map, cast them to their type.
 #define X(field_tag, member_field)   map_read_field_or_warn(map, field_tag, &(member_field));
@@ -354,7 +354,7 @@ void LibraryEntry::fromVariant(const QVariant& variant)
 //			m_is_populated = false;
 //		}
 	}
-//qDb() << "LIBRRAYENTRY:" << *this;
+	qDb() << "LIBRARYENTRY:" << *this;
 }
 
 #undef M_DATASTREAM_FIELDS

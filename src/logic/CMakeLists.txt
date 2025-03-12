@@ -1,5 +1,5 @@
 #
-# Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2018, 2019, 2024, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -19,12 +19,11 @@
 
 # @file src/logic/CMakeLists.txt
 
-add_subdir_lib(dbmodels EXCLUDE_FROM_ALL)
-add_subdir_lib(gsauthof_tree_model EXCLUDE_FROM_ALL)
-add_subdir_lib(jobs EXCLUDE_FROM_ALL)
-add_subdir_lib(models EXCLUDE_FROM_ALL)
-add_subdir_lib(proxymodels EXCLUDE_FROM_ALL)
-add_subdir_lib(serialization EXCLUDE_FROM_ALL)
+add_subdirectory(dbmodels)
+add_subdirectory(jobs)
+add_subdirectory(models)
+add_subdirectory(proxymodels)
+add_subdirectory(serialization)
 
 # The Tree Model from gsauthof.
 #add_subdirectory(gsauthof_tree_model EXCLUDE_FROM_ALL)
@@ -98,12 +97,21 @@ set(logic_subdir_HEADERS
     UUIncD.h
 	)
 
-target_sources_local(logic
-	PUBLIC
-		${logic_subdir_HEADERS}
+add_library(logic STATIC EXCLUDE_FROM_ALL)
+target_sources(logic
 	PRIVATE
+		${logic_subdir_HEADERS}
 		${logic_subdir_SOURCES}
 	)
+target_include_directories(logic
+   PRIVATE
+       # For config.h
+       ${PROJECT_BINARY_DIR}/src
+       #gsauthof_tree_model/tree_model
+       ${PROJECT_SOURCE_DIR}/src
+       ${PROJECT_SOURCE_DIR}/src/logic/models
+)
+
 target_link_libraries(logic
 	PUBLIC
 		concurrency
@@ -115,25 +123,13 @@ target_link_libraries(logic
 		utils
 		#tree_model
 	PRIVATE
-	    #${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS} ### @todo "logic_subdir links to itself".
+		gui
 		${QT5_LINK_LIB_TARGETS}
 		${KF5_LINK_LIB_TARGETS}
 		${GTK_LINK_LIB_TARGETS}
 		${AMLM_TAGLIB_TARGET}
 		${AMLM_LIBCUE_TARGET}
-
-	)
-target_include_directories(logic
-	PUBLIC
-	    # For config.h
-		${PROJECT_BINARY_DIR}/src
-		#                   ${CMAKE_CURRENT_LIST_DIR}/gsauthof_tree_model
-		#${CMAKE_CURRENT_LIST_DIR}/gsauthof_tree_model/tree_model
-		#                   ${CMAKE_CURRENT_LIST_DIR}/gsauthof_tree_model/tree_model/editor
-
-	PRIVATE
-		${PROJECT_SOURCE_DIR}/src
 	)
 
 
-
+message(STATUS "QT5_LINK_LIB_TARGETS: ${QT5_LINK_LIB_TARGETS}")

@@ -11,10 +11,10 @@ using std::endl;
 struct User {
     int id;
     std::string name;
-    std::vector<char> hash; //  binary format
+    std::vector<char> hash;  //  binary format
 };
 
-int main(int argc, char **argv) {
+int main(int, char**) {
     using namespace sqlite_orm;
     auto storage = make_storage("blob.sqlite",
                                 make_table("users",
@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
     User alex{
         0,
         "Alex",
-        { 0x10, 0x20, 0x30, 0x40 },
+        {0x10, 0x20, 0x30, 0x40},
     };
     alex.id = storage.insert(alex);
 

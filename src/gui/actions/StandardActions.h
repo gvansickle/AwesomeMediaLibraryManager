@@ -22,7 +22,7 @@
 
 #include <config.h>
 
-#if HAVE_KF501
+#if HAVE_KF501 || HAVE_KF6
 /// @link https://api.kde.org/frameworks/kconfigwidgets/html/namespaceKStandardAction.html#a741bca99a57745c202717fa273bc7f9b
 #include <KStandardAction>
 

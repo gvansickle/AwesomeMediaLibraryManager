@@ -17,9 +17,11 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <gui/activityprogressmanager/ActivityProgressPopup.h>
+#include "ActivityProgressPopup.h"
+
 #include <QPointer>
 #include <QToolButton>
+#include <QWidgetAction>
 
 
 

@@ -19,24 +19,27 @@
 
 #include "DirectoryScanJob.h"
 
-
-// Qt5
+// Qt
 #include <QString>
 #include <QUrl>
 #include <QDirIterator>
+#include <QPromise>
 
 // Ours
 #include <utils/TheSimplestThings.h>
 #include <logic/DirScanResult.h>
 #include <concurrency/ExtAsync.h>
+#include <utils/Stopwatch.h>
 
 
-void DirScanFunction(ExtFuture<DirScanResult> ext_future, AMLMJob* /*amlmJob*/,
-		const QUrl& dir_url, // The URL pointing at the directory to recursively scan.
-		const QStringList &name_filters,
-		const QDir::Filters dir_filters,
-		const QDirIterator::IteratorFlags iterator_flags)
+void DirScanFunction(QPromise<DirScanResult>& promise,
+                     const QUrl& dir_url, // The URL pointing at the directory to recursively scan.
+                     const QStringList &name_filters,
+		             const QDir::Filters dir_filters,
+		             const QDirIterator::IteratorFlags iterator_flags)
 {
+	Stopwatch sw;
+	sw.start("DirScanning");
 
 	if(!dir_url.isLocalFile())
 	{
@@ -59,7 +62,8 @@ void DirScanFunction(ExtFuture<DirScanResult> ext_future, AMLMJob* /*amlmJob*/,
 	}
 
 	// Count progress in terms of files found.
-	ext_future.setProgressUnit(KJob::Unit::Files);
+    M_TODO("FIX THIS FOR QT6/KF6")
+//    ext_future.setProgressUnit(KJob::Unit::Files);
 
 
 	int num_files_found_so_far = 0;
@@ -69,12 +73,13 @@ void DirScanFunction(ExtFuture<DirScanResult> ext_future, AMLMJob* /*amlmJob*/,
 
 	QString status_text = QObject::tr("Scanning for music files");
 
-	ext_future.reportDescription(status_text,
-								 QPair<QString,QString>(QObject::tr("Root URL"), dir_url.toString()),
-								 QPair<QString,QString>(QObject::tr("Current file"), QObject::tr("")));
+    M_TODO("FIX THIS FOR QT6/KF6")
+    // promise.reportDescription(status_text,
+    //                           QPair<QString,QString>(QObject::tr("Root URL"), dir_url.toString()),
+    //                           QPair<QString,QString>(QObject::tr("Current file"), QObject::tr("")));
 
-	ext_future.setProgressRange(0, 0);
-	ext_future.setProgressValueAndText(0, status_text);
+	promise.setProgressRange(0, 0);
+	promise.setProgressValueAndText(0, status_text);
 
 	// Iterate through the directory tree.
 	while(dir_iterator.hasNext())
@@ -101,7 +106,8 @@ void DirScanFunction(ExtFuture<DirScanResult> ext_future, AMLMJob* /*amlmJob*/,
 //            setTotalAmountAndSize(KJob::Unit::Directories, num_discovered_dirs+1);
 //            setProcessedAmountAndSize(KJob::Unit::Directories, num_discovered_dirs);
 //            setTotalAmountAndSize(KJob::Unit::Files, num_possible_files+1);
-			ext_future.setProgressRange(0, num_possible_files+1);
+			promise.setProgressRange(0, num_possible_files + 1);
+			promise.setProgressValue(num_files_found_so_far);
 		}
 		else if(file_info.isFile())
 		{
@@ -118,7 +124,7 @@ void DirScanFunction(ExtFuture<DirScanResult> ext_future, AMLMJob* /*amlmJob*/,
 			DirScanResult dir_scan_result(file_url, file_info);
 //			qDb() << "DIRSCANRESULT:" << dir_scan_result;
 
-			ext_future.reportInfoMessage(QObject::tr("File: %1").arg(file_url.toString()), QObject::tr("File: %1").arg(file_url.toString()));
+            promise.setProgressValueAndText(num_files_found_so_far, QObject::tr("File: %1").arg(file_url.toString()));
 
 			// Update progress.
 			/// @note Bytes is being used for "Size" == progress by the system.
@@ -132,42 +138,38 @@ void DirScanFunction(ExtFuture<DirScanResult> ext_future, AMLMJob* /*amlmJob*/,
 				// Keep progress range at least one more than the number of files we've found.
 				num_possible_files = num_files_found_so_far+1;
 //                setTotalAmountAndSize(KJob::Unit::Files, num_possible_files);
-				ext_future.setProgressRange(0, num_possible_files);
+				promise.setProgressRange(0, num_possible_files);
 			}
-
-			/// @todo
-//			amlmJob->setProcessedAmountAndSize(KJob::Unit::Files, num_files_found_so_far);
-			/// NEW
-			ext_future.setProgressValue(num_files_found_so_far);
+			promise.setProgressValue(num_files_found_so_far);
 
 			// Report the URL we found to the future.
-			ext_future.reportResult(dir_scan_result);
+            promise.addResult(dir_scan_result);
 
-			qDb() << "NUM FILES:" << num_files_found_so_far << ", per ext_future:" << ext_future.resultCount();
+            qDb() << "NUM FILES:" << num_files_found_so_far; // << ", per promise:" << promise.resultCount();
 		}
 
 		// Have we been canceled?
-		if(ext_future.HandlePauseResumeShouldICancel())
+        promise.suspendIfRequested();
+        if(promise.isCanceled())
 		{
 			// We've been cancelled.
 			qIn() << "CANCELLED";
-			// It's already been handled, we'd be reporting it twice here.
-//			ext_future.reportCanceled();
 			break;
 		}
 	}
 
 	// We've either completed our work or been cancelled.
 	num_possible_files = num_files_found_so_far;
-	if (!ext_future.isCanceled())
+	if (!promise.isCanceled())
 	{
-		ext_future.setProgressRange(0, num_possible_files);
-		ext_future.setProgressValueAndText(num_files_found_so_far, status_text);
+		promise.setProgressRange(0, num_possible_files);
+		promise.setProgressValueAndText(num_files_found_so_far, status_text);
 	}
 
-	ext_future.reportFinished();
+	sw.stop();
+	sw.print_results();
 
-	qDb() << "RETURNING, ExtFuture:" << ext_future; ///< STARTED only, last output of pool thread
+	// QtConcurrent::run() does the finish for us, so we just return here.
 	return;
 }
 

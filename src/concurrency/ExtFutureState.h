@@ -20,13 +20,14 @@
 #ifndef SRC_CONCURRENCY_EXTFUTURESTATE_H_
 #define SRC_CONCURRENCY_EXTFUTURESTATE_H_
 
+#if 0 // !Qt6
+
 #include <config.h>
 
 // Std C++ backfill
 #include <future/cpp14_concepts.hpp>
 
 // Qt5
-#include <QtCore>
 #include <QFlags>
 #include <QFutureInterface>
 
@@ -49,7 +50,7 @@ public:
         Started = QFutureInterfaceBase::Started,
         Finished = QFutureInterfaceBase::Finished,
         Canceled = QFutureInterfaceBase::Canceled,
-        Paused = QFutureInterfaceBase::Paused,
+//        Paused = QFutureInterfaceBase::Paused,
         Throttled = QFutureInterfaceBase::Throttled
     };
     Q_DECLARE_FLAGS(State, StateFlag)
@@ -88,7 +89,7 @@ public:
             QFutureInterfaceBase::State::Started,
             QFutureInterfaceBase::State::Finished,
             QFutureInterfaceBase::State::Canceled,
-            QFutureInterfaceBase::State::Paused,
+//            QFutureInterfaceBase::State::Paused,
             QFutureInterfaceBase::State::Throttled
         };
 
@@ -167,5 +168,7 @@ QDebug operator<<(QDebug dbg, const QFutureInterfaceBase &qfi)
 
     return dbg;
 }
+
+#endif
 
 #endif /* SRC_CONCURRENCY_EXTFUTURESTATE_H_ */

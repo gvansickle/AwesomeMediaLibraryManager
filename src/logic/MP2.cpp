@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -17,34 +17,49 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <gui/actions/ActionHelpers.h>
+
 #include "MP2.h"
-#include "ntp.h"
 
-#include "utils/ConnectHelpers.h"
-
-#include <QMediaPlaylist>
+// Qt
 #include <QDebug>
 #include <QUrlQuery>
+#include <QAudioDevice>
+#include <QMediaDevices>
 
+// Ours
+#include <ModelUserRoles.h>
+#include <PlaylistModelItem.h>
 #include <utils/Fraction.h>
+#include "utils/ConnectHelpers.h"
+#include "ntp.h"
+#include <gui/actions/ActionHelpers.h>
 
-MP2::MP2(QObject* parent, Flags flags) : QMediaPlayer(parent, flags)
+
+MP2::MP2(QObject* parent) : QMediaPlayer(parent)
 {
-	setAudioRole(QAudio::MusicRole);
-	setNotifyInterval(10); // ms
+	auto dev_list = QMediaDevices::audioOutputs();
+	for (auto& dev : dev_list)
+	{
+		qDb() << "AUDIODEV:" << dev.description() << "ID:" << dev.id();
+	}
+	qDb() << M_ID_VAL(QMediaDevices::defaultAudioOutput().description());
+
+	m_audio_output = std::make_unique<QAudioOutput>(this);
+	m_audio_output->setDevice(QAudioDevice());
+	setAudioOutput(m_audio_output.get());
 
 	createActions();
 
 	// Make initial connections from the underlying QMediaPlayer to slots in this.
-	connect(this, &QMediaPlayer::positionChanged, this, &MP2::onPositionChanged);
-	connect(this, &QMediaPlayer::durationChanged, this, &MP2::onDurationChanged);
-	connect(this, &QMediaPlayer::mediaChanged, this, &MP2::onMediaChanged);
-	connect(this, &QMediaPlayer::mediaStatusChanged, this, &MP2::onMediaStatusChanged);
-	connect(this, &QMediaPlayer::currentMediaChanged, this, &MP2::onCurrentMediaChanged);
-	connect(this, &QMediaPlayer::stateChanged, this, &MP2::onStateChanged);
-	connect(qobject_cast<QMediaPlayer*>(this), static_cast<void(QMediaPlayer::*)(QMediaPlayer::Error)>(&QMediaPlayer::error), this,
-			static_cast<void(MP2::*)(QMediaPlayer::Error)>(&MP2::onPlayerError));
+	connect_or_die(this, &QMediaPlayer::errorOccurred, this, &MP2::onErrorOccurred);
+	connect_or_die(this, &QMediaPlayer::positionChanged, this, &MP2::onPositionChanged);
+	connect_or_die(this, &QMediaPlayer::durationChanged, this, &MP2::onDurationChanged);
+	connect_or_die(this, &QMediaPlayer::mediaStatusChanged, this, &MP2::onMediaStatusChanged);
+
+	// Reflect some signals from our QAudioOutput to signals coming from this object.
+	// This avoids having to expose m_audio_output for a third party to make connections to.
+	connect_or_die(m_audio_output.get(), &QAudioOutput::volumeChanged, this, &MP2::volumeChanged);
+	connect_or_die(m_audio_output.get(), &QAudioOutput::mutedChanged, this, &MP2::mutedChanged);
 }
 
 qint64 MP2::position() const
@@ -71,14 +86,24 @@ qint64 MP2::duration() const
 	}
 }
 
+bool MP2::muted() const
+{
+	return m_audio_output->isMuted();
+}
+
+float MP2::volume() const
+{
+	return m_audio_output->volume();
+}
+
 void MP2::createActions()
 {
 
 }
 
-void MP2::setTrackInfoFromUrl(QUrl url)
+void MP2::getTrackInfoFromUrl(QUrl url)
 {
-	qDebug() << QString("URL: '%1'").arg(url.toString());
+	qDebug() << "URL: " << url.toString();
 	if(url.hasFragment())
 	{
 		m_is_subtrack = true;
@@ -87,157 +112,58 @@ void MP2::setTrackInfoFromUrl(QUrl url)
 		{
 			m_track_startpos_ms = ntpfrag.start_secs()*1000.0;
 			m_track_endpos_ms = ntpfrag.end_secs()*1000.0;
+			qDb() << "SET START AND END";
 		}
 	}
 	else
 	{
 		m_is_subtrack = false;
 	}
-	updateSeekToEndInfoOnMediaChange();
-}
-
-void MP2::updateSeekToEndInfoOnMediaChange()
-{
-	// We need to call this whenever the current media status changes.
-	// If we were in seek-to-end mode, this sets things up to handle any possible pending seek msg, and cancels out of
-	// seek-to-end mode.
-
-	if(m_seek_to_end_mode)
-	{
-		// We were seeking to the end of the last track when this next track started.
-		if(m_pending_seek_msg)
-		{
-			// There's an outstanding seek-to-end msg.  Ignore it when it comes in.
-			qDebug() << "Seek msg pending, will ignore next setPosition(-1)";
-			m_ignore_seek_msg = true;
-		}
-		// We're no longer in seek-to-end mode, this new track cancels it.
-		m_seek_to_end_mode = false;
-	}
-}
-
-void MP2::seekToEnd()
-{
-	// Start the seek-to-end process for a subtrack.
-	qDebug() << "Queueing setPosition(-1) message.";
-	m_seek_to_end_mode = true;
-	m_pending_seek_msg = true;
-	m_ignore_seek_msg = false;
-	// Queue up a message to seek to the end of the current media.
-	QMetaObject::invokeMethod(this, "setPosition", Qt::QueuedConnection, Q_ARG(qint64, -1));
 }
 
 void MP2::play()
 {
+	qDb() << "play(), current media URL:" << source() << M_ID_VAL(m_track_startpos_ms) << M_ID_VAL(m_track_endpos_ms);
+	auto playback_state = QMediaPlayer::playbackState();
+	if (playback_state == QMediaPlayer::StoppedState)  //<= This is usually PlayingState / LoadedMedia.
+	{
+		if (m_is_subtrack)
+		{
+			QMediaPlayer::setPosition(m_track_startpos_ms);
+		}
+	}
+	m_playing = true;
 	QMediaPlayer::play();
 }
 
 void MP2::stop()
 {
+	m_playing = false;
 	QMediaPlayer::stop();
-	updateSeekToEndInfoOnMediaChange();
 	if(m_is_subtrack)
 	{
 		QMediaPlayer::setPosition(m_track_startpos_ms);
 	}
 }
 
+void MP2::setMuted(bool muted)
+{
+	m_audio_output->setMuted(muted);
+}
+
+void MP2::setVolume(float volume)
+{
+	m_audio_output->setVolume(volume);
+}
+
 void MP2::setShuffleMode(bool shuffle_on)
 {
-	// QMediaPlaylist doesn't have orthogonal support for Sequential/Shuffle and Repeat/Non-repeat playback.
-	// It's a single setting of QMediaPlaylist::PlaybackMode, which can be one of:
-	// QMediaPlaylist::Random == Shuffle + Repeat
-	// QMediaPlaylist::Sequential == Sequential + Non-Repeat
-	// QMediaPlaylist::Loop == Sequential + Repeat.
-
-	auto current_playlist = playlist();
-	if(current_playlist)
-	{
-		if(shuffle_on)
-		{
-			// Shuffle plus Implicit repeat.
-			current_playlist->setPlaybackMode(QMediaPlaylist::Random);
-			qDebug() << "Shuffle+Repeat";
-		}
-		else
-		{
-			// Not shuffle.  Switch to Sequential + Repeat or + Non-repeat, depending on what
-			// was last set.
-			if(m_last_repeat_state)
-			{
-				current_playlist->setPlaybackMode(QMediaPlaylist::Loop);
-				qDebug() << "Seq+Repeat";
-			}
-			else
-			{
-				current_playlist->setPlaybackMode(QMediaPlaylist::Sequential);
-				qDebug() << "Seq+Stop";
-			}
-		}
-	}
+	m_shuffle_setting = shuffle_on ? MP2::Shuffle : MP2::Sequential;
 }
 
-void MP2::repeat(bool checked)
+void MP2::repeat(bool loop)
 {
-	// QMediaPlaylist doesn't have orthogonal support for Sequential/Shuffle and Loop/Non-loop playback.
-	// It's a single setting of QMediaPlaylist::PlaybackMode, which can be one of:
-	// QMediaPlaylist::Random == Shuffle + Loop
-	// QMediaPlaylist::Sequential == Sequential + Non-loop
-	// QMediaPlaylist::Loop == Sequential + Loop.
-	auto current_playlist = playlist();
-	if(current_playlist)
-	{
-		if(current_playlist->playbackMode() == QMediaPlaylist::Random)
-		{
-			// Ignore this signal while we're in shuffle playback mode.
-			qDebug() << "Currently in Shuffle mode, ignoring";
-		}
-		else
-		{
-			if(checked)
-			{
-				current_playlist->setPlaybackMode(QMediaPlaylist::Loop);
-				qDebug() << "Seq+Repeat";
-			}
-			else
-			{
-				current_playlist->setPlaybackMode(QMediaPlaylist::Sequential);
-				qDebug() << "Seq+Stop";
-			}
-		}
-	}
-	// Regardless of whether we ignored it above or not, record the new state for setShuffleMode().
-	m_last_repeat_state = checked;
-}
-
-void MP2::setPosition(qint64 position)
-{
-	qDebug() << "setPosition:" << position;
-	if(position == -1)
-	{
-		// This is an incoming "seek_to_end" msg.
-		if(!m_ignore_seek_msg)
-		{
-			if(m_pending_seek_msg)
-			{
-				// Set position to the last millisecond.  This is for ending subtracks.
-				qDebug() << "setPosition: seeking to end";
-				QMediaPlayer::setPosition(QMediaPlayer::duration());
-			}
-		}
-		else
-		{
-			m_ignore_seek_msg = false;
-			qDebug() << "setPosition: ignoring.";
-		}
-		// Regardless of whether we ignored it or not, we've absorbed the seek message.
-		m_pending_seek_msg = false;
-	}
-	else
-	{
-		// It's a normal setPosition() message.  Just forward to the superclass.
-		QMediaPlayer::setPosition(position);
-	}
+	m_loop_setting = loop ? MP2::Loop : MP2::NoLoop;
 }
 
 void MP2::onPositionChanged(qint64 pos)
@@ -251,16 +177,16 @@ void MP2::onPositionChanged(qint64 pos)
 	{
 		Q_EMIT positionChanged2(pos);
 	}
-	if(!m_seek_to_end_mode)
+
+	if (m_is_subtrack && (QMediaPlayer::position() >= m_track_endpos_ms))
 	{
-		// We're not already trying to seek to the end of the track.
-		if(m_is_subtrack)
+		// Subtrack, and the position is past its end.  Stop playback and tell the playlist we're connected to
+		// to send us the next media URL to play.
+		if (!m_EndOfMedia_sending_playlistToNext)
 		{
-			if(QMediaPlayer::position() >= m_track_endpos_ms)
-			{
-				qDebug() << QString("onPositionChanged: Seeking to subtrack end: %1").arg(QMediaPlayer::duration());
-				seekToEnd();
-			}
+			m_onPositionChanged_sending_playlistToNext = true;
+			QMediaPlayer::stop();
+			Q_EMIT playlistToNext();
 		}
 	}
 }
@@ -278,47 +204,100 @@ void MP2::onDurationChanged(qint64 duration)
 	}
 }
 
-void MP2::onMediaChanged(const QMediaContent& media)
-{
-	// This could be the playlist.
-	qDebug() << QString("onMediaChanged: %1").arg(media.canonicalUrl().toString());
-}
-
 void MP2::onMediaStatusChanged(QMediaPlayer::MediaStatus status)
 {
 	qDebug() << QString("onMediaStatusChanged:") << status;
-	if(status == QMediaPlayer::NoMedia)
-	{
-		updateSeekToEndInfoOnMediaChange();
-	}
-	else if(status == QMediaPlayer::EndOfMedia)
-	{
-		updateSeekToEndInfoOnMediaChange();
-	}
-}
+	qDb() << M_ID_VAL(playbackState());
 
-void MP2::onCurrentMediaChanged(const QMediaContent& qmediacontent)
-{
-	// This is the active media content being played.  Could be Null.
-	qDebug() << QString("onCurrentMediaChanged:") << qmediacontent.canonicalUrl();
-	updateSeekToEndInfoOnMediaChange();
-	if(!qmediacontent.isNull())
+	switch(status)
 	{
-		if(qmediacontent.playlist() == nullptr)
+		case QMediaPlayer::NoMedia:
 		{
-			setTrackInfoFromUrl(qmediacontent.canonicalUrl());
-			qDebug() << QString("track start: %1").arg(m_track_startpos_ms);
+			break;
+		}
+		case QMediaPlayer::LoadedMedia:
+		{
+			// Player should be in StoppedState here.
+			qDb() << QString("setPosition() to track start: %1 ms").arg(m_track_startpos_ms);
 			QMediaPlayer::setPosition(m_track_startpos_ms);
+
+			if (m_playing)
+			{
+				play();
+			}
+			break;
+		}
+		case QMediaPlayer::EndOfMedia:
+		{
+			// Player should be in StoppedState here.
+			// Note: We aren't get these msgs from subtracks when we do a seek-to-end for some reason.
+			/// We have two separate things which will emit playlistToNext() (see the other playlistToNext() emit in
+			/// onPositionChanged()).  We could end up with a subtrack at the end of its file triggering
+			/// both of these emits, and hence doing a double skip.  This logic here and in onPositionChanged()
+			/// prevents that race and guarantees only one playlistToNext() is sent.
+			/// These two flags allow only one to send the signal, which comes back to us via the
+			/// onPlaylistPositionChanged() slot.  That slot clears the flags to reset this mechanism for the next track.
+			if(!m_onPositionChanged_sending_playlistToNext)
+			{
+				m_EndOfMedia_sending_playlistToNext = true;
+				Q_EMIT playlistToNext();
+			}
+			break;
 		}
 	}
 }
 
-void MP2::onStateChanged(QMediaPlayer::State state)
+void MP2::onSourceChanged(const QUrl& media_url)
 {
-	qDebug() << QString("onStateChanged (Player): %1").arg(/*PlayerStateMap[*/state/*]*/);
+	qDebug() << "onSourceChanged, URL:" << media_url;
+
+	if(media_url.isValid() && !media_url.isEmpty())
+	{
+		// Get the info we need from the URL's Fragment.
+		getTrackInfoFromUrl(media_url);
+		// Remove the Fragment before we pass the URL to QMediaPlayer.
+		QUrl url_minus_fragment = media_url.toString(QUrl::RemoveFragment);
+		// Note that setSource():
+		// - Discards all info it has for the current media source.
+		// - Stops playback.
+		// - returns immediately.
+		// So we can't setPosition() to the beginning of the track here, we have to do that when we get a
+		// mediaStatusChange of QMediaPlayer::LoadedMedia.
+		QMediaPlayer::setSource(url_minus_fragment);
+	}
 }
 
-void MP2::onPlayerError(QMediaPlayer::Error error)
+
+
+void MP2::onPlaylistPositionChanged(const QModelIndex& current, const QModelIndex& previous)
 {
-	qWarning() << "Player error" << error << ":" << this->errorString();
+	// We get in here when the Playlist view sends the QItemSelectionModel::currentChanged signal.
+	// That signal can come from:
+	// - User input on the playlist view.
+	// - The MP2::playlistToNext signal emitted by us (in two different places).
+
+	m_onPositionChanged_sending_playlistToNext = false;
+	m_EndOfMedia_sending_playlistToNext = false;
+
+	qDb() << "playlistPosChanged:" << current;
+
+	if (!current.isValid())
+	{
+		qWr() << "Invalid QModelIndex: " << current;
+	}
+	else
+	{
+		// Set up to play the newly-selected track.
+		QVariant libentry = current.siblingAtColumn(0).data(ModelUserRoles::PointerToItemRole);
+		Q_ASSERT(libentry.isValid());
+		std::shared_ptr<PlaylistModelItem> item = libentry.value<std::shared_ptr<PlaylistModelItem>>();
+		auto new_url = item->getM2Url();
+		qDb() << M_ID_VAL(new_url);
+		onSourceChanged(new_url);
+	}
+}
+
+void MP2::onErrorOccurred(QMediaPlayer::Error error, const QString& errorString)
+{
+	qCr() << "PLAYER ERROR:" << error << errorString;
 }

@@ -38,17 +38,17 @@ class SRTMItem_LibEntry : public ScanResultsTreeModelItem, public enable_shared_
 {
 	using BASE_CLASS = ScanResultsTreeModelItem;
 
-protected:
-	explicit SRTMItem_LibEntry(std::shared_ptr<LibraryEntry> libentry,
-							   const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root);
-	explicit SRTMItem_LibEntry(const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root);
+public:
+//protected:
+	explicit SRTMItem_LibEntry(const std::shared_ptr<AbstractTreeModelItem>& parent_item = nullptr, UUIncD id = UUIncD::null());
+	explicit SRTMItem_LibEntry(std::shared_ptr<LibraryEntry> libentry, const std::shared_ptr<AbstractTreeModelItem>& parent_item = nullptr, UUIncD id = UUIncD::null());
+//	explicit SRTMItem_LibEntry(const QVariant& variant, const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr, UUIncD id = UUIncD::null());
 
 public:
-	static std::shared_ptr<SRTMItem_LibEntry> construct(std::shared_ptr<LibraryEntry> libentry,
-			const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root = false);
-	static std::shared_ptr<SRTMItem_LibEntry> construct(const QVariant& variant,
-			const std::shared_ptr<ScanResultsTreeModel>& model, bool is_root = false);
-	SRTMItem_LibEntry() {};
+//	static std::shared_ptr<SRTMItem_LibEntry> construct(std::shared_ptr<LibraryEntry> libentry,
+//	                                                    const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr, UUIncD id = UUIncD::null());
+//	static std::shared_ptr<SRTMItem_LibEntry> construct(const QVariant& variant,
+//	                                                    const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr, UUIncD id = UUIncD::null());
 	~SRTMItem_LibEntry() override = default;
 
 	QVariant data(int column, int role = Qt::DisplayRole) const override;
@@ -77,7 +77,7 @@ private:
 	std::shared_ptr<LibraryEntry> m_library_entry;
 };
 
-Q_DECLARE_METATYPE(SRTMItem_LibEntry);
+//Q_DECLARE_METATYPE(SRTMItem_LibEntry);
 
 
 #endif /* SRC_LOGIC_MODELS_SRTMITEMLIBENTRY_H_ */

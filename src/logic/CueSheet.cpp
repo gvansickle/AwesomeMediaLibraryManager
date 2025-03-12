@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -102,10 +102,14 @@ std::mutex CueSheet::m_libcue_mutex;
 
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering CueSheet";
-    qRegisterMetaType<CueSheet>()
-    ;});
+    qRegisterMetaType<CueSheet>();
+	QMetaType::registerConverter<std::__cxx11::basic_string<char>, QString>([](const std::__cxx11::basic_string<char>& str){ return QString::fromUtf8(str); });
+	QMetaType::registerConverter<QString, std::__cxx11::basic_string<char>>([](const QString& str){
+		return str.toStdString();
+		});
+	});
 
-using strviw_type = QLatin1Literal;
+using strviw_type = QLatin1String;
 
 #define M_DATASTREAM_FIELDS_DISC(X) \
 	X(XMLTAG_DISC_CATALOG_NUM, m_disc_catalog_num) \
@@ -222,7 +226,7 @@ uint8_t CueSheet::get_total_num_tracks() const
 
 QVariant CueSheet::toVariant() const
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 
 	// CD-level fields.
 #define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
@@ -250,7 +254,7 @@ QVariant CueSheet::toVariant() const
 
 void CueSheet::fromVariant(const QVariant& variant)
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 	qviomap_from_qvar_or_die(&map, variant);
 
 	// CD-level fields.
@@ -266,7 +270,7 @@ void CueSheet::fromVariant(const QVariant& variant)
 #if 0
 	list_read_all_fields_or_warn(qvar_track_list, &m_tracks);
 #else
-	for(const auto& track : qAsConst(qvar_track_list))
+	for(const auto& track : std::as_const(qvar_track_list))
 	{
 		TrackMetadata tm;
 		tm.fromVariant(track);
@@ -474,4 +478,18 @@ QDebug operator<<(QDebug dbg, const CueSheet &cuesheet)
     dbg << ")\n";
 
     return dbg;
+}
+
+QDataStream &operator<<(QDataStream &out, const CueSheet &myObj)
+{
+    out << myObj.toVariant();
+    return out;
+}
+
+QDataStream &operator>>(QDataStream &in, CueSheet &myObj)
+{
+    QVariant var;
+    in >> var;
+    myObj.fromVariant(var);
+    return in;
 }

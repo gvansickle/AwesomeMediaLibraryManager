@@ -41,7 +41,7 @@ class enable_shared_from_this_virtual_base : public std::enable_shared_from_this
     friend struct enable_shared_from_this_virtual;
 
 public:
-	virtual ~enable_shared_from_this_virtual_base() {};
+    virtual ~enable_shared_from_this_virtual_base() {}
 
     std::shared_ptr<enable_shared_from_this_virtual_base> shared_from_this()
     {
@@ -52,16 +52,14 @@ public:
     	return base_type::shared_from_this();
     }
 
-//	std::weak_ptr<enable_shared_from_this_virtual_base> weak_from_this() noexcept
-//	{
-//		return base_type::weak_from_this();
-//	};
-//	std::weak_ptr<enable_shared_from_this_virtual_base const> weak_from_this() const noexcept
-//	{
-//		return base_type::weak_from_this();
-//	};
-
-	void* m_void_ptr;
+	std::weak_ptr<enable_shared_from_this_virtual_base> weak_from_this() noexcept
+	{
+		return base_type::weak_from_this();
+    }
+	std::weak_ptr<enable_shared_from_this_virtual_base const> weak_from_this() const noexcept
+	{
+		return base_type::weak_from_this();
+    }
 };
 
 template <typename T>
@@ -90,15 +88,15 @@ public:
 #endif
 	}
 
-//	std::weak_ptr<T> weak_from_this() noexcept
-//	{
-//    	std::weak_ptr<T> result(base_type::weak_from_this(), static_cast<T*>(this));
-//    	return result;
-//	};
-//	std::weak_ptr<T const> weak_from_this() const noexcept
-//	{
-//		std::weak_ptr<T const> result(base_type::weak_from_this(), static_cast<T const*>(this));
-//	};
+	std::weak_ptr<T> weak_from_this() noexcept
+	{
+		std::weak_ptr<T> result(base_type::weak_from_this(), static_cast<T*>(this));
+		return result;
+    }
+	std::weak_ptr<T const> weak_from_this() const noexcept
+	{
+		std::weak_ptr<T const> result(base_type::weak_from_this(), static_cast<T const*>(this));
+    }
 
 	/**
 	 * Utility method to easily downcast.

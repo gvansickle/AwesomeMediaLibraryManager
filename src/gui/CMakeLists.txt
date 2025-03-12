@@ -1,5 +1,5 @@
 #
-# Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2018, 2024, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -105,21 +105,27 @@ set(gui_settings_SOURCE_FILES
 	)
 PREPEND_TO_EACH(gui_settings_SOURCE_FILES "settings/" ${gui_settings_SOURCE_FILES})
 
-message(WARN "TODO")
 add_subdirectory(activityprogressmanager)
+add_subdirectory(widgets)
 
-add_subdir_lib(widgets STATIC EXCLUDE_FROM_ALL)
-
-target_sources_local(gui
-	PUBLIC
+add_library(gui STATIC EXCLUDE_FROM_ALL)
+target_sources(gui
+	PRIVATE
 		${gui_HEADER_FILES}
 		${gui_settings_SOURCE_FILES}
 		${HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER}
-	#PRIVATE
-		${gui_SOURCE_FILES}
+        ${gui_SOURCE_FILES}
 		${SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER}
 		${UI_FILES_GUI_ACTIVITYPROGRESSMANAGER}
 		)
+target_include_directories(gui
+	PRIVATE
+		# For config.h
+		${PROJECT_BINARY_DIR}/src
+		# For anything in <root>/src: utils, logic, future, gui.
+		${PROJECT_SOURCE_DIR}/src
+		${Qt5Gui_PRIVATE_INCLUDE_DIRS} ### @todo OBSOLETE THIS
+)
 set_target_properties(gui
     PROPERTIES
     	AUTOMOC ON
@@ -128,20 +134,12 @@ set_target_properties(gui
     	)
 target_link_libraries(gui
 	PUBLIC
-                      src
+		kconfig_target
 		${QT5_LINK_LIB_TARGETS}
 		${KF5_LINK_LIB_TARGETS}
 		${GTK_LINK_LIB_TARGETS}
-		widgets
 	PRIVATE
+		widgets
 		resources
-		)
-target_include_directories(gui
-	PUBLIC
-		# For config.h
-		${PROJECT_BINARY_DIR}/src
-	PUBLIC
-		# For anything in <root>/src: utils, logic, future, gui.
-		${PROJECT_SOURCE_DIR}/src
-		${Qt5Gui_PRIVATE_INCLUDE_DIRS} ### @todo OBSOLETE THIS
-		)
+)
+

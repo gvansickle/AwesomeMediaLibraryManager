@@ -26,8 +26,8 @@
 #include <memory>
 
 // Ours
-#include "AMLMApp.h"
 #include <logic/models/ColumnSpec.h>
+#include <logic/models/treeitem.h>
 
 
 namespace AMLM
@@ -59,12 +59,47 @@ void Core::build()
 
 	// Create the single (at this point) ScanResultsTreeModel.
 	/// @note In KDenLive, this is the same, no parent QObject given to ProjectItemModel::construct();
-M_TODO("Improve ColumnSpecs, not sure I like how we do this and then need to erase it on a LoadModel().");
-	m_self->m_srtm_instance = ScanResultsTreeModel::construct({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
+M_TODO("Improve ColumnSpecs, not sure I like how we do this and then need to erase it on a LoadModel().")
+	std::initializer_list<ColumnSpec> column_specs = {ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}};
+//	m_self->m_srtm_instance = std::make_shared</*ScanResultsTreeModel*/AbstractTreeModel>(column_specs, nullptr);
+//	m_self->m_srtm_instance = std::make_shared<ScanResultsTreeModel>();
+//	m_self->m_srtm_instance = ScanResultsTreeModel::construct({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
+	m_self->m_srtm_instance = ScanResultsTreeModel::make_ScanResultsTreeModel({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
 	// Create and set the root item / headers
 //	m_self->m_srtm_instance->setColumnSpecs({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
 	// Let's add two more columns
 	m_self->m_srtm_instance->insertColumns(3, 2);
+
+
+	/// ETM
+	QStringList headers;
+	headers << tr("Title") << tr("Description");
+	m_self->m_etm_instance = std::make_shared<TreeModel>(headers);
+	auto the_etm = m_self->m_etm_instance;
+
+	auto root_item = the_etm->getItem(QModelIndex());
+	std::shared_ptr<TreeItem> new_child = the_etm->insertChild();
+
+	QVector<QVariant> fields({QString("ABC"), QString("DEF")});
+//	std::shared_ptr<TreeItem> new_grandchild = std::make_shared<TreeItem>(fields, new_child);
+//	/*auto new_grandchild =*/ new_child->insertChild(0, new_grandchild);
+	auto new_grandchild = the_etm->append_child(fields, new_child);
+	fields.clear();
+	fields << QString("GHI") << QString("JKL");
+	the_etm->append_child(fields, new_grandchild);
+
+	QVector<QVariant> fields2({QString("First"), QString("Second")});
+	auto new_unparented_child = std::make_shared<TreeItem>(fields2);
+
+
+	/// std::shared_ptr<AbstractTreeModel> m_atm_instance;
+//	m_self->m_atm_instance = std::make_shared<AbstractTreeModel>(column_specs);
+	m_self->m_atm_instance = AbstractTreeModel::make_AbstractTreeModel(column_specs);
+
+//	new_child->setData(0, fields[0]);
+//	new_child->setData(1, fields[1]);
+//	TreeItem* new_item = new TreeItem(fields, root_item);
+//	root_item->insertChildren();
 
 	/// @todo experimental
 //	UUIncD new_id = m_self->m_srtm_instance->requestAddItem({"Artist1", "B", "C", "D"}, m_self->m_srtm_instance->getRootItem()->getId());
@@ -94,8 +129,31 @@ std::unique_ptr<Core>& Core::self()
 std::shared_ptr<ScanResultsTreeModel> Core::getScanResultsTreeModel()
 {
 	Q_CHECK_PTR(m_srtm_instance);
-	return m_srtm_instance;
+
+	return std::dynamic_pointer_cast<ScanResultsTreeModel>(m_srtm_instance);
+}
+
+std::shared_ptr<ScanResultsTreeModel> Core::swapScanResultsTreeModel(const std::shared_ptr<ScanResultsTreeModel>& new_model)
+{
+	auto old_model = m_srtm_instance;
+
+	m_srtm_instance = new_model;
+
+	return old_model;
+}
+
+std::initializer_list<ColumnSpec> Core::getDefaultColumnSpecs()
+{
+	std::initializer_list<ColumnSpec> column_specs = {ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}};
+	return column_specs;
 };
+
+std::shared_ptr<TreeModel> Core::getEditableTreeModel()
+{
+	Q_CHECK_PTR(m_etm_instance);
+	return m_etm_instance;
+}
+
 
 void Core::clean()
 {

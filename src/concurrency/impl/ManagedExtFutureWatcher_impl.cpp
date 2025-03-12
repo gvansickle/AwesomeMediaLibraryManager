@@ -21,6 +21,8 @@
  * @file ManagedExtFutureWatcher_impl.cpp
  */
 
+#if 1 // !QT6
+
 #include "ManagedExtFutureWatcher_impl.h"
 
 // Qt5
@@ -29,6 +31,7 @@
 // Ours
 #include <utils/DebugHelpers.h>
 #include <utils/ConnectHelpers.h>
+#include <logic/PerfectDeleter.h>
 
 namespace ManagedExtFutureWatcher_detail
 {
@@ -102,3 +105,5 @@ FutureWatcherParent* get_future_watcher_parent()
 }
 
 }; // END ns
+
+#endif // !QT6

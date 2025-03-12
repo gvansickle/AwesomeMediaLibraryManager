@@ -227,10 +227,10 @@ set(TREE_MODEL_CC
 #   )
 
 ### GRVS
-#add_library(tree_model STATIC)
-
-target_sources_local(gsauthof_tree_model
-	PUBLIC
+add_library(tree_model STATIC)
+	
+target_sources(tree_model
+	PRIVATE
 		${TREE_MODEL_MOC}
 		${HEADERS_EDITOR}
 		${SOURCE_EDITOR}

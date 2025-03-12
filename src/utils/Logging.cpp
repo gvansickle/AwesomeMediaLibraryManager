@@ -86,11 +86,11 @@ void printDebugMessagesWhileDebuggingHandler(QtMsgType type, const QMessageLogCo
 		shortfunction = shortfunction.left(32);
 #else
 		std::string shortfunction = context.function;
-		shortfunction = std::regex_replace(shortfunction, std::regex(u8R"!(^[\s]*(static|void|template|virtual|\*))!"), "");
+		shortfunction = std::regex_replace(shortfunction, std::regex(R"!(^[\s]*(static|void|template|virtual|\*))!"), "");
 		// Strip trailing whitespace.
-		shortfunction = std::regex_replace(shortfunction, std::regex(u8R"!(\w+\s+)!"), "");
+		shortfunction = std::regex_replace(shortfunction, std::regex(R"!(\w+\s+)!"), "");
 		// Strip leading whitespace.
-		shortfunction = std::regex_replace(shortfunction, std::regex(u8R"!(^([\s]+))!"), "");
+		shortfunction = std::regex_replace(shortfunction, std::regex(R"!(^([\s]+))!"), "");
 		shortfunction.resize(32, u8' ');
 #endif
 		debug_str.replace(QStringLiteral("%shortfunction"), toqstr(shortfunction));
@@ -183,7 +183,7 @@ void Logging::dumpEnvVars()
 
 
 	qInfo() << "QT/KDE Environment variables:";
-	for(const auto& str : qAsConst(known_qt_kde_vars))
+	for(const auto& str : std::as_const(known_qt_kde_vars))
 	{
 		qInfo() << str + ":" << env.value(str, "<unset or empty>");
 	}
@@ -194,14 +194,14 @@ void Logging::dumpEnvVars()
 	qInfo() << "QGuiApplication::libraryPaths():" << QGuiApplication::libraryPaths();
 
 	qInfo() << "XDG Environment variables:";
-	for(const auto& str : qAsConst(known_env_vars))
+	for(const auto& str : std::as_const(known_env_vars))
 	{
 		qInfo() << str + ":" << env.value(str, "<unset or empty>");
 	}
 
 	qInfo() << "XDG Base Directory Specification environment variables:";
 
-	for(const auto& str : qAsConst(known_xdg_base_dir_spec_vars))
+	for(const auto& str : std::as_const(known_xdg_base_dir_spec_vars))
 	{
 		qInfo() << str + ":" << env.value(str, "<unset or empty>");
 	}

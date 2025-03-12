@@ -21,22 +21,30 @@
 #define SRC_LOGIC_JOBS_LIBRARYRESCANNERJOB_H_
 
 
-/// Qt5
+// Qt
 #include <QVector>
+#include <QPromise>
 
-/// Ours
+// Ours
 #include "LibraryRescannerMapItem.h"
 #include "LibraryRescanner.h" ///< For MetadataReturnVal
+#include "ExtFuture.h"
+#include "AMLMJob.h"
 
 
 class LibraryModel;
 
 /**
- * Function taking a CnR future to rescan the metadata.
+ * Worker function which converts the LibraryRescanMapItems from @a in_future
+ * to MetadataReturnVal's which are sent to @a promise.
+ *
+ * @param promise
+ * @param in_future
+ * @param current_libmodel
  */
-void library_metadata_rescan_task(ExtFuture<MetadataReturnVal> ext_future, AMLMJob* job,
-								  ExtFuture<VecLibRescannerMapItems> items_to_rescan,
-								  LibraryModel* current_libmodel);
+void library_metadata_rescan_task(QPromise<MetadataReturnVal>& promise, AMLMJob*,
+                                  ExtFuture<VecLibRescannerMapItems> in_future,
+                                  LibraryModel* current_libmodel);
 
 
 #endif /* SRC_LOGIC_JOBS_LIBRARYRESCANNERJOB_H_ */

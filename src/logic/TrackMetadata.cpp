@@ -50,7 +50,7 @@ AMLM_QREG_CALLBACK([](){
 //Q_DECLARE_METATYPE(std::string);
 
 
-using strviw_type = QLatin1Literal;
+using strviw_type = QLatin1String;
 
 
 std::unique_ptr<TrackMetadata> TrackMetadata::make_track_metadata(const Track* track_ptr, int track_number)
@@ -173,7 +173,7 @@ std::string TrackMetadata::toStdString() const
 
 QVariant TrackMetadata::toVariant() const
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 
 	// Set some extra class info to the attributes.
 //	set_map_class_info(this, &map);
@@ -199,7 +199,7 @@ QVariant TrackMetadata::toVariant() const
 
 void TrackMetadata::fromVariant(const QVariant& variant)
 {
-	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
+	InsertionOrderedMap<QString, QVariant> map = variant.value<InsertionOrderedMap<QString, QVariant>>();
 
 	auto uuid = map.get_attr("xml:id", {});
 	if(uuid.empty())
@@ -215,10 +215,10 @@ void TrackMetadata::fromVariant(const QVariant& variant)
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
-M_TODO("REMOVE");
-#define X(id) m_ ## id = map.value( # id ).value<decltype( m_ ## id )>();
-	PTI_STR_LIST(X);
-#undef X
+// M_TODO("REMOVE");
+// #define X(id) m_ ## id = map.at( # id ).value<decltype( m_ ## id )>();
+// 	PTI_STR_LIST(X);
+// #undef X
 
 	// Load the index list.
 	QVariantHomogenousList index_list("m_indexes", "index");
@@ -226,12 +226,12 @@ M_TODO("REMOVE");
 
 	// Read the m_indexes TrackIndex'es out of the list.
 	// This is a QList<QVariant> where the qvar holds QVariantInsertionOrderedMap's.
-	for(const QVariant& qvar_index_entry : qAsConst(index_list))
+	for(const QVariant& qvar_index_entry : std::as_const(index_list))
 	{
 		Q_ASSERT(qvar_index_entry.isValid());
-		Q_ASSERT(qvar_index_entry.canConvert<QVariantInsertionOrderedMap>());
+		Q_ASSERT((qvar_index_entry.canConvert<InsertionOrderedMap<QString, QVariant>>()));
 
-		QVariantInsertionOrderedMap qvmap_index_entry = qvar_index_entry.value<QVariantInsertionOrderedMap>();
+		InsertionOrderedMap<QString, QVariant> qvmap_index_entry = qvar_index_entry.value<InsertionOrderedMap<QString, QVariant>>();
 		TrackIndex ti;
 		ti.fromVariant(qvmap_index_entry);
 		m_indexes.push_back(ti);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2019, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -28,7 +28,7 @@
 // Std C++ from The Future
 #include <future/overloaded.h>
 
-// Qt5
+// Qt
 #include <QFile>
 #include <QSaveFile>
 #include <QVariant>
@@ -150,7 +150,7 @@ bool XmlSerializer::load(ISerializable& serializable, const QUrl &file_url)
 	return !xmlstream.error();
 }
 
-static const int f_iomap_id = qMetaTypeId<QVariantInsertionOrderedMap>();
+static const int f_iomap_id = qMetaTypeId<InsertionOrderedMap<QString, QVariant>>();
 static const int f_qvarlist_id = qMetaTypeId<QVariantHomogenousList>();
 static const int f_serqvarlist_id = qMetaTypeId<SerializableQVariantList>();
 
@@ -169,52 +169,18 @@ void XmlSerializer::InnerWriteVariantToStream(const QVariant& variant, QXmlStrea
 	// Handles the QVariant type dispatch and basically everything between the writing of the node name and type
 	// and the end element.
 
-	/**
-	 * @note Uhhhhhh..... QMetaType sometimes != QVariant.type().
-	 *
-	 * This looks like a complete fiasco.  Seriously, from the Qt 5.11.1 docs:
-	 *
-	 * @link http://doc.qt.io/qt-5/qvariant.html#type
-	 * "QVariant::Type QVariant::type() const
-	 *    Although this function is declared as returning QVariant::Type, the return value should be
-	 * interpreted as QMetaType::Type. [...]
-	 * Note that return values in the ranges QVariant::Char through QVariant::RegExp and QVariant::Font
-	 * through QVariant::Transform correspond to the values in the ranges QMetaType::QChar through QMetaType::QRegExp
-	 * and QMetaType::QFont through QMetaType::QQuaternion. [...huh?] Pay particular attention when working
-	 * with char and QChar variants. [...whu...?] Also note that the types void*, long, short, unsigned long,
-	 * unsigned short, unsigned char, float, QObject*, and QWidget* are represented in QMetaType::Type but not
-	 * in QVariant::Type, and they can be returned by this function. [...???] However, they are considered to
-	 * be user defined types when tested against QVariant::Type. [$*&^$%*#@@#!???]".
-	 *
-	 * ...oh, ok, a partial explanation:
-	 * From qvariant.h:495:
-	 * "// QVariant::Type is marked as \obsolete, but we don't want to
-	// provide a constructor from its intended replacement,
-	// QMetaType::Type, instead, because the idea behind these
-	// constructors is flawed in the first place. But we also don't
-	// want QVariant(QMetaType::String) to compile and falsely be an
-	// int variant, so delete this constructor:
-	QVariant(QMetaType::Type) Q_DECL_EQ_DELETE;"
-	 */
+	QMetaType metatype = variant.metaType();
+	int metatypeId = metatype.id();
 
-	int type = variant.type(); // AFAICT this is just wrong.
-	int usertype = variant.userType(); // This matches variant.typeName()
-
-	if(type != usertype)
-	{
-//		qWr() << "#### TYPE != USERTYPE: variant.typeName():" << variant.typeName() << "As ints:" << type << "!=" << usertype << ":"
-//				<< QVariant::typeToName(type) << QVariant::typeToName(usertype);
-	}
-
-	if(usertype == f_iomap_id)
+	if(metatypeId == f_iomap_id)
 	{
 		writeVariantOrderedMapToStream(variant, *xmlstream);
 	}
-	else if(usertype == f_qvarlist_id)
+	else if(metatypeId == f_qvarlist_id)
 	{
 		writeQVariantHomogenousListToStream(variant, *xmlstream);
 	}
-	else if(usertype == f_serqvarlist_id)
+	else if(metatypeId == f_serqvarlist_id)
 	{
 		QVariantHomogenousList list = variant.value<QVariantHomogenousList>();
 
@@ -222,13 +188,9 @@ void XmlSerializer::InnerWriteVariantToStream(const QVariant& variant, QXmlStrea
 	}
 	else
 	{
-		switch(usertype)//variant.type())
+		switch(metatypeId)
 		{
 			case QMetaType::QVariantList:
-				/// @link http://doc.qt.io/qt-5/qvariant.html#toList
-				/// "Returns the variant as a QVariantList if the variant has userType() QMetaType::QVariantList
-				/// or QMetaType::QStringList"
-			case QMetaType::QStringList:
 				writeVariantListToStream(variant, *xmlstream);
 				break;
 			case QMetaType::QVariantMap:
@@ -282,7 +244,7 @@ void XmlSerializer::writeVariantListToStream(const QVariant &variant, QXmlStream
 
 	// Stream each QVariant in the list out.
 	/// @note tag name will be "item" for each element, not sure we want that.
-	for(const QVariant& element : list)
+	for(const QVariant& element : std::as_const(list))
 	{
 		writeVariantToStream("item", element, xmlstream);
 	}
@@ -308,9 +270,9 @@ void XmlSerializer::writeVariantMapToStream(const QVariant &variant, QXmlStreamW
 void XmlSerializer::writeVariantOrderedMapToStream(const QVariant& variant, QXmlStreamWriter& xmlstream)
 {
 	Q_ASSERT(variant.isValid());
-	Q_ASSERT(variant.canConvert<QVariantInsertionOrderedMap>());
+	Q_ASSERT((variant.canConvert<InsertionOrderedMap<QString, QVariant>>()));
 
-	QVariantInsertionOrderedMap omap = variant.value<QVariantInsertionOrderedMap>();
+	InsertionOrderedMap<QString, QVariant> omap = variant.value<InsertionOrderedMap<QString, QVariant>>();
 
 	xmlstream.writeAttribute("metatype_id", toqstr(std::to_string(omap.m_id)));
 	xmlstream.writeAttribute("class", toqstr(omap.m_class));
@@ -336,7 +298,7 @@ void XmlSerializer::writeVariantValueToStream(const QVariant &variant, QXmlStrea
 	{
 		std::string vartype {variant.typeName()};
 		qCr() << "QVariant contents not convertible to a QString:" << M_ID_VAL(variant) << M_ID_VAL(vartype);
-		Q_ASSERT(0);
+		// Q_ASSERT(0);
 	}
 
 	QString str = variant.toString();
@@ -377,33 +339,28 @@ QVariant XmlSerializer::InnerReadVariantFromStream(QString typeString, const QXm
 	QVariant variant;
 
 	// Copy the attributes, removing only "type".
-	std::vector<QXmlStreamAttribute> attributes_cp = attributes.toStdVector();
-	std::experimental::erase_if(attributes_cp, [](auto& attr){ return attr.qualifiedName() == "type" ? true : false; });
+	std::vector<QXmlStreamAttribute> attributes_cp(attributes.cbegin(), attributes.cend());
+	std::erase_if(attributes_cp, [](auto& attr){ return attr.qualifiedName() == "type" ? true : false; });
 
-	/// @todo QVariant::Type returned, switch is on QMetaType::Type.  OK but former is deprecated and clang-tidy warns.
-	int metatype = QMetaType::type(typeString.toStdString().c_str());
+	QMetaType metatype = QMetaType::fromName(typeString.toStdString().c_str());
 
-	if(metatype == f_iomap_id)
+	if(metatype.id() == f_iomap_id)
 	{
 		variant = readVariantOrderedMapFromStream(attributes_cp, xmlstream);
 	}
-	else if(metatype == f_qvarlist_id)
+	else if(metatype.id() == f_qvarlist_id)
 	{
 		variant = readHomogenousListFromStream(xmlstream);
 	}
-	else if(metatype == f_serqvarlist_id)
+	else if(metatype.id() == f_serqvarlist_id)
 	{
 		variant = readHomogenousListFromStream(xmlstream);
 	}
 	else
 	{
-		switch(metatype)
+		switch(metatype.id())
 		{
 			case QMetaType::QVariantList:
-				/// @link http://doc.qt.io/qt-5/qvariant.html#toList
-				/// "Returns the variant as a QVariantList if the variant has userType() QMetaType::QVariantList
-				/// or QMetaType::QStringList"
-			case QMetaType::QStringList:
 				variant = readVariantListFromStream(xmlstream);
 				break;
 			case QMetaType::QVariantMap:
@@ -417,7 +374,7 @@ QVariant XmlSerializer::InnerReadVariantFromStream(QString typeString, const QXm
 
 	if(!variant.isValid())
 	{
-		// Whatever we read, it didn't make it to a QVariant successfully.
+		// Whatever we read, it didn't make it into a QVariant successfully.
 		// Report error and try to keep going.
 		xmlstream.raiseError("#### Invalid QVariant conversion");
 	}
@@ -505,84 +462,6 @@ QVariant XmlSerializer::readVariantListFromStream(QXmlStreamReader& xmlstream)
 	return list;
 }
 
-QVariant XmlSerializer::readVariantValueFromStream(QXmlStreamReader& xmlstream)
-{
-	// The lowest-level read function.
-
-	QXmlStreamAttributes attributes = xmlstream.attributes();
-	QString attr_type_str = attributes.value("type").toString();
-
-	Q_ASSERT(xmlstream.isStartElement());
-
-	// Slurps up all contents of this element until the EndElement, including all child element text.
-	/// @note I know, not cool with all the RAM wasteage.
-	QString element_text = xmlstream.readElementText();
-
-	QVariant variant(element_text);
-
-	if(!variant.isValid())
-	{
-		Q_ASSERT(0);
-	}
-
-	// Cast to type named in attr_type_str.
-	// If this fails, status will be false, but variant will be changed to the requested type
-	// will be null/cleared but valid.
-	/// @todo QVariant::Type returned, switch is on QMetaType::Type.  OK but former is deprecated and clang-tidy warns.
-	QVariant::Type metatype_v = QVariant::nameToType(attr_type_str.toStdString().c_str());
-	int metatype = QMetaType::type(attr_type_str.toStdString().c_str());
-	const char* metatype_name = QMetaType::typeName(metatype);
-//	if(metatype != metatype_v)
-//	{
-//		qWr() << "METATYPES DIFFER:" << M_NAME_VAL(metatype)  << "(name: " << metatype_name << ") !="
-//			<< M_NAME_VAL(metatype_v) << "(" << metatype_v << ")";
-//		qWr() << "Type:" << attr_type_str << ", Element text:" << element_text;
-//	}
-
-	if(metatype == QMetaType::UnknownType)
-	{
-		// This is bad, we don't know the type.
-		xmlstream.raiseError(QString("ERROR: Unknown type: %1").arg(attr_type_str));
-	}
-	else
-	{
-		bool is_compatible = variant.canConvert(metatype);
-
-		if(!is_compatible)
-		{
-			xmlstream.raiseError(QString("ERROR: CAN'T CONVERT FROM QSTRING TO INCOMPATIBLE TYPE: %1/%2/%3 != %4")
-				.arg(attr_type_str)
-				.arg(metatype).arg(metatype_name).arg(metatype_v));
-		}
-		else
-		{
-			// Check if it's an empty string.  If so, we're return a default-constructed object of type metatype.
-			if(variant.isNull())
-			{
-				// Empty string, return default constructed object.
-				// We checked metatype above, it's valid.
-//				void* retobj_p = QMetaType::create(metatype);
-//				qWr() << "TODO: NULL QVARIANT, SKIPPING. Type:" << attr_type_str;
-			}
-			else
-			{
-				bool status = variant.convert(metatype);
-
-				if(!status)
-				{
-					qWr() << "ERROR: METATYPES:" << M_ID_VAL(attr_type_str) << M_NAME_VAL(metatype)  << "(name: " << metatype_name << ") !=" << M_NAME_VAL(metatype_v);
-					xmlstream.raiseError(QString("XML FAIL: Could not convert string '%1' to object of type '%2'").arg(element_text, attr_type_str));
-				}
-			}
-		}
-	}
-
-	// No check for errors here, let the top-level readVariantFromStream() handle that.
-//	check_for_stream_error_and_skip(xmlstream);
-
-	return variant;
-}
-
 QString XmlSerializer::normalize_node_name(const QString& node_name) const
 {
 //	QRegularExpression re("s/(\\s+)/%20/g");
@@ -607,7 +486,7 @@ QVariant XmlSerializer::readVariantMapFromStream(QXmlStreamReader& xmlstream)
 
 QVariant XmlSerializer::readVariantOrderedMapFromStream(std::vector<QXmlStreamAttribute> attributes, QXmlStreamReader& xmlstream)
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 
 	Q_ASSERT(xmlstream.isStartElement());
 
@@ -619,7 +498,89 @@ QVariant XmlSerializer::readVariantOrderedMapFromStream(std::vector<QXmlStreamAt
 		map.insert(xmlstream.name().toString(), readVariantFromStream(xmlstream));
 	}
 
-	return QVariant::fromValue(map);
+	return map;
+}
+
+QVariant XmlSerializer::readVariantValueFromStream(QXmlStreamReader& xmlstream)
+{
+	// The lowest-level read function.
+
+	QXmlStreamAttributes attributes = xmlstream.attributes();
+	QString attr_type_str = attributes.value("type").toString();
+
+	Q_ASSERT(xmlstream.isStartElement());
+
+	// Slurps up all contents of this element until the EndElement, including all child element text.
+	/// @note I know, not cool with all the RAM wasteage.
+	QString element_text = xmlstream.readElementText();
+
+	QVariant variant(element_text);
+
+	if (!variant.isValid())
+	{
+		Q_ASSERT(0);
+	}
+
+	// Cast to type named in attr_type_str.
+	// If this fails, status will be false, but variant will be changed to the requested type
+	// will be null/cleared but valid.
+	QMetaType metatype = QMetaType::fromName(attr_type_str.toStdString().c_str());
+	const char* metatype_name = metatype.name();
+
+	// qWr() << "READ FROM XML: Type:" << attr_type_str << ", Element text:" << element_text;
+	bool element_text_is_empty = element_text.isEmpty();
+
+	if (metatype.id() == QMetaType::UnknownType)
+	{
+		// This is bad, we don't know the type.
+		xmlstream.raiseError(QString("ERROR: Unknown type: %1").arg(attr_type_str));
+	}
+	else
+	{
+		bool is_compatible = variant.canConvert(metatype);
+
+		if (!is_compatible)
+		{
+			xmlstream.raiseError(QString("ERROR: CAN'T CONVERT FROM QSTRING TO INCOMPATIBLE TYPE: %1/%2/%3")
+								.arg(attr_type_str)
+								.arg(metatype.id()).arg(metatype_name));
+		}
+		else
+		{
+			// Check if it's an empty string.  If so, we're return a default-constructed object of type metatype.
+            if (!variant.isValid() || variant.isNull())
+			{
+				// We checked metatype above, it's valid.
+				//				void* retobj_p = QMetaType::create(metatype);
+                qWr() << "TODO: NULL or INVALID QVARIANT, SKIPPING. Type:" << attr_type_str;
+			}
+			else if (element_text_is_empty)
+			{
+				// Empty string, return default constructed object.
+				QMetaType mtype = QMetaType::fromName(attr_type_str.toStdString().c_str());
+
+				variant = QVariant::fromMetaType(mtype);
+			}
+			else
+			{
+				bool status = variant.convert(metatype);
+
+				if (!status)
+				{
+					qWr() << "ERROR: METATYPES:" << M_ID_VAL(attr_type_str) << M_ID_VAL(metatype) << "( name: " <<
+						metatype_name << ")";
+					xmlstream.raiseError(
+						QString("XML FAIL: Could not convert string '%1' to object of type '%2'").arg(
+							element_text, attr_type_str));
+				}
+			}
+		}
+	}
+
+	// No check for errors here, let the top-level readVariantFromStream() handle that.
+	//	check_for_stream_error_and_skip(xmlstream);
+
+	return variant;
 }
 
 void XmlSerializer::check_for_stream_error_and_skip(QXmlStreamReader& xmlstream)

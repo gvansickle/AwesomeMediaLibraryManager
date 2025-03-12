@@ -27,7 +27,7 @@
 #include <vector>
 #include <deque>
 
-// Qt5
+// Qt
 #include <QVector>
 #include <QVariant>
 
@@ -48,18 +48,26 @@ class AbstractTreeModelHeaderItem: public AbstractTreeModelItem, public enable_s
 {
 	using BASE_CLASS = AbstractTreeModelItem;
 
-protected:
-	explicit AbstractTreeModelHeaderItem(std::initializer_list<ColumnSpec> column_specs,
-			const std::shared_ptr<AbstractTreeModel>& parent_model, bool isRoot, UUIncD id = UUIncD::null());
+//protected:
+public:
+
+	friend class AbstractTreeModel;
+	/**
+	 * Note: This is always the root item of a tree model, no parent item.
+	 * @param column_specs
+	 * @param parent_model
+	 * @param id
+	 */
+	AbstractTreeModelHeaderItem(std::initializer_list<ColumnSpec> column_specs,
+	                                     const std::shared_ptr<AbstractTreeModel>& parent_model = nullptr, UUIncD id = UUIncD::null());
 
 public:
-	/**
-	 * Named constructor.
-	 */
-	static std::shared_ptr<AbstractTreeModelHeaderItem> construct(std::initializer_list<ColumnSpec> column_specs,
-			const std::shared_ptr<AbstractTreeModel>& model, bool isRoot = true,
-	                                                              UUIncD id = UUIncD::null());
-	AbstractTreeModelHeaderItem() {};
+//	/**
+//	 * Named constructor.
+//	 */
+//	static std::shared_ptr<AbstractTreeModelHeaderItem> construct(std::initializer_list<ColumnSpec> column_specs,
+//																  const std::shared_ptr<AbstractTreeModel>& parent_model = nullptr, UUIncD id = UUIncD::null());
+////	AbstractTreeModelHeaderItem() {};
 	~AbstractTreeModelHeaderItem() override;
 
 	void clear() override;
@@ -94,7 +102,7 @@ private:
 	/**
 	 * This header's (and hence the model's) ColumnSpecs.
 	 */
-	std::deque<ColumnSpec> m_column_specs;
+//	std::vector<ColumnSpec> m_column_specs;
 
 };
 

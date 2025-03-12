@@ -22,6 +22,7 @@
 
 // Std C++
 #include <shared_mutex>
+#include <initializer_list>
 
 // Qt5
 #include <QUrl>
@@ -29,13 +30,14 @@
 
 // Ours
 #include <utils/QtHelpers.h>
+#include "ColumnSpec.h"
 #include "ScanResultsTreeModelItem.h"
 //#include "AbstractTreeModel.h"
 #include "ThreadsafeTreeModel.h"
 
 class AbstractTreeModelHeaderItem;
 #include <future/enable_shared_from_this_virtual.h>
-#include <models/UndoRedoHelper.h>
+#include "UndoRedoHelper.h"
 
 
 /**
@@ -45,7 +47,7 @@ class AbstractTreeModelHeaderItem;
  * - Contains 1 or more tracks.
  * - May have a sidecar or embedded cue sheet.
  */
-class ScanResultsTreeModel : public ThreadsafeTreeModel//, public virtual enable_shared_from_this_virtual<ScanResultsTreeModel>
+class ScanResultsTreeModel : public ThreadsafeTreeModel, public virtual ISerializable, public virtual enable_shared_from_this_virtual<ScanResultsTreeModel>
 {
 	Q_OBJECT
 	Q_DISABLE_COPY(ScanResultsTreeModel);
@@ -55,7 +57,7 @@ class ScanResultsTreeModel : public ThreadsafeTreeModel//, public virtual enable
 
 protected:
 	/**
-	 * The constructed model will NOT have a root, that's what construct() adds.
+	 * Use the public named constructor.
 	 */
 	explicit ScanResultsTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
 
@@ -75,15 +77,16 @@ public:
 	/**
 	 * Named constructors.
 	 */
-	static std::shared_ptr<ScanResultsTreeModel> construct(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
+	static std::shared_ptr<ScanResultsTreeModel> make_ScanResultsTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent = nullptr);
 
+	ScanResultsTreeModel() = delete;
 	~ScanResultsTreeModel() override = default;
 
     /**
      * Sets the base directory of the model.
      * @todo Not sure if we should support more than one or not, but should support "known alias paths".
      */
-    void setBaseDirectory(const QUrl& base_directory);
+    void setBaseDirectory(const QUrl& base_directory) override;
 
 	/// @name Serialization
 	/// @{
@@ -94,12 +97,12 @@ public:
 	/**
 	 * Non-static factory functions for creating new, typed tree nodes from QVariantMaps.
 	 */
-	UUIncD requestAddScanResultsTreeModelItem(const QVariant& variant, UUIncD parent_id,
-								   Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
-	UUIncD requestAddSRTMLibEntryItem(const QVariant& variant, UUIncD parent_id,
-									  Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
-	UUIncD requestAddExistingTreeModelItem(std::shared_ptr<AbstractTreeModelItem> new_item, UUIncD parent_id,
-										   Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
+//	UUIncD requestAddScanResultsTreeModelItem(const QVariant& variant, UUIncD parent_id,
+//								   Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
+//	UUIncD requestAddSRTMLibEntryItem(const QVariant& variant, UUIncD parent_id,
+//									  Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
+//	UUIncD requestAddExistingTreeModelItem(std::shared_ptr<AbstractTreeModelItem> new_item, UUIncD parent_id,
+//										   Fun undo = noop_undo_redo_lambda, Fun redo = noop_undo_redo_lambda);
 
 #if 0
 	void toOrm(std::string filename) const override;
@@ -127,8 +130,14 @@ protected:
 	QString getXmlStreamName() const override { return "AMLMScanResults"; };
 	QString getXmlStreamVersion() const override { return "0.1"; };
 
-	// The tree's base directory URL.
+	/// The tree's base directory URL.
     QUrl m_base_directory;
+	QString m_title {"XSPF playlist title goes HERE"};
+	QString m_creator {"XSPF playlist CREATOR GOES HERE"};
+	QDateTime m_creation_date;
+	QDateTime m_ts_last_scan_start;
+	QDateTime m_ts_last_scan_end;
+
 
 private:
 
@@ -136,6 +145,6 @@ private:
 	QPersistentModelIndex m_pmindex;
 };
 
-
+QTH_DECLARE_QDATASTREAM_OPS(ScanResultsTreeModel);
 
 #endif // SCANRESULTSTREEMODEL_H

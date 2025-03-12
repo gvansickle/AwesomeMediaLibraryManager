@@ -1,5 +1,5 @@
 #
-# Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2018, 2024 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -35,10 +35,8 @@ set(dbmodels_subdir_SOURCES
 	ScanResultsTableModel.cpp
 	ScanResultsTableModel.h
 		)
-prepend_to_each(dbmodels_subdir_SOURCES "${CMAKE_CURRENT_LIST_DIR}/" ${dbmodels_subdir_SOURCES})
 
-target_sources_local(dbmodels
-	PUBLIC
+add_library(dbmodels STATIC EXCLUDE_FROM_ALL
 		${dbmodels_subdir_SOURCES}
 	)
 target_link_libraries(dbmodels PUBLIC ${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS})

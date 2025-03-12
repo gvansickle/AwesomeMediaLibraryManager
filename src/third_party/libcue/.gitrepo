@@ -6,6 +6,7 @@
 [subrepo]
 	remote = https://github.com/lipnitsk/libcue
 	branch = master
-	commit = f6a11cbfd6029abb9cbc50264d2b747d3f9e427f
+	commit = 7176a1faccecbfe2d4cca2f776177439ca49cad2
 	parent = 209949479004518c4014bf560251658859b1d97a
-	cmdver = 0.3.1
+	cmdver = 0.4.9
+	method = merge

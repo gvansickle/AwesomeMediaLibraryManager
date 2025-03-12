@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -19,10 +19,7 @@
 
 #include "FilterWidget.h"
 
-//#include <nomocimpl.h>
-
 #include <QIcon>
-//#include <QPixmap>
 #include <QImage>
 #include <QMenu>
 #include <QAction>
@@ -30,8 +27,9 @@
 #include <QToolButton>
 #include <QWidgetAction>
 #include <QDebug>
+#include <QRegularExpression>
 
-//W_OBJECT_IMPL(FilterWidget)
+
 
 FilterWidget::FilterWidget(QWidget *parent) : QLineEdit(parent), m_patternGroup(new QActionGroup(this))
 {
@@ -47,6 +45,12 @@ FilterWidget::FilterWidget(QWidget *parent) : QLineEdit(parent), m_patternGroup(
 
 	menu->addSeparator();
 	m_patternGroup->setExclusive(true);
+#if 1 // QT6
+	QAction* patternAction = menu->addAction(tr("[TODO]"));
+	patternAction->setCheckable(true);
+	patternAction->setChecked(true);
+	m_patternGroup->addAction(patternAction);
+#elif 0 // QT5
 	QAction *patternAction = menu->addAction(tr("Fixed String"));
 	patternAction->setData(QVariant(int(QRegExp::FixedString)));
 	patternAction->setCheckable(true);
@@ -60,6 +64,8 @@ FilterWidget::FilterWidget(QWidget *parent) : QLineEdit(parent), m_patternGroup(
 	patternAction->setCheckable(true);
 	patternAction->setData(QVariant(int(QRegExp::Wildcard)));
 	m_patternGroup->addAction(patternAction);
+#endif
+
 	connect(m_patternGroup, &QActionGroup::triggered, this, &FilterWidget::filterChanged);
 
 	const QIcon icon = QIcon::fromTheme("edit-find");
@@ -78,16 +84,17 @@ FilterWidget::FilterWidget(QWidget *parent) : QLineEdit(parent), m_patternGroup(
 	addAction(optionsAction, QLineEdit::LeadingPosition);
 }
 
-Qt::CaseSensitivity FilterWidget::caseSensitivity() const
+QRegularExpression::PatternOptions FilterWidget::caseSensitive() const
 {
-	return m_caseSensitivityAction->isChecked() ? Qt::CaseSensitive : Qt::CaseInsensitive;
+    return m_caseSensitivityAction->isChecked() ? QRegularExpression::NoPatternOption : QRegularExpression::CaseInsensitiveOption;
 }
 
-void FilterWidget::setCaseSensitivity(Qt::CaseSensitivity cs)
+void FilterWidget::setCaseSensitive(bool case_sensitive)
 {
-	m_caseSensitivityAction->setChecked(cs == Qt::CaseSensitive);
+	m_caseSensitivityAction->setChecked(case_sensitive == true);
 }
 
+#if 0 // QT5
 static inline QRegExp::PatternSyntax patternSyntaxFromAction(const QAction *a)
 {
 	return static_cast<QRegExp::PatternSyntax>(a->data().toInt());
@@ -101,7 +108,7 @@ QRegExp::PatternSyntax FilterWidget::patternSyntax() const
 void FilterWidget::setPatternSyntax(QRegExp::PatternSyntax s)
 {
 	auto actions = m_patternGroup->actions();
-	for(QAction *a : actions)
+	for(QAction *a : std::as_const(actions))
 	{
 		if (patternSyntaxFromAction(a) == s)
 		{
@@ -110,3 +117,4 @@ void FilterWidget::setPatternSyntax(QRegExp::PatternSyntax s)
 		}
 	}
 }
+#endif

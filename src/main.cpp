@@ -21,7 +21,7 @@
 
 #include "AMLMApp.h"
 
-/// Qt5
+// Qt
 #include <QtGlobal>
 #include <QSettings>
 #include <QIcon>
@@ -32,28 +32,24 @@
 #include <QImageReader>
 #include <QDebug>
 
-/// KF5
+// KF
 #include <KAboutData>
 #include <KIconTheme>
 #include <KSharedConfig>
 #include <KConfigGroup>
 
 #if HAVE_GTKMM01
-/// GTK
+// GTK
 #include <gtk/gtk.h>
 #endif
 
-/// Ours
+// Ours
 #include "Core.h"
 #include <gui/Theme.h>
 #include <utils/AboutDataSetup.h>
 #include "utils/DebugHelpers.h"
-#include "utils/StringHelpers.h"
-
 #include "gui/MainWindow.h"
-
 #include "resources/VersionInfo.h"
-
 #include "utils/Logging.h"
 
 // Compile-time info/sanity checks.
@@ -153,7 +149,7 @@ int main(int argc, char *argv[])
 	}
 
     // If we're forcing Breeze icons, force them here.
-    M_WARNING("Not picking up these icons FWICT.  Also interfering with user selected icon theme, and doesn't get saved.");
+    M_WARNING("Not picking up these icons FWICT.  Also interfering with user selected icon theme, and doesn't get saved.")
     bool forceBreeze = grp.readEntry("force_breeze", QVariant(false)).toBool();
     if (forceBreeze)
     {

@@ -76,7 +76,7 @@ Q_SIGNALS:
 
     /// Signal-to-self for async loading of metadata for a single LibraryEntry.
 //    void SIGNAL_selfSendReadyResults(MetadataReturnVal results) const;
-	void SIGNAL_selfSendReadyResults(LibraryEntryLoaderJobResult results) const;
+	void SIGNAL_selfSendReadyResults(LibraryEntryLoaderJobResult results);
 
 public:
 	explicit LibraryModel(QObject *parent = nullptr);
@@ -172,14 +172,22 @@ public:
     QStringList mimeTypes() const override;
     QMimeData* mimeData(const QModelIndexList &indexes) const override;
 
+	// This is FBO clazy.  Without this, it'll flag the slot using this below with:
+	// "warning: slot arguments need to be fully-qualified [...] [-Wclazy-fully-qualified-moc-types]"
+	using StdVecOfSharedPtrToLibEntry = std::vector<std::shared_ptr<LibraryEntry>>;
+
 public Q_SLOTS:
 	/// All this is for reading the metadata from a non-GUI thread.
     void SLOT_processReadyResults(MetadataReturnVal lritem_vec);
     void SLOT_processReadyResults(LibraryEntryLoaderJobResult loader_results);
     void SLOT_onIncomingPopulateRowWithItems_Single(QPersistentModelIndex pindex, std::shared_ptr<LibraryEntry> item);
-	void SLOT_onIncomingPopulateRowWithItems_Multiple(QPersistentModelIndex pindex, std::vector<std::shared_ptr<LibraryEntry>> items);
+	void SLOT_onIncomingPopulateRowWithItems_Multiple(QPersistentModelIndex pindex, LibraryModel::StdVecOfSharedPtrToLibEntry items);
 
-    virtual QVector<VecLibRescannerMapItems> getLibRescanItems();
+	/**
+	 * 
+	 * @return  A QList of all the items in the LibraryModel which need to be populated with metadata.
+	 */
+	virtual QList<VecLibRescannerMapItems> getLibRescanItems();
 
 	/// Let's try something different.
 	virtual void startRescan();
@@ -249,6 +257,7 @@ private:
 	mutable ThreadsafeMap<QPersistentModelIndex, bool> m_pending_async_item_loads;
 };
 
-Q_DECLARE_METATYPE(LibraryModel*)
+Q_DECLARE_METATYPE(LibraryModel);
+Q_DECLARE_METATYPE(LibraryModel*);
 
 #endif // LIBRARYMODEL_H

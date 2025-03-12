@@ -279,11 +279,11 @@ private Q_SLOTS:
  */
 template <class T>
 ::testing::AssertionResult AMLM_IsStartedRunningOnly(ExtFuture<T> f) {
-	if(f.state() == (ExtFutureState::Started & !(ExtFutureState::Canceled | ExtFutureState::Finished)))
-	{
-		return ::testing::AssertionSuccess() << f << " is in started-maybe-running-only state";
-	}
-	else
+	// if(f.state() == (ExtFutureState::Started & !(ExtFutureState::Canceled | ExtFutureState::Finished)))
+	// {
+	// 	return ::testing::AssertionSuccess() << f << " is in started-maybe-running-only state";
+	// }
+	// else
 	{
 		return ::testing::AssertionFailure() << f << " is in wrong state: " << f.state();
 	}
@@ -425,7 +425,7 @@ QFuture<T> make_startedNotCanceled_QFuture()
 	AMLMTEST_SCOPED_TRACE("make_startedNotCanceled_QFuture");
     QFutureInterface<T> fi;
     fi.reportStarted();
-    EXPECT_EQ(ExtFutureState::state(fi), ExtFutureState::Started | ExtFutureState::Running);
+    // EXPECT_EQ(ExtFutureState::state(fi), ExtFutureState::Started | ExtFutureState::Running);
     return QFuture<T>(&fi);
 }
 
@@ -438,7 +438,7 @@ FutureT make_default_future()
 	AMLMTEST_SCOPED_TRACE("make_default_future");
     QFutureInterface<T> fi;
     fi.reportStarted();
-    EXPECT_EQ(ExtFutureState::state(fi), ExtFutureState::Started | ExtFutureState::Running);
+    // EXPECT_EQ(ExtFutureState::state(fi), ExtFutureState::Started | ExtFutureState::Running);
     return FutureT(&fi);
 }
 
@@ -448,11 +448,11 @@ auto qfiface(QFuture<T>& f)
 	return f.d;
 }
 
-template <class T>
-auto qfiface(ExtFuture<T>& f)
-{
-	return f;
-}
+// template <class T>
+// auto qfiface(ExtFuture<T>& f)
+// {
+// 	return f;
+// }
 
 template <typename T>
 void reportFinished(QFuture<T>* f)
@@ -461,18 +461,18 @@ void reportFinished(QFuture<T>* f)
 	TCOUT << "REPORTING FINISHED";
 	f->d.reportFinished();
     // May have been already canceled by the caller.
-	EXPECT_TRUE((ExtFutureState::state(*f) & ~ExtFutureState::Canceled) & (ExtFutureState::Started | ExtFutureState::Finished));
+	// EXPECT_TRUE((ExtFutureState::state(*f) & ~ExtFutureState::Canceled) & (ExtFutureState::Started | ExtFutureState::Finished));
 }
 
-template <typename T>
-void reportFinished(ExtFuture<T>* f)
-{
-	AMLMTEST_SCOPED_TRACE("reportFinished(ExtFuture<T>& f)");
-
-	f->reportFinished();
-
-	AMLMTEST_EXPECT_TRUE(f->isFinished());
-}
+// template <typename T>
+// void reportFinished(ExtFuture<T>* f)
+// {
+// 	AMLMTEST_SCOPED_TRACE("reportFinished(ExtFuture<T>& f)");
+//
+// 	f->reportFinished();
+//
+// 	AMLMTEST_EXPECT_TRUE(f->isFinished());
+// }
 
 template <typename T>
 void reportCanceled(QFuture<T>* f)
@@ -488,14 +488,14 @@ template <typename FutureT, class ResultType>
 void reportResult(FutureT* f, ResultType t)
 {
 	AMLMTEST_SCOPED_TRACE("reportResult");
-	if constexpr (is_ExtFuture_v<FutureT>)
-    {
-		f->reportResult(t);
-    }
-	else
-    {
-		f->d.reportResult(t);
-    }
+	// if constexpr (is_ExtFuture_v<FutureT>)
+ //    {
+	// 	f->reportResult(t);
+ //    }
+	// else
+ //    {
+	// 	f->d.reportResult(t);
+ //    }
 }
 
 /// @}
@@ -520,7 +520,7 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTes
         for(int i=0; i<num_iterations; i++)
         {
             /// @todo Not sure if we want this to work or not.
-            AMLMTEST_EXPECT_FALSE(ExtFutureState::state(future) & ExtFutureState::Canceled);
+            // AMLMTEST_EXPECT_FALSE(ExtFutureState::state(future) & ExtFutureState::Canceled);
 
             // Sleep for a second.
 			qDb() << "SLEEPING FOR 1 SEC";
@@ -552,14 +552,14 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTes
     {
         // ExtFuture() creates an empty, cancelled future (Start|Canceled|Finished).
         TCOUT << "ExtFuture<>, clearing state";
-        retval = ExtAsync::make_started_only_future<int>();
+        // retval = ExtAsync::make_started_only_future<int>();
     }
 	else
 	{
 		static_assert(dependent_false_v<ReturnFutureT>, "Bad future type");
 	}
 
-    TCOUT << "ReturnFuture initial state:" << ExtFutureState::state(retval);
+    // TCOUT << "ReturnFuture initial state:" << ExtFutureState::state(retval);
 
 //    AMLMTEST_EXPECT_TRUE(retval.isStarted());
 //	AMLMTEST_EXPECT_FALSE(retval.isCanceled());
@@ -573,10 +573,10 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTes
     else
     {
         TCOUT << "ExtAsync::qthread_async_with_cnr_future()";
-		retval = ExtAsync::qthread_async_with_cnr_future(lambda);
+		// retval = ExtAsync::qthread_async_with_cnr_future(lambda);
     }
 
-    TCOUT << "RETURNING future:" << ExtFutureState::state(retval);
+    // TCOUT << "RETURNING future:" << ExtFutureState::state(retval);
 
 //	AMLMTEST_EXPECT_TRUE(retval.isStarted());
 //    if constexpr (std::is_same_v<ReturnFutureT, QFuture<int>>)

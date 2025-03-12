@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -19,17 +19,23 @@
 
 #include "Library.h"
 
-// Qt5
+// Qt
 #include <QDateTime>
 #include <QDebug>
 #include <QFileDevice>
-#include <QtConcurrent>
+#include <QUrl>
 
 // Ours
 #include <utils/DebugHelpers.h>
 #include <future/preproc.h>
 #include <utils/Stopwatch.h>
 #include <logic/serialization/SerializationHelpers.h>
+
+AMLM_QREG_CALLBACK([](){
+	qIn() << "Registering Library";
+	qRegisterMetaType<Library>();
+});
+
 
 void Library::clear()
 {
@@ -161,7 +167,7 @@ static const strviw_type XMLTAG_NUM_LIBRARY_ENTRIES("num_lib_entries");
 
 QVariant Library::toVariant() const
 {
-	QVariantInsertionOrderedMap map;
+	InsertionOrderedMap<QString, QVariant> map;
 
 #define X(field_tag, member_field)   map_insert_or_die(map, field_tag, member_field);
 	M_DATASTREAM_FIELDS(X);
@@ -169,7 +175,7 @@ QVariant Library::toVariant() const
 
 	// Write some derived info re: the Library.
 	map_insert_or_die(map, XMLTAG_WRITE_TIMESTAMP_MS, QDateTime::currentMSecsSinceEpoch());
-	map_insert_or_die(map, XMLTAG_WRITE_TIMESTAMP_UTC, QDateTime::currentDateTimeUtc()/*.toString()*/);
+	map_insert_or_die(map, XMLTAG_WRITE_TIMESTAMP_UTC, QDateTime::currentDateTimeUtc());
 	map_insert_or_die(map, XMLTAG_NUM_LIBRARY_ENTRIES, static_cast<qint64>(m_lib_entries.size()));
 	if(!m_lib_entries.empty())
 	{
@@ -191,19 +197,21 @@ void Library::fromVariant(const QVariant& variant)
 {
 	Stopwatch sw("################### Library::fromVariant()");
 
-	QVariantInsertionOrderedMap map; // = variant.value<QVariantInsertionOrderedMap>();
+	clear();
+
+	InsertionOrderedMap<QString, QVariant> map;
 	qviomap_from_qvar_or_die(&map, variant);
 
-#define X(field_tag, member_field)   map_read_field_or_warn(map, field_tag, &member_field);
+#define X(field_tag, member_field)   map_read_field_or_warn(map, field_tag, &(member_field));
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
 	// This is a local.
-	qint64 num_lib_entries = map.value(XMLTAG_NUM_LIBRARY_ENTRIES).value<qint64>();
+	qint64 num_lib_entries = map.at(XMLTAG_NUM_LIBRARY_ENTRIES).value<qint64>();
 
 	//QVariantHomogenousList list("library_entries", "library_entry");
 	//map_read_field_or_warn(map, XMLTAG_LIBRARY_ENTRIES, &list);
-	QVariant qvar_list = map.value(XMLTAG_LIBRARY_ENTRIES);
+	QVariant qvar_list = map.at(XMLTAG_LIBRARY_ENTRIES);
 	Q_ASSERT(qvar_list.isValid());
 	QVariantHomogenousList list("m_lib_entries", "library_entry");
 	list = qvar_list.value<QVariantHomogenousList>();
@@ -211,7 +219,6 @@ void Library::fromVariant(const QVariant& variant)
 	// Concurrency.  Vs. the loop we used to have here, we went from 2.x secs to 0.5 secs.
 	list_blocking_map_reduce_read_all_entries_or_warn(list, &m_lib_entries);
 
-	qDb() << "NUM LIB ENTRIES:" << m_lib_entries.size() << "VS:" << num_lib_entries;
 	AMLM_WARNIF(m_lib_entries.size() != num_lib_entries);
 }
 

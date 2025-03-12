@@ -15,9 +15,11 @@ ExperimentalKDEView1::~ExperimentalKDEView1()
 	delete ui;
 }
 
-bool ExperimentalKDEView1::setModel(ScanResultsTreeModel* model)
+bool ExperimentalKDEView1::setModel(AbstractTreeModel* model)
 {
 	auto view = ui->m_top_level_tree_view;
+
+	Q_CHECK_PTR(model);
 
 	// Put the URLs in column 0.
 	m_column_remapper_proxy = QSharedPointer<KRearrangeColumnsProxyModel>::create(this);
@@ -26,7 +28,7 @@ bool ExperimentalKDEView1::setModel(ScanResultsTreeModel* model)
 	remapping << 1;
 	m_column_remapper_proxy->setSourceColumns(remapping);
 
-	M_MESSAGE("I can't get the proxy model or view to work");
+    M_MESSAGE("I can't get the proxy model or view to work")
 	m_cat_proxy_model = QSharedPointer<KCategorizedSortFilterProxyModel>::create(this);
 	m_cat_proxy_model->setSourceModel(m_column_remapper_proxy.get());
 	m_cat_proxy_model->setCategorizedModel(true);
