@@ -32,7 +32,7 @@ extern "C" {
 #include <libcue/cdtext.h>
 } // END extern C
 
-/// Ours, Qt5/KF5-related
+/// Ours, Qt/KF-related
 #include <utils/TheSimplestThings.h>
 #include <utils/RegisterQtMetatypes.h>
 
@@ -165,7 +165,7 @@ std::string TrackMetadata::toStdString() const
 	X(XMLTAG_TRACK_META_INDEXES, m_indexes)
 
 /// Strings to use for the tags.
-#define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
+#define X(field_tag, member_field) static constexpr strviw_type field_tag ( # member_field );
 	M_DATASTREAM_FIELDS(X);
 	M_DATASTREAM_FIELDS_SPECIAL_HANDLING(X);
 #undef X

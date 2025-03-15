@@ -97,6 +97,6 @@ protected:
 };
 
 Q_DECLARE_METATYPE(ScanResultsTreeModelItem);
-Q_DECLARE_METATYPE(std::shared_ptr<ScanResultsTreeModelItem>);
+// Q_DECLARE_METATYPE(std::shared_ptr<ScanResultsTreeModelItem>);
 
 #endif /* SRC_LOGIC_MODELS_SCANRESULTSTREEMODELITEM_H_ */

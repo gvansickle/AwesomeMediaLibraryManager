@@ -238,7 +238,7 @@ void ScanResultsTreeModel::DERIVED_set_default_namespace()
 	X(XMLTAG_SRTM_TS_LAST_SCAN_END, m_ts_last_scan_end) \
 	// X(XMLTAG_SRTM_ROOT_ITEM, tree_model_root_item)
 
-constexpr static QLatin1String XMLTAG_SRTM_ROOT_ITEM {"tree_model_root_item"};
+static constexpr QLatin1String XMLTAG_SRTM_ROOT_ITEM {"tree_model_root_item"};
 
 /// Strings to use for the tags.
 #define X(field_tag, member_field) static const QLatin1String field_tag ( # member_field );
@@ -250,6 +250,8 @@ QVariant ScanResultsTreeModel::toVariant() const
 	InsertionOrderedMap<QString, QVariant> map;
 
 	std::unique_lock write_lock(m_rw_mutex);
+
+	qDb() << "START tree serialize";
 
 #define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
 	M_DATASTREAM_FIELDS(X)
@@ -294,8 +296,8 @@ QVariant ScanResultsTreeModel::toVariant() const
 
 	// Insert the invisible root item, which will recursively add all children.
 	/// @todo It also serves as the model's header, not sure that's a good overloading.
-	qDb() << "START tree serialize";
 	map_insert_or_die(map, XMLTAG_SRTM_ROOT_ITEM, *m_root_item);
+
 	qDb() << "END tree serialize";
 
 	return map;
@@ -343,7 +345,8 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 	/// @note This is a QVariantMap, contains abstract_tree_model_header as a QVariantList.
 	InsertionOrderedMap<QString, QVariant> root_item_map;
 	map_read_field_or_warn(map, XMLTAG_SRTM_ROOT_ITEM, &root_item_map);
-	m_root_item->fromVariant(root_item_map);
+    m_root_item = std::make_shared<AbstractTreeModelHeaderItem>();
+    m_root_item->fromVariant(root_item_map);
 
 	dump_map(map);
 }

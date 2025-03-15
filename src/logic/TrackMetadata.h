@@ -192,10 +192,10 @@ This information is always ASCII encoded. */ \
     friend QDebug operator<<(QDebug dbg, const TrackMetadata &tm);
 };
 
+QDebug operator<<(QDebug dbg, const TrackMetadata& tm);
+
 Q_DECLARE_METATYPE(TrackMetadata);
 // Qt already declares this.
 //Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE(std::vector);
-
-QDebug operator<<(QDebug dbg, const TrackMetadata &tm);
 
 #endif // TRACKMETADATA_H

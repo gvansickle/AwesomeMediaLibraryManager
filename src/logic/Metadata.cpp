@@ -645,12 +645,11 @@ using strviw_type = QLatin1String;
 	X(XMLTAG_TRACKS, m_tracks)
 
 /// Strings to use for the tags.
-#define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
+#define X(field_tag, member_field) static constexpr strviw_type field_tag ( # member_field );
 	M_DATASTREAM_FIELDS(X);
 	M_DATASTREAM_FIELDS_MAPS(X);
 	M_DATASTREAM_FIELDS_LISTS(X);
 #undef X
-//static const strviw_type XMLTAG_TRACKS("m_tracks");
 static const strviw_type XMLTAG_CUESHEET("m_cuesheet");
 
 
@@ -663,6 +662,10 @@ QVariant Metadata::toVariant() const
     M_DATASTREAM_FIELDS(X)
     M_DATASTREAM_FIELDS_MAPS(X)
 #undef X
+
+	// M_DATASTREAM_FIELDS_LISTS(X)
+    QVariantMap var_tracks = std_map_to_qvariantmap(m_tracks);
+    map_insert_or_die(map, XMLTAG_TRACKS, var_tracks);
 
 	// Track-level fields.
 #if 0 /// @todo This info gets duplicated (complete with should-be-unique xml:id's)	in the CueSheet.
@@ -693,7 +696,13 @@ void Metadata::fromVariant(const QVariant& variant)
 #define X(field_tag, member_field)   map_read_field_or_warn(map, field_tag, &(member_field));
     M_DATASTREAM_FIELDS(X)
     M_DATASTREAM_FIELDS_MAPS(X)
+    // M_DATASTREAM_FIELDS_LISTS(X)
 #undef X
+    QVariantMap temp_map;
+    map_read_field_or_warn(map, XMLTAG_TRACKS, &temp_map);
+    std::map<int, TrackMetadata> tracks_map = qvariantmap_to_std_map<std::map<int, TrackMetadata>>(temp_map);
+    m_tracks = tracks_map;
+    // map_read_field_or_warn(map, XMLTAG_TRACKS, &m_tracks);
 
 	map_read_field_or_warn(map, XMLTAG_CUESHEET, &m_cuesheet);
 

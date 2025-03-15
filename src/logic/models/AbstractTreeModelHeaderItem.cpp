@@ -68,21 +68,23 @@ AbstractTreeModelHeaderItem::construct(std::initializer_list<ColumnSpec> column_
 }
 #endif
 
+AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem() : BASE_CLASS({}, nullptr)
+{
+    // Abs*HeaderItem can only be root.
+    m_is_root = true;
+
+}
+
 AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(std::initializer_list<ColumnSpec> column_specs,
                                                          const std::shared_ptr<AbstractTreeModel>& parent_model, UUIncD id)
-	: BASE_CLASS({}, nullptr, id)//, m_is_root(true) //, m_column_specs(column_specs)
+    : BASE_CLASS({}, nullptr, id)//, m_is_root(true) //, m_column_specs(column_specs)
 {
 	m_is_root = true;
 	m_model = parent_model;
 	setColumnSpecs(column_specs);
-//	m_model->
-//	m_is_root = true;
-//	m_is_in_model = true;
 }
 
-AbstractTreeModelHeaderItem::~AbstractTreeModelHeaderItem()
-{
-}
+AbstractTreeModelHeaderItem::~AbstractTreeModelHeaderItem() = default;
 
 void AbstractTreeModelHeaderItem::clear()
 {
@@ -163,9 +165,9 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 
 	// Child nodes.
 	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
-	for(auto& it : m_child_items)
+	for(const auto& it : m_child_items)
 	{
-		list_push_back_or_die(child_var_list, it->toVariant());
+		list_push_back_or_die(child_var_list, it.get()->toVariant());
 	}
 	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, child_var_list);
 
@@ -191,8 +193,8 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	// Note that the AbstractTreeModel forwards it's insertColumns() call to here, but it handles the begin/end signaling.
 	// So... I think we need to go through that mechanism if we're already in a model.
 	// But... we're being deserialized here, so will we have a model yet?
-	Q_ASSERT(isInModel());
-	Q_ASSERT(!m_model.expired());
+    // Q_ASSERT(isInModel());
+    // Q_ASSERT(!m_model.expired());
 
 
 //	insertColumns(0, header_num_sections);
@@ -206,12 +208,12 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	}
 
 	// Now read in our children.  We need this HeaderItem to be in a model for that to work.
-	Q_ASSERT(isInModel());
+//    Q_ASSERT(isInModel());
 
 	// This needs to be in a model before we can requestAddXxx() anything.
 	// By default, this HeaderItem *only* will already be in the model.
-	auto model_ptr = std::dynamic_pointer_cast<ScanResultsTreeModel>(m_model.lock());
-	Q_ASSERT(model_ptr);
+//	auto model_ptr = std::dynamic_pointer_cast<ScanResultsTreeModel>(m_model.lock());
+//	Q_ASSERT(model_ptr);
 
 	auto parent_id = getId();
 	Q_ASSERT(parent_id != UUIncD::null());

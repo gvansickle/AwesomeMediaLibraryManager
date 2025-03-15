@@ -257,7 +257,7 @@ public:
 	 * Sets the base directory of the model.
 	 * @todo TEMP.
 	 */
-	virtual void setBaseDirectory(const QUrl& base_directory) {};
+    virtual void setBaseDirectory(const QUrl& base_directory) {}
 
 	/// Load and save the database to a file.
 	/// @note The idea is that these shouldn't need to be overridden in derived classes, but just in case we make
@@ -266,10 +266,10 @@ public:
 	virtual void SaveDatabase(const QString& database_filename);
 
 	/// Serialize the entire model to a QVariant.
-	QVariant toVariant() const override { Q_ASSERT(0); return QVariant(); }; // = 0;
+    QVariant toVariant() const override { Q_ASSERT(0); return QVariant(); } // = 0;
 
 	/// Serialize the entire model from a QVariant.
-	void fromVariant(const QVariant& variant) override { Q_ASSERT(0); }; // = 0;
+    void fromVariant(const QVariant& variant) override { Q_ASSERT(0); } // = 0;
 
 #if 0
 	virtual void toOrm(std::string filename) const;
@@ -316,7 +316,7 @@ protected:
 	/// @name Derived-class serialization info.
 	/// @{
 
-	virtual void DERIVED_set_default_namespace() {};
+    virtual void DERIVED_set_default_namespace() {}
 
 //	virtual void DERIVED_clean() {};
 
@@ -366,8 +366,8 @@ protected:
 	/// @name Extended protected model interface.
 	/// @{
 
-	virtual QString getXmlStreamName() const { return ""; };
-	virtual QString getXmlStreamVersion() const { return ""; };
+    virtual QString getXmlStreamName() const { return ""; }
+    virtual QString getXmlStreamVersion() const { return ""; }
 
 	std::string m_default_namespace_decl {"XXXBROKENXXX"};
 	std::string m_default_namespace_version {"XXXBROKENXXX"};

@@ -43,6 +43,7 @@ class AbstractTreeModelHeaderItem;
 /**
  * A ScanResultsTreeModel represents the results of a directory traversal.  Each instance corresponds
  * roughly to what MusicBrainz refers to as a "Medium": @link https://musicbrainz.org/doc/Medium
+ *
  * It's essentially a URL to an mp3, ogg, flac, or other audio file which:
  * - Contains 1 or more tracks.
  * - May have a sidecar or embedded cue sheet.
@@ -146,5 +147,7 @@ private:
 };
 
 QTH_DECLARE_QDATASTREAM_OPS(ScanResultsTreeModel);
+
+Q_DECLARE_METATYPE(ScanResultsTreeModel);
 
 #endif // SCANRESULTSTREEMODEL_H

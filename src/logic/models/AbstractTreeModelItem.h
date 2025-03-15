@@ -277,23 +277,11 @@ protected:
 	{
 		int id = qMetaTypeId<T>();
         qDb() << "QMetaType:" << id << QMetaType::fromType<T>().name();
-		map->m_id = id;
+		// QMetaType id numbers are not consistent from run to run, so we don't persist them.
+		// map->m_id = id;
+		map->m_id = 1;
 		map->m_class = QMetaType::fromType<T>().name();
 	}
-
-#if 0
-	template <class MapType>
-	static void set_map_class_info(const std::string& classname, MapType* map)
-	{
-//		int id = qMetaTypeId<T>();
-		int id = 0;
-//		qDb() << "QMetaType:" << id << QMetaType::typeName(id);// << QVariant(*this).typeName();
-		qDb() << "No QMetaType, class:" << classname << "id:" << id;
-		map->m_id = id;
-//		map->m_class = QMetaType::typeName(id);
-		map->m_class = classname;
-	}
-#endif
 
 	template <class T, class MapType>
 	static void dump_map_class_info(const T* self, MapType* map)
@@ -326,7 +314,7 @@ protected:
 	std::vector<QVariant> m_item_data;
 
 	std::weak_ptr<AbstractTreeModel> m_model;
-//	bool m_is_in_model {false};
+	bool m_is_in_model {false};
 
 	bool m_is_root {false};
 
@@ -353,7 +341,7 @@ private:
 //	int m_depth {-1};
 };
 
-//Q_DECLARE_METATYPE(AbstractTreeModelItem);
+Q_DECLARE_METATYPE(AbstractTreeModelItem);
 Q_DECLARE_METATYPE(std::vector<QVariant>);
 Q_DECLARE_METATYPE(std::weak_ptr<AbstractTreeModelItem>);
 Q_DECLARE_METATYPE(std::shared_ptr<AbstractTreeModelItem>);
@@ -405,7 +393,7 @@ std::shared_ptr<T> TreeItemFactory(Args... args)
 template <class ChildItemType, class ParentItemType = AbstractTreeModelItem>
 void append_children_from_variant(ParentItemType* parent_item, const QVariantHomogenousList& child_var_list)
 {
-	Q_ASSERT(parent_item->isInModel());
+//	Q_ASSERT(parent_item->isInModel());
 	auto starting_childcount = parent_item->childCount();
 
 	for(const QVariant& child_variant : child_var_list)

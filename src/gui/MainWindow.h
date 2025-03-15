@@ -96,9 +96,10 @@ class LibraryEntryMimeData;
 
 /**
  * Awesome Media Library Manager's MainWindow class.
- *
  * @note I suspect deriving from KXmlGuiWindow instead of KMainWindow, when I'm not using XML for the GUI,
  *       is going to bite me at some point (EDIT: == continuously).  But this gives me an actionCollection().  So there's that.
+ *
+ * @note KdenLive inherits from KXmlGuiWindow here.  KDevelop inherits from Sublime::MainWindow, which inherits from ???.
  */
 class MainWindow: public KXmlGuiWindow ///KMainWindow
 {

@@ -37,7 +37,7 @@ class Metadata : public virtual ISerializable
 {
 public:
     M_GH_RULE_OF_FIVE_DEFAULT_C21(Metadata)
-    ~Metadata() override {}
+    ~Metadata() override = default;
 
 	/// @name Static Factory Functions
 	/// @{
@@ -211,10 +211,9 @@ private:
 
 };
 
+QDataStream& operator<<(QDataStream& out, const Metadata& obj);
+QDataStream& operator>>(QDataStream& in, Metadata& obj);
+
 Q_DECLARE_METATYPE(Metadata);
-
-QDataStream &operator<<(QDataStream &out, const Metadata &obj);
-QDataStream &operator>>(QDataStream &in, Metadata &obj);
-
 
 #endif // LOGIC_METADATA_H

@@ -259,14 +259,7 @@ void AbstractTreeModelItem::setId(UUIncD id)
 
 bool AbstractTreeModelItem::isInModel() const
 {
-	if(auto temp = m_model.lock())
-	{
-		return true;
-	}
-	else
-	{
-		return false;
-	}
+	return m_is_in_model;
 }
 
 bool AbstractTreeModelItem::operator==(const AbstractTreeModelItem& other) const
@@ -326,7 +319,7 @@ void AbstractTreeModelItem::removeChild(const std::shared_ptr<AbstractTreeModelI
 	}
 	else
 	{
-		qCr() << "ERROR: Something went wrong when removing child in TreeItem. Model is not available anymore";
+		qCr() << "ERROR: Couldn't lock model.";
 		Q_ASSERT(false);
 	}
 }
@@ -374,7 +367,7 @@ bool AbstractTreeModelItem::changeParent(std::shared_ptr<AbstractTreeModelItem> 
 using strviw_type = QLatin1String;
 
 ///// Strings to use for the tags.
-#define X(field_tag, tag_string, var_name) static const strviw_type field_tag ( # tag_string );
+#define X(field_tag, tag_string, var_name) static constexpr strviw_type field_tag ( # tag_string );
 	M_DATASTREAM_FIELDS(X);
 	M_DATASTREAM_FIELDS_CONTSIZES(X);
 #undef X
@@ -563,8 +556,8 @@ void AbstractTreeModelItem::insertChild(int row, std::shared_ptr<AbstractTreeMod
 {
 #if 1 /// AQP
 
-	AMLM_ASSERT_X(!item->isInModel(), "TODO: ITEM ALREADY IN MODEL, MOVE ITEMS BETWEEN MODELS");
-	AMLM_ASSERT_X(isInModel(), "TODO: PARENT ITEM NOT IN MODEL");
+    AMLM_ASSERT_X(!item->isInModel(), "TODO: ITEM ALREADY IN THIS MODEL, MOVE ITEMS BETWEEN MODELS");
+//	AMLM_ASSERT_X(isInModel(), "TODO: PARENT ITEM NOT IN MODEL");
 
 	item->m_parent_item = this->shared_from_this();
 
@@ -776,13 +769,13 @@ void AbstractTreeModelItem::register_self(const std::shared_ptr<AbstractTreeMode
 	if (auto ptr = self->m_model.lock())
 	{
 		ptr->register_item(self);
-//		self->isInModel() = true;
+		self->m_is_in_model = true;
 		AMLM_ASSERT_EQ(self->isInModel(), true);
 	}
 	else
 	{
 		qWr() << "COULDN'T LOCK MODEL:";// << M_ID_VAL(self->m_model);// << M_ID_VAL(self->m_model);
-		AMLM_ASSERT_X(false, "Error : construction of AbstractTreeModelItem failed because parent model is not available anymore");
+        AMLM_ASSERT_X(false, "Error : construction of AbstractTreeModelItem failed");
 	}
 }
 
@@ -803,6 +796,7 @@ void AbstractTreeModelItem::deregister_self()
 		if (auto ptr = m_model.lock())
 		{
 			ptr->deregister_item(m_uuincid, this);
+			m_is_in_model = false;
 			AMLM_ASSERT_X(isInModel() == false, "ITEM STILL IN MODEL");
 		}
 		else

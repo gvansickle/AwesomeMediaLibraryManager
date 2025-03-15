@@ -330,8 +330,6 @@ void LibraryEntry::fromVariant(const QVariant& variant)
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
-//	map_read_field_or_warn(map, XMLTAG_METADATA, &m_metadata);
-
 	/// @todo
 	if(isPopulated())
 	{
