@@ -48,11 +48,12 @@ class AbstractTreeModelHeaderItem: public AbstractTreeModelItem, public enable_s
 {
 	using BASE_CLASS = AbstractTreeModelItem;
 
-public:
+protected:
 
 	friend class AbstractTreeModel;
+
 	/**
-	 * Note: This is always the root item of a tree model, no parent item.
+     * Note: This type is always the root item of a tree model, no parent item.
 	 * @param column_specs
 	 * @param parent_model
 	 * @param id
@@ -62,11 +63,11 @@ public:
     AbstractTreeModelHeaderItem();
 
 public:
-//	/**
-//	 * Named constructor.
-//	 */
-//	static std::shared_ptr<AbstractTreeModelHeaderItem> construct(std::initializer_list<ColumnSpec> column_specs,
-//																  const std::shared_ptr<AbstractTreeModel>& parent_model = nullptr, UUIncD id = UUIncD::null());
+    /**
+     * Named constructor.
+     */
+    static std::shared_ptr<AbstractTreeModelHeaderItem> create(std::initializer_list<ColumnSpec> column_specs,
+                                                                  const std::shared_ptr<AbstractTreeModel>& parent_model = nullptr, UUIncD id = UUIncD::null());
 	~AbstractTreeModelHeaderItem() override;
 
 	void clear() override;
@@ -106,6 +107,6 @@ private:
 };
 
 Q_DECLARE_METATYPE(AbstractTreeModelHeaderItem);
-// Q_DECLARE_METATYPE(std::shared_ptr<AbstractTreeModelHeaderItem>)
+Q_DECLARE_METATYPE(std::shared_ptr<AbstractTreeModelHeaderItem>)
 
 #endif /* SRC_LOGIC_MODELS_ABSTRACTTREEMODELHEADERITEM_H_ */

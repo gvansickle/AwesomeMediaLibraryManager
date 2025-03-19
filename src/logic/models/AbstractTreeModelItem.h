@@ -45,6 +45,7 @@
 #include <future/enable_shared_from_this_virtual.h>
 #include <logic/UUIncD.h>
 #include <logic/serialization/ISerializable.h>
+#include <logic/serialization/SerializationHelpers.h>
 #include "UndoRedoHelper.h"
 class AbstractTreeModel;
 
@@ -64,11 +65,13 @@ protected:
 	friend class AbstractTreeModel;
 
 public:
-	AbstractTreeModelItem();
+	static std::shared_ptr<AbstractTreeModelItem> create(const std::vector<QVariant>& data, const std::shared_ptr<AbstractTreeModel>& model,
+		bool is_root, UUIncD id = UUIncD::null());
 
-public:
+// protected:
 	explicit AbstractTreeModelItem(const std::vector<QVariant>& data,
-			const std::shared_ptr<AbstractTreeModelItem>& parent_item = nullptr, UUIncD id = UUIncD::null());
+			const std::shared_ptr<AbstractTreeModel>& model = nullptr, UUIncD id = UUIncD::null());
+public:
 	~AbstractTreeModelItem() override;
 
 	/**
@@ -212,8 +215,10 @@ public:
 	/// Be sure to override these in derived classes.
 	/// @{
 
-	 QVariant toVariant() const override;
-	 void fromVariant(const QVariant& variant) override;
+    QVariant toVariant() const override;
+    void fromVariant(const QVariant& variant) override;
+    void setModel(std::shared_ptr<AbstractTreeModel> model) { m_model = model; }
+
 
 	/// KDEN
 	/**
@@ -247,12 +252,19 @@ public:
 
 protected:
 
+	static void baseFinishCreate(const std::shared_ptr<AbstractTreeModelItem>& new_item);
 
 	/**
 	 * Helper functions to handle registration / deregistration to the model.
 	 */
 	static void register_self(const std::shared_ptr<AbstractTreeModelItem>& self);
 	void deregister_self();
+
+    /// @name Serialzation
+    /// These are helper functions for serializing just the child nodes in m_child_items.
+    QVariant ChildNodesToVariant() const;
+    void ChildNodesfromVariant(const QVariant& variant);
+
 
 	/**
 	 * Reflect update of the parent ptr (for example set this's correct depth).
@@ -272,24 +284,13 @@ protected:
 
 	/// @}
 
-	template <class T, class MapType>
-	static void set_map_class_info(const T* self, MapType* map)
-	{
-		int id = qMetaTypeId<T>();
-        qDb() << "QMetaType:" << id << QMetaType::fromType<T>().name();
-		// QMetaType id numbers are not consistent from run to run, so we don't persist them.
-		// map->m_id = id;
-		map->m_id = 1;
-		map->m_class = QMetaType::fromType<T>().name();
-	}
+
 
 	template <class T, class MapType>
 	static void dump_map_class_info(const T* self, MapType* map)
 	{
 		int id = qMetaTypeId<T>();
 		qDb() << "QMetaType:" << id << QMetaType::fromType<T>().name();
-//		map->m_id = id;
-//		map->m_class = QMetaType::typeName(id);
 	}
 
 
@@ -341,6 +342,7 @@ private:
 //	int m_depth {-1};
 };
 
+
 Q_DECLARE_METATYPE(AbstractTreeModelItem);
 Q_DECLARE_METATYPE(std::vector<QVariant>);
 Q_DECLARE_METATYPE(std::weak_ptr<AbstractTreeModelItem>);
@@ -383,24 +385,39 @@ std::shared_ptr<T> TreeItemFactory(Args... args)
   return retval;
 }
 
+#if 0 // DELETE ME?
 /**
  * Function template for trying to commonalize the loading of an item's children.
  * @tparam ChildItemType
  * @tparam ParentItemType
+ * @param model
  * @param parent_item
  * @param child_var_list
  */
-template <class ChildItemType, class ParentItemType = AbstractTreeModelItem>
-void append_children_from_variant(ParentItemType* parent_item, const QVariantHomogenousList& child_var_list)
+template <class ModelType, class ParentItemType>
+void append_children_from_variant(ModelType& model, ParentItemType parent_item, const QVariantHomogenousList& child_var_list)
 {
-//	Q_ASSERT(parent_item->isInModel());
+    // Q_ASSERT(parent_item->isInModel());
 	auto starting_childcount = parent_item->childCount();
+    Q_ASSERT(starting_childcount == 0);
 
 	for(const QVariant& child_variant : child_var_list)
 	{
 		qDb() << "READING CHILD ITEM:" << child_variant << " INTO PARENT ITEM:" << parent_item;
 
-		auto new_child = std::make_shared<ChildItemType>();
+		if (!child_variant.canConvert<std::shared_ptr<AbstractTreeModelItem>>())
+        {
+            // qDb() << child_variant.canConvert<ScanResultsTreeModelItem>();
+            if(child_variant.canConvert<InsertionOrderedMap<QString, QVariant>>())
+            {
+                auto chmap = child_variant.value<InsertionOrderedMap<QString, QVariant>>();
+                dump_map(chmap);
+            }
+            Q_ASSERT(0);
+		}
+		auto new_child = child_variant.value<std::shared_ptr<AbstractTreeModelItem>>();
+
+		// auto new_child = std::make_shared<ChildItemType>(child_variant, model, false);
 		Q_ASSERT(new_child);
 
 		/// @note Curently we need to add the empty item to the model before reading it in, so that
@@ -408,10 +425,13 @@ void append_children_from_variant(ParentItemType* parent_item, const QVariantHom
 		bool append_success = parent_item->appendChild(new_child);
 		AMLM_ASSERT_X(append_success, "FAILED TO APPEND NEW ITEM TO PARENT");
 
-		new_child->fromVariant(child_variant);
+        // if(child_variant.canConvert<std::shared_ptr<>>())
+        // new_child.fromVariant(child_variant);
 	}
 
 	AMLM_ASSERT_EQ(starting_childcount+child_var_list.size(), parent_item->childCount());
 }
+#endif
+
 
 #endif // ABSTRACTTREEMODELITEM_H

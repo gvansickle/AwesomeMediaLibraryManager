@@ -81,9 +81,9 @@ void ScanResultsTreeModel::sendModification()
 std::shared_ptr<ScanResultsTreeModel>
 ScanResultsTreeModel::make_ScanResultsTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent)
 {
-	auto retval_shptr = std::shared_ptr<ScanResultsTreeModel>(new ScanResultsTreeModel(column_specs, parent));
+    auto retval_shptr = std::shared_ptr<ScanResultsTreeModel>(new ScanResultsTreeModel(column_specs, parent));
 
-	retval_shptr->postConstructorFinalization(retval_shptr, column_specs);
+    retval_shptr->m_root_item = AbstractTreeModelHeaderItem::create(column_specs, retval_shptr, UUIncD::create());
 
 	return retval_shptr;
 }
@@ -247,11 +247,14 @@ static constexpr QLatin1String XMLTAG_SRTM_ROOT_ITEM {"tree_model_root_item"};
 
 QVariant ScanResultsTreeModel::toVariant() const
 {
+    qDb() << "START tree serialize";
+
 	InsertionOrderedMap<QString, QVariant> map;
 
 	std::unique_lock write_lock(m_rw_mutex);
 
-	qDb() << "START tree serialize";
+    set_map_class_info(this, &map);
+
 
 #define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
 	M_DATASTREAM_FIELDS(X)
@@ -309,6 +312,8 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 
     InsertionOrderedMap<QString, QVariant> map = variant.value<InsertionOrderedMap<QString, QVariant>>();
 
+
+
 #define X(field_tag, var_name) map_read_field_or_warn(map, field_tag, &var_name);
 	M_DATASTREAM_FIELDS(X);
 #undef X
@@ -345,8 +350,9 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 	/// @note This is a QVariantMap, contains abstract_tree_model_header as a QVariantList.
 	InsertionOrderedMap<QString, QVariant> root_item_map;
 	map_read_field_or_warn(map, XMLTAG_SRTM_ROOT_ITEM, &root_item_map);
-    m_root_item = std::make_shared<AbstractTreeModelHeaderItem>();
     m_root_item->fromVariant(root_item_map);
+
+    Q_ASSERT(m_root_item->isRoot() && m_root_item->isInModel());
 
 	dump_map(map);
 }

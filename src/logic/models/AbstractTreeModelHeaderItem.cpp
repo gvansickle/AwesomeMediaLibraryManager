@@ -43,28 +43,18 @@
 /// TEMP
 #include "ScanResultsTreeModel.h"
 
-#if 0
+#if 1
 // static
 std::shared_ptr<AbstractTreeModelHeaderItem>
-AbstractTreeModelHeaderItem::construct(std::initializer_list<ColumnSpec> column_specs,
+AbstractTreeModelHeaderItem::create(std::initializer_list<ColumnSpec> column_specs,
 									   const std::shared_ptr<AbstractTreeModel>& parent_model, UUIncD id)
 {
-	std::shared_ptr<AbstractTreeModelHeaderItem> self(new AbstractTreeModelHeaderItem(column_specs, parent_model, id));
+    std::shared_ptr<AbstractTreeModelHeaderItem> new_item(new AbstractTreeModelHeaderItem(column_specs, parent_model, UUIncD::create()));
 
-	self->setColumnSpecs(column_specs);
-
-	auto lambda = parent_model->addItem_lambda(self, UUIncD::null());
-	lambda();
-
-	self->m_is_root = true;
-//	self->m_model = parent_model;
-//	self->m_is_in_model = true;
-	// This should add the HeaderItem to the model.
-	self->postConstructorFinalization();
-//	Q_ASSERT(self->m_model.lock());// = parent_model;
-
-	Q_ASSERT(self->isInModel());
-	return self;
+    new_item->setColumnSpecs(column_specs);
+    new_item->m_is_root = true;
+    baseFinishCreate(new_item);
+    return new_item;
 }
 #endif
 
@@ -72,12 +62,11 @@ AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem() : BASE_CLASS({}, null
 {
     // Abs*HeaderItem can only be root.
     m_is_root = true;
-
 }
 
 AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(std::initializer_list<ColumnSpec> column_specs,
                                                          const std::shared_ptr<AbstractTreeModel>& parent_model, UUIncD id)
-    : BASE_CLASS({}, nullptr, id)//, m_is_root(true) //, m_column_specs(column_specs)
+    : BASE_CLASS({}, parent_model, id)//, m_is_root(true) //, m_column_specs(column_specs)
 {
 	m_is_root = true;
 	m_model = parent_model;
@@ -163,13 +152,10 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 	}
 	map_insert_or_die(map, XMLTAG_HEADER_SECTION_LIST, header_section_list);
 
-	// Child nodes.
-	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
-	for(const auto& it : m_child_items)
-	{
-		list_push_back_or_die(child_var_list, it.get()->toVariant());
-	}
-	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, child_var_list);
+    // Serialize the data members of the base class.
+    QVariant base_class = static_cast<const BASE_CLASS*>(this)->BASE_CLASS::toVariant();
+
+    map_insert_or_die(map, "baseclass", base_class);
 
 	return map;
 }
@@ -193,31 +179,36 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	// Note that the AbstractTreeModel forwards it's insertColumns() call to here, but it handles the begin/end signaling.
 	// So... I think we need to go through that mechanism if we're already in a model.
 	// But... we're being deserialized here, so will we have a model yet?
-    // Q_ASSERT(isInModel());
-    // Q_ASSERT(!m_model.expired());
+    Q_ASSERT(isInModel());
+    Q_ASSERT(!m_model.expired());
 
-
-//	insertColumns(0, header_num_sections);
 
 	int section_index = 0;
 	for(const QVariant& e : header_section_list)
 	{
-//		setData(section_index, e);
-		m_item_data.push_back(e);
+        // setData(section_index, e);
+        m_item_data.push_back(e);
 		section_index++;
 	}
 
 	// Now read in our children.  We need this HeaderItem to be in a model for that to work.
-//    Q_ASSERT(isInModel());
+    Q_ASSERT(isInModel());
 
 	// This needs to be in a model before we can requestAddXxx() anything.
 	// By default, this HeaderItem *only* will already be in the model.
-//	auto model_ptr = std::dynamic_pointer_cast<ScanResultsTreeModel>(m_model.lock());
-//	Q_ASSERT(model_ptr);
+    auto model_ptr = std::dynamic_pointer_cast<ScanResultsTreeModel>(m_model.lock());
+    Q_ASSERT(model_ptr);
 
 	auto parent_id = getId();
 	Q_ASSERT(parent_id != UUIncD::null());
 
+    // Deserialize the data members of the base class.
+    auto iomap {InsertionOrderedMap<QString, QVariant>()};
+    map_read_field_or_warn(map, "baseclass", &iomap);
+    static_cast<BASE_CLASS*>(this)->BASE_CLASS::fromVariant(iomap);
+    // QVariant base_class = static_cast<const BASE_CLASS*>(this)->BASE_CLASS::toVariant();
+
+#if 0
 	/// @todo This is a QVariantList containing <item>/QVariantMap's, each of which
 	/// contains a single <scan_res_tree_model_item type="QVariantMap">, which in turn
 	/// contains a single <dirscanresult>/QVariantMap.
@@ -226,16 +217,17 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	Q_ASSERT(!child_var_list.empty());
 	qDb() << "Number of children read:" << child_var_list.size();
 
-#if 1///
-	append_children_from_variant<ScanResultsTreeModelItem/*, AbstractTreeModelHeaderItem*/>(this, child_var_list);
+#if 0///
+    // append_children_from_variant<decltype(m_model), std::shared_ptr<ScanResultsTreeModelItem>/*, AbstractTreeModelHeaderItem*/>(m_model, this, child_var_list);
+	append_children_from_variant(m_model, this, child_var_list);
 #else
 	auto starting_childcount = childCount();
 
 	for(const QVariant& child_variant : child_var_list)
 	{
-		qDb() << "READING CHILD ITEM INTO HEADERITEM:" << child_variant;
+        qDb() << "READING CHILD ITEM INTO HEADERITEM:" << child_variant << "TYPE:" << child_variant.metaType().name();
 
-		auto new_child = std::make_shared<ScanResultsTreeModelItem>();
+        auto new_child = std::make_shared<ScanResultsTreeModelItem>(model_ptr, UUIncD::create());
 		Q_ASSERT(new_child);
 		/// @note Cuurently we need to add the empty item to the model before reading it in, so that
 		/// its children will be set up correctly model-wise.  This is almost certainly more efficient anyway.
@@ -253,6 +245,7 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	}
 
 	AMLM_ASSERT_EQ(starting_childcount+child_var_list.size(),childCount());
+#endif
 #endif
 }
 

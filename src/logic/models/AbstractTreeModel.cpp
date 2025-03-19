@@ -52,9 +52,13 @@
 std::shared_ptr<AbstractTreeModel>
 AbstractTreeModel::make_AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent)
 {
-	auto retval_shptr = std::shared_ptr<AbstractTreeModel>(new AbstractTreeModel(column_specs, parent));
+    // auto retval_shptr = std::make_shared<AbstractTreeModel>(column_specs, parent);
 
-	retval_shptr->postConstructorFinalization(retval_shptr, column_specs);
+    auto retval_shptr = std::shared_ptr<AbstractTreeModel>(new AbstractTreeModel(column_specs, parent));
+
+    retval_shptr->m_root_item = AbstractTreeModelHeaderItem::create(column_specs, retval_shptr, UUIncD::create());
+
+    retval_shptr->checkConsistency();
 
 	return retval_shptr;
 }
@@ -74,6 +78,7 @@ AbstractTreeModel::AbstractTreeModel(std::initializer_list<ColumnSpec> column_sp
 	/// Regardless, the named constructor is working well now, so we're good.
 }
 
+#if 0
 void AbstractTreeModel::postConstructorFinalization(const std::shared_ptr<AbstractTreeModel>& retval_shptr, std::initializer_list<ColumnSpec> column_specs)
 {
 	// Create the root item/header item.
@@ -88,6 +93,7 @@ void AbstractTreeModel::postConstructorFinalization(const std::shared_ptr<Abstra
 //    retval_shptr->m_model_tester = new QAbstractItemModelTester(retval_shptr.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, retval_shptr.get());
 	AMLM_ASSERT_X(retval_shptr->checkConsistency(), "MODEL INCONSISTENT");
 }
+#endif
 
 AbstractTreeModel::~AbstractTreeModel()
 {
@@ -129,9 +135,9 @@ void AbstractTreeModel::clear()
 
 	// One last thing, our hidden root node / header node still has ColumnSpecs.
 	m_root_item->clear();
-#elif 0
+#elif 1
 	beginResetModel();
-#error "TODO"
+
 	// Delete the root item, which will get us 99% of the way to cleared.
 //	m_root_item.reset();
 
@@ -266,7 +272,7 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getItem(const QModelIn
 //	m_base_directory = base_directory;
 //}
 
-/// NEW: KDEN:
+// KDEN, GRVS locking.
 std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getItemById(const UUIncD& id) const
 {
 	std::unique_lock read_lock(m_rw_mutex);
@@ -283,7 +289,7 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getItemById(const UUIn
 	return m_model_item_map.at(id).lock();
 }
 
-/// BOTH
+// BOTH
 std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getRootItem() const
 {
 	std::unique_lock read_lock(m_rw_mutex);
@@ -354,6 +360,7 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::append_child(const QVe
 	std::shared_ptr<AbstractTreeModelItem> new_child = parent->child(parent->childCount()-1);
 
 	// Register the new child with this model.
+    /// @todo We shouldn't have to do this?
 	register_item(new_child);
 
 	for(int column = 0; column < columnData.size(); ++column)
@@ -544,6 +551,8 @@ void AbstractTreeModel::register_item(const std::shared_ptr<AbstractTreeModelIte
 	Q_ASSERT(id.isValid());
 	AMLM_ASSERT_X(m_model_item_map.count(id) == 0, "Item was already in model.");
 	m_model_item_map[id] = item;
+
+    qDb() << "Registering:" << M_ID_VAL(id) << M_ID_VAL(m_model_item_map.size());
 }
 
 void AbstractTreeModel::deregister_item(UUIncD id, AbstractTreeModelItem* item)
@@ -640,7 +649,7 @@ void AbstractTreeModel::notifyRowDeleted()
 /// NEW: KDEN:
 bool AbstractTreeModel::checkConsistency()
 {
-#if 0///
+#if 1///
 // first check that the root is all good
 	if (!m_root_item || !m_root_item->m_is_root || !m_root_item->isInModel() || m_model_item_map.count(m_root_item->getId()) == 0)
 	{
@@ -648,6 +657,7 @@ bool AbstractTreeModel::checkConsistency()
 		qDebug() << "ERROR: Model is not valid because root is not properly constructed";
 		return false;
 	}
+#elif 0
 	// Then we traverse the tree from the root, checking the infos on the way
 	std::unordered_set<UUIncD> seenIDs;
 	std::queue<std::pair<UUIncD, std::pair<int, UUIncD>>> queue; // store (id, (depth, parentId))
@@ -946,7 +956,7 @@ int AbstractTreeModel::rowCount(const QModelIndex &parent) const
 	std::unique_lock read_lock(m_rw_mutex);
 
 	// Only column 0 has children, and hence a non-zero rowCount().
-	if(parent.isValid() && parent.column() != 0)
+    if(parent.isValid() && (parent.column() != 0))
 	{
 		return 0;
 	}

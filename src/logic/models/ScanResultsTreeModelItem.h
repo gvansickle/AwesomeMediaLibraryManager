@@ -44,9 +44,11 @@ class ScanResultsTreeModel;
  * Tree model item containing the results of a single DirScanResult.
  * KDEN: ~similar to AbstractProjectItem
  */
-class ScanResultsTreeModelItem : public AbstractTreeModelItem, public enable_shared_from_this_virtual<ScanResultsTreeModelItem>
+class ScanResultsTreeModelItem : public AbstractTreeModelItem, //public virtual ISerializable,
+	public enable_shared_from_this_virtual<ScanResultsTreeModelItem>
 
 {
+protected:
 	using BASE_CLASS = AbstractTreeModelItem;
 
 //protected:
@@ -54,9 +56,9 @@ public:
 	/// Create a new model item populated with the passed DirScanResult.
 //	explicit ScanResultsTreeModelItem(const DirScanResult& dsr, std::shared_ptr<ScanResultsTreeModel> model,
 //	                                  bool is_root = false);
-	explicit ScanResultsTreeModelItem(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr, UUIncD id = UUIncD::null());
-	explicit ScanResultsTreeModelItem(const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr, UUIncD id = UUIncD::null());
-	explicit ScanResultsTreeModelItem(const QVariant& variant, const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr, UUIncD id = UUIncD::null());
+	explicit ScanResultsTreeModelItem(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModel>& parent = nullptr, UUIncD id = UUIncD::null());
+	explicit ScanResultsTreeModelItem(const std::shared_ptr<AbstractTreeModel>& parent = nullptr, UUIncD id = UUIncD::null());
+	explicit ScanResultsTreeModelItem(const QVariant& variant, const std::shared_ptr<AbstractTreeModel>& parent = nullptr, UUIncD id = UUIncD::null());
 
 //
 //	explicit ScanResultsTreeModelItem(std::shared_ptr<ScanResultsTreeModel> model, bool is_root = false);
@@ -74,7 +76,7 @@ public:
 	 */
 	QVariant data(int column, int role = Qt::DisplayRole) const override;
 
-	DirScanResult getDsr() const { return m_dsr; };
+    DirScanResult getDsr() const { return m_dsr; }
 
 	int columnCount() const override;
 
@@ -97,6 +99,6 @@ protected:
 };
 
 Q_DECLARE_METATYPE(ScanResultsTreeModelItem);
-// Q_DECLARE_METATYPE(std::shared_ptr<ScanResultsTreeModelItem>);
+Q_DECLARE_METATYPE(std::shared_ptr<ScanResultsTreeModelItem>);
 
 #endif /* SRC_LOGIC_MODELS_SCANRESULTSTREEMODELITEM_H_ */

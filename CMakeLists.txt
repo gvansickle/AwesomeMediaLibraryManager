@@ -623,6 +623,29 @@ configure_file(${PROJECT_SOURCE_DIR}/src/config.h.in
 # add_custom_target(graphviz ALL
 # 	${CMAKE_COMMAND} .. "--graphviz=graphviz.dot" .
 # 	WORKING_DIRECTORY .)
+find_package(Doxygen REQUIRED)
+if(DOXYGEN_FOUND)
+	# Set directories.
+	set(DOXYGEN_INPUT "${CMAKE_SOURCE_DIR}/src")
+	set(DOXYGEN_OUTPUT "${CMAKE_BINARY_DIR}/docs")
+	# Configure Doxyfile.
+	configure_file(
+		${CMAKE_SOURCE_DIR}/Doxyfile.in
+		${CMAKE_BINARY_DIR}/Doxyfile
+		@ONLY
+	)
+	# Custom target to generate doxygen docs.
+	add_custom_target(docs
+		COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_BINARY_DIR}/Doxyfile
+		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+		COMMENT "Generating internals documentation with Doxygen"
+		VERBATIM
+	)
+else()
+	message(WARNING "Doxygen not found.  Documentation will not be generated.")
+endif()
+
+
 
 ###
 ### Add the project subdirs.

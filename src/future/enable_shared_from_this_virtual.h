@@ -31,6 +31,51 @@
 
 // The following is a hack that allows to use shared_from_this in the case of a multiple inheritance.
 // Credit: https://stackoverflow.com/questions/14939190/boost-shared-from-this-and-multiple-inheritance
+
+
+/**
+ * Use it like this:
+@code
+#include <iostream>
+
+struct A : public enable_shared_from_this_virtual<A>
+{
+	void foo()
+	{
+		shared_from_this()->baz();
+	}
+
+	void baz()
+	{
+		std::cout << __PRETTY_FUNCTION__ << std::endl;
+	}
+};
+
+struct B : public enable_shared_from_this_virtual<B>
+{
+	void bar()
+	{
+		shared_from_this()->baz();
+	}
+
+	void baz()
+	{
+		std::cout << __PRETTY_FUNCTION__ << std::endl;
+	}
+};
+
+struct D: A, B {};
+
+
+int main()
+{
+ std::shared_ptr<D> d(new D);
+ d->foo();
+ d->bar();
+ return 0;
+}
+@endcode
+ */
 template <typename T>
 struct enable_shared_from_this_virtual;
 
@@ -111,5 +156,42 @@ public:
 		return std::dynamic_pointer_cast<Down>(enable_shared_from_this_virtual_base::shared_from_this());
 	}
 };
+
+#if 0
+
+/**
+ * And this is another way to do it, from SO here:
+ * https://stackoverflow.com/a/15550262
+ * Use it like so:
+ * @code
+ struct A: virtual_enable_shared_from_this<A> {};
+ struct B: virtual_enable_shared_from_this<B> {};
+ struct Z: A, B { };
+ int main() {
+ std::shared_ptr<Z> z = std::make_shared<Z>();
+ std::shared_ptr<B> b = z->B::shared_from_this();
+ }
+ @endcode
+ */
+struct virtual_enable_shared_from_this_base :
+	std::enable_shared_from_this<virtual_enable_shared_from_this_base>
+{
+	virtual ~virtual_enable_shared_from_this_base()
+	{
+	}
+};
+
+template <typename T>
+struct virtual_enable_shared_from_this :
+	virtual virtual_enable_shared_from_this_base
+{
+	std::shared_ptr<T> shared_from_this()
+	{
+		return std::dynamic_pointer_cast<T>(
+			virtual_enable_shared_from_this_base::shared_from_this());
+	}
+};
+
+#endif
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_ENABLE_SHARED_FROM_THIS_VIRTUAL_H

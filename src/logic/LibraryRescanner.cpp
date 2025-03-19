@@ -17,7 +17,9 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/** @file Implementation of LibraryRescanner, an asynchronous helper for LibraryModel. */
+/** @file LibraryRescanner.cpp
+ * Implementation of LibraryRescanner, an asynchronous helper for LibraryModel.
+ */
 
 #include "LibraryRescanner.h"
 
@@ -404,10 +406,12 @@ qDb() << "POST WAIT" << M_NAME_VAL(future);
 
 Stopwatch sw("Populate LibraryEntry");
 		// Get the current ScanResultsTreeModel.
-//		std::shared_ptr<ScanResultsTreeModel> tree_model_sptr = AMLM::Core::self()->getScanResultsTreeModel();
-		std::shared_ptr<AbstractTreeModel> tree_model_sptr = AMLM::Core::self()->getScanResultsTreeModel();
+        // std::shared_ptr<ScanResultsTreeModel> tree_model_sptr = AMLM::Core::self()->getScanResultsTreeModel();
+        std::shared_ptr<AbstractTreeModel> tree_model_sptr = AMLM::Core::self()->getScanResultsTreeModel();
 		Q_ASSERT(tree_model_sptr);
-//		tree_model_sptr->clear();
+        bool ok = tree_model_sptr->checkConsistency();
+        Q_ASSERT(ok);
+
 		qDb() << "START: tree_model_item_future.stap(), new_items_future count:" << new_items_future.resultCount();
 
 		// For each QList<SharedItemContType> entry.
@@ -419,6 +423,8 @@ Stopwatch sw("Populate LibraryEntry");
 			// Append ScanResultsTreeModelItem entries to the ScanResultsTreeModel.
 			for(std::shared_ptr<AbstractTreeModelItem>& entry : *new_items_vector_ptr)
 			{
+                // AbstractTreeModelItem's need to have a model at all times?????
+                entry->setModel(tree_model_sptr);
 				// Make sure the entry wasn't moved from.
 				Q_ASSERT(bool(entry) == true);
 //				Q_ASSERT(entry->isInModel());
@@ -432,7 +438,7 @@ sw.start("LibEntry");
 				std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(entry_dp->data(1).toString());
 				lib_entry->populate(true);
 sw.lap("Populate Complete");
-				std::shared_ptr<SRTMItem_LibEntry> new_child = std::make_shared<SRTMItem_LibEntry>(lib_entry);
+                std::shared_ptr<SRTMItem_LibEntry> new_child = std::make_shared<SRTMItem_LibEntry>(lib_entry, tree_model_sptr);
 				Q_ASSERT(new_child);
 sw.lap("SRTMItem_LibEntry created");
 				/// NEW: Give the incoming ScanResultTreeModelItem entry a parent.

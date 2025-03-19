@@ -23,11 +23,11 @@
 
 #include "ISerializable.h"
 
-// Qt5
+// Qt
 #include <QDebug>
 #include <QMetaType>
 
-// Ours, Qt5/KF5 related.
+// Ours, Qt/KF related.
 #include <utils/DebugHelpers.h>
 #include <utils/RegisterQtMetatypes.h>
 
@@ -55,7 +55,7 @@ QVariant SerializableQVariantList::toVariant() const
 	InsertionOrderedMap<QString, QVariant> map;
 	// Return a QMap with a single QVariant(SerializableQVariantList) item.
 
-    SerializableQVariantList list;
+    SerializableQVariantList list(m_list_tag, m_list_item_tag);
     for(const auto& element : m_the_list)
     {
         list.push_back(element);

@@ -59,12 +59,12 @@ class ColumnSpec;
 class AbstractTreeModel : public QAbstractItemModel, public virtual ISerializable, public enable_shared_from_this_virtual<AbstractTreeModel>
 {
     Q_OBJECT
-	Q_DISABLE_COPY(AbstractTreeModel);
-	Q_INTERFACES(ISerializable);
+    Q_DISABLE_COPY(AbstractTreeModel)
+    Q_INTERFACES(ISerializable)
 
 	using BASE_CLASS = QAbstractItemModel;
 
-private:
+protected:
 	/**
 	 * My bright idea here is to defer to this constructor from other constructors which need to call virtual functions on this.
 	 * I have no idea if that really works like I think it does.
@@ -79,7 +79,7 @@ protected:
 	 *          call immediately after creating a new model.
 	 * In general, derived constructors don't do much more than pass the @a parent param.
 	 */
-	AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
+    explicit AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
 
 	/**
 	 * Creates and adds the root item to the model, some sanity checks, and other last-chance setup of the model object
@@ -87,13 +87,14 @@ protected:
 	 * @param retval_shptr  A shared_ptr to the model being constructed.
 	 * @param column_specs  The columnspecs list to initialize the root/header item with.
 	 */
-	virtual void postConstructorFinalization(const std::shared_ptr<AbstractTreeModel>& retval_shptr, std::initializer_list<ColumnSpec> column_specs);
+    // virtual void postConstructorFinalization(const std::shared_ptr<AbstractTreeModel>& retval_shptr, std::initializer_list<ColumnSpec> column_specs);
 
 public:
 	/**
 	 * Named constructor.
 	 */
 	static std::shared_ptr<AbstractTreeModel> make_AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
+
 	/**
 	 * Destructor.  Clears all items in the model, including the root item.
 	 */

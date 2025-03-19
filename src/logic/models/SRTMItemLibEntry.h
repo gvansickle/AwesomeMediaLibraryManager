@@ -36,12 +36,13 @@ class LibraryEntry;
  */
 class SRTMItem_LibEntry : public ScanResultsTreeModelItem, public enable_shared_from_this_virtual<SRTMItem_LibEntry>
 {
+protected:
 	using BASE_CLASS = ScanResultsTreeModelItem;
 
 public:
 //protected:
-	explicit SRTMItem_LibEntry(const std::shared_ptr<AbstractTreeModelItem>& parent_item = nullptr, UUIncD id = UUIncD::null());
-	explicit SRTMItem_LibEntry(std::shared_ptr<LibraryEntry> libentry, const std::shared_ptr<AbstractTreeModelItem>& parent_item = nullptr, UUIncD id = UUIncD::null());
+	explicit SRTMItem_LibEntry(const std::shared_ptr<AbstractTreeModel>& model = nullptr, UUIncD id = UUIncD::null());
+    explicit SRTMItem_LibEntry(std::shared_ptr<LibraryEntry> libentry, const std::shared_ptr<AbstractTreeModel>& model, UUIncD id = UUIncD::null());
 //	explicit SRTMItem_LibEntry(const QVariant& variant, const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr, UUIncD id = UUIncD::null());
 
 public:
@@ -77,7 +78,7 @@ private:
 	std::shared_ptr<LibraryEntry> m_library_entry;
 };
 
-//Q_DECLARE_METATYPE(SRTMItem_LibEntry);
-
+Q_DECLARE_METATYPE(SRTMItem_LibEntry);
+Q_DECLARE_METATYPE(std::shared_ptr<SRTMItem_LibEntry>);
 
 #endif /* SRC_LOGIC_MODELS_SRTMITEMLIBENTRY_H_ */

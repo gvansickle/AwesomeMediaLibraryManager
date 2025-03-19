@@ -47,7 +47,7 @@
  * This class lives at about the same inheritance level as KDenLive's ProjectItemModel (->AbstractTreeModel->0),
  * but some work is also split into ScanResultsTreeModel.
  */
-class ThreadsafeTreeModel : public AbstractTreeModel, public virtual ISerializable//, public virtual enable_shared_from_this_virtual<ThreadsafeTreeModel>
+class ThreadsafeTreeModel : public AbstractTreeModel, public virtual ISerializable, public enable_shared_from_this_virtual<ThreadsafeTreeModel>
 {
 	Q_OBJECT
 	Q_DISABLE_COPY(ThreadsafeTreeModel);

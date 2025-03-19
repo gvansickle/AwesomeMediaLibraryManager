@@ -17,7 +17,7 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/** @file LibraryModel. */
+/** @file LibraryModel.h */
 
 #ifndef LIBRARYMODEL_H
 #define LIBRARYMODEL_H

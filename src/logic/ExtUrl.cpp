@@ -63,6 +63,8 @@ QVariant ExtUrl::toVariant() const
 {
 	InsertionOrderedMap<QString, QVariant> map;
 
+    set_map_class_info(this, &map);
+
 	// Add all the fields to the map.
 #define X(field_tag, field)   map_insert_or_die(map, field_tag, field);
 	M_DATASTREAM_FIELDS(X)

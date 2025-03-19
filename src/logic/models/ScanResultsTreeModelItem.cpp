@@ -39,19 +39,20 @@
 #include <serialization/SerializationHelpers.h>
 
 
-ScanResultsTreeModelItem::ScanResultsTreeModelItem(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id)
-	: BASE_CLASS({}, parent, id), m_dsr(dsr)
+ScanResultsTreeModelItem::ScanResultsTreeModelItem(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModel>& model, UUIncD id)
+	: BASE_CLASS({}, model, id), m_dsr(dsr)
 {
 }
 
-ScanResultsTreeModelItem::ScanResultsTreeModelItem(const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id)
-	: BASE_CLASS({}, parent, id)
+ScanResultsTreeModelItem::ScanResultsTreeModelItem(const std::shared_ptr<AbstractTreeModel>& model, UUIncD id)
+	: BASE_CLASS({}, model, id)
 {
 }
 
-ScanResultsTreeModelItem::ScanResultsTreeModelItem(const QVariant& variant, const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id)
-	: BASE_CLASS({}, parent, id)
+ScanResultsTreeModelItem::ScanResultsTreeModelItem(const QVariant& variant, const std::shared_ptr<AbstractTreeModel>& model, UUIncD id)
+	: BASE_CLASS({}, model, id)
 {
+	Q_UNIMPLEMENTED();
 //	M_WARNING("TODO: DECODE VARIANT");
 }
 
@@ -119,21 +120,24 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 	// Set the xml:id.
 	map.insert_attributes({{"xml:id", get_prefixed_uuid()}});
 
-	/// @todo Will be more fields, justifying the map vs. value?
-	/// @todo Need the parent here too?  Probably needs to be handled by the parent, but maybe for error detection.
-
 	map_insert_or_die(map, XMLTAG_DIRSCANRESULT, m_dsr);
 
 // #define X(field_tag, tag_string, var_name) map_insert_or_die(map, field_tag, var_name);
 // 	M_DATASTREAM_FIELDS(X);
 // #undef X
 
-	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
-	for(auto& it : m_child_items)
-	{
-		list_push_back_or_die(child_var_list, it->toVariant());
-	}
-	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, child_var_list);
+	// QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
+	// for(auto& it : m_child_items)
+	// {
+	// 	list_push_back_or_die(child_var_list, it->toVariant());
+	// }
+	// auto child_var_list = ChildNodesToVariant();
+	// map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, child_var_list);
+
+    // Serialize the data members of the base class.
+	QVariant base_class = static_cast<const BASE_CLASS*>(this)->BASE_CLASS::toVariant();
+
+    map_insert_or_die(map, "baseclass", base_class);
 
 	return map;
 }
@@ -154,25 +158,26 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 
 	map_read_field_or_warn(map, XMLTAG_DIRSCANRESULT, &m_dsr);
 
-	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
-	child_var_list = map.at(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
-	Q_ASSERT(child_var_list.size() > 0);
+    // QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
+    // child_var_list = map.at(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
+    // Q_ASSERT(child_var_list.size() > 0);
 
-	append_children_from_variant<SRTMItem_LibEntry>(this, child_var_list);
+#if 1
+    // append_children_from_variant(m_model, this, child_var_list);
 
-#if 0////
+#elif 0////
 	auto model_ptr_base = m_model.lock();
 	Q_ASSERT(model_ptr_base);
 	auto model_ptr = std::dynamic_pointer_cast<ScanResultsTreeModel>(model_ptr_base);
 	auto parent_id = getId();
 
-	/// NEEDS TO BE IN MODEL HERE.
+    // WE NEEDS TO BE IN MODEL HERE.
 	Q_ASSERT(isInModel());
 
 	std::vector<std::shared_ptr<AbstractTreeModelItem>> new_child_item_vec;
-	for(const QVariant& child_variant : child_list)
+    for(const QVariant& child_variant : child_var_list)
 	{
-		qDb() << "READING CHILD ITEM INTO ScanResultsTreeModelItem:" << child_variant.typeName();
+        qDb() << "READING CHILD ITEM:" << child_variant << "INTO ScanResultsTreeModelItem:" << child_variant.typeName();
 
 		auto id = model_ptr->requestAddSRTMLibEntryItem(child_variant, parent_id);
 		auto new_child = model_ptr->getItemById(id);

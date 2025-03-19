@@ -48,7 +48,7 @@ class AbstractTreeModelHeaderItem;
  * - Contains 1 or more tracks.
  * - May have a sidecar or embedded cue sheet.
  */
-class ScanResultsTreeModel : public ThreadsafeTreeModel, public virtual ISerializable, public virtual enable_shared_from_this_virtual<ScanResultsTreeModel>
+class ScanResultsTreeModel : public ThreadsafeTreeModel, public virtual ISerializable, public enable_shared_from_this_virtual<ScanResultsTreeModel>
 {
 	Q_OBJECT
 	Q_DISABLE_COPY(ScanResultsTreeModel);
