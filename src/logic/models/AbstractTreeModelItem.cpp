@@ -49,6 +49,7 @@
 
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering std::shared_ptr<AbstractTreeModelItem>";
+	qRegisterMetaType<AbstractTreeModelItem>();
 	qRegisterMetaType<std::shared_ptr<AbstractTreeModelItem>>();
 });
 
@@ -394,9 +395,7 @@ QVariant AbstractTreeModelItem::toVariant() const
 	// Add them to the output map.
 	map_insert_or_die(map, "item_data", list);
 
-	// Serialize out Child nodes.
-	// std::shared_ptr<AbstractTreeModelItem>
-	// AbstractTreeModelItem unpacked_child;
+    // Serialize out Child items.
     QVariantHomogenousList child_list("m_child_items", "child_item");
 	for (auto child : m_child_items)
 	{
@@ -441,39 +440,39 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 
 	qDb() << XMLTAG_NUM_CHILDREN << num_children;
 
-
+    // Now read in our children.  We need this Item to be in a model for that to work.
+    Q_ASSERT(isInModel());
 	QVariantHomogenousList child_list(XMLTAG_CHILD_ITEM_LIST, "child");
 	child_list = map.at(XMLTAG_CHILD_ITEM_LIST).value<QVariantHomogenousList>();
 	qDb() << M_ID_VAL(child_list.size());
 
 	AMLM_ASSERT_EQ(num_children, child_list.size());
 
-	// Read in our children.
-	/// @todo ???
-//	childrenFromVariant(child_list);
-
-	////////////////////////////////////
-#if 0
-	// Now read in our children.  We need this Item to be in a model for that to work.
-	Q_ASSERT(isInModel());
-
+#if 1
 	auto model_ptr = m_model.lock();
 	Q_ASSERT(model_ptr);
-
-	// What was the derived class that was actually written?
-	std::string metatype_class_str = map.get_attr("class");
-	if(metatype_class_str.empty())
-	{
-		// Get as much info as we can.
-		auto vartype = variant.type();
-		const char* typename_per_var = variant.typeName();
-		auto metatype = QMetaType::typeName(vartype);
-		qDb() << "Class attr:" << M_ID_VAL(metatype) << M_ID_VAL(vartype) << M_ID_VAL(typename_per_var);
-//		Q_ASSERT(0);
-	}
-
-	AMLM_ASSERT_EQ(num_children, m_child_items.size());
-#endif///
+    for(auto& child_item : child_list)
+    {
+        // What was the derived class type that was actually written?
+        std::string metatype_class_str = map.get_attr("class");
+        auto metatype = child_item.metaType();
+        if(metatype.isValid())
+        {
+            qDb() << "class:" << metatype_class_str;
+            // qDb() << "Class attr:" << M_ID_VAL(metatype) << M_ID_VAL(typename_per_var);
+            AbstractTreeModelItem child = child_item.value<AbstractTreeModelItem>();
+            std::shared_ptr<AbstractTreeModelItem> child_sptr = AbstractTreeModelItem::create(child.m_item_data, model_ptr, child.isRoot(), UUIncD::create());
+            // std::shared_ptr<AbstractTreeModelItem> child_sptr = std::make_shared<AbstractTreeModelItem>();
+            // *child_sptr = child;
+            appendChild(child_sptr);
+        }
+        else
+        {
+            // Error.
+            Q_ASSERT(0);
+        }
+    }
+#endif
 }
 
 QVariant AbstractTreeModelItem::data(int column, int role) const
