@@ -34,7 +34,7 @@
 #include <memory>
 #include <utility>
 
-// Qt5
+// Qt
 #include <QBrush>
 #include <QStringList>
 
@@ -45,6 +45,7 @@
 #include "AbstractTreeModel.h"
 #include <utils/ext_iterators.h>
 #include <logic/serialization/SerializationHelpers.h>
+#include "ItemFactory.h"
 
 
 AMLM_QREG_CALLBACK([](){
@@ -73,7 +74,7 @@ AbstractTreeModelItem::AbstractTreeModelItem(const std::vector<QVariant>& data, 
 	m_is_in_model = false;
 	m_is_root = false;
 
-    test12(1);
+    // test12(1);
 }
 
 AbstractTreeModelItem::~AbstractTreeModelItem()
@@ -417,6 +418,8 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 {
 	InsertionOrderedMap<QString, QVariant> map = variant.value<InsertionOrderedMap<QString, QVariant>>();
 
+	qDb() << "READING IN CLASS:" << map.get_attr("class");
+
 #define X(field_tag, tag_string, member_field) map_read_field_or_warn(map, field_tag, member_field);
 //	M_DATASTREAM_FIELDS(X);
 #undef X
@@ -442,7 +445,7 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 
     // Now read in our children.  We need this Item to be in a model for that to work.
     Q_ASSERT(isInModel());
-	QVariantHomogenousList child_list(XMLTAG_CHILD_ITEM_LIST, "child");
+    QVariantHomogenousList child_list(XMLTAG_CHILD_ITEM_LIST, "child_item");
 	child_list = map.at(XMLTAG_CHILD_ITEM_LIST).value<QVariantHomogenousList>();
 	qDb() << M_ID_VAL(child_list.size());
 
@@ -454,14 +457,48 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
     for(auto& child_item : child_list)
     {
         // What was the derived class type that was actually written?
-        std::string metatype_class_str = map.get_attr("class");
-        auto metatype = child_item.metaType();
-        if(metatype.isValid())
+    	std::string class_attr;
+        if (child_item.canConvert<InsertionOrderedMap<QString, QVariant>>())
+    	{
+            auto child_item_map = child_item.value<InsertionOrderedMap<QString, QVariant>>();
+    		class_attr = child_item_map.get_attr("class");
+            qDb() << "CLASS ATTR:" << class_attr;
+    	}
+    	else
+    	{
+    		// Tree is corrupted.
+    		Q_ASSERT(0);
+    	}
+		// qDb() << "READING IN CLASS:" << map.get_attr("class");
+		// std::string metatype_class_str = map.get_attr("class"); // This is wrong, that's *this's class entry, not the child items.
+
+    	auto derived_child_ptr = ItemFactory::instance().createItem(class_attr);
+
+    	if (derived_child_ptr)
+    	{
+    		derived_child_ptr->fromVariant(child_item);
+    		appendChild(std::move(derived_child_ptr));
+    	}
+#endif
+#if 0
+        auto derived_child_metatype = QMetaType::fromName(class_attr.c_str());
+        if(derived_child_metatype.isValid())
         {
-            qDb() << "class:" << metatype_class_str;
+            qDb() << "Derived QMetaType:" << derived_child_metatype;
+
+            if (!child_item.canConvert(derived_child_metatype))
+        	{
+        		Q_ASSERT(0);
+        	}
+
+        	bool convert_ok = child_item.convert(derived_child_metatype);
+        	Q_ASSERT(convert_ok);
+
+        	void* data = derived_child_metatype.create(variant.constData());
+        	std::shared_ptr<AbstractTreeModelItem> child_sptr(reinterpret_cast<AbstractTreeModelItem*>(data));
             // qDb() << "Class attr:" << M_ID_VAL(metatype) << M_ID_VAL(typename_per_var);
-            AbstractTreeModelItem child = child_item.value<AbstractTreeModelItem>();
-            std::shared_ptr<AbstractTreeModelItem> child_sptr = AbstractTreeModelItem::create(child.m_item_data, model_ptr, child.isRoot(), UUIncD::create());
+            // AbstractTreeModelItem child = child_item.value<AbstractTreeModelItem>();
+            // std::shared_ptr<AbstractTreeModelItem> child_sptr = AbstractTreeModelItem::create(child.m_item_data, model_ptr, child.isRoot(), UUIncD::create());
             // std::shared_ptr<AbstractTreeModelItem> child_sptr = std::make_shared<AbstractTreeModelItem>();
             // *child_sptr = child;
             appendChild(child_sptr);
@@ -471,8 +508,8 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
             // Error.
             Q_ASSERT(0);
         }
-    }
 #endif
+    }
 }
 
 QVariant AbstractTreeModelItem::data(int column, int role) const

@@ -60,6 +60,7 @@ protected:
 	 */
 	AbstractTreeModelHeaderItem(std::initializer_list<ColumnSpec> column_specs,
 	                                     const std::shared_ptr<AbstractTreeModel>& parent_model = nullptr, UUIncD id = UUIncD::null());
+public:
     AbstractTreeModelHeaderItem();
 
 public:
