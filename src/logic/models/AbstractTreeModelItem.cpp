@@ -477,6 +477,7 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
     	if (derived_child_ptr)
     	{
     		derived_child_ptr->fromVariant(child_item);
+    		derived_child_ptr->setModel(model_ptr);
     		appendChild(std::move(derived_child_ptr));
     	}
 #endif
