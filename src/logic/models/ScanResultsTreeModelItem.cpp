@@ -105,7 +105,7 @@ int ScanResultsTreeModelItem::columnCount() const
 using strviw_type = QLatin1String;
 
 ///// Strings to use for the tags.
-#define X(field_tag, tag_string, var_name) static const strviw_type field_tag ( # tag_string );
+#define X(field_tag, tag_string, var_name) static constexpr strviw_type field_tag ( # tag_string );
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
@@ -135,7 +135,7 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 	// map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, child_var_list);
 
     // Serialize the data members of the base class.
-	QVariant base_class = static_cast<const BASE_CLASS*>(this)->BASE_CLASS::toVariant();
+    QVariant base_class = this->BASE_CLASS::toVariant();
 
     map_insert_or_die(map, "baseclass", base_class);
 
@@ -149,14 +149,16 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 	// Overwrite any class info added by the above.
 //	dump_map_class_info(this, &map);
 
-	auto uuid = map.get_attr("xml:id", "");
-	set_prefixed_uuid(uuid);
+    // auto uuid = map.get_attr("xml:id", "");
+    // set_prefixed_uuid(uuid);
 
 // #define X(field_tag, tag_string, var_name) map_read_field_or_warn(map, field_tag, var_name);
 // 	M_DATASTREAM_FIELDS(X);
 // #undef X
-
-	map_read_field_or_warn(map, XMLTAG_DIRSCANRESULT, &m_dsr);
+    // auto dsrmap {InsertionOrderedMap<QString, QVariant>()};
+    map_read_field_or_warn(map, XMLTAG_DIRSCANRESULT, &m_dsr);
+    // m_dsr.fromVariant(dsrmap);
+    // map_read_field_or_warn(map, XMLTAG_DIRSCANRESULT, &m_dsr);
 
     // QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
     // child_var_list = map.at(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
@@ -166,7 +168,8 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
     // Once we get up to the AbstractTreeModelItem base class, this includes child items.
     auto iomap {InsertionOrderedMap<QString, QVariant>()};
     map_read_field_or_warn(map, "baseclass", &iomap);
-    static_cast<BASE_CLASS*>(this)->BASE_CLASS::fromVariant(iomap);
+    Q_ASSERT(m_model.lock());
+    this->BASE_CLASS::fromVariant(iomap);
 
 #if 1
     // append_children_from_variant(m_model, this, child_var_list);

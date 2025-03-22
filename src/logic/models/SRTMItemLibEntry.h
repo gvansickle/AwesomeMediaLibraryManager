@@ -34,7 +34,7 @@ class LibraryEntry;
 /**
  * A ScanResultsTreeModelItem with a LibraryEntry field.
  */
-class SRTMItem_LibEntry : public ScanResultsTreeModelItem, public enable_shared_from_this_virtual<SRTMItem_LibEntry>
+class SRTMItem_LibEntry : public ScanResultsTreeModelItem, public virtual ISerializable, public enable_shared_from_this_virtual<SRTMItem_LibEntry>
 {
 protected:
 	using BASE_CLASS = ScanResultsTreeModelItem;

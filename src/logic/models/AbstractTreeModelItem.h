@@ -185,7 +185,7 @@ public:
 	 * Append an already-created child item to this item.
 	 */
 	// GRVS+KDEN,AQP has this as addChild().
-	bool appendChild(const std::shared_ptr<AbstractTreeModelItem>& new_child);
+	bool appendChild(std::shared_ptr<AbstractTreeModelItem> new_child);
 	/**
 	 * Construct and Append a new child item to this item, initializing it from @a data.
 	 */
@@ -223,7 +223,7 @@ public:
 
     QVariant toVariant() const override;
     void fromVariant(const QVariant& variant) override;
-    void setModel(std::shared_ptr<AbstractTreeModel> model) { m_model = model; }
+    void setModel(std::shared_ptr<AbstractTreeModel> model) { m_model = model; m_is_in_model = true; }
 
 
 	/// KDEN

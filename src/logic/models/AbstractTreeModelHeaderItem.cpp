@@ -204,7 +204,7 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
     // This includes child items.
     auto iomap {InsertionOrderedMap<QString, QVariant>()};
     map_read_field_or_warn(map, "baseclass", &iomap);
-    static_cast<BASE_CLASS*>(this)->BASE_CLASS::fromVariant(iomap);
+    /*static_cast<BASE_CLASS*>(this)*/ this->BASE_CLASS::fromVariant(iomap);
 
 #if 0
 	/// @todo This is a QVariantList containing <item>/QVariantMap's, each of which

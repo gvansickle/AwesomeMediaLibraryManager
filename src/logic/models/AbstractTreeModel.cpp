@@ -50,7 +50,7 @@
 
 // static
 std::shared_ptr<AbstractTreeModel>
-AbstractTreeModel::make_AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent)
+AbstractTreeModel::create(std::initializer_list<ColumnSpec> column_specs, QObject* parent)
 {
     // auto retval_shptr = std::make_shared<AbstractTreeModel>(column_specs, parent);
 

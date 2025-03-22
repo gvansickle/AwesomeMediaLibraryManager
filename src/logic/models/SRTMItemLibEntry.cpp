@@ -150,7 +150,7 @@ QVariant SRTMItem_LibEntry::toVariant() const
 	map_insert_or_die(map, XMLTAG_LIBRARY_ENTRIES, list);
 
     // Serialize the data members of the base class.
-    QVariant base_class = static_cast<const BASE_CLASS*>(this)->BASE_CLASS::toVariant();
+    QVariant base_class = this->BASE_CLASS::toVariant();
 
     map_insert_or_die(map, "baseclass", base_class);
 
@@ -172,9 +172,9 @@ void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 		qWr() << "NO XML:ID:";
 	}
 
-#define X(field_tag, tag_string, var_name) map_read_field_or_warn(map, field_tag, var_name);
-	M_DATASTREAM_FIELDS(X);
-#undef X
+// #define X(field_tag, tag_string, var_name) map_read_field_or_warn(map, field_tag, var_name);
+// 	M_DATASTREAM_FIELDS(X);
+// #undef X
 
 	// Load LibraryEntry's.
 	QVariantHomogenousList list(XMLTAG_LIBRARY_ENTRIES, "m_library_entry");
@@ -194,6 +194,15 @@ void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 		m_library_entry = std::make_shared<LibraryEntry>();
 		m_library_entry->fromVariant(it);
 	}
+
+
+    // Deserialize the data members of the base class.
+    // Once we get up to the AbstractTreeModelItem base class, this includes child items.
+    auto iomap {InsertionOrderedMap<QString, QVariant>()};
+    map_read_field_or_warn(map, "baseclass", &iomap);
+    Q_ASSERT(m_model.lock());
+    this->BASE_CLASS::fromVariant(iomap);
+
 #endif
 
     // QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");

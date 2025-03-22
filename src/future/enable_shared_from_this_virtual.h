@@ -27,7 +27,7 @@
 // From KDenLive, which got it from SO here:
 // https://stackoverflow.com/questions/14939190/boost-shared-from-this-and-multiple-inheritance
 
-#define TYPE_2 1
+// #define TYPE_2 1
 
 // The following is a hack that allows to use shared_from_this in the case of a multiple inheritance.
 // Credit: https://stackoverflow.com/questions/14939190/boost-shared-from-this-and-multiple-inheritance

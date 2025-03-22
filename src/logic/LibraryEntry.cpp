@@ -80,7 +80,7 @@ std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::split_to_tracks()
 	if(m_total_track_number == 0 || m_total_track_number == 1)
 	{
 		// Either unknown or only one track, return this.
-		retval.push_back(this->shared_from_this());
+        retval.push_back(shared_from_this());
 	}
 	else
 	{

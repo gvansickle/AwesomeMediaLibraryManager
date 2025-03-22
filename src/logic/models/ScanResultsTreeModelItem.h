@@ -44,7 +44,7 @@ class ScanResultsTreeModel;
  * Tree model item containing the results of a single DirScanResult.
  * KDEN: ~similar to AbstractProjectItem
  */
-class ScanResultsTreeModelItem : public AbstractTreeModelItem, //public virtual ISerializable,
+class ScanResultsTreeModelItem : public AbstractTreeModelItem, public virtual ISerializable,
 	public enable_shared_from_this_virtual<ScanResultsTreeModelItem>
 
 {

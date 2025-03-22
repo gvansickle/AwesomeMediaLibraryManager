@@ -93,7 +93,7 @@ public:
 	/**
 	 * Named constructor.
 	 */
-	static std::shared_ptr<AbstractTreeModel> make_AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
+	static std::shared_ptr<AbstractTreeModel> create(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
 
 	/**
 	 * Destructor.  Clears all items in the model, including the root item.

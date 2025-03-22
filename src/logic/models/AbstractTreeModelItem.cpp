@@ -452,8 +452,8 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 	AMLM_ASSERT_EQ(num_children, child_list.size());
 
 #if 1
-	auto model_ptr = parent()->m_model.lock();
-	// auto model_ptr = m_model.lock();
+    // auto model_ptr = parent()->m_model.lock();
+    auto model_ptr = m_model.lock();
 	Q_ASSERT(model_ptr);
     for(auto& child_item : child_list)
     {
@@ -475,9 +475,11 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 
     	if (derived_child_ptr)
     	{
-    		derived_child_ptr->fromVariant(child_item);
     		derived_child_ptr->setModel(model_ptr);
-    		appendChild(std::move(derived_child_ptr));
+    		derived_child_ptr->fromVariant(child_item);
+            std::shared_ptr<AbstractTreeModelItem> cptr(std::move(derived_child_ptr));
+            qDb() << "APPENDING";
+            appendChild(cptr);
     	}
 #endif
 #if 0
@@ -659,7 +661,7 @@ Q_ASSERT(0);
 	return true;
 }
 
-bool AbstractTreeModelItem::appendChild(const std::shared_ptr<AbstractTreeModelItem>& new_child)
+bool AbstractTreeModelItem::appendChild(const std::shared_ptr<AbstractTreeModelItem> new_child)
 {
 #if 0//
 	this->insertChild(childCount(), new_child);
@@ -689,7 +691,7 @@ bool AbstractTreeModelItem::appendChild(const std::shared_ptr<AbstractTreeModelI
 	}
 	if (auto ptr = m_model.lock())
 	{
-		std::shared_ptr<AbstractTreeModelItem> sft = shared_from_this();
+        std::shared_ptr<AbstractTreeModelItem> sft = shared_from_this();
 		Q_ASSERT(sft);
 		ptr->notifyRowAboutToAppend(shared_from_this());
 		new_child->updateParent(shared_from_this());
@@ -838,7 +840,7 @@ void AbstractTreeModelItem::register_self(const std::shared_ptr<AbstractTreeMode
 	else
 	{
         qWr() << "COULDN'T LOCK MODEL:"; //<< M_ID_VAL((self->m_model));// << M_ID_VAL(self->m_model);
-        AMLM_ASSERT_X(false, "Error : construction of AbstractTreeModelItem failed");
+        AMLM_ASSERT_X(false,"Error : construction of AbstractTreeModelItem failed");
 	}
 }
 

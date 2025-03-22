@@ -514,7 +514,7 @@ sw.print_results();
 		/// Try to load it back in and round-trip it.
 		//				std::initializer_list<ColumnSpec> temp_initlist = {ColumnSpec(SectionID(0), "DirProps"), {SectionID(0), "MediaURL"}, {SectionID(0), "SidecarCueURL"}};
 		//				std::shared_ptr<ScanResultsTreeModel> load_tree = ScanResultsTreeModel::construct({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
-		std::shared_ptr<ScanResultsTreeModel> load_tree	= ScanResultsTreeModel::make_ScanResultsTreeModel({});//temp_initlist);
+		std::shared_ptr<ScanResultsTreeModel> load_tree	= ScanResultsTreeModel::create({});//temp_initlist);
 
 		load_tree->LoadDatabase(database_filename);
 		//				load_tree->clear();

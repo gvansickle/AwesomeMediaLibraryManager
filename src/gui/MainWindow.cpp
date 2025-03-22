@@ -1449,7 +1449,7 @@ void MainWindow::readLibSettings(QSettings& settings)
 
 	// Try to Load it asynchronously into a new model.
 	/// AMLM::Core::self()->getDefaultColumnSpecs()
-	auto temp_load_srtm_instance = ScanResultsTreeModel::make_ScanResultsTreeModel({});
+	auto temp_load_srtm_instance = ScanResultsTreeModel::create({});
 	bool success = temp_load_srtm_instance->LoadDatabase(database_filename);
 	if(success)
 	{

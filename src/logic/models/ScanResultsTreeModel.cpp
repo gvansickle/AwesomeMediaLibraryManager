@@ -79,7 +79,7 @@ void ScanResultsTreeModel::sendModification()
 
 // static
 std::shared_ptr<ScanResultsTreeModel>
-ScanResultsTreeModel::make_ScanResultsTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent)
+ScanResultsTreeModel::create(std::initializer_list<ColumnSpec> column_specs, QObject* parent)
 {
     auto retval_shptr = std::shared_ptr<ScanResultsTreeModel>(new ScanResultsTreeModel(column_specs, parent));
 
@@ -312,8 +312,6 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 
     InsertionOrderedMap<QString, QVariant> map = variant.value<InsertionOrderedMap<QString, QVariant>>();
 
-
-
 #define X(field_tag, var_name) map_read_field_or_warn(map, field_tag, &var_name);
 	M_DATASTREAM_FIELDS(X);
 #undef X
@@ -354,7 +352,7 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 
     Q_ASSERT(m_root_item->isRoot() && m_root_item->isInModel());
 
-	dump_map(map);
+	// dump_map(map);
 }
 
 QDataStream &operator<<(QDataStream &out, const ScanResultsTreeModel &myObj)
