@@ -162,6 +162,12 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
     // child_var_list = map.at(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
     // Q_ASSERT(child_var_list.size() > 0);
 
+    // Deserialize the data members of the base class.
+    // Once we get up to the AbstractTreeModelItem base class, this includes child items.
+    auto iomap {InsertionOrderedMap<QString, QVariant>()};
+    map_read_field_or_warn(map, "baseclass", &iomap);
+    static_cast<BASE_CLASS*>(this)->BASE_CLASS::fromVariant(iomap);
+
 #if 1
     // append_children_from_variant(m_model, this, child_var_list);
 

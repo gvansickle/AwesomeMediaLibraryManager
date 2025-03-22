@@ -52,6 +52,8 @@ AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering std::shared_ptr<AbstractTreeModelItem>";
 	qRegisterMetaType<AbstractTreeModelItem>();
 	qRegisterMetaType<std::shared_ptr<AbstractTreeModelItem>>();
+    qRegisterMetaType<std::unique_ptr<AbstractTreeModelItem>>();
+    qRegisterMetaType<std::weak_ptr<AbstractTreeModelItem>>();
 });
 
 
@@ -84,7 +86,6 @@ AbstractTreeModelItem::~AbstractTreeModelItem()
 
 void AbstractTreeModelItem::clear()
 {
-    Q_ASSERT(0);
 	// Reset this item to completely empty, except for its place in the model.
 //	m_child_items.clear();
 //	m_item_data.clear();
@@ -356,7 +357,7 @@ bool AbstractTreeModelItem::changeParent(std::shared_ptr<AbstractTreeModelItem> 
 
 #define M_DATASTREAM_FIELDS(X) \
 	/* TAG_IDENTIFIER, tag_string, member_field, var_name */ \
-	X(XMLTAG_CHILD_ITEM_LIST, child_item_list, nullptr)
+    X(XMLTAG_CHILD_ITEM_LIST, child_item_list, nullptr)
 
 #define M_DATASTREAM_FIELDS_CONTSIZES(X) \
 	X(XMLTAG_NUM_COLUMNS, num_columns, m_item_data) \
@@ -379,9 +380,9 @@ QVariant AbstractTreeModelItem::toVariant() const
 	// Write class info to the map.
 	set_map_class_info(this, &map);
 
-#define X(field_tag, tag_string, var_name) map_insert_or_die(map, field_tag, var_name);
-	M_DATASTREAM_FIELDS(X);
-#undef X
+// #define X(field_tag, tag_string, var_name) map_insert_or_die(map, field_tag, var_name);
+// 	M_DATASTREAM_FIELDS(X);
+// #undef X
 #define X(field_tag, tag_string, var_name) map_insert_or_die(map, field_tag, (qulonglong)(var_name).size());
 	M_DATASTREAM_FIELDS_CONTSIZES(X);
 #undef X
@@ -411,7 +412,6 @@ QVariant AbstractTreeModelItem::toVariant() const
 
 	return map;
 }
-
 
 
 void AbstractTreeModelItem::fromVariant(const QVariant& variant)
@@ -452,7 +452,8 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 	AMLM_ASSERT_EQ(num_children, child_list.size());
 
 #if 1
-	auto model_ptr = m_model.lock();
+	auto model_ptr = parent()->m_model.lock();
+	// auto model_ptr = m_model.lock();
 	Q_ASSERT(model_ptr);
     for(auto& child_item : child_list)
     {
@@ -469,8 +470,6 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
     		// Tree is corrupted.
     		Q_ASSERT(0);
     	}
-		// qDb() << "READING IN CLASS:" << map.get_attr("class");
-		// std::string metatype_class_str = map.get_attr("class"); // This is wrong, that's *this's class entry, not the child items.
 
     	auto derived_child_ptr = ItemFactory::instance().createItem(class_attr);
 
@@ -695,7 +694,7 @@ bool AbstractTreeModelItem::appendChild(const std::shared_ptr<AbstractTreeModelI
 		ptr->notifyRowAboutToAppend(shared_from_this());
 		new_child->updateParent(shared_from_this());
 		UUIncD id = new_child->getId();
-		auto it = m_child_items.insert(m_child_items.end(), new_child);
+        m_child_items.push_back(new_child);
 		register_self(new_child);
 		ptr->notifyRowAppended(new_child);
 
@@ -707,7 +706,7 @@ bool AbstractTreeModelItem::appendChild(const std::shared_ptr<AbstractTreeModelI
     qCr() << "ERROR: Something went wrong when appending child.";
 	Q_ASSERT(false);
 	return false;
-#endif///
+#endif
 }
 
 /// Append a child item created from @a data.
