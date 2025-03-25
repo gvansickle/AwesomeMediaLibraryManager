@@ -33,19 +33,19 @@ struct ItemCreatorRegistration
 	{
 		ItemFactory::instance().registerItemCreator("AbstractTreeModelItem", []()
 		{
-			return std::make_unique<AbstractTreeModelItem>();
+            return AbstractTreeModelItem::create();
 		});
 		ItemFactory::instance().registerItemCreator("AbstractTreeModelHeaderItem", []()
 		{
-			return std::make_unique<AbstractTreeModelHeaderItem>();
+            return AbstractTreeModelHeaderItem::create();
 		});
 		ItemFactory::instance().registerItemCreator("ScanResultsTreeModelItem", []()
 		{
-			return std::make_unique<ScanResultsTreeModelItem>();
+            return ScanResultsTreeModelItem::create();
 		});
 		ItemFactory::instance().registerItemCreator("SRTMItem_LibEntry", []()
 		{
-			return std::make_unique<SRTMItem_LibEntry>();
+            return SRTMItem_LibEntry::create();
 		});
 	}
 };
@@ -63,7 +63,7 @@ void ItemFactory::registerItemCreator(const std::string classname, Creator creat
 	m_creators[classname] = creator;
 }
 
-std::unique_ptr<AbstractTreeModelItem> ItemFactory::createItem(std::string classname) const
+std::shared_ptr<AbstractTreeModelItem> ItemFactory::createItem(std::string classname) const
 {
 	if (m_creators.contains(classname))
 	{

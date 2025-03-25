@@ -44,23 +44,17 @@
 //	return self;
 //}
 
-SRTMItem_LibEntry::SRTMItem_LibEntry(const std::shared_ptr<AbstractTreeModel>& model, UUIncD id)
-	: BASE_CLASS(model, id)
+SRTMItem_LibEntry::SRTMItem_LibEntry(const std::shared_ptr<AbstractTreeModel>& model)
+    : BASE_CLASS(model)
 {
 
 }
 
-SRTMItem_LibEntry::SRTMItem_LibEntry(std::shared_ptr<LibraryEntry> libentry, const std::shared_ptr<AbstractTreeModel>& model, UUIncD id)
-	: BASE_CLASS(model, id), m_library_entry(libentry)
+SRTMItem_LibEntry::SRTMItem_LibEntry(std::shared_ptr<LibraryEntry> libentry, const std::shared_ptr<AbstractTreeModel>& model)
+    : BASE_CLASS(model), m_library_entry(libentry)
 {
 
 }
-
-//SRTMItem_LibEntry::SRTMItem_LibEntry(const QVariant& variant, const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id)
-//	: BASE_CLASS(parent, id)
-//{
-//
-//}
 
 QVariant SRTMItem_LibEntry::data(int column, int role) const
 {

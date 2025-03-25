@@ -35,13 +35,13 @@
 class ItemFactory
 {
 public:
-  	using Creator = std::function<std::unique_ptr<AbstractTreeModelItem>()>;
+  	using Creator = std::function<std::shared_ptr<AbstractTreeModelItem>()>;
 
 	static ItemFactory& instance();
 
 	void registerItemCreator(const std::string classname, Creator creator);
 
-	std::unique_ptr<AbstractTreeModelItem> createItem(std::string classname) const;
+	std::shared_ptr<AbstractTreeModelItem> createItem(std::string classname) const;
 
 private:
 	QMap<std::string, Creator> m_creators;

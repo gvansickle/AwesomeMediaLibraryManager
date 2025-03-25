@@ -65,26 +65,22 @@ protected:
 	friend class AbstractTreeModel;
 
 public:
-	static std::shared_ptr<AbstractTreeModelItem> create(const std::vector<QVariant>& data, const std::shared_ptr<AbstractTreeModel>& model,
-		bool is_root, UUIncD id = UUIncD::null());
+    static std::shared_ptr<AbstractTreeModelItem> create(const std::vector<QVariant>& data = {},
+                                                        const std::shared_ptr<AbstractTreeModel>& model = nullptr,
+                                                        bool is_root = false);
 
-// protected:
+protected:
 	explicit AbstractTreeModelItem(const std::vector<QVariant>& data,
-			const std::shared_ptr<AbstractTreeModel>& model = nullptr, UUIncD id = UUIncD::null());
+			const std::shared_ptr<AbstractTreeModel>& model = nullptr);
 
 public:
-// protected:
-    /// Only needed for serialization.
+protected:
     explicit AbstractTreeModelItem() = default;
 
 public:
 	~AbstractTreeModelItem() override;
 
-	/**
-	 * Because we have a mutex member.
-	 */
-//	AbstractTreeModelItem(const AbstractTreeModelItem& other);
-
+public:
 	virtual void clear();
 
 	/**
@@ -141,8 +137,8 @@ public:
 	std::shared_ptr<AbstractTreeModelItem> parent() const;
 
 
-	// KDEN, seems unused.
-	int depth() const;
+	// KDEN, used in checkConsistency().
+	int depth() const { return m_depth; }
 
 	/**
 	 * Return the UUIncD of this item.
@@ -185,7 +181,7 @@ public:
 	 * Append an already-created child item to this item.
 	 */
 	// GRVS+KDEN,AQP has this as addChild().
-	bool appendChild(std::shared_ptr<AbstractTreeModelItem> new_child);
+    bool appendChild(const std::shared_ptr<AbstractTreeModelItem>& new_child);
 	/**
 	 * Construct and Append a new child item to this item, initializing it from @a data.
 	 */
@@ -258,18 +254,13 @@ public:
 
 protected:
 
-	static void baseFinishCreate(const std::shared_ptr<AbstractTreeModelItem>& new_item);
+    static void baseFinishCreate(const std::shared_ptr<AbstractTreeModelItem>& new_item);
 
 	/**
 	 * Helper functions to handle registration / deregistration to the model.
 	 */
 	static void register_self(const std::shared_ptr<AbstractTreeModelItem>& self);
 	void deregister_self();
-
-    /// @name Serialzation
-    /// These are helper functions for serializing just the child nodes in m_child_items.
-    QVariant ChildNodesToVariant() const;
-    void ChildNodesfromVariant(const QVariant& variant);
 
 
 	/**
@@ -345,7 +336,8 @@ private:
 	/// be non-null as long as this item is not the invisible root item.
 	std::weak_ptr<AbstractTreeModelItem> m_parent_item;
 
-//	int m_depth {-1};
+	/// This is used by checkConsistency().
+	int m_depth {-1};
 };
 
 // Debug stream op free func declaration.
@@ -354,7 +346,7 @@ QTH_DECLARE_QDEBUG_OP(AbstractTreeModelItem);
 Q_DECLARE_METATYPE(AbstractTreeModelItem);
 Q_DECLARE_METATYPE(std::vector<QVariant>);
 Q_DECLARE_METATYPE(std::weak_ptr<AbstractTreeModelItem>);
-Q_DECLARE_METATYPE(std::shared_ptr<AbstractTreeModelItem>);
+// Q_DECLARE_METATYPE(std::shared_ptr<AbstractTreeModelItem>);
 
 
 

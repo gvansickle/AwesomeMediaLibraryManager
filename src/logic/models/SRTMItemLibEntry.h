@@ -40,12 +40,22 @@ protected:
 	using BASE_CLASS = ScanResultsTreeModelItem;
 
 public:
-//protected:
-	explicit SRTMItem_LibEntry(const std::shared_ptr<AbstractTreeModel>& model = nullptr, UUIncD id = UUIncD::null());
-    explicit SRTMItem_LibEntry(std::shared_ptr<LibraryEntry> libentry, const std::shared_ptr<AbstractTreeModel>& model, UUIncD id = UUIncD::null());
-//	explicit SRTMItem_LibEntry(const QVariant& variant, const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr, UUIncD id = UUIncD::null());
+
+
+protected:
+    explicit SRTMItem_LibEntry(const std::shared_ptr<AbstractTreeModel>& model = nullptr);
+    explicit SRTMItem_LibEntry(std::shared_ptr<LibraryEntry> libentry, const std::shared_ptr<AbstractTreeModel>& model);
+
 
 public:
+    static std::unique_ptr<SRTMItem_LibEntry> create(const std::shared_ptr<AbstractTreeModel>& model = nullptr)
+    {
+        return std::unique_ptr<SRTMItem_LibEntry>(new SRTMItem_LibEntry(model));
+    }
+    static std::unique_ptr<SRTMItem_LibEntry> create(std::shared_ptr<LibraryEntry> libentry, const std::shared_ptr<AbstractTreeModel>& model)
+    {
+        return std::unique_ptr<SRTMItem_LibEntry>(new SRTMItem_LibEntry(libentry, model));
+    }
 //	static std::shared_ptr<SRTMItem_LibEntry> construct(std::shared_ptr<LibraryEntry> libentry,
 //	                                                    const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr, UUIncD id = UUIncD::null());
 //	static std::shared_ptr<SRTMItem_LibEntry> construct(const QVariant& variant,

@@ -268,11 +268,15 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	qurl_promise->start();
 	tree_model_item_promise->start();
 
-	// Attach a streaming tap to the dirscan future.
-    // ExtFuture<Unit> tail_future;// = QtFuture::makeReadyValueFuture(unit);
+	std::shared_ptr<ScanResultsTreeModel> tree_model_sptr = AMLM::Core::self()->getScanResultsTreeModel();
+	/// @todo Explicitly disconnect after worker thread is done?
+	std::shared_ptr<AbstractTreeModelItem> root = tree_model_sptr->getRootItem();
 
-	// auto tap_future = dirresults_future;
-    streaming_then(dirresults_future, [this, qurl_promise, tree_model_item_promise](QFuture<DirScanResult> tap_future, int begin, int end) -> Unit {
+	connect_or_die(this, &LibraryRescanner::SIGNAL_appendChildToRoot,
+                     tree_model_sptr.get(), &AbstractTreeModel::SLOT_appendChildToRoot);
+	connect_or_die(this, &LibraryRescanner::SIGNAL_appendChild, tree_model_sptr.get(),&AbstractTreeModel::SLOT_appendChild);
+
+	streaming_then(dirresults_future, [this, tree_model_sptr, qurl_promise, tree_model_item_promise](QFuture<DirScanResult> tap_future, int begin, int end) -> Unit {
 		// Start of the dirtrav streaming_then callback.  This should be a non-main thread.
 		// This will be called multiple times by streaming_then() as DirScanResult's become available.
 
@@ -281,7 +285,6 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 
 qDb() << "IN STREAMING THEN CALLBACK";
 
-		std::shared_ptr<ScanResultsTreeModel> tree_model_sptr = AMLM::Core::self()->getScanResultsTreeModel();
 		Q_ASSERT(tree_model_sptr);
 
 		if(begin == 0)
@@ -300,8 +303,8 @@ qDb() << "IN STREAMING THEN CALLBACK";
 
 			// Add another entry to the vector we'll send to the model.
 			Q_ASSERT(tree_model_sptr);
-			auto new_item = std::make_shared<ScanResultsTreeModelItem>(dsr);
-			new_items->emplace_back(new_item);
+            std::shared_ptr<ScanResultsTreeModelItem> new_item = ScanResultsTreeModelItem::create(dsr);
+            new_items->push_back(new_item);
 
 			if(i >= end)
 			{
@@ -400,7 +403,7 @@ qDb() << "POST WAIT" << M_NAME_VAL(future);
 	Q_ASSERT(tree_model);
 /// streaming_then() ############################################
     streaming_then(tree_model_item_future,
-                              [](ExtFuture<SharedItemContType> new_items_future, int begin, int end){
+                              [this](ExtFuture<SharedItemContType> new_items_future, int begin, int end){
 		// AMLM_ASSERT_IN_GUITHREAD();
 		AMLM_ASSERT_NOT_IN_GUITHREAD();
 
@@ -409,8 +412,10 @@ Stopwatch sw("Populate LibraryEntry");
         // std::shared_ptr<ScanResultsTreeModel> tree_model_sptr = AMLM::Core::self()->getScanResultsTreeModel();
         std::shared_ptr<AbstractTreeModel> tree_model_sptr = AMLM::Core::self()->getScanResultsTreeModel();
 		Q_ASSERT(tree_model_sptr);
+        qDb() << "Checking tree consistency before";
         bool ok = tree_model_sptr->checkConsistency();
         Q_ASSERT(ok);
+        qDb() << "ok";
 
 		qDb() << "START: tree_model_item_future.stap(), new_items_future count:" << new_items_future.resultCount();
 
@@ -438,14 +443,16 @@ sw.start("LibEntry");
 				std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(entry_dp->data(1).toString());
 				lib_entry->populate(true);
 sw.lap("Populate Complete");
-                std::shared_ptr<SRTMItem_LibEntry> new_child = std::make_shared<SRTMItem_LibEntry>(lib_entry, tree_model_sptr);
+                std::shared_ptr<SRTMItem_LibEntry> new_child = SRTMItem_LibEntry::create(lib_entry, tree_model_sptr);
 				Q_ASSERT(new_child);
 sw.lap("SRTMItem_LibEntry created");
 				/// NEW: Give the incoming ScanResultTreeModelItem entry a parent.
 M_WARNING("TODO: This needs rework.");
 //				entry_dp->changeParent(tree_model_sptr->getRootItem());
-				tree_model_sptr->getRootItem()->appendChild(entry_dp);
-				entry_dp->appendChild(new_child);
+				// tree_model_sptr->getRootItem()->appendChild(entry_dp);
+				// entry_dp->appendChild(new_child);
+				Q_EMIT SIGNAL_appendChildToRoot(entry_dp);
+				Q_EMIT SIGNAL_appendChild(new_child, entry_dp->getId());
 //				tree_model_sptr->getRootItem()->appendChild(entry_dp);
 			}
 
@@ -459,10 +466,11 @@ M_WARNING("TODO: This needs rework.");
 //				std::shared_ptr<AbstractTreeModelItem> new_child = the_etm->insertChild();
 //			}
 			/// @temp
+			qDb() << "Checking tree consistency after";
 			bool ok = tree_model_sptr->checkConsistency();
-			// qDb() << "########################### TREE MODEL CHECK checkConsistency:" << ok;
 			Q_ASSERT(ok);
-sw.lap("TreeModel checkConsistency");
+			qDb() << "ok";
+			sw.lap("TreeModel checkConsistency");
 sw.stop();
 sw.print_results();
 		}

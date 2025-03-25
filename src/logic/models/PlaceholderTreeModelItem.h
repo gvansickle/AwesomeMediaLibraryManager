@@ -43,7 +43,7 @@ public:
 	/// Sets the model and UUIncD.
 //	PlaceholderTreeModelItem(std::vector<QVariant> data, const std::shared_ptr<AbstractTreeModel>& model,
 //	                         bool is_root = false, UUIncD id = UUIncD::null());
-	explicit PlaceholderTreeModelItem(const std::vector<QVariant>& data, const std::shared_ptr<AbstractTreeModel>& model = nullptr, UUIncD id = UUIncD::null());
+	explicit PlaceholderTreeModelItem(const std::vector<QVariant>& data, const std::shared_ptr<AbstractTreeModel>& model = nullptr);
 
 public:
 	~PlaceholderTreeModelItem() override = default;

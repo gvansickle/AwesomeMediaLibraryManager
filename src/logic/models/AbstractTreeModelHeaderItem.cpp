@@ -47,25 +47,26 @@
 // static
 std::shared_ptr<AbstractTreeModelHeaderItem>
 AbstractTreeModelHeaderItem::create(std::initializer_list<ColumnSpec> column_specs,
-									   const std::shared_ptr<AbstractTreeModel>& parent_model, UUIncD id)
+									   const std::shared_ptr<AbstractTreeModel>& parent_model)
 {
-    std::shared_ptr<AbstractTreeModelHeaderItem> new_item(new AbstractTreeModelHeaderItem(column_specs, parent_model, UUIncD::create()));
+    std::shared_ptr<AbstractTreeModelHeaderItem> new_item(new AbstractTreeModelHeaderItem(column_specs, parent_model));
 
     new_item->setColumnSpecs(column_specs);
     new_item->m_is_root = true;
     baseFinishCreate(new_item);
+
     return new_item;
 }
 
-AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem() : BASE_CLASS({}, nullptr, UUIncD::create())
+AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem() : BASE_CLASS({}, nullptr)
 {
     // Abs*HeaderItem can only be root.
     m_is_root = true;
 }
 
 AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(std::initializer_list<ColumnSpec> column_specs,
-                                                         const std::shared_ptr<AbstractTreeModel>& parent_model, UUIncD id)
-    : BASE_CLASS({}, parent_model, id)
+                                                         const std::shared_ptr<AbstractTreeModel>& parent_model)
+    : BASE_CLASS({}, parent_model)
 {
 	m_is_root = true;
 	m_model = parent_model;
@@ -204,7 +205,7 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
     // This includes child items.
     auto iomap {InsertionOrderedMap<QString, QVariant>()};
     map_read_field_or_warn(map, "baseclass", &iomap);
-    /*static_cast<BASE_CLASS*>(this)*/ this->BASE_CLASS::fromVariant(iomap);
+    this->BASE_CLASS::fromVariant(iomap);
 
 #if 0
 	/// @todo This is a QVariantList containing <item>/QVariantMap's, each of which

@@ -57,7 +57,7 @@ ThreadsafeTreeModel::ThreadsafeTreeModel(std::initializer_list<ColumnSpec> colum
 
 ThreadsafeTreeModel::~ThreadsafeTreeModel()
 {
-	// Same as KdenLive's ProjectModelItem, it's destructor is defaulted.
+	// Same as KdenLive's ProjectModelItem, its destructor is defaulted.
 }
 
 #if 0

@@ -100,6 +100,16 @@ public:
 	 */
 	~AbstractTreeModel() override;
 
+public Q_SLOTS:
+	/**
+	 * Append a child item to the root item.  FBO non-GUI threads.
+	 * @param child  The child to append to the root item.
+	 */
+	void SLOT_appendChildToRoot(std::shared_ptr<AbstractTreeModelItem> child);
+
+	void SLOT_appendChild(std::shared_ptr<AbstractTreeModelItem> child, UUIncD parent_id);
+
+public:
 	/// GRVS/KDEN's is ProjItemModel::clean().
 	/**
 	 * Clears all data from the model.
@@ -233,7 +243,7 @@ public:
 	/// @{
 
 	/* @brief Helper function to generate a lambda that adds an item to the tree */
-	Fun addItem_lambda(const std::shared_ptr<AbstractTreeModelItem> &new_item, UUIncD parentId);
+	Fun addItem_lambda(const std::shared_ptr<AbstractTreeModelItem>& new_item, UUIncD parentId);
 
 	/* @brief Helper function to generate a lambda that removes an item from the tree */
 	Fun removeItem_lambda(UUIncD id);

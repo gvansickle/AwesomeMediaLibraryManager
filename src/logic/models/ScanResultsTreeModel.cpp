@@ -83,7 +83,7 @@ ScanResultsTreeModel::create(std::initializer_list<ColumnSpec> column_specs, QOb
 {
     auto retval_shptr = std::shared_ptr<ScanResultsTreeModel>(new ScanResultsTreeModel(column_specs, parent));
 
-    retval_shptr->m_root_item = AbstractTreeModelHeaderItem::create(column_specs, retval_shptr, UUIncD::create());
+    retval_shptr->m_root_item = AbstractTreeModelHeaderItem::create(column_specs, retval_shptr);
 
 	return retval_shptr;
 }

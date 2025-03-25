@@ -1,5 +1,5 @@
 /*
- * Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2019, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -33,8 +33,8 @@
 
 // Std C++
 #include <functional>
-//#include <unordered_set>
-//#include <queue>
+#include <unordered_set>
+#include <queue>
 
 // Qt
 #include <QModelIndex>
@@ -56,13 +56,12 @@ AbstractTreeModel::create(std::initializer_list<ColumnSpec> column_specs, QObjec
 
     auto retval_shptr = std::shared_ptr<AbstractTreeModel>(new AbstractTreeModel(column_specs, parent));
 
-    retval_shptr->m_root_item = AbstractTreeModelHeaderItem::create(column_specs, retval_shptr, UUIncD::create());
+    retval_shptr->m_root_item = AbstractTreeModelHeaderItem::create(column_specs, retval_shptr);
 
     retval_shptr->checkConsistency();
 
 	return retval_shptr;
 }
-
 
 AbstractTreeModel::AbstractTreeModel(QObject* parent) : QAbstractItemModel(parent)
 {
@@ -100,6 +99,18 @@ AbstractTreeModel::~AbstractTreeModel()
 	// KDEN does exactly this in its ~AbstractTreeModel().
 	m_model_item_map.clear();
 	m_root_item.reset();
+}
+
+void AbstractTreeModel::SLOT_appendChildToRoot(std::shared_ptr<AbstractTreeModelItem> child)
+{
+	AMLM_ASSERT_IN_GUITHREAD();
+	getRootItem()->appendChild(child);
+}
+
+void AbstractTreeModel::SLOT_appendChild(std::shared_ptr<AbstractTreeModelItem> child, UUIncD parent_id)
+{
+	AMLM_ASSERT_IN_GUITHREAD();
+	getItemById(parent_id)->appendChild(child);
 }
 
 //void AbstractTreeModel::postConstructorFinalization(std::initializer_list<ColumnSpec> column_specs)
@@ -508,7 +519,7 @@ void AbstractTreeModel::dump_model_info() const
 	qDb() << "Total items in m_model_item_map:" << m_model_item_map.size();
 }
 
-#if 0
+#if 0 /// ORM
 void AbstractTreeModel::toOrm(std::string filename) const
 {
 //	using namespace sqlite_orm;
@@ -545,19 +556,21 @@ AbstractTreeModel::iterator AbstractTreeModel::end()
 
 void AbstractTreeModel::register_item(const std::shared_ptr<AbstractTreeModelItem>& item)
 {
-	std::unique_lock write_lock(m_rw_mutex);
+	// std::unique_lock write_lock(m_rw_mutex);
+
+	qDb() << "Registering:" << M_ID_VAL(item->getId()) << M_ID_VAL(m_model_item_map.size());
 
 	UUIncD id = item->getId();
 	Q_ASSERT(id.isValid());
 	AMLM_ASSERT_X(m_model_item_map.count(id) == 0, "Item was already in model.");
 	m_model_item_map[id] = item;
 
-    qDb() << "Registering:" << M_ID_VAL(id) << M_ID_VAL(m_model_item_map.size());
+	qDb() << "Registered";
 }
 
 void AbstractTreeModel::deregister_item(UUIncD id, AbstractTreeModelItem* item)
 {
-	std::unique_lock write_lock(m_rw_mutex);
+	// std::unique_lock write_lock(m_rw_mutex);
 
 	Q_UNUSED(item);
 //	AMLM_ASSERT_GT(m_model_item_map.count(id), 0);
@@ -566,6 +579,7 @@ void AbstractTreeModel::deregister_item(UUIncD id, AbstractTreeModelItem* item)
 	{
 		// Nothing to erase, we weren't in the model for some reason.
 		qWr() << "Attempt to deregister unregistered item:" << M_ID_VAL(id) << M_ID_VAL(item);
+		Q_ASSERT(0);
 	}
 	else
 	{
@@ -655,9 +669,10 @@ bool AbstractTreeModel::checkConsistency()
 	{
 		qDebug() << !m_root_item->m_is_root << !m_root_item->isInModel() << (m_model_item_map.count(m_root_item->getId()) == 0);
 		qDebug() << "ERROR: Model is not valid because root is not properly constructed";
+        Q_ASSERT(0);
 		return false;
 	}
-#elif 0
+
 	// Then we traverse the tree from the root, checking the infos on the way
 	std::unordered_set<UUIncD> seenIDs;
 	std::queue<std::pair<UUIncD, std::pair<int, UUIncD>>> queue; // store (id, (depth, parentId))
@@ -724,9 +739,11 @@ bool AbstractTreeModel::checkConsistency()
 			i++;
 		}
 	}
-#endif///
 
 	return true;
+#elif 0
+#endif///
+
 }
 
 QVariant AbstractTreeModel::headerData(int section, Qt::Orientation orientation, int role) const

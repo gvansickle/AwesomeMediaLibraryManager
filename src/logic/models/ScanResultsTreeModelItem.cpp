@@ -39,18 +39,18 @@
 #include <serialization/SerializationHelpers.h>
 
 
-ScanResultsTreeModelItem::ScanResultsTreeModelItem(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModel>& model, UUIncD id)
-	: BASE_CLASS({}, model, id), m_dsr(dsr)
+ScanResultsTreeModelItem::ScanResultsTreeModelItem(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModel>& model)
+	: BASE_CLASS({}, model), m_dsr(dsr)
 {
 }
 
-ScanResultsTreeModelItem::ScanResultsTreeModelItem(const std::shared_ptr<AbstractTreeModel>& model, UUIncD id)
-	: BASE_CLASS({}, model, id)
+ScanResultsTreeModelItem::ScanResultsTreeModelItem(const std::shared_ptr<AbstractTreeModel>& model)
+	: BASE_CLASS({}, model)
 {
 }
 
-ScanResultsTreeModelItem::ScanResultsTreeModelItem(const QVariant& variant, const std::shared_ptr<AbstractTreeModel>& model, UUIncD id)
-	: BASE_CLASS({}, model, id)
+ScanResultsTreeModelItem::ScanResultsTreeModelItem(const QVariant& variant, const std::shared_ptr<AbstractTreeModel>& model)
+	: BASE_CLASS({}, model)
 {
 	Q_UNIMPLEMENTED();
 //	M_WARNING("TODO: DECODE VARIANT");
@@ -58,6 +58,7 @@ ScanResultsTreeModelItem::ScanResultsTreeModelItem(const QVariant& variant, cons
 
 ScanResultsTreeModelItem::~ScanResultsTreeModelItem()
 {
+    qDb() << "DELETING";
 }
 
 QVariant ScanResultsTreeModelItem::data(int column, int role) const

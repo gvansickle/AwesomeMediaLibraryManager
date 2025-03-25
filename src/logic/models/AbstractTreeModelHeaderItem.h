@@ -58,17 +58,17 @@ protected:
 	 * @param parent_model
 	 * @param id
 	 */
-	AbstractTreeModelHeaderItem(std::initializer_list<ColumnSpec> column_specs,
-	                                     const std::shared_ptr<AbstractTreeModel>& parent_model = nullptr, UUIncD id = UUIncD::null());
-public:
+    AbstractTreeModelHeaderItem(std::initializer_list<ColumnSpec> column_specs = {},
+	                                     const std::shared_ptr<AbstractTreeModel>& parent_model = nullptr);
+protected:
     AbstractTreeModelHeaderItem();
 
 public:
     /**
      * Named constructor.
      */
-    static std::shared_ptr<AbstractTreeModelHeaderItem> create(std::initializer_list<ColumnSpec> column_specs,
-                                                                  const std::shared_ptr<AbstractTreeModel>& parent_model = nullptr, UUIncD id = UUIncD::null());
+    static std::shared_ptr<AbstractTreeModelHeaderItem> create(std::initializer_list<ColumnSpec> column_specs = {},
+                                                                  const std::shared_ptr<AbstractTreeModel>& parent_model = nullptr);
 	~AbstractTreeModelHeaderItem() override;
 
 	void clear() override;

@@ -42,7 +42,7 @@
 #include "ColumnSpec.h"
 
 /**
- * Don't know how threadsafe this really is, all indications are that QT5's model/view cannot be made threadsafe.
+ * Don't know how threadsafe this really is, all indications are that QT's model/view cannot be made threadsafe.
  * Borrowing requestXxx() concept from KDenLive's ProjectItemModel.
  * This class lives at about the same inheritance level as KDenLive's ProjectItemModel (->AbstractTreeModel->0),
  * but some work is also split into ScanResultsTreeModel.
