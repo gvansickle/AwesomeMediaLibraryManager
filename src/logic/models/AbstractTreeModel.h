@@ -1,5 +1,5 @@
 /*
- * Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2019, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -115,7 +115,7 @@ public:
 	 * Clears all data from the model.
 	 * May need to be overridded in derived classes.
 	 */
-	virtual void clear();
+    virtual void clear(bool quit = false);
 
 	/// OLD
 	/**
@@ -231,12 +231,12 @@ public:
 	/// ETM-inspired append function.  Based on setupModelData().
 	std::shared_ptr<AbstractTreeModelItem> append_child(const QVector<QVariant> &data, std::shared_ptr<AbstractTreeModelItem> parent);
 
-	QModelIndex getIndexFromItem(const std::shared_ptr<AbstractTreeModelItem>& item) const;
+	QModelIndex getIndexFromItem(const std::shared_ptr<AbstractTreeModelItem>& item, int column = 0) const;
 	QModelIndex getIndexFromId(UUIncD id) const;
 	std::shared_ptr<AbstractTreeModelItem> getItemById(const UUIncD &id) const;
 	std::shared_ptr<AbstractTreeModelItem> getRootItem() const;
 	// ETM/GRVS/AQP(itemForIndex)
-	std::shared_ptr<AbstractTreeModelItem> getItem(const QModelIndex &index) const;
+	virtual std::shared_ptr<AbstractTreeModelItem> getItem(const QModelIndex &index) const;
 
 
 	/// @name Public interface: Lambda generators for tree structure modification.
@@ -389,12 +389,7 @@ protected:
     /// Parented to the model itself.
     QAbstractItemModelTester* m_model_tester {nullptr};
 
-    /**
-	 * Single writer/multi-reader mutex.
-	 * @todo The KDenLive code has/needs this to be recursive, but we should try to un-recurse it.
-	 */
-//	mutable std::shared_mutex m_rw_mutex;
-	mutable std::recursive_mutex m_rw_mutex;
+
 
     /// Hidden root node of the tree model.
     /// Pulls double duty as the horizontal header item.
@@ -405,10 +400,6 @@ protected:
 	 */
 //	std::map<UUIncD, std::weak_ptr<AbstractTreeModelItem>> m_model_item_map;
 	item_map_type m_model_item_map;
-
-	/// TEMP
-	// The tree's base directory URL.
-//	QUrl m_base_directory;
 
 };
 

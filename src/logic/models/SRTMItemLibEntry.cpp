@@ -174,7 +174,7 @@ void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 	QVariantHomogenousList list(XMLTAG_LIBRARY_ENTRIES, "m_library_entry");
 	map_read_field_or_warn(map, XMLTAG_LIBRARY_ENTRIES, &list);
 
-	/// There should only be one I think....
+    // There should only be one I think....
 	AMLM_ASSERT_EQ(list.size(), 1);
 
 #if 0///

@@ -67,16 +67,6 @@ private:
 	static std::atomic_uint64_t m_next_id;
 };
 
-//inline static bool operator==(const UUIncD& lhs, const UUIncD& rhs)
-//{
-//	return lhs.operator==(rhs);
-//}
-
-//inline static bool operator<(const UUIncD& lhs, const UUIncD& rhs)
-//{
-//	return lhs.m_my_id < rhs.m_my_id;
-//}
-
 namespace std
 {
 	template <> struct hash<UUIncD>

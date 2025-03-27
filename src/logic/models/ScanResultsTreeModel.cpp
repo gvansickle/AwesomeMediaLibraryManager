@@ -90,7 +90,7 @@ ScanResultsTreeModel::create(std::initializer_list<ColumnSpec> column_specs, QOb
 
 void ScanResultsTreeModel::setBaseDirectory(const QUrl &base_directory)
 {
-	std::unique_lock write_lock(m_rw_mutex);
+    QWriteLocker write_lock(&m_rw_mutex);
 
 	m_base_directory = base_directory;
 }
@@ -251,7 +251,7 @@ QVariant ScanResultsTreeModel::toVariant() const
 
 	InsertionOrderedMap<QString, QVariant> map;
 
-	std::unique_lock write_lock(m_rw_mutex);
+    QWriteLocker locker(&m_rw_mutex);
 
     set_map_class_info(this, &map);
 
@@ -308,7 +308,7 @@ QVariant ScanResultsTreeModel::toVariant() const
 
 void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 {
-	std::unique_lock write_lock(m_rw_mutex);
+    QWriteLocker locker(&m_rw_mutex);
 
     InsertionOrderedMap<QString, QVariant> map = variant.value<InsertionOrderedMap<QString, QVariant>>();
 

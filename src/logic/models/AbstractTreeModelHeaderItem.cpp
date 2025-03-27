@@ -190,6 +190,10 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	}
 #endif
 
+    // This is always a hidden root item.
+    m_is_root = true;
+    m_uuincid = UUIncD::create();
+
 	// Now read in our children.  We need this HeaderItem to be in a model for that to work.
     Q_ASSERT(isInModel());
 
@@ -198,8 +202,8 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
     auto model_ptr = std::dynamic_pointer_cast<ScanResultsTreeModel>(m_model.lock());
     Q_ASSERT(model_ptr);
 
-	auto parent_id = getId();
-	Q_ASSERT(parent_id != UUIncD::null());
+    // auto parent_id = getId();
+    // Q_ASSERT(parent_id != UUIncD::null());
 
     // Deserialize the data members of the base class.
     // This includes child items.

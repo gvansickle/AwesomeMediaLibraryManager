@@ -114,8 +114,10 @@ public:
      // Both ETM&KDEN have this, but they don't take a role param.
 	virtual QVariant data(int column, int role = Qt::DisplayRole) const;
 
-	/// @todo NEW: Return the QVariant in @a column.  Not sure if this is needed.
-	// KDEN, see data().
+	/**
+	 * Return the QVariant in @a column.
+	 * KDEN, see data().
+	 */
 	QVariant dataColumn(int column) const;
 
 	// ETM+KDEN
@@ -244,7 +246,8 @@ public:
      */
     bool has_ancestor(UUIncD id);
 
-	/* @brief Return true if the item thinks it is a root.
+    /**
+     *  Return true if the item thinks it is a root.
    Note that it should be consistent with what the model thinks, but it may have been
    messed up at some point if someone wrongly constructed the object with isRoot = true */
 	bool isRoot() const;

@@ -77,6 +77,7 @@ list(TRANSFORM AMLM_HEADER_FILES_TEST PREPEND "../src/")
 
 list(APPEND AMLM_SOURCE_FILES_TEST
      ${PROJECT_SOURCE_DIR}/tests/FlagsAndEnumsTests.cpp
+	${PROJECT_SOURCE_DIR}/tests/treetest.cpp
 )
 list(APPEND AMLM_HEADER_FILES_TEST
      ${PROJECT_SOURCE_DIR}/tests/TestHelpers.h

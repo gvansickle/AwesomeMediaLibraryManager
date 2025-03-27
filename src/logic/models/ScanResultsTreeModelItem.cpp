@@ -158,12 +158,6 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 // #undef X
     // auto dsrmap {InsertionOrderedMap<QString, QVariant>()};
     map_read_field_or_warn(map, XMLTAG_DIRSCANRESULT, &m_dsr);
-    // m_dsr.fromVariant(dsrmap);
-    // map_read_field_or_warn(map, XMLTAG_DIRSCANRESULT, &m_dsr);
-
-    // QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
-    // child_var_list = map.at(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
-    // Q_ASSERT(child_var_list.size() > 0);
 
     // Deserialize the data members of the base class.
     // Once we get up to the AbstractTreeModelItem base class, this includes child items.
@@ -181,7 +175,7 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 	auto model_ptr = std::dynamic_pointer_cast<ScanResultsTreeModel>(model_ptr_base);
 	auto parent_id = getId();
 
-    // WE NEEDS TO BE IN MODEL HERE.
+    // WE NEED TO BE IN MODEL HERE.
 	Q_ASSERT(isInModel());
 
 	std::vector<std::shared_ptr<AbstractTreeModelItem>> new_child_item_vec;

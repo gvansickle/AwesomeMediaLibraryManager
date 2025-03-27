@@ -29,16 +29,20 @@
 #include <unordered_set>
 #include <functional>
 
-// Qt5
+// Qt
 #include <QAbstractItemModelTester>
 
 // Ours
+#include <shared_mutex>
 #include <logic/serialization/XmlSerializer.h>
 #include <models/UndoRedoHelper.h>
 #include <utils/DebugHelpers.h>
 #include "AbstractTreeModelHeaderItem.h"
 #include "AbstractTreeModelItem.h"
 #include "AbstractTreeModel.h"
+
+
+
 
 
 ThreadsafeTreeModel::ThreadsafeTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent)
@@ -60,10 +64,11 @@ ThreadsafeTreeModel::~ThreadsafeTreeModel()
 	// Same as KdenLive's ProjectModelItem, its destructor is defaulted.
 }
 
-#if 0
-void ThreadsafeTreeModel::clear()
+void ThreadsafeTreeModel::clear(bool quit)
 {
-	std::unique_lock write_lock(m_rw_mutex);
+    QWriteLocker locker(&m_rw_mutex);
+
+	m_closing = true;
 
 	std::vector<std::shared_ptr<AbstractTreeModelItem>> items_to_delete;
 
@@ -77,15 +82,20 @@ void ThreadsafeTreeModel::clear()
 	Fun redo = []() { return true; };
 	for (const auto &child : items_to_delete)
 	{
-		qDb() << "clearing" << items_to_delete.size() << "items, current:" << child->m_uuid;
+		qDb() << "Clearing" << items_to_delete.size() << "items, current:" << child->m_uuid;
 		requestDeleteItem(child, undo, redo);
 	}
+	items_to_delete.clear();
 	Q_ASSERT(m_root_item->childCount() == 0);
+	m_closing = false;
+	if (!quit)
+	{
+		// KDen: m_uuid = QUuid::createUuid();
+	}
 
 	// One last thing, our hidden root node / header node still has ColumnSpecs.
-	m_root_item->clear();
+	// m_root_item->clear();
 }
-#endif
 
 bool ThreadsafeTreeModel::requestDeleteItem(const std::shared_ptr<AbstractTreeModelItem>& item, Fun& undo, Fun& redo)
 {
@@ -134,69 +144,105 @@ bool ThreadsafeTreeModel::requestDeleteItem(const std::shared_ptr<AbstractTreeMo
 
 QVariant ThreadsafeTreeModel::data(const QModelIndex& index, int role) const
 {
-	std::unique_lock read_lock(m_rw_mutex);
+    READ_LOCK()
 	return BASE_CLASS::data(index, role);
 }
 
-//UUIncD ThreadsafeTreeModel::requestAddItem(std::vector<QVariant> values, UUIncD parent_id, Fun undo, Fun redo)
-//{
-//	std::unique_lock write_lock(m_rw_mutex);
-//
-//	std::shared_ptr<AbstractTreeModelItem> new_item = AbstractTreeModelItem::construct(values, std::static_pointer_cast<ThreadsafeTreeModel>(shared_from_this()), /*root?*/false);
-//
-//	bool status = addItem(new_item, parent_id, undo, redo);
-//
-//	if(!status)
-//	{
-//		// Add failed for some reason, return a null UUIncD.
-//		return UUIncD::null();
-//	}
-//	return new_item->getId();
-//}
+bool ThreadsafeTreeModel::setData(const QModelIndex& index, const QVariant& value, int role)
+{
+    QWriteLocker locker(&m_rw_mutex);
+	return BASE_CLASS::setData(index, value, role);
+}
 
-//void ThreadsafeTreeModel::register_item(const std::shared_ptr<AbstractTreeModelItem>& item)
-//{
-//	std::unique_lock write_lock(m_rw_mutex);
-//
-//	BASE_CLASS::register_item(item);
-//}
+QVariant ThreadsafeTreeModel::headerData(int section, Qt::Orientation orientation, int role) const
+{
+    READ_LOCK()
+	return BASE_CLASS::headerData(section, orientation, role);
+}
 
-//void ThreadsafeTreeModel::deregister_item(UUIncD id, AbstractTreeModelItem* item)
-//{
-//	std::unique_lock write_lock(m_rw_mutex);
-//
-//	// Per KdenLive:
-//	// "here, we should suspend jobs belonging to the item we delete. They can be restarted if the item is reinserted by undo"
-//
-//	BASE_CLASS::deregister_item(id, item);
-//
-//}
+Qt::ItemFlags ThreadsafeTreeModel::flags(const QModelIndex& index) const
+{
+    READ_LOCK()
 
-//bool ThreadsafeTreeModel::addItem(const std::shared_ptr<AbstractTreeModelItem>& item, UUIncD parent_id, Fun& undo, Fun& redo)
-//{
-//	Q_ASSERT(0);
-//#if 0/// GRVS
-//	std::unique_lock write_lock(m_rw_mutex);
-//
-//	std::shared_ptr<AbstractTreeModelItem> parent_item = getItemById(parent_id);
-//
-//	if(!parent_item)
-//	{
-//		qCr() << "ERROR, BAD PARENT ITEM with ID:" << parent_id;// << "," << item;
-//		return false;
-//	}
-//
-//	Fun operation = addItem_lambda(item, parent_item->getId());
-//
-//	UUIncD itemId = item->getId();
-//	Fun reverse = removeItem_lambda(itemId);
-//	bool res = operation();
-//	Q_ASSERT(item->isInModel());
-//	if (res)
-//	{
-//		UPDATE_UNDO_REDO(m_rw_mutex, operation, reverse, undo, redo);
-//	}
-//	return res;
-//#endif
-//	return true;
-//}
+	return BASE_CLASS::flags(index);
+}
+
+std::shared_ptr<AbstractTreeModelItem> ThreadsafeTreeModel::getItem(const QModelIndex& index) const
+{
+    READ_LOCK()
+	return AbstractTreeModel::getItem(index);
+}
+
+int ThreadsafeTreeModel::columnCount(const QModelIndex& parent) const
+{
+	// KDen: This is mutex + the same as AbstractTreeModel.
+    READ_LOCK()
+
+	if (!parent.isValid())
+	{
+		// Invalid index, return root column count.
+		return m_root_item->columnCount();
+	}
+	// Else look up the item and return its column count.
+	const auto id = UUIncD(parent.internalId());
+	auto item = getItemById(id);
+	return item->columnCount();
+}
+
+int ThreadsafeTreeModel::rowCount(const QModelIndex& parent) const
+{
+    READ_LOCK()
+	return BASE_CLASS::rowCount(parent);
+}
+
+bool ThreadsafeTreeModel::requestAddItem(std::shared_ptr<AbstractTreeModelItem> new_item, UUIncD parent_id, Fun undo, Fun redo)
+{
+    QWriteLocker locker(&m_rw_mutex);
+
+    bool status = addItem(new_item, parent_id, undo, redo);
+
+    return status;
+}
+
+void ThreadsafeTreeModel::register_item(const std::shared_ptr<AbstractTreeModelItem>& item)
+{
+    QWriteLocker locker(&m_rw_mutex);
+
+	BASE_CLASS::register_item(item);
+}
+
+void ThreadsafeTreeModel::deregister_item(UUIncD id, AbstractTreeModelItem* item)
+{
+    QWriteLocker locker(&m_rw_mutex);
+
+	// Per KdenLive:
+	// "here, we should suspend jobs belonging to the item we delete. They can be restarted if the item is reinserted by undo"
+
+	BASE_CLASS::deregister_item(id, item);
+
+}
+
+bool ThreadsafeTreeModel::addItem(const std::shared_ptr<AbstractTreeModelItem>& item, UUIncD parent_id, Fun& undo, Fun& redo)
+{
+    QWriteLocker locker(&m_rw_mutex);
+
+	std::shared_ptr<AbstractTreeModelItem> parent_item = getItemById(parent_id);
+
+	if(!parent_item)
+	{
+		qCr() << "ERROR, BAD PARENT ITEM with ID:" << parent_id; // << "," << item;
+		return false;
+	}
+
+	Fun operation = addItem_lambda(item, parent_item->getId());
+
+	UUIncD itemId = item->getId();
+	Fun reverse = removeItem_lambda(itemId);
+	bool res = operation();
+	Q_ASSERT(item->isInModel());
+	if (res)
+	{
+        UPDATE_UNDO_REDO(m_rw_mutex, operation, reverse, undo, redo);
+	}
+	return res;
+}
