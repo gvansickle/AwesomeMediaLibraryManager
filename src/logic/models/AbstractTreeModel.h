@@ -374,8 +374,8 @@ public:
 	virtual bool checkConsistency();
 
 protected:
-	/// @name Extended protected model interface.
-	/// @{
+
+	void setItemMap(UUIncD id);
 
     virtual QString getXmlStreamName() const { return ""; }
     virtual QString getXmlStreamVersion() const { return ""; }
@@ -389,12 +389,11 @@ protected:
     /// Parented to the model itself.
     QAbstractItemModelTester* m_model_tester {nullptr};
 
-
-
     /// Hidden root node of the tree model.
     /// Pulls double duty as the horizontal header item.
 	std::shared_ptr<AbstractTreeModelHeaderItem> m_root_item;
 
+private:
 	/**
 	 * Map of UUIncD's to AbstractTreeModelItems.
 	 */

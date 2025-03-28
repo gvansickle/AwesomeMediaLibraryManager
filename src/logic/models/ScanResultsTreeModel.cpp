@@ -351,6 +351,7 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
     m_root_item->fromVariant(root_item_map);
 
     Q_ASSERT(m_root_item->isRoot() && m_root_item->isInModel());
+	Q_ASSERT(checkConsistency());
 
 	// dump_map(map);
 }

@@ -563,6 +563,7 @@ void AbstractTreeModel::register_item(const std::shared_ptr<AbstractTreeModelIte
 
 	UUIncD id = item->getId();
 	Q_ASSERT(id.isValid());
+	qDb() << "MIM ADD:" << id;
 	AMLM_ASSERT_X(m_model_item_map.count(id) == 0, "Item was already in model.");
 	m_model_item_map[id] = item;
 
@@ -584,6 +585,7 @@ void AbstractTreeModel::deregister_item(UUIncD id, AbstractTreeModelItem* item)
 	}
 	else
 	{
+		qDb() << "MIM ERASE:" << id;
 		m_model_item_map.erase(id);
 	}
 }
