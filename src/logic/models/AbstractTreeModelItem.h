@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2019, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -87,8 +87,8 @@ public:
 	 * From KDenLive:
 	 * "This function executes what should be done when the item is deleted but without deleting effectively.
 	 * For example, the item will deregister itself from the model and delete the clips from the timeline.
-	 * However, the object is NOT actually deleted, and the tree structure is preserved.
-	 * @param Undo,Redo are the lambdas accumulating the update.
+	 * However, the object is NOT actually deleted, and the tree structure is preserved."
+	 * @param Undo, Redo are the lambdas accumulating the update.
 	 */
 	virtual bool selfSoftDelete(Fun &undo, Fun &redo);
 
@@ -167,7 +167,7 @@ public:
 	/// @{
 
 	/**
-	 * @note This is where all(?) children are ultimately created.
+	 *
 	 */
 	std::vector<std::shared_ptr<AbstractTreeModelItem>> insertChildren(int position, int count, int columns);
 

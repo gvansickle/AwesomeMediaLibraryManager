@@ -212,30 +212,30 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
     this->BASE_CLASS::fromVariant(iomap);
 
 #if 0
-	/// @todo This is a QVariantList containing <item>/QVariantMap's, each of which
-	/// contains a single <scan_res_tree_model_item type="QVariantMap">, which in turn
-	/// contains a single <dirscanresult>/QVariantMap.
-	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
-	child_var_list = map.at(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
-	Q_ASSERT(!child_var_list.empty());
-	qDb() << "Number of children read:" << child_var_list.size();
+    /// @todo This is a QVariantList containing <item>/QVariantMap's, each of which
+    /// contains a single <scan_res_tree_model_item type="QVariantMap">, which in turn
+    /// contains a single <dirscanresult>/QVariantMap.
+    QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
+    child_var_list = map.at(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
+    Q_ASSERT(!child_var_list.empty());
+    qDb() << "Number of children read:" << child_var_list.size();
 
 #if 0///
     // append_children_from_variant<decltype(m_model), std::shared_ptr<ScanResultsTreeModelItem>/*, AbstractTreeModelHeaderItem*/>(m_model, this, child_var_list);
-	append_children_from_variant(m_model, this, child_var_list);
+    append_children_from_variant(m_model, this, child_var_list);
 #else
-	auto starting_childcount = childCount();
+    auto starting_childcount = childCount();
 
-	for(const QVariant& child_variant : child_var_list)
-	{
+    for(const QVariant& child_variant : child_var_list)
+    {
         qDb() << "READING CHILD ITEM INTO HEADERITEM:" << child_variant << "TYPE:" << child_variant.metaType().name();
 
         auto new_child = std::make_shared<ScanResultsTreeModelItem>(model_ptr, UUIncD::create());
-		Q_ASSERT(new_child);
-		/// @note Cuurently we need to add the empty item to the model before reading it in, so that
-		/// its children will be set up correctly model-wise.  This is almost certainly more efficient anyway.
-		this->appendChild(new_child);
-		new_child->fromVariant(child_variant);
+        Q_ASSERT(new_child);
+        /// @note Cuurently we need to add the empty item to the model before reading it in, so that
+        /// its children will be set up correctly model-wise.  This is almost certainly more efficient anyway.
+        this->appendChild(new_child);
+        new_child->fromVariant(child_variant);
 
 //		std::shared_ptr<AbstractTreeModelItem> new_child_item = model_ptr->make_item_from_variant(child);
 //		bool ok = appendChild(new_child_item);
@@ -245,9 +245,9 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 //		auto new_child = model_ptr->getItemById(id);
 //		Q_ASSERT(new_child);
 //		new_child->fromVariant(variant);
-	}
+    }
 
-	AMLM_ASSERT_EQ(starting_childcount+child_var_list.size(),childCount());
+    AMLM_ASSERT_EQ(starting_childcount+child_var_list.size(),childCount());
 #endif
 #endif
 }

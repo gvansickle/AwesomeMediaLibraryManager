@@ -52,8 +52,6 @@
 std::shared_ptr<AbstractTreeModel>
 AbstractTreeModel::create(std::initializer_list<ColumnSpec> column_specs, QObject* parent)
 {
-    // auto retval_shptr = std::make_shared<AbstractTreeModel>(column_specs, parent);
-
     auto retval_shptr = std::shared_ptr<AbstractTreeModel>(new AbstractTreeModel(column_specs, parent));
 
     retval_shptr->m_root_item = AbstractTreeModelHeaderItem::create(column_specs, retval_shptr);
@@ -71,27 +69,8 @@ AbstractTreeModel::AbstractTreeModel(QObject* parent) : QAbstractItemModel(paren
 AbstractTreeModel::AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent)
 	: AbstractTreeModel(parent)
 {
-	/// Can't call virtual functions in here, which makes our life more difficult.
-	/// Actually, it's the "shared_from_this() requires this to already be a shared_ptr<>" that's tripping me up. I think.
-	/// Regardless, the named constructor is working well now, so we're good.
+	/// @todo Anything here?  Odd to just throw the column specs out....
 }
-
-#if 0
-void AbstractTreeModel::postConstructorFinalization(const std::shared_ptr<AbstractTreeModel>& retval_shptr, std::initializer_list<ColumnSpec> column_specs)
-{
-	// Create the root item/header item.
-    retval_shptr->m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs, retval_shptr);
-	// Register it with this model.
-    retval_shptr->register_item(retval_shptr->m_root_item);
-    // register_item(retval_shptr->m_root_item);
-
-    // AMLM_ASSERT_X(retval_shptr->m_root_item->isInModel(), "ROOT ITEM NOT IN MODEL");
-
-	/// TODO Keep trying to get this to not barf all over the place.
-//    retval_shptr->m_model_tester = new QAbstractItemModelTester(retval_shptr.get(), QAbstractItemModelTester::FailureReportingMode::Fatal, retval_shptr.get());
-	AMLM_ASSERT_X(retval_shptr->checkConsistency(), "MODEL INCONSISTENT");
-}
-#endif
 
 AbstractTreeModel::~AbstractTreeModel()
 {
@@ -112,20 +91,11 @@ void AbstractTreeModel::SLOT_appendChild(std::shared_ptr<AbstractTreeModelItem> 
 	getItemById(parent_id)->appendChild(child);
 }
 
-//void AbstractTreeModel::postConstructorFinalization(std::initializer_list<ColumnSpec> column_specs)
-//{
-////	m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs, this->shared_from_this());
-//	m_root_item = AbstractTreeModelHeaderItem::construct(column_specs, this->shared_from_this());
-//	Q_ASSERT(m_root_item->m_is_root == true);
-//	Q_ASSERT(m_root_item->m_is_in_model == true);
-
-//}
-
 void AbstractTreeModel::clear(bool quit)
 {
 	// std::unique_lock write_lock(m_rw_mutex);
 
-#if 0///KDEN
+#if 0///KDEN @info KDenLive has this in ProjectItemModel, as "clean()", and it's a bit different.
 	std::vector<std::shared_ptr<AbstractTreeModelItem>> items_to_delete;
 
 	items_to_delete.reserve(m_root_item->childCount());
@@ -163,10 +133,7 @@ bool AbstractTreeModel::setColumnSpecs(std::initializer_list<ColumnSpec> column_
 	// std::unique_lock write_lock(m_rw_mutex);
 
 	Q_ASSERT(m_root_item);
-//	if(!m_root_item)
-//	{
-//		m_root_item = std::make_shared<AbstractTreeModelHeaderItem>(column_specs, this->shared_from_this());
-//	}
+
 	return m_root_item->setColumnSpecs(column_specs);
 }
 
@@ -200,8 +167,6 @@ QVariant AbstractTreeModel::data(const QModelIndex &index, int role) const
         return QVariant();
 	}
 
-	/// @todo ###
-#if 1 // TEMP?
 	// Color invalid model indexes.
 	if(index.column() >= columnCount())
 	{
@@ -215,14 +180,13 @@ QVariant AbstractTreeModel::data(const QModelIndex &index, int role) const
 				break;
 		}
 	}
-#endif
+
     if (role != Qt::DisplayRole && role != Qt::EditRole) /// @todo Not in KDen AbstTreeModel: && role != Qt::EditRole)
 	{
         return QVariant();
 	}
 
     // Get a pointer to the indexed item.
-	//auto item = getItemById(UUIncD(index.internalId()));
 	std::shared_ptr<AbstractTreeModelItem> item = getItem(index);
 
 	// Return the requested [column,role] data from the item.
@@ -255,7 +219,7 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getItem(const QModelIn
 {
 	// std::unique_lock read_lock(m_rw_mutex);
 	/**
-	 * There's a fail here.  Trying to do a mapping from QModelIndex->TreeItem*, but we're going through
+	 * @warning There's a fail here.  Trying to do a mapping from QModelIndex->TreeItem*, but we're going through
 	 * getItemById() to do it (index.internalId() -> TreeItem*).  In e.g. insertChild(), this results in the
 	 * second lookup being done before the item is in the map, == error.
 	 */
@@ -296,8 +260,8 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getItemById(const UUIn
 	{
 		return m_root_item;
 	}
-//#error "An empty model dies here in the view, via parent()"
-    Q_ASSERT(m_model_item_map.count(id) > 0);
+
+	Q_ASSERT(m_model_item_map.count(id) > 0);
 	return m_model_item_map.at(id).lock();
 }
 
@@ -310,7 +274,7 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getRootItem() const
 	return m_root_item;
 }
 
-#if 0///
+#if 0/// ETM
 /**
  * Insert an empty new child under @a parent and returns a shared_ptr to it.
  * ETM: From MainWindow, where parent is always currentIndex() from a selection model.
@@ -358,8 +322,14 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::insertChild(const QMod
 
 	return getItem(child);
 }
-#endif///
+#endif
 
+/**
+ * @todo THIS APPEARS TO BE UNUSED.  REMOVE?
+ * @param data
+ * @param parent
+ * @return
+ */
 std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::append_child(const QVector<QVariant>& data, std::shared_ptr<AbstractTreeModelItem> parent)
 {
 	// Append a new item to the given parent's list of children.
@@ -468,11 +438,10 @@ bool AbstractTreeModel::LoadDatabase(const QString& database_filename)
 {
 	qIn() << "###### READING AbstractTreeModel from:" << database_filename;
 
-	/// @todo This is unworkable I think.
 	/// @note Not sure if this is the best place for this, but we need to clear everything before reloading it.
-M_WARNING("Not right, this needs ColumnSpecs added initially from somewhere");
+
+	/// @todo Locking?
 	// std::unique_lock write_lock(m_rw_mutex);
-//	m_root_item = AbstractTreeModelHeaderItem::construct({}, shared_from_this());
 
 	XmlSerializer xmlser;
 	/// @todo Better name
@@ -575,7 +544,6 @@ void AbstractTreeModel::deregister_item(UUIncD id, AbstractTreeModelItem* item)
 	// std::unique_lock write_lock(m_rw_mutex);
 
 	Q_UNUSED(item);
-//	AMLM_ASSERT_GT(m_model_item_map.count(id), 0);
 
 	if(m_model_item_map.count(id) == 0)
 	{
@@ -585,12 +553,9 @@ void AbstractTreeModel::deregister_item(UUIncD id, AbstractTreeModelItem* item)
 	}
 	else
 	{
-		qDb() << "MIM ERASE:" << id;
 		m_model_item_map.erase(id);
 	}
 }
-
-
 
 void AbstractTreeModel::notifyColumnsAboutToInserted(const std::shared_ptr<AbstractTreeModelItem>& parent, int first_column, int last_column)
 {
@@ -640,11 +605,10 @@ void AbstractTreeModel::notifyRowDeleted()
 }
 
 
-/// NEW: KDEN:
+// KDEN:
 bool AbstractTreeModel::checkConsistency()
 {
-#if 1///
-// first check that the root is all good
+	// first check that the root is all good
 	if (!m_root_item || !m_root_item->m_is_root || !m_root_item->isInModel() || m_model_item_map.count(m_root_item->getId()) == 0)
 	{
 		qDebug() << !m_root_item->m_is_root << !m_root_item->isInModel() << (m_model_item_map.count(m_root_item->getId()) == 0);
@@ -721,9 +685,6 @@ bool AbstractTreeModel::checkConsistency()
 	}
 
 	return true;
-#elif 0
-#endif///
-
 }
 
 QVariant AbstractTreeModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -779,7 +740,7 @@ bool AbstractTreeModel::insertColumns(int insert_before_column, int num_columns,
 
 	beginInsertColumns(parent_model_index, insert_before_column, insert_before_column + num_columns - 1);
 
-M_WARNING("TODO: This is what ETM has.  Should it be the parent_model_index, not the m_root_item?");
+// M_WARNING("TODO: This is what ETM has.  Should it be the parent_model_index, not the m_root_item?");
 	success = m_root_item->insertColumns(insert_before_column, num_columns);
 
 	endInsertColumns();
@@ -969,7 +930,7 @@ int AbstractTreeModel::rowCount(const QModelIndex &parent) const
 	}
 	else
 	{
-M_WARNING("FIXME: We still get here before parent has been added to the model.");
+/// @todo Fixed? M_WARNING("FIXME: We still get here before parent has been added to the model.");
 		parent_item = getItemById(UUIncD(parent.internalId()));
 //		parent_item = getItem(parent);
 

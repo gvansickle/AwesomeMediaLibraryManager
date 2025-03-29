@@ -79,15 +79,7 @@ protected:
 	 *          call immediately after creating a new model.
 	 * In general, derived constructors don't do much more than pass the @a parent param.
 	 */
-    explicit AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
-
-	/**
-	 * Creates and adds the root item to the model, some sanity checks, and other last-chance setup of the model object
-	 * just prior to the new model shared_ptr being returned by the named constructor.
-	 * @param retval_shptr  A shared_ptr to the model being constructed.
-	 * @param column_specs  The columnspecs list to initialize the root/header item with.
-	 */
-    // virtual void postConstructorFinalization(const std::shared_ptr<AbstractTreeModel>& retval_shptr, std::initializer_list<ColumnSpec> column_specs);
+    AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
 
 public:
 	/**
@@ -396,8 +388,8 @@ protected:
 private:
 	/**
 	 * Map of UUIncD's to AbstractTreeModelItems.
+	 * Currently: std::map<UUIncD, std::weak_ptr<AbstractTreeModelItem>> m_model_item_map;
 	 */
-//	std::map<UUIncD, std::weak_ptr<AbstractTreeModelItem>> m_model_item_map;
 	item_map_type m_model_item_map;
 
 };

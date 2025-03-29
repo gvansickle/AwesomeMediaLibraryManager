@@ -1,5 +1,5 @@
 /*
- * Copyright 2017, 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018, 2019, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -46,9 +46,6 @@ AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering TrackMetadata";
     qRegisterMetaType<TrackMetadata>();
     ;});
-
-//Q_DECLARE_METATYPE(std::string);
-
 
 using strviw_type = QLatin1String;
 
@@ -176,7 +173,7 @@ QVariant TrackMetadata::toVariant() const
 	InsertionOrderedMap<QString, QVariant> map;
 
 	// Set some extra class info to the attributes.
-//	set_map_class_info(this, &map);
+	set_map_class_info(this, &map);
 
 	// Set the xml:id.
 	map.insert_attributes({{"xml:id", get_prefixed_uuid()}});

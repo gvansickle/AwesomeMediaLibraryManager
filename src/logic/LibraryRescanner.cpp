@@ -344,7 +344,7 @@ qDb() << "IN STREAMING THEN CALLBACK";
 		Q_ASSERT_X(!new_items->empty(), "DIRTRAV CALLBACK", "NO NEW ITEMS BUT HIT TAP CALLBACK");
 
 		// Got all the ready results, send them to the model(s).
-		// Because of Qt5's model/view system not being threadsafeable, we have to do at least the final
+        // Because of Qt's model/view system not being threadsafeable, we have to do at least the final
 		// model item entry from the GUI thread.
 //		qIn() << "Sending" << new_items->size() << "scan results to models";
 #if 1 // DEBUG!!!
@@ -403,19 +403,22 @@ qDb() << "POST WAIT" << M_NAME_VAL(future);
 	Q_ASSERT(tree_model);
 /// streaming_then() ############################################
     streaming_then(tree_model_item_future,
-                              [this](ExtFuture<SharedItemContType> new_items_future, int begin, int end){
+                              [this, tree_model_sptr](ExtFuture<SharedItemContType> new_items_future, int begin, int end){
 		// AMLM_ASSERT_IN_GUITHREAD();
 		AMLM_ASSERT_NOT_IN_GUITHREAD();
 
 Stopwatch sw("Populate LibraryEntry");
 		// Get the current ScanResultsTreeModel.
         // std::shared_ptr<ScanResultsTreeModel> tree_model_sptr = AMLM::Core::self()->getScanResultsTreeModel();
-        std::shared_ptr<AbstractTreeModel> tree_model_sptr = AMLM::Core::self()->getScanResultsTreeModel();
-		Q_ASSERT(tree_model_sptr);
+        // std::shared_ptr<AbstractTreeModel> tree_model_sptr = AMLM::Core::self()->getScanResultsTreeModel();
+        // Q_ASSERT(tree_model_sptr);
+if(0)
+{
         qDb() << "Checking tree consistency before";
         bool ok = tree_model_sptr->checkConsistency();
         Q_ASSERT(ok);
         qDb() << "ok";
+}
 
 		qDb() << "START: tree_model_item_future.stap(), new_items_future count:" << new_items_future.resultCount();
 
@@ -465,24 +468,29 @@ M_WARNING("TODO: This needs rework.");
 //			{
 //				std::shared_ptr<AbstractTreeModelItem> new_child = the_etm->insertChild();
 //			}
-			/// @temp
-			qDb() << "Checking tree consistency after";
-			bool ok = tree_model_sptr->checkConsistency();
-			Q_ASSERT(ok);
-			qDb() << "ok";
-			sw.lap("TreeModel checkConsistency");
+            /// @temp
+            // qDb() << "Checking tree consistency after";
+            // bool ok = tree_model_sptr->checkConsistency();
+            // Q_ASSERT(ok);
+            // qDb() << "ok";
+            // sw.lap("TreeModel checkConsistency");
 sw.stop();
 sw.print_results();
 		}
 	})
 #endif
 	/// .then() ############################################
-	.then([&](ExtFuture<void> f)-> Unit {
+    .then(qApp, [&, tree_model_sptr](ExtFuture<void> f)-> Unit {
 		Q_ASSERT(f.isFinished());
 		Q_ASSERT(m_model_ready_to_save_to_db == false);
 		m_model_ready_to_save_to_db = true;
-		/// @todo This is happening immediately, and also before "Finished tree_model_item_future" & qurl_future.
-		m_timer.lap("TreeModelItems stap() finished.");
+
+        qDb() << "Checking tree consistency after";
+        bool ok = tree_model_sptr->checkConsistency();
+        Q_ASSERT(ok);
+        qDb() << "ok";
+
+        m_timer.lap("TreeModelItems stap() finished.");
 		return unit;
 	})
 	/// .then() ############################################

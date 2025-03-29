@@ -68,9 +68,6 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::create(const std::
 	return new_item;
 }
 
-template <class T>
-int test12(T param);
-
 AbstractTreeModelItem::AbstractTreeModelItem(const std::vector<QVariant>& data, const std::shared_ptr<AbstractTreeModel>& model)
 {
 	m_item_data = data;
@@ -79,7 +76,6 @@ AbstractTreeModelItem::AbstractTreeModelItem(const std::vector<QVariant>& data, 
 	m_uuincid = UUIncD::create();
 	m_is_in_model = false;
 	m_is_root = false;
-    // test12(1);
 }
 
 AbstractTreeModelItem::~AbstractTreeModelItem()
@@ -153,22 +149,6 @@ int AbstractTreeModelItem::columnCount() const
  */
 int AbstractTreeModelItem::childNumber() const
 {
-#if 0
-	if (auto shpt = m_parent_item.lock())
-	{
-		// We compute the distance in the parent's children list
-		auto it = shpt->m_child_items.begin();
-		return (int)std::distance(it, (decltype(it))shpt->get_m_child_items_iterator(m_uuincid));
-	}
-	else
-	{
-		/// @note Expired parent item. KDenLive doesn't do this.
-		qWr() << "EXPIRED PARENT ITEM";
-//		Q_ASSERT(0);
-	}
-
-    return -1;
-#endif
 	if(auto par = m_parent_item.lock())
 	{
 		std::shared_ptr<AbstractTreeModelItem> this_cast = std::const_pointer_cast<AbstractTreeModelItem>(this->shared_from_this());
@@ -185,8 +165,8 @@ int AbstractTreeModelItem::childNumber() const
 		}
 	}
 
-	// No parent, ETM returns 0 here.
-    return 0;
+	// No parent, ETM returns 0 here, KDen returns -1.
+    return -1;
 }
 
 
@@ -334,7 +314,7 @@ bool AbstractTreeModelItem::changeParent(std::shared_ptr<AbstractTreeModelItem> 
 		return false;
 	}
 	std::shared_ptr<AbstractTreeModelItem> oldParent;
-	if (oldParent = m_parent_item.lock())
+	if ((oldParent = m_parent_item.lock()))
 	{
 		oldParent->removeChild(shared_from_this());
 	}
@@ -704,13 +684,6 @@ bool AbstractTreeModelItem::appendChild(const std::shared_ptr<AbstractTreeModelI
 {
     AMLM_ASSERT_IN_GUITHREAD();
 
-#if 0//
-	this->insertChild(childCount(), new_child);
-
-	verify_post_add_ins_child(new_child);
-
-	return true;
-#else // KDEN
 	if(has_ancestor(new_child->getId()))
 	{
 		// Somehow trying to create a cycle in the tree.
@@ -762,7 +735,6 @@ bool AbstractTreeModelItem::appendChild(const std::shared_ptr<AbstractTreeModelI
     qCr() << "ERROR: Something went wrong when appending child.";
 	Q_ASSERT(false);
 	return false;
-#endif
 }
 
 /// Append a child item created from @a data.
@@ -873,8 +845,6 @@ void AbstractTreeModelItem::baseFinishCreate(const std::shared_ptr<AbstractTreeM
  */
 void AbstractTreeModelItem::register_self(const std::shared_ptr<AbstractTreeModelItem>& self)
 {
-//	Q_ASSERT(self->m_model);
-
     // Register children, who will then register their own children, etc....
 	for (const auto& child : self->m_child_items)
 	{
@@ -919,7 +889,7 @@ void AbstractTreeModelItem::deregister_self()
 		}
         // else
         // {
-  //           /// @note This will assert on model destruct.  Kdenlive ignores this else.
+		//  /// @note This will assert on model destruct.  Kdenlive ignores this else.
         // 	Q_ASSERT(0);
         // }
 	}
@@ -934,7 +904,7 @@ void AbstractTreeModelItem::updateParent(std::shared_ptr<AbstractTreeModelItem> 
 		// Keep depth up to date.
 		m_depth = parent->m_depth + 1;
 		// Keep max column count up to date.
-		/// @todo
+		/// @todo Do we need this?
 //		m_num_parent_columns = parent->columnCount();
 	}
 }
@@ -946,64 +916,3 @@ AbstractTreeModelItem::CICTIteratorType AbstractTreeModelItem::get_m_child_items
 	return retval;
 }
 
-
-#if 1//DELETE_ME
-// Base class
-class BaseClass {
-public:
-    virtual ~BaseClass() = default;
-    virtual void print() const {
-        qDebug() << "BaseClass instance, val_base:" << val_base;
-    }
-
-    int val_base = 5;
-};
-
-// Derived class
-class DerivedClass : public BaseClass {
-public:
-    void print() const override {
-        qDebug() << "DerivedClass instance, val_base:" << val_base << "val_derived:" << val_derived;
-    }
-
-    float val_derived = 3.14f;
-};
-
-// Register the shared_ptr types with Qt's meta-object system
-Q_DECLARE_METATYPE(std::shared_ptr<BaseClass>)
-Q_DECLARE_METATYPE(std::shared_ptr<DerivedClass>)
-
-template <class T>
-int test12(T param) {
-    // Register the types
-    qRegisterMetaType<std::shared_ptr<BaseClass>>();
-    qRegisterMetaType<std::shared_ptr<DerivedClass>>();
-
-    // Create a shared_ptr to DerivedClass
-    std::shared_ptr<DerivedClass> derivedObject = std::make_shared<DerivedClass>();
-
-    // Store the shared_ptr in a QVariant as a BaseClass pointer
-    QVariant variant = QVariant::fromValue<std::shared_ptr<BaseClass>>(derivedObject);
-
-    // Recover the shared_ptr from the QVariant
-    if (variant.canConvert<std::shared_ptr<BaseClass>>()) {
-        std::shared_ptr<BaseClass> baseObject = variant.value<std::shared_ptr<BaseClass>>();
-
-    	baseObject->print();
-
-        // Use dynamic_pointer_cast to cast to DerivedClass
-        std::shared_ptr<DerivedClass> recoveredDerivedObject =
-            std::dynamic_pointer_cast<DerivedClass>(baseObject);
-
-        if (recoveredDerivedObject) {
-            recoveredDerivedObject->print();  // Output: "DerivedClass instance"
-        } else {
-            qDebug() << "Failed to cast to DerivedClass";
-        }
-    } else {
-        qDebug() << "Failed to convert QVariant to std::shared_ptr<BaseClass>";
-    }
-
-    return 0;
-}
-#endif
