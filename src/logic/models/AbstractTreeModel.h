@@ -223,10 +223,10 @@ public:
 	/// ETM-inspired append function.  Based on setupModelData().
 	std::shared_ptr<AbstractTreeModelItem> append_child(const QVector<QVariant> &data, std::shared_ptr<AbstractTreeModelItem> parent);
 
-	QModelIndex getIndexFromItem(const std::shared_ptr<AbstractTreeModelItem>& item, int column = 0) const;
-	QModelIndex getIndexFromId(UUIncD id) const;
-	std::shared_ptr<AbstractTreeModelItem> getItemById(const UUIncD &id) const;
-	std::shared_ptr<AbstractTreeModelItem> getRootItem() const;
+	virtual QModelIndex getIndexFromItem(const std::shared_ptr<AbstractTreeModelItem>& item, int column = 0) const;
+	virtual QModelIndex getIndexFromId(UUIncD id) const;
+	virtual std::shared_ptr<AbstractTreeModelItem> getItemById(const UUIncD &id) const;
+	virtual std::shared_ptr<AbstractTreeModelItem> getRootItem() const;
 	// ETM/GRVS/AQP(itemForIndex)
 	virtual std::shared_ptr<AbstractTreeModelItem> getItem(const QModelIndex &index) const;
 
@@ -308,13 +308,6 @@ protected:
 	 */
 	virtual void register_item(const std::shared_ptr<AbstractTreeModelItem>& item);
 	virtual void deregister_item(UUIncD id, AbstractTreeModelItem* item);
-
-	/**
-	 * Adds @a item to this tree model as a child of @a parent_id.
-	 * This is the workhorse threadsafe function which adds all new items to the model.  It should be not be called by clients,
-	 * but rather called by one of the requestAddXxxx() members.
-	 */
-	bool addItem(const std::shared_ptr<AbstractTreeModelItem> &item, UUIncD parent_id, Fun &undo, Fun &redo);
 
 	/// @name Derived-class serialization info.
 	/// @{

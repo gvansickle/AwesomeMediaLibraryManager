@@ -433,7 +433,7 @@ QVariantMap std_map_to_qvariantmap(const MapType& inmap)
 		// Need an explicit int->Qstring conversion.
 		for (const auto& [key, val] : inmap)
 		{
-            QString str = QString("item%1").arg(key);
+            QString str = QString("item").arg(key);
 			retval.insert(str, QVariant(val));
 		}
 	}
@@ -441,6 +441,10 @@ QVariantMap std_map_to_qvariantmap(const MapType& inmap)
 	{
 		// Should be able to just rely on QMap(std::map...) constructor.
 		retval = inmap;
+	}
+	else
+	{
+		static_assert(0, "Invalid MapType");
 	}
 
 	return retval;
@@ -456,6 +460,7 @@ MapType qvariantmap_to_std_map(const QVariantMap& inmap)
         for(const auto [key, value] : inmap.asKeyValueRange())
         {
             QString temp_key = key;
+        	/// @todo This is where the Metadata roundtrip is failing, no int to extract.
             typename MapType::key_type int_key = temp_key.remove("item").toInt();
             typename MapType::mapped_type mapped_val;
             if(value.canConvert<typename MapType::mapped_type>())
@@ -466,6 +471,10 @@ MapType qvariantmap_to_std_map(const QVariantMap& inmap)
         }
         return retval;
     }
+	else
+	{
+		static_assert(0, "Invalid MapType");
+	}
 }
 
 

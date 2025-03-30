@@ -248,11 +248,9 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getItem(const QModelIn
 //	m_base_directory = base_directory;
 //}
 
-// KDEN, GRVS locking.
+// KDEN, GRVS locking in ThreadSafeTreeModel.
 std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getItemById(const UUIncD& id) const
 {
-	// std::unique_lock read_lock(m_rw_mutex);
-
 	Q_ASSERT(m_root_item);
 	Q_ASSERT(id != UUIncD::null());
 
@@ -268,8 +266,6 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getItemById(const UUIn
 // BOTH
 std::shared_ptr<AbstractTreeModelItem> AbstractTreeModel::getRootItem() const
 {
-	// std::unique_lock read_lock(m_rw_mutex);
-
 	Q_ASSERT(m_root_item);
 	return m_root_item;
 }

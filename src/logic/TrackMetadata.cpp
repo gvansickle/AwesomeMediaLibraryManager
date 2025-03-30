@@ -181,6 +181,7 @@ QVariant TrackMetadata::toVariant() const
 #define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
 	M_DATASTREAM_FIELDS(X);
 #undef X
+	// map_insert_or_die(map, XMLTAG_TRACK_PTI_VALUES, m_tm_track_pti.toVariant());
 
 	// m_indexes
 	QVariantHomogenousList index_list("m_indexes", "index");

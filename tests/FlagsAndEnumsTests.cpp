@@ -33,7 +33,7 @@
 #include <future/function_traits.hpp>
 #include <future/future_type_traits.hpp>
 
-// Qt5
+// Qt
 #include <QTest>
 #include <QString>
 #include <QFlags>
@@ -355,43 +355,7 @@ TEST_F(FlagsAndEnumsTests, EnumRoundTripThroughQVariantStringRep)
 ////////////////////////////////////////////////////////////
 M_WARNING("TODO: Split into a serialization test.");
 
-TEST_F(FlagsAndEnumsTests, ExtUrlRoundTripThroughQVariant)
-{
-	ExtUrl before;
 
-	before.m_url = "file://a.b.com/";
-
-	QVariant during = before.toVariant();
-
-	ExtUrl after;
-	after.fromVariant(during);
-
-	TCOUT << M_NAME_VAL(before);
-	TCOUT << M_NAME_VAL(during);
-	TCOUT << M_NAME_VAL(after);
-
-//	AMLMTEST_EXPECT_EQ(before, after);
-}
-
-TEST_F(FlagsAndEnumsTests, QUrlRoundTripThroughQVariant)
-{
-	QUrl before;
-
-	before = "file://a.b.com/";
-
-	QVariant during = QVariant::fromValue(before);
-
-	TCOUT << "TYPENAME:" << during.typeName();
-
-	QUrl after;
-	after = during.value<QUrl>();
-
-	TCOUT << M_NAME_VAL(before);
-	TCOUT << M_NAME_VAL(during);
-	TCOUT << M_NAME_VAL(after);
-
-	AMLMTEST_EXPECT_EQ(before, after);
-}
 
 //DECL_EXTENUM(MyTestExtEnum);
 

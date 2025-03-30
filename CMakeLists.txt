@@ -157,7 +157,7 @@ include(ECMQtDeclareLoggingCategory)
 # The sanitizers are not enabled by default. Instead, you must set ECM_ENABLE_SANITIZERS (either in your
 # CMakeLists.txt or on the command line) to a semicolon-separated list of sanitizers you wish to enable.
 # The options are:
-#   address memory thread leak undefined
+#   address memory thread leak undefined fuzzer
 # The sanitizers "address", "memory" and "thread" are mutually exclusive. You cannot enable two of them in the same build.
 # "leak" requires the "address" sanitizer.
 ### @note KDECompileFlags includes include(ECMEnableSanitizers).

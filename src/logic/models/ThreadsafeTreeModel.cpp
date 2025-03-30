@@ -163,36 +163,44 @@ QVariant ThreadsafeTreeModel::headerData(int section, Qt::Orientation orientatio
 Qt::ItemFlags ThreadsafeTreeModel::flags(const QModelIndex& index) const
 {
     READ_LOCK()
-
 	return BASE_CLASS::flags(index);
-}
-
-std::shared_ptr<AbstractTreeModelItem> ThreadsafeTreeModel::getItem(const QModelIndex& index) const
-{
-    READ_LOCK()
-	return AbstractTreeModel::getItem(index);
 }
 
 int ThreadsafeTreeModel::columnCount(const QModelIndex& parent) const
 {
 	// KDen: This is mutex + the same as AbstractTreeModel.
     READ_LOCK()
-
-	if (!parent.isValid())
-	{
-		// Invalid index, return root column count.
-		return m_root_item->columnCount();
-	}
-	// Else look up the item and return its column count.
-	const auto id = UUIncD(parent.internalId());
-	auto item = getItemById(id);
-	return item->columnCount();
+	return BASE_CLASS::columnCount(parent);
 }
 
 int ThreadsafeTreeModel::rowCount(const QModelIndex& parent) const
 {
     READ_LOCK()
 	return BASE_CLASS::rowCount(parent);
+}
+
+QModelIndex ThreadsafeTreeModel::getIndexFromId(UUIncD id) const
+{
+	READ_LOCK();
+	return BASE_CLASS::getIndexFromId(id);
+}
+
+std::shared_ptr<AbstractTreeModelItem> ThreadsafeTreeModel::getItemById(const UUIncD& id) const
+{
+	READ_LOCK();
+	return BASE_CLASS::getItemById(id);
+}
+
+std::shared_ptr<AbstractTreeModelItem> ThreadsafeTreeModel::getRootItem() const
+{
+	READ_LOCK();
+	return BASE_CLASS::getRootItem();
+}
+
+std::shared_ptr<AbstractTreeModelItem> ThreadsafeTreeModel::getItem(const QModelIndex& index) const
+{
+	READ_LOCK()
+	return BASE_CLASS::getItem(index);
 }
 
 bool ThreadsafeTreeModel::requestAddItem(std::shared_ptr<AbstractTreeModelItem> new_item, UUIncD parent_id, Fun undo, Fun redo)

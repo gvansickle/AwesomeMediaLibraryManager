@@ -263,7 +263,6 @@ public:
     bool empty() const { return m_vector_of_elements.empty(); }
     size_t size() const { return m_vector_of_elements.size(); }
 
-#if 1 // Qt5
 //	QTH_FRIEND_QDATASTREAM_OPS(InsertionOrderedMap);
 
 	/**
@@ -274,9 +273,6 @@ public:
 	{
 		return QVariant::fromValue(*this);
 	}
-
-#endif // Qt5
-
 
 private:
 
@@ -310,8 +306,8 @@ Q_DECLARE_METATYPE(QVariantInsertionOrderedMap);
 template <class T, class MapType>
 static void set_map_class_info(const T* self, MapType* map)
 {
-	int id = qMetaTypeId<T>();
-	qDb() << "QMetaType:" << id << QMetaType::fromType<T>().name();
+	// int id = qMetaTypeId<T>();
+	// qDb() << "QMetaType:" << id << QMetaType::fromType<T>().name();
 	// QMetaType id numbers are not consistent from run to run, so we don't persist them.
 	// map->m_id = id;
 	map->m_id = 1;

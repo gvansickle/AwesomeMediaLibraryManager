@@ -77,15 +77,17 @@ public:
 	Frames m_length_post_gap {0};
 
 	/// CD-Text "pack type indicators".
+	///
 	/// @link https://www.gnu.org/software/libcdio/cd-text-format.html
 	/// @link https://github.com/lipnitsk/libcue/blob/master/libcue.h
 	/// @link https://en.wikipedia.org/wiki/CD-Text
+	///
 	/// These are the character types, applicable to both Disc and Track sections unless otherwise noted.
 	/// See below for binary types.
 	/// These text pack types contain a NUL-termintated string.
 	/// PTI_UPC_ISRC (0x8e) for the full disk is "is documented by Sony as: UPC/EAN Code (POS Code) of the album.
 	///   This field typically consists of 13 characters."  Per the Gnu link above, always ASCII.
-	/// For tracks, ""ISRC code [which] typically consists of 12 characters" and is always ISO-8859-1 encoded.".
+	/// For tracks, "ISRC code [which] typically consists of 12 characters" and is always ISO-8859-1 encoded.".
 	/// Also per the Gnu link: "MMC calls these information entities “Media Catalog Number” and “ISRC”. The catalog
 	///   number consists of 13 decimal digits. ISRC consists of 12 characters: 2 country code [0-9A-Z], 3 owner code [0-9A-Z],
 	///   2 year digits (00 to 99), 5 serial number digits (00000 to 99999)."
@@ -195,7 +197,6 @@ This information is always ASCII encoded. */ \
 QDebug operator<<(QDebug dbg, const TrackMetadata& tm);
 
 Q_DECLARE_METATYPE(TrackMetadata);
-// Qt already declares this.
-//Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE(std::vector);
+
 
 #endif // TRACKMETADATA_H

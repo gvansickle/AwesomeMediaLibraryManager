@@ -239,39 +239,30 @@ target_sources(libapp
 )
 target_compile_definitions(libapp
                            PRIVATE
-                           # libstdc++ defs: @link https://gcc.gnu.org/onlinedocs/gcc-9.1.0/libstdc++/manual/
-                           # Enable the libstdc++ debug mode.
-                           #_GLIBCXX_DEBUG
-                           "KXMLGUI_NO_DEPRECATED=1"
-                           "USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
+	                           # libstdc++ defs: @link https://gcc.gnu.org/onlinedocs/gcc-9.1.0/libstdc++/manual/
+	                           # Enable the libstdc++ debug mode.
+	                           #_GLIBCXX_DEBUG
+	                           "KXMLGUI_NO_DEPRECATED=1"
 )
 target_include_directories(libapp
 								PUBLIC
-									${Wt_INCLUDE_DIRS}
 									"utils/nomoc"
-									${INCLUDE_DIR_VERDIGRIS}
 									${PROJECT_SOURCE_DIR}/src ### @todo For <future/...>
 									${PROJECT_BINARY_DIR}/src
 )
 target_compile_options(libapp PUBLIC ${EXTRA_CXX_COMPILE_FLAGS})
 set_target_properties(libapp
                       PROPERTIES
-                      AUTOMOC ON
-                      AUTOUIC ON
-                      #CXX_CLANG_TIDY "clang-tidy;-checks=-*,readability-*"
+	                      AUTOMOC ON
+	                      AUTOUIC ON
+	                      #CXX_CLANG_TIDY "clang-tidy;-checks=-*,readability-*"
 )
 target_link_libraries(libapp
                       PUBLIC
 	                      # Targetized C++ compile settings.
 	                      cxx_settings
 	                      cxx_definitions_qt
-                      src
-#                      PRIVATE
-#	                      src
-#	                      utils
-	                      #		logic
-	                      #		gui
-	                      #		concurrency
+	                      src
 )
 
 ###
@@ -282,22 +273,16 @@ target_link_libraries(libapp
 add_executable(${PROJECT_NAME} ${WIN32_OR_MACOS_BUNDLE}
 		main.cpp
 )
-# Compiler features FBO Verdigris (esp. on Windows/MSVC).  -D__cpp_constexpr=201304 -D__cpp_variable_templates=201304.
-### @todo No longer required?
-#target_compile_features(${PROJECT_NAME} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
 target_compile_definitions(${PROJECT_NAME}
 	PUBLIC
 		# libstdc++ defs: @link https://gcc.gnu.org/onlinedocs/gcc-9.1.0/libstdc++/manual/
 		# Enable the libstdc++ debug mode.
 		#_GLIBCXX_DEBUG
 		"KXMLGUI_NO_DEPRECATED=1"
-		"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
 	)
 target_include_directories(${PROJECT_NAME}
 	PRIVATE
-		${Wt_INCLUDE_DIRS}
 		"utils/nomoc"
-		${INCLUDE_DIR_VERDIGRIS}
 		${PROJECT_SOURCE_DIR}/src ### @todo For <future/...>
 		${PROJECT_BINARY_DIR}/src
 	)
@@ -333,11 +318,11 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 #add_dependencies(${PROJECT_NAME} icons_oxygen)
 
 # Stop clang-tidy from scanning generated files.
-file(WRITE "${PROJECT_BINARY_DIR}/.clang-tidy" "
----
-Checks: '-*,llvm-twine-local'
-...
-")
+#file(WRITE "${PROJECT_BINARY_DIR}/.clang-tidy" "
+#---
+#Checks: '-*,llvm-twine-local'
+#...
+#")
 
 #print_target_properties(${PROJECT_NAME})
 

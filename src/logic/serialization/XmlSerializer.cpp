@@ -23,8 +23,6 @@
 
 #include "XmlSerializer.h"
 
-// Std C++
-#include <variant>
 // Std C++ from The Future
 #include <future/overloaded.h>
 

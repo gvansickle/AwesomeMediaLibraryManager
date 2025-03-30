@@ -78,6 +78,7 @@ list(TRANSFORM AMLM_HEADER_FILES_TEST PREPEND "../src/")
 list(APPEND AMLM_SOURCE_FILES_TEST
      ${PROJECT_SOURCE_DIR}/tests/FlagsAndEnumsTests.cpp
 	${PROJECT_SOURCE_DIR}/tests/treetest.cpp
+	${PROJECT_SOURCE_DIR}/tests/SerializationTests.cpp
 )
 list(APPEND AMLM_HEADER_FILES_TEST
      ${PROJECT_SOURCE_DIR}/tests/TestHelpers.h
@@ -165,7 +166,6 @@ if(TRUE)
 #	                           "QT_SHAREDPOINTER_TRACK_POINTERS=1"
 #	                           "QT_DEPRECATED_WARNINGS"
 #	                           "QT_NO_KEYWORDS"
-	                           "USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
 	                           "TEST_FWK_IS_QTEST=1"
 	)
 	target_compile_options(test_qtestamlmjobtests PRIVATE ${EXTRA_CXX_COMPILE_FLAGS})
@@ -175,7 +175,6 @@ if(TRUE)
 	target_include_directories(test_qtestamlmjobtests
 	                           PRIVATE
 	                           "utils/nomoc"
-	                           ${INCLUDE_DIR_VERDIGRIS}
 	                           "../src/logic"
 	                           "../src"
 	                           # For config.h
@@ -200,7 +199,7 @@ if(TRUE)
 	add_test(NAME test_qtestamlmjobtests COMMAND $<TARGET_FILE:test_qtestamlmjobtests>)
 	ecm_mark_as_test(test_qtestamlmjobtests)
 	###
-	### END Qt5 QTests
+	### END Qt QTests
 	###
 endif()
 
