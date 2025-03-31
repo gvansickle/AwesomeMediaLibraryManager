@@ -140,9 +140,6 @@ TEST_F(FlagsAndEnumsTests, FlagsToStringViaEnumFlagtoqstr)
 
 TEST_F(FlagsAndEnumsTests, FlagsToStringViaQVariant)
 {
-	// Up to at least Qt5.11.1, Q_ENUM()s can be converted to QStrings when held in QVariants,
-	// but Q_FLAG()s have no such built-in support, hence the EXPECT_NE() below.
-
 	TestFlagHolder::TestFlags testflags { TestFlagHolder::Flag1 | TestFlagHolder::Flag4 };
 
 	QString flags_as_str = QVariant::fromValue(testflags).toString();
@@ -154,7 +151,7 @@ TEST_F(FlagsAndEnumsTests, FlagsToStringViaQVariant)
 	}
 	else
 	{
-		EXPECT_NE(flags_as_str, QString("Flag1|Flag4"));
+		EXPECT_EQ(flags_as_str, QString("Flag1|Flag4"));
 	}
 }
 TEST_F(FlagsAndEnumsTests, FlagsRoundTripThroughQVariantStringRepWithRegisteredConverters)

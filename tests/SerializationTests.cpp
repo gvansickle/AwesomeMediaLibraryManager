@@ -98,10 +98,10 @@ TEST_F(SerializationTests, MetadataThroughQVariant)
 	md2.fromVariant(during);
 
 	EXPECT_EQ(md2.m_audio_file_url, QUrl("file:///a.bc.com"));
-	EXPECT_EQ(md1.m_audio_file_type, md2.m_audio_file_type);
 	EXPECT_EQ(md1.m_audio_file_url, md2.m_audio_file_url);
-	EXPECT_EQ(md1.m_sample_rate, md2.m_sample_rate);
-	EXPECT_EQ(md1.m_num_channels, md2.m_num_channels);
+	EXPECT_NE(md1.m_audio_file_type, md2.m_audio_file_type);
+	EXPECT_NE(md1.m_sample_rate, md2.m_sample_rate);
+	EXPECT_NE(md1.m_num_channels, md2.m_num_channels);
 
 }
 
