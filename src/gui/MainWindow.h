@@ -387,6 +387,7 @@ private:
 
     /// Experimental "scratch" widget for doing development experiments.
     Experimental* m_experimental;
+    /// Experimental KDE view.
 	ExperimentalKDEView1* m_exp_second_child_view;
 
 

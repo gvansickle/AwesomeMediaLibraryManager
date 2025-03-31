@@ -1497,7 +1497,7 @@ void MainWindow::readLibSettings(QSettings& settings)
 
 		SerializableQVariantList list = ef.result();
 
-		qIn() << "###### READ" << list.size() << "libraries from XML DB:" << overlay_filename;
+        qIn() << "###### READ" << list.size() << "libraries from XML DB:" << overlay_filename;
 
 		for(const auto& list_entry : list)
 		{
@@ -1505,7 +1505,7 @@ void MainWindow::readLibSettings(QSettings& settings)
 			Q_ASSERT(qv.isValid());
 			Q_ASSERT(!qv.isNull());
 
-
+			// Create a new LibraryModel and read contents into it.
 			LibraryModel* library_model = new LibraryModel(this);
 			{
 				Stopwatch sw("library_model-from-variant");
@@ -1526,6 +1526,7 @@ void MainWindow::readLibSettings(QSettings& settings)
 				mvpair.m_model_was_existing = false;
 
 				addChildMDIModelViewPair_Library(mvpair);
+                onShowLibrary(library_model);
 			}
 		}
 		qIn() << "###### READ AND CONVERTED XML DB:" << overlay_filename;
@@ -1799,15 +1800,15 @@ void MainWindow::newCollectionView()
 
 //    child->getTableView()->setModel(model);
 //    child->setPane2Model(AMLMApp::instance()->cdb2_model_instance());
-M_WARNING("SHARED PTR")
+// M_WARNING("SHARED PTR")
 //	child->setPane2Model(AMLMApp::instance()->IScanResultsTreeModel().get());
 //	child->setPane2Model(AMLM::Core::self()->getScanResultsTreeModel().get());
 	child->setPane2Model(AMLM::Core::self()->getEditableTreeModel().get());
 
 	m_exp_second_child_view = new ExperimentalKDEView1(this);
 	auto second_mdi_child = m_mdi_area->addSubWindow(m_exp_second_child_view);
-M_WARNING("SHARED PTR")
-auto srtmodel = AMLM::Core::self()->getScanResultsTreeModel().get();
+// M_WARNING("SHARED PTR")
+    auto srtmodel = AMLM::Core::self()->getScanResultsTreeModel().get();
 	m_exp_second_child_view->setModel(srtmodel);
 
     mdi_child->show();
