@@ -438,8 +438,9 @@ bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t
             auto insert_status = m_tracks.insert({track_num, tm});
             if(insert_status.second != true)
             {
-                // No insertion took place, must have been a dup.
-                qWr() << "DUPLICATE CUESHEET TRACK ENTRIES:" << track_num;/// << tm << *insert_status.first;
+                // Found a dup.
+            	/// @todo This means something is really broken, should handle this better than just a message.
+                qCr() << "DUPLICATE CUESHEET TRACK ENTRIES:" << track_num;/// << tm << *insert_status.first;
             }
         }
 

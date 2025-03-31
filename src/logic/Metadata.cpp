@@ -663,12 +663,13 @@ QVariant Metadata::toVariant() const
 #undef X
 
 	// M_DATASTREAM_FIELDS_LISTS(X)
+
+#if 0
     QVariantMap var_tracks = std_map_to_qvariantmap(m_tracks);
     map_insert_or_die(map, XMLTAG_TRACKS, var_tracks);
 
-
 	// Track-level fields.
-#if 0 /// @todo This info gets duplicated (complete with should-be-unique xml:id's)	in the CueSheet.
+#else /// @todo This info gets duplicated (complete with should-be-unique xml:id's)	in the CueSheet.
 	// Add the track list to the return map.
 	QVariantHomogenousList qvar_track_map("m_track", "track");
 
@@ -702,18 +703,18 @@ void Metadata::fromVariant(const QVariant& variant)
     map_read_field_or_warn(map, XMLTAG_TRACKS, &temp_map);
     std::map<int, TrackMetadata> tracks_map = qvariantmap_to_std_map<std::map<int, TrackMetadata>>(temp_map);
     m_tracks = tracks_map;
-    map_read_field_or_warn(map, XMLTAG_TRACKS, &m_tracks);
+    // map_read_field_or_warn(map, XMLTAG_TRACKS, &m_tracks);
 
 	map_read_field_or_warn(map, XMLTAG_CUESHEET, &m_cuesheet);
 
 /// @todo FIX TRACK DUPS
-#if 0 /// @todo This info gets duplicated (complete with should-be-unique xml:id's)	in the CueSheet.
+#if 1 /// @todo This info gets duplicated (complete with should-be-unique xml:id's)	in the CueSheet.
 	// Read in the track list.
 	QVariantHomogenousList qvar_track_list("m_track", "track");
 	map_read_field_or_warn(map, XMLTAG_TRACKS, &qvar_track_list);
-#if 0
-	list_read_all_fields_or_warn(qvar_track_list)
-#else
+
+    // list_read_all_fields_or_warn(qvar_track_list)
+
 	for(const auto& track : qvar_track_list)
 	{
 		TrackMetadata tm;
@@ -725,7 +726,6 @@ void Metadata::fromVariant(const QVariant& variant)
 
 		m_tracks.insert(std::make_pair(track_num, tm));
 	}
-#endif
 #endif
 	m_read_has_been_attempted = true;
 	m_is_error = false;

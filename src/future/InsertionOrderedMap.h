@@ -28,6 +28,7 @@
 #include <deque>
 #include <map>
 #include <tuple>
+#include <format>
 #include <vector>
 #include <utility> // For std::pair<>.
 
@@ -41,6 +42,7 @@
 #include <future/guideline_helpers.h>
 #include <future/future_algorithms.h>
 #include <utils/DebugHelpers.h>
+#include <utils/StringHelpers.h>
 
 
 /**
@@ -138,12 +140,23 @@ public:
 		m_attribute_map.clear();
 	}
 
+	mapped_type& at(const KeyType& key)
+	{
+		auto it = this->find(key);
+		if (it == m_vector_of_elements.cend())
+		{
+            throw std::out_of_range(
+                std::format("InsertionOrderedMap(): no such element, at(key): {}", key));// + key.toUtf8().toStdString());
+		}
+		return it->second;
+	}
+
 	const mapped_type& at(const KeyType& key) const
 	{
 		auto it = this->find(key);
 		if(it == m_vector_of_elements.cend())
 		{
-			throw std::out_of_range(std::string("InsertionOrderedMap(): no such element at():") + key.toUtf8().toStdString());
+            throw std::out_of_range(std::format("InsertionOrderedMap(): no such element, at(key):", key));// + key.toUtf8().toStdString());
 		}
 		return it->second;
 	}

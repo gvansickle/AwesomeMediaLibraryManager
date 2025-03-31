@@ -204,8 +204,7 @@ public:
 	int m_num_tracks_on_media {0};
 
 	/// Collection of track metadata.  May be empty, may contain multiple entries for a single-file multi-song image.
-	// std::map<int, TrackMetadata> m_tracks {};
-	InsertionOrderedMap<int, TrackMetadata> m_tracks;
+    std::map<int, TrackMetadata> m_tracks {};
 
 	/// Same as above, but in AMLMTagMap form.
 //	AMLMTagMap m_track_amlmtagmaps {};
