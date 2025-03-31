@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+* Copyright 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -17,36 +17,35 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "UUIncD.h"
+#ifndef ITEMFACTORY_H
+#define ITEMFACTORY_H
 
-#include <DebugHelpers.h>
+// Std C++
+#include <memory>
+#include <functional>
+#include <string>
 
-std::atomic_uint64_t UUIncD::m_next_id {1};
+// Qt
+#include <QMap>
 
-UUIncD::UUIncD(std::uint64_t id)
+// Ours.
+#include "AbstractTreeModelItem.h"
+
+
+class ItemFactory
 {
-	m_my_id = id;
-}
+public:
+  	using Creator = std::function<std::shared_ptr<AbstractTreeModelItem>()>;
 
-// static
-UUIncD::UUIncD(quintptr qmodelindex_int_id)
-{
-	static_assert(sizeof(quintptr) == sizeof(m_my_id));
-	m_my_id = qmodelindex_int_id;
-}
+	static ItemFactory& instance();
 
-// Static
-UUIncD UUIncD::create()
-{
-	UUIncD retval;
-	retval.m_my_id = UUIncD::m_next_id.fetch_add(1);
-	qDb() << "UUIncD::create():" << retval;
-	return retval;
-}
+	void registerItemCreator(const std::string classname, Creator creator);
 
-UUIncD::operator uint64_t() const
-{
-	return m_my_id;
-}
+	std::shared_ptr<AbstractTreeModelItem> createItem(std::string classname) const;
+
+private:
+	QMap<std::string, Creator> m_creators;
+};
 
 
+#endif //ITEMFACTORY_H

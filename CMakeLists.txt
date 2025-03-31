@@ -157,7 +157,7 @@ include(ECMQtDeclareLoggingCategory)
 # The sanitizers are not enabled by default. Instead, you must set ECM_ENABLE_SANITIZERS (either in your
 # CMakeLists.txt or on the command line) to a semicolon-separated list of sanitizers you wish to enable.
 # The options are:
-#   address memory thread leak undefined
+#   address memory thread leak undefined fuzzer
 # The sanitizers "address", "memory" and "thread" are mutually exclusive. You cannot enable two of them in the same build.
 # "leak" requires the "address" sanitizer.
 ### @note KDECompileFlags includes include(ECMEnableSanitizers).
@@ -623,6 +623,29 @@ configure_file(${PROJECT_SOURCE_DIR}/src/config.h.in
 # add_custom_target(graphviz ALL
 # 	${CMAKE_COMMAND} .. "--graphviz=graphviz.dot" .
 # 	WORKING_DIRECTORY .)
+find_package(Doxygen REQUIRED)
+if(DOXYGEN_FOUND)
+	# Set directories.
+	set(DOXYGEN_INPUT "${CMAKE_SOURCE_DIR}/src")
+	set(DOXYGEN_OUTPUT "${CMAKE_BINARY_DIR}/docs")
+	# Configure Doxyfile.
+	configure_file(
+		${CMAKE_SOURCE_DIR}/Doxyfile.in
+		${CMAKE_BINARY_DIR}/Doxyfile
+		@ONLY
+	)
+	# Custom target to generate doxygen docs.
+	add_custom_target(docs
+		COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_BINARY_DIR}/Doxyfile
+		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+		COMMENT "Generating internals documentation with Doxygen"
+		VERBATIM
+	)
+else()
+	message(WARNING "Doxygen not found.  Documentation will not be generated.")
+endif()
+
+
 
 ###
 ### Add the project subdirs.

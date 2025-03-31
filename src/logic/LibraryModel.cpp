@@ -17,7 +17,7 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/** @file LibraryModel. */
+/** @file LibraryModel.cpp */
 
 #include "LibraryModel.h"
 
@@ -702,6 +702,7 @@ void LibraryModel::fromVariant(const QVariant& variant)
 
 	temp_lib.fromVariant(qvar_temp_lib);
 
+#warning "Do we need to delete any old library here?"
 	m_library = temp_lib;
 }
 

@@ -36,8 +36,8 @@
 class Metadata : public virtual ISerializable
 {
 public:
-	M_GH_RULE_OF_FIVE_DEFAULT_C21(Metadata);
-	~Metadata() override {};
+    M_GH_RULE_OF_FIVE_DEFAULT_C21(Metadata)
+    ~Metadata() override = default;
 
 	/// @name Static Factory Functions
 	/// @{
@@ -79,7 +79,7 @@ public:
 	bool hasRIFFInfo() const { return m_has_riff_info; }
 	bool hasDiscCuesheet() const { return !m_tm_cuesheet_disc.empty(); }
 
-	AMLMTagMap tagmap_generic() const { return m_tm_generic; };
+    AMLMTagMap tagmap_generic() const { return m_tm_generic; }
 	AMLMTagMap tagmap_id3v1() const { return m_tm_id3v1; }
 	AMLMTagMap tagmap_id3v2() const { return m_tm_id3v2; }
 	AMLMTagMap tagmap_ape() const { return m_tm_ape; }
@@ -145,7 +145,9 @@ public:
 
 	/// @}
 
-private:
+/// @todo if(googletest) here
+// private:
+
 
 	QUrl m_audio_file_url {};
 
@@ -202,7 +204,7 @@ private:
 	int m_num_tracks_on_media {0};
 
 	/// Collection of track metadata.  May be empty, may contain multiple entries for a single-file multi-song image.
-	std::map<int, TrackMetadata> m_tracks {};
+    std::map<int, TrackMetadata> m_tracks {};
 
 	/// Same as above, but in AMLMTagMap form.
 //	AMLMTagMap m_track_amlmtagmaps {};
@@ -211,10 +213,9 @@ private:
 
 };
 
+QDataStream& operator<<(QDataStream& out, const Metadata& obj);
+QDataStream& operator>>(QDataStream& in, Metadata& obj);
+
 Q_DECLARE_METATYPE(Metadata);
-
-QDataStream &operator<<(QDataStream &out, const Metadata &obj);
-QDataStream &operator>>(QDataStream &in, Metadata &obj);
-
 
 #endif // LOGIC_METADATA_H

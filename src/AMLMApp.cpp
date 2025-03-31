@@ -148,7 +148,7 @@ bool AMLMApp::shuttingDown() const
 
 void AMLMApp::KDEOrForceBreeze(KConfigGroup group)
 {
-M_WARNING("TODO: Do something with this Breeze forcing.");
+/// @TODO: Do something with this Breeze forcing.
 return;
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     if (env.contains(QStringLiteral("XDG_CURRENT_DESKTOP")) && env.value(QStringLiteral("XDG_CURRENT_DESKTOP")).toLower() == QLatin1String("kde"))

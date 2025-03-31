@@ -27,7 +27,7 @@
 // Std C++
 #include <functional>
 
-// Qt5
+// Qt
 #include <QString>
 #include <QUrl>
 
@@ -42,7 +42,7 @@ class ISerializable;
 class ISerializer
 {
 public:
-	virtual ~ISerializer() {}
+    virtual ~ISerializer() = default;
 
 	virtual void save(const ISerializable& serializable,
 			const QUrl& filepath,

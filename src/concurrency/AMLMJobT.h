@@ -548,7 +548,8 @@ protected:
         // This group corresponds ~1:1 with KJob functionality.
 		connect_or_die(watcher, &ExtFutureWatcherT::started, this, &ThisType::SLOT_extfuture_started);
 		connect_or_die(watcher, &ExtFutureWatcherT::canceled, this, &ThisType::SLOT_extfuture_canceled);
-		connect_or_die(watcher, &ExtFutureWatcherT::paused, this, &ThisType::SLOT_extfuture_paused);
+        connect_or_die(watcher, &ExtFutureWatcherT::suspending, this, &ThisType::SLOT_extfuture_paused);
+        connect_or_die(watcher, &ExtFutureWatcherT::suspended, this, &ThisType::SLOT_extfuture_paused);
 		connect_or_die(watcher, &ExtFutureWatcherT::resumed, this, &ThisType::SLOT_extfuture_resumed);
 		connect_or_die(watcher, &ExtFutureWatcherT::finished, this, &ThisType::SLOT_extfuture_finished);
 

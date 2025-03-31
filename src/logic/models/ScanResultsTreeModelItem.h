@@ -26,7 +26,7 @@
 // Std C++
 #include <memory>
 
-// Qt5
+// Qt
 #include <QStringLiteral>
 
 // Ours
@@ -44,23 +44,30 @@ class ScanResultsTreeModel;
  * Tree model item containing the results of a single DirScanResult.
  * KDEN: ~similar to AbstractProjectItem
  */
-class ScanResultsTreeModelItem : public AbstractTreeModelItem, public enable_shared_from_this_virtual<ScanResultsTreeModelItem>
+class ScanResultsTreeModelItem : public AbstractTreeModelItem, public virtual ISerializable,
+	public enable_shared_from_this_virtual<ScanResultsTreeModelItem>
 
 {
+protected:
 	using BASE_CLASS = AbstractTreeModelItem;
 
-//protected:
-public:
+protected:
 	/// Create a new model item populated with the passed DirScanResult.
-//	explicit ScanResultsTreeModelItem(const DirScanResult& dsr, std::shared_ptr<ScanResultsTreeModel> model,
-//	                                  bool is_root = false);
-	explicit ScanResultsTreeModelItem(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr, UUIncD id = UUIncD::null());
-	explicit ScanResultsTreeModelItem(const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr, UUIncD id = UUIncD::null());
-	explicit ScanResultsTreeModelItem(const QVariant& variant, const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr, UUIncD id = UUIncD::null());
+	explicit ScanResultsTreeModelItem(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModel>& parent = nullptr);
+	explicit ScanResultsTreeModelItem(const std::shared_ptr<AbstractTreeModel>& parent = nullptr);
+	explicit ScanResultsTreeModelItem(const QVariant& variant, const std::shared_ptr<AbstractTreeModel>& parent = nullptr);
 
-//
-//	explicit ScanResultsTreeModelItem(std::shared_ptr<ScanResultsTreeModel> model, bool is_root = false);
 public:
+    static std::unique_ptr<ScanResultsTreeModelItem> create(const std::shared_ptr<AbstractTreeModel>& parent = nullptr)
+    {
+        return std::unique_ptr<ScanResultsTreeModelItem>(new ScanResultsTreeModelItem(parent));
+    }
+    static std::unique_ptr<ScanResultsTreeModelItem> create(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModel>& parent = nullptr)
+    {
+        return std::unique_ptr<ScanResultsTreeModelItem>(new ScanResultsTreeModelItem(dsr, parent));
+    }
+
+
 //	ScanResultsTreeModelItem() {};
 //	explicit ScanResultsTreeModelItem(const DirScanResult& dsr, const std::shared_ptr<AbstractTreeModelItem>& parent = nullptr, UUIncD id = UUIncD::null());
 	~ScanResultsTreeModelItem() override;
@@ -74,7 +81,7 @@ public:
 	 */
 	QVariant data(int column, int role = Qt::DisplayRole) const override;
 
-	DirScanResult getDsr() const { return m_dsr; };
+    DirScanResult getDsr() const { return m_dsr; }
 
 	int columnCount() const override;
 

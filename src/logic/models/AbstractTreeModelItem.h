@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2019, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -45,6 +45,7 @@
 #include <future/enable_shared_from_this_virtual.h>
 #include <logic/UUIncD.h>
 #include <logic/serialization/ISerializable.h>
+#include <logic/serialization/SerializationHelpers.h>
 #include "UndoRedoHelper.h"
 class AbstractTreeModel;
 
@@ -64,26 +65,30 @@ protected:
 	friend class AbstractTreeModel;
 
 public:
-	AbstractTreeModelItem();
+    static std::shared_ptr<AbstractTreeModelItem> create(const std::vector<QVariant>& data = {},
+                                                        const std::shared_ptr<AbstractTreeModel>& model = nullptr,
+                                                        bool is_root = false);
+
+protected:
+	explicit AbstractTreeModelItem(const std::vector<QVariant>& data,
+			const std::shared_ptr<AbstractTreeModel>& model = nullptr);
 
 public:
-	explicit AbstractTreeModelItem(const std::vector<QVariant>& data,
-			const std::shared_ptr<AbstractTreeModelItem>& parent_item = nullptr, UUIncD id = UUIncD::null());
+protected:
+    explicit AbstractTreeModelItem() = default;
+
+public:
 	~AbstractTreeModelItem() override;
 
-	/**
-	 * Because we have a mutex member.
-	 */
-//	AbstractTreeModelItem(const AbstractTreeModelItem& other);
-
+public:
 	virtual void clear();
 
 	/**
 	 * From KDenLive:
 	 * "This function executes what should be done when the item is deleted but without deleting effectively.
 	 * For example, the item will deregister itself from the model and delete the clips from the timeline.
-	 * However, the object is NOT actually deleted, and the tree structure is preserved.
-	 * @param Undo,Redo are the lambdas accumulating the update.
+	 * However, the object is NOT actually deleted, and the tree structure is preserved."
+	 * @param Undo, Redo are the lambdas accumulating the update.
 	 */
 	virtual bool selfSoftDelete(Fun &undo, Fun &redo);
 
@@ -109,8 +114,10 @@ public:
      // Both ETM&KDEN have this, but they don't take a role param.
 	virtual QVariant data(int column, int role = Qt::DisplayRole) const;
 
-	/// @todo NEW: Return the QVariant in @a column.  Not sure if this is needed.
-	// KDEN, see data().
+	/**
+	 * Return the QVariant in @a column.
+	 * KDEN, see data().
+	 */
 	QVariant dataColumn(int column) const;
 
 	// ETM+KDEN
@@ -119,7 +126,7 @@ public:
 	/**
 	 * Insert new default-constructed columns into this item/row.
 	 */
-M_WARNING("NEED TO BE OVERRIDDEN IN HeaderItem");
+	/// @warning NEED TO BE OVERRIDDEN IN HeaderItem
 	 // ETM, no KDEN
 	virtual bool insertColumns(int insert_before_column, int num_columns);
 	// ETM, no KDEN
@@ -132,8 +139,8 @@ M_WARNING("NEED TO BE OVERRIDDEN IN HeaderItem");
 	std::shared_ptr<AbstractTreeModelItem> parent() const;
 
 
-	// KDEN, seems unused.
-	int depth() const;
+	// KDEN, used in checkConsistency().
+	int depth() const { return m_depth; }
 
 	/**
 	 * Return the UUIncD of this item.
@@ -160,7 +167,7 @@ M_WARNING("NEED TO BE OVERRIDDEN IN HeaderItem");
 	/// @{
 
 	/**
-	 * @note This is where all(?) children are ultimately created.
+	 *
 	 */
 	std::vector<std::shared_ptr<AbstractTreeModelItem>> insertChildren(int position, int count, int columns);
 
@@ -176,7 +183,7 @@ M_WARNING("NEED TO BE OVERRIDDEN IN HeaderItem");
 	 * Append an already-created child item to this item.
 	 */
 	// GRVS+KDEN,AQP has this as addChild().
-	bool appendChild(const std::shared_ptr<AbstractTreeModelItem>& new_child);
+    bool appendChild(const std::shared_ptr<AbstractTreeModelItem>& new_child);
 	/**
 	 * Construct and Append a new child item to this item, initializing it from @a data.
 	 */
@@ -212,8 +219,10 @@ M_WARNING("NEED TO BE OVERRIDDEN IN HeaderItem");
 	/// Be sure to override these in derived classes.
 	/// @{
 
-	 QVariant toVariant() const override;
-	 void fromVariant(const QVariant& variant) override;
+    QVariant toVariant() const override;
+    void fromVariant(const QVariant& variant) override;
+    void setModel(std::shared_ptr<AbstractTreeModel> model) { m_model = model; m_is_in_model = true; }
+
 
 	/// KDEN
 	/**
@@ -237,7 +246,8 @@ M_WARNING("NEED TO BE OVERRIDDEN IN HeaderItem");
      */
     bool has_ancestor(UUIncD id);
 
-	/* @brief Return true if the item thinks it is a root.
+    /**
+     *  Return true if the item thinks it is a root.
    Note that it should be consistent with what the model thinks, but it may have been
    messed up at some point if someone wrongly constructed the object with isRoot = true */
 	bool isRoot() const;
@@ -247,12 +257,14 @@ M_WARNING("NEED TO BE OVERRIDDEN IN HeaderItem");
 
 protected:
 
+    static void baseFinishCreate(const std::shared_ptr<AbstractTreeModelItem>& new_item);
 
 	/**
 	 * Helper functions to handle registration / deregistration to the model.
 	 */
 	static void register_self(const std::shared_ptr<AbstractTreeModelItem>& self);
 	void deregister_self();
+
 
 	/**
 	 * Reflect update of the parent ptr (for example set this's correct depth).
@@ -272,36 +284,13 @@ protected:
 
 	/// @}
 
-	template <class T, class MapType>
-	static void set_map_class_info(const T* self, MapType* map)
-	{
-		int id = qMetaTypeId<T>();
-        qDb() << "QMetaType:" << id << QMetaType::fromType<T>().name();
-		map->m_id = id;
-		map->m_class = QMetaType::fromType<T>().name();
-	}
 
-#if 0
-	template <class MapType>
-	static void set_map_class_info(const std::string& classname, MapType* map)
-	{
-//		int id = qMetaTypeId<T>();
-		int id = 0;
-//		qDb() << "QMetaType:" << id << QMetaType::typeName(id);// << QVariant(*this).typeName();
-		qDb() << "No QMetaType, class:" << classname << "id:" << id;
-		map->m_id = id;
-//		map->m_class = QMetaType::typeName(id);
-		map->m_class = classname;
-	}
-#endif
 
 	template <class T, class MapType>
 	static void dump_map_class_info(const T* self, MapType* map)
 	{
 		int id = qMetaTypeId<T>();
 		qDb() << "QMetaType:" << id << QMetaType::fromType<T>().name();
-//		map->m_id = id;
-//		map->m_class = QMetaType::typeName(id);
 	}
 
 
@@ -326,11 +315,11 @@ protected:
 	std::vector<QVariant> m_item_data;
 
 	std::weak_ptr<AbstractTreeModel> m_model;
-//	bool m_is_in_model {false};
+	bool m_is_in_model {false};
 
 	bool m_is_root {false};
 
-	/// Deque of shared_ptr's to child items.
+    /// Deque of std::shared_ptr's to child items.
 	std::deque<std::shared_ptr<AbstractTreeModelItem>> m_child_items;
 
 private:
@@ -350,16 +339,19 @@ private:
 	/// be non-null as long as this item is not the invisible root item.
 	std::weak_ptr<AbstractTreeModelItem> m_parent_item;
 
-//	int m_depth {-1};
+	/// This is used by checkConsistency().
+	int m_depth {-1};
 };
-
-//Q_DECLARE_METATYPE(AbstractTreeModelItem);
-Q_DECLARE_METATYPE(std::vector<QVariant>);
-Q_DECLARE_METATYPE(std::weak_ptr<AbstractTreeModelItem>);
-Q_DECLARE_METATYPE(std::shared_ptr<AbstractTreeModelItem>);
 
 // Debug stream op free func declaration.
 QTH_DECLARE_QDEBUG_OP(AbstractTreeModelItem);
+
+Q_DECLARE_METATYPE(AbstractTreeModelItem);
+Q_DECLARE_METATYPE(std::vector<QVariant>);
+Q_DECLARE_METATYPE(std::weak_ptr<AbstractTreeModelItem>);
+// Q_DECLARE_METATYPE(std::shared_ptr<AbstractTreeModelItem>);
+
+
 
 
 template <class T, class BinOp>
@@ -393,37 +385,6 @@ std::shared_ptr<T> TreeItemFactory(Args... args)
 	retval->postConstructorFinalization();
 
   return retval;
-}
-
-/**
- * Function template for trying to commonalize the loading of an item's children.
- * @tparam ChildItemType
- * @tparam ParentItemType
- * @param parent_item
- * @param child_var_list
- */
-template <class ChildItemType, class ParentItemType = AbstractTreeModelItem>
-void append_children_from_variant(ParentItemType* parent_item, const QVariantHomogenousList& child_var_list)
-{
-	Q_ASSERT(parent_item->isInModel());
-	auto starting_childcount = parent_item->childCount();
-
-	for(const QVariant& child_variant : child_var_list)
-	{
-		qDb() << "READING CHILD ITEM:" << child_variant << " INTO PARENT ITEM:" << parent_item;
-
-		auto new_child = std::make_shared<ChildItemType>();
-		Q_ASSERT(new_child);
-
-		/// @note Cuurently we need to add the empty item to the model before reading it in, so that
-		/// its children will be set up correctly model-wise.  This is almost certainly more efficient anyway.
-		bool append_success = parent_item->appendChild(new_child);
-		AMLM_ASSERT_X(append_success, "FAILED TO APPEND NEW ITEM TO PARENT");
-
-		new_child->fromVariant(child_variant);
-	}
-
-	AMLM_ASSERT_EQ(starting_childcount+child_var_list.size(), parent_item->childCount());
 }
 
 #endif // ABSTRACTTREEMODELITEM_H

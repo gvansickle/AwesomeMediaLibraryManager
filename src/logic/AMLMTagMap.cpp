@@ -26,7 +26,7 @@
 // Std C++
 #include <iterator>
 
-// Qt5
+// Qt
 #include <QtGlobal>
 
 // TagLib.

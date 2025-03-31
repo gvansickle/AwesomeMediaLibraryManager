@@ -95,22 +95,6 @@ int main(int argc, char *argv[])
 	// Log our startup environment.
 	logging.dumpEnvVars();
 
-	// App-wide settings.
-	// http://doc.qt.io/qt-5/qt.html#ApplicationAttribute-enum
-	// Enable high-DPI scaling in Qt on supported platforms.
-	// Makes Qt scale the main (device independent) coordinate system according to display scale factors provided by
-	// the operating system. This corresponds to setting the QT_AUTO_SCREEN​_SCALE_FACTOR environment variable to 1.
-	/// @note Must be set before Q(Gui)Application is constructed.
-    AMLMApp::setAttribute(Qt::AA_EnableHighDpiScaling);
-    // Use HighDPI pixmaps as long as we're supporting High DPI scaling.
-    // "After setting this attribute, application code that uses pixmap sizes in layout geometry calculations should
-    // typically divide by devicePixelRatio() to get device-independent layout geometry."
-    /// @note Must be set before Q(Gui)Application is constructed.
-    AMLMApp::setAttribute(Qt::AA_UseHighDpiPixmaps, true);
-	/// @todo Look at:
-	///		Qt::AA_UseStyleSheetPropagationInWidgetStyles
-	///		Qt::AA_CompressHighFrequencyEvents (default is true on X11)
-
     // QStandardPaths::AppDataLocation changes before and after QApp creation, and then again when we set these
     // vars, if we don't set them prior to constructing the app.  This affects KIconTheme's attempt to load
     // an "icontheme.rcc" file from one of these dirs.
@@ -149,7 +133,7 @@ int main(int argc, char *argv[])
 	}
 
     // If we're forcing Breeze icons, force them here.
-    M_WARNING("Not picking up these icons FWICT.  Also interfering with user selected icon theme, and doesn't get saved.")
+/// @todo Not picking up these icons FWICT.  Also interfering with user selected icon theme, and doesn't get saved.
     bool forceBreeze = grp.readEntry("force_breeze", QVariant(false)).toBool();
     if (forceBreeze)
     {

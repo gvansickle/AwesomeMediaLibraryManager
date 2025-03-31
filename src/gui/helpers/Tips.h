@@ -20,7 +20,8 @@
 #ifndef TIPS_H
 #define TIPS_H
 
-/// @file Helpers for setting all the various *Tips() at once.
+/// @file Tips.h
+/// Helpers for setting all the various *Tips() at once.
 
 class QString;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017, 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018, 2019, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -32,7 +32,7 @@ extern "C" {
 #include <libcue/cdtext.h>
 } // END extern C
 
-/// Ours, Qt5/KF5-related
+/// Ours, Qt/KF-related
 #include <utils/TheSimplestThings.h>
 #include <utils/RegisterQtMetatypes.h>
 
@@ -46,9 +46,6 @@ AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering TrackMetadata";
     qRegisterMetaType<TrackMetadata>();
     ;});
-
-//Q_DECLARE_METATYPE(std::string);
-
 
 using strviw_type = QLatin1String;
 
@@ -165,7 +162,7 @@ std::string TrackMetadata::toStdString() const
 	X(XMLTAG_TRACK_META_INDEXES, m_indexes)
 
 /// Strings to use for the tags.
-#define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
+#define X(field_tag, member_field) static constexpr strviw_type field_tag ( # member_field );
 	M_DATASTREAM_FIELDS(X);
 	M_DATASTREAM_FIELDS_SPECIAL_HANDLING(X);
 #undef X
@@ -176,7 +173,7 @@ QVariant TrackMetadata::toVariant() const
 	InsertionOrderedMap<QString, QVariant> map;
 
 	// Set some extra class info to the attributes.
-//	set_map_class_info(this, &map);
+	set_map_class_info(this, &map);
 
 	// Set the xml:id.
 	map.insert_attributes({{"xml:id", get_prefixed_uuid()}});
@@ -184,6 +181,7 @@ QVariant TrackMetadata::toVariant() const
 #define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
 	M_DATASTREAM_FIELDS(X);
 #undef X
+	// map_insert_or_die(map, XMLTAG_TRACK_PTI_VALUES, m_tm_track_pti.toVariant());
 
 	// m_indexes
 	QVariantHomogenousList index_list("m_indexes", "index");

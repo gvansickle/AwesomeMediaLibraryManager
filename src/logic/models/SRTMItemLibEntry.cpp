@@ -44,23 +44,17 @@
 //	return self;
 //}
 
-SRTMItem_LibEntry::SRTMItem_LibEntry(const std::shared_ptr<AbstractTreeModelItem>& parent_item, UUIncD id)
-	: BASE_CLASS(parent_item, id)
+SRTMItem_LibEntry::SRTMItem_LibEntry(const std::shared_ptr<AbstractTreeModel>& model)
+    : BASE_CLASS(model)
 {
 
 }
 
-SRTMItem_LibEntry::SRTMItem_LibEntry(std::shared_ptr<LibraryEntry> libentry, const std::shared_ptr<AbstractTreeModelItem>& parent_item, UUIncD id)
-	: BASE_CLASS(parent_item, id), m_library_entry(libentry)
+SRTMItem_LibEntry::SRTMItem_LibEntry(std::shared_ptr<LibraryEntry> libentry, const std::shared_ptr<AbstractTreeModel>& model)
+    : BASE_CLASS(model), m_library_entry(libentry)
 {
 
 }
-
-//SRTMItem_LibEntry::SRTMItem_LibEntry(const QVariant& variant, const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id)
-//	: BASE_CLASS(parent, id)
-//{
-//
-//}
 
 QVariant SRTMItem_LibEntry::data(int column, int role) const
 {
@@ -128,7 +122,7 @@ int SRTMItem_LibEntry::columnCount() const
 using strviw_type = QLatin1String;
 
 ///// Strings to use for the tags.
-#define X(field_tag, tag_string, var_name) static const strviw_type field_tag ( # tag_string );
+#define X(field_tag, tag_string, var_name) static constexpr strviw_type field_tag ( # tag_string );
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
@@ -149,12 +143,10 @@ QVariant SRTMItem_LibEntry::toVariant() const
 	}
 	map_insert_or_die(map, XMLTAG_LIBRARY_ENTRIES, list);
 
-	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
-	for(auto& it : m_child_items)
-	{
-		list_push_back_or_die(child_var_list, it->toVariant());
-	}
-	map_insert_or_die(map, XMLTAG_CHILD_NODE_LIST, child_var_list);
+    // Serialize the data members of the base class.
+    QVariant base_class = this->BASE_CLASS::toVariant();
+
+    map_insert_or_die(map, "baseclass", base_class);
 
 	return map;
 }
@@ -174,15 +166,15 @@ void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 		qWr() << "NO XML:ID:";
 	}
 
-#define X(field_tag, tag_string, var_name) map_read_field_or_warn(map, field_tag, var_name);
-	M_DATASTREAM_FIELDS(X);
-#undef X
+// #define X(field_tag, tag_string, var_name) map_read_field_or_warn(map, field_tag, var_name);
+// 	M_DATASTREAM_FIELDS(X);
+// #undef X
 
 	// Load LibraryEntry's.
 	QVariantHomogenousList list(XMLTAG_LIBRARY_ENTRIES, "m_library_entry");
 	map_read_field_or_warn(map, XMLTAG_LIBRARY_ENTRIES, &list);
 
-	/// There should only be one I think....
+    // There should only be one I think....
 	AMLM_ASSERT_EQ(list.size(), 1);
 
 #if 0///
@@ -196,12 +188,21 @@ void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 		m_library_entry = std::make_shared<LibraryEntry>();
 		m_library_entry->fromVariant(it);
 	}
+
+
+    // Deserialize the data members of the base class.
+    // Once we get up to the AbstractTreeModelItem base class, this includes child items.
+    auto iomap {InsertionOrderedMap<QString, QVariant>()};
+    map_read_field_or_warn(map, "baseclass", &iomap);
+    Q_ASSERT(m_model.lock());
+    this->BASE_CLASS::fromVariant(iomap);
+
 #endif
 
-	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
-	child_var_list = map.at(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
+    // QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
+    // child_var_list = map.at(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
 
-	append_children_from_variant<AbstractTreeModelItem>(this, child_var_list);
+    // append_children_from_variant(m_model, this, child_var_list);
 
 
 #if 0///

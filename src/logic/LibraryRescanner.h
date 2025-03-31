@@ -84,8 +84,15 @@ class LibraryRescanner : public QObject
 
 Q_SIGNALS:
 
-//	void SIGNAL_StapToTreeModel(std::vector<std::unique_ptr<AbstractTreeModelItem>> new_items);
 	void SIGNAL_FileUrlQString(QString);
+
+	/**
+	 * Signal for sending a new child to the model across threads.
+	 * @param new_child
+	 */
+	void SIGNAL_appendChildToRoot(std::shared_ptr<AbstractTreeModelItem> new_child);
+
+	void SIGNAL_appendChild(std::shared_ptr<AbstractTreeModelItem> new_child, UUIncD parent_id);
 
 public:
 	explicit LibraryRescanner(LibraryModel* parent);

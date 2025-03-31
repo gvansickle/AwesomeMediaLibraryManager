@@ -30,8 +30,8 @@
 //	baseFinishConstruct(self);
 //	return self;
 //}
-PlaceholderTreeModelItem::PlaceholderTreeModelItem(const std::vector<QVariant>& data, const std::shared_ptr<AbstractTreeModelItem>& parent, UUIncD id)
-	: AbstractTreeModelItem(data, parent, id)
+PlaceholderTreeModelItem::PlaceholderTreeModelItem(const std::vector<QVariant>& data, const std::shared_ptr<AbstractTreeModel>& model)
+	: AbstractTreeModelItem(data, model)
 {
 
 }

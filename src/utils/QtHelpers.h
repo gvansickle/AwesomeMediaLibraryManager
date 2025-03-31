@@ -23,18 +23,9 @@
 #include <config.h>
 #include <QtCore/QSharedPointer>
 
-/*
- *
- */
-class QtHelpers
-{
-public:
-	QtHelpers();
-	virtual ~QtHelpers();
-};
 
 /**
- * In many/most instances we can't cross the std:: and Qt 5 streams.
+ * In many/most instances we can't cross the std:: and Qt streams.
  * Uhhhh.......
  */
 template <class T>
@@ -53,13 +44,6 @@ using UNIQUE_PTR = QSharedPointer<T>;
 template <class T>
 using WEAK_PTR = QWeakPointer<T>;
 
-#if 0
-template<class StreamType, class T>
-inline static StreamType operator<<(StreamType outstream, const T& obj)
-{
-    return outstream << obj;
-}
-#endif
 
 /**
  * Use the below macros in your header, then put something like this in your .cpp file:

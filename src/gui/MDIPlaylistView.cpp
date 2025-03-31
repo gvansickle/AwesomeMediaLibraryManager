@@ -121,12 +121,6 @@ MDIModelViewPair MDIPlaylistView::openModel(QPointer<PlaylistModel> model, QWidg
 	return retval;
 }
 
-
-QMediaPlaylist* MDIPlaylistView::getQMediaPlaylist()
-{
-	return m_underlying_model->qmplaylist();
-}
-
 void MDIPlaylistView::setModel(QAbstractItemModel* model)
 {
 	// Keep a ref to the real model.
@@ -383,7 +377,7 @@ void MDIPlaylistView::dropEvent(QDropEvent* event)
 		{
 			// Need to do the same trick here, or the move won't happen.
 			qDebug() << "SELECTED MOVE ACTION";
-			M_WARNING("/// @todo Doesn't work.");
+M_WARNING("/// @todo Doesn't work.");
 			setDragDropMode(InternalMove);
 		}
 	}
@@ -679,7 +673,7 @@ void MDIPlaylistView::keyPressEvent(QKeyEvent* event)
 	if(event->matches(QKeySequence::Delete))
 	{
 		qDebug() << "DELETE KEY:" << event;
-M_WARNING("TODO: It seems now that we don't need this anymore for some reason.");
+/// @todo It seems now that we don't need this anymore for some reason.
 #if 0
 		onDelete();
 
