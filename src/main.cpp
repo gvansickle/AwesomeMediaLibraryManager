@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
 
 
 	//
-    // Create the Qt5/KF5 app.
+    // Create the Qt/KF app.
     // @note Must be the first QObject created and the last QObject deleted.
     // @note This should have loaded any bundled icontheme.rcc files.
 	//
