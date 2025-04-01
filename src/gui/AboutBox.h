@@ -20,7 +20,6 @@
 #ifndef AWESOMEMEDIALIBRARYMANAGER_ABOUTBOX_H
 #define AWESOMEMEDIALIBRARYMANAGER_ABOUTBOX_H
 
-//#include <nomocdefs.h>
 
 #include <QtGlobal>
 #include <QDialog>

@@ -57,6 +57,14 @@ HelpMenu::HelpMenu(QWidget* parent, const KAboutData& aboutData) : KHelpMenu(par
 		menu()->insertAction(act_about_kde, act_aboutQt);
 	}
 
+	// Try to make sure the dialog is tall enough to avoid having scroll bars.
+	// @note "parent" here is the MainWindow, so this stylesheet will be appended to any it already has.
+	parent->setStyleSheet(parent->styleSheet() +
+		"KAboutApplicationDialog {"
+		"  min-width: 600px;"
+		"  min-height: 350px;"
+		"}"
+	);
 }
 
 HelpMenu::~HelpMenu() = default;
