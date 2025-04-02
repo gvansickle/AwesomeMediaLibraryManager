@@ -27,7 +27,7 @@
 #include <any>
 #include <cstring>
 
-// Qt 5
+// Qt
 //#include <QString>
 
 // Ours

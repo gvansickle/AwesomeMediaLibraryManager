@@ -19,8 +19,6 @@
 
 #include "AboutBox.h"
 
-//#include <nomocimpl.h>
-
 #include <QApplication>
 #include <QHBoxLayout>
 #include <QLabel>

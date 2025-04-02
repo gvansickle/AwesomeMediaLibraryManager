@@ -49,8 +49,6 @@
 #include <utils/QtHelpers.h>
 #include "SupportedMimeTypes.h"
 
-// Boost
-//#include <boost/thread.hpp>
 
 /// Ours
 #include <AMLMApp.h>

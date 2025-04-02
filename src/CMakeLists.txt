@@ -105,9 +105,6 @@ set(PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS
 		${GTK_LINK_LIB_TARGETS}
 		${AMLM_TAGLIB_TARGET}
 		${AMLM_LIBCUE_TARGET}
-#		callable_traits
-#		Boost::thread
-		${Boost_LIBRARIES}
 		)
 
 
@@ -123,13 +120,6 @@ set(SOURCE_FILES
 	AMLMApp.cpp
     Core.cpp
 	)
-
-# NoMoc files.
-set(HEADER_FILES_UTILS_NOMOC
-	utils/nomoc/nomocdefs.h
-	utils/nomoc/nomocimpl.h)
-list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_NOMOC})
-
 
 
 #
@@ -191,12 +181,7 @@ target_link_libraries(src
 		kconfig_target
 		utils
 		SQLite::SQLite3
-	PRIVATE
-		# Boost
-		Boost::boost					# Target for header-only dependencies
-		Boost::diagnostic_definitions # For information about Boost's automatic linking
-                                      # during compilation (adds BOOST_LIB_DIAGNOSTIC)
-	)
+)
 #if(NOT DEFINED amlm_APP_ICONS)
 #	message(FATAL_ERROR "NOT DEFINED: amlm_APP_ICONS: '${amlm_APP_ICONS}'")
 #endif()
@@ -211,7 +196,7 @@ target_link_libraries(src
 # Set up the app icon for Linux, add a dep so it gets built.
 #qt5_add_binary_resources(build_AppIcon_rcc ${AppIcon_qrc} DESTINATION ${AppIcon_rcc})
 
-# Qt5 non-binary Resource files.
+# Qt non-binary Resource files.
 qt_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/AppIcon.qrc")
 qt_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/amlm.qrc")
 qt_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/xquery_files.qrc")
@@ -246,7 +231,6 @@ target_compile_definitions(libapp
 )
 target_include_directories(libapp
 								PUBLIC
-									"utils/nomoc"
 									${PROJECT_SOURCE_DIR}/src ### @todo For <future/...>
 									${PROJECT_BINARY_DIR}/src
 )
@@ -282,7 +266,6 @@ target_compile_definitions(${PROJECT_NAME}
 	)
 target_include_directories(${PROJECT_NAME}
 	PRIVATE
-		"utils/nomoc"
 		${PROJECT_SOURCE_DIR}/src ### @todo For <future/...>
 		${PROJECT_BINARY_DIR}/src
 	)

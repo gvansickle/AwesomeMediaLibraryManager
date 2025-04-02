@@ -20,7 +20,6 @@
 #include "DirScanResult.h"
 
 #include <config.h>
-#include <logic/serialization/ExtEnum.h>
 
 // Qt
 #include <QUrl>
@@ -28,7 +27,7 @@
 #include <QDir>
 #include <QRegularExpression>
 
-// Ours, Qt5/KF5-related
+// Ours, Qt/KF-related
 #include <utils/TheSimplestThings.h>
 #include <utils/RegisterQtMetatypes.h>
 

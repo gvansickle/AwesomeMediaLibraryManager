@@ -51,11 +51,11 @@ MDITreeViewBase::MDITreeViewBase(QWidget* parent) : QTreeView(parent)
 	m_act_window = new QAction(this);
 	m_act_window->setCheckable(true);
 	connect_trig(m_act_window, this, &MDITreeViewBase::show);
-	connect(m_act_window, SIGNAL(triggered()), this, SLOT(setFocus()));
+    connect(m_act_window, SIGNAL(triggered()), this, SLOT(setFocus()));
 
 	// ModelChangeWatcher for keeping "Select All" status updated.
 	m_select_all_model_watcher = new ModelChangeWatcher(this);
-	connect(m_select_all_model_watcher, &ModelChangeWatcher::modelHasRows, this, &MDITreeViewBase::selectAllAvailable);
+    connect_or_die(m_select_all_model_watcher, &ModelChangeWatcher::modelHasRows, this, &MDITreeViewBase::selectAllAvailable);
 
 	// Full Url to the file backing this view.
 	m_current_url = QUrl();

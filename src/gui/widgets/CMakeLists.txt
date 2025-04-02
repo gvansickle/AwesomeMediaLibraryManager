@@ -61,8 +61,6 @@ target_include_directories(widgets
 	PUBLIC
 		# For config.h
 		${PROJECT_BINARY_DIR}/src
-		# For nomoc.
-		${PROJECT_SOURCE_DIR}/src/utils/nomoc
 	PRIVATE
 		# For anything in <root>/src: utils, logic, future, gui.
 		${PROJECT_SOURCE_DIR}/src

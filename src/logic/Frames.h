@@ -26,8 +26,7 @@
 // Std C++.
 #include <cstdint>
 
-// Boost.
-#include <boost/operators.hpp>
+
 #if 0
 /**
  * Arithmetic type for units of CD Cue Sheet Frames == 1/75th of a second.
