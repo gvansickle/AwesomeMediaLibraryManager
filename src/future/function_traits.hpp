@@ -29,6 +29,8 @@
 
 #include <config.h>
 
+#if 0
+
 // Stc C++.
 #include <cstddef>
 #include <type_traits>
@@ -37,11 +39,17 @@
 // Include some type_traits from the future (i.e. C++17+).
 #include "future_type_traits.hpp"
 
-// Boost Callable Traits.
-/// This is me giving up on trying to reinvent the function_traits wheel.
-#include <boost/callable_traits.hpp>
+template <typename F>
+struct args;
 
-namespace ct = boost::callable_traits;
+// Specialization for free functions: R(Args...)
+template <typename R, typename... Args>
+struct args<R(Args...)>
+{
+	using type = std::tuple<Args...>;
+};
+template <typename R, typename... Args>
+using args_t = args<R(Args...)>::type;
 
 /**
  * Non-specialization for all callables.
@@ -57,9 +65,9 @@ template<class T>
 struct function_traits
 {
 	// Note that ct::args_t will return "std::tuple<>" (i.e. 0-length tuple) for a free function taking void: "void(*)()"
-	static constexpr std::size_t arity_v = std::tuple_size_v<ct::args_t<T>>;
+	static constexpr std::size_t arity_v = std::tuple_size_v<args_t<T>>;
 
-	using return_type_t = ct::return_type_t<T>;
+	using return_type_t = std::invoke_result_t<T>;
 
     /// Helpers for providing arg_t<N> vs. arg<N>::type.
     template<class... Types>
@@ -79,7 +87,7 @@ struct function_traits
 	template <std::size_t i>
 	struct argtype
 	{
-		using type = std::enable_if_t<arity_v >= i, typename std::tuple_element_t<i, ct::args_t<T>>>;
+		using type = std::enable_if_t<arity_v >= i, typename std::tuple_element_t<i, args_t<T>>>;
 	};
 
 //    template <std::size_t i>
@@ -112,7 +120,7 @@ static constexpr bool function_return_type_is_v = std::is_same_v<function_return
 
 /// SFINAE-safe Helper for providing argtype_t<F, N>.
 template <class F, std::size_t i>
-using argtype_t = std::enable_if_t<function_traits<F>::arity_v >= i, std::tuple_element_t<i, ct::args_t<F>>>;
+using argtype_t = std::enable_if_t<function_traits<F>::arity_v >= i, std::tuple_element_t<i, args_t<F>>>;
 //using argtype_t = typename function_traits<F>::template arg_t<i>;
 //using argtype_t = typename function_traits<F&&>::arg_t<i>;
 
@@ -120,18 +128,18 @@ using argtype_t = std::enable_if_t<function_traits<F>::arity_v >= i, std::tuple_
 template <class F, std::size_t i, class Expected>
 static constexpr bool argtype_n_is_v = std::is_same_v<argtype_t<F, i>, Expected>;
 
-/// Numer of args.
+/// Number of args.
 template <class F>
 struct arity
 {
-	using arity_v = typename std::tuple_size<ct::args_t<F>>::value;
+	using arity_v = typename std::tuple_size<args_t<F>>::value;
 };
 
 /**
  * Returns the number arguments (including the @c this pointer if applicable) taken by function @a F.
  */
 template <class F>
-static constexpr std::size_t arity_v = std::tuple_size<ct::args_t<F>>::value;
+static constexpr std::size_t arity_v = std::tuple_size<args_t<F>>::value;
 
 
 /// For getting R from T<R>.
@@ -151,5 +159,7 @@ template <class T>
 using contained_type_t = typename contained_type_impl<T>::type;
 
 /// @} // Convenience templates.
+
+#endif
 
 #endif /* UTILS_CONCURRENCY_FUNCTION_TRAITS_HPP_ */

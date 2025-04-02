@@ -23,6 +23,11 @@
  * All compile-time tests, no runtime hit.
  */
 
+/// @note Requires boost::args_t, so no longer compiles. This was used a lot in the ExtAsync/ExtFuture stuff, which is also now obsolete.
+/// Move to attic or delete at some point.
+#if 0
+
+
 // This file's header.
 #include "function_traits.hpp"
 
@@ -34,6 +39,7 @@
 
 // Ours
 #include <utils/DebugHelpers.h>
+
 
 namespace function_traits_impl
 {
@@ -103,7 +109,7 @@ namespace function_traits_impl
 //		static_assert(std::is_same_v<!contained_type_t<decltype(test_var)>, long>, "Wrong contained type");
 //		static_assert(std::is_same_v<argtype_t<decltype(test_struct_longs), 0>, long>, "Wrong contained type");
 	}
-
 }
 
+#endif
 
