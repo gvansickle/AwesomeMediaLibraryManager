@@ -77,7 +77,7 @@ AbstractTreeModelHeaderItem::~AbstractTreeModelHeaderItem() = default;
 
 void AbstractTreeModelHeaderItem::clear()
 {
-	// Reset this header item to completely empty, except for its place in the model.
+	// Reset this header item to completely empty, except for its place in the model (==root).
 	// All children should have already been removed from the model by the model.
 	Q_ASSERT(m_child_items.empty());
 

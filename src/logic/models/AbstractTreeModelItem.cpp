@@ -87,10 +87,8 @@ AbstractTreeModelItem::~AbstractTreeModelItem()
 void AbstractTreeModelItem::clear()
 {
 	// Reset this item to completely empty, except for its place in the model.
-//	m_child_items.clear();
-//	m_item_data.clear();
-//	m_num_columns = 0;
-//	m_num_parent_columns = -1;
+	// m_child_items.clear();
+	// m_item_data.clear();
 }
 
 bool AbstractTreeModelItem::selfSoftDelete(Fun& undo, Fun& redo)
@@ -707,10 +705,10 @@ bool AbstractTreeModelItem::appendChild(const std::shared_ptr<AbstractTreeModelI
 	}
 	if (auto ptr = m_model.lock())
 	{
-        // is_managed_by_shared(this);
+        // Make sure *this is managed by a shared_ptr.
         if(auto sharedThis = weak_from_this().lock())
         {
-            qDb() << "Use count:" << sharedThis.use_count();
+            // qDb() << "Use count:" << sharedThis.use_count();
         }
         else
         {

@@ -59,10 +59,8 @@ ThreadsafeTreeModel::ThreadsafeTreeModel(std::initializer_list<ColumnSpec> colum
 //	return self;
 //}
 
-ThreadsafeTreeModel::~ThreadsafeTreeModel()
-{
-	// Same as KdenLive's ProjectModelItem, its destructor is defaulted.
-}
+// Same as KdenLive's ProjectModelItem, its destructor is defaulted.
+ThreadsafeTreeModel::~ThreadsafeTreeModel() = default;
 
 void ThreadsafeTreeModel::clear(bool quit)
 {
@@ -86,6 +84,7 @@ void ThreadsafeTreeModel::clear(bool quit)
 		requestDeleteItem(child, undo, redo);
 	}
 	items_to_delete.clear();
+	qDb() << M_ID_VAL(m_root_item->childCount());
 	Q_ASSERT(m_root_item->childCount() == 0);
 	m_closing = false;
 	if (!quit)
@@ -94,13 +93,14 @@ void ThreadsafeTreeModel::clear(bool quit)
 	}
 
 	// One last thing, our hidden root node / header node still has ColumnSpecs.
+#warning "@todo If we do this, the view doesn't have any header columns, so you see nothing."
 	// m_root_item->clear();
 }
 
 bool ThreadsafeTreeModel::requestDeleteItem(const std::shared_ptr<AbstractTreeModelItem>& item, Fun& undo, Fun& redo)
 {
-	#if 0///
-	std::unique_lock write_locker(m_rw_mutex);
+	// This is adapted from KDenLive's ProjectItemModel::requestBinClipDeletion().
+	QWriteLocker locker(&m_rw_mutex);
 	Q_ASSERT(item);
 	if (!item)
 	{
@@ -108,43 +108,28 @@ bool ThreadsafeTreeModel::requestDeleteItem(const std::shared_ptr<AbstractTreeMo
 	}
 	UUIncD parentId = UUIncD::null();
 
-	if (std::shared_ptr<AbstractTreeModelItem> ptr = item->parent_item().lock())
+	if (auto ptr = item->parent())
 	{
 		parentId = ptr->getId();
 	}
-//	bool isSubClip = item->itemType() == AbstractProjectItem::SubClipItem;
-	item->selfSoftDelete(undo, redo);
+	if (!item->selfSoftDelete(undo, redo))
+	{
+		return false;
+	}
 	UUIncD id = item->getId();
 	Fun operation = removeItem_lambda(id);
 	Fun reverse = addItem_lambda(item, parentId);
-	bool request_was_successful = operation();
-	if (request_was_successful)
+	bool res = operation();
+	if (res)
 	{
-//		if (isSubClip)
-//		{
-//			Fun update_doc = [this, binId]() {
-//				std::shared_ptr<AbstractProjectItem> parentItem = getItemByBinId(binId);
-//				if (parentItem && parentItem->itemType() == AbstractProjectItem::ClipItem) {
-//					auto clipItem = std::static_pointer_cast<ProjectClip>(parentItem);
-//					clipItem->updateZones();
-//				}
-//				return true;
-//			};
-//			update_doc();
-//			PUSH_LAMBDA(update_doc, operation);
-//			PUSH_LAMBDA(update_doc, reverse);
-//		}
 		UPDATE_UNDO_REDO(m_rw_mutex, operation, reverse, undo, redo);
 	}
-
-	return request_was_successful;
-#endif///
-	return false;
+	return res;
 }
 
 QVariant ThreadsafeTreeModel::data(const QModelIndex& index, int role) const
 {
-    READ_LOCK()
+	READ_LOCK()
 	return BASE_CLASS::data(index, role);
 }
 

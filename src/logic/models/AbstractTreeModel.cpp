@@ -690,7 +690,7 @@ QVariant AbstractTreeModel::headerData(int section, Qt::Orientation orientation,
 	// Both ETM and KDEN are the same here.
     if (orientation == Qt::Horizontal && role == Qt::DisplayRole)
 	{
-		return m_root_item->data(section, role);
+		return m_root_item->dataColumn(section);
 	}
 
     return QVariant();

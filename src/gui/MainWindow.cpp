@@ -1449,25 +1449,11 @@ void MainWindow::readLibSettings(QSettings& settings)
 
 	// Try to Load it asynchronously into a new model.
 	/// AMLM::Core::self()->getDefaultColumnSpecs()
-	auto temp_load_srtm_instance = ScanResultsTreeModel::create({});
-	bool success = temp_load_srtm_instance->LoadDatabase(database_filename);
-	if(success)
-	{
-		// Swap in the new model.
-		qDb() << "TODO: Load succeeded, swapping in the new model.";
-		temp_load_srtm_instance->dump_model_info();
-/// @TODO
-		qDb() << "Detaching old model from view";
-
-//		auto oldselmodel = m_exp_second_child_view->selectionModel();
-
-		auto old_model = AMLM::Core::self()->swapScanResultsTreeModel(temp_load_srtm_instance);
-		old_model->deleteLater();
-
-		auto srtmodel = AMLM::Core::self()->getScanResultsTreeModel().get();
-		m_exp_second_child_view->setModel(srtmodel);
-
-//		oldselmodel->deleteLater();
+	auto exp_db_model = AMLM::Core::self()->getScanResultsTreeModel();
+    bool success = exp_db_model->LoadDatabase(database_filename);
+    if(success)
+    {
+		qDb() << "Load succeeded";
 	}
 	else
 	{
