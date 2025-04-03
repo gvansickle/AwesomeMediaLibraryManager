@@ -258,7 +258,6 @@ public:
 
 	/**
 	 * Sets the base directory of the model.
-	 * @todo TEMP.
 	 */
     virtual void setBaseDirectory(const QUrl& base_directory) {}
 

@@ -52,9 +52,9 @@ using Fun = std::function<bool(void)>;
 */
 #define LOCK_IN_LAMBDA(mutex, lambda) \
 	lambda = [this, lambda]() { \
-        m_rw_mutex.lockForWrite(); /*std::unique_lock write_lock(mutex);*/ \
+        mutex.lockForWrite(); \
 		bool res_lambda = lambda(); \
-m_rw_mutex.unlock(); \
+		mutex.unlock(); \
 		return res_lambda; \
 	};
 
@@ -63,7 +63,7 @@ m_rw_mutex.unlock(); \
 Note that it might happen that a thread is executing a write operation that requires
 reading a Read-protected property. In that case, we try to write lock it first (this will be granted since the lock is recursive)
 */
-#if 0
+#if 0 // Std mutexes.
 #define READ_LOCK(mutex) \
 	using ul_type = std::unique_lock<std::recursive_mutex>; \
 	std::unique_ptr<ul_type> read_locker = std::make_unique<ul_type>(); \

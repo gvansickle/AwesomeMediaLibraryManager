@@ -5,7 +5,7 @@
 #include <QWidget>
 #include <QSharedPointer>
 
-// KF5
+// KF
 #if 0 // KF5
 #include <KItemViews/KCategorizedSortFilterProxyModel>
 #include <KItemViews/KCategoryDrawer>

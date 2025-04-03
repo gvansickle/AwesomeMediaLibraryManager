@@ -292,7 +292,7 @@ target_link_libraries(${PROJECT_NAME}
 #target_link_options(${PROJECT_NAME} PRIVATE -static-libasan)
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-	COMMAND cloc --no-autogen "--not-match-d=/(third_party|build-|\\.).*/" "--exclude-ext=moc,xml,ui" ${PROJECT_SOURCE_DIR}
+	COMMAND cloc --no-autogen "--not-match-d=/(third_party|gsauthof|build\-|\\.|CMakeLists\.txt\.user).*/" "--exclude-ext=moc,xml,ui" ${PROJECT_SOURCE_DIR}
 	VERBATIM
 	COMMENT "Running cloc..."
 )
