@@ -24,6 +24,7 @@ set(proxymodels_subdir_SOURCES
 	LibrarySortFilterProxyModel.cpp
 	ModelChangeWatcher.cpp
 	QPersistentModelIndexVec.cpp
+	ShuffleProxyModel.cpp
 )
 
 set(proxymodels_subdir_HEADERS
@@ -32,6 +33,7 @@ set(proxymodels_subdir_HEADERS
     LibrarySortFilterProxyModel.h
     ModelChangeWatcher.h
     QPersistentModelIndexVec.h
+	ShuffleProxyModel.h
 )
 
 add_library(proxymodels STATIC EXCLUDE_FROM_ALL)
