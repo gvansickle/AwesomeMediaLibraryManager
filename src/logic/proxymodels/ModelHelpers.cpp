@@ -17,3 +17,61 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "ModelHelpers.h"
+
+
+
+QModelIndex mapToSourceRecursive(const QModelIndex& proxy_index)
+{
+    if(!proxy_index.isValid())
+    {
+        return QModelIndex();
+    }
+
+	if (proxy_index.model())
+	{
+		// There's an underlying model.  See if it's a proxy model.
+		auto proxy_model = qobject_cast<const QAbstractProxyModel*>(proxy_index.model());
+		if (proxy_model)
+		{
+			// recurse into the next proxy model.
+            return mapToSourceRecursive(proxy_model->mapToSource(proxy_index));
+		}
+		// We've hit the true source model.
+		return proxy_index;
+	}
+
+	// No model, return invalid index.
+	return QModelIndex();
+}
+
+QModelIndex mapFromSourceRecursive(const QAbstractItemModel* top_proxy, const QModelIndex& source_model_index)
+{
+	if (!top_proxy || !source_model_index.isValid())
+	{
+		return QModelIndex();
+	}
+
+	auto proxy_model = qobject_cast<const QAbstractProxyModel*>(top_proxy);
+	if (proxy_model)
+	{
+		// Recurse through all proxy model layers.
+		QModelIndex next_source_model_index = mapFromSourceRecursive(proxy_model->sourceModel(), source_model_index);
+		return proxy_model->mapFromSource(next_source_model_index);
+	}
+
+	// We've hit the actual source model.
+	return source_model_index;
+}
+
+QModelIndexList mapToSourceRecursive(const QModelIndexList& source_indices)
+{
+	QModelIndexList retval;
+
+	for(const auto& i : source_indices)
+	{
+		retval.push_back(mapToSourceRecursive(i));
+	}
+
+	return retval;
+}

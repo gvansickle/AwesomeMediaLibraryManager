@@ -668,7 +668,7 @@ void MDIPlaylistView::startPlaying(const QModelIndex& index)
 
 QModelIndex MDIPlaylistView::to_underlying_qmodelindex(const QModelIndex &proxy_index)
 {
-	auto underlying_model_index = qobject_cast<LibrarySortFilterProxyModel*>(model())->mapToSource(proxy_index);
+	auto underlying_model_index = mapToSourceRecursive(proxy_index);
 	Q_ASSERT(underlying_model_index.isValid());
 
 	return underlying_model_index;
@@ -676,7 +676,7 @@ QModelIndex MDIPlaylistView::to_underlying_qmodelindex(const QModelIndex &proxy_
 
 QModelIndex MDIPlaylistView::from_underlying_qmodelindex(const QModelIndex &underlying_index)
 {
-	auto proxy_model_index = qobject_cast<LibrarySortFilterProxyModel*>(model())->mapFromSource(underlying_index);
+	auto proxy_model_index = mapFromSourceRecursive(model(), underlying_index);
 	return proxy_model_index;
 }
 
