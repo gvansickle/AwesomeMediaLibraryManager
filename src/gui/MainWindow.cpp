@@ -1106,6 +1106,7 @@ void MainWindow::connectPlayerControlsAndPlaylistView(PlayerControls *controls, 
 	/// OR-ed in with any other connection type, which are 0,1,2,3.
     connect_or_die(controls, &PlayerControls::next, playlist_view, &MDIPlaylistView::next, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
     connect_or_die(controls, &PlayerControls::previous, playlist_view, &MDIPlaylistView::previous, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
+	connect_or_die(controls, &PlayerControls::changeShuffle, playlist_view, &MDIPlaylistView::onShuffle);
 
 	// Connect play() signal-to-signal.
     connect_or_die(playlist_view, &MDIPlaylistView::play, controls, &PlayerControls::play, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));

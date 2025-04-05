@@ -1,5 +1,5 @@
 /*
-* Copyright 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -24,6 +24,7 @@
 #include <vector>
 
 // Qt
+#include <ConnectHelpers.h>
 #include <QSortFilterProxyModel>
 #include <QModelIndex>
 
@@ -34,25 +35,43 @@
 */
 class ShuffleProxyModel : public QSortFilterProxyModel
 {
+    Q_OBJECT
+
 public:
-	explicit ShuffleProxyModel(QObject* parent = nullptr) : QSortFilterProxyModel(parent) {}
-    ~ShuffleProxyModel() = default;
+	explicit ShuffleProxyModel(QObject* parent = nullptr);
+    ~ShuffleProxyModel() noexcept override = default;
 
 	/**
 	 * Shuffles the proxy<->source model map.
 	 * @param shuffle true = shuffle, false = unshuffle.
 	 */
-	void shuffle(bool shuffle);
+    void shuffle(bool shuffle = false);
 
 	QModelIndex mapFromSource(const QModelIndex& sourceIndex) const override;
 
     QModelIndex mapToSource(const QModelIndex &proxyIndex) const override;
+
+	void setSourceModel(QAbstractItemModel* sourceModel) override;
+
+public Q_SLOTS:
+
+    void onNumRowsChanged();
+
+protected:
+	/**
+	 * Connect the necessary signals and slots between this proxy model
+	 * and the (proxy) model it's attached to.  Pass nullptr to disconnect any existing connections.
+	 * @param model The model to connect to.  Pass nullptr to disconnect.
+	 */
+	void connectToModel(QAbstractItemModel *model);
 
 private:
 	/**
 	* The map of proxy indices <-> source model indices.
 	*/
 	std::vector<int> m_indices;
+
+	Disconnector m_disconnector;
 };
 
 

@@ -19,15 +19,11 @@
 
 #include "MDIPlaylistView.h"
 
-// Srd C++
+// Std C++
 #include <vector>
 #include <memory>
 
-#include <gui/delegates/ItemDelegateLength.h>
-
-#include <gui/menus/DropMenu.h>
-
-#include "DragDropTreeViewStyleProxy.h"
+// Qt
 #include <QApplication>
 #include <QHeaderView>
 #include <QToolTip>
@@ -39,6 +35,11 @@
 #include <QPoint>
 #include <QKeyEvent>
 
+// Ours
+#include <gui/delegates/ItemDelegateLength.h>
+#include <gui/menus/DropMenu.h>
+#include "DragDropTreeViewStyleProxy.h"
+
 #include "utils/DebugHelpers.h"
 #include "logic/LibraryEntryMimeData.h"
 #include "menus/PlaylistContextMenuViewport.h"
@@ -46,7 +47,9 @@
 
 #include <logic/ModelUserRoles.h>
 #include <logic/proxymodels/LibrarySortFilterProxyModel.h>
+#include <logic/proxymodels/ShuffleProxyModel.h>
 #include <logic/proxymodels/ModelHelpers.h>
+
 
 MDIPlaylistView::MDIPlaylistView(QWidget* parent) : MDITreeViewBase(parent)
 {
@@ -63,6 +66,9 @@ MDIPlaylistView::MDIPlaylistView(QWidget* parent) : MDITreeViewBase(parent)
 	m_sortfilter_model = new LibrarySortFilterProxyModel(this);
 	m_sortfilter_model->setDynamicSortFilter(false);
 	m_sortfilter_model->setSortCaseSensitivity(Qt::CaseInsensitive);
+
+	// The Shuffle proxy model.
+	m_shuffle_model = new ShuffleProxyModel(this);
 
 	// Delegates.
 	m_length_delegate = new ItemDelegateLength(this);
@@ -133,8 +139,12 @@ void MDIPlaylistView::setModel(QAbstractItemModel* model)
 		m_underlying_model->setLibraryRootUrl(m_current_url);
 
 		m_sortfilter_model->setSourceModel(model);
+		m_shuffle_model->setSourceModel(m_sortfilter_model);
+
+		// Set the top-level proxy model that this view will use.
 		auto old_sel_model = selectionModel();
-		MDITreeViewBase::setModel(m_sortfilter_model);
+		MDITreeViewBase::setModel(m_shuffle_model);
+
 		// Call selectionChanged when the user changes the selection.
 		/// @todo selectionModel().selectionChanged.connect(selectionChanged)
         if(old_sel_model != nullptr)
@@ -470,6 +480,11 @@ void MDIPlaylistView::previous()
 	}
 }
 
+void MDIPlaylistView::onShuffle(bool shuffle)
+{
+	m_shuffle_model->shuffle(shuffle);
+}
+
 void MDIPlaylistView::onCut()
 {
 	qDebug() << "CUTTING";
@@ -699,3 +714,4 @@ void MDIPlaylistView::keyPressEvent(QKeyEvent* event)
 	}
 	MDITreeViewBase::keyPressEvent(event);
 }
+

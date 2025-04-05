@@ -22,8 +22,14 @@
 // Std C++
 #include <numeric>
 #include <algorithm>
+#include <ConnectHelpers.h>
 #include <random>
 
+
+ShuffleProxyModel::ShuffleProxyModel(QObject* parent): QSortFilterProxyModel(parent)
+{
+
+}
 
 void ShuffleProxyModel::shuffle(bool shuffle)
 {
@@ -54,4 +60,39 @@ QModelIndex ShuffleProxyModel::mapToSource(const QModelIndex &proxyIndex) const
 	}
 
 	return sourceModel()->index(m_indices[proxyIndex.row()], proxyIndex.column());
+}
+
+void ShuffleProxyModel::setSourceModel(QAbstractItemModel* sourceModel)
+{
+	beginResetModel();
+
+	m_disconnector.disconnect();
+	QSortFilterProxyModel::setSourceModel(sourceModel);
+	connectToModel(sourceModel);
+
+	endResetModel();
+}
+
+void ShuffleProxyModel::onNumRowsChanged()
+{
+	// Resize the shuffle map.
+	auto num_rows = sourceModel()->rowCount();
+	m_indices.resize(num_rows);
+	std::iota(m_indices.begin(), m_indices.end(), 0);
+}
+
+void ShuffleProxyModel::connectToModel(QAbstractItemModel* model)
+{
+	if (model == nullptr)
+	{
+		// Disconnect from the model.
+		m_disconnector.disconnect();
+	}
+	else
+	{
+		m_disconnector
+		<< connect_or_die(model, &QAbstractItemModel::modelReset, this, &ShuffleProxyModel::onNumRowsChanged)
+		<< connect_or_die(model, &QAbstractItemModel::rowsInserted, this, &ShuffleProxyModel::onNumRowsChanged)
+		<< connect_or_die(model, &QAbstractItemModel::rowsRemoved, this, &ShuffleProxyModel::onNumRowsChanged);
+	}
 }

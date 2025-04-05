@@ -97,6 +97,7 @@ protected:
 
 };
 
+Q_DECLARE_METATYPE(PlaylistModel)
 Q_DECLARE_METATYPE(const PlaylistModel*)
 Q_DECLARE_METATYPE(std::shared_ptr<PlaylistModel>)
 

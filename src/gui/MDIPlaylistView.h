@@ -20,11 +20,13 @@
 #ifndef MDIPLAYLISTVIEW_H
 #define MDIPLAYLISTVIEW_H
 
+
 #include "MDITreeViewBase.h"
 #include <logic/PlaylistModel.h>
 
 class QMediaPlaylist;
 class LibrarySortFilterProxyModel;
+class ShuffleProxyModel;
 class ItemDelegateLength;
 class DragDropTreeViewStyleProxy;
 
@@ -77,6 +79,9 @@ public Q_SLOTS:
 
 	/// Start previous song.
     void previous();
+
+	void onShuffle(bool shuffle);
+
 	/// @}
 
     /// @name Edit slots.
@@ -172,6 +177,7 @@ private:
 
     QPointer<PlaylistModel> m_underlying_model;
     LibrarySortFilterProxyModel* m_sortfilter_model;
+	ShuffleProxyModel* m_shuffle_model;
     ItemDelegateLength* m_length_delegate;
 
 	/// true == shuffle, false == sequential.
