@@ -1,5 +1,5 @@
 /*
- * Copyright 2017, 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018, 2019, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -20,6 +20,8 @@
 #ifndef CONNECTHELPERS_H
 #define CONNECTHELPERS_H
 
+// Std C++
+#include <vector>
 
 // Std C++ backfill
 #include <future/cpp14_concepts.hpp>
@@ -58,12 +60,13 @@ QMetaObject::Connection connect_clicked(Sender* sender, const Receiver* receiver
  * The overload below tries to catch the case where UniqueConnection does apply.
  */
 template <typename... Args>
-void connect_or_die(Args&&... args)
+QMetaObject::Connection connect_or_die(Args&&... args)
 {
     QMetaObject::Connection retval;
 
     retval = QObject::connect(std::forward<Args>(args)...);
     Q_ASSERT(static_cast<bool>(retval) != false);
+	return retval;
 }
 
 /**
@@ -73,7 +76,7 @@ void connect_or_die(Args&&... args)
  */
 template <class TPMF, class T = class_of_t<TPMF>, class UPMF, class U = class_of_t<UPMF>,
           REQUIRES(std::is_member_function_pointer_v<UPMF>)>
-void connect_or_die(const T* t, TPMF tpmf, const U* u, UPMF upmf, Qt::ConnectionType connection_type = Qt::AutoConnection)
+QMetaObject::Connection connect_or_die(const T* t, TPMF tpmf, const U* u, UPMF upmf, Qt::ConnectionType connection_type = Qt::AutoConnection)
 {
     QMetaObject::Connection retval;
 
@@ -83,6 +86,7 @@ void connect_or_die(const T* t, TPMF tpmf, const U* u, UPMF upmf, Qt::Connection
 
     retval = QObject::connect(t, tpmf, u, upmf, Qt::ConnectionType(connection_type | Qt::UniqueConnection));
     Q_ASSERT(static_cast<bool>(retval) != false);
+	return retval;
 }
 
 /**
@@ -92,12 +96,13 @@ void connect_or_die(const T* t, TPMF tpmf, const U* u, UPMF upmf, Qt::Connection
  */
 template <class TPMF, class T = class_of_t<TPMF>, class UPMF, class U = class_of_t<UPMF>,
           REQUIRES(std::is_member_function_pointer_v<UPMF>)>
-void connect_queued_or_die(const T* t, TPMF tpmf, const U* u, UPMF upmf)
+QMetaObject::Connection connect_queued_or_die(const T* t, TPMF tpmf, const U* u, UPMF upmf)
 {
     QMetaObject::Connection retval;
 
     retval = QObject::connect(t, tpmf, u, upmf, Qt::ConnectionType(Qt::QueuedConnection | Qt::UniqueConnection));
     Q_ASSERT(static_cast<bool>(retval) != false);
+	return retval;
 }
 
 //inline static
@@ -117,7 +122,7 @@ void connect_queued_or_die(const T* t, TPMF tpmf, const U* u, UPMF upmf)
  * Qt::DirectConnection if same or Qt::BlockingQueuedConnection if different.
  */
 template <typename Sender, typename Signal, typename Receiver, typename Slot>
-void connect_blocking_or_die(Sender&& sender, Signal&& signal, Receiver&& receiver, Slot&& slot)
+QMetaObject::Connection connect_blocking_or_die(Sender&& sender, Signal&& signal, Receiver&& receiver, Slot&& slot)
 {
     QMetaObject::Connection retval;
 
@@ -140,6 +145,7 @@ void connect_blocking_or_die(Sender&& sender, Signal&& signal, Receiver&& receiv
     retval = QObject::connect(std::forward<Sender>(sender), std::forward<Signal>(signal),
     		std::forward<Receiver>(receiver), std::forward<Slot>(slot), connection_type);
     Q_ASSERT(static_cast<bool>(retval) != false);
+	return retval;
 }
 
 /**
@@ -160,5 +166,29 @@ QMetaObject::Connection connect_destroyed_debug(Sender* sender, Qt::ConnectionTy
                             type);
     return retval;
 }
+
+/**
+ * Holds any number of connections for the purpose of disconnecting them at some later time.
+ */
+class Disconnector
+{
+public:
+	explicit Disconnector();
+	~Disconnector();
+
+	void addConnection(QMetaObject::Connection connection);
+	Disconnector& operator<<(QMetaObject::Connection connection);
+
+	/**
+	 * Disconnects and deletes all connections which have been registered.
+	 */
+	void disconnect();
+
+private:
+	std::vector<QMetaObject::Connection> m_connections;
+};
+
+
+
 
 #endif // CONNECTHELPERS_H
