@@ -40,6 +40,7 @@ set(utils_HEADER_FILES
 	ext_iterators.h
 )
 set(utils_SOURCE_FILES
+	ConnectHelpers.cpp
 	DebugBlock.cpp
 	DebugHelpers.cpp
 	ext_iterators.cpp
