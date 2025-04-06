@@ -600,7 +600,6 @@ M_WARNING("TODO: This mostly works, but can start the wrong row if e.g. this vie
 
 void MDIPlaylistView::playlistPositionChanged(qint64 position)
 {
-M_WARNING("CRIT: Do we even need this?")
 	// Notification from the QMediaPlaylist that the current selection has changed.
 	// Since we have a QSortFilterProxyModel between us and the underlying model, we need to convert the position,
 	// which is in underlying-model coordinates, to proxy model coordinates.

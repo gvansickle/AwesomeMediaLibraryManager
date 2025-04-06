@@ -342,8 +342,6 @@ QVariant XmlSerializer::InnerReadVariantFromStream(QString typeString, const QXm
 	}
 	else if(metatype.id() == f_serqvarlist_id)
 	{
-#warning "Remove"
-		log_current_node(xmlstream); qDb() << "serqvarlist";
 		variant = readHomogenousListFromStream(xmlstream);
 	}
 	else

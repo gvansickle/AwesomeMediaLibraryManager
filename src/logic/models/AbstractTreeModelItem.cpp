@@ -80,7 +80,6 @@ AbstractTreeModelItem::AbstractTreeModelItem(const std::vector<QVariant>& data, 
 
 AbstractTreeModelItem::~AbstractTreeModelItem()
 {
-    qDb() << "DELETING";
 	deregister_self();
 }
 

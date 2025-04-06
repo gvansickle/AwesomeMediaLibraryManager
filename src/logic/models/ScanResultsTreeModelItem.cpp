@@ -58,7 +58,6 @@ ScanResultsTreeModelItem::ScanResultsTreeModelItem(const QVariant& variant, cons
 
 ScanResultsTreeModelItem::~ScanResultsTreeModelItem()
 {
-    qDb() << "DELETING";
 }
 
 QVariant ScanResultsTreeModelItem::data(int column, int role) const
