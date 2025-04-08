@@ -1,5 +1,5 @@
 /*
- * Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2019, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -31,7 +31,7 @@
 #include <vector>
 #include <map>
 
-// Qt5
+// Qt
 #include <QAbstractItemModel>
 #include <QModelIndex>
 #include <QVariant>
@@ -60,12 +60,12 @@ class ColumnSpec;
 class AbstractTreeModel : public QAbstractItemModel, public virtual ISerializable, public enable_shared_from_this_virtual<AbstractTreeModel>
 {
     Q_OBJECT
-	Q_DISABLE_COPY(AbstractTreeModel);
-	Q_INTERFACES(ISerializable);
+    Q_DISABLE_COPY(AbstractTreeModel)
+    Q_INTERFACES(ISerializable)
 
 	using BASE_CLASS = QAbstractItemModel;
 
-private:
+protected:
 	/**
 	 * My bright idea here is to defer to this constructor from other constructors which need to call virtual functions on this.
 	 * I have no idea if that really works like I think it does.
@@ -79,7 +79,7 @@ protected:
 	 * @warning This model will NOT have a root item because virtual.  The named constructor will create it.
 	 * In general, derived constructors don't do much more than pass the @a parent param.
 	 */
-	AbstractTreeModel(const std::vector<ColumnSpec>& column_specs, QObject *parent = nullptr);
+    AbstractTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
 
 	/**
 	 * Creates and adds the root item to the model, some sanity checks, and other last-chance setup of the model object
@@ -87,10 +87,8 @@ protected:
 	 * @param retval_shptr  A shared_ptr to the model being constructed.
 	 * @param column_specs  The columnspecs list to initialize the root/header item with.
 	 */
-#warning "TODO: THIS IS BROKEN I THINK, HERE JUST TO GET STUFF TO COMPILE"
-	virtual void postConstructorFinalization(const std::shared_ptr<AbstractTreeModel>& retval_shptr, std::vector<ColumnSpec> column_specs);
+	static std::shared_ptr<AbstractTreeModel> create(std::initializer_list<ColumnSpec> column_specs, QObject *parent = nullptr);
 
-public:
 	/**
 	 * Named constructors.
 	 * @note KDEN live doesn't pass a non-null parent QObject, ETM, AQP do pass a parent QObject (main window).
@@ -103,12 +101,23 @@ public:
 	 */
 	~AbstractTreeModel() override;
 
+public Q_SLOTS:
+	/**
+	 * Append a child item to the root item.  FBO non-GUI threads.
+	 * @param child  The child to append to the root item.
+	 */
+	void SLOT_appendChildToRoot(std::shared_ptr<AbstractTreeModelItem> child);
+
+	void SLOT_appendChild(std::shared_ptr<AbstractTreeModelItem> child, UUIncD parent_id);
+
+public:
+	/// GRVS/KDEN's is ProjItemModel::clean().
 	/**
 	 * Clears all data from the model.
 	 * May need to be overridden in derived classes.
 	 * GRVS, KDEN's equivalent is ProjItemModel::clean().
 	 */
-	virtual void clear();
+    virtual void clear(bool quit = false);
 
 	/// OLD
 	/**
@@ -237,22 +246,20 @@ public:
 	/// ETM-inspired append function.  Based on setupModelData().
 	std::shared_ptr<AbstractTreeModelItem> append_child(const QVector<QVariant> &data, std::shared_ptr<AbstractTreeModelItem> parent);
 
-	/// @name Item getters/converters from/to indexes, UUIncD's, pointer to the item, etc.
-	/// @{
-	QModelIndex getIndexFromItem(const std::shared_ptr<AbstractTreeModelItem>& item) const;
-	QModelIndex getIndexFromId(UUIncD id) const;
-	std::shared_ptr<AbstractTreeModelItem> getItemById(const UUIncD &id) const;
-	std::shared_ptr<AbstractTreeModelItem> getRootItem() const;
+	virtual QModelIndex getIndexFromItem(const std::shared_ptr<AbstractTreeModelItem>& item, int column = 0) const;
+	virtual QModelIndex getIndexFromId(UUIncD id) const;
+	virtual std::shared_ptr<AbstractTreeModelItem> getItemById(const UUIncD &id) const;
+	virtual std::shared_ptr<AbstractTreeModelItem> getRootItem() const;
 	// ETM/GRVS/AQP(itemForIndex)
-	std::shared_ptr<AbstractTreeModelItem> getItem(const QModelIndex &index) const;
-	/// @}
+	virtual std::shared_ptr<AbstractTreeModelItem> getItem(const QModelIndex &index) const;
+
 
 	/// @name Public interface: Lambda generators for tree structure modification.
 	///KDEN
 	/// @{
 
 	/* @brief Helper function to generate a lambda that adds an item to the tree */
-	Fun addItem_lambda(const std::shared_ptr<AbstractTreeModelItem> &new_item, UUIncD parentId);
+	Fun addItem_lambda(const std::shared_ptr<AbstractTreeModelItem>& new_item, UUIncD parentId);
 
 	/* @brief Helper function to generate a lambda that removes an item from the tree */
 	Fun removeItem_lambda(UUIncD id);
@@ -275,9 +282,8 @@ public:
 
 	/**
 	 * Sets the base directory of the model.
-	 * @todo TEMP.
 	 */
-	virtual void setBaseDirectory(const QUrl& base_directory) {};
+    virtual void setBaseDirectory(const QUrl& base_directory) {}
 
 	/// Load and save the database to a file.
 	/// @note The idea is that these shouldn't need to be overridden in derived classes, but just in case we make
@@ -286,10 +292,10 @@ public:
 	virtual void SaveDatabase(const QString& database_filename);
 
 	/// Serialize the entire model to a QVariant.
-	QVariant toVariant() const override;
+    QVariant toVariant() const override { Q_ASSERT(0); return QVariant(); } // = 0;
 
 	/// Serialize the entire model from a QVariant.
-	void fromVariant(const QVariant& variant) override;
+    void fromVariant(const QVariant& variant) override { Q_ASSERT(0); } // = 0;
 
 #if 0
 	virtual void toOrm(std::string filename) const;
@@ -326,17 +332,12 @@ protected:
 	virtual void register_item(const std::shared_ptr<AbstractTreeModelItem>& item);
 	virtual void deregister_item(UUIncD id, AbstractTreeModelItem* item);
 
-	/**
-	 * Adds @a item to this tree model as a child of @a parent_id.
-	 * This is the workhorse threadsafe function which adds all new items to the model.  It should be not be called by clients,
-	 * but rather called by one of the requestAddXxxx() members.
-	 */
-	bool addItem(const std::shared_ptr<AbstractTreeModelItem> &item, UUIncD parent_id, Fun &undo, Fun &redo);
-
 	/// @name Derived-class serialization info.
 	/// @{
 
-	virtual void DERIVED_set_default_namespace() {};
+    virtual void DERIVED_set_default_namespace() {}
+
+//	virtual void DERIVED_clean() {};
 
 	/// @}
 
@@ -382,11 +383,10 @@ public:
 
 protected:
 
-	/// @name Extended protected model interface.
-	/// @{
+	void setItemMap(UUIncD id);
 
-	virtual QString getXmlStreamName() const { return ""; };
-	virtual QString getXmlStreamVersion() const { return ""; };
+    virtual QString getXmlStreamName() const { return ""; }
+    virtual QString getXmlStreamVersion() const { return ""; }
 
 	std::string m_default_namespace_decl {"XXXBROKENXXX"};
 	std::string m_default_namespace_version {"XXXBROKENXXX"};
@@ -397,22 +397,17 @@ protected:
     /// Parented to the model itself.
     QAbstractItemModelTester* m_model_tester {nullptr};
 
-    /**
-	 * Single writer/multi-reader mutex.
-	 * @todo The KDenLive code has/needs this to be recursive, but we should try to un-recurse it.
-	 */
-//	mutable std::shared_mutex m_rw_mutex;
-	mutable std::recursive_mutex m_rw_mutex;
-
     /// Hidden root node of the tree model.
     /// Pulls double duty as the horizontal header item.
 	std::shared_ptr<AbstractTreeModelHeaderItem> m_root_item;
 
+private:
 	/**
 	 * Map of UUIncD's to AbstractTreeModelItems.
-	 * Type is: std::map<UUIncD, std::weak_ptr<AbstractTreeModelItem>> m_model_item_map;
+	 * Currently: std::map<UUIncD, std::weak_ptr<AbstractTreeModelItem>> m_model_item_map;
 	 */
 	item_map_type m_model_item_map;
+
 };
 
 

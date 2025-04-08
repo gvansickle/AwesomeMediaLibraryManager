@@ -315,4 +315,21 @@ _Pragma("GCC diagnostic push")
 #   define M_WARNING(exp) DO_PRAGMA(message FILE_LINE_LINK "warning: " exp) // NOLINT
 #endif
 _Pragma("GCC diagnostic pop")
+
+
+template <class ThisType>
+bool is_managed_by_shared(ThisType* self)
+{
+    if(auto sharedThis = self->weak_from_this().lock())
+    {
+        qDb() << "Use count:" << sharedThis.use_count();
+        return true;
+    }
+    else
+    {
+        qDb() << "Object is not managed by a std::shared_ptr";
+        return false;
+    }
+}
+
 #endif // DEBUGHELPERS_H

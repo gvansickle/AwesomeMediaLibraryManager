@@ -19,6 +19,8 @@
 
 #include "UUIncD.h"
 
+#include <DebugHelpers.h>
+
 std::atomic_uint64_t UUIncD::m_next_id {1};
 
 UUIncD::UUIncD(std::uint64_t id)
@@ -32,15 +34,13 @@ UUIncD::UUIncD(quintptr qmodelindex_int_id)
 	m_my_id = qmodelindex_int_id;
 }
 
-void UUIncD::clear()
-{
-	m_my_id = UUIncD::null();
-}
-
-// static
+// Static
 UUIncD UUIncD::create()
 {
-	return UUIncD(UUIncD::m_next_id.fetch_add(1));
+	UUIncD retval;
+	retval.m_my_id = UUIncD::m_next_id.fetch_add(1);
+	qDb() << "UUIncD::create():" << retval;
+	return retval;
 }
 
 UUIncD::operator uint64_t() const
@@ -48,7 +48,4 @@ UUIncD::operator uint64_t() const
 	return m_my_id;
 }
 
-//UUIncD UUIncD::null()
-//{
-//	return UUIncD(0xFFFFFFFFFFFFFFFF);
-//}
+

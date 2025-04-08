@@ -96,9 +96,10 @@ class LibraryEntryMimeData;
 
 /**
  * Awesome Media Library Manager's MainWindow class.
- *
  * @note I suspect deriving from KXmlGuiWindow instead of KMainWindow, when I'm not using XML for the GUI,
  *       is going to bite me at some point (EDIT: == continuously).  But this gives me an actionCollection().  So there's that.
+ *
+ * @note KdenLive inherits from KXmlGuiWindow here.  KDevelop inherits from Sublime::MainWindow, which inherits from ???.
  */
 class MainWindow: public KXmlGuiWindow ///KMainWindow
 {
@@ -388,6 +389,7 @@ private:
 
     /// Experimental "scratch" widget for doing development experiments.
     Experimental* m_experimental;
+    /// Experimental KDE view.
 	ExperimentalKDEView1* m_exp_second_child_view;
 
 	/// The "model of models", used for the collection dock widget.
@@ -414,9 +416,9 @@ private:
     /// The MDI area.
     MDIArea* m_mdi_area;
 
-    /// Actions
+    // Actions
 
-    /// @name File actions
+    /// File actions
     /// @{
     QAction* m_importLibAct;
     QAction* m_saveLibraryAsAct;
@@ -428,7 +430,7 @@ private:
     QAction* m_scanLibraryAction;
     /// @}
 
-    /// @name Edit actions.
+    /// Edit actions.
     /// @{
 public:
 	ActionBundle* m_ab_cut_copy_paste_actions;
@@ -532,9 +534,6 @@ private:
      */
     ActivityProgressStatusBarTracker* m_activity_progress_tracker { nullptr };
 #endif
-
-    /// The Settings (AKA Preferences, AKA Config) dialog.
-    QSharedPointer<SettingsDialog> m_settings_dlg;
 };
 
 #endif // AWESOMEMEDIALIBRARYMANAGER_SRC_GUI_MAINWINDOW_H

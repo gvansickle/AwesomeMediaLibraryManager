@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -26,6 +26,9 @@
 
 #include <QUrl>
 
+#include "future/guideline_helpers.h"
+
+
 /**
  *
  */
@@ -34,6 +37,7 @@ class IfExistsAskForOverwrite
 public:
 	IfExistsAskForOverwrite();
 	virtual ~IfExistsAskForOverwrite();
+    M_GH_POLYMORPHIC_SUPPRESS_COPYING_C67(IfExistsAskForOverwrite)
 
 	static bool IfExistsAskForDelete(const QUrl &filename);
 

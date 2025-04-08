@@ -20,7 +20,6 @@
 #ifndef DRAGDROPTREEVIEWSTYLEPROXY_H
 #define DRAGDROPTREEVIEWSTYLEPROXY_H
 
-//#include <nomocdefs.h>
 
 #include <QStyle>
 #include <QStyleOption>

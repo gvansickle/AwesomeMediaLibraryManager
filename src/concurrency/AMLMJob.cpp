@@ -216,7 +216,7 @@ void AMLMJob::SLOT_onAboutToShutdown()
 {
     /// @note KDevelop/ImportProjectJob() just does kill() here.
 
-M_WARNING("I think we need 'already killed' reentrancy protection here or in kill() itself");
+// I think we need 'already killed' reentrancy protection here or in kill() itself
 /// @todo If left to run, loading a library leaves DirectoryScannerAMLMJob_0 laying around for some reason,
 /// which then segfaults here on AboutToShutdown().
     qDb() << "SHUTDOWN, KILLING";

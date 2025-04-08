@@ -29,14 +29,29 @@
 #include "ScanResultsTreeModel.h"
 
 
-SRTMItem_LibEntry::SRTMItem_LibEntry(const std::shared_ptr<AbstractTreeModelItem>& parent_item, UUIncD id)
-	: BASE_CLASS(parent_item, id)
+//std::shared_ptr<SRTMItem_LibEntry> SRTMItem_LibEntry::construct(std::shared_ptr<LibraryEntry> libentry,
+//                                                                const std::shared_ptr<AbstractTreeModelItem>& parent_item, UUIncD id)
+//{
+//	std::shared_ptr<SRTMItem_LibEntry> self(new SRTMItem_LibEntry(libentry, parent_item, id));
+//	self->postConstructorFinalization();
+//	return self;
+//}
+
+//std::shared_ptr<SRTMItem_LibEntry> SRTMItem_LibEntry::construct(const QVariant& variant, const std::shared_ptr<AbstractTreeModelItem>& parent_item, UUIncD id)
+//{
+//	std::shared_ptr<SRTMItem_LibEntry> self(new SRTMItem_LibEntry(variant, parent_item, id));
+//	self->postConstructorFinalization();
+//	return self;
+//}
+
+SRTMItem_LibEntry::SRTMItem_LibEntry(const std::shared_ptr<AbstractTreeModel>& model)
+    : BASE_CLASS(model)
 {
 
 }
 
-SRTMItem_LibEntry::SRTMItem_LibEntry(std::shared_ptr<LibraryEntry> libentry, const std::shared_ptr<AbstractTreeModelItem>& parent_item, UUIncD id)
-	: BASE_CLASS(parent_item, id), m_library_entry(libentry)
+SRTMItem_LibEntry::SRTMItem_LibEntry(std::shared_ptr<LibraryEntry> libentry, const std::shared_ptr<AbstractTreeModel>& model)
+    : BASE_CLASS(model), m_library_entry(libentry)
 {
 
 }
@@ -106,7 +121,7 @@ QVariant SRTMItem_LibEntry::data(int column, int role) const
 using strviw_type = QLatin1String;
 
 ///// Strings to use for the tags.
-#define X(field_tag, tag_string, var_name) static const strviw_type field_tag ( # tag_string );
+#define X(field_tag, tag_string, var_name) static constexpr strviw_type field_tag ( # tag_string );
 	M_DATASTREAM_FIELDS(X);
 	M_DATASTREAM_FIELDS_CONTSIZES(X);
 #undef X
@@ -140,10 +155,12 @@ QVariant SRTMItem_LibEntry::toVariant() const
 	}
 	map_insert_or_die(map, XMLTAG_LIBRARY_ENTRIES, libentrylist);
 
-	// Serialize out Child nodes.
-	children_to_variant(&map);
+    // Serialize the data members of the base class.
+    QVariant base_class = this->BASE_CLASS::toVariant();
 
-	return QVariant::fromValue(map);
+    map_insert_or_die(map, "baseclass", base_class);
+
+	return map;
 }
 
 void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
@@ -161,18 +178,15 @@ void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 		qWr() << "NO XML:ID:";
 	}
 
-	// Get this item's data from variant list.
-	int item_data_retval = item_data_from_variant(map);
-
-#define X(field_tag, tag_string, var_name) map_read_field_or_warn(map, field_tag, var_name);
-//	M_DATASTREAM_FIELDS(X);
-#undef X
+// #define X(field_tag, tag_string, var_name) map_read_field_or_warn(map, field_tag, var_name);
+// 	M_DATASTREAM_FIELDS(X);
+// #undef X
 
 	// Load LibraryEntry's.
 	QVariantHomogenousList list(XMLTAG_LIBRARY_ENTRIES, "m_library_entry");
 	map_read_field_or_warn(map, XMLTAG_LIBRARY_ENTRIES, &list);
 
-	// There should only be one currently.
+    // There should only be one I think....
 	AMLM_ASSERT_EQ(list.size(), 1);
 
 	for(const QVariant& it : list)
@@ -183,11 +197,21 @@ void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 		m_library_entry = std::make_shared<LibraryEntry>();
 		m_library_entry->fromVariant(it);
 	}
+
+
+    // Deserialize the data members of the base class.
+    // Once we get up to the AbstractTreeModelItem base class, this includes child items.
+    auto iomap {InsertionOrderedMap<QString, QVariant>()};
+    map_read_field_or_warn(map, "baseclass", &iomap);
+    Q_ASSERT(m_model.lock());
+    this->BASE_CLASS::fromVariant(iomap);
+
 #endif
 
-	QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
-	child_var_list = map.at(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
+    // QVariantHomogenousList child_var_list(XMLTAG_CHILD_NODE_LIST, "child");
+    // child_var_list = map.at(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
 
+    // append_children_from_variant(m_model, this, child_var_list);
 
 	// Get this item's children.
 	qulonglong num_children = 0;

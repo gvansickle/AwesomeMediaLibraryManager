@@ -77,12 +77,12 @@ void Core::build()
 
 	// Create the single (at this point) ScanResultsTreeModel.
 	/// @note In KDenLive, this is the same, no parent QObject given to ProjectItemModel::construct();
-M_TODO("Improve ColumnSpecs, not sure I like how we do this and then need to erase it on a LoadModel().")
+/// @todo Improve ColumnSpecs, not sure I like how we do this and then need to erase it on a LoadModel().
 	std::initializer_list<ColumnSpec> column_specs = {ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}};
 //	m_self->m_srtm_instance = std::make_shared</*ScanResultsTreeModel*/AbstractTreeModel>(column_specs, nullptr);
 //	m_self->m_srtm_instance = std::make_shared<ScanResultsTreeModel>();
 //	m_self->m_srtm_instance = ScanResultsTreeModel::construct({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
-	m_self->m_srtm_instance = ScanResultsTreeModel::make_ScanResultsTreeModel({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
+	m_self->m_srtm_instance = ScanResultsTreeModel::create({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
 	// Create and set the root item / headers
 //	m_self->m_srtm_instance->setColumnSpecs({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
 	// Let's add two more columns
@@ -114,10 +114,8 @@ M_TODO("Improve ColumnSpecs, not sure I like how we do this and then need to era
 
 	/// ATM
 	/// std::shared_ptr<AbstractTreeModel> m_atm_instance;
-	/// experimental
-	{
-		std::vector<ColumnSpec> column_specs = {ColumnSpec(SectionID(0), "Tag"), {SectionID{0}, "Value"}, {SectionID{0}, "Type"}, {SectionID{0}, "Class"}};
-		m_self->m_atm_instance = AbstractTreeModel::make_AbstractTreeModel(column_specs);
+//	m_self->m_atm_instance = std::make_shared<AbstractTreeModel>(column_specs);
+	m_self->m_atm_instance = AbstractTreeModel::create(column_specs);
 
 		//	new_child->setData(0, fields[0]);
 		//	new_child->setData(1, fields[1]);

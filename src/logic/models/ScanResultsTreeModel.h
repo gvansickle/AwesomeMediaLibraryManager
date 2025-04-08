@@ -41,11 +41,12 @@ class AbstractTreeModelHeaderItem;
 /**
  * A ScanResultsTreeModel represents the results of a directory traversal.  Each instance corresponds
  * roughly to what MusicBrainz refers to as a "Medium": @link https://musicbrainz.org/doc/Medium
+ *
  * It's essentially a URL to an mp3, ogg, flac, or other audio file which:
  * - Contains 1 or more tracks.
  * - May have a sidecar or embedded cue sheet.
  */
-class ScanResultsTreeModel : public AbstractTreeModel, public virtual ISerializable, public virtual enable_shared_from_this_virtual<ScanResultsTreeModel>
+class ScanResultsTreeModel : public ThreadsafeTreeModel, public virtual ISerializable, public enable_shared_from_this_virtual<ScanResultsTreeModel>
 {
 	Q_OBJECT
 	Q_DISABLE_COPY(ScanResultsTreeModel);
@@ -75,8 +76,7 @@ public:
 	/**
 	 * Named constructors.
 	 */
-	static std::shared_ptr<ScanResultsTreeModel> make_ScanResultsTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent = nullptr);
-	static std::shared_ptr<ScanResultsTreeModel> make_ScanResultsTreeModel(const std::vector<ColumnSpec>& column_specs, QObject* parent = nullptr);
+	static std::shared_ptr<ScanResultsTreeModel> create(std::initializer_list<ColumnSpec> column_specs, QObject* parent = nullptr);
 
 	ScanResultsTreeModel() = delete;
 	~ScanResultsTreeModel() override;
@@ -136,5 +136,7 @@ private:
 };
 
 QTH_DECLARE_QDATASTREAM_OPS(ScanResultsTreeModel);
+
+Q_DECLARE_METATYPE(ScanResultsTreeModel);
 
 #endif // SCANRESULTSTREEMODEL_H

@@ -21,7 +21,7 @@ class DefaultSettingsHelper : public QObject
 	Q_OBJECT
 
 public:
-	DefaultSettingsHelper();
+    DefaultSettingsHelper(QObject* parent = nullptr);
 
 	static QStringList defaultCollectionUrlList();
 

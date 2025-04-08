@@ -80,15 +80,37 @@ void ScanResultsTreeModel::sendModification()
 
 // static
 std::shared_ptr<ScanResultsTreeModel>
-ScanResultsTreeModel::make_ScanResultsTreeModel(std::initializer_list<ColumnSpec> column_specs, QObject* parent)
+ScanResultsTreeModel::create(std::initializer_list<ColumnSpec> column_specs, QObject* parent)
 {
-	auto vec_colspec = to_vector(column_specs);
-	return ScanResultsTreeModel::make_ScanResultsTreeModel(vec_colspec, parent);
+    auto retval_shptr = std::shared_ptr<ScanResultsTreeModel>(new ScanResultsTreeModel(column_specs, parent));
+
+    retval_shptr->m_root_item = AbstractTreeModelHeaderItem::create(column_specs, retval_shptr);
+
+	return retval_shptr;
 }
 
-// static
-std::shared_ptr<ScanResultsTreeModel>
-ScanResultsTreeModel::make_ScanResultsTreeModel(const std::vector<ColumnSpec>& column_specs, QObject* parent)
+void ScanResultsTreeModel::setBaseDirectory(const QUrl &base_directory)
+{
+    QWriteLocker write_lock(&m_rw_mutex);
+
+	m_base_directory = base_directory;
+}
+
+#if 0
+void ScanResultsTreeModel::LoadDatabase(const QString& database_filename)
+{
+	qIn() << "###### READING" << database_filename;
+
+	XmlSerializer xmlser;
+	xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
+	xmlser.HACK_skip_extra(false);
+	xmlser.load(*this, QUrl::fromLocalFile(database_filename));
+
+	qIn() << "###### TREEMODELPTR HAS NUM ROWS:" << rowCount();
+	qIn() << "###### READ" << database_filename;
+}
+
+void ScanResultsTreeModel::SaveDatabase(const QString& database_filename)
 {
 	auto retval_shptr = std::shared_ptr<ScanResultsTreeModel>(new ScanResultsTreeModel(column_specs, parent));
 
@@ -174,7 +196,7 @@ void ScanResultsTreeModel::DERIVED_set_default_namespace()
 	X(XMLTAG_SRTM_TS_LAST_SCAN_END, m_ts_last_scan_end) \
 	// X(XMLTAG_SRTM_ROOT_ITEM, tree_model_root_item)
 
-constexpr static QLatin1String XMLTAG_SRTM_ROOT_ITEM {"tree_model_root_item"};
+static constexpr QLatin1String XMLTAG_SRTM_ROOT_ITEM {"tree_model_root_item"};
 
 /// Strings to use for the tags.
 #define X(field_tag, member_field) static const QLatin1String field_tag ( # member_field );
@@ -183,9 +205,14 @@ constexpr static QLatin1String XMLTAG_SRTM_ROOT_ITEM {"tree_model_root_item"};
 
 QVariant ScanResultsTreeModel::toVariant() const
 {
+    qDb() << "START tree serialize";
+
 	InsertionOrderedMap<QString, QVariant> map;
 
-	std::unique_lock write_lock(m_rw_mutex);
+    QWriteLocker locker(&m_rw_mutex);
+
+    set_map_class_info(this, &map);
+
 
 #define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
 	M_DATASTREAM_FIELDS(X)
@@ -230,8 +257,8 @@ QVariant ScanResultsTreeModel::toVariant() const
 
 	// Insert the invisible root item, which will recursively add all children.
 	/// @todo It also serves as the model's header, not sure that's a good overloading.
-	qDb() << "START tree serialize";
 	map_insert_or_die(map, XMLTAG_SRTM_ROOT_ITEM, *m_root_item);
+
 	qDb() << "END tree serialize";
 
 	return map;
@@ -239,11 +266,11 @@ QVariant ScanResultsTreeModel::toVariant() const
 
 void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 {
-	std::unique_lock write_lock(m_rw_mutex);
+    QWriteLocker locker(&m_rw_mutex);
 
     InsertionOrderedMap<QString, QVariant> map = variant.value<InsertionOrderedMap<QString, QVariant>>();
 
-#define X(field_tag, var_name) map_read_field_or_warn(map, field_tag, var_name);
+#define X(field_tag, var_name) map_read_field_or_warn(map, field_tag, &var_name);
 	M_DATASTREAM_FIELDS(X);
 #undef X
 #if 0
@@ -273,13 +300,18 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 	m_root_item->fromVariant(root_item_map);
 
 #endif
+	Q_ASSERT(m_base_directory.isValid());
+	Q_ASSERT(!m_base_directory.isEmpty());
 
 	/// @note This is a QVariantMap, contains abstract_tree_model_header as a QVariantList.
 	InsertionOrderedMap<QString, QVariant> root_item_map;
 	map_read_field_or_warn(map, XMLTAG_SRTM_ROOT_ITEM, &root_item_map);
-	m_root_item->fromVariant(root_item_map);
+    m_root_item->fromVariant(root_item_map);
 
-	dump_map(map);
+    Q_ASSERT(m_root_item->isRoot() && m_root_item->isInModel());
+	Q_ASSERT(checkConsistency());
+
+	// dump_map(map);
 }
 
 QDataStream &operator<<(QDataStream &out, const ScanResultsTreeModel &myObj)

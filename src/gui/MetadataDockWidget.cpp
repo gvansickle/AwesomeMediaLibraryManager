@@ -240,7 +240,7 @@ M_TODO("Not getting some field here");
 		coverart_future.then([=](ExtFuture<QByteArray> future) -> QImage
 		{
 			// Do as much as we can in the arbitrary non-GUI context we're called in.
-#warning "NEED TO FIX get() returning nothing"
+/// @todo NEED TO FIX get() returning nothing
 #if 0 // QT6
 			if(future.hasException())
 			{

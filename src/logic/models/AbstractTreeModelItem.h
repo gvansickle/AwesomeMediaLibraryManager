@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2019, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -45,6 +45,7 @@
 #include <future/enable_shared_from_this_virtual.h>
 #include <logic/UUIncD.h>
 #include <logic/serialization/ISerializable.h>
+#include <logic/serialization/SerializationHelpers.h>
 #include "UndoRedoHelper.h"
 class AbstractTreeModel;
 
@@ -63,29 +64,30 @@ class AbstractTreeModelItem : public virtual ISerializable, public enable_shared
 	friend class AbstractTreeModel;
 
 public:
-	M_GH_RULE_OF_FIVE_DEFAULT_C21(AbstractTreeModelItem);
+    static std::shared_ptr<AbstractTreeModelItem> create(const std::vector<QVariant>& data = {},
+                                                        const std::shared_ptr<AbstractTreeModel>& model = nullptr,
+                                                        bool is_root = false);
+
+protected:
+	explicit AbstractTreeModelItem(const std::vector<QVariant>& data,
+			const std::shared_ptr<AbstractTreeModel>& model = nullptr);
 
 public:
-	AbstractTreeModelItem(const std::initializer_list<QVariant>& data,
-				const std::shared_ptr<AbstractTreeModelItem>& parent_item = nullptr, UUIncD id = UUIncD::null());
-	explicit AbstractTreeModelItem(const std::vector<QVariant>& data,
-			const std::shared_ptr<AbstractTreeModelItem>& parent_item = nullptr, UUIncD id = UUIncD::null());
+protected:
+    explicit AbstractTreeModelItem() = default;
+
+public:
 	~AbstractTreeModelItem() override;
 
-	/**
-	 * KDEN has a clean() in ProjectItemModel, nothing in item.
-	 * ETM has nothing like this.
-	 * AQP has one in the model which essentially just deletes the root item, and a takeChild()
-	 * in the item which is what the removeRows() override uses.
-	 */
+public:
 	virtual void clear();
 
 	/**
 	 * From KDenLive:
 	 * "This function executes what should be done when the item is deleted but without deleting effectively.
 	 * For example, the item will deregister itself from the model and delete the clips from the timeline.
-	 * However, the object is NOT actually deleted, and the tree structure is preserved.
-	 * @param Undo,Redo are the lambdas accumulating the update.
+	 * However, the object is NOT actually deleted, and the tree structure is preserved."
+	 * @param Undo, Redo are the lambdas accumulating the update.
 	 */
 	virtual bool selfSoftDelete(Fun &undo, Fun &redo);
 
@@ -111,8 +113,10 @@ public:
      // Both ETM&KDEN have this, but they don't take a role param.
 	virtual QVariant data(int column, int role = Qt::DisplayRole) const;
 
-	/// @todo NEW: Return the QVariant in @a column.  Not sure if this is needed.
-	// KDEN, see data().
+	/**
+	 * Return the QVariant in @a column.
+	 * KDEN, see data().
+	 */
 	QVariant dataColumn(int column) const;
 
 	// ETM+KDEN
@@ -122,7 +126,7 @@ public:
 	 * Insert new default-constructed columns into this item/row.
 	 * @note These are for this item, not model-level.
 	 */
-//M_WARNING("NEED TO BE OVERRIDDEN IN HeaderItem");
+	/// @warning NEED TO BE OVERRIDDEN IN HeaderItem
 	 // ETM, no KDEN
 	virtual bool insertColumns(int insert_before_column, int num_columns);
 	// ETM, no KDEN
@@ -135,8 +139,8 @@ public:
 	std::shared_ptr<AbstractTreeModelItem> parent() const;
 
 
-	/// KDEN, used in checkConsistency().
-	int depth() const;
+	// KDEN, used in checkConsistency().
+	int depth() const { return m_depth; }
 
 	/**
 	 * Return the UUIncD of this item.
@@ -163,7 +167,7 @@ public:
 	/// @{
 
 	/**
-	 * @note This is where all(?) children are ultimately created.
+	 *
 	 */
 	std::vector<std::shared_ptr<AbstractTreeModelItem>> insertChildren(int position, int count, int columns);
 
@@ -186,7 +190,13 @@ public:
 	 * Append an already-created child item to this item.
 	 * @note GRVS+KDEN,AQP has this as addChild().
 	 */
-	bool appendChild(const std::shared_ptr<AbstractTreeModelItem>& new_child);
+	// GRVS+KDEN,AQP has this as addChild().
+    bool appendChild(const std::shared_ptr<AbstractTreeModelItem>& new_child);
+	/**
+	 * Construct and Append a new child item to this item, initializing it from @a data.
+	 */
+	// KDEN
+	std::shared_ptr<AbstractTreeModelItem> appendChild(const std::vector<QVariant>& data = {});
 
 	/// @} // END Child append/insert functions.
 
@@ -219,8 +229,10 @@ public:
 	/// Be sure to override these in derived classes.
 	/// @{
 
-	 QVariant toVariant() const override;
-	 void fromVariant(const QVariant& variant) override;
+    QVariant toVariant() const override;
+    void fromVariant(const QVariant& variant) override;
+    void setModel(std::shared_ptr<AbstractTreeModel> model) { m_model = model; m_is_in_model = true; }
+
 
 	/// KDEN
 	/**
@@ -243,19 +255,18 @@ public:
      */
     bool has_ancestor(UUIncD id);
 
-	bool has_children() const;
-
-	/**
-	 * @brief Return true if the item thinks it is a root.
-	 * Note that it should be consistent with what the model thinks, but it may have been
-	 * messed up at some point if someone wrongly constructed the object with isRoot = true
-	 */
+    /**
+     *  Return true if the item thinks it is a root.
+   Note that it should be consistent with what the model thinks, but it may have been
+   messed up at some point if someone wrongly constructed the object with isRoot = true */
 	bool isRoot() const;
 
     // Debug stream op free func friender.
     QTH_DECLARE_FRIEND_QDEBUG_OP(AbstractTreeModelItem);
 
 protected:
+
+    static void baseFinishCreate(const std::shared_ptr<AbstractTreeModelItem>& new_item);
 
 	/**
 	 * Helper functions to handle registration / deregistration to the model.
@@ -266,6 +277,7 @@ protected:
 	 * Does effectively nothing if item is not in a model.
 	 */
 	void deregister_self();
+
 
 	/**
 	 * KDEN
@@ -305,36 +317,13 @@ protected:
 
 	/// @}
 
-	template <class T, class MapType>
-	static void set_map_class_info(const T* self, MapType* map)
-	{
-		int id = qMetaTypeId<T>();
-        qDb() << "QMetaType:" << id << QMetaType::fromType<T>().name();
-		map->m_id = id;
-		map->m_class = QMetaType::fromType<T>().name();
-	}
 
-#if 0
-	template <class MapType>
-	static void set_map_class_info(const std::string& classname, MapType* map)
-	{
-//		int id = qMetaTypeId<T>();
-		int id = 0;
-//		qDb() << "QMetaType:" << id << QMetaType::typeName(id);// << QVariant(*this).typeName();
-		qDb() << "No QMetaType, class:" << classname << "id:" << id;
-		map->m_id = id;
-//		map->m_class = QMetaType::typeName(id);
-		map->m_class = classname;
-	}
-#endif
 
 	template <class T, class MapType>
 	static void dump_map_class_info(const T* self, MapType* map)
 	{
 		int id = qMetaTypeId<T>();
 		qDb() << "QMetaType:" << id << QMetaType::fromType<T>().name();
-//		map->m_id = id;
-//		map->m_class = QMetaType::typeName(id);
 	}
 
 
@@ -360,10 +349,11 @@ protected:
 
 	/// Pointer to the model this is a part of.
 	std::weak_ptr<AbstractTreeModel> m_model;
+	bool m_is_in_model {false};
 
 	bool m_is_root {false};
 
-	/// Deque of shared_ptr's to child items.
+    /// Deque of std::shared_ptr's to child items.
 	std::deque<std::shared_ptr<AbstractTreeModelItem>> m_child_items;
 
 	/// KDEN: The "Last parent id", the last parent this item had.
@@ -390,21 +380,19 @@ private:
 	/// be non-null as long as this item is not the invisible root item.
 	std::weak_ptr<AbstractTreeModelItem> m_parent_item;
 
-
-
-	/// The depth of this item in its tree.
-	///KDEN
-	int m_depth {0};
+	/// This is used by checkConsistency().
+	int m_depth {-1};
 };
-
-// For name access and QVariant use.
-Q_DECLARE_METATYPE(AbstractTreeModelItem);
-Q_DECLARE_METATYPE(std::vector<QVariant>);
-Q_DECLARE_METATYPE(std::weak_ptr<AbstractTreeModelItem>);
-Q_DECLARE_METATYPE(std::shared_ptr<AbstractTreeModelItem>);
 
 // Debug stream op free func declaration.
 QTH_DECLARE_QDEBUG_OP(AbstractTreeModelItem);
+
+Q_DECLARE_METATYPE(AbstractTreeModelItem);
+Q_DECLARE_METATYPE(std::vector<QVariant>);
+Q_DECLARE_METATYPE(std::weak_ptr<AbstractTreeModelItem>);
+// Q_DECLARE_METATYPE(std::shared_ptr<AbstractTreeModelItem>);
+
+
 
 
 template <class T, class BinOp>

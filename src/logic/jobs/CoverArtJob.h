@@ -71,11 +71,11 @@ protected:
 	/**
 	 * The worker function.
 	 *
-	 * @param promise
+	 * @param promise  The QPromise<> which will be passed to us by QtConcurrent::run(). Non-const reference is correct here.
 	 * @param kjob
 	 * @param url
 	 */
-	static void LoadCoverArt(QPromise<QByteArray> & promise, CoverArtJobPtr kjob, const QUrl& url);
+	static void LoadCoverArt(QPromise<QByteArray>& promise, CoverArtJobPtr kjob, const QUrl& url);
 
 
 private:

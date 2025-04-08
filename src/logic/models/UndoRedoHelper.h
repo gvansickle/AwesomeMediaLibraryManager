@@ -52,8 +52,9 @@ using Fun = std::function<bool(void)>;
 */
 #define LOCK_IN_LAMBDA(mutex, lambda) \
 	lambda = [this, lambda]() { \
-		std::unique_lock write_lock(mutex); \
+        mutex.lockForWrite(); \
 		bool res_lambda = lambda(); \
+		mutex.unlock(); \
 		return res_lambda; \
 	};
 
@@ -62,7 +63,7 @@ using Fun = std::function<bool(void)>;
 Note that it might happen that a thread is executing a write operation that requires
 reading a Read-protected property. In that case, we try to write lock it first (this will be granted since the lock is recursive)
 */
-#if 0
+#if 0 // Std mutexes.
 #define READ_LOCK(mutex) \
 	using ul_type = std::unique_lock<std::recursive_mutex>; \
 	std::unique_ptr<ul_type> read_locker = std::make_unique<ul_type>(); \
@@ -74,9 +75,27 @@ reading a Read-protected property. In that case, we try to write lock it first (
 	} else { \
 		read_locker.reset(new ul_type(mutex)); \
 	}
+#elif 0
+#define READ_LOCK(mutex) std::unique_lock<std::recursive_mutex> read_locker(mutex);
+#elif 1
+/**
+ *  From KDenLive: This convenience macro locks the mutex for reading.
+Note that it might happen that a thread is executing a write operation that requires
+reading a Read-protected property. In that case, we try to write lock it first (this will be granted since the lock is recursive)
+*/
+#define READ_LOCK()                                                                                                                                            \
+std::unique_ptr<QReadLocker> rlocker(new QReadLocker(nullptr));                                                                                            \
+    std::unique_ptr<QWriteLocker> wlocker(new QWriteLocker(nullptr));                                                                                          \
+    if (m_rw_mutex.tryLockForWrite()) {                                                                                                                            \
+        /*we yield ownership of the lock to the WriteLocker*/                                                                                                  \
+        m_rw_mutex.unlock();                                                                                                                                       \
+        wlocker.reset(new QWriteLocker(&m_rw_mutex));                                                                                                              \
+} else {                                                                                                                                                   \
+        rlocker.reset(new QReadLocker(&m_rw_mutex));                                                                                                               \
+}
 #endif
 
-#define READ_LOCK(mutex) std::unique_lock<std::recursive_mutex> read_locker(mutex);
+
 
 /* @brief This macro takes some lambdas that represent undo/redo for an operation and the text (name) associated with this operation
    The lambdas are transformed to make sure they lock access to the class they operate on.

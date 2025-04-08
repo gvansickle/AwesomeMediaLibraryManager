@@ -41,20 +41,25 @@ class ModelIterators
 //////////////////
 /// DO NOT USE, THIS DOES NOT WORK YET.
 //////////////////////////////////////
-class bfs_iterator : public std::iterator<
-														// Category: bfs will be a LegacyInputIterator (can only be incremented, may invalidate all copies of prev value).
-														/// @link https://en.cppreference.com/w/cpp/named_req/InputIterator
-														std::input_iterator_tag,
-														//ItemType,
-														AbstractTreeModelItem,
-														// Distance is meaningless
-														void,
-														// Pointer and Reference need to be smart.
-														std::shared_ptr<AbstractTreeModelItem>,
-														AbstractTreeModelItem&
-														>
+class bfs_iterator //: public std::iterator<
+// 										// Category: bfs will be a LegacyInputIterator (can only be incremented, may invalidate all copies of prev value).
+// 										/// @link https://en.cppreference.com/w/cpp/named_req/InputIterator
+// 										std::input_iterator_tag,
+// 										//ItemType,
+// 										AbstractTreeModelItem,
+// 										// Distance is meaningless
+// 										void,
+// 										// Pointer and Reference need to be smart.
+// 										std::shared_ptr<AbstractTreeModelItem>,
+// 										AbstractTreeModelItem&
+// 										>
 {
 public:
+	using iterator_category = std::input_iterator_tag;
+	using value_type = AbstractTreeModelItem;
+	using difference_type = void;
+	using pointer = std::shared_ptr<AbstractTreeModelItem>;
+	using reference = AbstractTreeModelItem&;
 	using iterator_concept = std::input_iterator_tag;
 
 	bfs_iterator();

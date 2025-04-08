@@ -28,6 +28,7 @@
 #include <deque>
 #include <map>
 #include <tuple>
+#include <format>
 #include <vector>
 #include <utility> // For std::pair<>.
 
@@ -41,6 +42,7 @@
 #include <future/guideline_helpers.h>
 #include <future/future_algorithms.h>
 #include <utils/DebugHelpers.h>
+#include <utils/StringHelpers.h>
 
 //template <typename KeyType, typename ValueType>
 //struct value_type_grvs
@@ -149,12 +151,23 @@ public:
 		m_attribute_map.clear();
 	}
 
+	mapped_type& at(const KeyType& key)
+	{
+		auto it = this->find(key);
+		if (it == m_vector_of_elements.cend())
+		{
+            throw std::out_of_range(
+                std::format("InsertionOrderedMap(): no such element, at(key): {}", key));// + key.toUtf8().toStdString());
+		}
+		return it->second;
+	}
+
 	const mapped_type& at(const KeyType& key) const
 	{
 		auto it = this->find(key);
 		if(it == m_vector_of_elements.cend())
 		{
-			throw std::out_of_range(std::string("InsertionOrderedMap(): no such element at():") + key.toUtf8().toStdString());
+            throw std::out_of_range(std::format("InsertionOrderedMap(): no such element, at(key):", key));// + key.toUtf8().toStdString());
 		}
 		return it->second;
 	}
@@ -275,25 +288,14 @@ public:
 
 	iterator begin() { return m_vector_of_elements.begin(); }
 	const_iterator begin() const { return m_vector_of_elements.begin(); }
-	const_iterator cbegin() const noexcept { return std::cbegin(m_vector_of_elements); };
+    const_iterator cbegin() const noexcept { return std::cbegin(m_vector_of_elements); }
 
 	iterator end()	{ return m_vector_of_elements.end(); }
 	const_iterator end() const { return m_vector_of_elements.end(); }
-	const_iterator cend() const noexcept { return std::cend(m_vector_of_elements); };
+    const_iterator cend() const noexcept { return std::cend(m_vector_of_elements); }
 
-	bool empty() const { return m_vector_of_elements.empty(); };
-	size_t size() const { return m_vector_of_elements.size(); };
-
-#if 1 // Qt5
-
-	/// @name Debug
-	/// @{
-	/// @link See SO https://stackoverflow.com/a/4661372
-//	QTH_DECLARE_FRIEND_QDEBUG_OP(InsertionOrderedMap<KeyType,ValueType>);
-	friend QDebug operator<< <KeyType, ValueType>(QDebug out, const InsertionOrderedMap<KeyType, ValueType>& obj);
-
-	/// @}
-
+    bool empty() const { return m_vector_of_elements.empty(); }
+    size_t size() const { return m_vector_of_elements.size(); }
 
 //	QTH_FRIEND_QDATASTREAM_OPS(InsertionOrderedMap);
 
@@ -305,9 +307,6 @@ public:
 	{
 		return QVariant::fromValue(*this);
 	}
-
-#endif // Qt5
-
 
 private:
 
@@ -338,5 +337,16 @@ using QVariantInsertionOrderedMap = InsertionOrderedMap<QString, QVariant>;
 // Q_DECLARE_METATYPE_TEMPLATE_2ARG(InsertionOrderedMap);
 Q_DECLARE_METATYPE(QVariantInsertionOrderedMap);
 
+
+template <class T, class MapType>
+static void set_map_class_info(const T* self, MapType* map)
+{
+	// int id = qMetaTypeId<T>();
+	// qDb() << "QMetaType:" << id << QMetaType::fromType<T>().name();
+	// QMetaType id numbers are not consistent from run to run, so we don't persist them.
+	// map->m_id = id;
+	map->m_id = 1;
+	map->m_class = QMetaType::fromType<T>().name();
+}
 
 #endif /* SRC_FUTURE_INSERTIONORDEREDMAP_H_ */

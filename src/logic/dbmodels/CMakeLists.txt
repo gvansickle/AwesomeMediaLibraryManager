@@ -45,8 +45,6 @@ target_include_directories(dbmodels
 #		${CMAKE_CURRENT_SOURCE_DIR}/.. # To allow <future/whatever.h>
 		${CMAKE_CURRENT_LIST_DIR}
 #	    ${CMAKE_CURRENT_LIST_DIR}/.. # To allow <future/whatever.h>
-		${boost_callable_traits_SOURCE_DIR}
-		${boost_callable_traits_BINARY_DIR}
 		# For config.h
 		${PROJECT_BINARY_DIR}/src
 		)

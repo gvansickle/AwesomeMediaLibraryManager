@@ -9,7 +9,7 @@
 
 #include <QStandardPaths>
 
-DefaultSettingsHelper::DefaultSettingsHelper()
+DefaultSettingsHelper::DefaultSettingsHelper(QObject* parent) : QObject(parent)
 {
 	// TODO Auto-generated constructor stub
 

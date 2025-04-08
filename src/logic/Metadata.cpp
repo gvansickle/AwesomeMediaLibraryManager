@@ -24,7 +24,7 @@
 #include <string>
 #include <map>
 
-// Qt5
+// Qt
 #include <QVariant>
 #include <QVariantMap>
 
@@ -73,7 +73,6 @@
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering Metadata metatypes";
 	qRegisterMetaType<Metadata>();
-//	QMetaType::registerConverter<Metadata, QString>([](const Metadata& obj){ return obj.name(); });
 });
 
 QTH_DEFINE_DUMMY_QDEBUG_OP(Metadata);
@@ -396,7 +395,7 @@ qDb() << "####### NUM TRACKS:" << m_tracks.size();
 
 
 		// Ok, now do a second pass over the tracks and determine if there are any gapless sets.
-M_TODO("WAS THIS ALREADY DONE ABOVE?");
+M_TODO("WAS THIS ALREADY DONE ABOVE?")
 		qDebug() << "Scanning for gaplessness...";
 		for(int track_num=1; track_num < m_num_tracks_on_media; ++track_num)
 		{
@@ -461,7 +460,7 @@ Fraction Metadata::total_length_seconds() const
 
 AMLMTagMap Metadata::filled_fields() const
 {
-M_TODO("OBSOLETE");
+M_TODO("OBSOLETE")
 	if(hasBeenRead() && !isError())
 	{
 		//qDebug() << "Converting filled_fields to TagMap";
@@ -475,7 +474,7 @@ M_TODO("OBSOLETE");
 			if(key.empty() || key.length() == 0)
 			{
 				// We found an unknown key.
-				M_WARNING("TODO: Find a better way to track new keys.")
+                /// @TODO: Find a better way to track new keys.
 				///f_newly_discovered_keys.insert(key_val_pairs.first);
 				continue;
 			}
@@ -530,7 +529,7 @@ TrackMetadata Metadata::track(int i) const
 
 Metadata Metadata::get_one_track_metadata(int track_index) const
 {
-M_TODO("FIX THIS");
+    /// @TODO FIX THIS
 	// Start off with a complete duplicate.
 	Metadata retval(*this);
 
@@ -545,7 +544,7 @@ M_TODO("FIX THIS");
 	//qIn() << "AFTER:" << retval.m_tracks;
 
 	// Copy any track-specific CDTEXT data to the "top level" metadata.
-	M_WARNING("TODO: This could probably be improved, e.g. not merge these in but keep the track info separate");
+    /// @TODO: This could probably be improved, e.g. not merge these in but keep the track info separate
 	if(!track_entry.m_PTI_TITLE.empty())
 	{
 		//    qIn() << M_NAME_VAL(retval.m_tag_map["TITLE"]);
@@ -582,7 +581,7 @@ bool Metadata::hasTrack(int i) const
 QByteArray Metadata::getCoverArtBytes() const
 {
 	// static function in MetadataTagLib.h/.cpp.
-	return getCoverArtBytes();
+    return getCoverArtBytes();
 }
 
 std::string Metadata::operator[](const std::string& key) const
@@ -652,13 +651,12 @@ using strviw_type = QLatin1String;
 	X(XMLTAG_TRACKS, m_tracks)
 
 /// Strings to use for the tags.
-#define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
+#define X(field_tag, member_field) static constexpr strviw_type field_tag ( # member_field );
 	M_DATASTREAM_FIELDS(X);
 	M_DATASTREAM_FIELDS_MAPS(X);
 	M_DATASTREAM_FIELDS_LISTS(X);
 #undef X
-//static const strviw_type XMLTAG_TRACKS("m_tracks");
-static const strviw_type XMLTAG_CUESHEET("m_cuesheet");
+static constexpr strviw_type XMLTAG_CUESHEET("m_cuesheet");
 
 
 
@@ -667,13 +665,14 @@ QVariant Metadata::toVariant() const
 	InsertionOrderedMap<QString, QVariant> map;
 
 #define X(field_tag, member_field)   map_insert_or_die(map, field_tag, member_field);
-	M_DATASTREAM_FIELDS(X);
-	M_DATASTREAM_FIELDS_MAPS(X);
+    M_DATASTREAM_FIELDS(X)
+    M_DATASTREAM_FIELDS_MAPS(X)
 #undef X
 
+	// M_DATASTREAM_FIELDS_LISTS(X)
+
 	// Track-level fields.
-#warning "FIX TRACK DUPS"
-#if 0 /// @todo This info gets duplicated (complete with should-be-unique xml:id's)	in the CueSheet.
+/// @todo This info gets duplicated (complete with should-be-unique xml:id's)	in the CueSheet.
 	// Add the track list to the return map.
 	QVariantHomogenousList qvar_track_map("m_track", "track");
 
@@ -685,7 +684,7 @@ QVariant Metadata::toVariant() const
 
 	// All tracks on the disc.
 	map_insert_or_die(map, XMLTAG_TRACKS, qvar_track_map);
-#endif
+
 	// The cuesheet, which will duplicate the track list.
 	/// @todo Somehow eliminate duplication here.
 	map_insert_or_die(map, XMLTAG_CUESHEET, m_cuesheet);
@@ -699,20 +698,24 @@ void Metadata::fromVariant(const QVariant& variant)
 	qviomap_from_qvar_or_die(&map, variant);
 
 #define X(field_tag, member_field)   map_read_field_or_warn(map, field_tag, &(member_field));
-	M_DATASTREAM_FIELDS(X);
-	M_DATASTREAM_FIELDS_MAPS(X);
+    M_DATASTREAM_FIELDS(X)
+    M_DATASTREAM_FIELDS_MAPS(X)
+    // M_DATASTREAM_FIELDS_LISTS(X)
 #undef X
+    QVariantMap temp_map;
+    map_read_field_or_warn(map, XMLTAG_TRACKS, &temp_map);
+    std::map<int, TrackMetadata> tracks_map = qvariantmap_to_std_map<std::map<int, TrackMetadata>>(temp_map);
+    m_tracks = tracks_map;
+    // map_read_field_or_warn(map, XMLTAG_TRACKS, &m_tracks);
 
 	map_read_field_or_warn(map, XMLTAG_CUESHEET, &m_cuesheet);
 
-#warning "FIX TRACK DUPS"
-#if 0 /// @todo This info gets duplicated (complete with should-be-unique xml:id's)	in the CueSheet.
+/// @todo FIX TRACK DUPS
+/// @todo This info gets duplicated (complete with should-be-unique xml:id's)	in the CueSheet.
 	// Read in the track list.
 	QVariantHomogenousList qvar_track_list("m_track", "track");
 	map_read_field_or_warn(map, XMLTAG_TRACKS, &qvar_track_list);
-#if 0
-	list_read_all_fields_or_warn(qvar_track_list)
-#else
+
 	for(const auto& track : qvar_track_list)
 	{
 		TrackMetadata tm;
@@ -724,8 +727,7 @@ void Metadata::fromVariant(const QVariant& variant)
 
 		m_tracks.insert(std::make_pair(track_num, tm));
 	}
-#endif
-#endif
+
 	m_read_has_been_attempted = true;
 	m_is_error = false;
 }

@@ -25,10 +25,11 @@
 #include <regex>
 #include <string_view>
 
-// Qt5
+// Qt
 #include <QRegularExpression>
 #include <QStringLiteral>
 #include <QUrl>
+#include <QFile>
 
 /// @todo Looks like VS2017 headers are broken here.  libcue.h includes <stdio.h> outside the extern "C",
 /// and apparently MS's stdio.h isn't C++-safe.
@@ -227,6 +228,8 @@ uint8_t CueSheet::get_total_num_tracks() const
 QVariant CueSheet::toVariant() const
 {
 	InsertionOrderedMap<QString, QVariant> map;
+
+    set_map_class_info(this, &map);
 
 	// CD-level fields.
 #define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
@@ -435,8 +438,9 @@ bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t
             auto insert_status = m_tracks.insert({track_num, tm});
             if(insert_status.second != true)
             {
-                // No insertion took place, must have been a dup.
-                qWr() << "DUPLICATE CUESHEET TRACK ENTRIES:" << track_num;/// << tm << *insert_status.first;
+                // Found a dup.
+            	/// @todo This means something is really broken, should handle this better than just a message.
+                qCr() << "DUPLICATE CUESHEET TRACK ENTRIES:" << track_num;/// << tm << *insert_status.first;
             }
         }
 

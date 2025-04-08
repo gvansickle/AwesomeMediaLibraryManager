@@ -23,11 +23,11 @@
 
 #include "ISerializable.h"
 
-// Qt5
+// Qt
 #include <QDebug>
 #include <QMetaType>
 
-// Ours, Qt5/KF5 related.
+// Ours, Qt/KF related.
 #include <utils/DebugHelpers.h>
 #include <utils/RegisterQtMetatypes.h>
 
@@ -54,9 +54,12 @@ QVariant SerializableQVariantList::toVariant() const
 
 	InsertionOrderedMap<QString, QVariant> map;
 	// Return a QMap with a single QVariant(SerializableQVariantList) item.
-	/// @note Slicing warning, but this is ok here.
-	/// @note Is it really?
-	SerializableQVariantList list = *this;
+
+    SerializableQVariantList list(m_list_tag, m_list_item_tag);
+    for(const auto& element : m_the_list)
+    {
+        list.push_back(element);
+    }
 
 	map.insert(m_list_tag, list);
 	return map;
@@ -74,8 +77,11 @@ void SerializableQVariantList::fromVariant(const QVariant& variant)
 	InsertionOrderedMap<QString, QVariant> map = variant.value<InsertionOrderedMap<QString, QVariant>>();
 
 	Q_ASSERT(map.contains(m_list_tag));
+    qDb() << "list type:" << map.at(m_list_tag).metaType();
+    // Q_ASSERT(map.at(m_list_tag).canConvert<SerializableQVariantList>());
+    Q_ASSERT(map.at(m_list_tag).canConvert<QVariantHomogenousList>());
 
-	SerializableQVariantList qvl = map.at(m_list_tag).value<SerializableQVariantList>();
+    auto qvl = map.at(m_list_tag).value<QVariantHomogenousList>();
 
 	for(const QVariant& entry : qvl)
 	{

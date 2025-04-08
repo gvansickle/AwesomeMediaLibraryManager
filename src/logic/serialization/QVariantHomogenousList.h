@@ -30,7 +30,6 @@
 
 // Qt
 #include <QString>
-#include <QVariantList>
 
 // Ours.
 // #include <ISerializable.h> //<< This includes this file.
@@ -38,7 +37,7 @@
 #include <future/guideline_helpers.h>
 
 
-class QVariantHomogenousList //: public QVariantList
+class QVariantHomogenousList
 {
 public:
 	/// @name Member types
@@ -50,7 +49,7 @@ public:
 	/// @}
 
 public:
-	// Rule-of-Zero doesn't work here, probably Qt5.
+	// Rule-of-Zero doesn't work here, probably Qt.
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(QVariantHomogenousList);
 	virtual ~QVariantHomogenousList() = default;
 

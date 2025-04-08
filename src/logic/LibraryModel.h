@@ -17,7 +17,7 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/** @file LibraryModel. */
+/** @file LibraryModel.h */
 
 #ifndef LIBRARYMODEL_H
 #define LIBRARYMODEL_H
@@ -81,6 +81,7 @@ Q_SIGNALS:
 public:
 	explicit LibraryModel(QObject *parent = nullptr);
     ~LibraryModel() override;
+	M_GH_POLYMORPHIC_SUPPRESS_COPYING_C67(LibraryModel)
 
 //    CollectionDatabaseModel *m_cdb_model;
 
@@ -241,7 +242,6 @@ protected:
 	LibraryRescanner* m_rescanner {nullptr};
 
 private:
-	Q_DISABLE_COPY(LibraryModel)
 
 	/// The directory where we'll put the LibraryModel's cache file.
 	QUrl m_cachedir;

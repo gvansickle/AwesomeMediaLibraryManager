@@ -34,7 +34,7 @@
 #include <memory>
 #include <utility>
 
-// Qt5
+// Qt
 #include <QBrush>
 #include <QStringList>
 #include <QVariant>
@@ -48,67 +48,55 @@
 #include "AbstractTreeModel.h"
 #include <utils/ext_iterators.h>
 #include <logic/serialization/SerializationHelpers.h>
+#include "ItemFactory.h"
+#include "ThreadsafeTreeModel.h"
 
 /// @todo Break Deps.
 #include "AbstractTreeModelHeaderItem.h"
 #include "ScanResultsTreeModelItem.h"
 #include "SRTMItemLibEntry.h"
 
+AMLM_QREG_CALLBACK([](){
+	qIn() << "Registering std::shared_ptr<AbstractTreeModelItem>";
+	qRegisterMetaType<AbstractTreeModelItem>();
+	qRegisterMetaType<std::shared_ptr<AbstractTreeModelItem>>();
+    qRegisterMetaType<std::unique_ptr<AbstractTreeModelItem>>();
+    qRegisterMetaType<std::weak_ptr<AbstractTreeModelItem>>();
+});
 
-//AbstractTreeModelItem::AbstractTreeModelItem()
-//{
-//	// Just to get a vptr.
-//}
 
-AbstractTreeModelItem::AbstractTreeModelItem(const std::initializer_list<QVariant>& data, const std::shared_ptr<AbstractTreeModelItem>& parent_item, UUIncD id)
-	: AbstractTreeModelItem(to_vector(data), parent_item, id)
+std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::create(const std::vector<QVariant>& data,
+																	const std::shared_ptr<AbstractTreeModel>& model,
+																	bool is_root)
 {
-	// Just delegating.
+    std::shared_ptr<AbstractTreeModelItem> new_item = std::shared_ptr<AbstractTreeModelItem>(new AbstractTreeModelItem(data, model));
+    baseFinishCreate(new_item);
+
+	return new_item;
 }
 
-AbstractTreeModelItem::AbstractTreeModelItem(const std::vector<QVariant>& data, const std::shared_ptr<AbstractTreeModelItem>& parent_item, UUIncD id)
-	: AbstractTreeModelItem()
+AbstractTreeModelItem::AbstractTreeModelItem(const std::vector<QVariant>& data, const std::shared_ptr<AbstractTreeModel>& model)
 {
-	// Generate or set the UUIncD.
-	if(!m_uuincid.isValid())
-	{
-		if(id.isValid())
-		{
-			// Set the id to the one passed in.
-			m_uuincid = id;
-		}
-		else
-		{
-			// Set it to a new unique ID.
-			m_uuincid = UUIncD::create();
-		}
-	}
-
-	// AQT
-	if(parent_item)
-	{
-		parent_item->appendChild(this->shared_from_this());
-	}
-
-	m_parent_item = parent_item;
-    m_item_data = data;
+	m_item_data = data;
+	m_model = model;
+	m_depth = 0;
+	m_uuincid = UUIncD::create();
+	m_is_in_model = false;
+	m_is_root = false;
 }
 
 AbstractTreeModelItem::~AbstractTreeModelItem()
 {
-	qDb() << "Destructing model item:" << *this;
+    qDb() << "DELETING";
 	deregister_self();
 //	clear();
 }
 
 void AbstractTreeModelItem::clear()
 {
-	qDb() << "clear(): Deregister if needed etc.";
-	deregister_self();
-
-	// Reset this item to its default-constructed state.  I.e. empty with no child items.
-	m_child_items.clear();
-	m_item_data.clear();
+	// Reset this item to completely empty, except for its place in the model.
+	// m_child_items.clear();
+	// m_item_data.clear();
 }
 
 bool AbstractTreeModelItem::selfSoftDelete(Fun& undo, Fun& redo)
@@ -180,20 +168,20 @@ int AbstractTreeModelItem::childNumber() const
 		}
 		else
 		{
-			qCr() << "Can't find ourselves in parent's list";
-			Q_ASSERT(0);
+            qCr() << "Can't find ourselves in parent's list:" << M_ID_VAL(this_cast->getId());
+            Q_ASSERT(0);
 			return -1;
 		}
 	}
 
-	// No parent, ETM returns 0 here.
-    return 0;
+	// No parent, ETM returns 0 here, KDen returns -1.
+    return -1;
 }
 
 
 bool AbstractTreeModelItem::insertColumns(int insert_before_column, int num_columns)
 {
-	// Check if caller is trying to inser a column out of bounds.
+	// Check if caller is trying to insert a column out of bounds.
 	if (insert_before_column < 0 || insert_before_column > m_item_data.size())
 	{
 		qWr() << "Ignoring insertColumns() with bad insert_before_column:" << insert_before_column;
@@ -246,11 +234,6 @@ std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::parent() const
 	return std::static_pointer_cast<AbstractTreeModelItem>(m_parent_item.lock());
 }
 
-int AbstractTreeModelItem::depth() const
-{
-	return m_depth;
-}
-
 UUIncD AbstractTreeModelItem::getId() const
 {
 	Q_ASSERT(m_uuincid != UUIncD::null());
@@ -265,18 +248,12 @@ void AbstractTreeModelItem::setId(UUIncD id)
 
 bool AbstractTreeModelItem::isInModel() const
 {
-	if(auto temp = m_model.lock())
-	{
-		return true;
-	}
-	else
-	{
-		return false;
-	}
+	return m_is_in_model;
 }
 
 bool AbstractTreeModelItem::operator==(const AbstractTreeModelItem& other) const
 {
+	Q_ASSERT(0);
 	return m_uuincid == other.m_uuincid;
 }
 
@@ -309,6 +286,7 @@ bool AbstractTreeModelItem::removeChildren(int position, int count)
 	return true;
 }
 
+
 void AbstractTreeModelItem::removeChild(const std::shared_ptr<AbstractTreeModelItem>& child)
 {
 	if (auto ptr = m_model.lock())
@@ -330,7 +308,7 @@ void AbstractTreeModelItem::removeChild(const std::shared_ptr<AbstractTreeModelI
 	}
 	else
 	{
-		qCr() << "ERROR: Something went wrong when removing child in TreeItem. Model is not available anymore";
+		qCr() << "ERROR: Couldn't lock model.";
 		Q_ASSERT(false);
 	}
 }
@@ -340,6 +318,7 @@ bool AbstractTreeModelItem::changeParent(std::shared_ptr<AbstractTreeModelItem> 
 	AMLM_ASSERT_X(!m_is_root, "ATTEMPTED TO CHANGE ROOT ITEM PARENT");
 	if (m_is_root)
 	{
+		// Don't allow changing the root item's parent.
 		return false;
 	}
 
@@ -369,37 +348,10 @@ bool AbstractTreeModelItem::changeParent(std::shared_ptr<AbstractTreeModelItem> 
 	return res;
 }
 
-class DataStreamField
-{
-public:
-	DataStreamField(const std::string& xml_tag_str)
-		: m_xml_tag_str(xml_tag_str)
-	{};
-	~DataStreamField() {};
-
-	/// Implicit conversion to std::string.
-	operator std::string() const { return m_xml_tag_str; };
-
-	/// Implicit conversion to QString.
-	operator QString() const { return toqstr(m_xml_tag_str); };
-
-private:
-	std::string m_xml_tag_str;
-};
-
-QDebug operator<<(QDebug qdb, const DataStreamField& dsr)
-{
-	qdb << QString(dsr);
-	return qdb;
-}
-
-static DataStreamField XMLTAG_NUM_CHILDREN{"num_children"};
 
 #define M_DATASTREAM_FIELDS(X) \
 	/* TAG_IDENTIFIER, tag_string, member_field, var_name */ \
-	X(XMLTAG_CHILD_ITEM_MAP, child_item_map, nullptr) \
-	X(XMLTAG_ITEM_DATA_LIST, item_data_list, nullptr)
-
+    X(XMLTAG_CHILD_ITEM_LIST, child_item_list, nullptr)
 
 #define M_DATASTREAM_FIELDS_CONTSIZES(X) \
 	X(XMLTAG_NUM_COLUMNS, num_columns, m_item_data) \
@@ -409,7 +361,7 @@ static DataStreamField XMLTAG_NUM_CHILDREN{"num_children"};
 using strviw_type = QLatin1String;
 
 ///// Strings to use for the tags.
-#define X(field_tag, tag_string, var_name) static const strviw_type field_tag ( # tag_string );
+#define X(field_tag, tag_string, var_name) static constexpr strviw_type field_tag ( # tag_string );
 	M_DATASTREAM_FIELDS(X);
 	M_DATASTREAM_FIELDS_CONTSIZES(X);
 #undef X
@@ -422,35 +374,72 @@ QVariant AbstractTreeModelItem::toVariant() const
 	// Write class info to the map.
 	set_map_class_info(this, &map);
 
-#define X(field_tag, tag_string, var_name) map_insert_or_die(map, field_tag, var_name);
-	M_DATASTREAM_FIELDS(X);
-#undef X
-	// Number of columns, XMLTAG_NUM_COLUMNS.
-	// Number of elements in m_item_data, XMLTAG_ITEM_DATA_LIST_SIZE.
-	// Number of immediate children, XMLTAG_NUM_CHILDREN.
+// #define X(field_tag, tag_string, var_name) map_insert_or_die(map, field_tag, var_name);
+// 	M_DATASTREAM_FIELDS(X);
+// #undef X
 #define X(field_tag, tag_string, var_name) map_insert_or_die(map, field_tag, (qulonglong)(var_name).size());
 	M_DATASTREAM_FIELDS_CONTSIZES(X);
 #undef X
 
-	// Add the m_item_data QVariants to the map under key XMLTAG_ITEM_DATA_LIST/"<item_data_list>".
-	item_data_to_variant(&map);
+	/// @todo The "m_item_data" string is not getting written out, not sure if we care.
+	QVariantHomogenousList list("m_item_data", "item");
+	// The item data itself.
+	for(const QVariant& itemdata : m_item_data)
+	{
+		list_push_back_or_die(list, itemdata);
+	}
+	// Add them to the output map.
+	map_insert_or_die(map, "item_data", list);
 
-	// Serialize out Child nodes.
-	children_to_variant(&map);
+    // Serialize out Child items.
+    QVariantHomogenousList child_list("m_child_items", "child_item");
+	for (auto child : m_child_items)
+	{
+		// Add the AbstractTreeModelItem to the list.
+		// Qt can't serialize smart pointers so we have to send the pointed-to objects.
+		QVariant var_child = child->toVariant();
+		list_push_back_or_die(child_list, var_child);
+	}
+
+	// Insert the list into the map.
+    map_insert_or_die(map, XMLTAG_CHILD_ITEM_LIST, child_list);
 
 	return QVariant::fromValue(map);
 }
+
 
 void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 {
 	InsertionOrderedMap<QString, QVariant> map = variant.value<InsertionOrderedMap<QString, QVariant>>();
 
+    qDb() << "READING IN CLASS:" << map.get_attr("class") << "from" << __PRETTY_FUNCTION__;
+
 #define X(field_tag, tag_string, member_field) map_read_field_or_warn(map, field_tag, member_field);
 //	M_DATASTREAM_FIELDS(X);
 #undef X
 
-	// Get this item's data from variant list.
-	int item_data_retval = item_data_from_variant(map);
+    if(m_is_root)
+    {
+        // Already set up in ...HeaderItem::fromVariant().
+    }
+    else
+    {
+        // m_model.lock()->m_model_item_map[m_uuincid] = weak_from_this();
+    }
+	// m_uuincd is set in the AbstractTreeModelItem constructor.
+
+	// Get the number of item_data entries.
+	std::vector<QVariant>::size_type item_data_size = 0;
+	map_read_field_or_warn(map, XMLTAG_ITEM_DATA_SIZE, &item_data_size);
+
+	// This item's data from variant list.
+	QVariantHomogenousList vl("itemdata_list", "m_item_data");
+	map_read_field_or_warn(map, "item_data", &vl);
+	for(const auto& it : vl)
+	{
+		QString itstr = it.toString();
+		m_item_data.push_back(itstr);
+	}
 
 	// Get this item's children.
 	qulonglong num_children = 0;
@@ -458,28 +447,95 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 
 	qDb() << XMLTAG_NUM_CHILDREN << num_children;
 
-
-	QVariantHomogenousList child_list(XMLTAG_CHILD_NODE_LIST, "child");
-	child_list = map.at(XMLTAG_CHILD_NODE_LIST).value<QVariantHomogenousList>();
+    // Now read in our children.  We need this Item to be in a model and registered for that to work,
+	// so first add *this to the model.
+	if (m_is_root)
+	{
+		// We're root, so we have no parent.
+		// Here, we're already registered with the model by the AbstractTreeModel::create() call.
+		Q_ASSERT(m_is_in_model);
+		Q_ASSERT(m_uuincid != UUIncD::null());
+	}
+	else
+	{
+        // For all other items, we need to get *this into the model, so it can be found
+        // when its children are subsequently added to the model.
+        // This should have happened on the previous recursion, in the child item requestAddItem() call below.
+        // std::dynamic_pointer_cast<ThreadsafeTreeModel>(m_model.lock())->requestAddItem(shared_from_this(), parentid);
+        // std::shared_ptr<AbstractTreeModelItem> parent_item = m_model.lock()->getItemById();
+	}
+    Q_ASSERT(isInModel());
+    QVariantHomogenousList child_list(XMLTAG_CHILD_ITEM_LIST, "child_item");
+	child_list = map.at(XMLTAG_CHILD_ITEM_LIST).value<QVariantHomogenousList>();
 	qDb() << M_ID_VAL(child_list.size());
 
 	AMLM_ASSERT_EQ(num_children, child_list.size());
 
-	// Read in our children.
-	/// @todo ???
-//	childrenFromVariant(child_list);
-
-	////////////////////////////////////
-#if 0
-	// Now read in our children.  We need this Item to be in a model for that to work.
-	/// @todo Add to model, Will this finally work?
-//	auto parent_item_ptr = this->parent_item().lock();
-//WRONG:	appendChild(this->shared_from_this());
-	Q_ASSERT(isInModel());
-	auto model_ptr = m_model.lock();
+#if 1
+    // auto model_ptr = parent()->m_model.lock();
+    auto model_ptr = m_model.lock();
 	Q_ASSERT(model_ptr);
+    for(auto& child_item : child_list)
+    {
+        // What was the derived class type that was actually written?
+    	std::string class_attr;
+        if (child_item.canConvert<InsertionOrderedMap<QString, QVariant>>())
+    	{
+            auto child_item_map = child_item.value<InsertionOrderedMap<QString, QVariant>>();
+    		class_attr = child_item_map.get_attr("class");
+            qDb() << "CLASS ATTR:" << class_attr;
+    	}
+    	else
+    	{
+    		// Tree is corrupted.
+    		Q_ASSERT(0);
+    	}
 
-	children_from_str_var_map(map);
+    	auto derived_child_ptr = ItemFactory::instance().createItem(class_attr);
+
+    	if (derived_child_ptr)
+    	{
+    		derived_child_ptr->setModel(model_ptr);
+            std::dynamic_pointer_cast<ThreadsafeTreeModel>(model_ptr)->requestAddItem(derived_child_ptr, this->getId());
+
+            // derived_child_ptr->updateParent(shared_from_this());
+    		derived_child_ptr->fromVariant(child_item);
+            // std::shared_ptr<AbstractTreeModelItem> cptr(std::move(derived_child_ptr));
+            // qDb() << "APPENDING" << *cptr;
+
+            // appendChild(cptr);
+    	}
+#endif
+#if 0
+        auto derived_child_metatype = QMetaType::fromName(class_attr.c_str());
+        if(derived_child_metatype.isValid())
+        {
+            qDb() << "Derived QMetaType:" << derived_child_metatype;
+
+            if (!child_item.canConvert(derived_child_metatype))
+        	{
+        		Q_ASSERT(0);
+        	}
+
+        	bool convert_ok = child_item.convert(derived_child_metatype);
+        	Q_ASSERT(convert_ok);
+
+        	void* data = derived_child_metatype.create(variant.constData());
+        	std::shared_ptr<AbstractTreeModelItem> child_sptr(reinterpret_cast<AbstractTreeModelItem*>(data));
+            // qDb() << "Class attr:" << M_ID_VAL(metatype) << M_ID_VAL(typename_per_var);
+            // AbstractTreeModelItem child = child_item.value<AbstractTreeModelItem>();
+            // std::shared_ptr<AbstractTreeModelItem> child_sptr = AbstractTreeModelItem::create(child.m_item_data, model_ptr, child.isRoot(), UUIncD::create());
+            // std::shared_ptr<AbstractTreeModelItem> child_sptr = std::make_shared<AbstractTreeModelItem>();
+            // *child_sptr = child;
+            appendChild(child_sptr);
+        }
+        else
+        {
+            // Error.
+            Q_ASSERT(0);
+        }
+#endif
+    }
 }
 
 QVariant AbstractTreeModelItem::data(int column, int role) const
@@ -503,11 +559,18 @@ QVariant AbstractTreeModelItem::data(int column, int role) const
 	return QVariant();
 }
 
-/// NEW: Return the QVariant in @a column.
+/// Return the QVariant at @a column.
 /// KDen behavior is to return def const QVariant if > num cols.
 QVariant AbstractTreeModelItem::dataColumn(int column) const
 {
-	return data(column);
+	try
+	{
+		return m_item_data.at(column);
+	}
+	catch (...) // std::out_of_range
+	{
+		return QVariant();
+	}
 }
 
 bool AbstractTreeModelItem::setData(int column, const QVariant &value)
@@ -550,7 +613,8 @@ std::vector<std::shared_ptr<AbstractTreeModelItem>> AbstractTreeModelItem::inser
 		/// @note The new item needs to know its parent, which we give it here, and then it needs to be
 		/// added to a model such that it can be looked up via its UUIncD.
 		std::vector<QVariant> data(columns);
-		std::shared_ptr<AbstractTreeModelItem> item = std::make_shared<AbstractTreeModelItem>(data, this->shared_from_this());
+        std::shared_ptr<AbstractTreeModelItem> item = AbstractTreeModelItem::create(data,
+			m_model.lock()->shared_from_this(), UUIncD::create());
 		m_child_items[position] = item;
 		retval.push_back(item);
 	}
@@ -563,58 +627,41 @@ void AbstractTreeModelItem::insertChild(int row, std::shared_ptr<AbstractTreeMod
 	AMLM_ASSERT_X(!item->isInModel(), "TODO: ITEM ALREADY IN MODEL, MOVE ITEMS BETWEEN MODELS");
 	AMLM_ASSERT_X(isInModel(), "We have to be in model or this fails");
 
-	if(has_ancestor(item->getId()))
-	{
-		// Somehow trying to create a cycle in the tree.
-		qCr() << "ATTEMPTED CREATION OF CYCLE";
-		return;
-	}
+    AMLM_ASSERT_X(!item->isInModel(), "TODO: ITEM ALREADY IN A MODEL, MOVE ITEMS BETWEEN MODELS");
+//	AMLM_ASSERT_X(isInModel(), "TODO: PARENT ITEM NOT IN MODEL");
 
-	// Does the new item already have a parent?
-	if (auto oldParent = item->parent_item().lock())
-	{
-		// Yes, is it this?
-		if (oldParent->getId() == m_uuincid)
-		{
-			// new item has this as current parent, no change needed.
-			qWr() << "OLD AND NEW PARENTS ARE THE SAME";
-			return;
-		}
-		else
-		{
-			// in that case a call to removeChild should have been carried out
-			/// @todo GRVS: I think this may be a valid case, probably can be made to work.
-			AMLM_ASSERT_X(0, "ERROR: trying to append a child that already has a parent");
-			return;
-		}
-	}
+    if(has_ancestor(item->getId()))
+    {
+        // Trying to create a cycle, abort.
+        return;
+    }
 
-	// If the parent (this) is in a model, add the child item to the same model.
-	if (auto model_shptr = m_model.lock())
-	{
-		std::shared_ptr<AbstractTreeModelItem> sft = shared_from_this();
-		Q_ASSERT(sft);
-		model_shptr->notifyRowAboutToAppend(shared_from_this());
+    if(auto old_parent = item->parent_item().lock())
+    {
+        if(old_parent->getId() == getId())
+        {
+            // Child is already parented by us, nothing to do.
+            return;
+        }
+        qCr() << "ERROR: Incoming child already has a parent.";
+        return;
+    }
 
-		// Set the item's parent to this.
-		item->updateParent(shared_from_this());
+    // If the parent is in a model, add the child item to the same model.
+    if(auto model = m_model.lock())
+    {
+        model->notifyRowAboutToAppend(shared_from_this());
+        item->updateParent(shared_from_this());
 
-		// Insert the item into this's child list, before the given row.
-		// Get an iterator to insert before.
-		auto ins_it = m_child_items.begin();
-		std::advance(ins_it, row);
-		m_child_items.insert(ins_it, item);
+        // Need an iterator to insert before.
+        auto ins_it = m_child_items.begin();
+        std::advance(ins_it, row);
 
-		/// @todo: The model doesn't know this happened....?
-		item->m_model = model_shptr;
-		// Register the new child item with the model.
+        m_child_items.insert(ins_it, item);
+
 		register_self(item);
 
-		model_shptr->notifyRowAppended(item);
-
-		verify_post_add_ins_child(item);
-
-		return;
+        model->notifyRowAppended(item);
 	}
 	qDebug() << "ERROR: Something went wrong when appending child in AbstractTreeModelItem. Model is not available anymore";
 	Q_ASSERT(false);
@@ -644,45 +691,50 @@ Q_ASSERT(0);
 
 bool AbstractTreeModelItem::appendChild(const std::shared_ptr<AbstractTreeModelItem>& new_child)
 {
-#if 1///
-
-
-	AMLM_ASSERT_X(isInModel(), "We have to be in model or this fails");
-
-	this->insertChild(childCount(), new_child);
-
-	verify_post_add_ins_child(new_child);
+    AMLM_ASSERT_IN_GUITHREAD();
 
 	return true;
 #else /// KDEN
 	if(has_ancestor(new_child->getId()))
 	{
 		// Somehow trying to create a cycle in the tree.
+        // Q_ASSERT(0);
 		return false;
 	}
 	if (auto oldParent = new_child->parent_item().lock())
 	{
-		if (oldParent->getId() == m_uuincid)
+        if (oldParent->getId() == getId())
 		{
 			// new_child has us as current parent, no change needed.
 			return true;
 		}
 		else
 		{
-			// in that case a call to removeChild should have been carried out
-			qDebug() << "ERROR: trying to append a child that already has a parent";
+            // Otherwise new_child has a different parent already.
+            qCr() << "ERROR: trying to append a child that already has a parent";
+            // Q_ASSERT(0);
 			return false;
 		}
 	}
 	if (auto ptr = m_model.lock())
 	{
-		std::shared_ptr<AbstractTreeModelItem> sft = shared_from_this();
+        // Make sure *this is managed by a shared_ptr.
+        if(auto sharedThis = weak_from_this().lock())
+        {
+            // qDb() << "Use count:" << sharedThis.use_count();
+        }
+        else
+        {
+            qCr() << "Object is not managed by a std::shared_ptr";
+        	Q_ASSERT(0);
+        }
+
+        std::shared_ptr<AbstractTreeModelItem> sft = shared_from_this();
 		Q_ASSERT(sft);
 		ptr->notifyRowAboutToAppend(shared_from_this());
 		new_child->updateParent(shared_from_this());
 		UUIncD id = new_child->getId();
-		auto it = m_child_items.insert(m_child_items.end(), new_child);
-//		m_iteratorTable[id] = it;
+        m_child_items.push_back(new_child);
 		register_self(new_child);
 		ptr->notifyRowAppended(new_child);
 
@@ -691,30 +743,24 @@ bool AbstractTreeModelItem::appendChild(const std::shared_ptr<AbstractTreeModelI
 
 		return true;
 	}
-	qDebug() << "ERROR: Something went wrong when appending child in TreeItem. Model is not available anymore";
+    qCr() << "ERROR: Something went wrong when appending child.";
 	Q_ASSERT(false);
 	return false;
-#endif///
 }
 
 #if 0///
 /// Append a child item created from @a data.
 std::shared_ptr<AbstractTreeModelItem> AbstractTreeModelItem::appendChild(const std::vector<QVariant>& data)
 {
-
-Q_ASSERT(0);
-
-
 	if (auto ptr = m_model.lock())
 	{
 		// Create the new child with this item's model as the model.
-		// Not that by definition, this will not be the root item.
-//		auto child = AbstractTreeModelItem::construct(data, ptr, false);
-		auto child = AbstractTreeModelItem::construct(data, this->shared_from_this());
+		// Note that by definition, this will not be the root item.
+		auto child = AbstractTreeModelItem::create(data, ptr, false);
 		appendChild(child);
 		return child;
 	}
-	qDebug() << "ERROR: Something went wrong when appending child to AbstractTreeModelItem. Model is not available anymore";
+	qCr() << "ERROR: Something went wrong when appending child to AbstractTreeModelItem.";
 	Q_ASSERT(false);
 
 	return std::shared_ptr<AbstractTreeModelItem>();
@@ -764,7 +810,6 @@ bool AbstractTreeModelItem::has_ancestor(UUIncD id)
 	if(auto ptr = m_parent_item.lock())
 	{
 		// We have a parent, recurse into it for the answer.
-		/// @note It's nice to have a lot of stack sometimes, isn't it?
 		return ptr->has_ancestor(id);
 	}
 	return false;
@@ -782,19 +827,32 @@ bool AbstractTreeModelItem::isRoot() const
 
 void AbstractTreeModelItem::verify_post_add_ins_child(const std::shared_ptr<AbstractTreeModelItem>& inserted_child)
 {
-	AMLM_ASSERT_X(inserted_child->has_ancestor(m_uuincid), "UUID of the parent not an ancestor of child.");
+	AMLM_ASSERT_X(inserted_child->has_ancestor(m_uuincid), "UUIncD of the parent is not an ancestor of child.");
 	auto child_locked_par_item = inserted_child->m_parent_item.lock();
 	AMLM_ASSERT_X(child_locked_par_item == this->shared_from_this(), "CHILD'S PARENT IS NOT THIS");
-	// If parent is in a model, child is in the same model.
+	// If parent is in a model, child should be in the same model.
 	auto child_par_model = child_locked_par_item->m_model.lock();
+	auto child_in_model = inserted_child->isInModel();
 	if(isInModel())
 	{
 		AMLM_ASSERT_X(inserted_child->isInModel(), "PARENT IN MODEL, CHILD ISN'T");
 		AMLM_ASSERT_X(child_par_model == m_model.lock(), "PARENT AND CHILD ARE IN DIFFERENT MODELS");
 	}
-	else
+	if (!inserted_child->isInModel() && !isInModel())
 	{
-		AMLM_ASSERT_X(!child_par_model, "This is not in a model but child is");
+		qDb() << "NEITHER PARENT NOR CHILD isInModel()";
+	}
+	if (!isInModel() && child_locked_par_item->isInModel())
+	{
+		AMLM_ASSERT_X(0, "*this is not in a model but child is");
+	}
+}
+
+void AbstractTreeModelItem::baseFinishCreate(const std::shared_ptr<AbstractTreeModelItem>& new_item)
+{
+	if(new_item->isRoot())
+	{
+		register_self(new_item);
 	}
 }
 
@@ -805,25 +863,25 @@ void AbstractTreeModelItem::verify_post_add_ins_child(const std::shared_ptr<Abst
  */
 void AbstractTreeModelItem::register_self(const std::shared_ptr<AbstractTreeModelItem>& self)
 {
-//	Q_ASSERT(self->m_model);
-//	Q_ASSERT(!self->m_model.expired());
-
-	// Register children.
+    // Register children, who will then register their own children, etc....
 	for (const auto& child : self->m_child_items)
 	{
 		register_self(child);
 	}
 	// If we still have a model, register with it.
+    // qDb() << M_ID_VAL(self->m_model);
+    Q_ASSERT(!(self->m_model.expired()));
+    Q_ASSERT(self->m_model.use_count() > 0);
 	if (auto ptr = self->m_model.lock())
 	{
 		ptr->register_item(self);
-//		self->isInModel() = true;
+		self->m_is_in_model = true;
 		AMLM_ASSERT_EQ(self->isInModel(), true);
 	}
 	else
 	{
-		qWr() << "COULDN'T LOCK MODEL:";// << M_ID_VAL(self->m_model);// << M_ID_VAL(self->m_model);
-		AMLM_ASSERT_X(false, "Error : construction of AbstractTreeModelItem failed because parent model is not available anymore");
+        qWr() << "COULDN'T LOCK MODEL:"; //<< M_ID_VAL((self->m_model));// << M_ID_VAL(self->m_model);
+        AMLM_ASSERT_X(false,"Error : construction of AbstractTreeModelItem failed");
 	}
 }
 
@@ -844,15 +902,14 @@ void AbstractTreeModelItem::deregister_self()
 		if (auto ptr = m_model.lock())
 		{
 			ptr->deregister_item(m_uuincid, this);
-			// Clear our weak pointer to the model we used to be in.
-			/// @todo This at least makes it not crash, but now we don't get the view showing anything.
-			m_model.reset();
+			m_is_in_model = false;
 			AMLM_ASSERT_X(isInModel() == false, "ITEM STILL IN MODEL");
 		}
-		else
-		{
-			Q_ASSERT(0);
-		}
+        // else
+        // {
+		//  /// @note This will assert on model destruct.  Kdenlive ignores this else.
+        // 	Q_ASSERT(0);
+        // }
 	}
 }
 
@@ -865,219 +922,9 @@ void AbstractTreeModelItem::updateParent(std::shared_ptr<AbstractTreeModelItem> 
 	{
 		// Keep depth up to date.
 		m_depth = parent->m_depth + 1;
-	}
-#elif 0 /// KDEN AbstractProjectItem.  Not clear what the last parent thing is all about.
-	// bool reload = !m_lastParentId.isEmpty();
-    m_lastParentId.clear();
-    if (newParent)
-    {
-        m_lastParentId = std::static_pointer_cast<AbstractProjectItem>(newParent)->clipId();
-    }
-    TreeItem::updateParent(newParent);
-#endif
-}
-
-
-
-/// @todo Find a better way, run-time registration?
-static const int f_abs_tree_model_header_item_id = qMetaTypeId<AbstractTreeModelHeaderItem>();
-static const int f_abs_tree_model_item_id = qMetaTypeId<AbstractTreeModelItem>();
-static const int f_scan_res_tree_model_item_id = qMetaTypeId<ScanResultsTreeModelItem>();
-static const int f_srtm_item_lib_entry_id = qMetaTypeId<SRTMItem_LibEntry>();
-
-int AbstractTreeModelItem::item_data_to_variant(InsertionOrderedStrVarMap* add_to_map) const
-{
-	/// @todo The "m_item_data" string is not getting written out, not sure if we care.
-	QVariantHomogenousList list(XMLTAG_ITEM_DATA_LIST, "item");
-	// The item data itself.
-	for(const QVariant& itemdata : m_item_data)
-	{
-		list_push_back_or_die(list, itemdata);
-	}
-	// Add them to the output map.
-	map_insert_or_die(*add_to_map, XMLTAG_ITEM_DATA_LIST, list);
-
-	return 0; /// @todo Return a better number.
-}
-
-int AbstractTreeModelItem::item_data_from_variant(const InsertionOrderedStrVarMap& read_from_map)
-{
-	// Get this item's data from the item_data_list variant list in read_from_map.
-	// Get the number of item_data entries.
-	/// @todo Save this and/or merge it into the list type itself.
-	std::vector<QVariant>::size_type item_data_size = 0;
-	map_read_field_or_warn(read_from_map, XMLTAG_ITEM_DATA_LIST, &item_data_size);
-
-	QVariantHomogenousList list(XMLTAG_ITEM_DATA_LIST, "item");
-	map_read_field_or_warn(read_from_map, XMLTAG_ITEM_DATA_LIST, &list);
-	// Push the item data members into the m_item_data vector<QVariant>.
-	Q_ASSERT(m_item_data.empty());
-	for(const auto& it : list)
-	{
-		QString itstr = it.toString();
-		m_item_data.push_back(itstr);
-	}
-
-	return 0; /// @todo Return a better number.
-}
-
-
-void AbstractTreeModelItem::children_to_variant(InsertionOrderedStrVarMap* add_to_map) const
-{
-	// Return value will be InsertionOrderedMap<QString, QVariant>, where the QVariants are whatever the items
-	// in m_child_items turn into via toVariant().
-
-	InsertionOrderedStrVarMap map;
-
-#if 1 // TEST
-	// T accumulate_const(T init, BinOp op) const;
-	// T BinOp(T, std::shared_ptr<AbstractTreeModelItem>)
-	int count = 0;
-	qDb() << "START children_to_variant():";
-	accumulate_const(0, [&](int last_count, auto shptr_atmi){
-		qDb() << "Total child count:" << last_count + childCount() << M_ID_VAL(shptr_atmi->has_children()) << M_ID_VAL(shptr_atmi->getId());
-		return last_count + childCount();
-	});
-#endif
-
-	map.insert_attributes({{"debug", "OuterChildMap"}});
-
-	// Insert the child count as an attribute.
-	map.set_attr(tostdstr(XMLTAG_NUM_CHILDREN), std::to_string(static_cast<qulonglong>(m_child_items.size())));
-
-	for(const std::shared_ptr<AbstractTreeModelItem>& it : m_child_items)
-	{
-		QString class_str = QVariant::fromValue(*it).typeName();
-		qDb() << M_ID_VAL(class_str);
-		int class_metatype = QMetaType::type(class_str.toStdString().c_str());
-		qDb() << M_ID_VAL(class_metatype);
-		const char* class_metatype_name = QMetaType::typeName(class_metatype);
-		qDb() << M_ID_VAL(class_metatype_name);
-		map.insert("one_child_item", it->toVariant());
-	}
-//	dump_map(map);
-
-	// Insert the list into the map.
-	map_insert_or_die(*add_to_map, XMLTAG_CHILD_ITEM_MAP, map);
-}
-
-void AbstractTreeModelItem::children_from_str_var_map(const InsertionOrderedStrVarMap& read_from_map)
-{
-	ATTR_VAR_MAX_DEBUG(read_from_map);
-
-	qDb() << M_ID_VAL(read_from_map);
-
-	// Ok, our goal here is to take a:
-	// "child_item_map", InsertionOrderedStrVarMap("child_item_list", QVariantList("item", InsertionOrderedStrVarMap the_item))
-	// ...and populate our
-	// std::deque<std::shared_ptr<AbstractTreeModelItem>> m_child_items; member with the contents.
-	// The incoming QVariants may contain shared_ptrs to different item types.
-
-	// Get this item's child count.
-	std::string num_children_str = read_from_map.get_attr(QString(XMLTAG_NUM_CHILDREN).toStdString());
-	qulonglong num_children = std::atoll(num_children_str.c_str());
-//	map_read_field_or_warn(read_from_map, XMLTAG_NUM_CHILDREN, &num_children);
-//	num_children = read_from_map.get_attr(XMLTAG_NUM_CHILDREN);
-
-	qDb() << XMLTAG_NUM_CHILDREN << num_children;
-
-	// We need this Item to be in a model for that to work.
-		/// @todo Add to model, Will this finally work?
-//	auto parent_item_ptr = this->parent_item().lock();
-//WRONG:	appendChild(this->shared_from_this());
-	Q_ASSERT(isInModel());
-	auto model_ptr = m_model.lock();
-	Q_ASSERT(model_ptr);
-
-	InsertionOrderedStrVarMap child_map;// (XMLTAG_CHILD_ITEM_MAP, "child");
-	child_map = read_from_map.value(XMLTAG_CHILD_ITEM_MAP).value<InsertionOrderedStrVarMap>();
-	qDb() << M_ID_VAL(child_map.size());
-
-	qDb() << "child_map ATTRS:" << child_map.get_attrs();
-	qDb() << "child_map SIZE:" << child_map.size();
-
-	if(child_map.size() == 0)
-	{
-		// This child map has no entries, skip it.
-		qDb() << "child_map HAS NO ENTRIES";
-		return;
-	}
-
-	qDb() << "child_map has num child items:" << child_map.size();
-//	qDb() << "Map:";
-//	dump_map(map);
-	// Should be 1 or more "one_child_item"'s.
-	qDb() << "First field QString value:" << child_map.cbegin()->first;
-	qDb() << "Second field/Variant type name is:" << child_map.cbegin()->second.typeName();
-
-	for(auto& it : child_map)
-	{
-		QString one_child_item = it.first;
-		QVariant the_child_var = it.second;
-
-		// Get the type info.
-		/// @todo HTH can we get the right type in here?
-		QString class_str = QVariant::fromValue(it.second).typeName();
-		qDb() << M_ID_VAL(class_str);
-		int class_metatype = QMetaType::type(class_str.toStdString().c_str());
-		qDb() << M_ID_VAL(class_metatype);
-		const char* class_metatype_name = QMetaType::typeName(class_metatype);
-		qDb() << M_ID_VAL(class_metatype_name);
-
-		// Convert to the target ID.
-		qDb() << "Converting from:" << class_str << "to target ID:" << class_metatype << class_metatype_name;
-		Q_ASSERT(the_child_var.convert(class_metatype));
-
-		Q_ASSERT(class_metatype != QMetaType::UnknownType);
-
-		if(class_metatype == QMetaType::type("InsertionOrderedStrVarMap"))
-		{
-			// What's the contained class?
-			InsertionOrderedStrVarMap svmap = the_child_var.value<InsertionOrderedStrVarMap>();
-			std::string contained_class_name = svmap.get_attr("class");
-			qDb() << M_ID_VAL(contained_class_name);
-
-			int attr_class_type = QMetaType::type(contained_class_name.c_str());
-//			Q_ASSERT(the_child_var.canConvert(attr_class_type));
-
-			// Convert to the "class" type ID.
-			qDb() << "Converting again, to:" << attr_class_type << contained_class_name;
-//			Q_ASSERT(contained_class_name == "AbstractTreeModelItem");
-//			Q_ASSERT(the_child_var.convert(attr_class_type));
-			std::shared_ptr<AbstractTreeModelItem> child_sp;
-			if(attr_class_type == f_abs_tree_model_item_id)
-			{
-				qDb() << "AbstractTreeModelItem";
-				child_sp = std::dynamic_pointer_cast<AbstractTreeModelItem>(std::make_shared<AbstractTreeModelItem>());
-			}
-			else if(attr_class_type == f_srtm_item_lib_entry_id)
-			{
-				qDb() << "SRTMItem_LibEntry";
-				child_sp = std::dynamic_pointer_cast<AbstractTreeModelItem>(std::make_shared<SRTMItem_LibEntry>());
-			}
-			else if(attr_class_type == f_scan_res_tree_model_item_id)
-			{
-				qDb() << "ScanResultsTreeModelItem";
-				child_sp = std::dynamic_pointer_cast<AbstractTreeModelItem>(std::make_shared<ScanResultsTreeModelItem>());
-			}
-			else if(attr_class_type == f_abs_tree_model_header_item_id)
-			{
-				qDb() << "AbstractTreeModelHeaderItem";
-				child_sp = std::dynamic_pointer_cast<AbstractTreeModelItem>(std::make_shared<AbstractTreeModelHeaderItem>());
-			}
-			else
-			{
-					Q_ASSERT(0);
-			}
-
-			// Finally add the child to our child map.
-			/// ??? Non-Null out the UUIncD.
-			child_sp->m_uuincid = UUIncD::create();
-			appendChild(child_sp);
-			child_sp->fromVariant(svmap);
-		}
-
-		qDb() << "the_child_var:" << the_child_var;
+		// Keep max column count up to date.
+		/// @todo Do we need this?
+//		m_num_parent_columns = parent->columnCount();
 	}
 }
 

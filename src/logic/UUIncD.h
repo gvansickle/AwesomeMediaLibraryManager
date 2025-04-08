@@ -38,7 +38,7 @@
 class UUIncD
 {
 public:
-	M_GH_RULE_OF_FIVE_DEFAULT_C21(UUIncD);
+    M_GH_RULE_OF_FIVE_DEFAULT_C21(UUIncD)
 	explicit UUIncD(quintptr qmodelindex_int_id);
 	~UUIncD() = default;
 
@@ -46,15 +46,15 @@ public:
 
 	static UUIncD create();
 
-	static UUIncD null() { return UUIncD(0xFFFF'FFFF'FFFF'FFFF); };
+    static UUIncD null() { return UUIncD(0xFFFF'FFFF'FFFF'FFFF); }
 
 	// User-defined conversion to uin64_t.
 	operator uint64_t() const;
 
-	bool isValid() const { return *this != null(); };
+    bool isValid() const { return *this != null(); }
 
-	bool operator==(const UUIncD& rhs) const { return m_my_id == rhs.m_my_id; };
-	bool operator<(const UUIncD& rhs) const { return m_my_id < rhs.m_my_id; };
+    bool operator==(const UUIncD& rhs) const { return m_my_id == rhs.m_my_id; }
+    bool operator<(const UUIncD& rhs) const { return m_my_id < rhs.m_my_id; }
 
 protected:
 	explicit UUIncD(std::uint64_t id);
@@ -68,16 +68,6 @@ private:
 	 */
 	static std::atomic_uint64_t m_next_id;
 };
-
-//inline static bool operator==(const UUIncD& lhs, const UUIncD& rhs)
-//{
-//	return lhs.operator==(rhs);
-//}
-
-//inline static bool operator<(const UUIncD& lhs, const UUIncD& rhs)
-//{
-//	return lhs.m_my_id < rhs.m_my_id;
-//}
 
 namespace std
 {
