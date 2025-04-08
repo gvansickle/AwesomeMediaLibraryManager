@@ -23,8 +23,6 @@
 
 #include "XmlSerializer.h"
 
-// Std C++
-#include <variant>
 // Std C++ from The Future
 #include <future/overloaded.h>
 
@@ -183,7 +181,7 @@ void XmlSerializer::InnerWriteVariantToStream(const QVariant& variant, QXmlStrea
 	else if(metatypeId == f_serqvarlist_id)
 	{
 		QVariantHomogenousList list = variant.value<QVariantHomogenousList>();
-
+#warning "This looks wrong, on read all lists are coming back a qvarlist"
 		writeQVariantHomogenousListToStream(list, *xmlstream);
 	}
 	else
@@ -203,19 +201,6 @@ void XmlSerializer::InnerWriteVariantToStream(const QVariant& variant, QXmlStrea
 	}
 }
 
-#if 0
-void XmlSerializer::writeVariantToStream(const QString& nodeName, const ISerializable& variant, QXmlStreamWriter* xmlstream)
-{
-	Q_ASSERT(0);
-	writeVariantToStream(nodeName, variant.toVariant(), *xmlstream);
-}
-
-void XmlSerializer::writeVariantToStream(const QString& nodeName, const ISerializable* variant, QXmlStreamWriter* xmlstream)
-{
-	Q_ASSERT(0);
-	writeVariantToStream(nodeName, variant->toVariant(), *xmlstream);
-}
-#endif
 
 void XmlSerializer::writeQVariantHomogenousListToStream(const QVariant& variant, QXmlStreamWriter& xmlstream)
 {
@@ -225,6 +210,7 @@ void XmlSerializer::writeQVariantHomogenousListToStream(const QVariant& variant,
 	QVariantHomogenousList list = variant.value<QVariantHomogenousList>();
 
 //	qDb() << "tags:" << list.get_list_tag() << list.get_list_item_tag();
+
 
 	auto the_item_tag = list.get_list_item_tag();
 
@@ -297,8 +283,9 @@ void XmlSerializer::writeVariantValueToStream(const QVariant &variant, QXmlStrea
 	if(!variant.canConvert<QString>())
 	{
 		std::string vartype {variant.typeName()};
-		qCr() << "QVariant contents not convertible to a QString:" << M_ID_VAL(variant) << M_ID_VAL(vartype);
-		// Q_ASSERT(0);
+        qCr() << "QVariant contents not convertible to a QString:" << M_ID_VAL(variant) << M_ID_VAL(vartype);
+
+        Q_ASSERT(0);
 	}
 
 	QString str = variant.toString();
@@ -350,10 +337,13 @@ QVariant XmlSerializer::InnerReadVariantFromStream(QString typeString, const QXm
 	}
 	else if(metatype.id() == f_qvarlist_id)
 	{
+
 		variant = readHomogenousListFromStream(xmlstream);
 	}
 	else if(metatype.id() == f_serqvarlist_id)
 	{
+#warning "Remove"
+		log_current_node(xmlstream); qDb() << "serqvarlist";
 		variant = readHomogenousListFromStream(xmlstream);
 	}
 	else
@@ -364,6 +354,7 @@ QVariant XmlSerializer::InnerReadVariantFromStream(QString typeString, const QXm
 				variant = readVariantListFromStream(xmlstream);
 				break;
 			case QMetaType::QVariantMap:
+
 				variant = readVariantMapFromStream(xmlstream);
 				break;
 			default:
@@ -372,17 +363,18 @@ QVariant XmlSerializer::InnerReadVariantFromStream(QString typeString, const QXm
 		}
 	}
 
+
 	if(!variant.isValid())
 	{
 		// Whatever we read, it didn't make it into a QVariant successfully.
 		// Report error and try to keep going.
 		xmlstream.raiseError("#### Invalid QVariant conversion");
 	}
-//	else if(!xmlstream.isEndElement())
-//	{
-//		// Not at an end element, parsing went wrong somehow.
-//		xmlstream.raiseError("#### NOT AT END ELEMENT, Reading xml stream failed, skipping to next start element");
-//	}
+	else if(!xmlstream.isEndElement())
+	{
+		// Not at an end element, parsing went wrong somehow.
+		xmlstream.raiseError("#### NOT AT END ELEMENT, Reading xml stream failed, skipping to next start element");
+	}
 
 	return variant;
 }
@@ -451,6 +443,7 @@ QVariant XmlSerializer::readVariantListFromStream(QXmlStreamReader& xmlstream)
 
 		if(!next_list_element.isValid())
 		{
+			xmlstream.raiseError("#### Invalid QVariant conversion");
 			check_for_stream_error_and_skip(xmlstream);
 		}
 		else
@@ -511,7 +504,6 @@ QVariant XmlSerializer::readVariantValueFromStream(QXmlStreamReader& xmlstream)
 	Q_ASSERT(xmlstream.isStartElement());
 
 	// Slurps up all contents of this element until the EndElement, including all child element text.
-	/// @note I know, not cool with all the RAM wasteage.
 	QString element_text = xmlstream.readElementText();
 
 	QVariant variant(element_text);
@@ -550,9 +542,8 @@ QVariant XmlSerializer::readVariantValueFromStream(QXmlStreamReader& xmlstream)
 			// Check if it's an empty string.  If so, we're return a default-constructed object of type metatype.
             if (!variant.isValid() || variant.isNull())
 			{
-				// We checked metatype above, it's valid.
-				//				void* retobj_p = QMetaType::create(metatype);
                 qWr() << "TODO: NULL or INVALID QVARIANT, SKIPPING. Type:" << attr_type_str;
+            	xmlstream.raiseError(QString("TODO: NULL or INVALID QVARIANT, SKIPPING. Type:") + attr_type_str);
 			}
 			else if (element_text_is_empty)
 			{
@@ -563,6 +554,7 @@ QVariant XmlSerializer::readVariantValueFromStream(QXmlStreamReader& xmlstream)
 			}
 			else
 			{
+				// Everything looks OK, we should be able to convert.
 				bool status = variant.convert(metatype);
 
 				if (!status)
@@ -607,23 +599,15 @@ void XmlSerializer::set_default_namespace(const std::string& default_ns, const s
 
 QString XmlSerializer::error_string(QXmlStreamReader& xmlstream) const
 {
-	QString retval("");
-
 	return QObject::tr("%1: Line %2, column %3")
 			.arg(xmlstream.errorString())
 			.arg(xmlstream.lineNumber())
 			.arg(xmlstream.columnNumber());
-
-	return retval;
 }
 
 QString XmlSerializer::error_string(QXmlStreamWriter& xmlstream) const
 {
-	QString retval("");
-
 	return QObject::tr("%1: Line %2, column %3").arg("Unknown error on write").arg("0", "0");
-
-	return retval;
 }
 
 

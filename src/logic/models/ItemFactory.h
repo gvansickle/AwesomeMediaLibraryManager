@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+* Copyright 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -17,23 +17,35 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef UTILS_NOMOC_NOMOCIMPL_H_
-#define UTILS_NOMOC_NOMOCIMPL_H_
+#ifndef ITEMFACTORY_H
+#define ITEMFACTORY_H
 
-/**
- * @file
- *
- * Wrapper for Verdigris, the "Qt5 minus moc" library.  Lets us build with or without it.
- *
- * @link https://code.woboq.org/woboq/verdigris/tutorial/tutorial.cpp.html
- */
+// Std C++
+#include <memory>
+#include <functional>
+#include <string>
 
-#ifdef USE_BUNDLED_VERDIGRIS
-#include <wobjectimpl.h>
-#else
-#define W_OBJECT_IMPL(...) /* nothing */
-#define W_GADGET_IMPL(...) /* nothing */
-#define W_NAMESPACE_IMPL(...) /* nothing */
-#endif
+// Qt
+#include <QMap>
 
-#endif /* UTILS_NOMOC_NOMOCIMPL_H_ */
+// Ours.
+#include "AbstractTreeModelItem.h"
+
+
+class ItemFactory
+{
+public:
+  	using Creator = std::function<std::shared_ptr<AbstractTreeModelItem>()>;
+
+	static ItemFactory& instance();
+
+	void registerItemCreator(const std::string classname, Creator creator);
+
+	std::shared_ptr<AbstractTreeModelItem> createItem(std::string classname) const;
+
+private:
+	QMap<std::string, Creator> m_creators;
+};
+
+
+#endif //ITEMFACTORY_H

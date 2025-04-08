@@ -48,26 +48,27 @@ class AbstractTreeModelHeaderItem: public AbstractTreeModelItem, public enable_s
 {
 	using BASE_CLASS = AbstractTreeModelItem;
 
-//protected:
-public:
+protected:
 
 	friend class AbstractTreeModel;
+
 	/**
-	 * Note: This is always the root item of a tree model, no parent item.
+     * Note: This type is always the root item of a tree model, no parent item.
 	 * @param column_specs
 	 * @param parent_model
 	 * @param id
 	 */
-	AbstractTreeModelHeaderItem(std::initializer_list<ColumnSpec> column_specs,
-	                                     const std::shared_ptr<AbstractTreeModel>& parent_model = nullptr, UUIncD id = UUIncD::null());
+    AbstractTreeModelHeaderItem(std::initializer_list<ColumnSpec> column_specs = {},
+	                                     const std::shared_ptr<AbstractTreeModel>& parent_model = nullptr);
+protected:
+    AbstractTreeModelHeaderItem();
 
 public:
-//	/**
-//	 * Named constructor.
-//	 */
-//	static std::shared_ptr<AbstractTreeModelHeaderItem> construct(std::initializer_list<ColumnSpec> column_specs,
-//																  const std::shared_ptr<AbstractTreeModel>& parent_model = nullptr, UUIncD id = UUIncD::null());
-////	AbstractTreeModelHeaderItem() {};
+    /**
+     * Named constructor.
+     */
+    static std::shared_ptr<AbstractTreeModelHeaderItem> create(std::initializer_list<ColumnSpec> column_specs = {},
+                                                                  const std::shared_ptr<AbstractTreeModel>& parent_model = nullptr);
 	~AbstractTreeModelHeaderItem() override;
 
 	void clear() override;
@@ -89,7 +90,7 @@ public:
 	 */
 	QVariant toVariant() const override;
 
-	void fromVariant(const QVariant& variant) override;
+    void fromVariant(const QVariant& variant) override;
 
 	/// @}
 

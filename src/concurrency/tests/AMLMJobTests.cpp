@@ -291,6 +291,9 @@ protected:
 INSTANTIATE_TEST_CASE_P(TrueFalseParameterizedTests,
                         AMLMJobTestsParameterized,
                         ::testing::Bool());
+/// To avoid error: "Parameterized test suite AMLMJobTestsParameterized is instantiated via INSTANTIATE_TEST_SUITE_P, but no tests are defined via TEST_P ."
+GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(AMLMJobTestsParameterized);
+
 
 TEST_F(AMLMJobTests, ThisShouldPass) // NOLINT
 {

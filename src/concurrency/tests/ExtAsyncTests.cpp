@@ -178,6 +178,10 @@ TEST_F(ExtAsyncTestsSuiteFixture, AsynchronizeBasic)
 INSTANTIATE_TEST_SUITE_P(ExtAsyncParameterizedTests,
 						ExtAsyncTestsParameterized,
 						::testing::Bool());
+
+/// To avoid "Parameterized test suite ExtAsyncTestsParameterized is instantiated via INSTANTIATE_TEST_SUITE_P, but no tests are defined via TEST_P ."
+GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(ExtAsyncTestsParameterized);
+
 #if 0
 TEST_P(ExtAsyncTestsParameterized, ExtAsyncQthreadAsyncException)
 {

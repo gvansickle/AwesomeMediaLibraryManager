@@ -17,7 +17,9 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/** @file Implementation of LibraryRescanner, an asynchronous helper for LibraryModel. */
+/** @file LibraryRescanner.cpp
+ * Implementation of LibraryRescanner, an asynchronous helper for LibraryModel.
+ */
 
 #include "LibraryRescanner.h"
 
@@ -47,8 +49,6 @@
 #include <utils/QtHelpers.h>
 #include "SupportedMimeTypes.h"
 
-// Boost
-//#include <boost/thread.hpp>
 
 /// Ours
 #include <AMLMApp.h>
@@ -219,7 +219,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
     // Get a list of the file extensions we're looking for.
     auto extensions = SupportedMimeTypes::instance().supportedAudioMimeTypesAsSuffixStringList();
 
-	// Run the directory scan in another thread.
+    // Set up the directory scan to run in another thread.
     QFuture<DirScanResult> dirresults_future = QtConcurrent::run(DirScanFunction,
 	                                                                                     dir_url,
 	                                                                                     extensions,
@@ -243,15 +243,6 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	// Make a new AMLMJobT for the metadata rescan.
 	AMLMJobT<ExtFuture<MetadataReturnVal>>* lib_rescan_job = make_async_AMLMJobT(lib_rescan_future, "LibRescanJob", AMLMApp::instance());
 
-    // Get a pointer to the Scan Results Tree model.
-    /// @note IS THIS STILL VALID?: This ptr will go away when we exit the function, so we can't copy it into any lambdas.
-	std::shared_ptr<ScanResultsTreeModel> tree_model = AMLM::Core::self()->getScanResultsTreeModel();
-//	std::shared_ptr<AbstractTreeModel> tree_model = AMLM::Core::self()->getScanResultsTreeModel();
-	Q_CHECK_PTR(tree_model);
-    // Set the root URL of the scan results model.
-    /// @todo Should this really be done here, or somewhere else?
-    tree_model->setBaseDirectory(dir_url);
-
 	// Create a future so we can attach a watcher to get the QUrl results to the main thread.
 	/// @todo Obsoleting.
 	auto qurl_promise = std::make_shared<QPromise<QString>>();
@@ -266,20 +257,29 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	qurl_promise->start();
 	tree_model_item_promise->start();
 
-	// Attach a streaming tap to the dirscan future.
-    // ExtFuture<Unit> tail_future;// = QtFuture::makeReadyValueFuture(unit);
+	// Get a pointer to the single ScanResultsTreeModel (view is the "ExperimentalKDE1" tab).
+	std::shared_ptr<ScanResultsTreeModel> tree_model_sptr = AMLM::Core::self()->getScanResultsTreeModel();
+    Q_CHECK_PTR(tree_model_sptr);
+	// Clear the model, it may already have been populated.
+	tree_model_sptr->clear(false);
+	auto num_rows = tree_model_sptr->rowCount(QModelIndex());
+	qDb() << "START rowCount: " << num_rows << "checkConsistency" << tree_model_sptr->checkConsistency();
+    // Set the root URL of the scan results model.
+    tree_model_sptr->setBaseDirectory(dir_url);
 
-	// auto tap_future = dirresults_future;
-    streaming_then(dirresults_future, [this, qurl_promise, tree_model_item_promise](QFuture<DirScanResult> tap_future, int begin, int end) -> Unit {
+
+	std::shared_ptr<AbstractTreeModelItem> root = tree_model_sptr->getRootItem();
+
+	connect_or_die(this, &LibraryRescanner::SIGNAL_appendChildToRoot,
+                     tree_model_sptr.get(), &AbstractTreeModel::SLOT_appendChildToRoot);
+	connect_or_die(this, &LibraryRescanner::SIGNAL_appendChild, tree_model_sptr.get(),&AbstractTreeModel::SLOT_appendChild);
+
+	streaming_then(dirresults_future, [this, tree_model_sptr, qurl_promise, tree_model_item_promise](QFuture<DirScanResult> sthen_future, int begin, int end) -> Unit {
 		// Start of the dirtrav streaming_then callback.  This should be a non-main thread.
 		// This will be called multiple times by streaming_then() as DirScanResult's become available.
 
 		AMLM_ASSERT_NOT_IN_GUITHREAD();
-		// AMLM_ASSERT_IN_GUITHREAD();
 
-qDb() << "IN STREAMING THEN CALLBACK";
-
-		std::shared_ptr<ScanResultsTreeModel> tree_model_sptr = AMLM::Core::self()->getScanResultsTreeModel();
 		Q_ASSERT(tree_model_sptr);
 
 		if(begin == 0)
@@ -294,52 +294,52 @@ qDb() << "IN STREAMING THEN CALLBACK";
 		int original_end = end;
 		for(int i=begin; i<end; i++)
 		{
-			DirScanResult dsr = tap_future.resultAt(i);
+			DirScanResult dsr = sthen_future.resultAt(i);
 
 			// Add another entry to the vector we'll send to the model.
 			Q_ASSERT(tree_model_sptr);
-			auto new_item = std::make_shared<ScanResultsTreeModelItem>(dsr);
-			new_items->emplace_back(new_item);
+            std::shared_ptr<ScanResultsTreeModelItem> new_item = ScanResultsTreeModelItem::create(dsr);
+            new_items->push_back(new_item);
 
 			if(i >= end)
 			{
 				// We're about to leave the loop.  Check if we have more ready results now than was originally reported.
-				if(tap_future.isResultReadyAt(end+1) || tap_future.resultCount() > (end+1))
+				if(sthen_future.isResultReadyAt(end+1) || sthen_future.resultCount() > (end+1))
 				{
 					// There are more results now than originally reported.
-					qIn() << "##### MORE RESULTS:" << M_NAME_VAL(original_end) << M_NAME_VAL(end) << M_NAME_VAL(tap_future.resultCount());
+					qIn() << "##### MORE RESULTS:" << M_NAME_VAL(original_end) << M_NAME_VAL(end) << M_NAME_VAL(sthen_future.resultCount());
 					end = end+1;
 				}
 			}
 		}
 		// Broke out of loop, check for problems.
-		if(tap_future.isCanceled())
+		if(sthen_future.isCanceled())
 		{
 			// We've been canceled.
 			/// @todo Not sure if we should see that in here or not, probably not.
 			qWr() << "tap_callback saw canceled";
 			return unit;
 		}
-		if(tap_future.isFinished())
+		if(sthen_future.isFinished())
 		{
 			qIn() << "tap_callback saw finished";
 			if(new_items->empty())
 			{
-				qWr() << "tap_callback saw finished/empty new_items";
+                qWr() << "sthen_callback saw finished/empty new_items";
 
 //M_TODO("This needs to reportFinished before the next steps below which save the DB, NOT WORKING HERE");
 //tree_model_item_future.reportFinished();
 
 				return unit;
 			}
-			qIn() << "tap_callback saw finished, but with" << new_items->size() << "outstanding results.";
+            qIn() << "sthen_callback saw finished, but with" << new_items->size() << "outstanding results.";
 		}
 
 		// Shouldn't get here with no incoming items.
-		Q_ASSERT_X(!new_items->empty(), "DIRTRAV CALLBACK", "NO NEW ITEMS BUT HIT TAP CALLBACK");
+        Q_ASSERT_X(!new_items->empty(), "DIRTRAV CALLBACK", "NO NEW ITEMS BUT HIT STHEN CALLBACK");
 
 		// Got all the ready results, send them to the model(s).
-		// Because of Qt5's model/view system not being threadsafeable, we have to do at least the final
+        // Because of Qt's model/view system not being threadsafeable, we have to do at least the final
 		// model item entry from the GUI thread.
 //		qIn() << "Sending" << new_items->size() << "scan results to models";
 #if 1 // DEBUG!!!
@@ -368,9 +368,9 @@ qDb() << "IN STREAMING THEN CALLBACK";
 	// Finish the two output futures.
     .then([this, tree_model_item_future, tree_model_item_promise = std::move(tree_model_item_promise),
     			qurl_future, qurl_promise=std::move(qurl_promise)](ExtFuture<Unit> future) mutable {
-qDb() << "PRE-WAIT" << M_NAME_VAL(future);
-                  future.waitForFinished();
-qDb() << "POST WAIT" << M_NAME_VAL(future);
+
+        future.waitForFinished();
+
 		// Finish a couple futures we started in this, and since this is done, there should be no more
 		// results coming for them.
 
@@ -395,19 +395,14 @@ qDb() << "POST WAIT" << M_NAME_VAL(future);
 	///
 	/// Convert SharedItemContainerType's into TreeModelItems, then Append TreeModelItems to the ScanResultsTreeModel tree_model.
 	///
-	Q_ASSERT(tree_model);
+    Q_ASSERT(tree_model_sptr);
 /// streaming_then() ############################################
     streaming_then(tree_model_item_future,
-                              [](ExtFuture<SharedItemContType> new_items_future, int begin, int end){
-		// AMLM_ASSERT_IN_GUITHREAD();
+                              [this, tree_model_sptr](ExtFuture<SharedItemContType> new_items_future, int begin, int end){
 		AMLM_ASSERT_NOT_IN_GUITHREAD();
 
 Stopwatch sw("Populate LibraryEntry");
-		// Get the current ScanResultsTreeModel.
-//		std::shared_ptr<ScanResultsTreeModel> tree_model_sptr = AMLM::Core::self()->getScanResultsTreeModel();
-		std::shared_ptr<AbstractTreeModel> tree_model_sptr = AMLM::Core::self()->getScanResultsTreeModel();
-		Q_ASSERT(tree_model_sptr);
-//		tree_model_sptr->clear();
+
 		qDb() << "START: tree_model_item_future.stap(), new_items_future count:" << new_items_future.resultCount();
 
 		// For each QList<SharedItemContType> entry.
@@ -419,6 +414,8 @@ Stopwatch sw("Populate LibraryEntry");
 			// Append ScanResultsTreeModelItem entries to the ScanResultsTreeModel.
 			for(std::shared_ptr<AbstractTreeModelItem>& entry : *new_items_vector_ptr)
 			{
+                // AbstractTreeModelItem's need to have a model at all times?????
+                entry->setModel(tree_model_sptr);
 				// Make sure the entry wasn't moved from.
 				Q_ASSERT(bool(entry) == true);
 //				Q_ASSERT(entry->isInModel());
@@ -432,14 +429,16 @@ sw.start("LibEntry");
 				std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(entry_dp->data(1).toString());
 				lib_entry->populate(true);
 sw.lap("Populate Complete");
-				std::shared_ptr<SRTMItem_LibEntry> new_child = std::make_shared<SRTMItem_LibEntry>(lib_entry);
+                std::shared_ptr<SRTMItem_LibEntry> new_child = SRTMItem_LibEntry::create(lib_entry, tree_model_sptr);
 				Q_ASSERT(new_child);
 sw.lap("SRTMItem_LibEntry created");
 				/// NEW: Give the incoming ScanResultTreeModelItem entry a parent.
 M_WARNING("TODO: This needs rework.");
 //				entry_dp->changeParent(tree_model_sptr->getRootItem());
-				tree_model_sptr->getRootItem()->appendChild(entry_dp);
-				entry_dp->appendChild(new_child);
+				// tree_model_sptr->getRootItem()->appendChild(entry_dp);
+				// entry_dp->appendChild(new_child);
+				Q_EMIT SIGNAL_appendChildToRoot(entry_dp);
+				Q_EMIT SIGNAL_appendChild(new_child, entry_dp->getId());
 //				tree_model_sptr->getRootItem()->appendChild(entry_dp);
 			}
 
@@ -452,29 +451,35 @@ M_WARNING("TODO: This needs rework.");
 //			{
 //				std::shared_ptr<AbstractTreeModelItem> new_child = the_etm->insertChild();
 //			}
-			/// @temp
-			bool ok = tree_model_sptr->checkConsistency();
-			// qDb() << "########################### TREE MODEL CHECK checkConsistency:" << ok;
-			Q_ASSERT(ok);
-sw.lap("TreeModel checkConsistency");
+            /// @temp
+            // qDb() << "Checking tree consistency after";
+            // bool ok = tree_model_sptr->checkConsistency();
+            // Q_ASSERT(ok);
+            // qDb() << "ok";
+            // sw.lap("TreeModel checkConsistency");
 sw.stop();
 sw.print_results();
 		}
 	})
 #endif
 	/// .then() ############################################
-	.then([&](ExtFuture<void> f)-> Unit {
+    .then(qApp, [&, tree_model_sptr](ExtFuture<void> f)-> Unit {
 		Q_ASSERT(f.isFinished());
 		Q_ASSERT(m_model_ready_to_save_to_db == false);
 		m_model_ready_to_save_to_db = true;
-		/// @todo This is happening immediately, and also before "Finished tree_model_item_future" & qurl_future.
-		m_timer.lap("TreeModelItems stap() finished.");
+
+        qDb() << "Checking tree consistency after";
+        bool ok = tree_model_sptr->checkConsistency();
+        Q_ASSERT(ok);
+        qDb() << "ok";
+
+        m_timer.lap("TreeModelItems sthen() finished.");
 		return unit;
 	})
 	/// .then() ############################################
 	.then(qApp, [this,
 			rescan_items_in_promise = std::move(rescan_items_in_promise),
-			tree_model_ptr=tree_model
+            tree_model_sptr
 			](ExtFuture<Unit> future_unit) mutable {
 		AMLM_ASSERT_IN_GUITHREAD();
 
@@ -500,7 +505,7 @@ sw.print_results();
 
 		m_timer.lap("Start of SaveDatabase");
 		//				SaveDatabase(tree_model_ptr, database_filename);
-		tree_model_ptr->SaveDatabase(database_filename);
+        tree_model_sptr->SaveDatabase(database_filename);
 		m_timer.lap("End of SaveDatabase");
 
 #if 1 /// ScanResultsTreeModel round-trip test.
@@ -508,12 +513,11 @@ sw.print_results();
 		/// Try to load it back in and round-trip it.
 		//				std::initializer_list<ColumnSpec> temp_initlist = {ColumnSpec(SectionID(0), "DirProps"), {SectionID(0), "MediaURL"}, {SectionID(0), "SidecarCueURL"}};
 		//				std::shared_ptr<ScanResultsTreeModel> load_tree = ScanResultsTreeModel::construct({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
-		std::shared_ptr<ScanResultsTreeModel> load_tree	= ScanResultsTreeModel::make_ScanResultsTreeModel({});//temp_initlist);
+		std::shared_ptr<ScanResultsTreeModel> load_tree	= ScanResultsTreeModel::create({});//temp_initlist);
 
 		load_tree->LoadDatabase(database_filename);
 		//				load_tree->clear();
 		//				dump_map(load_tree);
-		//				SaveDatabase(load_tree, QDir::homePath() +"/AMLMDatabaseRT.xml");
 		load_tree->SaveDatabase(QDir::homePath() +"/AMLMDatabaseRT.xml");
 #endif /////
 

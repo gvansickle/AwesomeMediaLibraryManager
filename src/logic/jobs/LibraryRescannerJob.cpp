@@ -25,7 +25,7 @@
 
 // Qt5
 #include <QObject>
-#include <QtConcurrent>
+#include <QtConcurrentRun>
 
 // Ours
 #include <utils/DebugHelpers.h>

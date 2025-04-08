@@ -34,7 +34,7 @@
 #include <future/future_type_traits.hpp>
 #include <future/cpp14_concepts.hpp>
 #include <boost/callable_traits/function_type.hpp>
-#include <logic/DirScanResult.h>
+// #include <logic/DirScanResult.h>
 #include "ISerializable.h"
 
 /**
@@ -128,7 +128,7 @@ void list_push_back_or_die(ListType& list, const ISerializable& member)
 	QVariant qvar = member.toVariant();
 	if(!qvar.isValid())
 	{
-		throw SerializationException("Coudn't push_back() to list.");
+		throw SerializationException("Couldn't push_back() to list.");
 	}
 
 	list.push_back(qvar);
@@ -365,6 +365,7 @@ void list_blocking_map_reduce_read_all_entries_or_warn(const InListType& in_list
 /// @{
 
 template <class MapType, class StringType, class RawMemberType>
+requires std::is_lvalue_reference_v<RawMemberType> || std::is_pointer_v<RawMemberType>
 void map_read_field_or_warn(const MapType& map, const StringType& key, RawMemberType member)
 {
 	// Regardless, get the qvar out of the map.
@@ -411,6 +412,69 @@ template <class MapType, class StringType>
 void map_read_field_or_warn(const MapType& map, const StringType& key, std::nullptr_t member)
 {
 	// Do nothing.
+}
+
+
+/**
+ * @brief Converts a std::map to a QVariantMap (i.e. QMap<QString, QVariant>).
+ * The key type of the std::map may be an integral type, it will be converted in here
+ * to a suitable string for use in serialization (e.g. 1 -> "item1", etc.).
+ *
+ * @param inmap
+ * @return
+ */
+template <class MapType>
+QVariantMap std_map_to_qvariantmap(const MapType& inmap)
+{
+	QVariantMap retval;
+
+	if constexpr(std::is_integral_v<typename MapType::key_type>)
+	{
+		// Need an explicit int->Qstring conversion.
+		for (const auto& [key, val] : inmap)
+		{
+            QString str = QString("item").arg(key);
+			retval.insert(str, QVariant(val));
+		}
+	}
+	else if constexpr(std::is_convertible_v<typename MapType::key_type, QString>)
+	{
+		// Should be able to just rely on QMap(std::map...) constructor.
+		retval = inmap;
+	}
+	else
+	{
+		static_assert(0, "Invalid MapType");
+	}
+
+	return retval;
+}
+
+template <class MapType>
+MapType qvariantmap_to_std_map(const QVariantMap& inmap)
+{
+    if constexpr(std::is_integral_v<typename MapType::key_type>)
+    {
+        // Need explicit conversion from QString to integral.
+        MapType retval;
+        for(const auto [key, value] : inmap.asKeyValueRange())
+        {
+            QString temp_key = key;
+        	/// @todo This is where the Metadata roundtrip is failing, no int to extract.
+            typename MapType::key_type int_key = temp_key.remove("item").toInt();
+            typename MapType::mapped_type mapped_val;
+            if(value.canConvert<typename MapType::mapped_type>())
+            {
+                mapped_val = value.value<typename MapType::mapped_type>();
+            }
+            retval.insert(typename MapType::value_type(int_key, mapped_val));
+        }
+        return retval;
+    }
+	else
+	{
+		static_assert(0, "Invalid MapType");
+	}
 }
 
 

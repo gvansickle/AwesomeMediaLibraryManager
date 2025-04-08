@@ -41,7 +41,7 @@
 #include "serialization/ISerializable.h"
 
 
-class LibraryEntry : public virtual ISerializable, public virtual enable_shared_from_this_virtual<LibraryEntry>
+class LibraryEntry : public virtual ISerializable, public enable_shared_from_this_virtual<LibraryEntry>
 {
 public:
     M_GH_RULE_OF_THREE_DEFAULT_C21(LibraryEntry)

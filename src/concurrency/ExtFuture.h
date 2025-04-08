@@ -1609,14 +1609,13 @@ auto streaming_then(QFuture<T> future, Function function)
 		});
 
 		watcher->setFuture(future);
-		qDb() << "AFTER SETFUTURE, future: " << future;
+        // qDb() << "AFTER SETFUTURE, future: " << future;
     	loop.exec();
 		future.waitForFinished();
-		qDb() << "WAIT FOR FINISHED COMPLETE" << future;
+        // qDb() << "WAIT FOR FINISHED COMPLETE" << future;
 	}, future);
 
-	qDebug() << "RETURNING FUTURE" << ret_future;
-	// return future;
+    // qDebug() << "RETURNING FUTURE" << ret_future;
 	return ret_future;
 }
 

@@ -370,11 +370,6 @@ M_WARNING("TODO: This is here to stop the model populator thread from starting, 
     endResetModel();
 }
 
-QMediaPlaylist* PlaylistModel::qmplaylist()
-{
-	return m_qmplaylist;
-}
-
 bool PlaylistModel::serializeToFileAsXSPF(QFileDevice& filedev) const
 {
 	QXmlStreamWriter stream(&filedev);

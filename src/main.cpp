@@ -55,8 +55,7 @@
 // Compile-time info/sanity checks.
 M_MESSAGE("BUILDING WITH CMAKE_C_COMPILER_ID: " CMAKE_C_COMPILER_ID " = " CMAKE_C_COMPILER);
 M_MESSAGE("BUILDING WITH CMAKE_CXX_COMPILER_ID: " CMAKE_CXX_COMPILER_ID " = " CMAKE_CXX_COMPILER);
-M_MESSAGE("BOOST_THREAD_VERSION: " STRINGISE(BOOST_THREAD_VERSION));
-static_assert(BOOST_THREAD_VERSION >= 5);
+
 
 
 /**
@@ -95,22 +94,6 @@ int main(int argc, char *argv[])
 	// Log our startup environment.
 	logging.dumpEnvVars();
 
-	// App-wide settings.
-	// http://doc.qt.io/qt-5/qt.html#ApplicationAttribute-enum
-	// Enable high-DPI scaling in Qt on supported platforms.
-	// Makes Qt scale the main (device independent) coordinate system according to display scale factors provided by
-	// the operating system. This corresponds to setting the QT_AUTO_SCREEN​_SCALE_FACTOR environment variable to 1.
-	/// @note Must be set before Q(Gui)Application is constructed.
-    AMLMApp::setAttribute(Qt::AA_EnableHighDpiScaling);
-    // Use HighDPI pixmaps as long as we're supporting High DPI scaling.
-    // "After setting this attribute, application code that uses pixmap sizes in layout geometry calculations should
-    // typically divide by devicePixelRatio() to get device-independent layout geometry."
-    /// @note Must be set before Q(Gui)Application is constructed.
-    AMLMApp::setAttribute(Qt::AA_UseHighDpiPixmaps, true);
-	/// @todo Look at:
-	///		Qt::AA_UseStyleSheetPropagationInWidgetStyles
-	///		Qt::AA_CompressHighFrequencyEvents (default is true on X11)
-
     // QStandardPaths::AppDataLocation changes before and after QApp creation, and then again when we set these
     // vars, if we don't set them prior to constructing the app.  This affects KIconTheme's attempt to load
     // an "icontheme.rcc" file from one of these dirs.
@@ -121,7 +104,7 @@ int main(int argc, char *argv[])
 
 
 	//
-    // Create the Qt5/KF5 app.
+    // Create the Qt/KF app.
     // @note Must be the first QObject created and the last QObject deleted.
     // @note This should have loaded any bundled icontheme.rcc files.
 	//
@@ -149,7 +132,7 @@ int main(int argc, char *argv[])
 	}
 
     // If we're forcing Breeze icons, force them here.
-    M_WARNING("Not picking up these icons FWICT.  Also interfering with user selected icon theme, and doesn't get saved.")
+/// @todo Not picking up these icons FWICT.  Also interfering with user selected icon theme, and doesn't get saved.
     bool forceBreeze = grp.readEntry("force_breeze", QVariant(false)).toBool();
     if (forceBreeze)
     {

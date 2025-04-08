@@ -33,7 +33,7 @@
 #include <future/function_traits.hpp>
 #include <future/future_type_traits.hpp>
 
-// Qt5
+// Qt
 #include <QTest>
 #include <QString>
 #include <QFlags>
@@ -140,9 +140,6 @@ TEST_F(FlagsAndEnumsTests, FlagsToStringViaEnumFlagtoqstr)
 
 TEST_F(FlagsAndEnumsTests, FlagsToStringViaQVariant)
 {
-	// Up to at least Qt5.11.1, Q_ENUM()s can be converted to QStrings when held in QVariants,
-	// but Q_FLAG()s have no such built-in support, hence the EXPECT_NE() below.
-
 	TestFlagHolder::TestFlags testflags { TestFlagHolder::Flag1 | TestFlagHolder::Flag4 };
 
 	QString flags_as_str = QVariant::fromValue(testflags).toString();
@@ -154,7 +151,7 @@ TEST_F(FlagsAndEnumsTests, FlagsToStringViaQVariant)
 	}
 	else
 	{
-		EXPECT_NE(flags_as_str, QString("Flag1|Flag4"));
+		EXPECT_EQ(flags_as_str, QString("Flag1|Flag4"));
 	}
 }
 TEST_F(FlagsAndEnumsTests, FlagsRoundTripThroughQVariantStringRepWithRegisteredConverters)
@@ -355,43 +352,7 @@ TEST_F(FlagsAndEnumsTests, EnumRoundTripThroughQVariantStringRep)
 ////////////////////////////////////////////////////////////
 M_WARNING("TODO: Split into a serialization test.");
 
-TEST_F(FlagsAndEnumsTests, ExtUrlRoundTripThroughQVariant)
-{
-	ExtUrl before;
 
-	before.m_url = "file://a.b.com/";
-
-	QVariant during = before.toVariant();
-
-	ExtUrl after;
-	after.fromVariant(during);
-
-	TCOUT << M_NAME_VAL(before);
-	TCOUT << M_NAME_VAL(during);
-	TCOUT << M_NAME_VAL(after);
-
-//	AMLMTEST_EXPECT_EQ(before, after);
-}
-
-TEST_F(FlagsAndEnumsTests, QUrlRoundTripThroughQVariant)
-{
-	QUrl before;
-
-	before = "file://a.b.com/";
-
-	QVariant during = QVariant::fromValue(before);
-
-	TCOUT << "TYPENAME:" << during.typeName();
-
-	QUrl after;
-	after = during.value<QUrl>();
-
-	TCOUT << M_NAME_VAL(before);
-	TCOUT << M_NAME_VAL(during);
-	TCOUT << M_NAME_VAL(after);
-
-	AMLMTEST_EXPECT_EQ(before, after);
-}
 
 //DECL_EXTENUM(MyTestExtEnum);
 

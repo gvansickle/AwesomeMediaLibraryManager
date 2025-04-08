@@ -314,4 +314,16 @@ static inline QString formattedDuration(qint64 msecs, int precision = 3)
 }
 
 
+/**
+ *  Specialize std::formatter for QString, so std::format knows what to do with it.
+ */
+template <>
+struct std::formatter<QString> : std::formatter<std::string>
+{
+    auto format(const QString& qstr, std::format_context& ctx) const
+    {
+        return std::formatter<std::string>::format(qstr.toStdString(), ctx);
+    }
+};
+
 #endif // STRINGHELPERS_H
