@@ -36,14 +36,6 @@ MDINowPlayingView::MDINowPlayingView(QWidget *parent) : MDIPlaylistView(parent)
     setItemDelegate(m_brdelegate);
 
     connect(model(), &QAbstractItemModel::modelAboutToBeReset, m_brdelegate, &BoldRowDelegate::clearAll);
-    connect(model(), &QAbstractItemModel::rowsAboutToBeRemoved, this,
-        [](const QModelIndex&, int first, int last)
-		{
-			for (int row = first; row <= last; ++row)
-			{
-				// m_brdelegate->clear_bold_on_this_row();
-			}
-		});
 	connect_or_die(m_brdelegate, &BoldRowDelegate::updateRequested, this, [this]()
 	{
 		this->viewport()->update();
@@ -77,12 +69,23 @@ void MDINowPlayingView::onNumRowsChanged()
 {
 	// Resize and re-iota-ize the shuffle map.
 	auto num_rows = model()->rowCount();
+
+	// Maintain our shuffle index.
+    ssize_t temp_shuffle_index = -1;
+	if (m_current_shuffle_index >= 0 && m_current_shuffle_index < m_indices.size())
+	{
+		temp_shuffle_index = m_indices.at(m_current_shuffle_index);
+	}
+	
 	m_indices.resize(num_rows);
 	std::iota(m_indices.begin(), m_indices.end(), 0);
+
 	if (m_shuffle)
 	{
 		std::ranges::shuffle(m_indices, std::mt19937(std::random_device{}()));
 	}
+
+	m_current_shuffle_index = temp_shuffle_index;
 }
 
 void MDINowPlayingView::next()
@@ -193,6 +196,9 @@ void MDINowPlayingView::onDoubleClicked(const QModelIndex& index)
 	M_WARNING("TODO: Fix assumption");
 	if (true) // we're the playlist connected to the player.
 	{
+		// Keep the shuffle index synced.
+		m_current_shuffle_index = m_indices[index.row()];
+
 		startPlaying(index);
 	}
 }
@@ -202,6 +208,9 @@ void MDINowPlayingView::onActivated(const QModelIndex& index)
 	M_WARNING("TODO: Fix assumption");
 	if (true) // we're the playlist connected to the player.
 	{
+		// Keep the shuffle index synced.
+		m_current_shuffle_index = m_indices[index.row()];
+
 		startPlaying(index);
 	}
 }
@@ -209,11 +218,10 @@ void MDINowPlayingView::onActivated(const QModelIndex& index)
 void MDINowPlayingView::startPlaying(const QModelIndex& index)
 {
 	// Tell the player to start playing the song at index.
-	auto underlying_model_index = to_underlying_qmodelindex(index);
 
-	Q_ASSERT(underlying_model_index.isValid());
+	Q_ASSERT(index.isValid());
 
-	qDebug() << "Underlying index:" << underlying_model_index;
+	qDebug() << "Index:" << index;
 
 	// Since m_underlying_model->qmplaylist() is connected to the player, we should only have to setCurrentIndex() to
 	// start the song.
@@ -222,7 +230,7 @@ void MDINowPlayingView::startPlaying(const QModelIndex& index)
     const_cast<QAbstractItemModel*>(model())->dataChanged(index, index, QList<int>(Qt::FontRole));
     const_cast<QAbstractItemModel*>(model())->dataChanged(index, index, QList<int>(Qt::FontRole));
     m_brdelegate->setRow(index.row());
-	setCurrentIndex(underlying_model_index);
+	setCurrentIndex(index);
 
 	// If the player isn't already playing, the index change above won't start it.  Send a signal to it to
 	// make sure it starts.
