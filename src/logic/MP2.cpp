@@ -166,6 +166,12 @@ void MP2::repeat(bool loop)
 	m_loop_setting = loop ? MP2::Loop : MP2::NoLoop;
 }
 
+void MP2::seek(int msecs)
+{
+    qDb() << "Seek pct: " << (msecs/duration()) << "msecs:" << msecs << M_ID_VAL(duration());
+	setPosition(msecs);
+}
+
 void MP2::onPositionChanged(qint64 pos)
 {
 	if(m_is_subtrack)
@@ -194,14 +200,13 @@ void MP2::onPositionChanged(qint64 pos)
 void MP2::onDurationChanged(qint64 duration)
 {
 	qDebug() << QString("onDurationChanged: %1").arg(duration);
-	if(m_is_subtrack)
+
+    if(m_is_subtrack)
 	{
-		Q_EMIT durationChanged2(m_track_endpos_ms - m_track_startpos_ms);
+        duration = m_track_endpos_ms - m_track_startpos_ms;
 	}
-	else
-	{
-		Q_EMIT durationChanged2(duration);
-	}
+
+    Q_EMIT durationChanged2(duration);
 }
 
 void MP2::onMediaStatusChanged(QMediaPlayer::MediaStatus status)
@@ -271,7 +276,7 @@ void MP2::onSourceChanged(const QUrl& media_url)
 
 void MP2::onPlaylistPositionChanged(const QModelIndex& current, const QModelIndex& previous)
 {
-	// We get in here when the Playlist view sends the QItemSelectionModel::currentChanged signal.
+	// We get in here when the Now Playing view sends the MDINowPlayingView::nowPlayingIndexChanged signal.
 	// That signal can come from:
 	// - User input on the playlist view.
 	// - The MP2::playlistToNext signal emitted by us (in two different places).
@@ -279,7 +284,7 @@ void MP2::onPlaylistPositionChanged(const QModelIndex& current, const QModelInde
 	m_onPositionChanged_sending_playlistToNext = false;
 	m_EndOfMedia_sending_playlistToNext = false;
 
-	qDb() << "playlistPosChanged:" << current;
+	qDb() << "playlistPosChanged:" << current.row();
 
 	if (!current.isValid())
 	{

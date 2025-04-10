@@ -56,6 +56,7 @@ Q_SIGNALS:
 	void changeRepeat(bool);
 	void changeVolume(float);
     void changeMuting(bool);
+	void positionSliderMoved(int);
 
 public Q_SLOTS:
     void setPlaybackState(QMediaPlayer::PlaybackState state);

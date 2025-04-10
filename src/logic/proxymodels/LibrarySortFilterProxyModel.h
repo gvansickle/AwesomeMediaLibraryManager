@@ -20,7 +20,14 @@
 #ifndef LIBRARYSORTFILTERPROXYMODEL_H
 #define LIBRARYSORTFILTERPROXYMODEL_H
 
+/**
+ * @file
+ */
+
+// Std C++
 #include <memory>
+
+// Qt
 #include <QSortFilterProxyModel>
 
 class LibraryEntry;

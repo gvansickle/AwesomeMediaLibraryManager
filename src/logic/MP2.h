@@ -40,7 +40,7 @@ public:
 	Q_ENUM(LoopSetting)
 
 public:
-	explicit MP2(QObject *parent = Q_NULLPTR);
+	explicit MP2(QObject *parent = nullptr);
 
 	/// Property overrides.
 	qint64 position() const;
@@ -88,6 +88,7 @@ public Q_SLOTS:
     void setVolume(float volume);
 	void setShuffleMode(bool shuffle_on);
 	void repeat(bool loop);
+	void seek(int msecs);
 
 	void onPositionChanged(qint64 pos);
 	void onDurationChanged(qint64 duration);

@@ -20,7 +20,11 @@
 #ifndef AWESOMEMEDIALIBRARYMANAGER_AUDIOFILETYPE_H
 #define AWESOMEMEDIALIBRARYMANAGER_AUDIOFILETYPE_H
 
-// Qt5
+/**
+ * @file AudioFileType
+ */
+
+// Qt
 #include <QMetaType>
 #include <QObject>
 

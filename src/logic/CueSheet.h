@@ -17,23 +17,27 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * @file CueSheet
+ */
+
 #ifndef SRC_LOGIC_CUESHEET_H_
 #define SRC_LOGIC_CUESHEET_H_
 
 #include <config.h>
 
-/// Std C++
+// Std C++
 #include <vector>
 #include <memory>
 #include <cstdint>
 #include <map>
 #include <mutex>
 
-/// Qt5
+// Qt
 class QUrl;
 #include <QDataStream>
 
-/// Ours
+// Ours
 #include "TrackMetadata.h"  ///< Per-track cue sheet info
 #include <future/guideline_helpers.h>
 #include "CueSheetParser.h"

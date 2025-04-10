@@ -20,10 +20,16 @@
 #ifndef MODELCHANGEWATCHER_H
 #define MODELCHANGEWATCHER_H
 
+/**
+ * @file
+ */
+
+// Qt
 #include <QObject>
 #include <QPointer>
 
 class QAbstractItemModel;
+
 
 
 class ModelChangeWatcher : public QObject

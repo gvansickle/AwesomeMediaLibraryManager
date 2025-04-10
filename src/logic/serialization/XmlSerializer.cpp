@@ -297,14 +297,6 @@ void XmlSerializer::writeVariantValueToStream(const QVariant &variant, QXmlStrea
 
 
 
-/**
- * XmlSerializer::readVariantFromStream
- *
- * @note On invalid QVariant, skips the current element and tries to continue.
- *
- * @param xmlstream
- * @return
- */
 QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 {
 	QXmlStreamAttributes attributes = xmlstream.attributes();

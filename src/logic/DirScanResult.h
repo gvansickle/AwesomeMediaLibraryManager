@@ -20,12 +20,14 @@
 #ifndef SRC_LOGIC_DIRSCANRESULT_H_
 #define SRC_LOGIC_DIRSCANRESULT_H_
 
+/// @file DirScanResult.h
+
 #include <config.h>
 
 // Std C++
 #include <optional>
 
-// Qt5
+// Qt
 #include <QUrl>
 #include <QFileInfo>
 #include <QDateTime>

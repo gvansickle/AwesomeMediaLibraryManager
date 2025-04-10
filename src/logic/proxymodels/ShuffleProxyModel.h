@@ -20,6 +20,10 @@
 #ifndef SHUFFLEPROXYMODEL_H
 #define SHUFFLEPROXYMODEL_H
 
+/**
+ * @file
+ */
+
 // Std C++
 #include <vector>
 
@@ -40,6 +44,12 @@ class ShuffleProxyModel : public QSortFilterProxyModel
 public:
 	explicit ShuffleProxyModel(QObject* parent = nullptr);
     ~ShuffleProxyModel() noexcept override = default;
+
+	/**
+	 * 
+	 * @param shuffle_model_rows true == shuffle model rows, false == shuffle navigation order.
+	 */
+	void shuffleModelRows(bool shuffle_model_rows);
 
 	/**
 	 * Shuffles the proxy<->source model map.
@@ -67,6 +77,15 @@ protected:
 
 private:
 	/**
+	 * Sets whether shuffling is on or off.
+	 */
+	bool m_shuffle {false};
+
+	bool m_shuffle_model_rows {false};
+
+	int m_current_row {0};
+
+	/**
 	* The map of proxy indices <-> source model indices.
 	*/
 	std::vector<int> m_indices;
@@ -74,6 +93,7 @@ private:
 	Disconnector m_disconnector;
 };
 
-
+// For queued-connection support (i.e. thread-safe slots)
+Q_DECLARE_METATYPE(ShuffleProxyModel)
 
 #endif //SHUFFLEPROXYMODEL_H

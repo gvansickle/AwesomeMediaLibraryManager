@@ -22,8 +22,10 @@
 // Std C++
 #include <numeric>
 #include <algorithm>
-#include <ConnectHelpers.h>
 #include <random>
+
+// Ours
+#include <ConnectHelpers.h>
 
 
 ShuffleProxyModel::ShuffleProxyModel(QObject* parent): QSortFilterProxyModel(parent)
@@ -34,12 +36,15 @@ ShuffleProxyModel::ShuffleProxyModel(QObject* parent): QSortFilterProxyModel(par
 void ShuffleProxyModel::shuffle(bool shuffle)
 {
 	beginResetModel();
+
+	m_shuffle = shuffle;
 	m_indices.resize(sourceModel()->rowCount());
-	std::iota(m_indices.begin(), m_indices.end(), 0);
+	std::ranges::iota(m_indices, 0);
 	if (shuffle)
 	{
 		std::ranges::shuffle(m_indices, std::mt19937(std::random_device{}()));
 	}
+
 	endResetModel();
 }
 
@@ -49,7 +54,14 @@ QModelIndex ShuffleProxyModel::mapFromSource(const QModelIndex& sourceIndex) con
     {
         return {};
     }
-	return createIndex(m_indices[sourceIndex.row()], sourceIndex.column());
+	if (m_shuffle_model_rows)
+	{
+		return createIndex(m_indices[sourceIndex.row()], sourceIndex.column());
+	}
+	else
+	{
+		return sourceIndex;
+	}
 }
 
 QModelIndex ShuffleProxyModel::mapToSource(const QModelIndex &proxyIndex) const
@@ -59,7 +71,14 @@ QModelIndex ShuffleProxyModel::mapToSource(const QModelIndex &proxyIndex) const
 		return {};
 	}
 
-	return sourceModel()->index(m_indices[proxyIndex.row()], proxyIndex.column());
+	if (m_shuffle_model_rows)
+	{
+		return sourceModel()->index(m_indices[proxyIndex.row()], proxyIndex.column());
+	}
+	else
+	{
+		return proxyIndex;
+	}
 }
 
 void ShuffleProxyModel::setSourceModel(QAbstractItemModel* sourceModel)
@@ -70,6 +89,8 @@ void ShuffleProxyModel::setSourceModel(QAbstractItemModel* sourceModel)
 	QSortFilterProxyModel::setSourceModel(sourceModel);
 	connectToModel(sourceModel);
 
+	onNumRowsChanged();
+
 	endResetModel();
 }
 
@@ -79,6 +100,10 @@ void ShuffleProxyModel::onNumRowsChanged()
 	auto num_rows = sourceModel()->rowCount();
 	m_indices.resize(num_rows);
 	std::iota(m_indices.begin(), m_indices.end(), 0);
+	if (m_shuffle)
+	{
+		std::ranges::shuffle(m_indices, std::mt19937(std::random_device{}()));
+	}
 }
 
 void ShuffleProxyModel::connectToModel(QAbstractItemModel* model)

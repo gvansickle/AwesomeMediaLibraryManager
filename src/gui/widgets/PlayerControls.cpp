@@ -103,8 +103,10 @@ PlayerControls::PlayerControls(QWidget *parent) : QWidget(parent)
 
     // Position slider
 	m_positionSlider = new QSlider(Qt::Horizontal, this);
-    //slider->setRange(0, player.duration() / 1000)
+    // m_positionSlider->setRange(0, player.duration());
     //slider->sliderMoved.connect(seek)
+	// Signal to signal connection.
+	connect(m_positionSlider, &QSlider::sliderMoved, this, &PlayerControls::positionSliderMoved);
 
     // Time Remaining/Duration label.
 	m_labelDuration = new QLabel(this);
@@ -315,7 +317,10 @@ void PlayerControls::onPositionChanged(qint64 pos)
 {
     // Position is in ms.
 	m_last_pos = pos;
-	m_positionSlider->setValue(pos);
+	if (!m_positionSlider->isSliderDown())
+	{
+		m_positionSlider->setValue(pos);
+	}
     updateDurationInfo(pos, -1);
 }
 

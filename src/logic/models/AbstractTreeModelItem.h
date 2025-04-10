@@ -32,7 +32,7 @@
 #include <mutex>
 #include <iterator>
 
-// Qt5
+// Qt
 #include <QList>
 #include <QVariant>
 #include <QVector>
@@ -47,6 +47,7 @@
 #include <logic/serialization/ISerializable.h>
 #include <logic/serialization/SerializationHelpers.h>
 #include "UndoRedoHelper.h"
+
 class AbstractTreeModel;
 
 /**

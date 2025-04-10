@@ -20,12 +20,18 @@
 #ifndef MODELHELPERS_H
 #define MODELHELPERS_H
 
+/**
+ * @file
+ */
+
+// Qt
 #include <QPersistentModelIndex>
 #include <QModelIndexList>
 #include <QItemSelection>
 #include <QAbstractProxyModel>
 #include <QDebug>
 
+// Ours
 #include <utils/DebugHelpers.h>
 #include <logic/proxymodels/QPersistentModelIndexVec.h>
 
