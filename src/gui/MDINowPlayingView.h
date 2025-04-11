@@ -111,6 +111,8 @@ private:
 	 */
 	void startPlaying(const QModelIndex& index);
 
+	void setCurrentIndexAndRow(const QModelIndex& new_index, const QModelIndex& old_index);
+
 	/**
 	* The map of proxy indices <-> source model indices.
 	*/
@@ -130,6 +132,8 @@ private:
 	Disconnector m_disconnector;
 
 };
+
+
 
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_MDINOWPLAYINGVIEW_H
