@@ -20,6 +20,8 @@
 #ifndef MP2_H
 #define MP2_H
 
+/// @file
+
 #include <QAction>
 #include <QMediaPlayer>
 #include <QAudioOutput>

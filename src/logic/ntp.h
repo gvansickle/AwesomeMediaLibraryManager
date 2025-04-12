@@ -17,11 +17,15 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/** @file Interface for ntp, a Normal Play Time support class for QUrl. */
+/**
+ * @file ntp.h
+ * Interface for ntp, a Normal Play Time support class for QUrl.
+ */
 
 #ifndef NTP_H
 #define NTP_H
 
+// Std C++
 #include <string>
 
 

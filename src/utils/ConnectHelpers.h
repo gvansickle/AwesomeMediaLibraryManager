@@ -20,6 +20,8 @@
 #ifndef CONNECTHELPERS_H
 #define CONNECTHELPERS_H
 
+/// @file ConnectHelpers.h
+
 // Std C++
 #include <vector>
 
