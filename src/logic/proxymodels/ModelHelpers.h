@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -20,12 +20,18 @@
 #ifndef MODELHELPERS_H
 #define MODELHELPERS_H
 
+/**
+ * @file
+ */
+
+// Qt
 #include <QPersistentModelIndex>
 #include <QModelIndexList>
 #include <QItemSelection>
 #include <QAbstractProxyModel>
 #include <QDebug>
 
+// Ours
 #include <utils/DebugHelpers.h>
 #include <logic/proxymodels/QPersistentModelIndexVec.h>
 
@@ -83,20 +89,29 @@ inline static QPersistentModelIndexVec pindexes(const QItemSelection& selection,
 	}
 }
 
-inline static QModelIndex mapToSource(const QModelIndex& proxy_index)
-{
-	if(proxy_index.model())
-	{
-		// There's a model.  See if it's a proxy model.
-		auto proxy_model = qobject_cast<const QAbstractProxyModel*>(proxy_index.model());
-		if(proxy_model)
-		{
-			return proxy_model->mapToSource(proxy_index);
-		}
-	}
+/**
+ * Maps a proxy QModelIndex through all intermediate proxies and returns the model's corresponding QModelIndex.
+ * @param proxy_index The QModelIndex to an item in the proxy.
+ * @return The QModelIndex in the bottom-most model corresponding to the @a proxy_index.
+ */
+QModelIndex mapToSourceRecursive(const QModelIndex& proxy_index);
 
-	return proxy_index;
-}
+/**
+ * Applies mapToSourceRecursive(const QModelIndex&) to each index in @a source_indices.
+ * @see mapToSourceRecursive(const QModelIndex&)
+ * @param source_indices The list of QModelIndex's to map to source.
+ * @return The mapped list.
+ */
+QModelIndexList mapToSourceRecursive(const QModelIndexList& source_indices);
+
+/**
+ * 
+ * @param proxy_index
+ * @param top_proxy
+ * @return
+ */
+QModelIndex mapFromSourceRecursive(const QAbstractItemModel* top_proxy, const QModelIndex& source_model_index);
+
 
 template <template<class> class T>
 T<QPersistentModelIndex> mapQPersistentModelIndexesToSource(const T<QPersistentModelIndex>& iterable_of_pindexes)
@@ -104,23 +119,16 @@ T<QPersistentModelIndex> mapQPersistentModelIndexesToSource(const T<QPersistentM
 	T<QPersistentModelIndex> retval;
 	for(auto i : iterable_of_pindexes)
 	{
-		retval.push_back(mapToSource(i));
+        retval.push_back(mapToSourceRecursive(i));
 	}
 	return retval;
 }
 
-inline static QModelIndexList mapToSource(const QModelIndexList& source_indices)
-{
-	QModelIndexList retval;
-
-	for(auto i : source_indices)
-	{
-		retval.push_back(mapToSource(i));
-	}
-
-	return retval;
-}
-
+/**
+ * @warning I'm not sure this is correct.
+ * @param maybe_proxy_model
+ * @return
+ */
 inline static QAbstractItemModel* getRootModel(QAbstractItemModel* maybe_proxy_model)
 {
 	auto proxy_model = qobject_cast<QAbstractProxyModel*>(maybe_proxy_model);

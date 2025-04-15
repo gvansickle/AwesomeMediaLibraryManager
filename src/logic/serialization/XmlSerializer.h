@@ -98,7 +98,15 @@ private:
 	/// @name Read members
 	/// @{
 
-	QVariant readVariantFromStream(QXmlStreamReader& xmlstream);
+    /**
+	 * XmlSerializer::readVariantFromStream
+	 *
+	 * @note On invalid QVariant, skips the current element and tries to continue.
+	 *
+	 * @param xmlstream
+	 * @return
+	 */
+    QVariant readVariantFromStream(QXmlStreamReader& xmlstream);
 
 	QVariant InnerReadVariantFromStream(QString typeString, const QXmlStreamAttributes& attributes, QXmlStreamReader& xmlstream);
 	QVariant readHomogenousListFromStream(QXmlStreamReader& xmlstream);

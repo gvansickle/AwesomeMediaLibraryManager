@@ -20,7 +20,9 @@
 #ifndef AWESOMEMEDIALIBRARYMANAGER_ABOUTDATASETUP_H
 #define AWESOMEMEDIALIBRARYMANAGER_ABOUTDATASETUP_H
 
+/// @file
 
+// Qt
 #include <KAboutData>
 
 class AboutDataSetup

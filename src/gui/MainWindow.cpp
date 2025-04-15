@@ -573,13 +573,13 @@ void MainWindow::createActions()
 
 //M_WARNING("TODO: Experimental KDE")
 	// Provides a menu entry that allows showing/hiding the toolbar(s)
-//	setStandardToolBarMenuEnabled(true);
+	// setStandardToolBarMenuEnabled(true);
 
 	// Provides a menu entry that allows showing/hiding the statusbar
-//	createStandardStatusBarAction();
+	// createStandardStatusBarAction();
 
 	// Standard 'Configure' menu actions
-//	createSettingsActions();
+	// createSettingsActions();
 /// @end
 }
 
@@ -1071,10 +1071,14 @@ void MainWindow::connectPlayerAndControls(MP2 *player, PlayerControls *controls)
 	connect_or_die(controls, &PlayerControls::play, player, &MP2::play);
 	connect_or_die(controls, &PlayerControls::pause, player, &MP2::pause);
 	connect_or_die(controls, &PlayerControls::stop, player, &MP2::stop);
+	/// See connectPlayerControlsAndNowPlayingView(), this might not actually do anything.
 	connect_or_die(controls, &PlayerControls::changeRepeat, player, &MP2::repeat);
 	connect_or_die(controls, &PlayerControls::changeMuting, player, &MP2::setMuted);
 	connect_or_die(controls, &PlayerControls::changeVolume, player, &MP2::setVolume);
 	connect_or_die(controls, &PlayerControls::changeShuffle, player, &MP2::setShuffleMode);
+    connect_or_die(controls, &PlayerControls::positionSliderMoved, player, &MP2::seek);
+	connect_or_die(controls, &PlayerControls::posSliderPressed, player, &MP2::seekStart);
+	connect_or_die(controls, &PlayerControls::posSliderReleased, player, &MP2::seekEnd);
 
 	// MP2 -> PlayerControls signals.
     connect_or_die(player, &MP2::playbackStateChanged, controls, &PlayerControls::setPlaybackState);
@@ -1089,26 +1093,26 @@ void MainWindow::connectPlayerAndControls(MP2 *player, PlayerControls *controls)
 	controls->setMuted(player->muted());
 }
 
-void MainWindow::connectPlayerAndPlaylistView(MP2 *player, MDIPlaylistView *playlist_view)
+void MainWindow::connectPlayerAndNowPlayingView(MP2 *player, MDINowPlayingView *now_playing_view)
 {
 	// Connection for the player to tell the playlist to go to the next item when the current one is over.
-	// This in turn will cause a QItemSelectionModel::currentChanged to be emitted, which the player
+	// This in turn will cause a MDINowPlayingView::nowPlayingIndexChanged() to be emitted, which the player
 	// receives and sets up the now-current track.
-	connect_or_die(player, &MP2::playlistToNext, playlist_view, &MDIPlaylistView::next);
-
-	auto selection_model = playlist_view->selectionModel();
-	connect_or_die(selection_model, &QItemSelectionModel::currentChanged, player, &MP2::onPlaylistPositionChanged);
+	connect_or_die(player, &MP2::playlistToNext, now_playing_view, &MDINowPlayingView::next);
+	connect_or_die(now_playing_view, &MDINowPlayingView::nowPlayingIndexChanged, player, &MP2::onPlaylistPositionChanged);
 }
 
-void MainWindow::connectPlayerControlsAndPlaylistView(PlayerControls *controls, MDIPlaylistView *playlist_view)
+void MainWindow::connectPlayerControlsAndNowPlayingView(PlayerControls *controls, MDINowPlayingView* now_playing_view)
 {
 	/// @note Qt::ConnectionType() cast here is due to the mixed flag/enum nature of the type.  Qt::UniqueConnection (0x80) can be bitwise-
 	/// OR-ed in with any other connection type, which are 0,1,2,3.
-    connect_or_die(controls, &PlayerControls::next, playlist_view, &MDIPlaylistView::next, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
-    connect_or_die(controls, &PlayerControls::previous, playlist_view, &MDIPlaylistView::previous, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
+    connect_or_die(controls, &PlayerControls::next, now_playing_view, &MDINowPlayingView::next, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
+    connect_or_die(controls, &PlayerControls::previous, now_playing_view, &MDINowPlayingView::previous, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
+	connect_or_die(controls, &PlayerControls::changeShuffle, now_playing_view, &MDINowPlayingView::shuffle);
+	connect_or_die(controls, &PlayerControls::changeRepeat, now_playing_view, &MDINowPlayingView::loopAtEnd);
 
 	// Connect play() signal-to-signal.
-    connect_or_die(playlist_view, &MDIPlaylistView::play, controls, &PlayerControls::play, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
+    connect_or_die(now_playing_view, &MDINowPlayingView::play, controls, &PlayerControls::play, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
 }
 
 void MainWindow::connectLibraryViewAndMainWindow(MDILibraryView *lv)
@@ -1134,8 +1138,8 @@ void MainWindow::connectNowPlayingViewAndMainWindow(MDINowPlayingView* now_playi
 	connect_or_die(this, &MainWindow::settingsChanged, now_playing_view, &MDILibraryView::onSettingsChanged);
 
 
-	connectPlayerAndPlaylistView(m_player, now_playing_view);
-	connectPlayerControlsAndPlaylistView(m_controls, now_playing_view);
+	connectPlayerAndNowPlayingView(m_player, now_playing_view);
+	connectPlayerControlsAndNowPlayingView(m_controls, now_playing_view);
     qDebug() << "Connected";
 }
 

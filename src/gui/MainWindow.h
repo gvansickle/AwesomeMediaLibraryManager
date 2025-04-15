@@ -312,9 +312,9 @@ private:
 
 	/// @name Bulk Signal/Slot Connection management.
     ///@{
-    void connectPlayerAndControls(MP2 *m_player, PlayerControls *m_controls);
-    void connectPlayerAndPlaylistView(MP2 *m_player, MDIPlaylistView *playlist_view);
-    void connectPlayerControlsAndPlaylistView(PlayerControls *controls, MDIPlaylistView *playlist_view);
+    void connectPlayerAndControls(MP2 *m_player, PlayerControls* m_controls);
+    void connectPlayerAndNowPlayingView(MP2 *m_player, MDINowPlayingView* playlist_view);
+    void connectPlayerControlsAndNowPlayingView(PlayerControls *controls, MDINowPlayingView* now_playing_view);
 
     void connectLibraryViewAndMainWindow(MDILibraryView* lv);
 	void connectPlaylistViewAndMainWindow(MDIPlaylistView* plv);

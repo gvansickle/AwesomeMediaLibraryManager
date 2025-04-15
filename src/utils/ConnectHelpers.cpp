@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -17,42 +17,40 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef AWESOMEMEDIALIBRARYMANAGER_AUDIOFILETYPE_H
-#define AWESOMEMEDIALIBRARYMANAGER_AUDIOFILETYPE_H
+/// @file ConnectHelpers.cpp
 
-/**
- * @file AudioFileType
- */
+#include "ConnectHelpers.h"
 
 // Qt
-#include <QMetaType>
 #include <QObject>
+#include <QMetaObject>
 
-// Ours.
-//#include <utils/RegisterQtMetatypes.h>
 
-/**
- * @brief The AudioFileType class
- * @todo Do we really need this, or would ExtMimeType serve just as well?
- */
-class AudioFileType
+Disconnector::Disconnector()
 {
-	Q_GADGET
+}
 
-public:
-	enum Type
-	{
-		UNKNOWN,
-		FLAC,
-		MP3,
-		OGG_VORBIS,
-		WAV,
-	};
+Disconnector::~Disconnector()
+{
+}
 
-	Q_ENUM(Type);
-};
+void Disconnector::addConnection(QMetaObject::Connection connection)
+{
+	m_connections.push_back(connection);
+}
 
-Q_DECLARE_METATYPE(AudioFileType);
+Disconnector& Disconnector::operator<<(QMetaObject::Connection connection)
+{
+	addConnection(connection);
+    return *this;
+}
 
-
-#endif //AWESOMEMEDIALIBRARYMANAGER_AUDIOFILETYPE_H
+void Disconnector::disconnect()
+{
+	for(auto& connection : m_connections)
+    {
+    	bool status = QObject::disconnect(connection);
+        Q_ASSERT(status == true);
+        m_connections.clear();
+    }
+}

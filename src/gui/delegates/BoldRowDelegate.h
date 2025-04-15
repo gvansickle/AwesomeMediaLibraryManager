@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -17,38 +17,48 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBRARYSORTFILTERPROXYMODEL_H
-#define LIBRARYSORTFILTERPROXYMODEL_H
-
-/**
- * @file
- */
+#ifndef BOLDROWDELEGATE_H
+#define BOLDROWDELEGATE_H
 
 // Std C++
-#include <memory>
+#include <set>
 
 // Qt
-#include <QSortFilterProxyModel>
+#include <QStyledItemDelegate>
 
-class LibraryEntry;
 
-class LibrarySortFilterProxyModel : public QSortFilterProxyModel
+/**
+ * Delegate which sets a given row's font to bold.
+ */
+class BoldRowDelegate : public QStyledItemDelegate
 {
     Q_OBJECT
 
 public:
-    explicit LibrarySortFilterProxyModel(QObject* parent = Q_NULLPTR);
+    explicit BoldRowDelegate(QObject* parent = nullptr);
+	~BoldRowDelegate() override;
 
-    std::shared_ptr<LibraryEntry> getItem(QModelIndex index) const;
 
-    virtual bool hasChildren(const QModelIndex &parent) const override;
+
+    void setRow(ssize_t row);
+
+    void clearAll();
+    void clearAllButOne();
 
 protected:
-    bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const override;
-    bool lessThan(const QModelIndex &source_left, const QModelIndex &source_right) const override;
+
+	void initStyleOption(QStyleOptionViewItem *option,
+						 const QModelIndex &index) const override;
+
+Q_SIGNALS:
+    void updateRequested();
 
 private:
-    Q_DISABLE_COPY(LibrarySortFilterProxyModel)
+    ssize_t m_row {-1};
+
+    std::set<int> m_bolded_rows;
 };
 
-#endif // LIBRARYSORTFILTERPROXYMODEL_H
+Q_DECLARE_METATYPE(BoldRowDelegate)
+
+#endif //BOLDROWDELEGATE_H

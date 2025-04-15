@@ -20,11 +20,13 @@
 #ifndef MDIPLAYLISTVIEW_H
 #define MDIPLAYLISTVIEW_H
 
+
 #include "MDITreeViewBase.h"
 #include <logic/PlaylistModel.h>
 
 class QMediaPlaylist;
 class LibrarySortFilterProxyModel;
+class ShuffleProxyModel;
 class ItemDelegateLength;
 class DragDropTreeViewStyleProxy;
 
@@ -34,13 +36,6 @@ class MDIPlaylistView : public MDITreeViewBase
     Q_OBJECT
 
     using BASE_CLASS = MDITreeViewBase;
-
-Q_SIGNALS:
-	/// @name Signals for player-connected messages.
-	/// @{
-	/// Start playing the current song.
-	void play();
-	/// @}
 
 public:
     explicit MDIPlaylistView(QWidget *parent = Q_NULLPTR);
@@ -66,17 +61,7 @@ public:
 
 public Q_SLOTS:
 
-	/// @name Slots for player-connected messages.
-	/// @{
 
-	/**
-	 * Start next song.
-	 * Makes the next item in the model the current item in the view.
-	 */
-    void next();
-
-	/// Start previous song.
-    void previous();
 	/// @}
 
     /// @name Edit slots.
@@ -147,26 +132,10 @@ protected Q_SLOTS:
 	void onContextMenuSelectedRows(QContextMenuEvent* event, const QPersistentModelIndexVec& row_indexes) override;
 	void onContextMenuViewport(QContextMenuEvent* event) override;
 
-    /// Invoked when user double-clicks on an entry.
-    /// According to Qt5 docs, index will always be valid:
-    /// http://doc.qt.io/qt-5/qabstractitemview.html#doubleClicked:
-    /// "The [doubleClicked] signal is only emitted when the index is valid."
-    void onDoubleClicked(const QModelIndex &index);
 
-	/**
-	 * Slot called when the user activates (hits Enter) on an item.
-	 * @param index
-	 */
-	void onActivated(const QModelIndex& index) override;
 
 private:
     Q_DISABLE_COPY(MDIPlaylistView)
-
-    /**
-     * Tell the player component to start playing the song at @a index.
-     * @param index
-     */
-    void startPlaying(const QModelIndex& index);
 
     std::unique_ptr<DragDropTreeViewStyleProxy> m_the_dragdropstyleproxy;
 

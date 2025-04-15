@@ -20,6 +20,8 @@
 #ifndef DEBUGHELPERS_H
 #define DEBUGHELPERS_H
 
+/// @file
+
 #include <config.h>
 
 // Std C++

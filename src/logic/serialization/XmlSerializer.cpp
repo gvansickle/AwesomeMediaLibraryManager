@@ -297,14 +297,6 @@ void XmlSerializer::writeVariantValueToStream(const QVariant &variant, QXmlStrea
 
 
 
-/**
- * XmlSerializer::readVariantFromStream
- *
- * @note On invalid QVariant, skips the current element and tries to continue.
- *
- * @param xmlstream
- * @return
- */
 QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 {
 	QXmlStreamAttributes attributes = xmlstream.attributes();
@@ -342,8 +334,6 @@ QVariant XmlSerializer::InnerReadVariantFromStream(QString typeString, const QXm
 	}
 	else if(metatype.id() == f_serqvarlist_id)
 	{
-#warning "Remove"
-		log_current_node(xmlstream); qDb() << "serqvarlist";
 		variant = readHomogenousListFromStream(xmlstream);
 	}
 	else

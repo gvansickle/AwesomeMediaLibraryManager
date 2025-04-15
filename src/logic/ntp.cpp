@@ -17,10 +17,14 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/** @file Implementation of ntp, a Normal Play Time support class for QUrl. */
+/**
+ * @file ntp.cpp
+ * Implementation of ntp, a Normal Play Time support class for QUrl.
+ */
 
 #include "ntp.h"
 
+// Qt
 #include <QRegularExpression>
 #include <QUrl>
 #include <QUrlQuery>

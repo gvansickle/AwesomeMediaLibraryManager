@@ -20,6 +20,11 @@
 #ifndef EXTMIMETYPE_H
 #define EXTMIMETYPE_H
 
+/**
+ * @file ExtMimeType
+ */
+
+// Qt
 #include <QObject>
 #include <QMimeDatabase>
 #include <QMimeType>

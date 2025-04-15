@@ -49,6 +49,7 @@ set(gui_HEADER_FILES
 	Theme.h
 	delegates/ItemDelegateLength.h
 	delegates/MimeTypeDelegate.h
+	delegates/BoldRowDelegate.h
 	)
 
 # gui source files
@@ -82,6 +83,7 @@ set(gui_SOURCE_FILES
 	Theme.cpp
 	delegates/ItemDelegateLength.cpp
 	delegates/MimeTypeDelegate.cpp
+	delegates/BoldRowDelegate.cpp
 	)
 
 # Settings dialog files (in settings/).

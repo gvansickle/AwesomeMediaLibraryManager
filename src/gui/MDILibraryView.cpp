@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -88,7 +88,7 @@ QString MDILibraryView::getDisplayName() const
 }
 
 /**
- * Pop up an 'Open file" dialog and open a new View on the file specified by the user.
+ * Pop up an "Open file" dialog and open a new View on the file specified by the user.
  */
 MDIModelViewPair MDILibraryView::open(QWidget *parent, std::function<MDIModelViewPair(QUrl)> find_existing_view_func)
 {

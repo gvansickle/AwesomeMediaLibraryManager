@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -19,6 +19,8 @@
 
 #ifndef PLAYERCONTROLS_H
 #define PLAYERCONTROLS_H
+
+// @file
 
 #include <QWidget>
 #include <QMediaPlayer>
@@ -56,6 +58,9 @@ Q_SIGNALS:
 	void changeRepeat(bool);
 	void changeVolume(float);
     void changeMuting(bool);
+	void positionSliderMoved(int);
+	void posSliderPressed();
+	void posSliderReleased();
 
 public Q_SLOTS:
     void setPlaybackState(QMediaPlayer::PlaybackState state);

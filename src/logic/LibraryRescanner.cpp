@@ -221,12 +221,12 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 
     // Set up the directory scan to run in another thread.
     QFuture<DirScanResult> dirresults_future = QtConcurrent::run(DirScanFunction,
-	                                                                                     dir_url,
-	                                                                                     extensions,
-	                                                                                     QDir::Filters(QDir::Files |
-	                                                                                                   QDir::AllDirs |
-	                                                                                                   QDir::NoDotAndDotDot),
-	                                                                                     QDirIterator::Subdirectories);
+                                                                     dir_url,
+                                                                     extensions,
+                                                                     QDir::Filters(QDir::Files |
+                                                                                   QDir::AllDirs |
+                                                                                   QDir::NoDotAndDotDot),
+                                                                     QDirIterator::Subdirectories);
 	// Create/Attach an AMLMJobT to the dirscan future.
 	QPointer<AMLMJobT<ExtFuture<DirScanResult>>> dirtrav_job = make_async_AMLMJobT(dirresults_future, "DirResultsJob", AMLMApp::instance());
 

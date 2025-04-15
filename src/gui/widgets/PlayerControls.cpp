@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -19,6 +19,7 @@
 
 #include "PlayerControls.h"
 
+// Qt
 #include <QToolButton>
 #include <QStyle>
 #include <QSlider>
@@ -32,6 +33,7 @@
 #include <qxtglobalshortcut.h>
 #endif
 
+// Ours
 #include <gui/Theme.h>
 #include "utils/ConnectHelpers.h"
 #include <gui/actions/ActionHelpers.h>
@@ -103,10 +105,14 @@ PlayerControls::PlayerControls(QWidget *parent) : QWidget(parent)
 
     // Position slider
 	m_positionSlider = new QSlider(Qt::Horizontal, this);
-    //slider->setRange(0, player.duration() / 1000)
+    // m_positionSlider->setRange(0, player.duration());
     //slider->sliderMoved.connect(seek)
+	// Signal to signal connection.
+	connect(m_positionSlider, &QSlider::sliderMoved, this, &PlayerControls::positionSliderMoved);
+	connect_or_die(m_positionSlider, &QSlider::sliderPressed, this, &PlayerControls::posSliderPressed);
+	connect_or_die(m_positionSlider, &QSlider::sliderReleased, this, &PlayerControls::posSliderReleased);
 
-    // Time Remaining/Duration label.
+	// Time Remaining/Duration label.
 	m_labelDuration = new QLabel(this);
 
     // Volume slider.
@@ -315,7 +321,10 @@ void PlayerControls::onPositionChanged(qint64 pos)
 {
     // Position is in ms.
 	m_last_pos = pos;
-	m_positionSlider->setValue(pos);
+	if (!m_positionSlider->isSliderDown())
+	{
+		m_positionSlider->setValue(pos);
+	}
     updateDurationInfo(pos, -1);
 }
 
@@ -331,6 +340,7 @@ void PlayerControls::updateDurationInfo(qint64 pos, qint64 duration)
 		duration = m_last_dur;
     }
 
+	// For display, use seconds granularity.
     pos /= 1000;
     duration /= 1000;
 

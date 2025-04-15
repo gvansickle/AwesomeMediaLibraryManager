@@ -20,6 +20,8 @@
 #ifndef STRINGHELPERS_H
 #define STRINGHELPERS_H
 
+/// @file StringHelpers.h
+
 #include <config.h>
 
 // Std C
@@ -29,7 +31,7 @@
 #include <type_traits>
 #include <string>
 
-// Qt5
+// Qt
 #include <QtGlobal>
 #include <QString>
 #include <QStringList>

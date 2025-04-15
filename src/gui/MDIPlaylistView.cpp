@@ -19,15 +19,11 @@
 
 #include "MDIPlaylistView.h"
 
-// Srd C++
+// Std C++
 #include <vector>
 #include <memory>
 
-#include <gui/delegates/ItemDelegateLength.h>
-
-#include <gui/menus/DropMenu.h>
-
-#include "DragDropTreeViewStyleProxy.h"
+// Qt
 #include <QApplication>
 #include <QHeaderView>
 #include <QToolTip>
@@ -39,6 +35,11 @@
 #include <QPoint>
 #include <QKeyEvent>
 
+// Ours
+#include <gui/delegates/ItemDelegateLength.h>
+#include <gui/menus/DropMenu.h>
+#include "DragDropTreeViewStyleProxy.h"
+
 #include "utils/DebugHelpers.h"
 #include "logic/LibraryEntryMimeData.h"
 #include "menus/PlaylistContextMenuViewport.h"
@@ -46,7 +47,9 @@
 
 #include <logic/ModelUserRoles.h>
 #include <logic/proxymodels/LibrarySortFilterProxyModel.h>
+#include <logic/proxymodels/ShuffleProxyModel.h>
 #include <logic/proxymodels/ModelHelpers.h>
+
 
 MDIPlaylistView::MDIPlaylistView(QWidget* parent) : MDITreeViewBase(parent)
 {
@@ -70,8 +73,7 @@ MDIPlaylistView::MDIPlaylistView(QWidget* parent) : MDITreeViewBase(parent)
 	// Configure selection.
 	setSelectionMode(QAbstractItemView::ExtendedSelection);
 
-	// Hook up double-click handler.
-	connect(this, &MDIPlaylistView::doubleClicked, this, &MDIPlaylistView::onDoubleClicked);
+
 
 	// Configure drag and drop.
     // http://doc.qt.io/qt-5/model-view-programming.html#using-drag-and-drop-with-item-views
@@ -133,19 +135,17 @@ void MDIPlaylistView::setModel(QAbstractItemModel* model)
 		m_underlying_model->setLibraryRootUrl(m_current_url);
 
 		m_sortfilter_model->setSourceModel(model);
+
+		// Set the top-level proxy model that this view will use.
 		auto old_sel_model = selectionModel();
 		MDITreeViewBase::setModel(m_sortfilter_model);
+
 		// Call selectionChanged when the user changes the selection.
 		/// @todo selectionModel().selectionChanged.connect(selectionChanged)
         if(old_sel_model != nullptr)
         {
             old_sel_model->deleteLater();
         }
-
-M_TODO("QT6 Pretty sure this needs fixing to update connections")
-
-		// Connect to the QMediaPlaylist's index changed notifications,
-		// connect_or_die(m_underlying_model->qmplaylist(), &QMediaPlaylist::currentIndexChanged, this, &MDIPlaylistView::playlistPositionChanged);
 
 		// Set up the TreeView's header.
 		header()->setStretchLastSection(false);
@@ -416,59 +416,9 @@ QUrl MDIPlaylistView::currentMedia() const
 //
 
 
-void MDIPlaylistView::next()
-{
-	QModelIndex current_index = currentIndex();
-	if (!current_index.isValid())
-	{
-		/// @todo Not immediately clear how we recover from this situation.
-		qDb() << "Model's current item is invalid.  Maybe no items in current playlist?";
-		return;
-	}
 
-	auto next_index = current_index.sibling(current_index.row() + 1, 0);
 
-	// Check if the next index is valid
-	if (next_index.isValid())
-	{
-		// Set the next index as the current item.
-		setCurrentIndex(next_index);
-	}
-	else
-	{
-		// Wrap.
-		next_index = model()->index(0,0);
-		setCurrentIndex(next_index);
-		// qCr() << "No next item available.";
-	}
-}
 
-void MDIPlaylistView::previous()
-{
-	QModelIndex current_index = currentIndex();
-	if (!current_index.isValid())
-	{
-		/// @todo Not immediately clear how we recover form this situation.
-		qDb() << "Model's current item is invalid.  Maybe no items in current playlist?";
-		return;
-	}
-
-	auto prev_index = current_index.sibling(current_index.row() - 1, current_index.column());
-
-	// Check if the calculated prev index is valid
-	if (prev_index.isValid())
-	{
-		// Set the next index as the current item.
-		setCurrentIndex(prev_index);
-	}
-	else
-	{
-		// Wrap.
-		prev_index = model()->index(model()->rowCount()-1, 0);
-		setCurrentIndex(prev_index);
-		// qCr() << "No next item available.";
-	}
-}
 
 void MDIPlaylistView::onCut()
 {
@@ -585,7 +535,6 @@ M_WARNING("TODO: This mostly works, but can start the wrong row if e.g. this vie
 
 void MDIPlaylistView::playlistPositionChanged(qint64 position)
 {
-M_WARNING("CRIT: Do we even need this?")
 	// Notification from the QMediaPlaylist that the current selection has changed.
 	// Since we have a QSortFilterProxyModel between us and the underlying model, we need to convert the position,
 	// which is in underlying-model coordinates, to proxy model coordinates.
@@ -610,50 +559,9 @@ void MDIPlaylistView::onContextMenuViewport(QContextMenuEvent* event)
 	context_menu->exec(event->globalPos());
 }
 
-void MDIPlaylistView::onDoubleClicked(const QModelIndex& index)
-{
-	// Should always be valid.
-	qDebug() << "Double-clicked index:" << index;
-	Q_ASSERT(index.isValid());
-
-M_WARNING("TODO: Fix assumption");
-	if(true) // we're the playlist connected to the player.
-	{
-		startPlaying(index);
-	}
-}
-
-void MDIPlaylistView::onActivated(const QModelIndex& index)
-{
-M_WARNING("TODO: Fix assumption");
-	if(true) // we're the playlist connected to the player.
-	{
-		startPlaying(index);
-	}
-}
-
-void MDIPlaylistView::startPlaying(const QModelIndex& index)
-{
-	// Tell the player to start playing the song at index.
-	auto underlying_model_index = to_underlying_qmodelindex(index);
-
-	Q_ASSERT(underlying_model_index.isValid());
-
-	qDebug() << "Underlying index:" << underlying_model_index;
-
-    // Since m_underlying_model->qmplaylist() is connected to the player, we should only have to setCurrentIndex() to
-    // start the song.
-    /// @note See "jump()" etc in the Qt5 MediaPlyer example.
-    Q_ASSERT(underlying_model_index.model() == m_underlying_model);
-	setCurrentIndex(underlying_model_index);
-	// If the player isn't already playing, the index change above won't start it.  Send a signal to it to
-	// make sure it starts.
-	Q_EMIT play();
-}
-
 QModelIndex MDIPlaylistView::to_underlying_qmodelindex(const QModelIndex &proxy_index)
 {
-	auto underlying_model_index = qobject_cast<LibrarySortFilterProxyModel*>(model())->mapToSource(proxy_index);
+	auto underlying_model_index = mapToSourceRecursive(proxy_index);
 	Q_ASSERT(underlying_model_index.isValid());
 
 	return underlying_model_index;
@@ -661,7 +569,7 @@ QModelIndex MDIPlaylistView::to_underlying_qmodelindex(const QModelIndex &proxy_
 
 QModelIndex MDIPlaylistView::from_underlying_qmodelindex(const QModelIndex &underlying_index)
 {
-	auto proxy_model_index = qobject_cast<LibrarySortFilterProxyModel*>(model())->mapFromSource(underlying_index);
+	auto proxy_model_index = mapFromSourceRecursive(model(), underlying_index);
 	return proxy_model_index;
 }
 
@@ -699,3 +607,4 @@ void MDIPlaylistView::keyPressEvent(QKeyEvent* event)
 	}
 	MDITreeViewBase::keyPressEvent(event);
 }
+
