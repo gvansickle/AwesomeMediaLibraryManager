@@ -240,7 +240,7 @@ LibraryModel* MDILibraryView::underlyingModel() const
 
 void MDILibraryView::setEmptyModel()
 {
-    M_WARNING("TODO");
+    // M_WARNING("TODO");
     Q_ASSERT(0);
 }
 
@@ -266,7 +266,7 @@ void MDILibraryView::serializeDocument(QFileDevice& file)
 {
 //	m_underlying_model->serializeToFile(file);
 	Q_ASSERT(0);
-M_WARNING("TODO: Serialization, remove or replace.");
+// M_WARNING("TODO: Serialization, remove or replace.");
 
 	QString database_filename = QDir::homePath() + "/AMLMDatabaseSerDes.xml";
 
@@ -282,7 +282,7 @@ M_WARNING("TODO: Serialization, remove or replace.");
 
 void MDILibraryView::deserializeDocument(QFileDevice& file)
 {
-	M_WARNING("TODO: Serialization, remove or replace.");
+	// M_WARNING("TODO: Serialization, remove or replace.");
 	Q_ASSERT(0);
 
 //	m_underlying_model->deserializeFromFile(file);
@@ -297,7 +297,7 @@ bool MDILibraryView::onBlankAreaToolTip(QHelpEvent* event)
 {
 	// Return True if you handle it, False if you don't.
 	// Blank-area tooltip, for debugging.
-M_WARNING("TODO: Get/print more library stats")
+// M_WARNING("TODO: Get/print more library stats")
 	QToolTip::showText(event->globalPos(),
         QString("<b>Library Info</b><hr>"
         "Total number of entries: %1\n"

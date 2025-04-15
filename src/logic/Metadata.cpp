@@ -342,7 +342,7 @@ bool Metadata::read(const QUrl& url)
 	}
 	else
 	{
-M_WARNING("BUG: Pulls data from bad cuesheet embeds in FLAC, such as some produced by EAC");
+// M_WARNING("BUG: Pulls data from bad cuesheet embeds in FLAC, such as some produced by EAC");
 	/// @todo The sidecar cue sheet support will then also kick in, and you get weirdness like a track will have two names.
 	/// Need to do some kind of comparison/validity check.
 
@@ -388,7 +388,7 @@ qDb() << "####### NUM TRACKS:" << m_tracks.size();
 
 
 		// Ok, now do a second pass over the tracks and determine if there are any gapless sets.
-M_TODO("WAS THIS ALREADY DONE ABOVE?")
+// M_TODO("WAS THIS ALREADY DONE ABOVE?")
 		qDebug() << "Scanning for gaplessness...";
 		for(int track_num=1; track_num < m_num_tracks_on_media; ++track_num)
 		{
@@ -453,7 +453,7 @@ Fraction Metadata::total_length_seconds() const
 
 AMLMTagMap Metadata::filled_fields() const
 {
-M_TODO("OBSOLETE")
+// M_TODO("OBSOLETE")
 	if(hasBeenRead() && !isError())
 	{
 		//qDebug() << "Converting filled_fields to TagMap";

@@ -359,7 +359,7 @@ void PlaylistModel::setLibraryRootUrl(const QUrl &url)
     // Give the library a starting point.
     m_library.setRootUrl(url);
 
-M_WARNING("TODO: This is here to stop the model populator thread from starting, and we don't need a cache file.")
+// M_WARNING("TODO: This is here to stop the model populator thread from starting, and we don't need a cache file.")
 //    // Create a cache file for this Library.
 //    createCacheFile(url);
 

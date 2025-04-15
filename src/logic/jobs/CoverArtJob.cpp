@@ -193,7 +193,7 @@ void CoverArtJob::LoadCoverArt(QPromise<QByteArray>& promise, CoverArtJobPtr kjo
 
 	promise.addResult(retval);
 
-M_WARNING("TODO: Getting asserts here on app close during dir scan.");
+// M_WARNING("TODO: Getting asserts here on app close during dir scan.");
 	if(kjob != nullptr)
 	{
 		Q_EMIT kjob->SIGNAL_ImageBytes(retval);

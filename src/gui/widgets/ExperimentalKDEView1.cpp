@@ -39,7 +39,7 @@ bool ExperimentalKDEView1::setModel(AbstractTreeModel* model)
 	remapping << 1;
 	m_column_remapper_proxy->setSourceColumns(remapping);
 
-    M_MESSAGE("I can't get the proxy model or view to work")
+    // M_MESSAGE("I can't get the proxy model or view to work")
 	m_cat_proxy_model = QSharedPointer<KCategorizedSortFilterProxyModel>::create(this);
 	m_cat_proxy_model->setSourceModel(m_column_remapper_proxy.get());
 	m_cat_proxy_model->setCategorizedModel(true);

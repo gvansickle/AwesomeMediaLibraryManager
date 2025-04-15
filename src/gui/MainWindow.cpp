@@ -177,7 +177,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : BASE_CLASS(pare
 
 MainWindow::~MainWindow()
 {
-M_WARNING("LOOKS LIKE WE'RE HANGING HERE");
+// M_WARNING("LOOKS LIKE WE'RE HANGING HERE");
     // KDev's MainWindow does only this here:
     /**
      * if (memberList().count() == 1) {
@@ -333,7 +333,7 @@ void MainWindow::onStartup()
     // Create the master job tracker singleton.
     // https://api.kde.org/frameworks/kjobwidgets/html/classKStatusBarJobTracker.html
     // parent: "the parent of this object and of the widget displaying the job progresses"
-M_WARNING("Q: Don't know if statusBar() is the correct parent here.  Need this before initRootModels() etc in onStartup?");
+// M_WARNING("Q: Don't know if statusBar() is the correct parent here.  Need this before initRootModels() etc in onStartup?");
     auto sb = statusBar();
     Q_CHECK_PTR(sb);
     m_activity_progress_tracker = new ActivityProgressStatusBarTracker(sb);
@@ -345,7 +345,7 @@ M_WARNING("Q: Don't know if statusBar() is the correct parent here.  Need this b
     // No ToolBar, because even though we have toolbars, adding that flag causes crashes somewhere
     //   in a context menu and when opening the KEditToolBar dialog.
     //   Without it, we seem to lose no functionality, but the crashes are gone.
-M_WARNING("Crashing here on Windows");
+// M_WARNING("Crashing here on Windows");
     setupGUI(KXmlGuiWindow::/*Keys | */StatusBar | /*ToolBar |*/ Save);
 
     post_setupGUI_init();
@@ -742,7 +742,7 @@ void MainWindow::createActionsHelp(KActionCollection* ac)
  */
 void MainWindow::addViewMenuActions()
 {
-M_WARNING("TODO")
+// M_WARNING("TODO")
 
 	m_act_lock_layout->setChecked(AMLMSettings::layoutIsLocked());
 //	connect(m_act_lock_layout, &QAction::toggled, this, &MainWindow::setLayoutLocked);
@@ -769,7 +769,7 @@ M_WARNING("TODO")
     }
 
 	// List toolbars.
-M_WARNING("/// @todo This doesn't work for unknown reasons.");
+// M_WARNING("/// @todo This doesn't work for unknown reasons.");
 //    m_menu_view->addSection(tr("Toolbars"));
 //    auto tbma = toolBarMenuAction();
 //    if(tbma != nullptr)
@@ -828,7 +828,7 @@ void MainWindow::createMenus()
 	m_menu_edit->addAction(m_act_find_prev);
 
     // Create the View menu.
-M_WARNING("TODO")
+// M_WARNING("TODO")
     m_menu_view = menuBar()->addMenu(tr("&View"));
 //	menuBar()->addMenu(m_menu_view);
 //	m_ab_docks->appendToMenu(m_menu_view);
@@ -1654,7 +1654,7 @@ void MainWindow::openFileLibrary(const QUrl& filename)
 void MainWindow::onRescanLibrary()
 {
 	// Start a rescan on all models.
-M_WARNING("HACKISH, MAKE THIS BETTER");
+// M_WARNING("HACKISH, MAKE THIS BETTER");
 /// @todo So really what we're doing is removing any libraries and re-opening them.
 
 	QVector<QUrl> lib_root_urls;
@@ -2193,7 +2193,7 @@ void MainWindow::onShowMenuBar(bool show)
 		KMessageBox::information(this, tr("This will hide the menu bar completely. You can show it again by typing Ctrl+M."),
 								 tr("Hide menu bar"), QStringLiteral("show-menubar-warning"));
 	}
-M_WARNING("TODO: CTRL+M doesn't get the bar back.");
+// M_WARNING("TODO: CTRL+M doesn't get the bar back.");
 //	menuBar()->setVisible(show);
 }
 

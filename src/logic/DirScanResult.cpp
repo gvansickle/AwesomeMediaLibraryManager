@@ -139,7 +139,7 @@ QVector<ExtUrl> DirScanResult::otherMediaFilesInDir(const QFileInfo& finfo)
     // Get the parent directory.
     auto dir = finfo.dir();
 Q_ASSERT(0);
-M_WARNING("TODO");
+// M_WARNING("TODO");
     return QVector<ExtUrl>();
 }
 
