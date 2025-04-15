@@ -21,6 +21,7 @@
 
 // Pages
 #include "SettingsPageGeneral.h"
+#include "SettingsPageDatabase.h"
 #include "SettingsPageCollection.h"
 #include "SettingsPageAppearance.h"
 #include "SettingsPageLibrary.h"
@@ -33,6 +34,7 @@
 #include <QDataWidgetMapper>
 #include <QDebug>
 #include <QStandardItem>
+#include <QListWidget>
 #include <QComboBox>
 #include <QRegularExpression>
 
@@ -54,7 +56,8 @@ SettingsDialog::SettingsDialog(QWidget *parent, const char* name, KConfigSkeleto
 	// Create and add the pages.
 	setFaceType(KPageDialog::List);
     addPage(new SettingsPageGeneral(this), tr("General"), "preferences-desktop-sound");
-    addPage(new SettingsPageCollection(this), tr("Collection"), "applications-multimedia");
+	addPage(new SettingsPageDatabase(this), tr("Database"), "network-server-database");
+	addPage(new SettingsPageCollection(this), tr("Collection"), "applications-multimedia");
 	addPage(new SettingsPageAppearance(this), tr("Appearance"), "preferences-desktop-color");
 //	addPage(new SettingsPageLibrary(this), tr("Music Library") );
 	/// ...

@@ -1,7 +1,11 @@
 #include "ExperimentalKDEView1.h"
 #include "ui_ExperimentalKDEView1.h"
 
+// Ours
 #include <utils/ConnectHelpers.h>
+#include <gui/helpers/ViewHelpers.h>
+#include <proxymodels/ModelHelpers.h>
+#include <utils/StringHelpers.h>
 
 ExperimentalKDEView1::ExperimentalKDEView1(QWidget *parent) :
 	QWidget(parent),
@@ -20,7 +24,14 @@ bool ExperimentalKDEView1::setModel(AbstractTreeModel* model)
 	auto view = ui->m_top_level_tree_view;
 
 	Q_CHECK_PTR(model);
+	Q_CHECK_PTR(view);
 
+    auto model_ptr_box = ui->currentModelPtrLabel;
+	auto str = tostr_hex((unsigned long)model);
+
+	model_ptr_box->setText(toqstr(str));
+
+#if 1
 	// Put the URLs in column 0.
 	m_column_remapper_proxy = QSharedPointer<KRearrangeColumnsProxyModel>::create(this);
 	m_column_remapper_proxy->setSourceModel(model);
@@ -33,7 +44,7 @@ bool ExperimentalKDEView1::setModel(AbstractTreeModel* model)
 	m_cat_proxy_model->setSourceModel(m_column_remapper_proxy.get());
 	m_cat_proxy_model->setCategorizedModel(true);
 	Q_ASSERT(0 == m_cat_proxy_model->sortColumn());
-
+#endif
 
 	view->setModel(model);
 //	view->setModel(m_cat_proxy_model.get());
@@ -45,14 +56,7 @@ bool ExperimentalKDEView1::setModel(AbstractTreeModel* model)
 	view->expandAll();
 
 	// Hook up Just-In-Time item expansion.
-	connect_or_die(ui->m_top_level_tree_view->model(), &QAbstractItemModel::rowsInserted,
-				   this, [this](const QModelIndex& parent, int first, int last)
-	{
-		if(!ui->m_top_level_tree_view->isExpanded(parent))
-		{
-			ui->m_top_level_tree_view->expand(parent);
-		}
-	});
+	AMLM::connect_jit_item_expansion(ui->m_top_level_tree_view->model(), ui->m_top_level_tree_view, this);
 
 	return true;
 }

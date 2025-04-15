@@ -87,7 +87,7 @@ namespace ExtFuture_detail
 {
 template <class T, class R>
 void connect_or_die_backprop_cancel_watcher(ExtFuture<T> up, ExtFuture<R> down);
-};
+}; // namespace ExtFuture_detail
 
 namespace ManagedExtFutureWatcher_detail {};
 
@@ -1239,9 +1239,9 @@ public:
 	 * @param stap_callback
 	 * @return
 	 */
-	template <class StreamingTapCallbackType,
+	template <class StreamingTapCallbackType, class... Args,
 		REQUIRES(std::is_invocable_r_v<void, StreamingTapCallbackType, ExtFuture<T>, int, int>)>
-	ExtFuture<T> stap_qthread_async(StreamingTapCallbackType&& stap_callback) const
+	ExtFuture<T> stap_qthread_async(StreamingTapCallbackType&& stap_callback, Args&&... args) const
 	{
 		ExtFuture<T> retfuture = ExtAsync::make_started_only_future<T>();
 

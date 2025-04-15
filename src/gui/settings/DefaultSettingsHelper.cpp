@@ -26,3 +26,10 @@ QStringList DefaultSettingsHelper::defaultCollectionUrlList()
 	return default_collection_paths;
 }
 
+QStringList DefaultSettingsHelper::getSettingsFileList()
+{
+	QStringList retval;
+	retval << "NULL";
+	return retval;
+}
+

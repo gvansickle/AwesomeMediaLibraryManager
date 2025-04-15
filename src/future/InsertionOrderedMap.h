@@ -77,6 +77,7 @@ public:
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(InsertionOrderedMap);
 	~InsertionOrderedMap() = default;
 
+	// Copy-through-QVariant constructor.
 	InsertionOrderedMap(const QVariant& variant)
 	{
 		Q_ASSERT(variant.isValid());
@@ -228,6 +229,11 @@ public:
 		}
 	}
 
+	void set_attr(const std::string& key, const std::string& value)
+	{
+		m_attribute_map.insert_or_assign(key, value);
+	}
+
 	std::string get_attr(const std::string& key) const
 	{
 		auto it = m_attribute_map.find(key);
@@ -261,6 +267,11 @@ public:
 	attr_map_type get_attrs() const
 	{
 		return m_attribute_map;
+	}
+
+	bool contains_attr(const std::string& attr_name) const
+	{
+		return m_attribute_map.count(attr_name) > 0;
 	}
 
 	/// @}

@@ -85,7 +85,7 @@ set_property(SOURCE ${AMLM_LIBCUE_TARGET_SRCS} PROPERTY SKIP_AUTOGEN ON)
 # This is an OBJECT library to get it to link.  There's a circular dependency between this and gui.
 # For some reason, CMake isn't able to handle that if this is a STATIC lib.
 add_library(kconfig_target OBJECT EXCLUDE_FROM_ALL)
-kconfig_add_kcfg_files(kconfig_target AwesomeMediaLibraryManagerSettings.kcfgc)
+kconfig_add_kcfg_files(kconfig_target GENERATE_MOC AwesomeMediaLibraryManagerSettings.kcfgc)
 target_include_directories(kconfig_target
 	PUBLIC
 		${CMAKE_CURRENT_BINARY_DIR}
