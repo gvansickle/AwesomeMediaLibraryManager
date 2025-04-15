@@ -56,6 +56,7 @@ MP2::MP2(QObject* parent) : QMediaPlayer(parent)
 	connect_or_die(this, &QMediaPlayer::positionChanged, this, &MP2::onPositionChanged);
 	connect_or_die(this, &QMediaPlayer::durationChanged, this, &MP2::onDurationChanged);
 	connect_or_die(this, &QMediaPlayer::mediaStatusChanged, this, &MP2::onMediaStatusChanged);
+	connect_or_die(this, &QMediaPlayer::playbackStateChanged, this, &MP2::onPlaybackStateChanged);
 
 	// Reflect some signals from our QAudioOutput to signals coming from this object.
 	// This avoids having to expose m_audio_output for a third party to make connections to.
@@ -119,12 +120,14 @@ void MP2::getTrackInfoFromUrl(QUrl url)
 	else
 	{
 		m_is_subtrack = false;
+		m_track_startpos_ms = 0;
 	}
 }
 
 void MP2::play()
 {
 	qDb() << "play(), current media URL:" << source() << M_ID_VAL(m_track_startpos_ms) << M_ID_VAL(m_track_endpos_ms);
+
 	auto playback_state = QMediaPlayer::playbackState();
 	if (playback_state == QMediaPlayer::StoppedState)  //<= This is usually PlayingState / LoadedMedia.
 	{
@@ -169,8 +172,24 @@ void MP2::repeat(bool loop)
 
 void MP2::seek(int msecs)
 {
-    qDb() << "Seek pct: " << (msecs/duration()) << "msecs:" << msecs << M_ID_VAL(duration());
+	msecs += m_track_startpos_ms;
+	// Clamp it to end-1 so we don't cause a transition to the next song while we're seeking.
+	/// @todo Except this doesn't work.
+	if (msecs>=m_track_endpos_ms)
+	{
+		msecs -= 1;
+	}
 	setPosition(msecs);
+}
+
+void MP2::seekStart()
+{
+	m_seeking = true;
+}
+
+void MP2::seekEnd()
+{
+	m_seeking = false;
 }
 
 void MP2::onPositionChanged(qint64 pos)
@@ -200,7 +219,7 @@ void MP2::onPositionChanged(qint64 pos)
 
 void MP2::onDurationChanged(qint64 duration)
 {
-	qDebug() << QString("onDurationChanged: %1").arg(duration);
+    qDb() << "onDurationChanged:" << duration;
 
     if(m_is_subtrack)
 	{
@@ -212,31 +231,40 @@ void MP2::onDurationChanged(qint64 duration)
 
 void MP2::onMediaStatusChanged(QMediaPlayer::MediaStatus status)
 {
-	qDebug() << QString("onMediaStatusChanged:") << status;
-	qDb() << M_ID_VAL(playbackState());
+	qDb() << "onMediaStatusChanged:" << status;
+
 
 	switch(status)
 	{
 		case QMediaPlayer::NoMedia:
+		case QMediaPlayer::LoadingMedia:
 		{
 			break;
 		}
 		case QMediaPlayer::LoadedMedia:
 		{
-			// Player should be in StoppedState here.
-			qDb() << QString("setPosition() to track start: %1 ms").arg(m_track_startpos_ms);
-			QMediaPlayer::setPosition(m_track_startpos_ms);
-
-			if (m_playing)
+			// Player should be in StoppedState here per docs, but it isn't always.
+			if (!m_seeking)
 			{
-				play();
+				qDb() << QString("setPosition() to track start: %1 ms").arg(m_track_startpos_ms);
+				QMediaPlayer::setPosition(m_track_startpos_ms);
+
+				if (m_playing)
+				{
+					play();
+				}
 			}
+			else
+			{
+				// We're seeking.
+			}
+
 			break;
 		}
 		case QMediaPlayer::EndOfMedia:
 		{
 			// Player should be in StoppedState here.
-			// Note: We aren't get these msgs from subtracks when we do a seek-to-end for some reason.
+			// Note: We aren't getting these msgs from subtracks when we do a seek-to-end for some reason.
 			/// We have two separate things which will emit playlistToNext() (see the other playlistToNext() emit in
 			/// onPositionChanged()).  We could end up with a subtrack at the end of its file triggering
 			/// both of these emits, and hence doing a double skip.  This logic here and in onPositionChanged()
@@ -253,6 +281,11 @@ void MP2::onMediaStatusChanged(QMediaPlayer::MediaStatus status)
 	}
 }
 
+void MP2::onPlaybackStateChanged(QMediaPlayer::PlaybackState newState)
+{
+	// qDb() << "onPlaybackStateChanged:" << newState;
+}
+
 void MP2::onSourceChanged(const QUrl& media_url)
 {
 	qDebug() << "onSourceChanged, URL:" << media_url;
@@ -263,12 +296,15 @@ void MP2::onSourceChanged(const QUrl& media_url)
 		getTrackInfoFromUrl(media_url);
 		// Remove the Fragment before we pass the URL to QMediaPlayer.
 		QUrl url_minus_fragment = media_url.toString(QUrl::RemoveFragment);
-		// Note that setSource():
+        // Note that setSource(QUrl()):
 		// - Discards all info it has for the current media source.
 		// - Stops playback.
 		// - returns immediately.
+        // setSource([actual_url]) returns immediately after recording the specified source of the media.
+        // It does not wait for the media to finish loading and does not check for errors.
 		// So we can't setPosition() to the beginning of the track here, we have to do that when we get a
 		// mediaStatusChange of QMediaPlayer::LoadedMedia.
+        QMediaPlayer::setSource(QUrl());
 		QMediaPlayer::setSource(url_minus_fragment);
 	}
 }

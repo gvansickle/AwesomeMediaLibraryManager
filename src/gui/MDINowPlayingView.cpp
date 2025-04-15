@@ -71,6 +71,10 @@ void MDINowPlayingView::onNumRowsChanged()
 	auto num_rows = model()->rowCount();
 
 	// Maintain our shuffle index.
+	if (num_rows == 0)
+	{
+		m_current_shuffle_index = -1;
+	}
 	bool was_empty = (m_current_shuffle_index == -1) ? true : false;
     ssize_t temp_shuffle_index = -1;
 	if (m_current_shuffle_index >= 0 && m_current_shuffle_index < m_indices.size())
@@ -89,16 +93,15 @@ void MDINowPlayingView::onNumRowsChanged()
 	m_current_shuffle_index = temp_shuffle_index;
 	if (was_empty && model()->rowCount() > 0)
 	{
-		QTimer::singleShot(0, [this](){
-			setCurrentIndexAndRow(model()->index(0, 0), QModelIndex());
-
-		});
-
 		// Went from empty Now Playing to non-empty.  Set a current item and selected item,
 		// so that the play button works.
-// #error "This is segfaulting"
-        // selectionModel()->select(model()->index(0, 0),
-  //           QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
+		// QTimer stuff here because this is segfaulting:
+		// selectionModel()->select(model()->index(0, 0),
+		//           QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
+		QTimer::singleShot(0, [this](){
+			m_current_shuffle_index = m_indices.at(0);
+			setCurrentIndexAndRow(model()->index(0, 0), QModelIndex());
+		});
 	}
 }
 
@@ -112,21 +115,31 @@ void MDINowPlayingView::next()
 		return;
 	}
 
+	bool stop_playing {false};
+
 	m_current_shuffle_index++;
 	if (m_current_shuffle_index >= m_indices.size())
 	{
 		m_current_shuffle_index = 0;
+		if (!m_loop_at_end)
+		{
+			stop_playing = true;
+		}
 	}
 
+	// Map from sequential m_current_shuffle_index [0, 1, ..., n) to possibly shuffled song index.
 	auto next_row = m_indices.at(m_current_shuffle_index);
 
 	auto next_index = current_index.sibling(next_row, 0);
 
-    // Set the next index as the current item.
-    const_cast<QAbstractItemModel*>(model())->dataChanged(next_index, next_index, QList<int>(Qt::FontRole));
-    const_cast<QAbstractItemModel*>(model())->dataChanged(current_index, current_index, QList<int>(Qt::FontRole));
+	// Set the next index as the current item.
+	const_cast<QAbstractItemModel*>(model())->dataChanged(next_index, next_index, QList<int>(Qt::FontRole));
+	const_cast<QAbstractItemModel*>(model())->dataChanged(current_index, current_index, QList<int>(Qt::FontRole));
+	if (stop_playing)
+	{
+		next_index = QModelIndex();
+	}
 	setCurrentIndexAndRow(next_index, current_index);
-
 }
 
 void MDINowPlayingView::previous()
@@ -158,6 +171,11 @@ void MDINowPlayingView::shuffle(bool shuffle)
 {
 	m_shuffle = shuffle;
 	onNumRowsChanged();
+}
+
+void MDINowPlayingView::loopAtEnd(bool loop_at_end)
+{
+	m_loop_at_end = loop_at_end;
 }
 
 void MDINowPlayingView::jump(const QModelIndex& index)
@@ -232,11 +250,6 @@ void MDINowPlayingView::startPlaying(const QModelIndex& index)
 
 	Q_ASSERT(index.isValid());
 
-	qDebug() << "Index:" << index;
-
-	// Since m_underlying_model->qmplaylist() is connected to the player, we should only have to setCurrentIndex() to
-	// start the song.
-	/// @note See "jump()" etc in the Qt5 MediaPlyer example.
     const_cast<QAbstractItemModel*>(model())->dataChanged(index, index, QList<int>(Qt::FontRole));
     m_brdelegate->setRow(index.row());
 	setCurrentIndex(index);
