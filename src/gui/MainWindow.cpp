@@ -1071,11 +1071,14 @@ void MainWindow::connectPlayerAndControls(MP2 *player, PlayerControls *controls)
 	connect_or_die(controls, &PlayerControls::play, player, &MP2::play);
 	connect_or_die(controls, &PlayerControls::pause, player, &MP2::pause);
 	connect_or_die(controls, &PlayerControls::stop, player, &MP2::stop);
+	/// See connectPlayerControlsAndNowPlayingView(), this might not actually do anything.
 	connect_or_die(controls, &PlayerControls::changeRepeat, player, &MP2::repeat);
 	connect_or_die(controls, &PlayerControls::changeMuting, player, &MP2::setMuted);
 	connect_or_die(controls, &PlayerControls::changeVolume, player, &MP2::setVolume);
 	connect_or_die(controls, &PlayerControls::changeShuffle, player, &MP2::setShuffleMode);
     connect_or_die(controls, &PlayerControls::positionSliderMoved, player, &MP2::seek);
+	connect_or_die(controls, &PlayerControls::posSliderPressed, player, &MP2::seekStart);
+	connect_or_die(controls, &PlayerControls::posSliderReleased, player, &MP2::seekEnd);
 
 	// MP2 -> PlayerControls signals.
     connect_or_die(player, &MP2::playbackStateChanged, controls, &PlayerControls::setPlaybackState);
@@ -1106,6 +1109,7 @@ void MainWindow::connectPlayerControlsAndNowPlayingView(PlayerControls *controls
     connect_or_die(controls, &PlayerControls::next, now_playing_view, &MDINowPlayingView::next, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
     connect_or_die(controls, &PlayerControls::previous, now_playing_view, &MDINowPlayingView::previous, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
 	connect_or_die(controls, &PlayerControls::changeShuffle, now_playing_view, &MDINowPlayingView::shuffle);
+	connect_or_die(controls, &PlayerControls::changeRepeat, now_playing_view, &MDINowPlayingView::loopAtEnd);
 
 	// Connect play() signal-to-signal.
     connect_or_die(now_playing_view, &MDINowPlayingView::play, controls, &PlayerControls::play, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));

@@ -74,6 +74,8 @@ public Q_SLOTS:
 	 */
 	void shuffle(bool shuffle = false);
 
+	void loopAtEnd(bool loop_at_end = false);
+
 	void jump(const QModelIndex& index);
 
 	/// @}
@@ -132,7 +134,6 @@ private:
 	Disconnector m_disconnector;
 
 };
-
 
 
 
