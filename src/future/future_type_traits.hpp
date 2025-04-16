@@ -39,6 +39,20 @@ namespace future_detection = std::experimental::fundamentals_v2;
 ////using ns_detection = namespace std;
 #endif
 
+#if __cplusplus <= 201703L /// No feature-test macro for this yet, it's C++20+.
+namespace std
+{
+	template<class T>
+	struct remove_cvref
+	{
+		using type = remove_cv_t<std::remove_reference_t<T>>;
+	};
+
+	template<class T>
+	using remove_cvref_t = typename remove_cvref<T>::type;
+};
+#endif // #if __cplusplus <= 201703L /// No feature-test macro for this yet, it's C++20+.
+
 // Logical traits?
 #if __cpp_lib_experimental_logical_traits >= 201511
 namespace future_logic_traits = std::experimental::fundamentals_v2;

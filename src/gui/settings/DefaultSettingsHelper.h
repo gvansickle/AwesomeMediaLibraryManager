@@ -24,6 +24,8 @@ public:
     DefaultSettingsHelper(QObject* parent = nullptr);
 
 	static QStringList defaultCollectionUrlList();
+
+	static QStringList getSettingsFileList();
 };
 
 #endif /* GUI_SETTINGS_DEFAULTSETTINGSHELPER_H_ */

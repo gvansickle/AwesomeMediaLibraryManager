@@ -46,6 +46,7 @@ set(utils_SOURCE_FILES
 	ext_iterators.cpp
 	Fraction.cpp
 	MapConverter.cpp
+	StringHelpers.cpp
 	RegisterQtMetatypes.cpp
 	UniqueIDMixin.h
 	Logging.cpp

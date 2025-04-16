@@ -45,7 +45,7 @@ MetadataReturnVal refresher_callback(const VecLibRescannerMapItems &mapitem)
 		// Only one entry.
 
 		// Get the LibraryEntry* to the existing entry.
-M_WARNING("There's no locking here, there needs to be, or these need to be copies.");
+// M_WARNING("There's no locking here, there needs to be, or these need to be copies.");
 		std::shared_ptr<LibraryEntry> item = mapitem[0].item;
 
 		if(!item->isPopulated())

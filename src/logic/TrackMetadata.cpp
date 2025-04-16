@@ -126,7 +126,7 @@ std::unique_ptr<TrackMetadata> TrackMetadata::make_track_metadata(const Track* t
 	PTI_STR_LIST(X)
 #undef X
 
-M_TODO("REPLACE THE ABOVE");
+// M_TODO("REPLACE THE ABOVE");
 //	/// @todo Get the track's Pack Type Indicator info as an AMLMTagMap.
 //#define X(id) tm.m_tm_track_pti.insert( # id, tostdstr(cdtext_get( id , track_cdtext )));
 //	PTI_STR_LIST(X)

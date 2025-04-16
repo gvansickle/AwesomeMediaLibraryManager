@@ -487,7 +487,7 @@ QStringList PerfectDeleter::stats_internal() const
 
 bool PerfectDeleter::waitForAMLMJobsFinished(bool spin)
 {
-M_TODO("This doesn't look like it's livelocking on exit, but it seems like we need to keep an event loop running.");
+// M_TODO("This doesn't look like it's livelocking on exit, but it seems like we need to keep an event loop running.");
 	long remaining_amlmjobs = 0;
 
 	do

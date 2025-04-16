@@ -433,7 +433,7 @@ sw.lap("Populate Complete");
 				Q_ASSERT(new_child);
 sw.lap("SRTMItem_LibEntry created");
 				/// NEW: Give the incoming ScanResultTreeModelItem entry a parent.
-M_WARNING("TODO: This needs rework.");
+
 //				entry_dp->changeParent(tree_model_sptr->getRootItem());
 				// tree_model_sptr->getRootItem()->appendChild(entry_dp);
 				// entry_dp->appendChild(new_child);
@@ -602,7 +602,7 @@ sw.print_results();
 	// Make sure the above job gets canceled and deleted.
     // AMLMApp::IPerfectDeleter().addQFuture(QFuture<void>(tail_future));
 
-M_TODO("???? I think we're already started");
+// M_TODO("???? I think we're already started");
 	// dirtrav_job->start();
 
 	m_timer.lap("Leaving startAsyncDirTrav");

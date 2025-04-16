@@ -62,7 +62,7 @@ void DirScanFunction(QPromise<DirScanResult>& promise,
 	}
 
 	// Count progress in terms of files found.
-    M_TODO("FIX THIS FOR QT6/KF6")
+    // M_TODO("FIX THIS FOR QT6/KF6")
 //    ext_future.setProgressUnit(KJob::Unit::Files);
 
 
@@ -73,7 +73,7 @@ void DirScanFunction(QPromise<DirScanResult>& promise,
 
 	QString status_text = QObject::tr("Scanning for music files");
 
-    M_TODO("FIX THIS FOR QT6/KF6")
+    // M_TODO("FIX THIS FOR QT6/KF6")
     // promise.reportDescription(status_text,
     //                           QPair<QString,QString>(QObject::tr("Root URL"), dir_url.toString()),
     //                           QPair<QString,QString>(QObject::tr("Current file"), QObject::tr("")));

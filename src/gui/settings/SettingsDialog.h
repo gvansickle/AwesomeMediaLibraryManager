@@ -66,6 +66,10 @@ public:
 	SettingsDialog(QWidget *parent, const char* name, KConfigSkeleton *config);
     ~SettingsDialog() override;
 
+// KConfigDialog signals:
+	// void 	settingsChanged (const QString &dialogName)
+	// void 	widgetModified ()
+
 protected Q_SLOTS:
 
     /**

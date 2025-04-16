@@ -209,13 +209,13 @@ void NetworkAwareFileDialog::setOptions(QFileDialog::Options options)
 
 QList<QUrl> NetworkAwareFileDialog::selectedUrls() const
 {
-M_WARNING("TODO");
+// M_WARNING("TODO");
     return m_the_qfiledialog->selectedUrls();
 }
 
 QString NetworkAwareFileDialog::selectedNameFilter() const
 {
-M_MESSAGE("TODO");
+// M_MESSAGE("TODO");
     return m_the_qfiledialog->selectedNameFilter();
 }
 

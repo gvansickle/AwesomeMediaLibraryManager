@@ -109,7 +109,7 @@ QPointer<LibraryModel> LibraryModel::openFile(QUrl open_url, QObject* parent)
     // Create the new LibraryModel.
 	auto lib = QPointer<LibraryModel>(new LibraryModel(parent));
 
-M_MESSAGE("TODO: Find a better way to start async operations and/or connect");
+// M_MESSAGE("TODO: Find a better way to start async operations and/or connect");
     lib->setLibraryRootUrl(open_url);
 
     return lib;
@@ -281,7 +281,7 @@ AMLM_WARNIF_NOT(checkIndex(index, CheckIndexOption::IndexIsValid));
 			}
 			else if(sec_id == SectionID::MIMEType)
 			{
-M_MESSAGE("TODO Probably should be refactored.");
+// M_MESSAGE("TODO Probably should be refactored.");
 //				return item->getFileType();
                 return QVariant::fromValue(item->getMimeType());
 			}
@@ -658,7 +658,7 @@ void LibraryModel::setLibraryRootUrl(const QUrl& url)
 	createCacheFile(url);
 
 	connectSignals();
-M_TODO("SEPARATE SCANNING FROM INIT");
+// M_TODO("SEPARATE SCANNING FROM INIT");
 //	Q_EMIT statusSignal(LibState::ScanningForFiles, 0, 0);
 	Q_EMIT startFileScanSignal(m_library.m_root_url);
 
@@ -702,7 +702,7 @@ void LibraryModel::fromVariant(const QVariant& variant)
 
 	temp_lib.fromVariant(qvar_temp_lib);
 
-#warning "Do we need to delete any old library here?"
+// #warning "Do we need to delete any old library here?"
 	m_library = temp_lib;
 }
 
@@ -720,7 +720,7 @@ Qt::DropActions LibraryModel::supportedDropActions() const
 
 QStringList LibraryModel::mimeTypes() const
 {
-	M_MESSAGE("TODO: Return url type as well?");
+	// M_MESSAGE("TODO: Return url type as well?");
 
 	return g_additional_supported_mimetypes;
 }

@@ -93,7 +93,7 @@ void ThreadsafeTreeModel::clear(bool quit)
 	}
 
 	// One last thing, our hidden root node / header node still has ColumnSpecs.
-#warning "@todo If we do this, the view doesn't have any header columns, so you see nothing."
+// #warning "@todo If we do this, the view doesn't have any header columns, so you see nothing."
 	// m_root_item->clear();
 }
 

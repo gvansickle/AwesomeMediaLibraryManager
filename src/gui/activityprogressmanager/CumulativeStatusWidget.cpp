@@ -44,7 +44,7 @@ QPointer<CumulativeStatusWidget> CumulativeStatusWidget::construct(KJob* job, Ac
 
 	retval->addButton(retval->m_button_show_all_jobs);
 
-M_WARNING("TODO: This should depend on contained jobs count/state");
+// M_WARNING("TODO: This should depend on contained jobs count/state");
 	retval->m_cancel_button->setEnabled(true);
 
 	connect_or_die(retval->m_button_show_all_jobs, &QToolButton::toggled, retval, &CumulativeStatusWidget::SIGNAL_show_hide_subjob_display);
@@ -68,7 +68,7 @@ void CumulativeStatusWidget::slot_number_of_jobs_changed(long long new_num_jobs)
 	// Update the subwidget contents.
     if(new_num_jobs > 0)
     {
-M_WARNING("TODO: Propagate job messages here");
+// M_WARNING("TODO: Propagate job messages here");
         m_job_title_label->setText(tr("Running"));
     }
     else

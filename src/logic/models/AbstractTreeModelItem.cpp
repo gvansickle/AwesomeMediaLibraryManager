@@ -108,7 +108,7 @@ bool AbstractTreeModelItem::selfSoftDelete(Fun& undo, Fun& redo)
 		}
 	}
 	qWr() << "###################### SELFSOFTDELETE()";
-M_WARNING("TODO, NEEDS MUTEX MEMBER");
+// M_WARNING("TODO, NEEDS MUTEX MEMBER");
 //	UPDATE_UNDO_REDO(m_rw_mutex, local_redo, local_undo, undo, redo);
 	return true;
 }
@@ -668,7 +668,7 @@ bool AbstractTreeModelItem::appendChildren(std::vector<std::shared_ptr<AbstractT
 
 		if(!retval)
 		{
-M_TODO("CRASHING HERE");/// @todo Recovery?
+// M_TODO("CRASHING HERE");/// @todo Recovery?
 Q_ASSERT(0);
 			return false;
 		}

@@ -21,11 +21,7 @@
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
       <item row="0" column="0">
-       <widget class="KEditListWidget" name="kcfg_CollectionSourceUrls">
-        <property name="buttons">
-         <set>KEditListWidget::Add|KEditListWidget::Remove</set>
-        </property>
-       </widget>
+       <widget class="KEditListWidget" name="kcfg_CollectionSourceUrls" native="true"/>
       </item>
      </layout>
     </widget>
@@ -36,12 +32,15 @@
       <string>Collection maintenance options</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_3">
-      <item row="0" column="0">
+      <item row="1" column="0">
        <widget class="QCheckBox" name="kcfg_CollectionWatchForChanges">
         <property name="text">
          <string>Watch Collection Source Paths for changes</string>
         </property>
        </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="KUrlRequester" name="kcfg_DatabaseUrl" native="true"/>
       </item>
      </layout>
     </widget>
@@ -53,6 +52,12 @@
    <class>KEditListWidget</class>
    <extends>QWidget</extends>
    <header>keditlistwidget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>KUrlRequester</class>
+   <extends>QWidget</extends>
+   <header>KUrlRequester</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources/>
