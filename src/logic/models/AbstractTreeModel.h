@@ -109,12 +109,10 @@ public:
 	 */
     virtual void clear(bool quit = false);
 
-	/// OLD
 	/**
-	 * Creates the root item of this tree model, then sets the ColumnSpecs which hold the info for the horizontal header.
-	 * @todo setHeaderData() enough?
+	 * Sets the ColumnSpecs which hold the info for the horizontal header.
 	 */
-	virtual bool setColumnSpecs(std::initializer_list<ColumnSpec> column_specs);
+	virtual bool setColumnSpecs(std::vector<ColumnSpec> column_specs);
 
 	// bool hasIndex() is not virtual.
 

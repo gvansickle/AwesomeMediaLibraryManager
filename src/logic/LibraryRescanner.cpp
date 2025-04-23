@@ -262,17 +262,25 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
     Q_CHECK_PTR(tree_model_sptr);
 	// Clear the model, it may already have been populated.
 	tree_model_sptr->clear(false);
+	Q_ASSERT(tree_model_sptr->columnCount(QModelIndex()) == 0);
 	auto num_rows = tree_model_sptr->rowCount(QModelIndex());
+	if (tree_model_sptr->columnCount(QModelIndex()) == 0)
+	{
+		// Set up the columns to defaults.
+		// Have to do this before any children are added.
+		auto col_specs = AMLM::Core::self()->getDefaultColumnSpecs();
+		tree_model_sptr->setColumnSpecs(col_specs);
+	}
 	qDb() << "START rowCount: " << num_rows << "checkConsistency" << tree_model_sptr->checkConsistency();
-    // Set the root URL of the scan results model.
-    tree_model_sptr->setBaseDirectory(dir_url);
+	// Set the root URL of the scan results model.
+	tree_model_sptr->setBaseDirectory(dir_url);
 
 
-	std::shared_ptr<AbstractTreeModelItem> root = tree_model_sptr->getRootItem();
+std::shared_ptr<AbstractTreeModelItem> root = tree_model_sptr->getRootItem();
 
-	connect_or_die(this, &LibraryRescanner::SIGNAL_appendChildToRoot,
-                     tree_model_sptr.get(), &AbstractTreeModel::SLOT_appendChildToRoot);
-	connect_or_die(this, &LibraryRescanner::SIGNAL_appendChild, tree_model_sptr.get(),&AbstractTreeModel::SLOT_appendChild);
+connect_or_die(this, &LibraryRescanner::SIGNAL_appendChildToRoot,
+				tree_model_sptr.get(), &AbstractTreeModel::SLOT_appendChildToRoot);
+connect_or_die(this, &LibraryRescanner::SIGNAL_appendChild, tree_model_sptr.get(), &AbstractTreeModel::SLOT_appendChild);
 
 	streaming_then(dirresults_future, [this, tree_model_sptr, qurl_promise, tree_model_item_promise](QFuture<DirScanResult> sthen_future, int begin, int end) -> Unit {
 		// Start of the dirtrav streaming_then callback.  This should be a non-main thread.
@@ -504,24 +512,24 @@ sw.print_results();
 		m_model_ready_to_save_to_db = false;
 
 		m_timer.lap("Start of SaveDatabase");
-		//				SaveDatabase(tree_model_ptr, database_filename);
-        tree_model_sptr->SaveDatabase(database_filename);
+
+		tree_model_sptr->SaveDatabase(database_filename);
 		m_timer.lap("End of SaveDatabase");
 
 #if 1 /// ScanResultsTreeModel round-trip test.
 
 		/// Try to load it back in and round-trip it.
-		//				std::initializer_list<ColumnSpec> temp_initlist = {ColumnSpec(SectionID(0), "DirProps"), {SectionID(0), "MediaURL"}, {SectionID(0), "SidecarCueURL"}};
+
 		//				std::shared_ptr<ScanResultsTreeModel> load_tree = ScanResultsTreeModel::construct({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
 		std::shared_ptr<ScanResultsTreeModel> load_tree	= ScanResultsTreeModel::create({});//temp_initlist);
 
 		load_tree->LoadDatabase(database_filename);
 		//				load_tree->clear();
 		//				dump_map(load_tree);
-		load_tree->SaveDatabase(QDir::homePath() +"/AMLMDatabaseRT.xml");
+		load_tree->SaveDatabase(QDir::homePath() + "/AMLMDatabaseRT.xml");
 #endif /////
 
-			/// @todo EXPERIMENTAL
+		/// @todo EXPERIMENTAL
 
 		m_timer.lap("dirtrav over partial, starting metadata rescan.");
 

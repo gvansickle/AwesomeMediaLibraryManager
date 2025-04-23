@@ -128,7 +128,7 @@ void AbstractTreeModel::clear(bool quit)
 #endif
 }
 
-bool AbstractTreeModel::setColumnSpecs(std::initializer_list<ColumnSpec> column_specs)
+bool AbstractTreeModel::setColumnSpecs(std::vector<ColumnSpec> column_specs)
 {
 	// std::unique_lock write_lock(m_rw_mutex);
 

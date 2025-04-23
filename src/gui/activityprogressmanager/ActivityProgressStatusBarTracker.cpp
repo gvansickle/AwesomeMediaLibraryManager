@@ -567,7 +567,7 @@ void ActivityProgressStatusBarTracker::INTERNAL_unregisterJob(KJob *kjob)
 {
     QPointer<KJob> kjob_qp(kjob);
 
-M_WARNING("Could KJob* already be finished and autoDeleted here?");
+// M_WARNING("Could KJob* already be finished and autoDeleted here?");
     Q_CHECK_PTR(kjob_qp);
 
     qIno() << "UNREGISTERING JOB:" << kjob_qp.data();

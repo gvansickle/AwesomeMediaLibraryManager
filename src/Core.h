@@ -74,7 +74,7 @@ public:
 	std::shared_ptr<ScanResultsTreeModel> getScanResultsTreeModel();
 	std::shared_ptr<ScanResultsTreeModel> swapScanResultsTreeModel(const std::shared_ptr<ScanResultsTreeModel>& new_model);
 	/// Really don't like this here.
-	std::initializer_list<ColumnSpec> getDefaultColumnSpecs();
+	std::vector<ColumnSpec> getDefaultColumnSpecs() const;
 
 	std::shared_ptr<TreeModel> getEditableTreeModel();
 
