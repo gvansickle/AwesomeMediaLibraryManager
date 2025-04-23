@@ -20,11 +20,13 @@
 #ifndef SCANRESULTSTREEMODEL_H
 #define SCANRESULTSTREEMODEL_H
 
+/// @file
+
 // Std C++
 #include <shared_mutex>
 #include <initializer_list>
 
-// Qt5
+// Qt
 #include <QUrl>
 #include <QString>
 
@@ -46,7 +48,7 @@ class AbstractTreeModelHeaderItem;
  *
  * It's essentially a URL to an mp3, ogg, flac, or other audio file which:
  * - Contains 1 or more tracks.
- * - May have a sidecar or embedded cue sheet.
+ * - May have a sidecar and/or embedded cue sheet.
  */
 class ScanResultsTreeModel : public ThreadsafeTreeModel, public virtual ISerializable, public enable_shared_from_this_virtual<ScanResultsTreeModel>
 {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2019, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -20,6 +20,7 @@
 /**
  * @file Core.cpp
  */
+
 #include <Core.h>
 
 // Std C++
@@ -69,16 +70,11 @@ void Core::build()
 	/// - returns.
 
 	// Create the single (at this point) ScanResultsTreeModel.
+	// This will be viewed by the ExperimentalKDE1 View.
 	/// @note In KDenLive, this is the same, no parent QObject given to ProjectItemModel::construct();
-/// @todo Improve ColumnSpecs, not sure I like how we do this and then need to erase it on a LoadModel().
-	std::initializer_list<ColumnSpec> column_specs = {ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}};
-//	m_self->m_srtm_instance = std::make_shared</*ScanResultsTreeModel*/AbstractTreeModel>(column_specs, nullptr);
-//	m_self->m_srtm_instance = std::make_shared<ScanResultsTreeModel>();
-//	m_self->m_srtm_instance = ScanResultsTreeModel::construct({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
-	m_self->m_srtm_instance = ScanResultsTreeModel::create({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
+	m_self->m_srtm_instance = ScanResultsTreeModel::create({});
 	// Create and set the root item / headers
-//	m_self->m_srtm_instance->setColumnSpecs({ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}});
-	// Let's add two more columns
+	/// @todo Exp: Let's add two more columns.
 	m_self->m_srtm_instance->insertColumns(3, 2);
 
 
@@ -102,12 +98,11 @@ void Core::build()
 	QVector<QVariant> fields2({QString("First"), QString("Second")});
 	auto new_unparented_child = std::make_shared<TreeItem>(fields2);
 
-
-	/// std::shared_ptr<AbstractTreeModel> m_atm_instance;
-//	m_self->m_atm_instance = std::make_shared<AbstractTreeModel>(column_specs);
+	/// @todo Improve ColumnSpecs, not sure I like how we do this and then need to erase it on a LoadModel().
+	std::initializer_list<ColumnSpec> column_specs = {ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}};
 	m_self->m_atm_instance = AbstractTreeModel::create(column_specs);
 
-//	new_child->setData(0, fields[0]);
+	//	new_child->setData(0, fields[0]);
 //	new_child->setData(1, fields[1]);
 //	TreeItem* new_item = new TreeItem(fields, root_item);
 //	root_item->insertChildren();
@@ -153,9 +148,9 @@ std::shared_ptr<ScanResultsTreeModel> Core::swapScanResultsTreeModel(const std::
 	return old_model;
 }
 
-std::initializer_list<ColumnSpec> Core::getDefaultColumnSpecs()
+std::vector<ColumnSpec> Core::getDefaultColumnSpecs() const
 {
-	std::initializer_list<ColumnSpec> column_specs = {ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}};
+	std::vector<ColumnSpec> column_specs = {ColumnSpec(SectionID(0), "DirProps"), {SectionID{0}, "MediaURL"}, {SectionID{0}, "SidecarCueURL"}};
 	return column_specs;
 };
 

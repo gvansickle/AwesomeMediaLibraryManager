@@ -17,11 +17,12 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef SRC_LOGIC_MODELS_ABSTRACTTREEMODELHEADERITEM_H_
+#define SRC_LOGIC_MODELS_ABSTRACTTREEMODELHEADERITEM_H_
+
 /**
  * @file AbstractTreeModelHeaderItem.h
  */
-#ifndef SRC_LOGIC_MODELS_ABSTRACTTREEMODELHEADERITEM_H_
-#define SRC_LOGIC_MODELS_ABSTRACTTREEMODELHEADERITEM_H_
 
 // Std C++
 #include <vector>
@@ -77,7 +78,7 @@ public:
 	  * Replaces any existing column_specs with the given @a column_specs.
 	  * @warning This must be called before any child items are added to the model.
 	  */
-	virtual bool setColumnSpecs(std::initializer_list<ColumnSpec> column_specs);
+	virtual bool setColumnSpecs(std::vector<ColumnSpec> column_specs);
 
 	QVariant data(int column, int role = Qt::DisplayRole) const override;
 

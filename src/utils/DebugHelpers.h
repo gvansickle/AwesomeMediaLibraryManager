@@ -307,6 +307,7 @@ _Pragma("GCC diagnostic push")
  * Portable compile-time message and warning output.
  * Use: M_WARNING("My message")
  */
+// NOLINTBEGIN
 #define FILE_LINE_LINK __FILE__ "(" STRINGISE(__LINE__) "): "
 #if defined(_MSC_VER)
 #   define M_WARNING(exp) __pragma(message(FILE_LINE_LINK "warning C2660: " exp))
@@ -321,7 +322,7 @@ _Pragma("GCC diagnostic push")
 #   define M_WARNING(exp) DO_PRAGMA(message FILE_LINE_LINK "warning: " exp) // NOLINT
 #endif
 _Pragma("GCC diagnostic pop")
-
+// NOLINTEND
 
 template <class ThisType>
 bool is_managed_by_shared(ThisType* self)
