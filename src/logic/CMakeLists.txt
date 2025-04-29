@@ -121,6 +121,7 @@ target_link_libraries(logic
 		proxymodels
 		serialization
 		utils
+		Taglib::Taglib
 		#tree_model
 	PRIVATE
 		gui

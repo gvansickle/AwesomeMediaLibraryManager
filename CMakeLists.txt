@@ -380,7 +380,10 @@ find_package(Qt6 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
 	Concurrent
 	Test # For Q...ModelTester.
 	)
-set(QT5_LINK_LIB_TARGETS Qt6::Core Qt6::Gui Qt6::Widgets
+set(QT5_LINK_LIB_TARGETS
+	Qt6::Core
+	Qt6::Gui
+	Qt6::Widgets
 	Qt6::Multimedia
 #	Qt6::XmlPatterns
 	Qt6::Concurrent
@@ -724,8 +727,11 @@ print_varlist(
 	KDE_INSTALL_BINDIR
 	KDE_INSTALL_DATADIR
 	KDE_INSTALL_ICONDIR
+	KDE_INSTALL_TARGETS_DEFAULT_ARGS
+	KDE_INSTALL_KXMLGUIDIR
+	KDE_INSTALL_KCFGDIR
 	META_FILES_TO_INCLUDE
-	KDE_INSTALL_TARGETS_DEFAULT_ARGS)
+)
 
 #message_cpack_summary()
 

@@ -3,6 +3,9 @@
 # LGPL3+
 #
 
+
+if(FALSE)
+
 #cmake_minimum_required(VERSION 2.8)
 cmake_minimum_required(VERSION 3.14.0)
 
@@ -484,4 +487,4 @@ target_link_libraries(tree_model
 # # for executing it from a quickfix environment
 # add_custom_target(check COMMAND ut)
 
-
+endif(FALSE)

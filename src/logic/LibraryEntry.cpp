@@ -23,14 +23,14 @@
 // Std C++
 #include <string>
 
-// Qt5
+// Qt
 #include <QDataStream>
 #include <QUrlQuery>
 
 // TagLib
-#include <tag.h>
-#include <fileref.h>
-#include <tpropertymap.h>
+#include <taglib/tag.h>
+#include <taglib/fileref.h>
+#include <taglib/tpropertymap.h>
 
 // Ours
 #include "AMLMApp.h"

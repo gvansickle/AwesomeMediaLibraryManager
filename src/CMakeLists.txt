@@ -36,8 +36,8 @@ add_subdirectory(third_party)
 set(USE_BUNDLED_LIBCUE TRUE)
 
 
-set(TAGLIB_MIN_VERSION "1.11.0")
-find_package(Taglib)
+set(TAGLIB_MIN_VERSION "1.13.0")
+find_package(Taglib ${TAGLIB_MIN_VERSION} REQUIRED)
 set_package_properties(Taglib PROPERTIES TYPE REQUIRED PURPOSE "Required for reading media file metadata.")
 if(TAGLIB_FOUND)
 	add_library(taglib INTERFACE)
@@ -407,6 +407,8 @@ install(PROGRAMS io.github.gvansickle.awesomemedialibrarymanager.desktop DESTINA
 # AppStream component metadata files.
 install(FILES io.github.gvansickle.awesomemedialibrarymanager.appdata.xml DESTINATION ${KDE_INSTALL_METAINFODIR}
 		COMPONENT coreapp)
+# The KXmlGui file.
+install(FILES AwesomeMediaLibraryManagerui.rc DESTINATION ${KDE_INSTALL_KXMLGUIDIR})
 # The KConfig file.
 install(FILES AwesomeMediaLibraryManagerSettings.kcfg DESTINATION ${KDE_INSTALL_KCFGDIR}
 	    COMPONENT coreapp)

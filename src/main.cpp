@@ -169,7 +169,7 @@ int main(int argc, char *argv[])
 	// Integrate KAboutData with commandline argument handling
 	QCommandLineParser parser;
 	aboutData.setupCommandLine(&parser);
-	// setup of app specific commandline args
+	// setup of app-specific commandline args
 	parser.setApplicationDescription(aboutData.shortDescription());
 	parser.addVersionOption();
 	parser.addHelpOption();
