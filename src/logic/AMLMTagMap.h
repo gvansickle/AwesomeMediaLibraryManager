@@ -28,7 +28,7 @@
 #include <string>
 #include <vector>
 
-// Qt5
+// Qt
 #include <QMetaType>
 #include <QVariant>
 #include <QMultiMap>
@@ -52,7 +52,8 @@ Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(std::multimap);
 class AMLMTagMap final : public virtual ISerializable
 {
 
-	/// Member Types
+	/// @name Member Types
+    ///@{
 private:
 	using Key = std::string;
 	using T = std::string;
@@ -60,10 +61,11 @@ private:
 public:
 	using underlying_container_type = std::multimap<Key, T>;
 	using key_type = Key;
-	using mapped_type = T;
+	using mapped_type = std::string;
 	using value_type = std::pair<const Key, T>;
 	using const_iterator = typename underlying_container_type::const_iterator;
 	using iterator = typename underlying_container_type::iterator;
+    ///@}
 
 	/// Member functions.
 public:

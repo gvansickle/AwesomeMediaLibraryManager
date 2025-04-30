@@ -17,6 +17,8 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/// @file
+
 #include <config.h>
 
 #include "TrackMetadata.h"
@@ -32,7 +34,7 @@ extern "C" {
 #include <libcue/cdtext.h>
 } // END extern C
 
-/// Ours, Qt/KF-related
+// Ours, Qt/KF-related
 #include <utils/TheSimplestThings.h>
 #include <utils/RegisterQtMetatypes.h>
 

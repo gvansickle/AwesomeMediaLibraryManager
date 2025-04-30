@@ -17,12 +17,15 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/// @file
+
 #include <config.h>
 
 #include "CueSheet.h"
 
 // Std C++
 #include <regex>
+#include <string>
 #include <string_view>
 
 // Qt
@@ -39,11 +42,11 @@ extern "C" {
 #include <libcue/cd.h>
 }
 
-/// Ours, Qt5/KF5-related
+// Ours, Qt/KF-related
 #include <utils/TheSimplestThings.h>
 #include <utils/RegisterQtMetatypes.h>
 
-/// Ours
+// Ours
 #include "TrackMetadata.h"  ///< Per-track cue sheet info
 #include <logic/serialization/SerializationHelpers.h>
 
@@ -99,16 +102,13 @@ FILE "Squeeze - Greatest Hits.flac" WAVE
  *
  */
 
+/// Mutex for serializing access to libcue, which is not threadsafe.
 std::mutex CueSheet::m_libcue_mutex;
 
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering CueSheet";
     qRegisterMetaType<CueSheet>();
-	QMetaType::registerConverter<std::__cxx11::basic_string<char>, QString>([](const std::__cxx11::basic_string<char>& str){ return QString::fromUtf8(str); });
-	QMetaType::registerConverter<QString, std::__cxx11::basic_string<char>>([](const QString& str){
-		return str.toStdString();
-		});
-	});
+});
 
 using strviw_type = QLatin1String;
 
@@ -130,7 +130,7 @@ using strviw_type = QLatin1String;
 	X(XMLTAG_TRACK_METADATA, m_tracks)
 
 /// Strings to use for the tags.
-#define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
+#define X(field_tag, member_field) static constexpr strviw_type field_tag ( # member_field );
 	M_DATASTREAM_FIELDS_DISC(X);
 	M_DATASTREAM_FIELDS_SPECIAL_HANDLING(X);
 #undef X

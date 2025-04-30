@@ -104,6 +104,29 @@ void map_insert_or_die(MapType& map, const StringType& key, const ValueType& mem
     map.insert(key, qvalue);
 }
 
+/**
+ * Specialization/overload which inserts a std::string into the map, but as a QString.
+ * This is necessary because std::string, which is a typedef, turns into a std::*basic_string<char>
+ * when sent through a QVariant.  Worse, the type that std::string aliases varies from compiler
+ * to compiler.
+ * @tparam MapType
+ * @tparam StringType
+ * @param map
+ * @param key
+ * @param member
+ */
+template <class MapType, class StringType>
+void map_insert_or_die(MapType& map, const StringType& key, const std::string& member)
+{
+	QString member_val = QString::fromStdString(member);
+	QVariant qvalue = QVariant::fromValue(member_val);
+	if (!qvalue.isValid())
+	{
+		throw SerializationException("Failed to convert member to QVariant.");
+	}
+	map.insert(key, qvalue);
+}
+
 template <class MapType, class StringType>
 void map_insert_or_die(MapType& map, const StringType& key, const std::nullptr_t member)
 {

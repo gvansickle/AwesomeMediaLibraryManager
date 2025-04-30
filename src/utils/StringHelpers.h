@@ -56,7 +56,7 @@ enum /*QLocale::*/DataSizeFormats
 };
 #endif
 
-// KF5
+// KF
 #if HAVE_KF501 || HAVE_KF6
 #   ifndef HAVE_QLOCALE_FORMATTEDDATASIZE
     /// Needed to format numbers into "12.3 GB" etc. until we can rely on Qt 5.10, which supports
