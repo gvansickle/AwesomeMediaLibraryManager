@@ -408,7 +408,10 @@ install(PROGRAMS io.github.gvansickle.awesomemedialibrarymanager.desktop DESTINA
 install(FILES io.github.gvansickle.awesomemedialibrarymanager.appdata.xml DESTINATION ${KDE_INSTALL_METAINFODIR}
 		COMPONENT coreapp)
 # The KXmlGui file.
-install(FILES AwesomeMediaLibraryManagerui.rc DESTINATION ${KDE_INSTALL_KXMLGUIDIR})
+install(FILES AwesomeMediaLibraryManagerui.rc
+		DESTINATION ${KDE_INSTALL_KXMLGUIDIR}
+		COMPONENT coreapp
+)
 # The KConfig file.
 install(FILES AwesomeMediaLibraryManagerSettings.kcfg DESTINATION ${KDE_INSTALL_KCFGDIR}
 	    COMPONENT coreapp)
