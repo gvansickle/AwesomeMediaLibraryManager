@@ -31,6 +31,7 @@
 #include <QCommandLineParser>
 #include <QImageReader>
 #include <QDebug>
+#include <QDirListing>
 
 // KF
 #include <KAboutData>
@@ -56,7 +57,16 @@
 M_MESSAGE("BUILDING WITH CMAKE_C_COMPILER_ID: " CMAKE_C_COMPILER_ID " = " CMAKE_C_COMPILER);
 M_MESSAGE("BUILDING WITH CMAKE_CXX_COMPILER_ID: " CMAKE_CXX_COMPILER_ID " = " CMAKE_CXX_COMPILER);
 
-
+static void LL(const QString& root)
+{
+	for (const auto& dir_entry : QDirListing(":/", QDirListing::IteratorFlag::Recursive))
+	{
+		if (!dir_entry.filePath().contains("icon"))
+		{
+			qIn() << dir_entry.filePath();
+		}
+	}
+}
 
 /**
  * Here's where the magic happens.
@@ -64,6 +74,7 @@ M_MESSAGE("BUILDING WITH CMAKE_CXX_COMPILER_ID: " CMAKE_CXX_COMPILER_ID " = " CM
 int main(int argc, char *argv[])
 {
 	// Make sure our compiled-in static lib resources are linked.
+	// Necessary because the resource files are compiled into a static library.
 	Q_INIT_RESOURCE(xquery_files);
 
 	QThread::currentThread()->setObjectName("MAIN");
@@ -90,6 +101,9 @@ int main(int argc, char *argv[])
 	qDebug() << "TEST: Debug";
 	qWarning() << "TEST: Warning";
 	qCritical() << "TEST: Critical";
+
+	// List our built-in resources.
+	LL(":/");
 
 	// Log our startup environment.
 	logging.dumpEnvVars();
@@ -228,7 +242,7 @@ int main(int argc, char *argv[])
 	AMLM::Core::clean();
 
 	/*
-	 * Look at the retval and see if we should restart, etc.
+	 * @todo Look at the retval and see if we should restart, etc.
 	 */
 
 	return result;

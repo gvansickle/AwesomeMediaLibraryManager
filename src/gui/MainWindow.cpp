@@ -128,6 +128,7 @@
 /// @note EXPERIMENTAL
 #include <gui/widgets/ExperimentalKDEView1.h>
 #include <Core.h>
+#include <ranges>
 
 
 //
@@ -346,9 +347,10 @@ void MainWindow::onStartup()
     //   in a context menu and when opening the KEditToolBar dialog.
     //   Without it, we seem to lose no functionality, but the crashes are gone.
 // M_WARNING("Crashing here on Windows");
-    setupGUI(KXmlGuiWindow::/*Keys | */StatusBar | /*ToolBar |*/ Save);
+    setupGUI(KXmlGuiWindow:: Create | Keys | StatusBar | ToolBar | Save,
+    	":/kxmlgui6/AwesomeMediaLibraryManager/AwesomeMediaLibraryManagerui.rc");
 
-    post_setupGUI_init();
+	post_setupGUI_init();
 }
 
 /**
@@ -1175,7 +1177,7 @@ bool MainWindow::maybeSaveOnClose()
 
     auto swl = m_mdi_area->subWindowList();
 
-	for(const auto& child : swl)
+	for(const auto& child : std::as_const(swl))
 	{
 		MDIPlaylistView* playlist_ptr= qobject_cast<MDIPlaylistView*>(child->widget());
 		if(playlist_ptr == nullptr)

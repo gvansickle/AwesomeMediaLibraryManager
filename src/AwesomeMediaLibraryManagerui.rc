@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<gui name="AwesomeMediaLibraryManager"
-     version="2"
+<gui version="4" name="AwesomeMediaLibraryManager"
      xmlns="https://www.kde.org/standards/kxmlgui/1.0"
      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
      xsi:schemaLocation="https://www.kde.org/standards/kxmlgui/1.0
-                         https://www.kde.org/standards/kxmlgui/1.0/kxmlgui.xsd">
+						 https://www.kde.org/standards/kxmlgui/1.0/kxmlgui.xsd">
 
 	<MenuBar>
 		<Menu name="file">

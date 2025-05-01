@@ -411,8 +411,10 @@ set(KF5_LINK_LIB_TARGETS "")
 ###       We'll require KF5Config separately to avoid any ambiguity.
 find_package(KF6Config ${KF5_MIN_VERSION} REQUIRED)
 find_package(KF6 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
+	Config
 	Archive ### @todo TRYING THIS IN CASE IconThemes needs it to work properly, otherwise REMOVE
 	WidgetsAddons
+	# Completion
 	CoreAddons ## USE_KF5_COREADDONS, git clone git://anongit.kde.org/kcoreaddons.git
 	GuiAddons
 	ConfigWidgets ## Not in Krita from this until WindowSystem.

@@ -1,6 +1,5 @@
 <RCC>
-    <qresource prefix="/kxmlgui6">
+    <qresource prefix="/kxmlgui6/AwesomeMediaLibraryManager">
         <file>AwesomeMediaLibraryManagerui.rc</file>
     </qresource>
-    <qresource prefix="/"/>
 </RCC>
