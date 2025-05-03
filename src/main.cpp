@@ -59,7 +59,7 @@ M_MESSAGE("BUILDING WITH CMAKE_CXX_COMPILER_ID: " CMAKE_CXX_COMPILER_ID " = " CM
 
 static void LL(const QString& root)
 {
-	for (const auto& dir_entry : QDirListing(":/", QDirListing::IteratorFlag::Recursive))
+    for (const auto& dir_entry : QDirListing(root, QDirListing::IteratorFlag::Recursive))
 	{
 		if (!dir_entry.filePath().contains("icon"))
 		{
@@ -203,7 +203,7 @@ int main(int argc, char *argv[])
 	// Set the application Icon.
 	///@todo Get an actual icon.
     QIcon appIcon; //= QIcon::fromTheme(QStringLiteral("preferences-desktop-sound"), QApplication::windowIcon());
-    appIcon.addFile(":/Icons/128-preferences-desktop-sound.png");
+    appIcon.addFile(":/icons/128-preferences-desktop-sound.png");
     // "KAboutData::setApplicationData() no longer sets the app window icon. For shells which do not fetch the icon name via
     // the desktop file [i.e. non-plasma], make sure to call QApplication::setWindowIcon(QIcon::fromTheme(QStringLiteral("foo")));
     // (in GUI apps)."

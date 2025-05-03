@@ -26,7 +26,7 @@
 #include <algorithm>
 #include <type_traits>
 
-// Qt5
+// Qt
 #include <QObject>
 #include <QApplication>
 #include <QMainWindow>
@@ -58,7 +58,7 @@
 #include <QTableView>
 #include <QProgressDialog>
 
-// KF5
+// KF
 #include <KMainWindow>
 #include <KHelpMenu>
 #include <KToolBar>
@@ -75,6 +75,7 @@
 #include <KJobWidgets>
 #include <KF6/KIconWidgets/KIconButton>
 #include <KF6/KXmlGui/KEditToolBar>
+#include <KXMLGUIFactory>
 
 // Ours
 #include "AMLMApp.h"
@@ -167,7 +168,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : BASE_CLASS(pare
     ///       create some docks
     ///       create more actions
     ///       create some menus
-    ///       setupGUI()
+    ///       setupGUI(Toolbar|StatusBar|Save|Create)
     ///       create more menus
     ///     ^^->show();
     ///   app.exec()
@@ -347,8 +348,22 @@ void MainWindow::onStartup()
     //   in a context menu and when opening the KEditToolBar dialog.
     //   Without it, we seem to lose no functionality, but the crashes are gone.
 // M_WARNING("Crashing here on Windows");
+#if 1 // debug, no KXmlGui.
     setupGUI(KXmlGuiWindow:: Create | Keys | StatusBar | ToolBar | Save,
     	":/kxmlgui6/AwesomeMediaLibraryManager/AwesomeMediaLibraryManagerui.rc");
+#elif 0
+	setupGUI(KXmlGuiWindow::/*Create |*/ Keys | StatusBar | /*ToolBar |*/ Save,
+		":/kxmlgui6/AwesomeMediaLibraryManager/AwesomeMediaLibraryManagerui.rc");
+#else
+	/// @sa KXmlGuiWindow::setupGui().
+	createStandardStatusBarAction();
+	setStandardToolBarMenuEnabled(true);
+	KStandardActions::configureToolbars(this, &KXmlGuiWindow::configureToolbars, actionCollection());
+#endif
+	// Debug check
+	qDebug() << "Toolbar valid:" << toolBar();
+	qDebug() << "Configure action exists:" << actionCollection()->action("options_configure_toolbars");
+	qDebug() << "All actions:" << actionCollection()->actions();
 
 	post_setupGUI_init();
 }
@@ -494,7 +509,7 @@ void MainWindow::createActions()
 	connect_trig(m_savePlaylistAct, this, &MainWindow::savePlaylistAs);
 	addAction("save_playlist_as", m_savePlaylistAct);
 
-#if HAVE_KF501 || HAVE_KF6
+#if !(HAVE_KF501 || HAVE_KF6)
 	m_exitAction = make_action(QIcon::fromTheme("application-exit"), "E&xit", this,
                               QKeySequence::Quit,
                               "Exit application");
@@ -589,7 +604,7 @@ void MainWindow::createActionsEdit(KActionCollection *ac)
 {
 	// The cut/copy/paste action "sub-bundle".
     m_ab_cut_copy_paste_actions = new ActionBundle(ac);
-#if HAVE_KF501 || HAVE_KF6
+#if !(HAVE_KF501 || HAVE_KF6)
 	// Specifying the ActionBundle as each QAction's parent automatically adds it to the bundle.
 	m_act_cut = make_action(Theme::iconFromTheme("edit-cut"), tr("Cu&t"), m_ab_cut_copy_paste_actions, QKeySequence::Cut,
                                                     tr("Cut the current selection to the clipboard"));
@@ -631,7 +646,7 @@ void MainWindow::createActionsEdit(KActionCollection *ac)
 	m_act_select_all = make_action(Theme::iconFromTheme("edit-select-all"), tr("Select &All"), m_ab_extended_edit_actions,
                                                                QKeySequence::SelectAll, tr("Select all items in the current list"));
 	connect_trig(m_act_select_all, this, &MainWindow::onSelectAll);
-	addAction("select_all", m_act_select_all);
+	addAction("edit_select_all", m_act_select_all);
 
     // Find
 //    m_ab_find_actions = new ActionBundle(ac);
@@ -646,7 +661,7 @@ void MainWindow::createActionsView(KActionCollection *ac)
 
     m_ab_docks = new ActionBundle(ac);
 
-#if HAVE_KF501 || HAVE_KF6
+#if !(HAVE_KF501 || HAVE_KF6)
 	m_act_lock_layout = make_action(Theme::iconFromTheme("emblem-locked"), tr("Lock layout"), this); // There's also an "emblem-unlocked"
 	m_act_reset_layout = make_action(Theme::iconFromTheme("view-multiple-objects"), tr("Reset layout"), this);
 #else
@@ -744,14 +759,34 @@ void MainWindow::createActionsHelp(KActionCollection* ac)
  */
 void MainWindow::addViewMenuActions()
 {
-// M_WARNING("TODO")
+	unplugActionList("lock_layout");
 
-	m_act_lock_layout->setChecked(AMLMSettings::layoutIsLocked());
+	auto* menu = guiFactory()->container("view", this);
+	if (menu == nullptr)
+	{
+		abort();
+	}
+
+	auto* qmenu = qobject_cast<QMenu*>(menu);
+	if (qmenu == nullptr)
+	{
+		abort();
+	}
+
+	// qmenu->addAction("Custom Action");
+
+	QList<QAction*> view_actions;
+	// m_act_lock_layout->setChecked(AMLMSettings::layoutIsLocked());
 //	connect(m_act_lock_layout, &QAction::toggled, this, &MainWindow::setLayoutLocked);
-    m_menu_view->addAction(m_act_lock_layout);
+    // m_menu_view->addAction(m_act_lock_layout);
+	view_actions.append(m_act_lock_layout);
 
-    // List dock widgets.
-    m_menu_view->addSection(tr("Docks"));
+	// List dock widgets.
+
+	// QMenu dummy_menu;
+	auto docks_section = qmenu->addSection(tr("Docks"));
+	view_actions.append(docks_section);
+
     QList<QDockWidget*> dockwidgets = findChildren<QDockWidget*>();
     qDb() << "Docks:" << dockwidgets;
     for(auto dock : std::as_const(dockwidgets))
@@ -765,10 +800,13 @@ void MainWindow::addViewMenuActions()
             }
             else
             {
-                m_menu_view->addAction(dock->toggleViewAction());
+                // m_menu_view->addAction(dock->toggleViewAction());
+            	view_actions.append(dock->toggleViewAction());
             }
         }
     }
+
+	plugActionList("lock_layout", view_actions);
 
 	// List toolbars.
 // M_WARNING("/// @todo This doesn't work for unknown reasons.");
@@ -783,16 +821,25 @@ void MainWindow::addViewMenuActions()
 //        qWr() << "NULL toolBarMenuAction";
 //    }
 
-    m_menu_view->addSection(tr("Toolbars"));
+	view_actions.clear();
+
+	qmenu->clear();
+	auto toolbar_section = qmenu->addSection(tr("Toolbars"));
+	view_actions.append(toolbar_section);
+
+    // m_menu_view->addSection(tr("Toolbars"));
     auto tbs = toolBars();
     for(auto tb : std::as_const(tbs))
     {
         auto action = tb->toggleViewAction();
-        m_menu_view->addAction(action);
+    	view_actions.append(action);
+        // m_menu_view->addAction(action);
     }
 
-	// Reset layout.
+	unplugActionList("toolbar_list");
+	plugActionList("toolbar_list", view_actions);
 
+	// Reset layout.
 }
 
 void MainWindow::createMenus()

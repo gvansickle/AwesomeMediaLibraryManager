@@ -22,7 +22,7 @@
 
 #include <config.h>
 
-/// Std C++
+// Std C++
 
 #include <vector>
 #include <utility> // For std::pair<>
@@ -44,13 +44,11 @@ class QStandardItemModel;
 #include <KMainWindow>
 #include <KXmlGuiWindow>
 
-// Ours
-#include <gui/widgets/CollectionStatsWidget.h>
-
 class KJob;
+
 namespace KIO
 {
-    class Job;
+	class Job;
 } // namespace KIO
 
 class KStatusBarJobTracker;
@@ -70,8 +68,8 @@ using ToolBarClass = QToolBar;
 
 #endif
 
-/// Ours
-
+// Ours
+#include <gui/widgets/CollectionStatsWidget.h>
 #include <logic/MP2.h>
 #include "mdi/MDIModelViewPair.h"
 
