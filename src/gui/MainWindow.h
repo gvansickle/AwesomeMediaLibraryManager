@@ -42,7 +42,6 @@ class QStandardItemModel;
 // KF
 #if HAVE_KF6 || HAVE_KF501
 #include <KMainWindow>
-#include <KXmlGuiWindow>
 
 class KJob;
 
@@ -51,6 +50,7 @@ namespace KIO
 	class Job;
 } // namespace KIO
 
+class KActionCollection;
 class KStatusBarJobTracker;
 class KToolBar;
 using ToolBarClass = KToolBar;
@@ -99,11 +99,11 @@ class LibraryEntryMimeData;
  *
  * @note KdenLive inherits from KXmlGuiWindow here.  KDevelop inherits from Sublime::MainWindow, which inherits from ???.
  */
-class MainWindow: public KXmlGuiWindow ///KMainWindow
+class MainWindow: public KMainWindow
 {
 	Q_OBJECT
 
-	using BASE_CLASS = KXmlGuiWindow;
+	using BASE_CLASS = KMainWindow;
 
 Q_SIGNALS:
 	/**
@@ -125,6 +125,12 @@ public:
 	 * Get a pointer to the MainWindow singleton.
 	 */
 	static QPointer<MainWindow> instance();
+
+	virtual KActionCollection* actionCollection();
+
+    void createStandardStatusBarAction();
+
+	void setStandardToolBarMenuEnabled(bool showToolBarMenu);
 
 	/// Init function to offload all the init which used to be in the constructor.
 	void init();
@@ -449,8 +455,8 @@ private:
 	QAction *m_act_lock_layout;
 	QAction *m_act_reset_layout;
 	KToggleAction* m_act_ktog_show_menu_bar;
-	KToggleToolBarAction* m_act_ktog_show_tool_bar;
-	KToggleAction* m_act_ktog_show_status_bar;
+	KToggleToolBarAction* m_act_ktog_show_tool_bar {nullptr};
+	KToggleAction* m_act_ktog_show_status_bar {nullptr};
 	ActionBundle* m_ab_docks;
 	QActionGroup* m_actgroup_styles;
 	/// @}
@@ -523,6 +529,8 @@ private:
 
     /// The MainWindow singleton.
     static QPointer<MainWindow> m_instance;
+
+    KActionCollection* m_actionCollection {nullptr};
 
 #if HAVE_KF501 || HAVE_KF6
     /**
