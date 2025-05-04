@@ -333,10 +333,10 @@ void MainWindow::init()
 
 void MainWindow::post_setupGUI_init()
 {
-    // KF5: Activate Autosave of toolbar/menubar/statusbar/window layout settings.
+    // KF: Activate Autosave of toolbar/menubar/statusbar/window layout settings.
     // "Make sure you call this after all your *bars have been created."
-    /// @note this is done by setupGUI().
-    ///setAutoSaveSettings();
+    // @note In KXmlGuiWindow this is done by setupGUI().
+    setAutoSaveSettings();
 
     // Post setupGUI(), we can now add the status/tool/dock actions.
     addViewMenuActions();

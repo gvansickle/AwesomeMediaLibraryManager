@@ -94,10 +94,8 @@ class LibraryEntryMimeData;
 
 /**
  * Awesome Media Library Manager's MainWindow class.
- * @note I suspect deriving from KXmlGuiWindow instead of KMainWindow, when I'm not using XML for the GUI,
- *       is going to bite me at some point (EDIT: == continuously).  But this gives me an actionCollection().  So there's that.
- *
- * @note KdenLive inherits from KXmlGuiWindow here.  KDevelop inherits from Sublime::MainWindow, which inherits from ???.
+ * @note KdenLive inherits from KXmlGuiWindow here, as do most KDE programs.  I tried for too long to use it here, and
+ * finally came to the conclusion that it's simply not worth the hassle.
  */
 class MainWindow: public KMainWindow
 {
@@ -512,11 +510,11 @@ private:
 	QMenu* m_menu_help;
 
     /// Toolbars
-    ToolBarClass* m_fileToolBar;
-	ToolBarClass* m_toolbar_edit;
-	ToolBarClass* m_settingsToolBar;
-	ToolBarClass* m_controlsToolbar;
-	ToolBarClass* m_filterToolbar;
+    ToolBarClass* m_fileToolBar {nullptr};
+	ToolBarClass* m_toolbar_edit {nullptr};
+	ToolBarClass* m_settingsToolBar {nullptr};
+	ToolBarClass* m_controlsToolbar {nullptr};
+	ToolBarClass* m_filterToolbar {nullptr};
 
 public:
     /// Docks
