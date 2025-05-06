@@ -17,7 +17,7 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// Qt5
+// Qt
 #include <QApplication>
 #include <QLoggingCategory>
 #include <QTimer>
@@ -92,7 +92,7 @@ int google_test_main(int argc, char *argv[])
 ///
 /// main() for Google Test Framework tests.
 ///
-/// @note main() mods to support Qt5 threading etc. testing per Stack Overflow: https://stackoverflow.com/a/33829950
+/// @note main() mods to support Qt threading etc. testing per Stack Overflow: https://stackoverflow.com/a/33829950
 ///
 int main(int argc, char *argv[])
 {
@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
                               "%{if-fatal}%{backtrace}%{endif}");
 
 	//
-    // Create the Qt5/KF5 app.
+    // Create the Qt/KF app.
     // @note Must be the first QObject created and the last QObject deleted.
 	//
     AMLMApp app(argc, argv);

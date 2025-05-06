@@ -25,7 +25,7 @@
 
 #include "ManagedExtFutureWatcher_impl.h"
 
-// Qt5
+// Qt
 #include <QThread>
 
 // Ours

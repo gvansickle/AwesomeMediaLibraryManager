@@ -22,7 +22,7 @@
 
 #include <config.h>
 
-// Qt5
+// Qt
 #include <QMutex>
 #include <QObject>
 

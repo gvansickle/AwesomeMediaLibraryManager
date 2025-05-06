@@ -50,8 +50,8 @@ target_sources(serialization
 
 target_link_libraries(serialization
 	PUBLIC
-		${QT5_LINK_LIB_TARGETS}
-		${KF5_LINK_LIB_TARGETS}
+		${QT_LINK_LIB_TARGETS}
+		${KF_LINK_LIB_TARGETS}
 		${GTK_LINK_LIB_TARGETS}
 
 )

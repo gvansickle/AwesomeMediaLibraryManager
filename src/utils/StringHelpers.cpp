@@ -42,7 +42,7 @@ std::string tostdstr(const char* cstr, const std::string& if_null)
 
 std::string tostdstr(const QString& qstr)
 {
-	// From the Qt5 docs:
+	// From the Qt6 docs:
 	// "Returns a std::string object with the data contained in this QString. The Unicode data is converted into 8-bit characters using the toUtf8() function."
 	return qstr.toStdString();
 }
@@ -62,17 +62,19 @@ std::string tostdstr(const TagLib::String& tstr)
 
 QString toqstr(const char* str)
 {
-	// From the QT5 docs:
+	// From the Qt docs:
 	// "QString QString::fromStdString(const std::string &str)
-	//	Returns a copy of the str string. The given string is converted to Unicode using the fromUtf8() function."
+	//	Returns a copy of the str string. The given string is assumed to be encoded in UTF-8, and is converted to
+	//	QString using the fromUtf8() function."
 	return QString::fromStdString(std::string(str));
 }
 
 QString toqstr(const std::string& str)
 {
-	// From the QT5 docs:
+	// From the Qt docs:
 	// "QString QString::fromStdString(const std::string &str)
-	//	Returns a copy of the str string. The given string is converted to Unicode using the fromUtf8() function."
+	//	Returns a copy of the str string. The given string is assumed to be encoded in UTF-8, and is converted to
+	//	QString using the fromUtf8() function."
 	return QString::fromStdString(str);
 }
 
@@ -97,7 +99,7 @@ bool isValidUTF8(const char* bytes)
 QString formattedDataSize(qint64 bytes, int precision, DataSizeFormats format)
 {
 #ifdef HAVE_QLOCALE_FORMATTEDDATASIZE
-	// Use the Qt5 version.
+	// Use the Qt version.
 	return QLocale().formattedDataSize(bytes, precision, (QLocale::DataSizeFormats)format);
 #else
 	// Use the KF5 equivalent.

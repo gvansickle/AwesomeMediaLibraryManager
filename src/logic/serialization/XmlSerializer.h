@@ -29,7 +29,7 @@
 #include <variant>
 #include <vector>
 
-// Qt5
+// Qt
 #include <QXmlStreamWriter>
 #include <QXmlStreamReader>
 #include <QVariant>

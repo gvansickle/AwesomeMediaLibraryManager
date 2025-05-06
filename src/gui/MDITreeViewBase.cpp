@@ -115,7 +115,8 @@ MDITreeViewBase::MDITreeViewBase(QWidget* parent) : QTreeView(parent)
 
 	// Enable smooth scrolling by default.
 	/// @todo Should be a user-settable parameter.
-	/// @note per Qt5 docs: "default value comes from the style via the QStyle::SH_ItemView_ScrollMode style hint.".
+	/// @note per Qt docs: "default value comes from the style via the QStyle::SH_ItemView_ScrollMode style hint.".
+	/// https://doc.qt.io/qt-6/qabstractitemview.html#verticalScrollMode-prop
 	setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
 
 	// We'll use the default context menu event mechanism.

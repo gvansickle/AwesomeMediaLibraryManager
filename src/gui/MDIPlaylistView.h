@@ -116,7 +116,7 @@ protected:
     QModelIndex from_underlying_qmodelindex(const QModelIndex& underlying_index) override;
 
 	/**
-	 * keyPressEvent() override.  Not sure we need this anymore.  Qt5 docs:
+	 * keyPressEvent() override.  Not sure we need this anymore.  Per Qt6 docs:
 	 * "This function is called with the given event when a key event is sent to the widget. The default implementation
 	 * handles basic cursor movement, e.g. Up, Down, Left, Right, Home, PageUp, and PageDown; the activated() signal
 	 * is emitted if the current index is valid and the activation key is pressed (e.g. Enter or Return, depending on the platform).

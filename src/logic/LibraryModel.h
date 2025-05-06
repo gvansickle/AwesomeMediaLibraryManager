@@ -17,16 +17,16 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/** @file LibraryModel.h */
-
 #ifndef LIBRARYMODEL_H
 #define LIBRARYMODEL_H
+
+/** @file LibraryModel.h */
 
 // Std C++
 #include <vector>
 #include <memory>
 
-// Qt5
+// Qt
 #include <QAbstractItemModel>
 #include <QFuture>
 #include <QSaveFile>

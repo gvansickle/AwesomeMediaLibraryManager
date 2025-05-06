@@ -20,7 +20,7 @@
 #ifndef SRC_GUI_ACTIVITYPROGRESSMANAGER_BASEACTIVITYPROGRESSSTATUSBARWIDGET_H_
 #define SRC_GUI_ACTIVITYPROGRESSMANAGER_BASEACTIVITYPROGRESSSTATUSBARWIDGET_H_
 
-/// Qt5
+// Qt
 #include <QObject>
 #include <QFrame>
 #include <QPointer>
@@ -29,7 +29,7 @@ class QLabel;
 class QProgressBar;
 class QToolButton;
 
-/// KF5
+// KF
 class KJob;
 class KAbstractWidgetJobTracker;
 class KToolTipWidget;

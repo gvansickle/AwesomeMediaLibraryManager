@@ -20,18 +20,20 @@
 #ifndef VECTORHELPERS_H
 #define VECTORHELPERS_H
 
+/// @file
+
 // Std C++
 //#include <algorithms>
 #include <iterator>
 
-// Qt5
+// Qt
 #include <QVector>
 
 namespace stdex
 {
 
 	/**
-	 * Analog of Qt5's "T QVector::value(int i, const T& defaultValue) const" for any container type
+	 * Analog of Qt's "T QVector::value(int i, const T& defaultValue) const" for any container type
 	 * with an .at() operator.
 	 * @param i  Index.
 	 * @returns The value at index i, or if i is out-of-bounds, a default-constructed value of type T.
@@ -73,7 +75,7 @@ namespace stdex
 		else
 		{
 			// Didn't find it.
-			// Qt5 returns -1 in this case.
+			// Qt returns -1 in this case.
 			return -1;
 		}
 	}

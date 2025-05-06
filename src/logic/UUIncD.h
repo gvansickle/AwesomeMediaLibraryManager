@@ -20,13 +20,15 @@
 #ifndef AWESOMEMEDIALIBRARYMANAGER_UUINCD_H
 #define AWESOMEMEDIALIBRARYMANAGER_UUINCD_H
 
+/// @file
+
 // Std C++
 #include <atomic>
 #include <cstdint>
 #include <functional> // For optional<>
 //#include <utility> // For std::rel_ops;
 
-// Qt5
+// Qt
 #include <Qt>
 #include <QDebug>
 

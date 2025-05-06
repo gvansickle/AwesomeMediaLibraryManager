@@ -20,6 +20,8 @@
 #ifndef SRC_GUI_HELPERS_GTK3DIALOGHELPER_H_
 #define SRC_GUI_HELPERS_GTK3DIALOGHELPER_H_
 
+/// @file
+
 #include <config.h>
 
 #if HAVE_GTKMM01 == 1

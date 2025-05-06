@@ -31,7 +31,7 @@
 #include <future/future_type_traits.hpp>
 #include <future/function_traits.hpp>
 
-// Qt5
+// Qt
 #include <QString>
 #include <QTest>
 #include <QFutureInterfaceBase> // shhh, we're not supposed to use this.  For calling .reportFinished() on QFuture<>s inside a run().

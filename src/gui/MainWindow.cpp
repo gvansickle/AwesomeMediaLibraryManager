@@ -129,7 +129,7 @@
 
 
 //
-// Note: The MDI portions of this file are very roughly based on the Qt5 MDI example,
+// Note: The MDI portions of this file are very roughly based on the Qt MDI example,
 // the MDI editor example here: http://www.informit.com/articles/article.aspx?p=1405543&seqNum=6, and countless
 // other variations on the theme, with my own adaptations liberally applied throughout.
 //
@@ -781,6 +781,7 @@ void MainWindow::createActionsHelp(KActionCollection* ac)
 							"Show help contents");
 	m_helpAct->setDisabled(true); /// @todo No help yet.
 	// Qt5 has a pre-fabbed "What's This" action which handles everything, we don't need to even add a handler or an icon.
+	// Qt6 is deprecating "What's this".
 	m_whatsThisAct = QWhatsThis::createAction(this);
 	m_whatsThisAct->setStatusTip("Show more than a tooltip, less than full help on a GUI item");
 
@@ -992,7 +993,7 @@ void MainWindow::createToolBars()
     m_settingsToolBar->addSeparator();
 	m_settingsToolBar->addAction(m_experimentalAct);
     /// KF5 button that opens an Icon select dialog.
-// @todo This doesn't link for some reason:	 m_settingsToolBar->addWidget(new KIconButton(m_settingsToolBar));
+// @todo This doesn't link now for some reason:	 m_settingsToolBar->addWidget(new KIconButton(m_settingsToolBar));
 
 #if HAVE_KF501 || HAVE_KF6
     // Create a combo box where the user can change the style.
@@ -1257,8 +1258,8 @@ bool MainWindow::maybeSaveOnClose()
 
 void MainWindow::closeEvent(QCloseEvent* event)
 {
-	/// @note Per KF5 docs:
-	/// https://api.kde.org/frameworks/kxmlgui/html/classKMainWindow.html#a2a4a27013543027fd70c707041068777
+	/// @note Per KF docs:
+	/// https://api.kde.org/frameworks/kxmlgui/html/classKMainWindow.html#a433d7bee79191266ca4ae335464922d5
 	/// "We recommend that you reimplement queryClose() rather than closeEvent(). If you do it anyway,
 	/// ensure to call the base implementation to keep the feature of auto-saving window settings working."
 	qDebug() << QString("Main Window received closeEvent.");
@@ -2138,11 +2139,12 @@ void MainWindow::startSettingsDialog()
 	}
 
 	// Open the settings dialog modeless.
-	// Note this from the Qt5 docs:
-	// http://doc.qt.io/qt-5/qdialog.html
-	// "If you invoke the show() function after hiding a dialog, the dialog will be displayed in its original position. [...]
-	// To preserve the position of a dialog that has been moved by the user, save its position in your closeEvent() handler and
-	// then move the dialog to that position, before showing it again"
+	// Note this from the Qt docs:
+	// http://doc.qt.io/qt-6/qdialog.html
+	// "If you invoke the show() function after hiding a dialog, the dialog will be displayed in its original position.
+	// This is because the window manager decides the position for windows that have not been explicitly placed by the
+	// programmer. To preserve the position of a dialog that has been moved by the user, save its position in your
+	// closeEvent() handler and then move the dialog to that position, before showing it again."
 	m_settings_dlg->show();
 	m_settings_dlg->raise();
 	m_settings_dlg->activateWindow();

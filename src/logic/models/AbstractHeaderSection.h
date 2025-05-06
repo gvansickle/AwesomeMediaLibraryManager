@@ -17,17 +17,18 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef SRC_LOGIC_MODELS_ABSTRACTHEADERSECTION_H_
+#define SRC_LOGIC_MODELS_ABSTRACTHEADERSECTION_H_
+
 /**
  * @file AbstractHeaderSection.h
  */
-#ifndef SRC_LOGIC_MODELS_ABSTRACTHEADERSECTION_H_
-#define SRC_LOGIC_MODELS_ABSTRACTHEADERSECTION_H_
 
 // Std C++
 #include <map>
 #include <memory>
 
-// Qt5
+// Qt
 #include <QVariant>
 
 /**

@@ -129,7 +129,7 @@ target_include_directories(gui
 		${PROJECT_BINARY_DIR}/src
 		# For anything in <root>/src: utils, logic, future, gui.
 		${PROJECT_SOURCE_DIR}/src
-		${Qt5Gui_PRIVATE_INCLUDE_DIRS} ### @todo OBSOLETE THIS
+		${QtGui_PRIVATE_INCLUDE_DIRS} ### @todo OBSOLETE THIS
 )
 set_target_properties(gui
     PROPERTIES
@@ -140,8 +140,8 @@ set_target_properties(gui
 target_link_libraries(gui
 	PUBLIC
 		kconfig_target
-		${QT5_LINK_LIB_TARGETS}
-		${KF5_LINK_LIB_TARGETS}
+		${QT_LINK_LIB_TARGETS}
+		${KF_LINK_LIB_TARGETS}
 		${GTK_LINK_LIB_TARGETS}
 	PRIVATE
 		widgets

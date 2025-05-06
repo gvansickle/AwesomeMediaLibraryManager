@@ -152,9 +152,9 @@ QMetaObject::Connection connect_blocking_or_die(Sender&& sender, Signal&& signal
 
 /**
  * For connecting the @a sender's destroyed() signal.
- * Qt5 docs re destroyed:
- * "This signal is emitted immediately before the object obj is destroyed, and can not be blocked.
- * All the objects's children are destroyed immediately after this signal is emitted."
+ * Qt docs re destroyed:
+ * "This signal is emitted immediately before the object @a obj is destroyed, after any instances of QPointer have been
+ * notified, and cannot be blocked. All the objects' children are destroyed immediately after this signal is emitted."
  */
 template <typename Sender>
 QMetaObject::Connection connect_destroyed_debug(Sender* sender, Qt::ConnectionType type = Qt::AutoConnection)

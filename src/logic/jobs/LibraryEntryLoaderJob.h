@@ -20,13 +20,15 @@
 #ifndef LIBRARYENTRYLOADERJOB_H
 #define LIBRARYENTRYLOADERJOB_H
 
+/// @file
+
 #include <config.h>
 
 // Std C++
 #include <memory>
 #include <utility>
 
-// Qt5
+// Qt
 #include <QObject>
 #include <QPersistentModelIndex>
 #include <QPointer>

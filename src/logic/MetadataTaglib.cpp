@@ -28,7 +28,7 @@
 #include <string>
 #include <type_traits>
 
-// Qt5
+// Qt
 #include <QUrl>
 #include <QDebug>
 

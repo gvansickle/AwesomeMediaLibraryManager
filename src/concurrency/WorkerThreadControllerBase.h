@@ -17,7 +17,7 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// Qt5
+// Qt
 #include <QObject>
 #include <QThread>
 

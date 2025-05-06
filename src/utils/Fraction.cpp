@@ -16,20 +16,21 @@
  * You should have received a copy of the GNU General Public License
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
+/// @file
 
 #include <config.h>
 
 #include "Fraction.h"
 
-/// Std C++
+// Std C++
 #include <numeric>
 
-/// Qt5
+// Qt
 #include <QString>
 #include <QDataStream>
 #include <QMetaType>
 
-/// Ours
+// Ours
 #include "utils/TheSimplestThings.h"
 #include "utils/RegisterQtMetatypes.h"
 

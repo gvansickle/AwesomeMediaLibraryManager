@@ -31,7 +31,7 @@
 #include <future/deduced_type.hpp>
 #include <future/Unit.hpp>
 
-// Qt5
+// Qt
 #include <QFutureWatcher>
 #include <QApplication>
 #include <QDebug>
@@ -328,7 +328,7 @@ void ExtFutureWatcher<T>::connectAllOnProgressCallbacks()
 		// No callbacks have been registered yet, which means we haven't connected the progress signals up yet.
 
 		// Connect up this's three progress-related callbacks.
-		// Note that Qt5 can't send signals from a class template.  Luckily we have a non-template base-base class,
+		// Note that Qt can't send signals from a class template.  Luckily we have a non-template base-base class,
 		// so we can just do this cast and send from there.
 		QFutureWatcherBase * fwb = qobject_cast<QFutureWatcherBase*>(this);
 		QObject::connect(fwb, &QFutureWatcherBase::progressValueChanged,

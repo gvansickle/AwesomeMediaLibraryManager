@@ -138,8 +138,8 @@ target_link_libraries(${TEST_EXE_TARGET}
 #		utils
 		Qt6::Test
 		${PROJECT_COMMON_LINK_LIBS}
-#		${QT5_LINK_LIB_TARGETS}
-		${KF5_LINK_LIB_TARGETS}
+#		${QT_LINK_LIB_TARGETS}
+		${KF_LINK_LIB_TARGETS}
 )
 add_test(NAME ${TEST_EXE_TARGET} COMMAND $<TARGET_FILE:${TEST_EXE_TARGET}>)
 ecm_mark_as_test(${TEST_EXE_TARGET})
@@ -191,7 +191,7 @@ if(TRUE)
 								libapp
 								Qt6::Test
 								${PROJECT_COMMON_LINK_LIBS}
-								${KF5_LINK_LIB_TARGETS}
+								${KF_LINK_LIB_TARGETS}
 	)
 
 	add_test(NAME test_qtestamlmjobtests COMMAND $<TARGET_FILE:test_qtestamlmjobtests>)
@@ -216,7 +216,7 @@ target_include_directories(tests
 	PRIVATE
 		# For config.h
 		${PROJECT_BINARY_DIR}/src
-		${Qt5Gui_PRIVATE_INCLUDE_DIRS}
+		${QtGui_PRIVATE_INCLUDE_DIRS}
 )
 target_link_libraries(tests
 	PRIVATE

@@ -26,7 +26,7 @@
 #include <shared_mutex>
 #include <condition_variable>
 
-// Qt5
+// Qt
 #include <QThread>
 
 // Ours

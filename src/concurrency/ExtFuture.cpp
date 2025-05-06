@@ -143,7 +143,7 @@
 #include <algorithm>
 #include <type_traits>
 
-// Qt5
+// Qt
 #include <QFuture>
 #include <QThread>
 

@@ -23,7 +23,7 @@
 
 #include "IfExistsAskForOverwrite.h"
 
-// Qt5
+// Qt
 #include <QFile>
 #include <QMessageBox>
 

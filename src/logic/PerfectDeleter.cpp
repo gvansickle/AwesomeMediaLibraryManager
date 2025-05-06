@@ -17,6 +17,8 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/// @file
+
 #include "PerfectDeleter.h"
 
 // Std C++
@@ -25,7 +27,7 @@
 // Future Std C++
 #include <future/future_algorithms.h> ///< For Uniform Container Erasure.
 
-// Qt5
+// Qt
 #include <QtConcurrentFilter>
 
 // Ours

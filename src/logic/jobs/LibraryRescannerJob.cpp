@@ -23,7 +23,7 @@
 #include <memory>
 #include <functional>
 
-// Qt5
+// Qt
 #include <QObject>
 #include <QtConcurrentRun>
 

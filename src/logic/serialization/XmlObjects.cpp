@@ -23,7 +23,7 @@
 
 #include "XmlObjects.h"
 
-// Qt5
+// Qt
 #include <QtCore/QFile>
 #include <QtCore/QDir>
 

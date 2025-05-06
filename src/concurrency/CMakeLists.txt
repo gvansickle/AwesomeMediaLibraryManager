@@ -90,8 +90,8 @@ target_include_directories(concurrency
 )
 target_link_libraries(concurrency
 	PRIVATE
-		${QT5_LINK_LIB_TARGETS}
-		${KF5_LINK_LIB_TARGETS}
+		${QT_LINK_LIB_TARGETS}
+		${KF_LINK_LIB_TARGETS}
 #		jobs  ### @note For LibraryEntryLoaderJob.h via LibraryModel.h.
 )
 

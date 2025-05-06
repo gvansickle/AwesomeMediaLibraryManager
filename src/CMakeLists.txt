@@ -92,7 +92,7 @@ target_include_directories(kconfig_target
 )
 target_link_libraries(kconfig_target
 	PUBLIC
-		${KF5_LINK_LIB_TARGETS}
+		${KF_LINK_LIB_TARGETS}
 )
 
 
@@ -100,8 +100,8 @@ target_link_libraries(kconfig_target
 ### Collect all the external link lib targets into one variable. 
 ###
 set(PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS
-		${QT5_LINK_LIB_TARGETS}
-		${KF5_LINK_LIB_TARGETS}
+		${QT_LINK_LIB_TARGETS}
+		${KF_LINK_LIB_TARGETS}
 		${GTK_LINK_LIB_TARGETS}
 		${AMLM_TAGLIB_TARGET}
 		${AMLM_LIBCUE_TARGET}
@@ -150,8 +150,8 @@ set(PROJECT_COMMON_INTERNAL_LINK_LIB_TARGETS
 )
 
 
-# QT5_LOGGING_CATEGORY_SOURCE_FILES
-list(APPEND SOURCE_FILES ${QT5_LOGGING_CATEGORY_SOURCE_FILES})
+# QT_LOGGING_CATEGORY_SOURCE_FILES
+list(APPEND SOURCE_FILES ${QT_LOGGING_CATEGORY_SOURCE_FILES})
 
 # Append the third_party files which need to be explicitly in the SOURCE_/HEADER_FILES vars.
 list(APPEND HEADER_FILES ${HEADER_FILES_THIRD_PARTY})
@@ -189,7 +189,7 @@ target_link_libraries(src
 
 
 # Qt Binary Resource (rcc) files.
-#qt5_add_binary_resources(icons_oxygen "${PROJECT_SOURCE_DIR}/resources/oxygenicons.qrc")
+#qt_add_binary_resources(icons_oxygen "${PROJECT_SOURCE_DIR}/resources/oxygenicons.qrc")
 #set(AppIcon_qrc "${CMAKE_CURRENT_SOURCE_DIR}/../resources/AppIcon.qrc")
 #set(AppIcon_rcc_dir "${CMAKE_CURRENT_BINARY_DIR}/../bin")
 #set(AppIcon_rcc "${AppIcon_rcc_dir}/AppIcon.rcc")
@@ -380,14 +380,15 @@ install(PROGRAMS gdbinit.in
 		coreapp
 		)
 ###
-### KF5 icon theme install for especially Windows and Mac.
+### KF icon theme install for especially Windows and Mac.
 ###
-### Per the docs @link https://api.kde.org/frameworks/kiconthemes/html/index.html, as long as icontheme.rcc
-### is installed "in a directory found by QStandardPaths::AppDataLocation", the KDE QPA should find it.
+### Per the docs @link https://api.kde.org/frameworks/kiconthemes/html/dir_846403474f86fc495edb3254e0a78881.html,
+### as long as icontheme.rcc is installed "in a directory found by QStandardPaths::AppDataLocation", the KDE QPA should find it.
 ### I'm not sure that actually works.  Even on Linux, it seems that "icontheme.rcc" apparently has to be in
 ### ${KDE_INSTALL_BINDIR}/data/ (bin/data/), and not in any of the actual QStandardPaths::AppDataLocation dirs
 ### (Linux: "~/.local/share/<APPNAME>", "/usr/local/share/<APPNAME>", "/usr/share/<APPNAME>") for it to be picked up.
-###
+### This is the KF6 "Icon Theme Deployment" docs: https://api.kde.org/frameworks/kiconthemes/html/dir_846403474f86fc495edb3254e0a78881.html
+### @link https://api.kde.org/frameworks/kiconthemes/html/dir_846403474f86fc495edb3254e0a78881.html
 ### @link https://blogs.kde.org/2016/06/16/icon-theme-deployment-windows-mac-os-and-mobile-platforms
 if(false)#WIN32)
 	install(FILES ${CMAKE_CURRENT_BINARY_DIR}/icons_oxygen.rcc

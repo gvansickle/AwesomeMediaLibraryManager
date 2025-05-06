@@ -25,7 +25,7 @@
 // Std C++
 #include <sstream>
 
-// Qt5
+// Qt
 #include <Qt>
 #include <QTest>
 #include <QString>

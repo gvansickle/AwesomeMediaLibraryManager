@@ -29,7 +29,7 @@
 #include <type_traits>
 #include <atomic>
 
-// Qt5
+// Qt
 #include <QFutureInterface>
 #include <QException>
 

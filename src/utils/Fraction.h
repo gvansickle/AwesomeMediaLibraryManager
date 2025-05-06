@@ -20,7 +20,9 @@
 #ifndef FRACTION_H
 #define FRACTION_H
 
-// Qt5
+/// @file
+
+// Qt
 #include <QDebug>
 #include <QMetaType>
 #include <QString>

@@ -27,7 +27,7 @@
 // Std C++
 #include <type_traits>
 
-// Qt5
+// Qt
 #include <QObject>
 #include <QMetaMethod>
 #include <QException>
@@ -43,7 +43,7 @@
 #include "DebugBlock.h"
 
 
-/// @name General Qt5-specific debug helpers.
+/// @name General Qt-specific debug helpers.
 /// @todo Move these to their own file.
 /// @{
 

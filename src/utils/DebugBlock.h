@@ -33,7 +33,7 @@ class KDebug::Block;
 */
 
 /**
- * Intent here is to Bring Debugging Back(tm) to Qt5/KF5.
+ * Intent here is to Bring Debugging Back(tm) to Qt/KF.
  * This class in particular is intended to backfill some of the functionality
  * of KDE4's KDebug::Block.
  * https://api.kde.org/4.x-api/kdelibs-apidocs/kdecore/html/classKDebug_1_1Block.html

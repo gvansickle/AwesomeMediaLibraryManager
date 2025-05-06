@@ -95,7 +95,7 @@ SettingsDialog::~SettingsDialog()
 void SettingsDialog::updateSettings()
 {
     // Save our own window settings.
-    /// @todo Do we actually need to do this with KF5?
+    /// @todo Do we actually need to do this with KF?
     /// @todo Load this in the constructor.
     KConfigGroup settings_dlg_group(AMLMSettings::self()->config(), "AMLMSettingsDialog");
     KWindowConfig::saveWindowSize(windowHandle(), settings_dlg_group);

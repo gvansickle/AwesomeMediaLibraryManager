@@ -52,8 +52,8 @@ target_include_directories(proxymodels
 target_link_libraries(proxymodels
 	PUBLIC
 		#${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS} ### @todo "logic_subdir links to itself".
-		${QT5_LINK_LIB_TARGETS}
-		${KF5_LINK_LIB_TARGETS}
+		${QT_LINK_LIB_TARGETS}
+		${KF_LINK_LIB_TARGETS}
 		${GTK_LINK_LIB_TARGETS}
 		#		${AMLM_TAGLIB_TARGET}
 		#		${AMLM_LIBCUE_TARGET}

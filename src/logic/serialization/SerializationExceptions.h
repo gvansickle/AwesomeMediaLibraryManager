@@ -26,7 +26,7 @@
 // Std C++
 #include <string>
 
-// Qt5
+// Qt
 #include <QException>
 
 /**
@@ -37,12 +37,13 @@
 	exception_class_name (const char* what_arg) : base_class_name (what_arg) {}; \
 	~exception_class_name () override = default;
 
-#define M_QT5_EXCEPTION_BOILERPLATE(exception_class_name) \
+#define M_QT_EXCEPTION_BOILERPLATE(exception_class_name) \
 	void raise() const override { throw *this; } \
 	exception_class_name *clone() const override { return new exception_class_name(*this); }
 
 /**
- * Base class for any exceptions we'll derive.  Adds what() functionality to Qt5.12's, which doesn't have it.
+ * Base class for any exceptions we'll derive.  Adds @a what() functionality to Qt's, which still
+ * doesn't have it as of Qt6.9.
  */
 class AMLMException : public QException
 {
@@ -53,7 +54,7 @@ public:
 
 	const char* what() const noexcept override { return m_what_str.c_str(); }
 
-	/// @name These two are for Qt5.  Allows it to throw across threads.
+	/// @name These two are for Qt.  Allows it to throw across threads.
 	/// @{
 	void raise() const override { throw *this; }
 	AMLMException *clone() const override { return new AMLMException(*this); }
@@ -71,7 +72,7 @@ class SerializationException: public AMLMException
 public:
 	M_AMLM_EXCEPTION_CTORS_DTORS(SerializationException, AMLMException);
 
-	M_QT5_EXCEPTION_BOILERPLATE(SerializationException);
+	M_QT_EXCEPTION_BOILERPLATE(SerializationException);
 };
 
 #endif /* SRC_LOGIC_SERIALIZATION_SERIALIZATIONEXCEPTIONS_H_ */

@@ -19,11 +19,11 @@
 
 #include "CumulativeStatusWidget.h"
 
-/// Qt5
+// Qt
 #include <QToolButton>
 #include <QLabel>
 
-/// Ours
+// Ours
 #include "utils/TheSimplestThings.h"
 #include <gui/Theme.h>
 

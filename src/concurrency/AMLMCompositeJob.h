@@ -20,7 +20,7 @@
 #ifndef SRC_CONCURRENCY_AMLMCOMPOSITEJOB_H_
 #define SRC_CONCURRENCY_AMLMCOMPOSITEJOB_H_
 
-/// Qt5
+// Qt
 #include <QObject>
 #include <QPointer>
 

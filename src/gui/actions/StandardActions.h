@@ -33,7 +33,7 @@ namespace StandardActions = KStandardAction;
 // We'll roll our own.
 /// @todo
 
-#endif // HAVE_KF501
+#endif // HAVE_KF
 
 
 

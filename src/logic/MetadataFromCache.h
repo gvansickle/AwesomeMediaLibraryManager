@@ -20,9 +20,11 @@
 #ifndef METADATAFROMCACHE_H
 #define METADATAFROMCACHE_H
 
+/// @file
+
 #include "MetadataAbstractBase.h"
 
-// Qt5
+// Qt
 #include <QByteArray>
 
 // Ours

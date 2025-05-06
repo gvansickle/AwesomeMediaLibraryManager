@@ -20,11 +20,13 @@
 #ifndef METADATAABSTRACTBASE_H
 #define METADATAABSTRACTBASE_H
 
+/// @file
+
 // Std C++
 #include <set>
 #include <memory>
 
-// Qt5
+// Qt
 #include <QUrl>
 #include <QObject>
 

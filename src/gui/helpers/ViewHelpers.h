@@ -23,7 +23,7 @@
 #ifndef SRC_GUI_HELPERS_VIEWHELPERS_H_
 #define SRC_GUI_HELPERS_VIEWHELPERS_H_
 
-// Qt5
+// Qt
 #include <QTreeView>
 #include <QModelIndex>
 

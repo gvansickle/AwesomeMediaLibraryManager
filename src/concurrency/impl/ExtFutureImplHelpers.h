@@ -30,7 +30,7 @@
 #include <condition_variable>
 #include <chrono>
 
-// Qt5
+// Qt
 #include <QFutureWatcher>
 #include <QList>
 #include <QThreadPool>

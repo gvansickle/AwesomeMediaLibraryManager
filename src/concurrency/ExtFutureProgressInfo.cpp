@@ -21,7 +21,7 @@
 
 #include "ExtFutureProgressInfo.h"
 
-// Qt5
+// Qt
 #include <QStringList>
 
 #include <utils/StringHelpers.h>

@@ -67,7 +67,7 @@ set_target_properties(resources
 ecm_add_app_icon(amlm_SRCS ICONS ${amlm_APP_ICONS})
 
 # Qt Binary Resource (rcc) files.
-#qt5_add_binary_resources(icons_oxygen oxygenicons.qrc)
+#qt_add_binary_resources(icons_oxygen oxygenicons.qrc)
 
 # Qt non-binary Resource files.
 #qt_add_resources(resources "AppIcon.qrc")

@@ -25,7 +25,7 @@
 #include <memory>
 #include <set>
 
-// Qt5
+// Qt
 #include <QApplication>
 #include <QRegularExpression>
 #include <QDebug>
@@ -495,7 +495,7 @@ QDialog::DialogCode NetworkAwareFileDialog::exec_gtk3plus()
         // On Linux/xcb, Qt5's WId is really an xcb_window_t.
         // See https://gist.github.com/torarnv/c5dfe2d2bc0c089910ce.
 
-        // So what we want to do here is set the Gtk3 dialog's (transient?)parent to be our Qt5 parent window.
+        // So what we want to do here is set the Gtk3 dialog's (transient?)parent to be our Qt parent window.
         // Per the link above, that means something like this:
         // nativeWindow = GetXcbWindowOf???(dialog);
         // qtWindow = this;

@@ -17,6 +17,8 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/// @file
+
 #include "AMLMJobTests.h"
 
 // Std C++
@@ -27,7 +29,7 @@
 //#include <gmock/gmock-matchers.h>
 
 
-// Qt5
+// Qt
 #include <QString>
 #include <QTest>
 #include <QSignalSpy>

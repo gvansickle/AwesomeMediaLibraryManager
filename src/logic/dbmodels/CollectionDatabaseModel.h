@@ -23,7 +23,7 @@
 #if 0
 #include <config.h>
 
-// Qt5
+// Qt
 #include <QMutex>
 #include <QObject>
 #include <QUrl>

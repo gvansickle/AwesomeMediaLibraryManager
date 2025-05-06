@@ -27,7 +27,7 @@
 #include <string>
 #include <deque>
 
-// Qt5
+// Qt
 #include <QSignalSpy>
 #include <QTest>
 
