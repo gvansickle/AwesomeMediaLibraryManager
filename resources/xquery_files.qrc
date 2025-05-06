@@ -4,4 +4,7 @@
         <file>filelist_stringlistout.xq</file>
         <file>database_filter_by_href_regex.xq</file>
     </qresource>
+    <qresource prefix="/kxmlgui6/AwesomeMediaLibraryManager">
+        <file alias="AwesomeMediaLibraryManagerui.rc">../src/AwesomeMediaLibraryManagerui.rc</file>
+    </qresource>
 </RCC>

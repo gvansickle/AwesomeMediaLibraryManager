@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -21,14 +21,16 @@
 #ifndef SRC_LOGIC_TAGLIBHELPERS_H_
 #define SRC_LOGIC_TAGLIBHELPERS_H_
 
+/** @file TagLibHelpers.h */
+
 #include <config.h>
 
 // Std C++.
 #include <type_traits>
 
 // TagLib.
-#include <fileref.h>
-#include <audioproperties.h>
+#include <taglib/fileref.h>
+#include <taglib/audioproperties.h>
 
 /// @name The TagLib::FileRef constructor takes a TagLib::FileName, which:
 /// - on Linux is typedef for const char *

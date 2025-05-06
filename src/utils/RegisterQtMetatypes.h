@@ -36,12 +36,12 @@
 #include <QDebug>
 #include <QMetaType>
 
-// Qt5 metatype declarations for some std containers.
+// Qt metatype declarations for some std containers.
 Q_DECLARE_METATYPE(std::string);
 Q_DECLARE_SMART_POINTER_METATYPE(std::shared_ptr);
 Q_DECLARE_SMART_POINTER_METATYPE(std::weak_ptr);
 Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE(std::deque);
-// Qt5 metatype declarations for metatypes for <cstdint>.
+// Qt metatype declarations for metatypes for <cstdint>.
 Q_DECLARE_METATYPE(std::int32_t);
 Q_DECLARE_METATYPE(std::uint32_t);
 Q_DECLARE_METATYPE(std::int64_t);

@@ -36,8 +36,8 @@ add_subdirectory(third_party)
 set(USE_BUNDLED_LIBCUE TRUE)
 
 
-set(TAGLIB_MIN_VERSION "1.11.0")
-find_package(Taglib)
+set(TAGLIB_MIN_VERSION "1.13.0")
+find_package(Taglib ${TAGLIB_MIN_VERSION} REQUIRED)
 set_package_properties(Taglib PROPERTIES TYPE REQUIRED PURPOSE "Required for reading media file metadata.")
 if(TAGLIB_FOUND)
 	add_library(taglib INTERFACE)
@@ -188,18 +188,19 @@ target_link_libraries(src
 #ecm_add_app_icon(amlm_SRCS ICONS ${amlm_APP_ICONS})
 
 
-# Qt5 Binary Resource (rcc) files.
+# Qt Binary Resource (rcc) files.
 #qt5_add_binary_resources(icons_oxygen "${PROJECT_SOURCE_DIR}/resources/oxygenicons.qrc")
 #set(AppIcon_qrc "${CMAKE_CURRENT_SOURCE_DIR}/../resources/AppIcon.qrc")
 #set(AppIcon_rcc_dir "${CMAKE_CURRENT_BINARY_DIR}/../bin")
 #set(AppIcon_rcc "${AppIcon_rcc_dir}/AppIcon.rcc")
 # Set up the app icon for Linux, add a dep so it gets built.
-#qt5_add_binary_resources(build_AppIcon_rcc ${AppIcon_qrc} DESTINATION ${AppIcon_rcc})
+#qt_add_binary_resources(build_AppIcon_rcc ${AppIcon_qrc} DESTINATION ${AppIcon_rcc})
 
 # Qt non-binary Resource files.
 qt_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/AppIcon.qrc")
-qt_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/amlm.qrc")
+#qt_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/amlm.qrc")
 qt_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/xquery_files.qrc")
+#qt_add_resources(amlm_SRCS AwesomeMediaLibraryManagerui.rc)
 
 
 # The link lib targets common to app and test builds.
@@ -214,7 +215,6 @@ if (APPLE)
 elseif (WIN32)
     set(WIN32_OR_MACOS_BUNDLE WIN32)
 endif()
-
 
 add_library(libapp STATIC EXCLUDE_FROM_ALL)
 target_sources(libapp
@@ -252,10 +252,13 @@ target_link_libraries(libapp
 ###
 ### The main executable.
 ###
-### @note Including HEADER_FILES in here so they get checked for existence.
-###
 add_executable(${PROJECT_NAME} ${WIN32_OR_MACOS_BUNDLE}
 		main.cpp
+)
+qt_add_resources(
+	TARGET ${PROJECT_NAME}
+#	PREFIX "/"
+	FILES "AwesomeMediaLibraryManagerui.rc"
 )
 target_compile_definitions(${PROJECT_NAME}
 	PUBLIC
@@ -314,7 +317,7 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 ###
 if(TRUE) # Enable test target.
 
-find_package(Qt5Test REQUIRED)
+find_package(Qt6Test REQUIRED)
 
 # @note We don't really need to do this, but will for expediency.  Per the docs:
 # "CMake will generate tests only if the enable_testing() command has been invoked.
@@ -407,6 +410,10 @@ install(PROGRAMS io.github.gvansickle.awesomemedialibrarymanager.desktop DESTINA
 # AppStream component metadata files.
 install(FILES io.github.gvansickle.awesomemedialibrarymanager.appdata.xml DESTINATION ${KDE_INSTALL_METAINFODIR}
 		COMPONENT coreapp)
+# The KXmlGui file.
+install(FILES AwesomeMediaLibraryManagerui.rc DESTINATION ${KDE_INSTALL_KXMLGUIDIR}/AwesomeMediaLibraryManager
+		COMPONENT coreapp
+)
 # The KConfig file.
 install(FILES AwesomeMediaLibraryManagerSettings.kcfg DESTINATION ${KDE_INSTALL_KCFGDIR}
 	    COMPONENT coreapp)

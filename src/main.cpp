@@ -31,6 +31,7 @@
 #include <QCommandLineParser>
 #include <QImageReader>
 #include <QDebug>
+#include <QDirListing>
 
 // KF
 #include <KAboutData>
@@ -56,7 +57,16 @@
 M_MESSAGE("BUILDING WITH CMAKE_C_COMPILER_ID: " CMAKE_C_COMPILER_ID " = " CMAKE_C_COMPILER);
 M_MESSAGE("BUILDING WITH CMAKE_CXX_COMPILER_ID: " CMAKE_CXX_COMPILER_ID " = " CMAKE_CXX_COMPILER);
 
-
+static void LL(const QString& root)
+{
+    for (const auto& dir_entry : QDirListing(root, QDirListing::IteratorFlag::Recursive))
+	{
+		if (!dir_entry.filePath().contains("icon"))
+		{
+			qIn() << dir_entry.filePath();
+		}
+	}
+}
 
 /**
  * Here's where the magic happens.
@@ -64,6 +74,7 @@ M_MESSAGE("BUILDING WITH CMAKE_CXX_COMPILER_ID: " CMAKE_CXX_COMPILER_ID " = " CM
 int main(int argc, char *argv[])
 {
 	// Make sure our compiled-in static lib resources are linked.
+	// Necessary because the resource files are compiled into a static library.
 	Q_INIT_RESOURCE(xquery_files);
 
 	QThread::currentThread()->setObjectName("MAIN");
@@ -90,6 +101,9 @@ int main(int argc, char *argv[])
 	qDebug() << "TEST: Debug";
 	qWarning() << "TEST: Warning";
 	qCritical() << "TEST: Critical";
+
+	// List our built-in resources.
+	LL(":/");
 
 	// Log our startup environment.
 	logging.dumpEnvVars();
@@ -169,7 +183,7 @@ int main(int argc, char *argv[])
 	// Integrate KAboutData with commandline argument handling
 	QCommandLineParser parser;
 	aboutData.setupCommandLine(&parser);
-	// setup of app specific commandline args
+	// setup of app-specific commandline args
 	parser.setApplicationDescription(aboutData.shortDescription());
 	parser.addVersionOption();
 	parser.addHelpOption();
@@ -189,7 +203,7 @@ int main(int argc, char *argv[])
 	// Set the application Icon.
 	///@todo Get an actual icon.
     QIcon appIcon; //= QIcon::fromTheme(QStringLiteral("preferences-desktop-sound"), QApplication::windowIcon());
-    appIcon.addFile(":/Icons/128-preferences-desktop-sound.png");
+    appIcon.addFile(":/icons/128-preferences-desktop-sound.png");
     // "KAboutData::setApplicationData() no longer sets the app window icon. For shells which do not fetch the icon name via
     // the desktop file [i.e. non-plasma], make sure to call QApplication::setWindowIcon(QIcon::fromTheme(QStringLiteral("foo")));
     // (in GUI apps)."
@@ -228,7 +242,7 @@ int main(int argc, char *argv[])
 	AMLM::Core::clean();
 
 	/*
-	 * Look at the retval and see if we should restart, etc.
+	 * @todo Look at the retval and see if we should restart, etc.
 	 */
 
 	return result;

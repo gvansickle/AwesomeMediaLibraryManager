@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
+/// @file
 
 #include "RegisterQtMetatypes.h"
 
@@ -94,8 +95,7 @@ Q_GLOBAL_STATIC(QtRegCallbackRegistry, f_qt_reg_callback_registry);
  * Register a number of general-purpose Qt converters etc.
  */
 AMLM_QREG_CALLBACK([](){
-	qIn() << "Registering std::string->QString converter";
-
+	qIn() << "Registering std::string<->QString converter";
 	QMetaType::registerConverter<std::string, QString>([](const std::string& str){ return toqstr(str); });
 	QMetaType::registerConverter<QString, std::string>([](const QString& str){ return tostdstr(str); });
 
@@ -173,8 +173,7 @@ void RegisterQtMetatypes()
 	// Register the types we want to be able to use in Qt's queued signal and slot connections or in QObject's property system.
 	qRegisterMetaType<LibraryEntry>();
 	qRegisterMetaType<PlaylistModelItem>();
-	qRegisterMetaType<std::string>();
-	// qRegisterMetaType<std::basic_string<char>>();
+	qRegisterMetaType<std::string>("std::string");
 	qRegisterMetaType<std::shared_ptr<LibraryEntry>>();
 	qRegisterMetaType<std::shared_ptr<PlaylistModelItem>>();
 	

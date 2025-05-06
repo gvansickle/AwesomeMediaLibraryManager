@@ -1,5 +1,5 @@
 /*
- * Copyright 2017, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2019, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -25,7 +25,7 @@
 #include <memory>
 #include <string>
 
-// Qt5
+// Qt
 #include <QString>
 
 // Libcue
@@ -50,7 +50,7 @@ using strviw_type = QLatin1String;
 	X(XMLTAG_TRACK_INDEX_FRAMES, "index_frames", m_index_frames)
 
 /// Strings to use for the tags.
-#define X(field_tag, field_tag_str, member_field) static const strviw_type field_tag ( field_tag_str );
+#define X(field_tag, field_tag_str, member_field) static constexpr strviw_type field_tag ( field_tag_str );
 	M_TRACK_INDEX_DATASTREAM_FIELDS(X);
 #undef X
 

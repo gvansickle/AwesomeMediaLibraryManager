@@ -24,9 +24,8 @@
 // Std C++
 #include <functional>
 #include <algorithm>
-#include <type_traits>
 
-// Qt5
+// Qt
 #include <QObject>
 #include <QApplication>
 #include <QMainWindow>
@@ -58,7 +57,7 @@
 #include <QTableView>
 #include <QProgressDialog>
 
-// KF5
+// KF
 #include <KMainWindow>
 #include <KHelpMenu>
 #include <KToolBar>
@@ -73,8 +72,8 @@
 #include <KIO/Job>
 #include <KIO/JobTracker>
 #include <KJobWidgets>
+#include <KActionCollection>
 #include <KF6/KIconWidgets/KIconButton>
-#include <KF6/KXmlGui/KEditToolBar>
 
 // Ours
 #include "AMLMApp.h"
@@ -122,7 +121,6 @@
 #include <logic/proxymodels/LibrarySortFilterProxyModel.h>
 #include <logic/serialization/XmlSerializer.h>
 
-#include "concurrency/ExtAsync.h"
 #include <utils/Stopwatch.h>
 
 /// @note EXPERIMENTAL
@@ -166,7 +164,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : BASE_CLASS(pare
     ///       create some docks
     ///       create more actions
     ///       create some menus
-    ///       setupGUI()
+    ///       setupGUI(Toolbar|StatusBar|Save|Create)
     ///       create more menus
     ///     ^^->show();
     ///   app.exec()
@@ -200,6 +198,8 @@ MainWindow::~MainWindow()
 	Q_CHECK_PTR(m_player);
 	delete m_player;
 
+	delete m_actionCollection;
+
     m_instance = nullptr;
 }
 
@@ -208,6 +208,48 @@ QPointer<MainWindow> MainWindow::instance()
     return m_instance;
 }
 
+KActionCollection* MainWindow::actionCollection()
+{
+    if(!m_actionCollection)
+    {
+        m_actionCollection = new KActionCollection(this);
+    	m_actionCollection->setObjectName("MainWindow-KActionCollection");
+    }
+    return m_actionCollection;
+}
+
+
+void MainWindow::createStandardStatusBarAction()
+{
+	// This is per the same function in KXmlGuiWindow.
+	if (!m_act_ktog_show_status_bar)
+	{
+		m_act_ktog_show_status_bar = KStandardAction::showStatusbar(this, &KMainWindow::setSettingsDirty,
+																	actionCollection());
+		QStatusBar* sb = statusBar();
+		connect_or_die(m_act_ktog_show_status_bar, &QAction::toggled, sb, &QStatusBar::setVisible);
+		m_act_ktog_show_status_bar->setChecked(sb->isHidden());
+	}
+	else
+	{
+		// Per KXmlGuiWindow, we could get here on a language change.
+		auto tmpStatusbar = KStandardAction::showStatusbar(nullptr, nullptr, nullptr);
+		m_act_ktog_show_status_bar->setText(tmpStatusbar->text());
+		/// @todo Qt6 has obsoleted "What's This", prob don't need this.
+		m_act_ktog_show_status_bar->setWhatsThis(tmpStatusbar->whatsThis());
+		delete tmpStatusbar;
+	}
+}
+
+void MainWindow::setStandardToolBarMenuEnabled(bool showToolBarMenu)
+{
+	/// @todo The KXmlGui* code for this looks substantial.
+	/// @sa https://api.kde.org/legacy/3.5-api/kdelibs-apidocs/kdeui/html/ktoolbarhandler_8cpp_source.html#l00127
+	// if (showToolBarMenu)
+	// {
+	// }
+	qDb() << "Empty setStandardToolBarMenuEnabled() called";
+}
 
 void MainWindow::init()
 {
@@ -291,10 +333,10 @@ void MainWindow::init()
 
 void MainWindow::post_setupGUI_init()
 {
-    // KF5: Activate Autosave of toolbar/menubar/statusbar/window layout settings.
+    // KF: Activate Autosave of toolbar/menubar/statusbar/window layout settings.
     // "Make sure you call this after all your *bars have been created."
-    /// @note this is done by setupGUI().
-    ///setAutoSaveSettings();
+    // @note In KXmlGuiWindow this is done by setupGUI().
+    setAutoSaveSettings();
 
     // Post setupGUI(), we can now add the status/tool/dock actions.
     addViewMenuActions();
@@ -346,9 +388,23 @@ void MainWindow::onStartup()
     //   in a context menu and when opening the KEditToolBar dialog.
     //   Without it, we seem to lose no functionality, but the crashes are gone.
 // M_WARNING("Crashing here on Windows");
-    setupGUI(KXmlGuiWindow::/*Keys | */StatusBar | /*ToolBar |*/ Save);
+#if 0 // debug, no KXmlGui.
+    setupGUI(KXmlGuiWindow:: Create | Keys | StatusBar | ToolBar | Save,
+    	":/kxmlgui6/AwesomeMediaLibraryManager/AwesomeMediaLibraryManagerui.rc");
+#elif 0
+	setupGUI(KXmlGuiWindow::/*Create |*/ Keys | StatusBar | /*ToolBar |*/ Save,
+		":/kxmlgui6/AwesomeMediaLibraryManager/AwesomeMediaLibraryManagerui.rc");
+#else
+	/// @sa KXmlGuiWindow::setupGui().
+	createStandardStatusBarAction();
+	setStandardToolBarMenuEnabled(true);
+#endif
+	// Debug check
+	qDebug() << "Toolbar valid:" << toolBar();
+	qDebug() << "Configure action exists:" << actionCollection()->action("options_configure_toolbars");
+	qDebug() << "All actions:" << actionCollection()->actions();
 
-    post_setupGUI_init();
+	post_setupGUI_init();
 }
 
 /**
@@ -492,7 +548,7 @@ void MainWindow::createActions()
 	connect_trig(m_savePlaylistAct, this, &MainWindow::savePlaylistAs);
 	addAction("save_playlist_as", m_savePlaylistAct);
 
-#if HAVE_KF501 || HAVE_KF6
+#if !(HAVE_KF501 || HAVE_KF6)
 	m_exitAction = make_action(QIcon::fromTheme("application-exit"), "E&xit", this,
                               QKeySequence::Quit,
                               "Exit application");
@@ -587,7 +643,7 @@ void MainWindow::createActionsEdit(KActionCollection *ac)
 {
 	// The cut/copy/paste action "sub-bundle".
     m_ab_cut_copy_paste_actions = new ActionBundle(ac);
-#if HAVE_KF501 || HAVE_KF6
+#if !(HAVE_KF501 || HAVE_KF6)
 	// Specifying the ActionBundle as each QAction's parent automatically adds it to the bundle.
 	m_act_cut = make_action(Theme::iconFromTheme("edit-cut"), tr("Cu&t"), m_ab_cut_copy_paste_actions, QKeySequence::Cut,
                                                     tr("Cut the current selection to the clipboard"));
@@ -629,7 +685,7 @@ void MainWindow::createActionsEdit(KActionCollection *ac)
 	m_act_select_all = make_action(Theme::iconFromTheme("edit-select-all"), tr("Select &All"), m_ab_extended_edit_actions,
                                                                QKeySequence::SelectAll, tr("Select all items in the current list"));
 	connect_trig(m_act_select_all, this, &MainWindow::onSelectAll);
-	addAction("select_all", m_act_select_all);
+	addAction("edit_select_all", m_act_select_all);
 
     // Find
 //    m_ab_find_actions = new ActionBundle(ac);
@@ -644,11 +700,15 @@ void MainWindow::createActionsView(KActionCollection *ac)
 
     m_ab_docks = new ActionBundle(ac);
 
-#if HAVE_KF501 || HAVE_KF6
+#if !(HAVE_KF501 || HAVE_KF6)
 	m_act_lock_layout = make_action(Theme::iconFromTheme("emblem-locked"), tr("Lock layout"), this); // There's also an "emblem-unlocked"
 	m_act_reset_layout = make_action(Theme::iconFromTheme("view-multiple-objects"), tr("Reset layout"), this);
 #else
-	m_act_lock_layout = make_action(Theme::iconFromTheme("emblem-locked"), tr("Lock layout"), ac); // There's also an "emblem-unlocked"
+	// There's also "emblem-locked", "emblem-unlocked", and "system-lock-screen".
+	// KF uses the latter in its KToolBar context menu.
+	m_act_lock_layout = make_action(Theme::iconFromTheme("system-lock-screen"), tr("Lock toolbar positions"), ac);
+	m_act_lock_layout->setCheckable(true);
+	m_act_lock_layout->setChecked(KToolBar::toolBarsLocked());
 	m_act_reset_layout = make_action(Theme::iconFromTheme("view-multiple-objects"), tr("Reset layout"), ac);
 #endif
 	/// @todo These appear to be unreparentable, so we can't give them to an ActionBundle.
@@ -738,15 +798,16 @@ void MainWindow::createActionsHelp(KActionCollection* ac)
 
 /**
  * @note This will only work properly if called after all Toolbars and Docks have been added
- * and setupGUI() has been called.
+ * and the equivalent of setupGUI() has been called.
  */
 void MainWindow::addViewMenuActions()
 {
-// M_WARNING("TODO")
-
 	m_act_lock_layout->setChecked(AMLMSettings::layoutIsLocked());
-//	connect(m_act_lock_layout, &QAction::toggled, this, &MainWindow::setLayoutLocked);
-    m_menu_view->addAction(m_act_lock_layout);
+	connect_or_die(m_act_lock_layout, &QAction::toggled, this, &MainWindow::onSetLayoutLocked);
+	m_menu_view->addActions({
+    	m_act_lock_layout,
+		m_act_reset_layout,
+		m_act_ktog_show_tool_bar});
 
     // List dock widgets.
     m_menu_view->addSection(tr("Docks"));
@@ -769,18 +830,6 @@ void MainWindow::addViewMenuActions()
     }
 
 	// List toolbars.
-// M_WARNING("/// @todo This doesn't work for unknown reasons.");
-//    m_menu_view->addSection(tr("Toolbars"));
-//    auto tbma = toolBarMenuAction();
-//    if(tbma != nullptr)
-//    {
-//        m_menu_view->addAction(tbma);
-//    }
-//    else
-//    {
-//        qWr() << "NULL toolBarMenuAction";
-//    }
-
     m_menu_view->addSection(tr("Toolbars"));
     auto tbs = toolBars();
     for(auto tb : std::as_const(tbs))
@@ -790,6 +839,7 @@ void MainWindow::addViewMenuActions()
     }
 
 	// Reset layout.
+	/// @todo ???
 
 }
 
@@ -828,8 +878,8 @@ void MainWindow::createMenus()
 	m_menu_edit->addAction(m_act_find_prev);
 
     // Create the View menu.
-// M_WARNING("TODO")
     m_menu_view = menuBar()->addMenu(tr("&View"));
+	// menu populated by addViewMenuActions().
 //	menuBar()->addMenu(m_menu_view);
 //	m_ab_docks->appendToMenu(m_menu_view);
 //	m_menu_view->addActions({
@@ -961,7 +1011,7 @@ void MainWindow::createToolBars()
     m_settingsToolBar->addWidget(iconThemeComboBox);
 	connect_or_die(iconThemeComboBox, &QComboBox::currentTextChanged, this, &MainWindow::changeIconTheme);
 #endif
-    // Create another toolbar for the player controls.
+    // Create a toolbar for the player controls.
     m_controlsToolbar = addToolBar(tr("Player Controls"), "PlayerControlsToolbar");
 
     m_controlsToolbar->addWidget(m_controls);
@@ -1175,7 +1225,7 @@ bool MainWindow::maybeSaveOnClose()
 
     auto swl = m_mdi_area->subWindowList();
 
-	for(const auto& child : swl)
+	for(const auto& child : std::as_const(swl))
 	{
 		MDIPlaylistView* playlist_ptr= qobject_cast<MDIPlaylistView*>(child->widget());
 		if(playlist_ptr == nullptr)
@@ -1213,7 +1263,7 @@ void MainWindow::closeEvent(QCloseEvent* event)
 	/// ensure to call the base implementation to keep the feature of auto-saving window settings working."
 	qDebug() << QString("Main Window received closeEvent.");
 
-	KXmlGuiWindow::closeEvent(event);
+    KMainWindow::closeEvent(event);
 
 	stopAllBackgroundThreads();
 
@@ -2197,17 +2247,26 @@ void MainWindow::onShowMenuBar(bool show)
 //	menuBar()->setVisible(show);
 }
 
+void MainWindow::onSetLayoutLocked(bool checked)
+{
+	KToolBar::setToolBarsLocked(checked);
+	// MainWindow::onSettingsChanged();
+	// KToolBar::emitToolbarStyleChanged();
+	onApplyToolbarConfig();
+}
+
 void MainWindow::onConfigureToolbars()
 {
 	auto config_group = KSharedConfig::openConfig()->group("MainWindowToolbarSettings");
 
 	saveMainWindowSettings(config_group);
 
-	KEditToolBar dialog(factory(), this);
+    /// @todo This probably need to go away, it's dependant on us being derived from KXmlGui.
+    // KEditToolBar dialog(actionCollection(), this);
 
-	connect_or_die(&dialog, &KEditToolBar::newToolBarConfig, this, &MainWindow::onApplyToolbarConfig);
+    // connect_or_die(&dialog, &KEditToolBar::newToolBarConfig, this, &MainWindow::onApplyToolbarConfig);
 
-	dialog.exec();
+    // dialog.exec();
 }
 
 void MainWindow::onApplyToolbarConfig()

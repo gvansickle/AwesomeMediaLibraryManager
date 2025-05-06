@@ -22,7 +22,7 @@
 
 #include <config.h>
 
-/// Std C++
+// Std C++
 
 #include <vector>
 #include <utility> // For std::pair<>
@@ -42,17 +42,15 @@ class QStandardItemModel;
 // KF
 #if HAVE_KF6 || HAVE_KF501
 #include <KMainWindow>
-#include <KXmlGuiWindow>
-
-// Ours
-#include <gui/widgets/CollectionStatsWidget.h>
 
 class KJob;
+
 namespace KIO
 {
-    class Job;
+	class Job;
 } // namespace KIO
 
+class KActionCollection;
 class KStatusBarJobTracker;
 class KToolBar;
 using ToolBarClass = KToolBar;
@@ -70,8 +68,8 @@ using ToolBarClass = QToolBar;
 
 #endif
 
-/// Ours
-
+// Ours
+#include <gui/widgets/CollectionStatsWidget.h>
 #include <logic/MP2.h>
 #include "mdi/MDIModelViewPair.h"
 
@@ -96,16 +94,14 @@ class LibraryEntryMimeData;
 
 /**
  * Awesome Media Library Manager's MainWindow class.
- * @note I suspect deriving from KXmlGuiWindow instead of KMainWindow, when I'm not using XML for the GUI,
- *       is going to bite me at some point (EDIT: == continuously).  But this gives me an actionCollection().  So there's that.
- *
- * @note KdenLive inherits from KXmlGuiWindow here.  KDevelop inherits from Sublime::MainWindow, which inherits from ???.
+ * @note KdenLive inherits from KXmlGuiWindow here, as do most KDE programs.  I tried for too long to use it here, and
+ * finally came to the conclusion that it's simply not worth the hassle.
  */
-class MainWindow: public KXmlGuiWindow ///KMainWindow
+class MainWindow: public KMainWindow
 {
 	Q_OBJECT
 
-	using BASE_CLASS = KXmlGuiWindow;
+	using BASE_CLASS = KMainWindow;
 
 Q_SIGNALS:
 	/**
@@ -127,6 +123,12 @@ public:
 	 * Get a pointer to the MainWindow singleton.
 	 */
 	static QPointer<MainWindow> instance();
+
+	virtual KActionCollection* actionCollection();
+
+    void createStandardStatusBarAction();
+
+	void setStandardToolBarMenuEnabled(bool showToolBarMenu);
 
 	/// Init function to offload all the init which used to be in the constructor.
 	void init();
@@ -263,6 +265,10 @@ private Q_SLOTS:
 
 	/// Slot which shows/hides the menu bar.
 	void onShowMenuBar(bool show);
+
+	/// Slot which locks the layout of the KToolBars.
+	/// @todo Other layout?
+	void onSetLayoutLocked(bool checked);
 
 	void onConfigureToolbars();
 
@@ -451,8 +457,8 @@ private:
 	QAction *m_act_lock_layout;
 	QAction *m_act_reset_layout;
 	KToggleAction* m_act_ktog_show_menu_bar;
-	KToggleToolBarAction* m_act_ktog_show_tool_bar;
-	KToggleAction* m_act_ktog_show_status_bar;
+	KToggleToolBarAction* m_act_ktog_show_tool_bar {nullptr};
+	KToggleAction* m_act_ktog_show_status_bar {nullptr};
 	ActionBundle* m_ab_docks;
 	QActionGroup* m_actgroup_styles;
 	/// @}
@@ -508,11 +514,11 @@ private:
 	QMenu* m_menu_help;
 
     /// Toolbars
-    ToolBarClass* m_fileToolBar;
-	ToolBarClass* m_toolbar_edit;
-	ToolBarClass* m_settingsToolBar;
-	ToolBarClass* m_controlsToolbar;
-	ToolBarClass* m_filterToolbar;
+    ToolBarClass* m_fileToolBar {nullptr};
+	ToolBarClass* m_toolbar_edit {nullptr};
+	ToolBarClass* m_settingsToolBar {nullptr};
+	ToolBarClass* m_controlsToolbar {nullptr};
+	ToolBarClass* m_filterToolbar {nullptr};
 
 public:
     /// Docks
@@ -525,6 +531,8 @@ private:
 
     /// The MainWindow singleton.
     static QPointer<MainWindow> m_instance;
+
+    KActionCollection* m_actionCollection {nullptr};
 
 #if HAVE_KF501 || HAVE_KF6
     /**

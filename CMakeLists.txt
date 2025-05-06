@@ -136,7 +136,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake
 # ECM KDE macros
 # @note Order matters for these next two include()s.  Per the docs, InstallDirs needs to come before CMakeSettings.
 # @link https://api.kde.org/ecm/kde-module/KDECMakeSettings.html#runtime-paths
-include(KDEInstallDirs)  ##< Replaces/uses GNUInstallDirs.
+include(KDEInstallDirs6)  ##< Replaces/uses GNUInstallDirs.
 #set(APPLE_FORCE_X11 ON) # This applies to KDECMakeSettings.
 set(ENABLE_CLAZY ON) # This applies to KDECMakeSettings.
 include(KDECMakeSettings NO_POLICY_SCOPE)
@@ -208,11 +208,9 @@ if(UNIX)
 	target_compile_options(cxx_compile_options
 		INTERFACE
 			-Og -ggdb3 -fno-omit-frame-pointer -fmessage-length=0 -pthread -Werror=return-type
-		-fno-eliminate-unused-debug-symbols -gas-loc-support -gas-locview-support -gstatement-frontiers
-		-gvariable-location-views -ginline-points -fno-eliminate-unused-debug-types)
+		-fno-eliminate-unused-debug-types)
 	ucm_add_flags(-Og -ggdb3 -fno-omit-frame-pointer -fmessage-length=0 -pthread -Werror=return-type
-		-fno-eliminate-unused-debug-symbols -gas-loc-support -gas-locview-support -gstatement-frontiers
-		-gvariable-location-views -ginline-points -fno-eliminate-unused-debug-types)
+		-fno-eliminate-unused-debug-types)
 # Flags for GNU libstdc++
 ### @todo Detect that we're actually using GNU libstdc++
 # "compiles user code using the debug mode. When defined, _GLIBCXX_ASSERTIONS is defined automatically"
@@ -226,7 +224,7 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	target_compile_options(cxx_compile_options
 		INTERFACE
 			-gvariable-location-views
-			-gas-loc-support -gstatement-frontiers -ginline-points -femit-struct-debug-detailed=any
+			-gas-loc-support -gas-locview-support -gstatement-frontiers -ginline-points -femit-struct-debug-detailed=any
 		)
 	#ucm_add_flags(-gvariable-location-views)
 	ucm_add_flags(-grecord-gcc-switches)
@@ -244,7 +242,7 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 		INTERFACE
 			-fforce-emit-vtables
 			)
-	ucm_add_flags(-Wthread-safety -fdebug-macro -fdiagnostics-show-template-tree -mno-omit-leaf-frame-pointer)
+	ucm_add_flags(-Wthread-safety -fdebug-macro -fdiagnostics-show-template-tree -mno-omit-leaf-frame-pointer -ftime-trace=trace.json)
 	#ucm_add_flags(-fdelayed-template-parsing -frelaxed-template-template-args)
 endif()
 if(WIN32)
@@ -260,7 +258,7 @@ if(WIN32)
 endif(WIN32)
 target_link_libraries(cxx_settings INTERFACE cxx_compile_options)
 
-set(CMAKE_CXX_FLAGS_DEBUG "-ggdb3")
+#set(CMAKE_CXX_FLAGS_DEBUG "-ggdb3 -ftime-trace")
 message(STATUS "C compiler supported features = ${CMAKE_C_COMPILE_FEATURES}")
 message(STATUS "C++ compiler supported features = ${CMAKE_CXX_COMPILE_FEATURES}")
 message(STATUS "C++ CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS}")
@@ -380,7 +378,10 @@ find_package(Qt6 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
 	Concurrent
 	Test # For Q...ModelTester.
 	)
-set(QT5_LINK_LIB_TARGETS Qt6::Core Qt6::Gui Qt6::Widgets
+set(QT5_LINK_LIB_TARGETS
+	Qt6::Core
+	Qt6::Gui
+	Qt6::Widgets
 	Qt6::Multimedia
 #	Qt6::XmlPatterns
 	Qt6::Concurrent
@@ -410,8 +411,10 @@ set(KF5_LINK_LIB_TARGETS "")
 ###       We'll require KF5Config separately to avoid any ambiguity.
 find_package(KF6Config ${KF5_MIN_VERSION} REQUIRED)
 find_package(KF6 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
+	Config
 	Archive ### @todo TRYING THIS IN CASE IconThemes needs it to work properly, otherwise REMOVE
 	WidgetsAddons
+	# Completion
 	CoreAddons ## USE_KF5_COREADDONS, git clone git://anongit.kde.org/kcoreaddons.git
 	GuiAddons
 	ConfigWidgets ## Not in Krita from this until WindowSystem.
@@ -428,6 +431,8 @@ list(APPEND KF5_LINK_LIB_TARGETS KF6::CoreAddons KF6::ConfigCore KF6::ConfigGui)
 list(APPEND KF5_LINK_LIB_TARGETS KF6::KIOCore KF6::KIOFileWidgets KF6::KIOWidgets)
 list(APPEND KF5_LINK_LIB_TARGETS KF6::WidgetsAddons KF6::XmlGui KF6::GuiAddons KF6::ItemModels KF6::ItemViews)
 list(APPEND KF5_LINK_LIB_TARGETS KF6::IconThemes KF6::WindowSystem)
+### @todo Without this the directory is kxmlgui5, which is wrong, and I haven't found the root cause.
+set(KDE_INSTALL_KXMLGUIDIR "share/kxmlgui6")  # Force KF6 path
 
 ###### EXPERIMENT
 
@@ -724,8 +729,11 @@ print_varlist(
 	KDE_INSTALL_BINDIR
 	KDE_INSTALL_DATADIR
 	KDE_INSTALL_ICONDIR
+	KDE_INSTALL_TARGETS_DEFAULT_ARGS
+	KDE_INSTALL_KXMLGUIDIR
+	KDE_INSTALL_KCFGDIR
 	META_FILES_TO_INCLUDE
-	KDE_INSTALL_TARGETS_DEFAULT_ARGS)
+)
 
 #message_cpack_summary()
 

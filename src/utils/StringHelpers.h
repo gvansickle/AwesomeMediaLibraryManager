@@ -24,10 +24,9 @@
 
 #include <config.h>
 
-// Std C
-#include <cstring>
 
 // Std C++
+#include <cstring>
 #include <type_traits>
 #include <string>
 
@@ -56,7 +55,7 @@ enum /*QLocale::*/DataSizeFormats
 };
 #endif
 
-// KF5
+// KF
 #if HAVE_KF501 || HAVE_KF6
 #   ifndef HAVE_QLOCALE_FORMATTEDDATASIZE
     /// Needed to format numbers into "12.3 GB" etc. until we can rely on Qt 5.10, which supports
@@ -134,7 +133,7 @@ std::string tostr_hex(const IntegerType x)
 	std::string str; //(max_string_bytes_for_type, "0");
 	str.resize(max_string_bytes_for_type);
 	std::string fmt_str = "0x%0" + std::to_string(max_hex_chars_for_type) + "llx";
-	std::sprintf(&(str[0]), fmt_str.c_str(), (unsigned long long)x);
+    std::sprintf(&(str[0]), fmt_str.c_str(), static_cast<unsigned long long>(x));
 
 	return str;
 }

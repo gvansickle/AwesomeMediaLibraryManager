@@ -49,6 +49,7 @@ target_sources(resources
 		${amlm_ICONS}
 		${amlm_XQUERIES}
 )
+
 target_include_directories(resources
 	PUBLIC
 		${CMAKE_CURRENT_SOURCE_DIR}/.. ### this is so the built VersionInfo.cpp can find the VersionInfo.h header.
@@ -57,6 +58,7 @@ target_include_directories(resources
 set_target_properties(resources
 	PROPERTIES
 		AUTOMOC OFF
+		AUTORCC ON
 		# CMake suddenly doesn't know the linker language to use for this subdir,
 		# even with the add of VersionInfo.cpp, so force it.
 		LINKER_LANGUAGE CXX
@@ -64,12 +66,12 @@ set_target_properties(resources
 
 ecm_add_app_icon(amlm_SRCS ICONS ${amlm_APP_ICONS})
 
-# Qt5 Binary Resource (rcc) files.
+# Qt Binary Resource (rcc) files.
 #qt5_add_binary_resources(icons_oxygen oxygenicons.qrc)
 
-# Qt5 non-binary Resource files.
-#qt5_add_resources(amlm_SRCS "AppIcon.qrc")
-#qt5_add_resources(amlm_SRCS "amlm.qrc")
+# Qt non-binary Resource files.
+#qt_add_resources(resources "AppIcon.qrc")
+#qt_add_resources(resources "amlm.qrc")
 
 #target_sources(amlm_pseudolib
 #	PUBLIC
