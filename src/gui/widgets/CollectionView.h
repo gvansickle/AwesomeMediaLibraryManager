@@ -1,7 +1,9 @@
 #ifndef COLLECTIONVIEW_H
 #define COLLECTIONVIEW_H
 
-// Qt5
+/// @file
+
+// Qt
 #include <QWidget>
 
 // Ours

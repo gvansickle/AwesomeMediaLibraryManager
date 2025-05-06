@@ -20,11 +20,13 @@
 #ifndef TRACKMETADATA_H
 #define TRACKMETADATA_H
 
+/// @file
+
 // Stc C++
 #include <string>
 #include <vector>
 
-// Qt5
+// Qt
 #include <QVariant>
 
 // Libcue.

@@ -59,7 +59,7 @@ class KToggleAction;
 class KToggleToolBarAction;
 class KActionMenu;
 
-#else // !HAVE_KF501
+#else // !HAVE_KF
 
 #include <QMainWindow>
 

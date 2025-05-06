@@ -26,7 +26,7 @@
 // Std C++
 #include <memory>
 
-// Qt5
+// Qt
 #include <QXmlStreamReader>
 
 // Ours

@@ -94,7 +94,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Min versions of Qt, KF, KF/ECM.
 set(QT_MIN_VERSION "6.8.2")
-set(KF5_MIN_VERSION "6.11.0") ### @win temp: Only have 5.52.0
+set(KF_MIN_VERSION "6.11.0") ### @win temp: Only have 5.52.0
 set(ECM_MIN_VERSION "6.3.0") #"5.57.0")
 
 ###
@@ -378,7 +378,7 @@ find_package(Qt6 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
 	Concurrent
 	Test # For Q...ModelTester.
 	)
-set(QT5_LINK_LIB_TARGETS
+set(QT_LINK_LIB_TARGETS
 	Qt6::Core
 	Qt6::Gui
 	Qt6::Widgets
@@ -390,35 +390,32 @@ set(QT5_LINK_LIB_TARGETS
 
 # Unix-only
 if(UNIX)
-#    find_package(Qt6 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
-#        X11Extras
-#    )
-#    list(APPEND QT5_LINK_LIB_TARGETS Qt5::X11Extras)
+### Nothing here yet.  Was QT5::X11Extras, which was removed by Qt6.
 endif(UNIX)
 # Windows only
 if(WIN32)
-	list(APPEND QT5_LINK_LIB_TARGETS Qt5::WinMain)
+	list(APPEND QT_LINK_LIB_TARGETS Qt6::WinMain)
 endif(WIN32)
 
 print_qtinfo()
 
 ###
-### KDE KF5 libs.
+### KDE Foundation libs.
 ###
 # Krita has ~this warning: "don't reorder these, this is the order they depend on each other."
-set(KF5_LINK_LIB_TARGETS "")
+set(KF_LINK_LIB_TARGETS "")
 ### @note "Config" is both a find_package() keyword as well as the KF5Config components KF5::ConfigCore and KF5::ConfigGui.
 ###       We'll require KF5Config separately to avoid any ambiguity.
-find_package(KF6Config ${KF5_MIN_VERSION} REQUIRED)
-find_package(KF6 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
+find_package(KF6Config ${KF_MIN_VERSION} REQUIRED)
+find_package(KF6 ${KF_MIN_VERSION} REQUIRED COMPONENTS
 	Config
 	Archive ### @todo TRYING THIS IN CASE IconThemes needs it to work properly, otherwise REMOVE
 	WidgetsAddons
 	# Completion
-	CoreAddons ## USE_KF5_COREADDONS, git clone git://anongit.kde.org/kcoreaddons.git
+	CoreAddons
 	GuiAddons
 	ConfigWidgets ## Not in Krita from this until WindowSystem.
-	KIO ## USE_KDE_KIO, git clone git://anongit.kde.org/kio.git
+	KIO
 	ItemModels
 	ItemViews
 	XmlGui
@@ -427,14 +424,14 @@ find_package(KF6 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
 )
 set(HAVE_KF501 ${KF5_FOUND})
 set(HAVE_KF6 ${KF6_FOUND})
-list(APPEND KF5_LINK_LIB_TARGETS KF6::CoreAddons KF6::ConfigCore KF6::ConfigGui)
-list(APPEND KF5_LINK_LIB_TARGETS KF6::KIOCore KF6::KIOFileWidgets KF6::KIOWidgets)
-list(APPEND KF5_LINK_LIB_TARGETS KF6::WidgetsAddons KF6::XmlGui KF6::GuiAddons KF6::ItemModels KF6::ItemViews)
-list(APPEND KF5_LINK_LIB_TARGETS KF6::IconThemes KF6::WindowSystem)
+list(APPEND KF_LINK_LIB_TARGETS KF6::CoreAddons KF6::ConfigCore KF6::ConfigGui)
+list(APPEND KF_LINK_LIB_TARGETS KF6::KIOCore KF6::KIOFileWidgets KF6::KIOWidgets)
+list(APPEND KF_LINK_LIB_TARGETS KF6::WidgetsAddons KF6::XmlGui KF6::GuiAddons KF6::ItemModels KF6::ItemViews)
+list(APPEND KF_LINK_LIB_TARGETS KF6::IconThemes KF6::WindowSystem)
 ### @todo Without this the directory is kxmlgui5, which is wrong, and I haven't found the root cause.
 set(KDE_INSTALL_KXMLGUIDIR "share/kxmlgui6")  # Force KF6 path
 
-###### EXPERIMENT
+###### EXPERIMENTAL
 
 # SQLite3
 find_package(SQLite3
@@ -477,7 +474,7 @@ if(WITH_BUNDLED_BREEZE_ICONS)
 			COMPONENT coreapp)
     endif()
 endif()
-#list(APPEND KF5_LINK_LIB_TARGETS Breeze)
+#list(APPEND KF_LINK_LIB_TARGETS Breeze)
 print_varlist(BREEZEICONS_PATH)
 
 
@@ -513,13 +510,13 @@ endif(UNIX)
 
 # Qt logging categories.
 # @link https://api.kde.org/ecm/module/ECMQtDeclareLoggingCategory.html
-ecm_qt_declare_logging_category(QT5_LOGGING_CATEGORY_SOURCE_FILES
+ecm_qt_declare_logging_category(QT_LOGGING_CATEGORY_SOURCE_FILES
                                 HEADER logging_cat_ExtFuture.h
                                 IDENTIFIER EXTFUTURE
                                 CATEGORY_NAME amlm.concurrency.extfuture
                                 DEFAULT_SEVERITY Debug ### <Debug|Info|Warning|Critical|Fatal>
                                 )
-ecm_qt_declare_logging_category(QT5_LOGGING_CATEGORY_SOURCE_FILES
+ecm_qt_declare_logging_category(QT_LOGGING_CATEGORY_SOURCE_FILES
                                 HEADER logging_cat_ExtAsync.h
                                 IDENTIFIER EXTASYNC
                                 CATEGORY_NAME amlm.concurrency.extasync

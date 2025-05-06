@@ -20,6 +20,8 @@
 #ifndef PERFECTDELETER_H
 #define PERFECTDELETER_H
 
+/// @file
+
 // Std C++
 #include <deque>
 #include <mutex>
@@ -37,7 +39,7 @@
 #include <QObjectCleanupHandler>
 #include <QUuid>
 
-// KF5
+// KF
 #include <KJob>
 class AMLMJob;
 

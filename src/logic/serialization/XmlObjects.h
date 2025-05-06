@@ -17,11 +17,11 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef SRC_LOGIC_SERIALIZATION_XMLOBJECTS_H_
+#define SRC_LOGIC_SERIALIZATION_XMLOBJECTS_H_
 /**
  * @file XmlObjects.h
  */
-#ifndef SRC_LOGIC_SERIALIZATION_XMLOBJECTS_H_
-#define SRC_LOGIC_SERIALIZATION_XMLOBJECTS_H_
 
 // Std C++
 #include <functional>
@@ -29,7 +29,7 @@
 #include <initializer_list>
 #include <cstdint>
 
-// Qt5
+// Qt
 #include <QXmlStreamWriter>
 #include <QDateTime>
 #include <QUrl>

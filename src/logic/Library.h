@@ -20,10 +20,12 @@
 #ifndef LIBRARY_H
 #define LIBRARY_H
 
+/// @file
+
 // Std C++
 #include <utility>
 
-// Qt5
+// Qt
 #include <QUrl>
 
 // Ours.

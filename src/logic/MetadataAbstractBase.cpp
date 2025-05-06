@@ -17,13 +17,15 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/// @file
+
 #include "MetadataAbstractBase.h"
 
 // Std C++
 #include <map>
 #include <string>
 
-// Qt5
+// Qt
 #include <QDebug>
 
 // Ours.

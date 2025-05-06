@@ -25,7 +25,7 @@
 #include <string>
 #include <mutex>
 
-// Qt5
+// Qt
 #include <QObject>
 
 

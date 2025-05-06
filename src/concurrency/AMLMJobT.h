@@ -236,24 +236,19 @@ protected: //Q_SLOTS:
 		{
 		case ExtFutureProgressInfo::EncodedType::DESC:
 			AMLM_ASSERT_EQ(strl.size(), 5);
-#if 0 // KF5
-			Q_EMIT this->description(this, strl[0],
-                                     std::pair<QList<QString>, QList<QString>>(strl[1], strl[2]),
-									 std::pair<QList<QString>, QList<QString>>(strl[3], strl[4]));
-#elif 1 // KF6
+
 			/**
 			 * From the KF6 docs: https://api.kde.org/frameworks/kcoreaddons/html/classKJob.html#a145f7a7648f06ef79cf526a2c6125b88
 			 * "Examples of titles are "Copying", "Creating resource", etc. The fields of the description
 			 * can be "Source" with an URL, and, "Destination" with an URL for a "Copying" description."
 			 */
             Q_EMIT this->description(this,
-                                     // Title, 	the general description of the job.
+                                     // Title, the general description of the job.
                                      strl[0],
                                      // field1, first field (localized name and value)
                                      std::pair(strl[1], strl[2]),
                                      // field2,	second field (localized name and value)
                                      std::pair(strl[3], strl[4]));
-#endif
 			break;
 		case ExtFutureProgressInfo::EncodedType::INFO:
             AMLM_ASSERT_EQ(strl.size(), 1);

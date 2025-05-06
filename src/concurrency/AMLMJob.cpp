@@ -21,10 +21,10 @@
 
 #include "AMLMJob.h"
 
-/// Qt5
+// Qt
 #include <QPointer>
 
-/// KF5
+// KF
 #include <KJob>
 #include <KJobWidgets>
 #include <KDialogJobUiDelegate>
@@ -347,7 +347,7 @@ void AMLMJob::dump_job_info(KJob* kjob, const QString& header)
     qIn() << " " << M_NAME_VAL(kjob->error());
     if(kjob->error() != 0)
     {
-        // Per KF5 docs (https://api.kde.org/frameworks/kcoreaddons/html/classKJob.html#ae0ac2567b61681f4811d128825fbcd0b),
+        // Per KF docs (https://api.kde.org/frameworks/kcoreaddons/html/classKJob.html#ae0ac2567b61681f4811d128825fbcd0b),
         // "[errorString() and errorText()] Only call if error is not 0.".
         qIn() << " " << M_NAME_VAL(kjob->errorText());
         qIn() << " " << M_NAME_VAL(kjob->errorString());

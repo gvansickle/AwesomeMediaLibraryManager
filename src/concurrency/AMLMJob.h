@@ -163,7 +163,7 @@ Q_SIGNALS:
 	void SIGNAL_resultsReadyAt(int begin, int end) /*override*/;
 
 
-    /// @warning Qt5 signals are always public in the C++ sense.  Slots are similarly public when called
+    /// @warning Qt signals are always public in the C++ sense.  Slots are similarly public when called
     ///          via the signal->slot mechanism, on direct calls they have the normal public/protected/private rules.
 
 
@@ -196,18 +196,17 @@ Q_SIGNALS:
 
 	/// @name Public KJob signals, quite a few:
     ///
-    // KF5: void 	description (KJob *job, const QString &title, const QPair< QString, QString > &field1=QPair< QString, QString >(), const QPair< QString, QString > &field2=QPair< QString, QString >())
-    // KF6:
+    // KF6: void KJob::description ( KJob * job, const QString & title, const QPair< QString, QString > & field1 = QPair< QString, QString >(), const QPair< QString, QString > & field2 = QPair< QString, QString >() )
 
     /// "Emitted when the job is finished, in any case.
     /// It is used to notify observers that the job is terminated and that progress can be hidden.
     /// *** This is a private signal, it can't be emitted directly by subclasses of KJob, use emitResult() instead.
-    /// In general, to be notified of a job's completion, client code should connect to result() rather than finished(), so that kill(Quietly) is indeed quiet. However if you store a list of jobs
+    /// Since 5.75 this signal is guaranteed to be emitted exactly once.
+    /// In general, to be notified of a job's completion, client code should connect to result() rather than finished(),
+    /// so that kill(Quietly) is indeed quiet. However if you store a list of jobs
     /// and they might get killed silently, then you must connect to this instead of result(), to avoid dangling pointers in your list."
     // void finished(KJob *job);
 
-    // KF5: void 	infoMessage (KJob *job, const QString &plain, const QString &rich=QString())
-    // KF5: void 	warning (KJob *job, const QString &plain, const QString &rich=QString())
     // KF6: void KJob::infoMessage ( KJob * job, const QString & message )
     // KF6: void KJob::warning ( KJob * job, const QString & message )
 
@@ -452,7 +451,7 @@ protected Q_SLOTS:
     void SLOT_kjob_finished(KJob* kjob);
     void SLOT_kjob_result(KJob* kjob);
 
-    // Really would like to be able to do this, but Qt5 doesn't.
+    // Really would like to be able to do this, but Qt doesn't.
 //    template <class T>
 //    void SLOT_onResultsReadyAt(T ef, int begin, int end);
     /// @}

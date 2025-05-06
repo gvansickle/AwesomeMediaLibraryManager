@@ -24,7 +24,7 @@
 #include <memory>
 #include <functional>
 
-// Qt5
+// Qt
 #include <QUrl>
 
 // Ours
@@ -149,8 +149,8 @@ protected Q_SLOTS:
 
 	/// @note OBSOLETE
 	/// Invoked when user double-clicks on an entry.
-	/// According to Qt5 docs, index will always be valid:
-	/// http://doc.qt.io/qt-5/qabstractitemview.html#doubleClicked:
+	/// According to Qt docs, index will always be valid:
+	/// https://doc.qt.io/qt-6/qabstractitemview.html#doubleClicked:
 	/// "The [doubleClicked] signal is only emitted when the index is valid."
 	void onDoubleClicked(const QModelIndex &index);
 

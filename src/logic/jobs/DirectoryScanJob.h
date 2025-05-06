@@ -20,9 +20,11 @@
 #ifndef SRC_CONCURRENCY_DIRECTORYSCANJOB_H_
 #define SRC_CONCURRENCY_DIRECTORYSCANJOB_H_
 
+/// @file
+
 #include <config.h>
 
-// Qt5
+// Qt
 #include <QObject>
 #include <QUrl>
 #include <QDir>

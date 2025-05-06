@@ -42,8 +42,8 @@ target_sources(jobs
 target_link_libraries(jobs
 	PUBLIC
 	    #${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS}
-		${QT5_LINK_LIB_TARGETS}
-		${KF5_LINK_LIB_TARGETS}
+		${QT_LINK_LIB_TARGETS}
+		${KF_LINK_LIB_TARGETS}
     PRIVATE
 		${AMLM_TAGLIB_TARGET}
 		concurrency

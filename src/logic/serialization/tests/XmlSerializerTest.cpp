@@ -25,7 +25,7 @@
 #include <gtest/gtest.h>
 //#include <gmock/gmock-matchers.h>
 
-// Qt5
+// Qt
 #include <QVariantMap>
 
 // Ours

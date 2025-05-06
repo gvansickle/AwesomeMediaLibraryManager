@@ -34,7 +34,7 @@
 #include <future/cpp14_concepts.hpp>
 #include <future/Unit.hpp>
 
-// Qt5
+// Qt
 #include <QObject>
 #include <QException>
 #include <QtConcurrentRun>

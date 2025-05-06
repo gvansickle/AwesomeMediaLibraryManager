@@ -19,7 +19,7 @@
 
 #include "BaseActivityProgressStatusBarWidget.h"
 
-// Qt5
+// Qt
 #include <QLabel>
 #include <QToolButton>
 #include <QProgressBar>
@@ -29,7 +29,7 @@
 #include <QHelpEvent>
 #include <QPalette>
 
-// KF5
+// KF
 //#include <KJob>
 #include <KAbstractWidgetJobTracker>
 #include <KToolTipWidget>

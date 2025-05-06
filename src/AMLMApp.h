@@ -144,7 +144,7 @@ public Q_SLOTS:
 
     /**
      * Connected to this app's aboutToQuit() signal.
-     * From the Qt5 manual:
+     * From the Qt manual:
      * "This signal is emitted when the application is about to quit the main event loop, e.g. when
      * the event loop level drops to zero. This may happen either after a call to quit() from inside the application
      * or when the user shuts down the entire desktop session.

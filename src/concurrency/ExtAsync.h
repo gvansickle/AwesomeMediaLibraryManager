@@ -52,7 +52,7 @@
 #include <future/function_traits.hpp>
 #include <future/Unit.hpp>
 
-// Qt5
+// Qt
 #include <QEvent>
 #include <QObject>
 #include <QtConcurrent>

@@ -804,7 +804,7 @@ QModelIndex AbstractTreeModel::parent(const QModelIndex &index) const
 {
 	// std::unique_lock write_lock(m_rw_mutex);
 
-	// Check index but don't touch parent, since per Qt5 docs that would make this go recursive.
+	// Check index but don't touch parent, since per Qt docs that would make this go recursive.
     // Q_ASSERT(checkIndex(index, CheckIndexOption::IndexIsValid | CheckIndexOption::DoNotUseParent));
     // Return invalid parent index for invalid index.
 	if (!index.isValid())
@@ -940,14 +940,14 @@ bool AbstractTreeModel::setData(const QModelIndex &index, const QVariant &value,
 	// std::unique_lock write_lock(m_rw_mutex);
 
 	// setData() expects a valid index.
-	// From Qt5 docs:
+	// From Qt docs:  https://doc.qt.io/qt-6/qabstractitemmodel.html#checkIndex
 	/// "A legal model index is either an invalid model index, or a valid model index for which all the following holds:
-	//    the index' model is this;
-	//    the index' row is greater or equal than zero;
-	//    the index' row is less than the row count for the index' parent;
-	//    the index' column is greater or equal than zero;
-	//    the index' column is less than the column count for the index' parent."
-	/// But options change the check.
+	/// the index' model is this;
+	/// the index' row is greater or equal than zero;
+	/// the index' row is less than the row count for the index' parent;
+	/// the index' column is greater or equal than zero;
+	/// the index' column is less than the column count for the index' parent.
+	/// The options argument may change some of these checks."
 
 	Q_ASSERT(checkIndex(index, CheckIndexOption::IndexIsValid));
 

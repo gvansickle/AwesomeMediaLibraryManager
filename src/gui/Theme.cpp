@@ -318,6 +318,7 @@ M_WARNING("TODO");
     // "Note: By default, only X11 will support themed icons. In order to use themed icons on Mac and Windows, you will
     // have to bundle a compliant theme in one of your themeSearchPaths() and set the appropriate themeName()."
     // (http://doc.qt.io/qt-5/qicon.html#fromTheme)
+	// Qt6 docs don't say that in QIcon docs, but AFAICS it's the same situation.
     // We set the bundled icons above, so now we just need to set the QIcon() theme name if necessary.
 	if(true) //QIcon::themeName() == "")
     {

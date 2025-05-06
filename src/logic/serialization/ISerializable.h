@@ -27,7 +27,7 @@
 // Std C++
 #include <type_traits>
 
-// Qt5
+// Qt
 #include <QMetaType>
 #include <QVariant>
 #include <QUuid>

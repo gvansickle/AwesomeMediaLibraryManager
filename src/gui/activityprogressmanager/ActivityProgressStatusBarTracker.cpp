@@ -21,14 +21,14 @@
 
 #include "ActivityProgressStatusBarTracker.h"
 
-/// Qt5
+// Qt
 #include <QObject>
 #include <QTimer>
 #include <QToolButton>
 #include <QWindow>
 #include <QStatusBar>
 
-/// KF5
+// KF
 #include <KJob>
 #include <KIO/ListJob>
 

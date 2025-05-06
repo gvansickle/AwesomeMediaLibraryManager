@@ -263,7 +263,7 @@ void Experimental::DoExperiment()
                                     QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
                                     QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 
-    /// Another KF5 KIO Job.
+    /// Another KF KIO Job.
     KIO::ListJob* kio_list_kiojob = KIO::listRecursive(dir_url, /*KIO::DefaultFlags*/ KIO::HideProgressInfo, /*includeHidden=*/false);
     connect_or_die(kio_list_kiojob, &KJob::result, this, [=](KJob* kjob){
         qIn() << "KIO::ListJob emitted result" << kjob;
@@ -276,7 +276,7 @@ void Experimental::DoExperiment()
 //    });
     kio_list_kiojob->setObjectName("LISTRECURSIVEJOB");
 
-    /// And one last KF5 KIO job.
+    /// And one last KF KIO job.
     /// "emits the data through the data() signal."
     QUrl web_src_url(QStringLiteral("http://releases.ubuntu.com/18.04/ubuntu-18.04-desktop-amd64.iso?_ga=2.204957456.1400403342.1527338037-878124677.1491681087"));
 //    QUrl local_dest_url(QStringLiteral("file://home/gary/testfile.html"));

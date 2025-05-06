@@ -27,7 +27,7 @@
 // Std C++ backfill
 #include <future/cpp14_concepts.hpp>
 
-// Qt5
+// Qt
 #include <QFlags>
 #include <QFutureInterface>
 

@@ -29,7 +29,7 @@
 #include <exception>
 #include <iostream>
 
-// Qt5
+// Qt
 #include <QException>
 
 /**

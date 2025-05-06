@@ -20,7 +20,7 @@
 #include <gui/delegates/ItemDelegateLength.h>
 #include "MDILibraryView.h"
 
-// Qt5
+// Qt
 #include <QMdiArea>
 #include <QMdiSubWindow>
 #include <QHeaderView>

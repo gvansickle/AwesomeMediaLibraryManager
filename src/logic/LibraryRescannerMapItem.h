@@ -20,15 +20,15 @@
 #ifndef SRC_LOGIC_LIBRARYRESCANNERMAPITEM_H_
 #define SRC_LOGIC_LIBRARYRESCANNERMAPITEM_H_
 
-/// Std C++
+// Std C++
 #include <memory>
 
-/// Qt5
+// Qt
 #include <QDebug>
 #include <QPersistentModelIndex>
 #include <QVector>
 
-/// Ours
+// Ours
 #include "LibraryEntry.h"
 
 /**

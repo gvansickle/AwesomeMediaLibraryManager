@@ -29,7 +29,7 @@
 #include <deque>
 #include <atomic>
 
-// Qt5
+// Qt
 #include <QFuture>
 #include <QSemaphore>
 class QThread;

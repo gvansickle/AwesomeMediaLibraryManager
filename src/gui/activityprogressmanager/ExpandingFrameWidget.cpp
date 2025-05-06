@@ -17,13 +17,15 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/// @file
+
 #include "ExpandingFrameWidget.h"
 
-/// Qt5
+// Qt
 #include <QLayout>
 #include <QWidget>
 
-/// Ours
+// Ours
 #include <utils/TheSimplestThings.h>
 #include <gui/MainWindow.h>
 
