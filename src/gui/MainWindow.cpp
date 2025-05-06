@@ -704,7 +704,11 @@ void MainWindow::createActionsView(KActionCollection *ac)
 	m_act_lock_layout = make_action(Theme::iconFromTheme("emblem-locked"), tr("Lock layout"), this); // There's also an "emblem-unlocked"
 	m_act_reset_layout = make_action(Theme::iconFromTheme("view-multiple-objects"), tr("Reset layout"), this);
 #else
-	m_act_lock_layout = make_action(Theme::iconFromTheme("emblem-locked"), tr("Lock layout"), ac); // There's also an "emblem-unlocked"
+	// There's also "emblem-locked", "emblem-unlocked", and "system-lock-screen".
+	// KF uses the latter in its KToolBar context menu.
+	m_act_lock_layout = make_action(Theme::iconFromTheme("system-lock-screen"), tr("Lock toolbar positions"), ac);
+	m_act_lock_layout->setCheckable(true);
+	m_act_lock_layout->setChecked(KToolBar::toolBarsLocked());
 	m_act_reset_layout = make_action(Theme::iconFromTheme("view-multiple-objects"), tr("Reset layout"), ac);
 #endif
 	/// @todo These appear to be unreparentable, so we can't give them to an ActionBundle.
@@ -794,13 +798,16 @@ void MainWindow::createActionsHelp(KActionCollection* ac)
 
 /**
  * @note This will only work properly if called after all Toolbars and Docks have been added
- * and setupGUI() has been called.
+ * and the equivalent of setupGUI() has been called.
  */
 void MainWindow::addViewMenuActions()
 {
 	m_act_lock_layout->setChecked(AMLMSettings::layoutIsLocked());
-//	connect(m_act_lock_layout, &QAction::toggled, this, &MainWindow::setLayoutLocked);
-    m_menu_view->addAction(m_act_lock_layout);
+	connect_or_die(m_act_lock_layout, &QAction::toggled, this, &MainWindow::onSetLayoutLocked);
+	m_menu_view->addActions({
+    	m_act_lock_layout,
+		m_act_reset_layout,
+		m_act_ktog_show_tool_bar});
 
     // List dock widgets.
     m_menu_view->addSection(tr("Docks"));
@@ -823,18 +830,6 @@ void MainWindow::addViewMenuActions()
     }
 
 	// List toolbars.
-// M_WARNING("/// @todo This doesn't work for unknown reasons.");
-//    m_menu_view->addSection(tr("Toolbars"));
-//    auto tbma = toolBarMenuAction();
-//    if(tbma != nullptr)
-//    {
-//        m_menu_view->addAction(tbma);
-//    }
-//    else
-//    {
-//        qWr() << "NULL toolBarMenuAction";
-//    }
-
     m_menu_view->addSection(tr("Toolbars"));
     auto tbs = toolBars();
     for(auto tb : std::as_const(tbs))
@@ -883,8 +878,8 @@ void MainWindow::createMenus()
 	m_menu_edit->addAction(m_act_find_prev);
 
     // Create the View menu.
-// M_WARNING("TODO")
     m_menu_view = menuBar()->addMenu(tr("&View"));
+	// menu populated by addViewMenuActions().
 //	menuBar()->addMenu(m_menu_view);
 //	m_ab_docks->appendToMenu(m_menu_view);
 //	m_menu_view->addActions({
@@ -1016,7 +1011,7 @@ void MainWindow::createToolBars()
     m_settingsToolBar->addWidget(iconThemeComboBox);
 	connect_or_die(iconThemeComboBox, &QComboBox::currentTextChanged, this, &MainWindow::changeIconTheme);
 #endif
-    // Create another toolbar for the player controls.
+    // Create a toolbar for the player controls.
     m_controlsToolbar = addToolBar(tr("Player Controls"), "PlayerControlsToolbar");
 
     m_controlsToolbar->addWidget(m_controls);
@@ -2250,6 +2245,14 @@ void MainWindow::onShowMenuBar(bool show)
 	}
 // M_WARNING("TODO: CTRL+M doesn't get the bar back.");
 //	menuBar()->setVisible(show);
+}
+
+void MainWindow::onSetLayoutLocked(bool checked)
+{
+	KToolBar::setToolBarsLocked(checked);
+	// MainWindow::onSettingsChanged();
+	// KToolBar::emitToolbarStyleChanged();
+	onApplyToolbarConfig();
 }
 
 void MainWindow::onConfigureToolbars()

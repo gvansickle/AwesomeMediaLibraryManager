@@ -266,6 +266,10 @@ private Q_SLOTS:
 	/// Slot which shows/hides the menu bar.
 	void onShowMenuBar(bool show);
 
+	/// Slot which locks the layout of the KToolBars.
+	/// @todo Other layout?
+	void onSetLayoutLocked(bool checked);
+
 	void onConfigureToolbars();
 
 	void onApplyToolbarConfig();
