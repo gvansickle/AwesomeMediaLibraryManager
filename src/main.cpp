@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -45,6 +45,7 @@
 #endif
 
 // Ours
+#include "AMLMSettings.h"
 #include "Core.h"
 #include <gui/Theme.h>
 #include <utils/AboutDataSetup.h>
@@ -57,6 +58,7 @@
 M_MESSAGE("BUILDING WITH CMAKE_C_COMPILER_ID: " CMAKE_C_COMPILER_ID " = " CMAKE_C_COMPILER);
 M_MESSAGE("BUILDING WITH CMAKE_CXX_COMPILER_ID: " CMAKE_CXX_COMPILER_ID " = " CMAKE_CXX_COMPILER);
 
+/// @todo Move this out of this file.
 static void LL(const QString& root)
 {
     for (const auto& dir_entry : QDirListing(root, QDirListing::IteratorFlag::Recursive))
@@ -103,7 +105,7 @@ int main(int argc, char *argv[])
 	qCritical() << "TEST: Critical";
 
 	// List our built-in resources.
-	LL(":/");
+	// LL(":/");
 
 	// Log our startup environment.
 	logging.dumpEnvVars();
@@ -133,6 +135,9 @@ int main(int argc, char *argv[])
 
 	// Get our config for use later.
 	KSharedConfigPtr config = KSharedConfig::openConfig();
+	qIn() << M_ID_VAL(config->mainConfigName()) << M_ID_VAL(config->openFlags());
+	auto amlmconfig = AMLMSettings::self();
+	qDb() << M_ID_VAL(amlmconfig->collectionSourceUrls());
 	// Open or create two top-level config groups: "unmanaged" and "version".
 	// We use the pre-existence of "version" to detect if this is the first time we've started.
 	KConfigGroup grp(config, "unmanaged");
@@ -140,6 +145,7 @@ int main(int argc, char *argv[])
     if (!initialGroup.exists())
 	{
         // First-time startup.
+    	qIn() << "First-time startup";
 
 		/// @todo Not sure if we want to be this draconian.
 //        app.KDEOrForceBreeze(grp);
@@ -230,6 +236,7 @@ int main(int argc, char *argv[])
 		// From the KDE5 docs: https://api.kde.org/frameworks/kxmlgui/html/classKMainWindow.html#ab0c194be12f0ad123a9ba8be75bb85c9
 		// "KMainWindows must be created on the heap with 'new'"
 		MainWindow *mainWin = new MainWindow();
+		mainWin->setObjectName("AMLMMainWindow#");
 		// Tell the app singleton about the main window singleton.
 		// Note that there's a lot of code between the two creations.
 		amlmApp->MAIN_ONLY_setMainWindow(mainWin);

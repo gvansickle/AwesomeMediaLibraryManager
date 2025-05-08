@@ -136,6 +136,8 @@ public:
     /// Init function which is called after setupGUI() has been called.
     void post_setupGUI_init();
 
+	void applyMainWindowSettings(const KConfigGroup& config) override;
+
 	/**
 	 * Called from the closeEvent() of views just before they accept the event.
 	 * This widget should delete any references it is keeping to @a viewptr.

@@ -333,13 +333,23 @@ void MainWindow::init()
 
 void MainWindow::post_setupGUI_init()
 {
-    // KF: Activate Autosave of toolbar/menubar/statusbar/window layout settings.
-    // "Make sure you call this after all your *bars have been created."
-    // @note In KXmlGuiWindow this is done by setupGUI().
-    setAutoSaveSettings();
-
     // Post setupGUI(), we can now add the status/tool/dock actions.
-    addViewMenuActions();
+	addViewMenuActions();
+
+	// KF: Activate Autosave of toolbar/menubar/statusbar/window layout settings.
+	// "Make sure you call this after all your *bars have been created."
+	// @note In KXmlGuiWindow this is done by setupGUI().
+	setAutoSaveSettings();
+}
+
+void MainWindow::applyMainWindowSettings(const KConfigGroup& config)
+{
+	KMainWindow::applyMainWindowSettings(config);
+	QStatusBar* sb = findChild<QStatusBar*>();
+	if (sb && m_act_ktog_show_status_bar)
+	{
+		m_act_ktog_show_status_bar->setChecked(sb->isHidden());
+	}
 }
 
 /**
@@ -350,7 +360,7 @@ void MainWindow::onStartup()
 {
     initRootModels();
 
-    // Create the "Now Playing" playlist and view.
+    // Create the "Now Playing" playlist model and view.
     newNowPlaying();
 
     /// @experimental
@@ -2257,6 +2267,7 @@ void MainWindow::onSetLayoutLocked(bool checked)
 	onApplyToolbarConfig();
 }
 
+// Slot
 void MainWindow::onConfigureToolbars()
 {
 	auto config_group = KSharedConfig::openConfig()->group("MainWindowToolbarSettings");

@@ -38,7 +38,6 @@
     </entry>
     <entry name="fileDialogModeComboBox" key="settings_file_dialog_mode" type="Enum">
     	<label context="@label:listbox">KCFG File dialog mode</label>
-
     	<choices name="FileDialogMode">
     		<choice name="QFDNative"><label context="@item:inlistbox">QFileDialog, native</label></choice>
     		<choice name="QFDNonNative"><label context="@item:inlistbox">QFileDialog, non-native</label></choice>
@@ -54,7 +53,6 @@
     	</code>
     	<default  code="true">dialog_modes</default>
     	    	    	-->
-
     </entry>
   </group>
   <group name="Music Library">
