@@ -200,8 +200,8 @@ private:
 	void saveStateOverload();
 	void restoreStateOverload();
 
-	/// Persist the last state to/from this QSettings key.
-	QString m_settings_state_key;
+	/// Persist the last state to/from this KConfig group.
+    QString m_per_dlg_type_group;
 
     /// The parent of this "proxy" widget, which we'll also use as
     /// the parent of the real file dialog.

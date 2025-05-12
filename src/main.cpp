@@ -23,7 +23,6 @@
 
 // Qt
 #include <QtGlobal>
-#include <QSettings>
 #include <QIcon>
 #include <QLoggingCategory>
 #include <QResource>
@@ -218,7 +217,7 @@ int main(int argc, char *argv[])
     QApplication::setWindowIcon(appIcon);
 
 	// Always use INI format for app settings, so we don't hit registry restrictions on Windows.
-	QSettings::setDefaultFormat(QSettings::IniFormat);
+	// QSettings::setDefaultFormat(QSettings::IniFormat);
 
 	qInfo() << "QPA Platform plugin name:" << app.platformName();
 

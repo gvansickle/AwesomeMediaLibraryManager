@@ -4,9 +4,22 @@
       xsi:schemaLocation="https://www.kde.org/standards/kcfg/1.0
       https://www.kde.org/standards/kcfg/1.0/kcfg.xsd" >
     <include>Qt</include>
+	<include>QFileDialog</include>
 	<include>KPageDialog</include>
 	<include>gui/settings/DefaultSettingsHelper.h</include>
+<!-- NOTE: KConfigXT uses at least two separate config files:
+	1. The one we're defining here: ~/.config/<appname>rc
+	2. One which seems to be automatically defined: ~.local/state/<appname>staterc
+	Docs on the second say this:
+	"Use this for storing information that is changing frequently and should not be saved by configuration backup utilities."
+	This means stuff like the MainWindow size and shape and other (dock placement?).  Things that don't cause much pain
+	if they	got defaulted for some reason.
+	The first is then for "actual" settings that you want to keep, even across such backups.
+	-->
   <kcfgfile name="AwesomeMediaLibraryManagerrc"/>
+
+
+
   <group name="General">
 	<!-- Settings dialog, General page -->
     <entry name="SettingsDialogFace" key="settings_dialog_type"	type="Enum">
@@ -104,6 +117,38 @@
       <min>5</min>
       <max>50</max>
       <default>10</default>
+    </entry>
+  </group>
+
+<!--	<kcfgfile name="testrc">-->
+<!--		<parameter name="groupname"/>-->
+<!--	</kcfgfile>-->
+
+
+
+	<group name="NetworkAwareFileDialogs">
+		<!-- Base64, because KconfigXT doesn't support QByteArray directly -->
+		<entry name="qfd_state" type="StringMap"></entry>
+
+		<entry name="dir_url" type="Url"/>
+	    <entry name="name_filter" type="String"/>
+        <entry name="mime_type_filter" type="String"/>
+		<entry name="view_mode" type="Enum">
+		    <label context="@label:listbox">NetworkAwareFileDialog</label>
+			<choices name="QFileDialog::ViewMode">
+			  <choice name="AnyFile">
+			<!--			  <label context="@item:inlistbox">QFileDialog, native</label>-->
+			  </choice>
+			  <choice name="ExistingFile">
+			<!--			  <label context="@item:inlistbox">QFileDialog, non-native</label>-->
+			  </choice>
+			  <choice name="Directory">
+			<!--			  <label context="@item:inlistbox">GTK+3 direct</label>-->
+			  </choice>
+			  <choice name="ExistingFiles">
+			  </choice>
+			</choices>
+	  <default>QFileDialog::FileMode::AnyFile</default>
     </entry>
   </group>
 </kcfg>

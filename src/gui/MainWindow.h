@@ -35,7 +35,6 @@ class QActionGroup;
 class QWidget;
 class QLabel;
 class QMdiSubWindow;
-class QSettings;
 class QStandardItem;
 class QStandardItemModel;
 
@@ -268,7 +267,7 @@ private Q_SLOTS:
 	/// Slot which shows/hides the menu bar.
 	void onShowMenuBar(bool show);
 
-	/// Slot which locks the layout of the KToolBars.
+	/// Slot which locks the layout of the KToolBars and the Docks.
 	/// @todo Other layout?
 	void onSetLayoutLocked(bool checked);
 
@@ -358,10 +357,16 @@ private:
 
     /// Reads the primary settings.
 	void readPreGUISettings();
+    /**
+ * Open the windows the user had open at the end of last session.
+ * @todo Actually now only opens a window for each libmodel.
+ */
     void openWindows();
     void writeSettings();
-    void writeLibSettings(QSettings& settings);
-    void readLibSettings(QSettings& settings);
+    /// Writes the Library settings to ${HOME}/AMLMDatabaseSerDes.xml (not a QSettings or KConfig settings file).
+    void writeLibSettings();
+    /// Reads the Library settings from ${HOME}/AMLMDatabaseSerDes.xml (not a QSettings or KConfig settings file).
+    void readLibSettings();
     ///@}
 
     /// Signal-Slot-related functions.

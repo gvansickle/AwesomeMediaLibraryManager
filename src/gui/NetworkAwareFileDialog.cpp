@@ -17,20 +17,20 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/// @file
+
 #include <config.h>
 
 #include "NetworkAwareFileDialog.h"
 
 // Std C++
 #include <memory>
-#include <set>
 
 // Qt
 #include <QApplication>
 #include <QRegularExpression>
 #include <QDebug>
 #include <QMessageBox>
-#include <QSettings>
 #include <QStandardPaths>
 #include <QWindow>
 
@@ -111,15 +111,16 @@ NetworkAwareFileDialog::NetworkAwareFileDialog(QWidget *parent, const QString& c
 	m_the_qfiledialog->setFileMode(QFileDialog::AnyFile);
 	m_the_qfiledialog->setAcceptMode(QFileDialog::AcceptSave);
 //	m_the_qfiledialog->setSupportedSchemes({"file", "smb", "gvfs"});
-#if 0
+
 	if(state_key.length() > 0)
 	{
-		// Persist the last state to/from this QSettings key.
-		m_settings_state_key = "file_dialogs/" + state_key;
+		// Persist the last state to/from this KConfig key.
+		// m_per_dlg_type_group = state_key;
+		m_per_dlg_type_group = "NetworkAwareFileDialog";
 	}
-#endif
 
-    // We need to track the filter the user has selected (i.e. "Text files (*.txt)") via this signal.
+
+	// We need to track the filter the user has selected (i.e. "Text files (*.txt)") via this signal.
     // For QFileDialog there doesn't appear to be any better way to get this information after the exec() call returns.
 	connect_or_die(m_the_qfiledialog.data(), &QFileDialog::filterSelected, this, &NetworkAwareFileDialog::onFilterSelected);
 }
@@ -170,6 +171,8 @@ std::pair<QUrl, QString> NetworkAwareFileDialog::getExistingDirectoryUrl(QWidget
 																		 QFileDialog::Options options,
 																		 const QStringList& supportedSchemes)
 {
+	Q_ASSERT(state_key.length() > 0);
+	qDb() << M_ID_VAL(state_key);
 	std::unique_ptr<NetworkAwareFileDialog> nafdlg = std::make_unique<NetworkAwareFileDialog>(parent, caption, dir, QString(), state_key);
 
     auto &dlg = nafdlg; //->m_the_qfiledialog;
@@ -267,7 +270,7 @@ QString NetworkAwareFileDialog::filter_to_suffix(const QString &filter)
 bool NetworkAwareFileDialog::use_qfiledialog() const
 {
     // Get the user's preference.
-    AMLMSettings::FileDialogMode user_pref_mode = AMLMSettings::fileDialogModeComboBox();
+    AMLMSettings::FileDialogMode user_pref_mode = AMLMSettings(0).fileDialogModeComboBox();
 
     if(user_pref_mode == AMLMSettings::FileDialogMode::QFDNative
             || user_pref_mode == AMLMSettings::FileDialogMode::QFDNonNative)
@@ -344,7 +347,7 @@ int NetworkAwareFileDialog::exec()
     }
 #endif // HAVE_GTKMM01 == 1
 
-	if(retval && m_settings_state_key.length() > 0)
+	if(retval && m_per_dlg_type_group.length() > 0)
 	{
 		// Save the state for next time.
 		saveStateOverload();
@@ -583,46 +586,67 @@ QDialog::DialogCode NetworkAwareFileDialog::exec_gtk3plus()
 }
 #endif // HAVE_GTKMM01 == 1
 
+
 void NetworkAwareFileDialog::saveStateOverload()
 {
-	QSettings settings;
+	auto old_group = AMLMSettings(0)/*::self()->*/.currentGroup();
+	AMLMSettings::self()->setCurrentGroup(m_per_dlg_type_group);
+	auto settings = AMLMSettings::self();
+
+	qDebug() << "Saving file dialog settings to settings key:" << m_per_dlg_type_group;
 
 	QByteArray new_state = m_the_qfiledialog->saveState();
-	qDebug() << "Saving file dialog settings to settings key:" << m_settings_state_key;
-	settings.setValue(m_settings_state_key + "/qfd_state", QVariant::fromValue(new_state));
+	settings->setQfd_state(new_state.toBase64());//QVariant::fromValue(new_state));
+
 	qDebug() << "Saving last dir URL: " << m_the_qfiledialog->directoryUrl();
-	settings.setValue(m_settings_state_key + "/dir_url", QVariant::fromValue(m_the_qfiledialog->directoryUrl()));
+    // settings.setValue(m_settings_state_key + "/dir_url", QVariant::fromValue(m_the_qfiledialog->directoryUrl()));
+    settings->setDir_url(m_the_qfiledialog->directoryUrl());
 
 	QString selected_name_filter = m_the_qfiledialog->selectedNameFilter();
 	qDebug() << "Saving last selected_name_filter: " << selected_name_filter;
-	settings.setValue(m_settings_state_key + "/name_filter", QVariant::fromValue(selected_name_filter));
+    // settings.setValue(m_settings_state_key + "/name_filter", QVariant::fromValue(selected_name_filter));
+    settings->setName_filter(selected_name_filter);
+
 
 	QString selected_mime_type_filter = m_the_qfiledialog->selectedMimeTypeFilter();
 	qDebug() << "Saving last selected_mime_type_filter: " << selected_mime_type_filter;
-	settings.setValue(m_settings_state_key + "/mime_type_filter", QVariant::fromValue(selected_mime_type_filter));
+    // settings.setValue(m_settings_state_key + "/mime_type_filter", QVariant::fromValue(selected_mime_type_filter));
+    settings->setMime_type_filter(selected_mime_type_filter);
 
 	// Detail or List view.
 	QFileDialog::ViewMode view_mode  = m_the_qfiledialog->viewMode();
 	qDebug() << "Saving last view_mode: " << view_mode;
-	settings.setValue(m_settings_state_key + "/view_mode", QVariant::fromValue(view_mode));
+    // settings.setValue(m_settings_state_key + "/view_mode", QVariant::fromValue(view_mode));
+    settings->setView_mode(view_mode);
 
-	settings.sync();
-	qDebug() << "Saved settings with error status:" << settings.status();
+    bool success = settings->save();
+    qDebug() << "Saved settings with error status:" << success;
+
+	AMLMSettings::self()->setCurrentGroup(old_group);
 }
 
 void NetworkAwareFileDialog::restoreStateOverload()
 {
-	QSettings settings;
+	qDb() << M_ID_VAL(m_per_dlg_type_group.length());
+	Q_ASSERT(m_per_dlg_type_group.length() > 0);
+	auto old_group = AMLMSettings::self()->currentGroup();
+	AMLMSettings::self()->setCurrentGroup(m_per_dlg_type_group);
+	auto settings = AMLMSettings::self();
 
 	// Do we have a state_key key?
-	if(m_settings_state_key.length() > 0)
+	if (m_per_dlg_type_group.length() > 0)
 	{
 		bool state_restored = false;
 
-		QByteArray saved_state = settings.value(m_settings_state_key + "/qfd_state").toByteArray();
-		QUrl last_dir_url = settings.value(m_settings_state_key + "/dir_url").toUrl();
-		QString selected_mime_type_filter = settings.value(m_settings_state_key + "/mime_type_filter").toString();
-		QString selected_name_filter = settings.value(m_settings_state_key + "/name_filter").toString();
+		// QByteArray saved_state = settings.value(m_settings_state_key + "/qfd_state").toByteArray();
+        QString temp_base64_data = settings->qfd_state();
+        QByteArray saved_state = QByteArray::fromBase64(temp_base64_data.toLatin1());
+        // QUrl last_dir_url = settings.value(m_settings_state_key + "/dir_url").toUrl();
+        QUrl last_dir_url = settings->dir_url();
+        // QString selected_mime_type_filter = settings.value(m_settings_state_key + "/mime_type_filter").toString();
+        QString selected_mime_type_filter =settings->mime_type_filter();
+        // QString selected_name_filter = settings.value(m_settings_state_key + "/name_filter").toString();
+        QString selected_name_filter = settings->name_filter();
 		if(saved_state.size() > 0)
 		{
 			state_restored = m_the_qfiledialog->restoreState(saved_state);
@@ -643,14 +667,15 @@ void NetworkAwareFileDialog::restoreStateOverload()
 
 		if(state_restored == false)
 		{
-			qWarning() << "File dialog state failed to restore for m_state_key '" << m_settings_state_key << "'";
+			qWarning() << "File dialog state failed to restore for m_state_key '" << m_per_dlg_type_group << "'";
 		}
 		else
 		{
-			qDebug() << "File dialog state restored successfully for m_state_key '" << m_settings_state_key << "'";
+			qDebug() << "File dialog state restored successfully for m_state_key '" << m_per_dlg_type_group << "'";
 			//qDebug() << "Dir is" << directory() << directoryUrl();
 		}
     }
+	AMLMSettings::self()->setCurrentGroup(old_group);
 }
 
 #if HAVE_GTKMM01

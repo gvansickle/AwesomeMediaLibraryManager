@@ -44,7 +44,6 @@
 #include <QMdiSubWindow>
 #include <QTimer>
 #include <QMessageBox>
-#include <QSettings>
 #include <QComboBox>
 #include <QStyleFactory>
 #include <QDirIterator>
@@ -213,7 +212,7 @@ KActionCollection* MainWindow::actionCollection()
     if(!m_actionCollection)
     {
         m_actionCollection = new KActionCollection(this);
-    	m_actionCollection->setObjectName("MainWindow-KActionCollection");
+    	m_actionCollection->setObjectName("MainWindow_KActionCollection");
     }
     return m_actionCollection;
 }
@@ -340,6 +339,8 @@ void MainWindow::post_setupGUI_init()
 	// "Make sure you call this after all your *bars have been created."
 	// @note In KXmlGuiWindow this is done by setupGUI().
 	setAutoSaveSettings();
+
+	onSetLayoutLocked(AMLMSettings::layoutIsLocked());
 }
 
 void MainWindow::applyMainWindowSettings(const KConfigGroup& config)
@@ -370,8 +371,7 @@ void MainWindow::onStartup()
 
     // Load any files which were opened at the time the last session was closed.
     qInfo() << "Loading libraries open at end of last session...";
-    QSettings settings;
-    readLibSettings(settings);
+    readLibSettings();
 
     // Open the windows the user had open at the end of last session.
     openWindows();
@@ -1480,7 +1480,7 @@ QDockWidget *MainWindow::addDock(const QString &title, const QString &object_nam
 
 
 //////
-////// Top-level QSettings save/restore.
+////// Top-level settings save/restore.
 //////
 
 void MainWindow::readPreGUISettings()
@@ -1492,7 +1492,7 @@ void MainWindow::readPreGUISettings()
 	/// @todo Add any readEntry()'s here.
 }
 
-void MainWindow::readLibSettings(QSettings& settings)
+void MainWindow::readLibSettings()
 {
 	int num_libs;
 
@@ -1596,27 +1596,22 @@ void MainWindow::readLibSettings(QSettings& settings)
 void MainWindow::writeSettings()
 {
 	qDebug() << "writeSettings() start";
-	QSettings settings;
 /// @todo REMOVE
 //	settings.beginGroup("mainwindow");
 //	settings.setValue("geometry", saveGeometry());
 //	settings.setValue("window_state", saveState());
 //	settings.endGroup();
 	// Write the open library settings.
-	writeLibSettings(settings);
+    writeLibSettings();
 	qDebug() << "writeSettings() end";
 }
 
 
-void MainWindow::writeLibSettings(QSettings& settings)
+void MainWindow::writeLibSettings()
 {
 	qDebug() << "writeLibSettings() start";
 
 	Stopwatch libsave_sw("writeLibSettings()");
-
-	// First it seems we have to remove the array.
-	/// @todo Remove, unneeded?
-	settings.remove("libraries");
 
 	QString database_filename = QDir::homePath() + "/AMLMDatabaseSerDes.xml";
 
@@ -1643,10 +1638,7 @@ void MainWindow::writeLibSettings(QSettings& settings)
 
 
 
-/**
- * Open the windows the user had open at the end of last session.
- * @todo Actually now only opens a window for each libmodel.
- */
+
 void MainWindow::openWindows()
 {
 	qInfo() << "Opening" << m_libmodels.size() << "windows which were open at end of last session...";
@@ -1778,11 +1770,8 @@ void MainWindow::onRemoveDirFromLibrary(QPointer<LibraryModel> libmodel)
 	qDebug() << QString("Num models:") << m_libmodels.size();
 
 	// Write the library settings out now.
-	QSettings settings;
-	writeLibSettings(settings);
-	settings.sync();
-
-	/// @todo ???
+    // note that this writes the Library settings to ${HOME}/AMLMDatabaseSerDes.xml (not a QSettings or KConfig settings file).
+	writeLibSettings();
 }
 
 /**
@@ -2261,18 +2250,34 @@ void MainWindow::onShowMenuBar(bool show)
 
 void MainWindow::onSetLayoutLocked(bool checked)
 {
+	// Lock all toolbars.
 	KToolBar::setToolBarsLocked(checked);
+
+	// Lock DockWidgets.
+	auto dockwidgetlist = this->findChildren<QDockWidget*>();
+	for (auto* dockwidget : std::as_const(dockwidgetlist))
+	{
+		if (checked)
+		{
+			dockwidget->setFeatures(dockwidget->features().setFlag(QDockWidget::DockWidgetMovable, false));
+		}
+		else
+		{
+			dockwidget->setFeatures(dockwidget->features().setFlag(QDockWidget::DockWidgetMovable, true));
+		}
+	}
 	// MainWindow::onSettingsChanged();
 	// KToolBar::emitToolbarStyleChanged();
 	onApplyToolbarConfig();
+
+	AMLMSettings::setLayoutIsLocked(checked);
+	AMLMSettings::self()->save();
 }
 
 // Slot
 void MainWindow::onConfigureToolbars()
 {
-	auto config_group = KSharedConfig::openConfig()->group("MainWindowToolbarSettings");
-
-	saveMainWindowSettings(config_group);
+	// saveMainWindowSettings(config_group);
 
     /// @todo This probably need to go away, it's dependant on us being derived from KXmlGui.
     // KEditToolBar dialog(actionCollection(), this);
@@ -2284,7 +2289,7 @@ void MainWindow::onConfigureToolbars()
 
 void MainWindow::onApplyToolbarConfig()
 {
-	auto config_group = KSharedConfig::openConfig()->group("MainWindowToolbarSettings");
+	auto config_group = KSharedConfig::openConfig()->group("MainWindow");
 
 	applyMainWindowSettings(config_group);
 }

@@ -92,7 +92,8 @@ QString MDILibraryView::getDisplayName() const
  */
 MDIModelViewPair MDILibraryView::open(QWidget *parent, std::function<MDIModelViewPair(QUrl)> find_existing_view_func)
 {
-	auto liburl = NetworkAwareFileDialog::getExistingDirectoryUrl(parent, "Select a directory to import", QUrl(""), "import_dir");
+	auto liburl = NetworkAwareFileDialog::getExistingDirectoryUrl(parent, "Select a directory to import",
+		QUrl(""), "import_dir");
     QUrl lib_url = liburl.first;
 
     if(lib_url.isEmpty())
