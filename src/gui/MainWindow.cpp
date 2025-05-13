@@ -962,7 +962,7 @@ void MainWindow::createToolBars()
 	//
 	// File
 	//
-    m_fileToolBar = addToolBar(tr("File"), "mainToolbar");
+    m_fileToolBar = addToolBar(tr("File"), "mainToolBar");
 
     Q_ASSERT(m_fileToolBar->parent() == this);
 

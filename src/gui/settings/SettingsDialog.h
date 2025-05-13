@@ -31,7 +31,7 @@ class QComboBox;
 /**
  * @todo How to use enums with KConfig, from /usr/share/config.kcfg/structviewpreferences.kcfg
  *  Okteta: https://github.com/KDE/okteta/blob/master/kasten/controllers/view/structures/settings/structureviewpreferences.kcfg
- *
+ * @code
  *<?xml version="1.0" encoding="UTF-8"?>
   <kcfg xmlns="http://www.kde.org/standards/kcfg/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0 http://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
@@ -52,7 +52,7 @@ class QComboBox;
       <default></default>
     </entry>
   </group>
- *
+ * @endcode
  * But apparently you still have to populate the combo box with items matching the label text (not choice name).
  */
 

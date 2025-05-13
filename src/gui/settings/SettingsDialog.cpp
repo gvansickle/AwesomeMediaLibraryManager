@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
+/// @file
 
 #include "SettingsDialog.h"
 
@@ -38,7 +39,7 @@
 #include <QComboBox>
 #include <QRegularExpression>
 
-// Kf
+// KF
 #include <KCoreConfigSkeleton>
 #include <KComboBox>
 
