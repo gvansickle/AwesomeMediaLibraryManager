@@ -20,6 +20,7 @@
 #ifndef MDITREEVIEWBASE_H
 #define MDITREEVIEWBASE_H
 
+/// @file
 #include <QTreeView>
 #include <QUrl>
 
@@ -32,6 +33,8 @@ class QFileDevice;
 class ModelChangeWatcher;
 class QPersistentModelIndexVec;
 class LibraryEntryMimeData;
+
+#include "AMLMSettings.h"
 
 /**
  * Base class for the various tree views in the app.
@@ -266,7 +269,7 @@ protected:
     /// Return a string suitable for use as a key in the QSettings file.  Used
     /// to save and restore the state of the "Save As" dialog.
     /// Default is none, settings won't be saved.
-    virtual QString getSaveAsDialogKey() const { return QString(); }
+    virtual AMLMSettings::NAFDDialogId getSaveAsDialogKey() const { return AMLMSettings::NAFDDialogId::unused; }
 
     /// Return True if you handle it, False if you don't.
     virtual bool onBlankAreaToolTip(QHelpEvent* event);

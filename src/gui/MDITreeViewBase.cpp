@@ -170,8 +170,8 @@ bool MDITreeViewBase::save()
 
 bool MDITreeViewBase::saveAs()
 {
-	QString state_key = getSaveAsDialogKey();
-	auto retval = NetworkAwareFileDialog::getSaveFileUrl(this, tr("Save As"), m_current_url, defaultNameFilter(), state_key);
+	AMLMSettings::NAFDDialogId dialog_id = getSaveAsDialogKey();
+	auto retval = NetworkAwareFileDialog::getSaveFileUrl(this, tr("Save As"), m_current_url, defaultNameFilter(), dialog_id);
 
 	QUrl file_url = retval.first;
 	QString filter = retval.second;

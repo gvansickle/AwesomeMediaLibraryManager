@@ -239,9 +239,9 @@ bool MDIPlaylistView::isModified() const
 	return false;
 }
 
-QString MDIPlaylistView::getSaveAsDialogKey() const
+AMLMSettings::NAFDDialogId MDIPlaylistView::getSaveAsDialogKey() const
 {
-	return "save_playlist";
+	return AMLMSettings::NAFDDialogId::SavePlaylist;
 }
 
 bool MDIPlaylistView::onBlankAreaToolTip(QHelpEvent* event)

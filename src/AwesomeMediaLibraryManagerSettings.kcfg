@@ -18,8 +18,6 @@
 	-->
   <kcfgfile name="AwesomeMediaLibraryManagerrc"/>
 
-
-
   <group name="General">
 	<!-- Settings dialog, General page -->
     <entry name="SettingsDialogFace" key="settings_dialog_type"	type="Enum">
@@ -57,15 +55,6 @@
     		<choice name="GTK3Direct"><label context="@item:inlistbox">GTK+3 direct</label></choice>
     	</choices>
     	<default>FileDialogMode::QFDNative</default>
-    	<!--
-    	<code>
-    		QStringList dialog_modes;
-    		dialog_modes.append("QFileDialog, native");
-    		dialog_modes.append("QFileDialog, non-native");
-    		dialog_modes.append("GTK+3 direct");
-    	</code>
-    	<default  code="true">dialog_modes</default>
-    	    	    	-->
     </entry>
   </group>
   <group name="Music Library">
@@ -106,49 +95,41 @@
   	</entry>
   </group>
   <group name="Options">
-    <entry name="CustomWidth" type="Int" key="custom width">
-      <label>The width of the playing field.</label>
-      <min>5</min>
-      <max>50</max>
-      <default>10</default>
-    </entry>
-    <entry name="CustomHeight" type="Int" key="custom height">
-      <label>The height of the playing field.</label>
-      <min>5</min>
-      <max>50</max>
-      <default>10</default>
-    </entry>
   </group>
-
-<!--	<kcfgfile name="testrc">-->
-<!--		<parameter name="groupname"/>-->
-<!--	</kcfgfile>-->
-
-
-
 	<group name="NetworkAwareFileDialogs">
-		<!-- Base64, because KconfigXT doesn't support QByteArray directly -->
-		<entry name="qfd_state" type="StringMap"></entry>
-
-		<entry name="dir_url" type="Url"/>
-	    <entry name="name_filter" type="String"/>
-        <entry name="mime_type_filter" type="String"/>
-		<entry name="view_mode" type="Enum">
-		    <label context="@label:listbox">NetworkAwareFileDialog</label>
-			<choices name="QFileDialog::ViewMode">
-			  <choice name="AnyFile">
-			<!--			  <label context="@item:inlistbox">QFileDialog, native</label>-->
-			  </choice>
-			  <choice name="ExistingFile">
-			<!--			  <label context="@item:inlistbox">QFileDialog, non-native</label>-->
-			  </choice>
-			  <choice name="Directory">
-			<!--			  <label context="@item:inlistbox">GTK+3 direct</label>-->
-			  </choice>
-			  <choice name="ExistingFiles">
-			  </choice>
+		<entry name="states" type="StringList"> <!-- param="NAFDDialogId"> -->
+			<default code="true">
+				[] () {
+					QStringList sl;
+					sl.resize(NAFDDialogId::LAST);
+					return sl;
+				}()
+			</default>
+		</entry>
+		<entry name="DUMMY_TO_CREATE_ENUM" type="Enum">
+			<choices name="NAFDDialogId">
+				<choice name="unused"/>
+				<choice name="ImportDir"/>
+				<choice name="SavePlaylist"/>
+				<choice name="LAST"/>
 			</choices>
-	  <default>QFileDialog::FileMode::AnyFile</default>
-    </entry>
-  </group>
+		</entry>
+<!--		<entry name="view_mode" type="Enum">-->
+<!--		    <label context="@label:listbox">NetworkAwareFileDialog</label>-->
+<!--			<choices name="QFileDialog::ViewMode">-->
+<!--			  <choice name="AnyFile">-->
+<!--			&lt;!&ndash;			  <label context="@item:inlistbox">QFileDialog, native</label>&ndash;&gt;-->
+<!--			  </choice>-->
+<!--			  <choice name="ExistingFile">-->
+<!--			&lt;!&ndash;			  <label context="@item:inlistbox">QFileDialog, non-native</label>&ndash;&gt;-->
+<!--			  </choice>-->
+<!--			  <choice name="Directory">-->
+<!--			&lt;!&ndash;			  <label context="@item:inlistbox">GTK+3 direct</label>&ndash;&gt;-->
+<!--			  </choice>-->
+<!--			  <choice name="ExistingFiles">-->
+<!--			  </choice>-->
+<!--			</choices>-->
+<!--			<default>QFileDialog::FileMode::AnyFile</default>-->
+<!--		</entry>-->
+    </group>
 </kcfg>
