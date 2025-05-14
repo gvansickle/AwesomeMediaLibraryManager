@@ -135,6 +135,12 @@ int main(int argc, char *argv[])
 	// Get our config for use later.
 	KSharedConfigPtr config = KSharedConfig::openConfig();
 	qIn() << M_ID_VAL(config->mainConfigName()) << M_ID_VAL(config->openFlags());
+
+	// Force defaults at startup, KConfig doesn't do this by default.
+	AMLMSettings::self()->setDefaults();
+	// Read actual config.
+	AMLMSettings::self()->read();
+
 	auto amlmconfig = AMLMSettings::self();
 	qDb() << M_ID_VAL(amlmconfig->collectionSourceUrls());
 	// Open or create two top-level config groups: "unmanaged" and "version".
