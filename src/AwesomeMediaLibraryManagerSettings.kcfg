@@ -16,10 +16,65 @@
 	if they	got defaulted for some reason.
 	The first is then for "actual" settings that you want to keep, even across such backups.
 	-->
+<!-- Commonly Supported Widgets
+    Boolean (bool) types:
+        QCheckBox
+        QRadioButton
+        QGroupBox (checked state)
+        QPushButton (checkable)
+
+    Numeric (int, uint, double) types:
+        QSpinBox
+        QDoubleSpinBox
+        QSlider
+        QDial
+        QProgressBar (read-only display)
+
+    Text (QString) types:
+        QLineEdit
+        QTextEdit
+        QPlainTextEdit
+        QComboBox (editable or non-editable)
+
+    Color (QColor) types:
+        KColorButton (from KDE Frameworks)
+
+    Font (QFont) types:
+        KFontWidget (from KDE Frameworks)
+
+    Date/Time types:
+        QDateTimeEdit
+        QDateEdit
+        QTimeEdit
+
+    Specialized KDE widgets:
+        KUrlRequester (for URLs/paths)
+        KEditListWidget (for string lists)
+        KFontRequester
+
+Automatic Type Conversion
+
+KConfigXT handles these Qt ↔ Config type conversions automatically:
+Widget Type	Config Data Type
+QCheckBox	bool
+QSpinBox	int
+QDoubleSpinBox	double
+QLineEdit	QString
+KColorButton	QColor
+QComboBox	QString or int
+QDateTimeEdit	QDateTime
+
+Unsupported Widgets
+
+These widgets cannot be automatically bound via kcfg_ prefix:
+    QLabel (read-only)
+    QTableView/QTreeView
+    QGraphicsView
+    Custom widgets (without additional code)	-->
   <kcfgfile name="AwesomeMediaLibraryManagerrc"/>
 
   <group name="General">
-	<!-- Settings dialog, General page -->
+	<!-- Settings dialog, General page, tab "Settings Dialog" -->
     <entry name="SettingsDialogFace" key="settings_dialog_type"	type="Enum">
     	<label>Layout style of this dialog</label>
     	<choices name="KPageDialog::FaceType">
@@ -31,11 +86,19 @@
    		</choices>
     	<default>KPageDialog::FaceType::List</default>
     </entry>
-    <entry name="SettingsDialogFiles" type="String">
-    	<label>Config Files</label>
-    	<default></default>
+    <entry name="configFileLocationListLineEdit" type="String">
+    	<label>Location of AMLM's config files</label>
+	    <default>stubbed/in/file1rc</default>
     </entry>
-    <!--Settings dialog, General page, Window tab-->
+    <!--Settings dialog, General page, tab "Window" -->
+	  <entry name="multipleDocumentModeComboBox" type="Enum">
+		  <choices name="MDIMode">
+			  <label>How to present the various playlists</label>
+			  <choice name="Tabs"></choice>
+			  <choice name="Subwindows"></choice>
+		  </choices>
+		  <default>Tabs</default>
+	  </entry>
     <entry name="toolbarTextIconModeCombo" key="toolbar_global_text_icon_mode" type="Enum">
     	<label context="@label:listbox">XXX Toolbar text/icon mode:</label>
     	<choices name="Qt::ToolButtonStyle">
