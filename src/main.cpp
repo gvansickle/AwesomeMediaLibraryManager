@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
+/// @file
 
 #include <config.h>
 
@@ -138,7 +139,7 @@ int main(int argc, char *argv[])
 
 	// Force defaults at startup, KConfig doesn't do this by default.
 	AMLMSettings::self()->setDefaults();
-	// Read actual config.
+	// Overlay non-default settings by reading the actual config.
 	AMLMSettings::self()->read();
 
 	auto amlmconfig = AMLMSettings::self();
