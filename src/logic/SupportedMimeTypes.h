@@ -20,11 +20,13 @@
 #ifndef SRC_LOGIC_SUPPORTEDMIMETYPES_H_
 #define SRC_LOGIC_SUPPORTEDMIMETYPES_H_
 
+/// @file
+
 #include <QObject>
 #include <QVector>
 #include <QMimeType>
 
-/*
+/**
  *
  */
 class SupportedMimeTypes: public QObject
