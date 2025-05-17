@@ -275,13 +275,7 @@ void MainWindow::init()
 	m_act_styles_kaction_menu = qobject_cast<KActionMenu*>(m_actgroup_styles->parent());
 	Q_CHECK_PTR(m_act_styles_kaction_menu);
 
-	// doChangeStyle() if we need to.
-	if(!AMLMSettings::widgetStyle().isEmpty()
-			&& QString::compare(QApplication::style()->objectName(), AMLMSettings::widgetStyle(), Qt::CaseInsensitive) != 0)
-	{
-		// Initialize the different style.
-		doChangeStyle();
-	}
+
 
 
 	/// Set "document mode" for the tab bar of tabbed dock widgets.
@@ -320,6 +314,14 @@ void MainWindow::init()
 
 	updateActionEnableStates();
 
+	// Set up the style GUI elements if we need to.
+	if (!AMLMSettings::widgetStyle().isEmpty()
+		&& QString::compare(QApplication::style()->objectName(), AMLMSettings::widgetStyle(), Qt::CaseInsensitive) != 0)
+	{
+		// Initialize the different style.
+		SLOT_setApplicationStyle(AMLMSettings::widgetStyle());
+	}
+
 	////// Connect up signals and slots.
 	createConnections();
 
@@ -328,7 +330,7 @@ void MainWindow::init()
 	setUnifiedTitleAndToolBarOnMac(true);
 
 	// Send ourself a message to re-load the files we had open last time we were closed.
-    QTimer::singleShot(0, this, &MainWindow::onStartup);
+	QTimer::singleShot(0, this, &MainWindow::onStartup);
 }
 
 void MainWindow::post_setupGUI_init()
@@ -756,7 +758,11 @@ void MainWindow::createActionsSettings(KActionCollection *ac)
 
 	// QStyles KActionMenu menu.
 	addAction(QStringLiteral("styles_menu"), m_act_styles_kaction_menu);
-    connect_or_die(m_actgroup_styles, &QActionGroup::triggered, this, &MainWindow::SLOT_onChangeQStyle);
+    connect_or_die(m_actgroup_styles, &QActionGroup::triggered,
+    	this, [this](QAction* action) {
+    		const QString styleName = action->data().toString();
+			SLOT_setApplicationStyle(styleName);
+    });
 
 	// Show/hide menu bar.
 	m_act_ktog_show_menu_bar = KStandardAction::showMenubar(this, &MainWindow::onShowMenuBar, ac);
@@ -1011,13 +1017,14 @@ void MainWindow::createToolBars()
     // Create a combo box where the user can change the application's style.
 	m_combobox_style = new QComboBox;
 	m_combobox_style->setObjectName("kcfg_widget_style");
+	m_combobox_style->addItem("Default");
 	m_combobox_style->addItems(QStyleFactory::keys());
     // Set it to the current style.
 	QString cur_style = amlmApp->style()->objectName();
 	m_combobox_style->setCurrentIndex(m_combobox_style->findText(cur_style, Qt::MatchFixedString));
 	m_settingsToolBar->addWidget(m_combobox_style);
 
-	connect_or_die(m_combobox_style, &QComboBox::currentTextChanged, this, &MainWindow::SLOT_applyStyle);
+	connect_or_die(m_combobox_style, &QComboBox::currentTextChanged, this, &MainWindow::SLOT_setApplicationStyle);
 
     // Create a combo box with icon themes.
     QComboBox* iconThemeComboBox = new QComboBox;
@@ -2162,40 +2169,57 @@ void MainWindow::onOpenShortcutDlg()
 	AMLMSettings::self()->save();
 }
 
-void MainWindow::SLOT_applyStyle(const QString& styleName)
+void MainWindow::applyStyle(const QString& styleName)
 {
-	/// @todo Refactor into a StyleController?
-	qDebug() << "signaled to set Style to" << styleName;
-	if (auto style = QStyleFactory::create(styleName))
+	if(auto style = QStyleFactory::create(styleName))
 	{
-		qApp->setStyle(style);
-		qDebug() << "set style to" << styleName;
-		if (m_currentStyle != styleName)
+		QApplication::setStyle(style);
+		m_currentStyle = styleName;
+	}
+	else
+	{
+		// styleName not available, fallback to user's KDE-global style (in a "kdeglobal" file).
+		// If that style is somehow not available, fallback to Breeze.
+		auto fallback_name = Theme::getUserDefaultQStyle("Breeze");
+		qWarning() << "Style" << styleName << "not available, falling back to" << fallback_name;
+		if (auto style = QStyleFactory::create(fallback_name))
 		{
-			m_currentStyle = styleName;
-			qApp->setPalette(qApp->style()->standardPalette());
-			// Q_EMIT styleChanged(styleName);
-
-            //
-            // Update UI elements.
-            //
-			// Set combo box selection.
-			if (m_combobox_style)
-			{
-				QSignalBlocker blocker(m_combobox_style);
-				m_combobox_style->setCurrentText(styleName);
-			}
-			// Update menu actions checked states.
-            if (m_actgroup_styles)
-            {
-                for (QAction* action : m_actgroup_styles->actions())
-				{
-                    qDb() << M_ID_VAL(action->data()) << M_ID_VAL(styleName);
-					action->setChecked(action->data() == styleName);
-				}
-			}
+			QApplication::setStyle(style);
 		}
 	}
+}
+
+void MainWindow::updateStyleSelectionUi(const QString& style_name)
+{
+	// Set combo box selection.
+	if (m_combobox_style)
+	{
+		QSignalBlocker blocker(m_combobox_style);
+		m_combobox_style->setCurrentText(style_name);
+	}
+	// Update menu actions checked states.
+	if (m_actgroup_styles)
+	{
+		for (QAction* action : m_actgroup_styles->actions())
+		{
+			qDb() << M_ID_VAL(action->data()) << M_ID_VAL(style_name);
+			action->setChecked(action->data() == style_name);
+		}
+	}
+}
+
+void MainWindow::SLOT_setApplicationStyle(const QString& styleName)
+{
+	qDebug() << "Signaled to set Style to" << styleName;
+
+	// Apply the style.
+	applyStyle(styleName);
+	// Set the new config setting.
+	AMLMSettings::setWidgetStyle(styleName);
+	// Update UI.
+	updateStyleSelectionUi(styleName);
+	// Write out the new setting.
+	AMLMSettings::self()->save();
 }
 
 void MainWindow::changeIconTheme(const QString& iconThemeName)
@@ -2209,35 +2233,6 @@ void MainWindow::changeIconTheme(const QString& iconThemeName)
 		QEvent style_changed_event(QEvent::StyleChange);
 		QCoreApplication::sendEvent(w, &style_changed_event);
 	}
-}
-
-void MainWindow::SLOT_onChangeQStyle(QAction *action)
-{
-	// Get the name of the style to change to.
-	QString style = action->data().toString();
-
-	// Update the settings first.
-	/// @todo Not sure if this is really correct.  If the new style e.g. causes a crash, we
-	///       will have maybe permanently hosed ourself by now always starting with that style.
-	AMLMSettings::setWidgetStyle(style);
-
-	// Do the actual style change work.
-	doChangeStyle();
-}
-
-void MainWindow::doChangeStyle()
-{
-	QString newStyle = AMLMSettings::widgetStyle();
-	if (newStyle.isEmpty() || newStyle == QStringLiteral("Default"))
-	{
-        newStyle = Theme::getUserDefaultQStyle("Breeze");
-	}
-	QApplication::setStyle(QStyleFactory::create(newStyle));
-
-//	// Changing widget style resets color theme, so update color theme again
-//	ThemeManager::instance()->slotChangePalette();
-
-	AMLMSettings::self()->save();
 }
 
 void MainWindow::about()

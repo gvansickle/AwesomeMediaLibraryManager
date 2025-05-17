@@ -113,10 +113,6 @@ Q_SIGNALS:
 	/// User changed the settings in the Settings dialog.
 	void settingsChanged();
 
-	/// Signal emitted after a new style has been applied in SLOT_applyStyle().
-	/// @todo Refactor into a StyleController class.
-	void styleChanged(const QString& styleName);
-
 public:
 	/// Constructor
 	explicit MainWindow(QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = Qt::WindowFlags());
@@ -240,9 +236,8 @@ private Q_SLOTS:
 
     /// @name Theme/Style related slots.
     /// @{
-    void SLOT_applyStyle(const QString& styleName);
+    void SLOT_setApplicationStyle(const QString& styleName);
     void changeIconTheme(const QString& iconThemeName);
-    void SLOT_onChangeQStyle(QAction* action);
 	/// @}
 
 	/**
@@ -290,7 +285,7 @@ private Q_SLOTS:
 private:
     Q_DISABLE_COPY(MainWindow)
 
-	/// @todo Refactor into a StyleController class.
+	/// @todo Refactor into a StyleController class?
 	QString m_currentStyle;
 
 	/// @name Startup Initialization
@@ -391,13 +386,15 @@ private:
 
     bool maybeSaveOnClose();
 
-	void doChangeStyle();
+	/// Apply the named style to the app.
+	void applyStyle(const QString& styleName);
+	void updateStyleSelectionUi(const QString& style_name);
 
 
 	/// @name Private data members.
     /// @{
 
-    /// App-specific cache directory.
+	/// App-specific cache directory.
     QUrl m_cachedir;
 
     /// App-specific directory where persistent application data can be stored.  On Windows, this is the roaming, not local, path.

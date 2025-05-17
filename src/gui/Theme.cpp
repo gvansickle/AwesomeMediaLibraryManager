@@ -49,7 +49,7 @@
 #include <KActionMenu>
 #endif
 
-/// Ours.
+// Ours.
 #include <AMLMSettings.h>
 #include <gui/Theme.h>
 #include <gui/MainWindow.h>
@@ -429,7 +429,6 @@ M_WARNING("TODO");
 QActionGroup* Theme::getWidgetStylesActionGroup(MainWindow *main_window)
 {
 	// Set up and return an "Application Style" menu.
-	// Adapted from similar code in Kdenlive::MainWindow::init().
 
     QPointer<KActionMenu> stylesAction = new KActionMenu(QIcon::fromTheme("preferences-desktop-theme-applications"),
     	tr("Widget Style"), main_window);
@@ -462,6 +461,12 @@ QActionGroup* Theme::getWidgetStylesActionGroup(MainWindow *main_window)
 	return stylesGroup;
 }
 
+/**
+ * Returns the name of the user's KDE-wide default theme set in kdeglobals
+ * @todo Most/All our theme management should probably be replaced with KStyleManager
+ * @param fallback
+ * @return
+ */
 QString Theme::getUserDefaultQStyle(const char* fallback)
 {
 	KSharedConfigPtr kdeGlobals = KSharedConfig::openConfig(QStringLiteral("kdeglobals"), KConfig::NoGlobals);
