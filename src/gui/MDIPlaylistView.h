@@ -101,7 +101,7 @@ protected:
 
     bool isModified() const override;
 
-    QString getSaveAsDialogKey() const override;
+	AMLMSettings::NAFDDialogId getSaveAsDialogKey() const override;
 
     bool onBlankAreaToolTip(QHelpEvent* event) override;
 

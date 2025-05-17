@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
+/// @file
 
 #ifndef UTILS_LOGGING_H_
 #define UTILS_LOGGING_H_

@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
+/// @file
 
 #include <config.h>
 
@@ -44,7 +45,6 @@
 #include <QMdiSubWindow>
 #include <QTimer>
 #include <QMessageBox>
-#include <QSettings>
 #include <QComboBox>
 #include <QStyleFactory>
 #include <QDirIterator>
@@ -213,7 +213,7 @@ KActionCollection* MainWindow::actionCollection()
     if(!m_actionCollection)
     {
         m_actionCollection = new KActionCollection(this);
-    	m_actionCollection->setObjectName("MainWindow-KActionCollection");
+    	m_actionCollection->setObjectName("MainWindow_KActionCollection");
     }
     return m_actionCollection;
 }
@@ -275,13 +275,7 @@ void MainWindow::init()
 	m_act_styles_kaction_menu = qobject_cast<KActionMenu*>(m_actgroup_styles->parent());
 	Q_CHECK_PTR(m_act_styles_kaction_menu);
 
-	// doChangeStyle() if we need to.
-	if(!AMLMSettings::widgetStyle().isEmpty()
-			&& QString::compare(QApplication::style()->objectName(), AMLMSettings::widgetStyle(), Qt::CaseInsensitive) != 0)
-	{
-		// Initailize the different style.
-		doChangeStyle();
-	}
+
 
 
 	/// Set "document mode" for the tab bar of tabbed dock widgets.
@@ -320,6 +314,14 @@ void MainWindow::init()
 
 	updateActionEnableStates();
 
+	// Set up the style GUI elements if we need to.
+	if (!AMLMSettings::widgetStyle().isEmpty()
+		&& QString::compare(QApplication::style()->objectName(), AMLMSettings::widgetStyle(), Qt::CaseInsensitive) != 0)
+	{
+		// Initialize the different style.
+		SLOT_setApplicationStyle(AMLMSettings::widgetStyle());
+	}
+
 	////// Connect up signals and slots.
 	createConnections();
 
@@ -328,18 +330,30 @@ void MainWindow::init()
 	setUnifiedTitleAndToolBarOnMac(true);
 
 	// Send ourself a message to re-load the files we had open last time we were closed.
-    QTimer::singleShot(0, this, &MainWindow::onStartup);
+	QTimer::singleShot(0, this, &MainWindow::onStartup);
 }
 
 void MainWindow::post_setupGUI_init()
 {
-    // KF: Activate Autosave of toolbar/menubar/statusbar/window layout settings.
-    // "Make sure you call this after all your *bars have been created."
-    // @note In KXmlGuiWindow this is done by setupGUI().
-    setAutoSaveSettings();
-
     // Post setupGUI(), we can now add the status/tool/dock actions.
-    addViewMenuActions();
+	addViewMenuActions();
+
+	// KF: Activate Autosave of toolbar/menubar/statusbar/window layout settings.
+	// "Make sure you call this after all your *bars have been created."
+	// @note In KXmlGuiWindow this is done by setupGUI().
+	setAutoSaveSettings();
+
+	onSetLayoutLocked(AMLMSettings::layoutIsLocked());
+}
+
+void MainWindow::applyMainWindowSettings(const KConfigGroup& config)
+{
+	KMainWindow::applyMainWindowSettings(config);
+	QStatusBar* sb = findChild<QStatusBar*>();
+	if (sb && m_act_ktog_show_status_bar)
+	{
+		m_act_ktog_show_status_bar->setChecked(sb->isHidden());
+	}
 }
 
 /**
@@ -350,7 +364,7 @@ void MainWindow::onStartup()
 {
     initRootModels();
 
-    // Create the "Now Playing" playlist and view.
+    // Create the "Now Playing" playlist model and view.
     newNowPlaying();
 
     /// @experimental
@@ -360,8 +374,7 @@ void MainWindow::onStartup()
 
     // Load any files which were opened at the time the last session was closed.
     qInfo() << "Loading libraries open at end of last session...";
-    QSettings settings;
-    readLibSettings(settings);
+    readLibSettings();
 
     // Open the windows the user had open at the end of last session.
     openWindows();
@@ -402,7 +415,7 @@ void MainWindow::onStartup()
 	// Debug check
 	qDebug() << "Toolbar valid:" << toolBar();
 	qDebug() << "Configure action exists:" << actionCollection()->action("options_configure_toolbars");
-	qDebug() << "All actions:" << actionCollection()->actions();
+	// qDebug() << "All actions:" << actionCollection()->actions();
 
 	post_setupGUI_init();
 }
@@ -743,9 +756,13 @@ void MainWindow::createActionsSettings(KActionCollection *ac)
 {
 #if HAVE_KF501 || HAVE_KF6
 
-	// Styles KActionMenu menu.
+	// QStyles KActionMenu menu.
 	addAction(QStringLiteral("styles_menu"), m_act_styles_kaction_menu);
-    connect_or_die(m_actgroup_styles, &QActionGroup::triggered, this, &MainWindow::SLOT_onChangeQStyle);
+    connect_or_die(m_actgroup_styles, &QActionGroup::triggered,
+    	this, [this](QAction* action) {
+    		const QString styleName = action->data().toString();
+			SLOT_setApplicationStyle(styleName);
+    });
 
 	// Show/hide menu bar.
 	m_act_ktog_show_menu_bar = KStandardAction::showMenubar(this, &MainWindow::onShowMenuBar, ac);
@@ -803,6 +820,7 @@ void MainWindow::createActionsHelp(KActionCollection* ac)
  */
 void MainWindow::addViewMenuActions()
 {
+	// Layout lock.
 	m_act_lock_layout->setChecked(AMLMSettings::layoutIsLocked());
 	connect_or_die(m_act_lock_layout, &QAction::toggled, this, &MainWindow::onSetLayoutLocked);
 	m_menu_view->addActions({
@@ -810,7 +828,7 @@ void MainWindow::addViewMenuActions()
 		m_act_reset_layout,
 		m_act_ktog_show_tool_bar});
 
-    // List dock widgets.
+    // List of dock widgets.
     m_menu_view->addSection(tr("Docks"));
     QList<QDockWidget*> dockwidgets = findChildren<QDockWidget*>();
     qDb() << "Docks:" << dockwidgets;
@@ -830,7 +848,7 @@ void MainWindow::addViewMenuActions()
         }
     }
 
-	// List toolbars.
+	// List of toolbars.
     m_menu_view->addSection(tr("Toolbars"));
     auto tbs = toolBars();
     for(auto tb : std::as_const(tbs))
@@ -952,7 +970,7 @@ void MainWindow::createToolBars()
 	//
 	// File
 	//
-    m_fileToolBar = addToolBar(tr("File"), "mainToolbar");
+    m_fileToolBar = addToolBar(tr("File"), "mainToolBar");
 
     Q_ASSERT(m_fileToolBar->parent() == this);
 
@@ -996,15 +1014,17 @@ void MainWindow::createToolBars()
 // @todo This doesn't link now for some reason:	 m_settingsToolBar->addWidget(new KIconButton(m_settingsToolBar));
 
 #if HAVE_KF501 || HAVE_KF6
-    // Create a combo box where the user can change the style.
-	QComboBox* styleComboBox = new QComboBox;
-	styleComboBox->addItems(QStyleFactory::keys());
+    // Create a combo box where the user can change the application's style.
+	m_combobox_style = new QComboBox;
+	m_combobox_style->setObjectName("kcfg_widget_style");
+	m_combobox_style->addItem("Default");
+	m_combobox_style->addItems(QStyleFactory::keys());
     // Set it to the current style.
 	QString cur_style = amlmApp->style()->objectName();
-	styleComboBox->setCurrentIndex(styleComboBox->findText(cur_style, Qt::MatchFixedString));
-	m_settingsToolBar->addWidget(styleComboBox);
+	m_combobox_style->setCurrentIndex(m_combobox_style->findText(cur_style, Qt::MatchFixedString));
+	m_settingsToolBar->addWidget(m_combobox_style);
 
-	connect_or_die(styleComboBox, &QComboBox::currentTextChanged, this, &MainWindow::changeStyle);
+	connect_or_die(m_combobox_style, &QComboBox::currentTextChanged, this, &MainWindow::SLOT_setApplicationStyle);
 
     // Create a combo box with icon themes.
     QComboBox* iconThemeComboBox = new QComboBox;
@@ -1470,7 +1490,7 @@ QDockWidget *MainWindow::addDock(const QString &title, const QString &object_nam
 
 
 //////
-////// Top-level QSettings save/restore.
+////// Top-level settings save/restore.
 //////
 
 void MainWindow::readPreGUISettings()
@@ -1482,7 +1502,7 @@ void MainWindow::readPreGUISettings()
 	/// @todo Add any readEntry()'s here.
 }
 
-void MainWindow::readLibSettings(QSettings& settings)
+void MainWindow::readLibSettings()
 {
 	int num_libs;
 
@@ -1586,27 +1606,22 @@ void MainWindow::readLibSettings(QSettings& settings)
 void MainWindow::writeSettings()
 {
 	qDebug() << "writeSettings() start";
-	QSettings settings;
 /// @todo REMOVE
 //	settings.beginGroup("mainwindow");
 //	settings.setValue("geometry", saveGeometry());
 //	settings.setValue("window_state", saveState());
 //	settings.endGroup();
 	// Write the open library settings.
-	writeLibSettings(settings);
+    writeLibSettings();
 	qDebug() << "writeSettings() end";
 }
 
 
-void MainWindow::writeLibSettings(QSettings& settings)
+void MainWindow::writeLibSettings()
 {
 	qDebug() << "writeLibSettings() start";
 
 	Stopwatch libsave_sw("writeLibSettings()");
-
-	// First it seems we have to remove the array.
-	/// @todo Remove, unneeded?
-	settings.remove("libraries");
 
 	QString database_filename = QDir::homePath() + "/AMLMDatabaseSerDes.xml";
 
@@ -1633,10 +1648,7 @@ void MainWindow::writeLibSettings(QSettings& settings)
 
 
 
-/**
- * Open the windows the user had open at the end of last session.
- * @todo Actually now only opens a window for each libmodel.
- */
+
 void MainWindow::openWindows()
 {
 	qInfo() << "Opening" << m_libmodels.size() << "windows which were open at end of last session...";
@@ -1768,11 +1780,8 @@ void MainWindow::onRemoveDirFromLibrary(QPointer<LibraryModel> libmodel)
 	qDebug() << QString("Num models:") << m_libmodels.size();
 
 	// Write the library settings out now.
-	QSettings settings;
-	writeLibSettings(settings);
-	settings.sync();
-
-	/// @todo ???
+    // note that this writes the Library settings to ${HOME}/AMLMDatabaseSerDes.xml (not a QSettings or KConfig settings file).
+	writeLibSettings();
 }
 
 /**
@@ -2160,11 +2169,57 @@ void MainWindow::onOpenShortcutDlg()
 	AMLMSettings::self()->save();
 }
 
-void MainWindow::changeStyle(const QString& styleName)
+void MainWindow::applyStyle(const QString& styleName)
 {
-	qDebug() << "signaled to set Style to" << styleName;
-	qApp->setStyle(QStyleFactory::create(styleName));
-	qApp->setPalette(qApp->style()->standardPalette());
+	if(auto style = QStyleFactory::create(styleName))
+	{
+		QApplication::setStyle(style);
+		m_currentStyle = styleName;
+	}
+	else
+	{
+		// styleName not available, fallback to user's KDE-global style (in a "kdeglobal" file).
+		// If that style is somehow not available, fallback to Breeze.
+		auto fallback_name = Theme::getUserDefaultQStyle("Breeze");
+		qWarning() << "Style" << styleName << "not available, falling back to" << fallback_name;
+		if (auto style = QStyleFactory::create(fallback_name))
+		{
+			QApplication::setStyle(style);
+		}
+	}
+}
+
+void MainWindow::updateStyleSelectionUi(const QString& style_name)
+{
+	// Set combo box selection.
+	if (m_combobox_style)
+	{
+		QSignalBlocker blocker(m_combobox_style);
+		m_combobox_style->setCurrentText(style_name);
+	}
+	// Update menu actions checked states.
+	if (m_actgroup_styles)
+	{
+		for (QAction* action : m_actgroup_styles->actions())
+		{
+			qDb() << M_ID_VAL(action->data()) << M_ID_VAL(style_name);
+			action->setChecked(action->data() == style_name);
+		}
+	}
+}
+
+void MainWindow::SLOT_setApplicationStyle(const QString& styleName)
+{
+	qDebug() << "Signaled to set Style to" << styleName;
+
+	// Apply the style.
+	applyStyle(styleName);
+	// Set the new config setting.
+	AMLMSettings::setWidgetStyle(styleName);
+	// Update UI.
+	updateStyleSelectionUi(styleName);
+	// Write out the new setting.
+	AMLMSettings::self()->save();
 }
 
 void MainWindow::changeIconTheme(const QString& iconThemeName)
@@ -2178,35 +2233,6 @@ void MainWindow::changeIconTheme(const QString& iconThemeName)
 		QEvent style_changed_event(QEvent::StyleChange);
 		QCoreApplication::sendEvent(w, &style_changed_event);
 	}
-}
-
-void MainWindow::SLOT_onChangeQStyle(QAction *action)
-{
-	// Get the name of the style to change to.
-	QString style = action->data().toString();
-
-	// Update the settings first.
-	/// @todo Not sure if this is really correct.  If the new style e.g. causes a crash, we
-	///       will have maybe permanently hosed ourself by now always starting with that style.
-	AMLMSettings::setWidgetStyle(style);
-
-	// Do the actual style change work.
-	doChangeStyle();
-}
-
-void MainWindow::doChangeStyle()
-{
-	QString newStyle = AMLMSettings::widgetStyle();
-	if (newStyle.isEmpty() || newStyle == QStringLiteral("Default"))
-	{
-        newStyle = Theme::getUserDefaultQStyle("Breeze");
-	}
-	QApplication::setStyle(QStyleFactory::create(newStyle));
-
-//	// Changing widget style resets color theme, so update color theme again
-//	ThemeManager::instance()->slotChangePalette();
-
-	AMLMSettings::self()->save();
 }
 
 void MainWindow::about()
@@ -2251,17 +2277,34 @@ void MainWindow::onShowMenuBar(bool show)
 
 void MainWindow::onSetLayoutLocked(bool checked)
 {
+	// Lock all toolbars.
 	KToolBar::setToolBarsLocked(checked);
+
+	// Lock DockWidgets.
+	auto dockwidgetlist = this->findChildren<QDockWidget*>();
+	for (auto* dockwidget : std::as_const(dockwidgetlist))
+	{
+		if (checked)
+		{
+			dockwidget->setFeatures(dockwidget->features().setFlag(QDockWidget::DockWidgetMovable, false));
+		}
+		else
+		{
+			dockwidget->setFeatures(dockwidget->features().setFlag(QDockWidget::DockWidgetMovable, true));
+		}
+	}
 	// MainWindow::onSettingsChanged();
 	// KToolBar::emitToolbarStyleChanged();
 	onApplyToolbarConfig();
+
+	AMLMSettings::setLayoutIsLocked(checked);
+	AMLMSettings::self()->save();
 }
 
+// Slot
 void MainWindow::onConfigureToolbars()
 {
-	auto config_group = KSharedConfig::openConfig()->group("MainWindowToolbarSettings");
-
-	saveMainWindowSettings(config_group);
+	// saveMainWindowSettings(config_group);
 
     /// @todo This probably need to go away, it's dependant on us being derived from KXmlGui.
     // KEditToolBar dialog(actionCollection(), this);
@@ -2273,7 +2316,7 @@ void MainWindow::onConfigureToolbars()
 
 void MainWindow::onApplyToolbarConfig()
 {
-	auto config_group = KSharedConfig::openConfig()->group("MainWindowToolbarSettings");
+	auto config_group = KSharedConfig::openConfig()->group("MainWindow");
 
 	applyMainWindowSettings(config_group);
 }

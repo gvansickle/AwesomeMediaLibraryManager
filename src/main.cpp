@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
+/// @file
 
 #include <config.h>
 
@@ -23,7 +24,6 @@
 
 // Qt
 #include <QtGlobal>
-#include <QSettings>
 #include <QIcon>
 #include <QLoggingCategory>
 #include <QResource>
@@ -45,6 +45,7 @@
 #endif
 
 // Ours
+#include "AMLMSettings.h"
 #include "Core.h"
 #include <gui/Theme.h>
 #include <utils/AboutDataSetup.h>
@@ -57,6 +58,7 @@
 M_MESSAGE("BUILDING WITH CMAKE_C_COMPILER_ID: " CMAKE_C_COMPILER_ID " = " CMAKE_C_COMPILER);
 M_MESSAGE("BUILDING WITH CMAKE_CXX_COMPILER_ID: " CMAKE_CXX_COMPILER_ID " = " CMAKE_CXX_COMPILER);
 
+/// @todo Move this out of this file.
 static void LL(const QString& root)
 {
     for (const auto& dir_entry : QDirListing(root, QDirListing::IteratorFlag::Recursive))
@@ -103,7 +105,7 @@ int main(int argc, char *argv[])
 	qCritical() << "TEST: Critical";
 
 	// List our built-in resources.
-	LL(":/");
+	// LL(":/");
 
 	// Log our startup environment.
 	logging.dumpEnvVars();
@@ -133,6 +135,15 @@ int main(int argc, char *argv[])
 
 	// Get our config for use later.
 	KSharedConfigPtr config = KSharedConfig::openConfig();
+	qIn() << M_ID_VAL(config->mainConfigName()) << M_ID_VAL(config->openFlags());
+
+	// Force defaults at startup, KConfig doesn't do this by default.
+	AMLMSettings::self()->setDefaults();
+	// Overlay non-default settings by reading the actual config.
+	AMLMSettings::self()->read();
+
+	auto amlmconfig = AMLMSettings::self();
+	qDb() << M_ID_VAL(amlmconfig->collectionSourceUrls());
 	// Open or create two top-level config groups: "unmanaged" and "version".
 	// We use the pre-existence of "version" to detect if this is the first time we've started.
 	KConfigGroup grp(config, "unmanaged");
@@ -140,6 +151,7 @@ int main(int argc, char *argv[])
     if (!initialGroup.exists())
 	{
         // First-time startup.
+    	qIn() << "First-time startup";
 
 		/// @todo Not sure if we want to be this draconian.
 //        app.KDEOrForceBreeze(grp);
@@ -152,7 +164,6 @@ int main(int argc, char *argv[])
     {
 //        Theme::setIconThemeName("breeze");
     }
-
 
 	// Set up the KAboutData.
 	// From: https://community.kde.org/Frameworks/Porting_Notes#Build_System
@@ -212,7 +223,7 @@ int main(int argc, char *argv[])
     QApplication::setWindowIcon(appIcon);
 
 	// Always use INI format for app settings, so we don't hit registry restrictions on Windows.
-	QSettings::setDefaultFormat(QSettings::IniFormat);
+	// QSettings::setDefaultFormat(QSettings::IniFormat);
 
 	qInfo() << "QPA Platform plugin name:" << app.platformName();
 
@@ -230,6 +241,7 @@ int main(int argc, char *argv[])
 		// From the KDE5 docs: https://api.kde.org/frameworks/kxmlgui/html/classKMainWindow.html#ab0c194be12f0ad123a9ba8be75bb85c9
 		// "KMainWindows must be created on the heap with 'new'"
 		MainWindow *mainWin = new MainWindow();
+		mainWin->setObjectName("AMLMMainWindow#");
 		// Tell the app singleton about the main window singleton.
 		// Note that there's a lot of code between the two creations.
 		amlmApp->MAIN_ONLY_setMainWindow(mainWin);

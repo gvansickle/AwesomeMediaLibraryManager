@@ -4,11 +4,77 @@
       xsi:schemaLocation="https://www.kde.org/standards/kcfg/1.0
       https://www.kde.org/standards/kcfg/1.0/kcfg.xsd" >
     <include>Qt</include>
+	<include>QFileDialog</include>
 	<include>KPageDialog</include>
 	<include>gui/settings/DefaultSettingsHelper.h</include>
+<!-- NOTE: KConfigXT uses at least two separate config files:
+	1. The one we're defining here: ~/.config/<appname>rc
+	2. One which seems to be automatically defined: ~.local/state/<appname>staterc
+	Docs on the second say this:
+	"Use this for storing information that is changing frequently and should not be saved by configuration backup utilities."
+	This means stuff like the MainWindow size and shape and other (dock placement?).  Things that don't cause much pain
+	if they	got defaulted for some reason.
+	The first is then for "actual" settings that you want to keep, even across such backups.
+	-->
+<!-- Commonly Supported Widgets
+    Boolean (bool) types:
+        QCheckBox
+        QRadioButton
+        QGroupBox (checked state)
+        QPushButton (checkable)
+
+    Numeric (int, uint, double) types:
+        QSpinBox
+        QDoubleSpinBox
+        QSlider
+        QDial
+        QProgressBar (read-only display)
+
+    Text (QString) types:
+        QLineEdit
+        QTextEdit
+        QPlainTextEdit
+        QComboBox (editable or non-editable)
+
+    Color (QColor) types:
+        KColorButton (from KDE Frameworks)
+
+    Font (QFont) types:
+        KFontWidget (from KDE Frameworks)
+
+    Date/Time types:
+        QDateTimeEdit
+        QDateEdit
+        QTimeEdit
+
+    Specialized KDE widgets:
+        KUrlRequester (for URLs/paths)
+        KEditListWidget (for string lists)
+        KFontRequester
+
+Automatic Type Conversion
+
+KConfigXT handles these Qt ↔ Config type conversions automatically:
+Widget Type	Config Data Type
+QCheckBox	bool
+QSpinBox	int
+QDoubleSpinBox	double
+QLineEdit	QString
+KColorButton	QColor
+QComboBox	QString or int
+QDateTimeEdit	QDateTime
+
+Unsupported Widgets
+
+These widgets cannot be automatically bound via kcfg_ prefix:
+    QLabel (read-only)
+    QTableView/QTreeView
+    QGraphicsView
+    Custom widgets (without additional code)	-->
   <kcfgfile name="AwesomeMediaLibraryManagerrc"/>
+
   <group name="General">
-	<!-- Settings dialog, General page -->
+	<!-- Settings dialog, General page, tab "Settings Dialog" -->
     <entry name="SettingsDialogFace" key="settings_dialog_type"	type="Enum">
     	<label>Layout style of this dialog</label>
     	<choices name="KPageDialog::FaceType">
@@ -20,11 +86,19 @@
    		</choices>
     	<default>KPageDialog::FaceType::List</default>
     </entry>
-    <entry name="SettingsDialogFiles" type="String">
-    	<label>Config Files</label>
-    	<default></default>
+    <entry name="configFileLocationListLineEdit" type="String">
+    	<label>Location of AMLM's config files</label>
+	    <default>stubbed/in/file1rc</default>
     </entry>
-    <!--Settings dialog, General page, Window tab-->
+    <!--Settings dialog, General page, tab "Window" -->
+	  <entry name="multipleDocumentModeComboBox" type="Enum">
+		  <choices name="MDIMode">
+			  <label>How to present the various playlists</label>
+			  <choice name="Tabs"></choice>
+			  <choice name="Subwindows"></choice>
+		  </choices>
+		  <default>Tabs</default>
+	  </entry>
     <entry name="toolbarTextIconModeCombo" key="toolbar_global_text_icon_mode" type="Enum">
     	<label context="@label:listbox">XXX Toolbar text/icon mode:</label>
     	<choices name="Qt::ToolButtonStyle">
@@ -38,23 +112,12 @@
     </entry>
     <entry name="fileDialogModeComboBox" key="settings_file_dialog_mode" type="Enum">
     	<label context="@label:listbox">KCFG File dialog mode</label>
-
     	<choices name="FileDialogMode">
     		<choice name="QFDNative"><label context="@item:inlistbox">QFileDialog, native</label></choice>
     		<choice name="QFDNonNative"><label context="@item:inlistbox">QFileDialog, non-native</label></choice>
     		<choice name="GTK3Direct"><label context="@item:inlistbox">GTK+3 direct</label></choice>
     	</choices>
     	<default>FileDialogMode::QFDNative</default>
-    	<!--
-    	<code>
-    		QStringList dialog_modes;
-    		dialog_modes.append("QFileDialog, native");
-    		dialog_modes.append("QFileDialog, non-native");
-    		dialog_modes.append("GTK+3 direct");
-    	</code>
-    	<default  code="true">dialog_modes</default>
-    	    	    	-->
-
     </entry>
   </group>
   <group name="Music Library">
@@ -95,17 +158,41 @@
   	</entry>
   </group>
   <group name="Options">
-    <entry name="CustomWidth" type="Int" key="custom width">
-      <label>The width of the playing field.</label>
-      <min>5</min>
-      <max>50</max>
-      <default>10</default>
-    </entry>
-    <entry name="CustomHeight" type="Int" key="custom height">
-      <label>The height of the playing field.</label>
-      <min>5</min>
-      <max>50</max>
-      <default>10</default>
-    </entry>
   </group>
+	<group name="NetworkAwareFileDialogs">
+		<entry name="states" type="StringList"> <!-- param="NAFDDialogId"> -->
+			<default code="true">
+				[] () {
+					QStringList sl;
+					sl.resize(NAFDDialogId::LAST);
+					return sl;
+				}()
+			</default>
+		</entry>
+		<entry name="DUMMY_TO_CREATE_ENUM" type="Enum">
+			<choices name="NAFDDialogId">
+				<choice name="unused"/>
+				<choice name="ImportDir"/>
+				<choice name="SavePlaylist"/>
+				<choice name="LAST"/>
+			</choices>
+		</entry>
+<!--		<entry name="view_mode" type="Enum">-->
+<!--		    <label context="@label:listbox">NetworkAwareFileDialog</label>-->
+<!--			<choices name="QFileDialog::ViewMode">-->
+<!--			  <choice name="AnyFile">-->
+<!--			&lt;!&ndash;			  <label context="@item:inlistbox">QFileDialog, native</label>&ndash;&gt;-->
+<!--			  </choice>-->
+<!--			  <choice name="ExistingFile">-->
+<!--			&lt;!&ndash;			  <label context="@item:inlistbox">QFileDialog, non-native</label>&ndash;&gt;-->
+<!--			  </choice>-->
+<!--			  <choice name="Directory">-->
+<!--			&lt;!&ndash;			  <label context="@item:inlistbox">GTK+3 direct</label>&ndash;&gt;-->
+<!--			  </choice>-->
+<!--			  <choice name="ExistingFiles">-->
+<!--			  </choice>-->
+<!--			</choices>-->
+<!--			<default>QFileDialog::FileMode::AnyFile</default>-->
+<!--		</entry>-->
+    </group>
 </kcfg>

@@ -1,9 +1,9 @@
 # Code generation options for kconfig_compiler
 File=AwesomeMediaLibraryManagerSettings.kcfg
 ClassName=AMLMSettings
-Singleton=true
 Mutators=true
 DefaultValueGetters=true
+Singleton=true
 ItemAccessors=true
 SetUserTexts=true
 GlobalEnums=false

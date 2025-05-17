@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -20,19 +20,26 @@
 #ifndef NETWORKAWAREFILEDIALOG_H
 #define NETWORKAWAREFILEDIALOG_H
 
+/// @file
+
+// Std C++
+#include <utility> // for std::pair<>.
+
+
 #include <config.h>
 
+// Qt
 #include <QWidget>
 #include <QFileDialog>
 #include <QUrl>
 #include <QString>
 
-#include <utility> // for std::pair<>.
-
 #if HAVE_GTKMM01 == 1
 #include <xcb/xcb.h>
 #include <xcb/xproto.h>
 #endif // HAVE_GTKMM01
+
+#include <AMLMSettings.h>
 
 /**
  * A sisyphean attempt to be all things to all people for file chooser dialogs.
@@ -90,7 +97,7 @@ Q_SIGNALS:
 
 public:
 	explicit NetworkAwareFileDialog(QWidget *parent = Q_NULLPTR, const QString &caption = QString(), const QUrl &directory = QUrl(),
-									const QString &filter = QString(), const QString &state_key = QString());
+									const QString &filter = QString(), AMLMSettings::NAFDDialogId dialog_id = AMLMSettings::NAFDDialogId::unused);
 	~NetworkAwareFileDialog() override;
 
 	/// @name Static functions for the most common use cases.
@@ -100,17 +107,17 @@ public:
 	 * Get a URL to save a file to.
 	 */
 	static std::pair<QUrl, QString> getSaveFileUrl(QWidget *parent = Q_NULLPTR, const QString &caption = QString(),
-												   const QUrl &dir = QUrl(),
-												   const QString &filter = QString(),
-												   const QString &state_key = QString(),
-												   QFileDialog::Options options = QFileDialog::Options(),
-												   const QStringList &supportedSchemes = QStringList());
+													const QUrl &dir = QUrl(),
+													const QString &filter = QString(),
+													AMLMSettings::NAFDDialogId dialog_id = AMLMSettings::NAFDDialogId::unused,
+													QFileDialog::Options options = QFileDialog::Options(),
+													const QStringList &supportedSchemes = QStringList());
 	/**
 	 * Get a URL to an existing directory.
 	 */
 	static std::pair<QUrl, QString> getExistingDirectoryUrl(QWidget *parent = Q_NULLPTR, const QString &caption = QString(),
 															const QUrl &dir = QUrl(),
-															const QString &state_key = QString(),
+															AMLMSettings::NAFDDialogId dialog_id = AMLMSettings::NAFDDialogId::unused,
 															QFileDialog::Options options = QFileDialog::ShowDirsOnly,
 															const QStringList &supportedSchemes = QStringList());
 	/// @} // END static members.
@@ -200,8 +207,8 @@ private:
 	void saveStateOverload();
 	void restoreStateOverload();
 
-	/// Persist the last state to/from this QSettings key.
-	QString m_settings_state_key;
+	/// Persist the last state to/from this dialog ID.
+    AMLMSettings::NAFDDialogId m_dialog_id;
 
     /// The parent of this "proxy" widget, which we'll also use as
     /// the parent of the real file dialog.

@@ -29,13 +29,13 @@
 #include <memory>
 
 // Qt
+#include <QComboBox>
 #include <QUrl>
 
 class QActionGroup;
 class QWidget;
 class QLabel;
 class QMdiSubWindow;
-class QSettings;
 class QStandardItem;
 class QStandardItemModel;
 
@@ -136,6 +136,8 @@ public:
     /// Init function which is called after setupGUI() has been called.
     void post_setupGUI_init();
 
+	void applyMainWindowSettings(const KConfigGroup& config) override;
+
 	/**
 	 * Called from the closeEvent() of views just before they accept the event.
 	 * This widget should delete any references it is keeping to @a viewptr.
@@ -234,15 +236,14 @@ private Q_SLOTS:
 
     /// @name Theme/Style related slots.
     /// @{
-    void changeStyle(const QString& styleName);
+    void SLOT_setApplicationStyle(const QString& styleName);
     void changeIconTheme(const QString& iconThemeName);
-    void SLOT_onChangeQStyle(QAction* action);
 	/// @}
 
-    /**
-	 * Slot FBO the Collection sidebar to bring the MDILibraryView associated with @a libmodel to the fore
-     * and/or creat a new MDILibraryView for it if one doesn't exist.
-     */
+	/**
+	* Slot FBO the Collection sidebar to bring the MDILibraryView associated with @a libmodel to the fore
+	* and/or creat a new MDILibraryView for it if one doesn't exist.
+	*/
 	void onShowLibrary(QPointer<LibraryModel> libmodel);
 
 	/**
@@ -266,7 +267,7 @@ private Q_SLOTS:
 	/// Slot which shows/hides the menu bar.
 	void onShowMenuBar(bool show);
 
-	/// Slot which locks the layout of the KToolBars.
+	/// Slot which locks the layout of the KToolBars and the Docks.
 	/// @todo Other layout?
 	void onSetLayoutLocked(bool checked);
 
@@ -283,6 +284,9 @@ private Q_SLOTS:
 
 private:
     Q_DISABLE_COPY(MainWindow)
+
+	/// @todo Refactor into a StyleController class?
+	QString m_currentStyle;
 
 	/// @name Startup Initialization
 	/// @{
@@ -356,10 +360,16 @@ private:
 
     /// Reads the primary settings.
 	void readPreGUISettings();
+    /**
+ * Open the windows the user had open at the end of last session.
+ * @todo Actually now only opens a window for each libmodel.
+ */
     void openWindows();
     void writeSettings();
-    void writeLibSettings(QSettings& settings);
-    void readLibSettings(QSettings& settings);
+    /// Writes the Library settings to ${HOME}/AMLMDatabaseSerDes.xml (not a QSettings or KConfig settings file).
+    void writeLibSettings();
+    /// Reads the Library settings from ${HOME}/AMLMDatabaseSerDes.xml (not a QSettings or KConfig settings file).
+    void readLibSettings();
     ///@}
 
     /// Signal-Slot-related functions.
@@ -376,13 +386,15 @@ private:
 
     bool maybeSaveOnClose();
 
-	void doChangeStyle();
+	/// Apply the named style to the app.
+	void applyStyle(const QString& styleName);
+	void updateStyleSelectionUi(const QString& style_name);
 
 
 	/// @name Private data members.
     /// @{
 
-    /// App-specific cache directory.
+	/// App-specific cache directory.
     QUrl m_cachedir;
 
     /// App-specific directory where persistent application data can be stored.  On Windows, this is the roaming, not local, path.
@@ -519,6 +531,7 @@ private:
 	ToolBarClass* m_settingsToolBar {nullptr};
 	ToolBarClass* m_controlsToolbar {nullptr};
 	ToolBarClass* m_filterToolbar {nullptr};
+	QPointer<QComboBox> m_combobox_style {nullptr};
 
 public:
     /// Docks
