@@ -29,6 +29,7 @@
 #include <memory>
 
 // Qt
+#include <QComboBox>
 #include <QUrl>
 
 class QActionGroup;
@@ -111,6 +112,10 @@ Q_SIGNALS:
 
 	/// User changed the settings in the Settings dialog.
 	void settingsChanged();
+
+	/// Signal emitted after a new style has been applied in SLOT_applyStyle().
+	/// @todo Refactor into a StyleController class.
+	void styleChanged(const QString& styleName);
 
 public:
 	/// Constructor
@@ -235,15 +240,15 @@ private Q_SLOTS:
 
     /// @name Theme/Style related slots.
     /// @{
-    void changeStyle(const QString& styleName);
+    void SLOT_applyStyle(const QString& styleName);
     void changeIconTheme(const QString& iconThemeName);
     void SLOT_onChangeQStyle(QAction* action);
 	/// @}
 
-    /**
-	 * Slot FBO the Collection sidebar to bring the MDILibraryView associated with @a libmodel to the fore
-     * and/or creat a new MDILibraryView for it if one doesn't exist.
-     */
+	/**
+	* Slot FBO the Collection sidebar to bring the MDILibraryView associated with @a libmodel to the fore
+	* and/or creat a new MDILibraryView for it if one doesn't exist.
+	*/
 	void onShowLibrary(QPointer<LibraryModel> libmodel);
 
 	/**
@@ -284,6 +289,9 @@ private Q_SLOTS:
 
 private:
     Q_DISABLE_COPY(MainWindow)
+
+	/// @todo Refactor into a StyleController class.
+	QString m_currentStyle;
 
 	/// @name Startup Initialization
 	/// @{
@@ -526,6 +534,7 @@ private:
 	ToolBarClass* m_settingsToolBar {nullptr};
 	ToolBarClass* m_controlsToolbar {nullptr};
 	ToolBarClass* m_filterToolbar {nullptr};
+	QPointer<QComboBox> m_combobox_style {nullptr};
 
 public:
     /// Docks

@@ -426,16 +426,17 @@ M_WARNING("TODO");
     qIn() << "END Initializing Theme";
 }
 
-QActionGroup * Theme::getWidgetStylesActionGroup(MainWindow *main_window)
+QActionGroup* Theme::getWidgetStylesActionGroup(MainWindow *main_window)
 {
-	/// Set up a "Style" menu.
-	/// Adapted from similar code in Kdenlive::MainWindow::init().
+	// Set up and return an "Application Style" menu.
+	// Adapted from similar code in Kdenlive::MainWindow::init().
 
-    KActionMenu *stylesAction = new KActionMenu(tr("Widget Style"), main_window);
+    QPointer<KActionMenu> stylesAction = new KActionMenu(QIcon::fromTheme("preferences-desktop-theme-applications"),
+    	tr("Widget Style"), main_window);
 	QActionGroup *stylesGroup = new QActionGroup(stylesAction);
 
 	// Add a "Default" style action
-	QAction *defaultStyle = new QAction(tr("Default"), stylesGroup);
+	QPointer<QAction> defaultStyle = new QAction(tr("Default"), stylesGroup);
 	defaultStyle->setData(QStringLiteral("Default"));
 	defaultStyle->setCheckable(true);
 	stylesAction->addAction(defaultStyle);
@@ -448,7 +449,7 @@ QActionGroup * Theme::getWidgetStylesActionGroup(MainWindow *main_window)
 	// Add all available styles to the menu, checking the currently selected one.
     for(const QString &style : std::as_const(m_available_qstyles))
 	{
-        QAction *a = new QAction(style, stylesGroup);
+        QPointer<QAction> a = new QAction(style, stylesGroup);
 		a->setCheckable(true);
 		a->setData(style);
 		if (AMLMSettings::widgetStyle() == style)

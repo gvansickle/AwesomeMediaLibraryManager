@@ -156,7 +156,6 @@ void SettingsDialog::parseWidgetsThatKDEForgotAbout()
             }
         }
     }
-
 }
 
 void SettingsDialog::setupWidget(KComboBox *box, KConfigSkeletonItem *item)

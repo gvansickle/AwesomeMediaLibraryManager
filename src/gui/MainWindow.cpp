@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
+/// @file
 
 #include <config.h>
 
@@ -278,7 +279,7 @@ void MainWindow::init()
 	if(!AMLMSettings::widgetStyle().isEmpty()
 			&& QString::compare(QApplication::style()->objectName(), AMLMSettings::widgetStyle(), Qt::CaseInsensitive) != 0)
 	{
-		// Initailize the different style.
+		// Initialize the different style.
 		doChangeStyle();
 	}
 
@@ -412,7 +413,7 @@ void MainWindow::onStartup()
 	// Debug check
 	qDebug() << "Toolbar valid:" << toolBar();
 	qDebug() << "Configure action exists:" << actionCollection()->action("options_configure_toolbars");
-	qDebug() << "All actions:" << actionCollection()->actions();
+	// qDebug() << "All actions:" << actionCollection()->actions();
 
 	post_setupGUI_init();
 }
@@ -753,7 +754,7 @@ void MainWindow::createActionsSettings(KActionCollection *ac)
 {
 #if HAVE_KF501 || HAVE_KF6
 
-	// Styles KActionMenu menu.
+	// QStyles KActionMenu menu.
 	addAction(QStringLiteral("styles_menu"), m_act_styles_kaction_menu);
     connect_or_die(m_actgroup_styles, &QActionGroup::triggered, this, &MainWindow::SLOT_onChangeQStyle);
 
@@ -813,6 +814,7 @@ void MainWindow::createActionsHelp(KActionCollection* ac)
  */
 void MainWindow::addViewMenuActions()
 {
+	// Layout lock.
 	m_act_lock_layout->setChecked(AMLMSettings::layoutIsLocked());
 	connect_or_die(m_act_lock_layout, &QAction::toggled, this, &MainWindow::onSetLayoutLocked);
 	m_menu_view->addActions({
@@ -820,7 +822,7 @@ void MainWindow::addViewMenuActions()
 		m_act_reset_layout,
 		m_act_ktog_show_tool_bar});
 
-    // List dock widgets.
+    // List of dock widgets.
     m_menu_view->addSection(tr("Docks"));
     QList<QDockWidget*> dockwidgets = findChildren<QDockWidget*>();
     qDb() << "Docks:" << dockwidgets;
@@ -840,7 +842,7 @@ void MainWindow::addViewMenuActions()
         }
     }
 
-	// List toolbars.
+	// List of toolbars.
     m_menu_view->addSection(tr("Toolbars"));
     auto tbs = toolBars();
     for(auto tb : std::as_const(tbs))
@@ -1006,15 +1008,16 @@ void MainWindow::createToolBars()
 // @todo This doesn't link now for some reason:	 m_settingsToolBar->addWidget(new KIconButton(m_settingsToolBar));
 
 #if HAVE_KF501 || HAVE_KF6
-    // Create a combo box where the user can change the style.
-	QComboBox* styleComboBox = new QComboBox;
-	styleComboBox->addItems(QStyleFactory::keys());
+    // Create a combo box where the user can change the application's style.
+	m_combobox_style = new QComboBox;
+	m_combobox_style->setObjectName("kcfg_widget_style");
+	m_combobox_style->addItems(QStyleFactory::keys());
     // Set it to the current style.
 	QString cur_style = amlmApp->style()->objectName();
-	styleComboBox->setCurrentIndex(styleComboBox->findText(cur_style, Qt::MatchFixedString));
-	m_settingsToolBar->addWidget(styleComboBox);
+	m_combobox_style->setCurrentIndex(m_combobox_style->findText(cur_style, Qt::MatchFixedString));
+	m_settingsToolBar->addWidget(m_combobox_style);
 
-	connect_or_die(styleComboBox, &QComboBox::currentTextChanged, this, &MainWindow::changeStyle);
+	connect_or_die(m_combobox_style, &QComboBox::currentTextChanged, this, &MainWindow::SLOT_applyStyle);
 
     // Create a combo box with icon themes.
     QComboBox* iconThemeComboBox = new QComboBox;
@@ -2159,11 +2162,40 @@ void MainWindow::onOpenShortcutDlg()
 	AMLMSettings::self()->save();
 }
 
-void MainWindow::changeStyle(const QString& styleName)
+void MainWindow::SLOT_applyStyle(const QString& styleName)
 {
+	/// @todo Refactor into a StyleController?
 	qDebug() << "signaled to set Style to" << styleName;
-	qApp->setStyle(QStyleFactory::create(styleName));
-	qApp->setPalette(qApp->style()->standardPalette());
+	if (auto style = QStyleFactory::create(styleName))
+	{
+		qApp->setStyle(style);
+		qDebug() << "set style to" << styleName;
+		if (m_currentStyle != styleName)
+		{
+			m_currentStyle = styleName;
+			qApp->setPalette(qApp->style()->standardPalette());
+			// Q_EMIT styleChanged(styleName);
+
+            //
+            // Update UI elements.
+            //
+			// Set combo box selection.
+			if (m_combobox_style)
+			{
+				QSignalBlocker blocker(m_combobox_style);
+				m_combobox_style->setCurrentText(styleName);
+			}
+			// Update menu actions checked states.
+            if (m_actgroup_styles)
+            {
+                for (QAction* action : m_actgroup_styles->actions())
+				{
+                    qDb() << M_ID_VAL(action->data()) << M_ID_VAL(styleName);
+					action->setChecked(action->data() == styleName);
+				}
+			}
+		}
+	}
 }
 
 void MainWindow::changeIconTheme(const QString& iconThemeName)

@@ -165,7 +165,6 @@ int main(int argc, char *argv[])
 //        Theme::setIconThemeName("breeze");
     }
 
-
 	// Set up the KAboutData.
 	// From: https://community.kde.org/Frameworks/Porting_Notes#Build_System
 	// "Make sure to create KAboutData instance only once the Q*Application instance has been created,
