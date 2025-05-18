@@ -58,7 +58,6 @@ set(AMLM_HEADER_FILES_TEST "")
 
 list(APPEND AMLM_SOURCE_FILES_TEST
      logic/serialization/tests/XmlSerializerTest.cpp
-     concurrency/tests/ExtAsyncTaskTests.cpp
      concurrency/tests/ExtAsyncTests.cpp
      concurrency/tests/ExtAsyncTestCommon.cpp
      concurrency/tests/ExtFutureTests.cpp
@@ -67,7 +66,6 @@ list(APPEND AMLM_SOURCE_FILES_TEST
 list(TRANSFORM AMLM_SOURCE_FILES_TEST PREPEND "../src/")
 
 list(APPEND AMLM_HEADER_FILES_TEST
-     concurrency/tests/ExtAsyncTaskTests.h
      concurrency/tests/ExtAsyncTests.h
      concurrency/tests/ExtAsyncTestCommon.h
      concurrency/tests/ExtFutureTests.h
