@@ -6,7 +6,8 @@ Because the world needs a Media Library Manager which is Awesome.
 Copyright (c) 2017, 2018, 2019, 2023, 2024, 2025 Gary R. Van Sickle
 
 Really this is just me experimenting with a number of things:
-- The Qt application framework
+- The Qt 5 (now 6) application framework
+- The KDE Frameworks 5 (now 6).
 - Creating a complete Qt GUI app, including:
   - A portable installer
   - Unit testing via GoogleTest and QTest
