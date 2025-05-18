@@ -182,9 +182,9 @@ void CollectionDockWidget::onRemoveLib(QModelIndex modelindex)
 	mb->setIcon(QMessageBox::Question);
 	mb->setText(tr("Remove Library Directory"));
 	mb->setInformativeText(QString("Do you really want to remove '%1' from the library?").arg(name));
-	mb->setDetailedText(QString("Name: '%1'\nURL: '%2'").arg(name).arg(url.toDisplayString()));
-	mb->setStandardButtons(QMessageBox::Yes | QMessageBox::No);
-	mb->setDefaultButton(QMessageBox::No);
+    mb->setDetailedText(QString("Name: '%1'\nURL: '%2'").arg(name, url.toDisplayString()));
+    mb->setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+    mb->setDefaultButton(QMessageBox::No);
 	auto retval = mb->exec();
 
 	if(retval == QMessageBox::Yes)

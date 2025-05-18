@@ -31,7 +31,7 @@
 #include <utils/QtHelpers.h>
 
 /**
- * @todo We should obsolete this.
+ * @todo We probably should obsolete this.
  */
 class Fraction
 {
@@ -43,6 +43,8 @@ public:
 	Fraction(const Fraction& other);
 	Fraction(long num, long denom);
 	~Fraction();
+
+    Fraction& operator=(const Fraction& other);
 
 
 	QString toQString() const;

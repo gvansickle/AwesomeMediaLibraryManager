@@ -55,7 +55,6 @@
 #include <utils/StringHelpers.h>
 #include <utils/DebugHelpers.h>
 #include <utils/UniqueIDMixin.h>
-#include "impl/ManagedExtFutureWatcher_impl.h"
 
 #if 0 // if !QT6
 

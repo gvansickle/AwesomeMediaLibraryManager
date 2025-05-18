@@ -1977,9 +1977,11 @@ void MainWindow::addChildMDIModelViewPair_Library(const MDIModelViewPair& mvpair
 			QStandardItem* new_lib_row_item = new QStandardItem(libmodel->getLibraryName());
 			new_lib_row_item->setData(QVariant::fromValue(libmodel));
 			new_lib_row_item->setData(QIcon::fromTheme("folder"), Qt::DecorationRole);
-			QString tttext = tr("<b>%1</b><hr>%2").arg(libmodel->getLibraryName()).arg(libmodel->getLibRootDir().toDisplayString());
-			new_lib_row_item->setData(QVariant(tttext), Qt::ToolTipRole);
-			m_stditem_libraries->appendRow(new_lib_row_item);
+            QString tttext = tr("<b>%1</b><hr>%2")
+                                 .arg(libmodel->getLibraryName(),
+                                      libmodel->getLibRootDir().toDisplayString());
+            new_lib_row_item->setData(QVariant(tttext), Qt::ToolTipRole);
+            m_stditem_libraries->appendRow(new_lib_row_item);
 			qDebug() << "LIBS ROWCOUNT:" << m_stditem_libraries->rowCount() << new_lib_row_item->parent();
 		}
 	}
@@ -2012,7 +2014,7 @@ void MainWindow::addChildMDIModelViewPair_Playlist(const MDIModelViewPair& mvpai
 			QStandardItem* new_playlist_row_item = new QStandardItem(playlist_view->getDisplayName());
 			new_playlist_row_item->setData(QVariant::fromValue(playlist_view));
             new_playlist_row_item->setData(QIcon::fromTheme("view-media-playlist"), Qt::DecorationRole);
-			QString tttext = tr("<b>%1</b><hr>%2").arg(playlist_view->getDisplayName()).arg(playlist_view->windowFilePath());
+            QString tttext = tr("<b>%1</b><hr>%2").arg(playlist_view->getDisplayName(), playlist_view->windowFilePath());
 			new_playlist_row_item->setData(QVariant(tttext), Qt::ToolTipRole);
 			m_stditem_playlist_views->appendRow(new_playlist_row_item);
 		}

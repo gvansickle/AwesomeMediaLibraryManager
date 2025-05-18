@@ -60,7 +60,6 @@
 #include <utils/DebugHelpers.h>
 #include <utils/ext_iterators.h>
 
-#include <concurrency/ExtAsync.h>
 #include <concurrency/AsyncTaskManager.h>
 #include <jobs/DirectoryScanJob.h>
 

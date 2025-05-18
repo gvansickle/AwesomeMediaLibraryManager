@@ -608,15 +608,13 @@ void BaseActivityProgressStatusBarWidget::speed(KJob *kjob, unsigned long value)
 
 			//~ singular %1/s (%2 remaining)
 			//~ plural %1/s (%2 remaining)
-			m_speed_label->setText(tr("%1 (%2 remaining)", "", /*singular/plural=*/msecs_remaining)
-                                   .arg(speedStr).arg(formattedDuration(msecs_remaining, 0)));
-		}
-		else
-		{
-			// total size is not known
+            m_speed_label->setText(tr("%1 (%2 remaining)", "", /*singular/plural=*/msecs_remaining)
+                                       .arg(speedStr, formattedDuration(msecs_remaining, 0)));
+        } else {
+            // total size is not known
 			m_speed_label->setText(tr("%1", "speed in progress units per second").arg(speedStr));
-		}
-	}
+        }
+    }
 
     updateMainTooltip();
 }

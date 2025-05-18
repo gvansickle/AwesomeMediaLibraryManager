@@ -33,8 +33,7 @@
 #include <QFutureWatcher>
 #include <QVector>
 
-/// Ours
-#include <concurrency/ExtAsync.h>
+// Ours
 #include "LibraryRescannerMapItem.h"
 #include <logic/models/AbstractTreeModelItem.h>
 #include <utils/Stopwatch.h>

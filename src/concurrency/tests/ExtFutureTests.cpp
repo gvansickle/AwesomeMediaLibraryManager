@@ -47,11 +47,6 @@
 #include "ExtAsyncTestCommon.h"
 #include <tests/IResultsSequenceMock.h>
 
-#include "../ExtAsync.h"
-#include "../ExtFuture.h"
-
-//#include <continuable/continuable.hpp>
-
 /// Types for gtest's "Typed Test" support.
 using FutureIntTypes = ::testing::Types<QFuture<int>, ExtFuture<int>>;
 TYPED_TEST_SUITE(ExtFutureTypedTestFixture, FutureIntTypes);

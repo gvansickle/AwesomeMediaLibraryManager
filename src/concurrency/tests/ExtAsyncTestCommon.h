@@ -54,8 +54,6 @@
 
 // Ours
 #include "../ExtFuture.h"
-#include "../ExtAsync.h"
-#include "concurrency/ExtFuture_traits.h"
 
 
 class ExtAsyncTestsSuiteFixtureBase;

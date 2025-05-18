@@ -50,8 +50,6 @@
 #include <tests/TestLifecycleManager.h>
 
 
-// Classes Under Test.
-#include "../ExtAsync.h"
 
 
 
