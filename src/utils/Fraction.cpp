@@ -101,6 +101,14 @@ Fraction::~Fraction()
 
 }
 
+Fraction& Fraction::operator=(const Fraction& other)
+{
+	m_numerator = other.m_numerator;
+	m_denominator = other.m_denominator;
+	m_cheater = other.m_cheater;
+	return *this;
+}
+
 QString Fraction::toQString() const
 {
 	QString retval;

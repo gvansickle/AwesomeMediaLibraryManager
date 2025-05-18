@@ -257,7 +257,7 @@ public Q_SLOTS:
     {
 //        if constexpr (std::is_convertible_v</*JobTypePtr*/std::shared_ptr<AMLMJob>, std::weak_ptr<AMLMJob>>)
 //        {
-            return registerJob(kjob.get());
+            registerJob(kjob.get());
 //        }
 //        else
 //        {

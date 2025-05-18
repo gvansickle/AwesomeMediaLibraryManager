@@ -165,9 +165,9 @@ QStringList LibraryContextMenu::getSongsAsTooltips(const QPersistentModelIndexVe
 			auto track_name = model->data(title_index, Qt::DisplayRole).toString();
 			auto artist_name = model->data(artist_index, Qt::DisplayRole).toString();
 //			qDebug() << "track_name:" << track_name;
-			retval.push_back(tr("<b>%1</b>: <i>%2</i>").arg(artist_name).arg(track_name));
-		}
-	}
+            retval.push_back(tr("<b>%1</b>: <i>%2</i>").arg(artist_name, track_name));
+        }
+    }
 
 	return retval;
 }

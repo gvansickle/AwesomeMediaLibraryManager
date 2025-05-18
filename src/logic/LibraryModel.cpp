@@ -977,8 +977,9 @@ void LibraryModel::deleteCache()
 	}
 	else
 	{
-		qWarning() << QString("Failed to remove cache file '%1': %2").arg(m_lib_cache_file.fileName()).arg(m_lib_cache_file.errorString());
-	}
+        qWarning() << QString("Failed to remove cache file '%1': %2")
+                          .arg(m_lib_cache_file.fileName(), m_lib_cache_file.errorString());
+    }
 }
 
 void LibraryModel::connectSignals()

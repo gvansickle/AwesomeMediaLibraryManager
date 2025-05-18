@@ -181,7 +181,6 @@ void XmlSerializer::InnerWriteVariantToStream(const QVariant& variant, QXmlStrea
 	else if(metatypeId == f_serqvarlist_id)
 	{
 		QVariantHomogenousList list = variant.value<QVariantHomogenousList>();
-#warning "This looks wrong, on read all lists are coming back a qvarlist"
 		writeQVariantHomogenousListToStream(list, *xmlstream);
 	}
 	else
