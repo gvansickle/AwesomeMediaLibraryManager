@@ -37,20 +37,20 @@
 // Ours
 #include <AMLMApp.h>
 #include <utils/RegisterQtMetatypes.h>
-#include "LibraryRescanner.h"
-#include "LibraryRescannerMapItem.h"
+#include "logic/LibraryRescanner.h"
+#include "logic/LibraryRescannerMapItem.h"
 #include "LibraryEntryMimeData.h"
 #include "utils/StringHelpers.h"
 #include "utils/DebugHelpers.h"
-#include "Library.h"
-#include "LibraryRescanner.h" ///< For MetadataReturnVal
+#include "logic/Library.h"
+#include "logic/LibraryRescanner.h" ///< For MetadataReturnVal
 #include "logic/ModelUserRoles.h"
 #include <logic/dbmodels/CollectionDatabaseModel.h>
 #include <logic/PerfectDeleter.h>
 
 #include <gui/Theme.h>
-#include <jobs/LibraryEntryLoaderJob.h>
-#include <jobs/LibraryRescannerJob.h>
+#include <logic/jobs/LibraryEntryLoaderJob.h>
+#include <logic/jobs/LibraryRescannerJob.h>
 #include <logic/serialization/SerializationHelpers.h>
 
 

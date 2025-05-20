@@ -20,6 +20,8 @@
 #ifndef SRC_LOGIC_LIBRARYRESCANNERMAPITEM_H_
 #define SRC_LOGIC_LIBRARYRESCANNERMAPITEM_H_
 
+/// @file
+
 // Std C++
 #include <memory>
 

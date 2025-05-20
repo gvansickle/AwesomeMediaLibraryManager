@@ -93,22 +93,22 @@
 #include <gui/widgets/CollectionStatsWidget.h>
 #include <gui/widgets/CollectionView.h>
 
-#include <logic/LibraryModel.h>
-#include <logic/PlaylistModel.h>
+#include <logic/models/LibraryModel.h>
+#include <logic/models/PlaylistModel.h>
 
 #include "gui/MDIArea.h"
 #include "MetadataDockWidget.h"
 #include "CollectionDockWidget.h"
 #include "widgets/PlayerControls.h"
 
-#include "logic/LibraryEntryMimeData.h"
+#include "logic/models/LibraryEntryMimeData.h"
 
 #include "utils/ConnectHelpers.h"
 #include "utils/DebugHelpers.h"
 
 #include <logic/MP2.h>
 #include "Theme.h"
-#include "logic/LibraryEntryMimeData.h"
+#include "logic/models/LibraryEntryMimeData.h"
 
 #include "AboutBox.h"
 #include "logic/proxymodels/ModelChangeWatcher.h"

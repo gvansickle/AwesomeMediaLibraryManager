@@ -20,7 +20,7 @@
 #include "LibrarySortFilterProxyModel.h"
 
 #include <logic/LibraryEntry.h>
-#include <logic/LibraryModel.h>
+#include <logic/models/LibraryModel.h>
 
 LibrarySortFilterProxyModel::LibrarySortFilterProxyModel(QObject* parent) : QSortFilterProxyModel(parent)
 {

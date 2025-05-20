@@ -31,8 +31,8 @@
 
 // Ours
 #include <gui/MDIPlaylistView.h>
-#include <logic/LibraryModel.h>
-#include <logic/PlaylistModel.h>
+#include <logic/models/LibraryModel.h>
+#include <logic/models/PlaylistModel.h>
 #include <utils/DebugHelpers.h>
 #include <logic/proxymodels/ModelHelpers.h>
 #include "menus/LibraryContextMenu.h"
@@ -40,7 +40,7 @@
 #include "logic/proxymodels/QPersistentModelIndexVec.h"
 
 #include <gui/delegates/MimeTypeDelegate.h>
-#include <logic/LibraryEntryMimeData.h>
+#include <logic/models/LibraryEntryMimeData.h>
 #include <logic/ModelUserRoles.h>
 #include <logic/proxymodels/LibrarySortFilterProxyModel.h>
 #include <logic/serialization/XmlSerializer.h>

@@ -70,7 +70,7 @@
 #include <logic/serialization/SerializationHelpers.h>
 #include <utils/Stopwatch.h>
 
-#include "LibraryModel.h"
+#include "models/LibraryModel.h"
 
 
 AMLM_QREG_CALLBACK([](){

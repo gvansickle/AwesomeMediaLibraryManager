@@ -32,10 +32,10 @@
 // Ours.
 #include <future/preproc.h>
 #include <logic/LibraryEntry.h>
-#include <logic/PlaylistModelItem.h>
+#include <logic/models/PlaylistModelItem.h>
 #include <utils/Fraction.h>
 #include <logic/LibraryRescanner.h>
-#include <logic/LibraryEntryMimeData.h>
+#include <logic/models/LibraryEntryMimeData.h>
 //#include <concurrency/AMLMJob.h>
 #include <logic/LibraryRescannerMapItem.h>
 #include <logic/AudioFileType.h>

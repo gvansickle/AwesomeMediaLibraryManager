@@ -29,7 +29,7 @@
 
 // Ours
 #include <ModelUserRoles.h>
-#include <PlaylistModelItem.h>
+#include <models/PlaylistModelItem.h>
 #include <utils/Fraction.h>
 #include "utils/ConnectHelpers.h"
 #include "ntp.h"

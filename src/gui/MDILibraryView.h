@@ -29,7 +29,7 @@
 
 // Ours
 #include "MDITreeViewBase.h"
-#include "logic/LibraryModel.h" // Needed for covariant return type.
+#include "logic/models/LibraryModel.h"  // Needed for covariant return type.
 #include "utils/DebugHelpers.h"
 
 class ItemDelegateLength;
