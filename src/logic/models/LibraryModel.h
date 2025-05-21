@@ -1,5 +1,5 @@
 /*
- * Copyright 2017, 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018, 2019, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -104,8 +104,11 @@ public:
 
     Qt::ItemFlags flags(const QModelIndex &index) const override;
 
-    // Returns the data stored under the given role for the item referred to by the index.
+    /// Returns the data stored under the given role for the item referred to by the index.
 	QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+
+	/// Fills the @a roleDataSpan with the requested data for the given @a index.
+	void multiData(const QModelIndex& index, QModelRoleDataSpan roleDataSpan) const override;
 
     // Returns a map with values for all predefined roles in the model for the item at the given index.
 	QMap<int, QVariant> itemData(const QModelIndex &index) const override;
