@@ -20,6 +20,8 @@
 #ifndef ITEMFACTORY_H
 #define ITEMFACTORY_H
 
+/// @file
+
 // Std C++
 #include <memory>
 #include <functional>
