@@ -20,6 +20,8 @@
 #ifndef LOGIC_COLUMNSPEC_H_
 #define LOGIC_COLUMNSPEC_H_
 
+/// @file
+
 #include <QMetaEnum>
 #include <QString>
 #include <QStringList>

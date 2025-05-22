@@ -17,12 +17,12 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/**
- * @file CueSheet
- */
-
 #ifndef SRC_LOGIC_CUESHEET_H_
 #define SRC_LOGIC_CUESHEET_H_
+
+/**
+ * @file CueSheet.h
+ */
 
 #include <config.h>
 

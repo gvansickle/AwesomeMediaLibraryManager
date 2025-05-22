@@ -17,16 +17,17 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/** @file Interface for LibraryRescanner, an asynchronous helper for LibraryModel. */
-
 #ifndef AWESOMEMEDIALIBRARYMANAGER_LIBRARYRESCANNER_H
 #define AWESOMEMEDIALIBRARYMANAGER_LIBRARYRESCANNER_H
 
-/// Std C++
+/// @file LibraryRescanner.h
+/// Interface for LibraryRescanner, an asynchronous helper for LibraryModel.
+
+// Std C++
 #include <memory>
 #include <vector>
 
-/// Qt
+// Qt
 #include <QObject>
 #include <QPersistentModelIndex>
 #include <QFuture>

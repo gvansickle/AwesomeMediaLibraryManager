@@ -20,6 +20,8 @@
 #ifndef PLAYLISTMODEL_H
 #define PLAYLISTMODEL_H
 
+/// @file
+
 #include "LibraryModel.h"
 #include "PlaylistModelItem.h"
 

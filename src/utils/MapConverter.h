@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -20,9 +20,15 @@
 #ifndef MAPCONVERTER_H
 #define MAPCONVERTER_H
 
-#include <QVariantMap>
+/// @file
+
+// C++
 #include <map>
 #include <string>
+
+// Qt
+#include <QVariantMap>
+
 
 class MapConverter
 {

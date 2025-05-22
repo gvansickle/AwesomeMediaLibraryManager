@@ -20,6 +20,8 @@
 #ifndef AWESOMEMEDIALIBRARYMANAGER_REGISTERQTMETATYPES_H
 #define AWESOMEMEDIALIBRARYMANAGER_REGISTERQTMETATYPES_H
 
+/// @file
+
 // Std C++
 #include <functional>
 #include <vector>

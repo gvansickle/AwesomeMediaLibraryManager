@@ -17,14 +17,12 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef ABSTRACTTREEMODEL_H
+#define ABSTRACTTREEMODEL_H
 /**
  * @file AbstractTreeModel.h
  * Interface of AbstractTreeModel.
  */
-
-
-#ifndef ABSTRACTTREEMODEL_H
-#define ABSTRACTTREEMODEL_H
 
 // Std C++
 #include <memory>

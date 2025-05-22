@@ -20,6 +20,8 @@
 #ifndef AWESOMEMEDIALIBRARYMANAGER_TRACKINDEX_H
 #define AWESOMEMEDIALIBRARYMANAGER_TRACKINDEX_H
 
+/// @file
+
 // Std C++
 #include <string>
 #include <vector>

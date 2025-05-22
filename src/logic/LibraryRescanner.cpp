@@ -17,7 +17,8 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/** @file LibraryRescanner.cpp
+/**
+ * @file LibraryRescanner.cpp
  * Implementation of LibraryRescanner, an asynchronous helper for LibraryModel.
  */
 

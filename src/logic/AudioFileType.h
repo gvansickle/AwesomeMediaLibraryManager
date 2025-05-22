@@ -21,7 +21,7 @@
 #define AWESOMEMEDIALIBRARYMANAGER_AUDIOFILETYPE_H
 
 /**
- * @file AudioFileType
+ * @file AudioFileType.h
  */
 
 // Qt
