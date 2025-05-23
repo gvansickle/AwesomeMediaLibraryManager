@@ -155,42 +155,63 @@ int AbstractTreeModel::columnCount(const QModelIndex& parent) const
 
 QVariant AbstractTreeModel::data(const QModelIndex &index, int role) const
 {
+	QModelRoleData roleData(role);
+	multiData(index, roleData);
+	return roleData.data();
+}
+
+void AbstractTreeModel::multiData(const QModelIndex& index, QModelRoleDataSpan roleDataSpan) const
+{
 	// Locked in ThreadsafeTreeModel.
-	// std::shared_lock read_lock(m_rw_mutex);
+// std::shared_lock read_lock(m_rw_mutex);
 
-	// data() expects a valid index, except it won't get one for data() calls for the root item info.
-//	Q_ASSERT(checkIndex(index, CheckIndexOption::IndexIsValid));
-
-	if (!index.isValid())
+	// Get data for each role at the given index.
+	for (QModelRoleData& roleData : roleDataSpan)
 	{
-		// Should never get here, checkIndex() should have asserted above.
-        return QVariant();
-	}
+		// data() expects a valid index, except it won't get one for data() calls for the root item info.
+		//	Q_ASSERT(checkIndex(index, CheckIndexOption::IndexIsValid));
 
-	// Color invalid model indexes.
-	if(index.column() >= columnCount())
-	{
-		switch(role)
+		// Clear any stale data that is in this QModelRoleData.
+		roleData.clearData();
+
+		if (!index.isValid())
 		{
+			// Should never get here, checkIndex() should have asserted above.
+			/// @todo ^^^ Assert no longer exists, so... ?
+			continue;
+		}
+
+		int role = roleData.role();
+
+		// Color invalid model indexes.
+		if(index.column() >= columnCount())
+		{
+			switch(role)
+			{
 			case Qt::ItemDataRole::BackgroundRole:
-				return QVariant::fromValue(QBrush(Qt::lightGray));
+				roleData.setData(QBrush(Qt::lightGray));
 				break;
 			default:
-				return QVariant();
-				break;
+				// return QVariant();
+				// break;
+				continue;
+			}
 		}
+
+		if (role != Qt::DisplayRole && role != Qt::EditRole) /// @todo Not in KDen AbstTreeModel: && role != Qt::EditRole)
+		{
+			// return QVariant();
+			roleData.setData(QVariant());
+			continue;
+		}
+
+		// Get a pointer to the indexed item.
+		std::shared_ptr<AbstractTreeModelItem> item = getItem(index);
+
+		// Return the requested [column,role] data from the item.
+		// return item->data(index.column(), role);
+		roleData.setData(item->data(index.column(), role));
 	}
-
-    if (role != Qt::DisplayRole && role != Qt::EditRole) /// @todo Not in KDen AbstTreeModel: && role != Qt::EditRole)
-	{
-        return QVariant();
-	}
-
-    // Get a pointer to the indexed item.
-	std::shared_ptr<AbstractTreeModelItem> item = getItem(index);
-
-	// Return the requested [column,role] data from the item.
-    return item->data(index.column(), role);
 }
 
 Qt::ItemFlags AbstractTreeModel::flags(const QModelIndex &index) const
