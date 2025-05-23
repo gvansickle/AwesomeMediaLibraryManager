@@ -21,10 +21,15 @@
 
 #include "AboutDataSetup.h"
 
+// Qt & KF
 #include <KAboutData>
 #include <QString>
 #include <QObject> // for tr()
 
+// Libcue
+// #include <libcue/libcue.h> // Currently has no version info.
+
+// Ours
 #include <utils/StringHelpers.h>
 #include <resources/VersionInfo.h>
 
@@ -61,6 +66,24 @@ KAboutData AboutDataSetup::GetKAboutData()
 					 QStringLiteral("https://github.com/gvansickle"), // The person's homepage or a relevant link. Start the address with "http://". "http://some.domain" is correct, "some.domain" is not. Can be left empty.
 					 QString() // The person's Open Collaboration Services username. The provider can be optionally specified
 				);
+
+	// Add more libraries and their versions.
+
+	// TagLib
+	std::string strtemp;
+	strtemp = std::format("{}.{}.{}", TAGLIB_MAJOR_VERSION, TAGLIB_MINOR_VERSION, TAGLIB_PATCH_VERSION);
+
+	retval.addComponent("TagLib",
+						"Used to read & write tags",
+						toqstr(strtemp),
+						QStringLiteral("https://taglib.org/"));
+
+	// libcue currently has no version info.
+	// strtemp = std::format("Version: {}.{}.{}", LIBCUE_VERSION_MAJOR, LIBCUE_MINOR_VERSION, LIBCUE_PATCH_VERSION);
+	retval.addComponent("libcue",
+						"Parsing and extracting data from CUE sheets",
+						"<unknown>",
+						QStringLiteral("https://github.com/lipnitsk/libcue"));
 
 	return retval;
 }
