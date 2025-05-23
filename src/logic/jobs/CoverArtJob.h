@@ -20,6 +20,8 @@
 #ifndef SRC_LOGIC_JOBS_COVERARTJOB_H_
 #define SRC_LOGIC_JOBS_COVERARTJOB_H_
 
+/// @file
+
 #include <config.h>
 
 // Qt

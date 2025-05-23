@@ -20,6 +20,8 @@
 #ifndef ENTRYTOMETADATATREEPROXYMODEL_H
 #define ENTRYTOMETADATATREEPROXYMODEL_H
 
+/// @file
+
 // Qt
 #include <QSortFilterProxyModel>
 #include <QPersistentModelIndex>

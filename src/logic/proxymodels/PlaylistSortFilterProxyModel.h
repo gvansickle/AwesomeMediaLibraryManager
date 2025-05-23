@@ -20,6 +20,8 @@
 #ifndef PLAYLISTSORTFILTERPROXYMODEL_H
 #define PLAYLISTSORTFILTERPROXYMODEL_H
 
+/// @file
+
 #include <QSortFilterProxyModel>
 
 class PlaylistSortFilterProxyModel : public QSortFilterProxyModel

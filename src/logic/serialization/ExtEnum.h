@@ -20,6 +20,8 @@
 #ifndef AWESOMEMEDIALIBRARYMANAGER_EXTENUM_H
 #define AWESOMEMEDIALIBRARYMANAGER_EXTENUM_H
 
+/// @file
+
 // Std C++
 #include <initializer_list>
 #include <string>
@@ -28,7 +30,7 @@
 #include <cstring>
 
 // Qt
-//#include <QString>
+
 
 // Ours
 #include <utils/crtp.h>

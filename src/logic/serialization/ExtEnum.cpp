@@ -21,6 +21,7 @@
 
 #include "ExtEnum.h"
 
+/// @file
 
 #if 0
 ///// @temp Testing
