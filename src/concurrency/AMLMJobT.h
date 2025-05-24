@@ -182,7 +182,7 @@ protected: //Q_SLOTS:
 
     virtual void SLOT_extfuture_finished()
     {
-		/// @note KDevelop's ImportProjectJob::importDone() which is connected to wtcher::finished
+		/// @note KDevelop's ImportProjectJob::importDone() which is connected to watcher::finished
 		///       does the watcher delete and the emit.
         // The ExtFuture<T> and hence the Job is finished.  Delete the watcher and emit the KJob result.
         // The emitResult() call will send out a KJob::finished() signal.
@@ -195,7 +195,7 @@ protected: //Q_SLOTS:
     {
 		/// @note KDevelop's ImportProjectJob::importCanceled() (watcher->canceled) does just this deleteLater().
 		/// I can't say I actually follow why they're bothering, don't see a destroyed() connection.
-    	// The ExtFuture<T> was cancelled (hopefully through the AMLMJobT interface).
+    	// The ExtFuture<T> was canceled (hopefully through the AMLMJobT interface).
 		qDbo() << "GOT EXTFUTURE CANCELED, calling deleteLater() on the watcher.";
         m_ext_watcher->deleteLater();
     }
