@@ -269,7 +269,7 @@ void CueSheet::fromVariant(const QVariant& variant)
 	QVariantHomogenousList qvar_track_list("m_tracks", "track");
 
 	map_read_field_or_warn(map, XMLTAG_TRACK_METADATA, &qvar_track_list);
-	AMLM_WARNIF(qvar_track_list.empty());
+	// AMLM_WARNIF(qvar_track_list.empty());
 #if 0
 	list_read_all_fields_or_warn(qvar_track_list, &m_tracks);
 #else
