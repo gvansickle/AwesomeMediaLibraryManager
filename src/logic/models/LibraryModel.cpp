@@ -184,9 +184,19 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
 {
 	/// @warn Per https://doc.qt.io/qt-6/qabstractitemmodel.html#multiData
 	/// "Note: It is illegal to pass an invalid model index to [multiData()]."
-	if(checkIndex(index, CheckIndexOption::IndexIsValid))
+
+	// Handle invalid indexes.
+	if (!index.isValid())
 	{
-		return QVariant();
+		if (role == Qt::UserRole)
+		{
+			// Global UserRole override for accessing model metadata.
+			return getLibraryName();
+		}
+		else
+		{
+			return QVariant();
+		}
 	}
 
 	QModelRoleData roleData(role);
@@ -200,7 +210,8 @@ void LibraryModel::multiData(const QModelIndex& index, QModelRoleDataSpan roleDa
 	/// "Note: It is illegal to pass an invalid model index to [multiData()]."
 	/// So I'm thinking we should really be bailing out and returning here.
 	/// But, our logic below actually handles (!index.isValid && role==Qt::UserRole).
-	AMLM_WARNIF_NOT(checkIndex(index, CheckIndexOption::IndexIsValid));
+	// AMLM_WARNIF_NOT(checkIndex(index, CheckIndexOption::IndexIsValid));
+	Q_ASSERT(checkIndex(index, CheckIndexOption::IndexIsValid));
 
 	// Get data for each role at the given index.
 	for (QModelRoleData& roleData : roleDataSpan)
@@ -273,6 +284,7 @@ void LibraryModel::multiData(const QModelIndex& index, QModelRoleDataSpan roleDa
 			}
 			else
 			{
+				continue;
 				// return QVariant();
 	        }
 	    }
