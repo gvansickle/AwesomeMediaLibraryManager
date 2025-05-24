@@ -831,10 +831,10 @@ void MainWindow::addViewMenuActions()
     // List of dock widgets.
     m_menu_view->addSection(tr("Docks"));
     QList<QDockWidget*> dockwidgets = findChildren<QDockWidget*>();
-    qDb() << "Docks:" << dockwidgets;
+    // qDb() << "Docks:" << dockwidgets;
     for(auto dock : std::as_const(dockwidgets))
     {
-        qDb() << "Dock:" << dock;
+        // qDb() << "Dock:" << dock;
         if(dock->parentWidget() == this)
         {
             if(dock->toggleViewAction() == nullptr)
@@ -1528,7 +1528,7 @@ void MainWindow::readLibSettings()
     bool success = exp_db_model->LoadDatabase(database_filename);
     if(success)
     {
-		qDb() << "Load succeeded";
+		// qDb() << "Load succeeded";
 	}
 	else
 	{

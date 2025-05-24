@@ -385,13 +385,13 @@ bool Metadata::read(const QUrl& url)
 
 		// Copy the cuesheet track info.
 		m_tracks = cuesheet->get_track_map();
-qDb() << "####### NUM TRACKS:" << m_tracks.size();
+// qDb() << "####### NUM TRACKS:" << m_tracks.size();
 		Q_ASSERT(!m_tracks.empty());
 
 
 		// Ok, now do a second pass over the tracks and determine if there are any gapless sets.
 // M_TODO("WAS THIS ALREADY DONE ABOVE?")
-		qDebug() << "Scanning for gaplessness...";
+		// qDebug() << "Scanning for gaplessness...";
 		for(int track_num=1; track_num < m_num_tracks_on_media; ++track_num)
 		{
 //            qDb() << "TRACK:" << track_num << m_tracks[track_num];
@@ -404,7 +404,7 @@ qDb() << "####### NUM TRACKS:" << m_tracks.size();
 			if(gap_frames_1to2 < 5 )
 			{
 				// There's little or no gap.
-				qDebug() << "Found a gapless track pair in" << m_audio_file_url << ":" << tm1.toStdString() << tm2.toStdString();
+				// qDebug() << "Found a gapless track pair in" << m_audio_file_url << ":" << tm1.toStdString() << tm2.toStdString();
 				m_tracks[track_num].m_is_part_of_gapless_set = true;
 				m_tracks[next_tracknum].m_is_part_of_gapless_set = true;
 			}
@@ -740,15 +740,16 @@ QDataStream &operator<<(QDataStream &out, [[maybe_unused]] const Metadata &obj)
 
 QDataStream &operator>>(QDataStream &in, Metadata &obj)
 {
+	Q_UNIMPLEMENTED();
 	Q_ASSERT(0);
 	/// @todo
-
+#if 0
 	QVariantMap tag_map;
 	using tag_map_var_type = std::map<std::string, std::vector<std::string>>;
 	tag_map_var_type tag_map_std;
 ///	in >> tag_map_std;
 
 //	obj.pImpl->m_tag_map = tag_map_std;
-
+#endif
 	return in;
 }

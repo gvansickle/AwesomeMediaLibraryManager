@@ -614,8 +614,6 @@ sw.print_results();
 	// dirtrav_job->start();
 
 	m_timer.lap("Leaving startAsyncDirTrav");
-
-	qDb() << "LEAVING" << __func__ << ":" << dir_url;
 }
 
 void LibraryRescanner::cancelAsyncDirectoryTraversal()

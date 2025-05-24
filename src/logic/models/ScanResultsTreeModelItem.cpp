@@ -164,29 +164,6 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
     map_read_field_or_warn(map, "baseclass", &iomap);
     Q_ASSERT(m_model.lock());
     this->BASE_CLASS::fromVariant(iomap);
-
-#if 1
-    // append_children_from_variant(m_model, this, child_var_list);
-
-#elif 0////
-	auto model_ptr_base = m_model.lock();
-	Q_ASSERT(model_ptr_base);
-	auto model_ptr = std::dynamic_pointer_cast<ScanResultsTreeModel>(model_ptr_base);
-	auto parent_id = getId();
-
-    // WE NEED TO BE IN MODEL HERE.
-	Q_ASSERT(isInModel());
-
-	std::vector<std::shared_ptr<AbstractTreeModelItem>> new_child_item_vec;
-    for(const QVariant& child_variant : child_var_list)
-	{
-        qDb() << "READING CHILD ITEM:" << child_variant << "INTO ScanResultsTreeModelItem:" << child_variant.typeName();
-
-		auto id = model_ptr->requestAddSRTMLibEntryItem(child_variant, parent_id);
-		auto new_child = model_ptr->getItemById(id);
-		Q_ASSERT(new_child);
-	}
-#endif
 }
 
 //std::shared_ptr<ScanResultsTreeModel> ScanResultsTreeModelItem::getTypedModel() const
