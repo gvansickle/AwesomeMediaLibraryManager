@@ -17,11 +17,11 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef SRC_LOGIC_MODELS_THREADSAFETREEMODEL_H_
+#define SRC_LOGIC_MODELS_THREADSAFETREEMODEL_H_
 /**
  * @file ThreadsafeTreeModel.h
  */
-#ifndef SRC_LOGIC_MODELS_THREADSAFETREEMODEL_H_
-#define SRC_LOGIC_MODELS_THREADSAFETREEMODEL_H_
 
 // Std C++
 #include <memory>
@@ -94,6 +94,7 @@ public:
 	/// @}
 
 	QVariant data(const QModelIndex &index, int role) const override;
+	void multiData(const QModelIndex& index, QModelRoleDataSpan roleDataSpan) const override;
 	bool setData(const QModelIndex& index, const QVariant& value, int role = Qt::EditRole) override;
 	QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
 	Qt::ItemFlags flags(const QModelIndex &index) const override;

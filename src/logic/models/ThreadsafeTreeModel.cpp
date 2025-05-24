@@ -84,7 +84,6 @@ void ThreadsafeTreeModel::clear(bool quit)
 		requestDeleteItem(child, undo, redo);
 	}
 	items_to_delete.clear();
-	qDb() << M_ID_VAL(m_root_item->childCount());
 	Q_ASSERT(m_root_item->childCount() == 0);
 	m_closing = false;
 	if (!quit)
@@ -131,6 +130,12 @@ QVariant ThreadsafeTreeModel::data(const QModelIndex& index, int role) const
 {
 	READ_LOCK()
 	return BASE_CLASS::data(index, role);
+}
+
+void ThreadsafeTreeModel::multiData(const QModelIndex& index, QModelRoleDataSpan roleDataSpan) const
+{
+	READ_LOCK()
+	BASE_CLASS::multiData(index, roleDataSpan);
 }
 
 bool ThreadsafeTreeModel::setData(const QModelIndex& index, const QVariant& value, int role)
