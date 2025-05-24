@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+/// @file
 
 #include <gui/actions/ActionHelpers.h>
 #include "HelpMenu.h"

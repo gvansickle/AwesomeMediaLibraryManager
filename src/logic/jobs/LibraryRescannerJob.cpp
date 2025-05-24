@@ -30,7 +30,7 @@
 // Ours
 #include <utils/DebugHelpers.h>
 #include <utils/TheSimplestThings.h>
-#include "LibraryModel.h"
+#include <models/LibraryModel.h>
 
 MetadataReturnVal refresher_callback(const VecLibRescannerMapItems &mapitem)
 {

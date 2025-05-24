@@ -290,7 +290,7 @@ protected:
 /// Test Cases
 ///
 
-INSTANTIATE_TEST_CASE_P(TrueFalseParameterizedTests,
+INSTANTIATE_TEST_SUITE_P(TrueFalseParameterizedTests,
                         AMLMJobTestsParameterized,
                         ::testing::Bool());
 /// To avoid error: "Parameterized test suite AMLMJobTestsParameterized is instantiated via INSTANTIATE_TEST_SUITE_P, but no tests are defined via TEST_P ."

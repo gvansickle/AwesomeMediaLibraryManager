@@ -1,5 +1,5 @@
 #
-# Copyright 2018, 2024 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2018, 2024, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -24,6 +24,7 @@ set(proxymodels_subdir_SOURCES
 	ModelHelpers.cpp
 	LibrarySortFilterProxyModel.cpp
 	ModelChangeWatcher.cpp
+	PlaylistSortFilterProxyModel.cpp
 	QPersistentModelIndexVec.cpp
 	ShuffleProxyModel.cpp
 )
@@ -33,6 +34,7 @@ set(proxymodels_subdir_HEADERS
     ModelHelpers.h
     LibrarySortFilterProxyModel.h
     ModelChangeWatcher.h
+	PlaylistSortFilterProxyModel.h
     QPersistentModelIndexVec.h
 	ShuffleProxyModel.h
 )

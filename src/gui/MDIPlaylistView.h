@@ -22,7 +22,7 @@
 
 
 #include "MDITreeViewBase.h"
-#include <logic/PlaylistModel.h>
+#include <logic/models/PlaylistModel.h>
 
 class QMediaPlaylist;
 class LibrarySortFilterProxyModel;

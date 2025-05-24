@@ -50,8 +50,6 @@ AMLMJob::AMLMJob(QObject *parent) : KJob(parent)
 {
 //    setObjectName(uniqueQObjectName());
 
-    qDbo() << M_NAME_VAL(this);
-
     /// @todo This is sort of horrible, we should find a just-in-time way to do the uiDelegate.
     /// ...and also, while this prevents crashes, we don't get any dialog etc. output on fail.
     /// So not at all clear what's happening here.

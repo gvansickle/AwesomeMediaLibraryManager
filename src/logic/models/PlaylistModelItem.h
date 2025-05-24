@@ -20,7 +20,9 @@
 #ifndef PLAYLISTMODELITEM_H
 #define PLAYLISTMODELITEM_H
 
-#include "LibraryEntry.h"
+/// @file
+
+#include "logic/LibraryEntry.h"
 
 #include <memory>
 

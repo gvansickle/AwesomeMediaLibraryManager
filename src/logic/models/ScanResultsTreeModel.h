@@ -111,6 +111,7 @@ public:
 	void toOrm(std::string filename) const override;
 	void fromOrm(std::string filename) override;
 #endif
+	/// @}
 
 protected:
 	/// @name Derived-class serialization info.

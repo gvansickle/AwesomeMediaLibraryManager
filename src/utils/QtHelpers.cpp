@@ -17,5 +17,7 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/// @file
+
 #include "QtHelpers.h"
 

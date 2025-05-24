@@ -37,20 +37,20 @@
 // Ours
 #include <AMLMApp.h>
 #include <utils/RegisterQtMetatypes.h>
-#include "LibraryRescanner.h"
-#include "LibraryRescannerMapItem.h"
+#include "logic/LibraryRescanner.h"
+#include "logic/LibraryRescannerMapItem.h"
 #include "LibraryEntryMimeData.h"
 #include "utils/StringHelpers.h"
 #include "utils/DebugHelpers.h"
-#include "Library.h"
-#include "LibraryRescanner.h" ///< For MetadataReturnVal
+#include "logic/Library.h"
+#include "logic/LibraryRescanner.h" ///< For MetadataReturnVal
 #include "logic/ModelUserRoles.h"
 #include <logic/dbmodels/CollectionDatabaseModel.h>
 #include <logic/PerfectDeleter.h>
 
 #include <gui/Theme.h>
-#include <jobs/LibraryEntryLoaderJob.h>
-#include <jobs/LibraryRescannerJob.h>
+#include <logic/jobs/LibraryEntryLoaderJob.h>
+#include <logic/jobs/LibraryRescannerJob.h>
 #include <logic/serialization/SerializationHelpers.h>
 
 
@@ -182,19 +182,16 @@ Qt::ItemFlags LibraryModel::flags(const QModelIndex &index) const
 
 QVariant LibraryModel::data(const QModelIndex &index, int role) const
 {
-//	Qt::ItemDataRole id_role = Qt::ItemDataRole(role);
-//	qDebug() << "index:" << index.isValid() << index.row() << index.column() << "role:" << id_role;
+	/// @warn Per https://doc.qt.io/qt-6/qabstractitemmodel.html#multiData
+	/// "Note: It is illegal to pass an invalid model index to [multiData()]."
 
-    // Q_ASSERT(checkIndex(index, CheckIndexOption::IndexIsValid));
-AMLM_WARNIF_NOT(checkIndex(index, CheckIndexOption::IndexIsValid));
-
-    // Handle invalid indexes.
-	if(!index.isValid())
+	// Handle invalid indexes.
+	if (!index.isValid())
 	{
-		if(role == Qt::UserRole)
+		if (role == Qt::UserRole)
 		{
 			// Global UserRole override for accessing model metadata.
-			return QVariant(getLibraryName());
+			return getLibraryName();
 		}
 		else
 		{
@@ -202,188 +199,172 @@ AMLM_WARNIF_NOT(checkIndex(index, CheckIndexOption::IndexIsValid));
 		}
 	}
 
-    // index is valid.
+	QModelRoleData roleData(role);
+	multiData(index, roleData);
+	return roleData.data();
+}
 
-	if(role == ModelUserRoles::PointerToItemRole)
-	{
-		if(index.column() == 0)
-		{
-			// Return a pointer to the item.
-			std::shared_ptr<LibraryEntry> item = getItem(index);
-			qDebug() << "Returning pointer to item with Url:" << item->getUrl();
-			return QVariant::fromValue<std::shared_ptr<LibraryEntry>>(item);
-		}
-	}
+void LibraryModel::multiData(const QModelIndex& index, QModelRoleDataSpan roleDataSpan) const
+{
+	/// @warn Per https://doc.qt.io/qt-6/qabstractitemmodel.html#multiData
+	/// "Note: It is illegal to pass an invalid model index to [multiData()]."
+	/// So I'm thinking we should really be bailing out and returning here.
+	/// But, our logic below actually handles (!index.isValid && role==Qt::UserRole).
+	// AMLM_WARNIF_NOT(checkIndex(index, CheckIndexOption::IndexIsValid));
+	Q_ASSERT(checkIndex(index, CheckIndexOption::IndexIsValid));
 
-    if(role == Qt::DecorationRole)
-    {
-        auto sectionid = getSectionFromCol(index.column());
-        if(SectionID::Status == sectionid)
-        {
-            // Return an icon indicating the populated status of this entry.
-            auto item = getItem(index);
-            if(item->isPopulated())
-            {
-                if(item->isError())
-                {
-                    return m_IconError;
-                }
-                else
-                {
-                    return m_IconOk;
-                }
-            }
-            else
-            {
-                return m_IconUnknown;
-            }
-        }
-        else if(SectionID::MIMEType == sectionid)
-        {
-            // Return an icon for the MIME type of the file containing the track.
-            auto item = getItem(index);
-            QMimeType mime = item->getMimeType();
-            QIcon mime_icon = Theme::iconFromTheme(mime);
-            return QVariant::fromValue(mime_icon);
-        }
-        else
-        {
-            return QVariant();
-        }
-    }
-	if(role == Qt::DisplayRole || role == Qt::ToolTipRole)
+	// Get data for each role at the given index.
+	for (QModelRoleData& roleData : roleDataSpan)
 	{
-		auto item = getItem(index);
-		auto sec_id = getSectionFromCol(index.column());
-        if(item->isPopulated())
+		int role = roleData.role();
+
+	    // Handle invalid indexes.
+		if(!index.isValid())
 		{
-            // Item has data.
-			QVariant metaentry;
-			if(sec_id == SectionID::Status)
+			if(role == Qt::UserRole)
 			{
-				// We get a flood of requests for the status column for some reason.
-				if(role == Qt::ToolTipRole)
-				{
-					// Return a big tooltip with all the details of the entry.
-					return QVariant(getEntryStatusToolTip(item.get()));
-				}
-				else if(role == Qt::DisplayRole)
-				{
-					return QVariant(item->hasNoPregap() ? "NoGap" : "");
-				}
-				// Short-circuit the rest of the logic, we have nothing to return here.
-				return QVariant();
-			}
-			else if(sec_id == SectionID::Length)
-			{
-				// Return Fraction as a string.
-				return QVariant::fromValue(item->get_length_secs());
-			}
-			else if(sec_id == SectionID::MIMEType)
-			{
-// M_MESSAGE("TODO Probably should be refactored.");
-//				return item->getFileType();
-                return QVariant::fromValue(item->getMimeType());
-			}
-			else if(sec_id == SectionID::Filename)
-			{
-				return item->getFilename();
+				// Global UserRole override for accessing model metadata.
+				roleData.setData(getLibraryName());
 			}
 			else
 			{
-				// Get the list of metadata entry names which will work for this column's text,
-				// in descending order of preference.
-				QStringList metadata_choices = m_columnSpecs[index.column()].metadata_list;
-//                qDebug() << "metadata_choices:" << metadata_choices;
-				for(QString& key: metadata_choices)
-				{
-					QStringList metadata_value_str_list = item->getMetadata(key);
-//                    qDb() << "KEY:" << key << "LIST:" << metadata_value_str_list;
-					if(!metadata_value_str_list.isEmpty() && !metadata_value_str_list[0].isEmpty())
-					{
-						//qDebug() << "was valid: (" << metadata_value_str_list[0] << ")";
-						metaentry = QVariant::fromValue(metadata_value_str_list[0]);
-						break;
-					}
-				}
+				roleData.clearData();
 			}
-			if(!metaentry.isNull() && metaentry.isValid())
+			// Go to next role.
+			continue;
+		}
+
+	    // index is valid.
+
+		// Clear any stale data that is in this QModelRoleData.
+		roleData.clearData();
+
+		if (role == ModelUserRoles::PointerToItemRole)
+		{
+			if(index.column() == 0)
 			{
-				return QVariant(metaentry);
+				// Return a pointer to the item.
+				std::shared_ptr<LibraryEntry> item = getItem(index);
+				qDebug() << "Returning pointer to item with Url:" << item->getUrl();
+				roleData.setData(item);
 			}
 		}
-        else
+
+		if (role == Qt::DecorationRole)
 		{
-			// Entry hasn't been populated yet.
-#if 1 //////////////////////////////////// EXPERIMENT
-			return QVariant();
-#else
-			// Get a QPMI so we can keep track of outstanding requests for it.
-			// We track by rows, so we want the index of column 0.
-			QPersistentModelIndex qpmi (index.siblingAtColumn(0));
-			Q_ASSERT(qpmi.isValid());
-			if(m_pending_async_item_loads.contains(qpmi))
-            {
-				// There's already an outstanding request, nothing to do but wait.
-				qDbo() << "Async load already pending for item:" << qpmi;
-            }
-			else
-            {
-                // Start an async job to read the data for this entry.
-
-				qDbo() << "STARTING ASYNC LOAD FOR ITEM:" << qpmi;
-
-				// Register that we're doing this, so another async load for this same item doesn't get triggered.
-				m_pending_async_item_loads.insert(qpmi, true);
-
-				ExtFuture<LibraryEntryLoaderJobResult> future_entry = LibraryEntryLoaderJob::make_task(QPersistentModelIndex(index), item);
-				ExtFuture<Unit> then_future = future_entry.then([=](ExtFuture<LibraryEntryLoaderJobResult> result_future) {
-					if(!result_future.isFinished() || result_future.resultCount() == 0)
-					{
-						/// @todo This is inside a then(), so Should never get here???
-						qWr() << "LIBRARYENTRYLOADERJOB RETURNED NO RESULTS:" << result_future;
-						return;
-						Q_ASSERT(0);
+			auto sectionid = getSectionFromCol(index.column());
+	        if(SectionID::Status == sectionid)
+	        {
+	            // Return an icon indicating the populated status of this entry.
+	            auto item = getItem(index);
+	            if(item->isPopulated())
+	            {
+	                if(item->isError())
+	                {
+	                    roleData.setData(m_IconError);
+	                }
+	                else
+	                {
+	                    roleData.setData(m_IconOk);
 					}
-					qDb() << "IN THEN CALLBACK:" << result_future;
-					LibraryEntryLoaderJobResult new_vals = result_future.result();
-					Q_EMIT SIGNAL_selfSendReadyResults(new_vals);
-					run_in_event_loop(qApp, [=]() -> bool {
-						AMLM_ASSERT_IN_GUITHREAD();
-						m_pending_async_item_loads.remove(qpmi);
-						return true;
-						});
-				});
-				AMLMApp::IPerfectDeleter()->addQFuture(future_entry);
-				AMLMApp::IPerfectDeleter()->addQFuture(then_future);
-            }
-#endif // EXPERIMENT
-            ////////////////
-
-			if(role == Qt::DisplayRole)
-			{
-				if(sec_id == SectionID::Length)
-				{
-					return QVariant::fromValue(Fraction("0/1"));
-				}
-                return QVariant("?");
+	            }
+	            else
+	            {
+	                roleData.setData(m_IconUnknown);
+	            }
+	        }
+	        else if(SectionID::MIMEType == sectionid)
+	        {
+	            // Return an icon for the MIME type of the file containing the track.
+	            auto item = getItem(index);
+	            QMimeType mime = item->getMimeType();
+	            QIcon mime_icon = Theme::iconFromTheme(mime);
+	            // return QVariant::fromValue(mime_icon);
+	            roleData.setData(mime_icon);
 			}
-			else if( role == Qt::ToolTipRole)
+			else
 			{
-                return QVariant(item->getUrl());
+				continue;
+				// return QVariant();
+	        }
+	    }
+		if(role == Qt::DisplayRole || role == Qt::ToolTipRole)
+		{
+			auto item = getItem(index);
+			auto sec_id = getSectionFromCol(index.column());
+	        if(item->isPopulated())
+			{
+	            // Item has data.
+				QVariant metaentry;
+				if(sec_id == SectionID::Status)
+				{
+					// We get a flood of requests for the status column for some reason.
+					if(role == Qt::ToolTipRole)
+					{
+						// Return a big tooltip with all the details of the entry.
+						roleData.setData(getEntryStatusToolTip(item.get()));
+					}
+					else if(role == Qt::DisplayRole)
+					{
+						roleData.setData(item->hasNoPregap() ? "NoGap" : "");
+					}
+					// Short-circuit the rest of the logic, we have nothing to return here.
+					continue;
+				}
+				else if(sec_id == SectionID::Length)
+				{
+					// Return Fraction as a string.
+					// return QVariant::fromValue(item->get_length_secs());
+					roleData.setData(item->get_length_secs());
+				}
+				else if(sec_id == SectionID::MIMEType)
+				{
+					roleData.setData(item->getMimeType());
+				}
+				else if(sec_id == SectionID::Filename)
+				{
+					// return item->getFilename();
+					roleData.setData(item->getFilename());
+				}
+				else
+				{
+					// Get the list of metadata entry names which will work for this column's text,
+					// in descending order of preference.
+					QStringList metadata_choices = m_columnSpecs[index.column()].metadata_list;
+	//                qDebug() << "metadata_choices:" << metadata_choices;
+					for(QString& key: metadata_choices)
+					{
+						QStringList metadata_value_str_list = item->getMetadata(key);
+	//                    qDb() << "KEY:" << key << "LIST:" << metadata_value_str_list;
+						if(!metadata_value_str_list.isEmpty() && !metadata_value_str_list[0].isEmpty())
+						{
+							//qDebug() << "was valid: (" << metadata_value_str_list[0] << ")";
+							metaentry = QVariant::fromValue(metadata_value_str_list[0]);
+							break;
+						}
+					}
+				}
+				if(!metaentry.isNull() && metaentry.isValid())
+				{
+					// return QVariant(metaentry);
+					roleData.setData(metaentry);
+				}
+			}
+			else
+			{
+				// Entry hasn't been populated yet.
 			}
 		}
 	}
-	return QVariant();
 }
 
 QMap<int, QVariant> LibraryModel::itemData(const QModelIndex& index) const
 {
 	auto retval = QAbstractItemModel::itemData(index);
-	if(index.column() == 0)
+	if (index.column() == 0)
 	{
 		auto vardata = data(index, ModelUserRoles::PointerToItemRole);
-		if(vardata.isValid())
+		if (vardata.isValid())
 		{
 			retval.insert(ModelUserRoles::PointerToItemRole, vardata);
 		}
@@ -396,9 +377,9 @@ QHash<int, QByteArray> LibraryModel::roleNames() const
 	auto retval = QAbstractItemModel::roleNames();
 
 	// Append our user role names.
-	for(int i = 0; i<ModelUserRoles::keyCount(); i++)
+	for (int i = 0; i < ModelUserRoles::keyCount(); i++)
 	{
-//		qDebug() << "ENUM:" << ModelUserRoles::key(i) << "Val:" << ModelUserRoles::value(i);
+		//		qDebug() << "ENUM:" << ModelUserRoles::key(i) << "Val:" << ModelUserRoles::value(i);
 		retval.insert(ModelUserRoles::value(i), ModelUserRoles::valueToKey(ModelUserRoles::value(i)));
 	}
 	return retval;
@@ -407,32 +388,31 @@ QHash<int, QByteArray> LibraryModel::roleNames() const
 QVariant LibraryModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
 	Q_ASSERT(section >= -1);
-	if(orientation == Qt::Horizontal)
+	if (orientation == Qt::Horizontal)
 	{
-		switch(role)
+		switch (role)
 		{
 		case Qt::DisplayRole:
-		{
-			if(section+1 > static_cast<int>(m_columnSpecs.size()))
 			{
-				return QVariant();
+				if (section + 1 > static_cast<int>(m_columnSpecs.size()))
+				{
+					return QVariant();
+				}
+				auto dn = m_columnSpecs[section].m_display_name;
+				return QVariant(dn);
 			}
-			auto dn = m_columnSpecs[section].m_display_name;
-			return QVariant(dn);
-		}
 		case ModelUserRoles::HeaderViewSectionID:
-		{
-			return QVariant::fromValue(m_columnSpecs[section].m_section_id);
-		}
+			{
+				return QVariant::fromValue(m_columnSpecs[section].m_section_id);
+			}
 		case ModelUserRoles::HeaderViewSectionShouldFitWidthToContents:
-		{
-			return m_columnSpecs[section].m_should_fit_column_width_to_contents;
-		}
+			{
+				return m_columnSpecs[section].m_should_fit_column_width_to_contents;
+			}
 		default:
 			// Punt to base class.
 			return BASE_CLASS::headerData(section, orientation, role);
 		}
-
 	}
 
 	return QVariant();
@@ -440,7 +420,7 @@ QVariant LibraryModel::headerData(int section, Qt::Orientation orientation, int 
 
 bool LibraryModel::hasChildren(const QModelIndex& parent) const
 {
-	if(!parent.isValid())
+	if (!parent.isValid())
 	{
 		// This is the root node, this is the only node with children.
 		return true;
@@ -458,32 +438,32 @@ std::shared_ptr<LibraryEntry> LibraryModel::createDefaultConstructedEntry() cons
 
 std::shared_ptr<LibraryEntry> LibraryModel::getItem(const QModelIndex& index) const
 {
-	if(index.isValid())
+	if (index.isValid())
 	{
 		std::shared_ptr<LibraryEntry> item = m_library[index.row()];
-		if(item)
+		if (item)
 		{
 			return item;
 		}
 		else
 		{
-            qWro() << "NULL internalPointer, returning 'None' item";
+			qWro() << "NULL internalPointer, returning 'None' item";
 			return nullptr;
 		}
 	}
 	else
 	{
-        qWro() << "Invalid index, returning 'None' item";
+		qWro() << "Invalid index, returning 'None' item";
 		return nullptr;
 	}
 }
 
 bool LibraryModel::setData(const QModelIndex& index, const QVariant& value, int role)
 {
-//	qDebug() << "SetData, index/value/role:" << index << value << role;
+	//	qDebug() << "SetData, index/value/role:" << index << value << role;
 
 	// Has to be a valid index or the call doesn't make sense.
-	if(!index.isValid())
+	if (!index.isValid())
 	{
 		qCritical() << "SET DATA CALLED WITH AN INVALID INDEX";
 		return false;
@@ -491,28 +471,29 @@ bool LibraryModel::setData(const QModelIndex& index, const QVariant& value, int 
 
 	// The stock view widgets react only to dataChanged with the DisplayRole.
 	// When they edit the data, they call setData with the EditRole.
-	if(role != Qt::EditRole && role != ModelUserRoles::PointerToItemRole)
+	if (role != Qt::EditRole && role != ModelUserRoles::PointerToItemRole)
 	{
 		qDebug() << "NOT Qt::EditRole or ModelUserRoles::PointerToItemRole";
 		return false;
 	}
 
 	// Currently we only support setData() on the first column.
-	if(index.column() != 0 || index.row() < 0)
+	if (index.column() != 0 || index.row() < 0)
 	{
-		qWarning() << "RETURNING FALSE: setData() called with index: valid=" << index.isValid() << ", row=" << index.row() << ", column=" << index.column() << ", parent=" << index.parent();
+		qWarning() << "RETURNING FALSE: setData() called with index: valid=" << index.isValid() << ", row=" << index.
+			row() << ", column=" << index.column() << ", parent=" << index.parent();
 		return false;
 	}
 
 	std::shared_ptr<LibraryEntry> replacement_item;
 
-//	if(role == ModelUserRoles::PointerToItemRole)
-//	{
-		// Set a std::shared_ptr<> to the item at this index/role.
-		replacement_item = value.value<std::shared_ptr<LibraryEntry>>();
-		Q_ASSERT(replacement_item);
-//		qDebug() << "Setting pointer to item with Url:" << replacement_item->getUrl();
-//	}
+	//	if(role == ModelUserRoles::PointerToItemRole)
+	//	{
+	// Set a std::shared_ptr<> to the item at this index/role.
+	replacement_item = value.value<std::shared_ptr<LibraryEntry>>();
+	Q_ASSERT(replacement_item);
+	//		qDebug() << "Setting pointer to item with Url:" << replacement_item->getUrl();
+	//	}
 
 	///qDebug() << "Can convert to LibraryEntry*:" << value.canConvert<LibraryEntry*>();
 
@@ -524,8 +505,8 @@ bool LibraryModel::setData(const QModelIndex& index, const QVariant& value, int 
 	subclassesSetData(index, value, role);
 
 	// Tell anybody that's listening that all data in this row has changed.
-	QModelIndex bottom_right_index = index.sibling(index.row(), columnCount()-1);
-//	qDebug() << "EMITTING DATACHANGED:" << index << index.parent() << bottom_right_index << bottom_right_index.parent() << Qt::ItemDataRole(role);
+	QModelIndex bottom_right_index = index.sibling(index.row(), columnCount() - 1);
+	//	qDebug() << "EMITTING DATACHANGED:" << index << index.parent() << bottom_right_index << bottom_right_index.parent() << Qt::ItemDataRole(role);
 	Q_EMIT dataChanged(index, bottom_right_index, {role});
 	return true;
 }
@@ -534,17 +515,17 @@ bool LibraryModel::setData(const QModelIndex& index, const QVariant& value, int 
 bool LibraryModel::insertRows(int row, int count, const QModelIndex& parent)
 {
 	// Insert a default-constructed row into the model.
-	qDebug() << "INSERTING ROWS" << row << "to" << row+count-1 << "UNDER PARENT:" << parent;
-	if(parent.isValid())
+	qDebug() << "INSERTING ROWS" << row << "to" << row + count - 1 << "UNDER PARENT:" << parent;
+	if (parent.isValid())
 	{
 		qDebug() << "PARENT IS VALID, NOT INSERTING";
 		return false;
 	}
 
-	beginInsertRows(parent, row, row+count-1);
+	beginInsertRows(parent, row, row + count - 1);
 
 	// Add new default-constructed entries.
-	for(int i = row; i<row+count; ++i)
+	for (int i = row; i < row + count; ++i)
 	{
 		auto default_entry = createDefaultConstructedEntry();
 		m_library.insertEntry(i, default_entry);
@@ -560,20 +541,20 @@ bool LibraryModel::insertRows(int row, int count, const QModelIndex& parent)
 
 bool LibraryModel::removeRows(int row, int count, const QModelIndex& parent)
 {
-	qDebug() <<  "REMOVING" << count << "ROWS STARTING AT ROW" <<  row << ", PARENT:" <<  parent;
-	if(parent.isValid())
+	qDebug() << "REMOVING" << count << "ROWS STARTING AT ROW" << row << ", PARENT:" << parent;
+	if (parent.isValid())
 	{
 		qWarning() << "PARENT IS VALID, NOT REMOVING";
 		return false;
 	}
 
-	if(row < 0)
+	if (row < 0)
 	{
 		qCritical() << "ROW WAS < 0";
 		return false;
 	}
 
-	beginRemoveRows(parent, row, row+count-1);
+	beginRemoveRows(parent, row, row + count - 1);
 
 	/// @note There's a QSignalBlocker() here in the model for: https://github.com/qt/qtbase/blob/5.10/src/widgets/itemviews/qtreewidget.cpp
 	/// Not clear why, doesn't seem like we need it.

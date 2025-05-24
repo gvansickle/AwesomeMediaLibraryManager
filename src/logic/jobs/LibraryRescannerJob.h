@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -20,9 +20,9 @@
 #ifndef SRC_LOGIC_JOBS_LIBRARYRESCANNERJOB_H_
 #define SRC_LOGIC_JOBS_LIBRARYRESCANNERJOB_H_
 
+/// @file
 
 // Qt
-#include <QVector>
 #include <QPromise>
 
 // Ours

@@ -20,6 +20,8 @@
 #ifndef LOGIC_PROXYMODELS_QPERSISTENTMODELINDEXVEC_H_
 #define LOGIC_PROXYMODELS_QPERSISTENTMODELINDEXVEC_H_
 
+/// @file
+
 #include <QVector>
 #include <QPersistentModelIndex>
 

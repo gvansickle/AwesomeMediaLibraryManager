@@ -1,5 +1,5 @@
 #
-# Copyright 2018, 2019, 2024 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2018, 2019, 2024, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -26,8 +26,12 @@ set(SOURCE_FILES_SRC_LOGIC_MODELS
 	AbstractTreeModelItem.cpp
 	AbstractTreeModelHeaderItem.cpp
 	ColumnSpec.cpp
+	LibraryEntryMimeData.cpp
+	LibraryModel.cpp
 	ModelIterators.cpp
     PlaceholderTreeModelItem.cpp
+	PlaylistModel.cpp
+	PlaylistModelItem.cpp
 	ScanResultsTreeModel.cpp
 	ScanResultsTreeModelItem.cpp
 	SRTMItemLibEntry.cpp
@@ -45,8 +49,12 @@ set(HEADER_FILES_SRC_LOGIC_MODELS
 		AbstractTreeModelItem.h
 		AbstractTreeModelHeaderItem.h
 		ColumnSpec.h
+		LibraryEntryMimeData.h
+		LibraryModel.h
 		ModelIterators.h
         PlaceholderTreeModelItem.h
+		PlaylistModel.h
+		PlaylistModelItem.h
 		ScanResultsTreeModel.h
 		ScanResultsTreeModelItem.h
 		SRTMItemLibEntry.h

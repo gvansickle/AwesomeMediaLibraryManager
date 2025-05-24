@@ -21,7 +21,7 @@
 #define EXTMIMETYPE_H
 
 /**
- * @file ExtMimeType
+ * @file ExtMimeType.h
  */
 
 // Qt

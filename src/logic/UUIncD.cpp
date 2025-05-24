@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2019, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -17,9 +17,10 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/// @file
+
 #include "UUIncD.h"
 
-#include <DebugHelpers.h>
 
 std::atomic_uint64_t UUIncD::m_next_id {1};
 
@@ -40,7 +41,6 @@ UUIncD UUIncD::create()
 {
 	UUIncD retval;
 	retval.m_my_id = UUIncD::m_next_id.fetch_add(1);
-	qDb() << "UUIncD::create():" << retval;
 	return retval;
 }
 

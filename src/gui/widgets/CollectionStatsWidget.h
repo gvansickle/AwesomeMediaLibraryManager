@@ -29,7 +29,7 @@
 
 // Ours
 #include <logic/proxymodels/ModelChangeWatcher.h>
-#include <logic/LibraryModel.h>
+#include <logic/models/LibraryModel.h>
 
 class CollectionStatsWidget : public QWidget
 {

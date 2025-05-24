@@ -133,8 +133,9 @@ void MDINowPlayingView::next()
 	auto next_index = current_index.sibling(next_row, 0);
 
 	// Set the next index as the current item.
-	const_cast<QAbstractItemModel*>(model())->dataChanged(next_index, next_index, QList<int>(Qt::FontRole));
-	const_cast<QAbstractItemModel*>(model())->dataChanged(current_index, current_index, QList<int>(Qt::FontRole));
+	/// @todo Not sure if the Q_EMITs here need to be non-queued or not.
+	Q_EMIT const_cast<QAbstractItemModel*>(model())->dataChanged(next_index, next_index, QList<int>(Qt::FontRole));
+	Q_EMIT const_cast<QAbstractItemModel*>(model())->dataChanged(current_index, current_index, QList<int>(Qt::FontRole));
 	if (stop_playing)
 	{
 		next_index = QModelIndex();
@@ -162,8 +163,9 @@ void MDINowPlayingView::previous()
 	auto prev_index = current_index.sibling(prev_row, current_index.column());
 
     // Set the previous index as the current item.
-    const_cast<QAbstractItemModel*>(model())->dataChanged(prev_index, prev_index, QList<int>(Qt::FontRole));
-    const_cast<QAbstractItemModel*>(model())->dataChanged(current_index, current_index, QList<int>(Qt::FontRole));
+	/// @todo Not sure if the Q_EMITs here need to be non-queued or not.
+    Q_EMIT const_cast<QAbstractItemModel*>(model())->dataChanged(prev_index, prev_index, QList<int>(Qt::FontRole));
+    Q_EMIT const_cast<QAbstractItemModel*>(model())->dataChanged(current_index, current_index, QList<int>(Qt::FontRole));
 	setCurrentIndexAndRow(prev_index, current_index);
 }
 
@@ -250,7 +252,7 @@ void MDINowPlayingView::startPlaying(const QModelIndex& index)
 
 	Q_ASSERT(index.isValid());
 
-    const_cast<QAbstractItemModel*>(model())->dataChanged(index, index, QList<int>(Qt::FontRole));
+    Q_EMIT const_cast<QAbstractItemModel*>(model())->dataChanged(index, index, QList<int>(Qt::FontRole));
     m_brdelegate->setRow(index.row());
 	setCurrentIndex(index);
 

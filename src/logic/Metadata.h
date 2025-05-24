@@ -20,6 +20,8 @@
 #ifndef LOGIC_METADATA_H
 #define LOGIC_METADATA_H
 
+/// @file
+
 // Std C++
 #include <set>
 

@@ -71,12 +71,6 @@ std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::split_to_tracks()
 	std::vector<std::shared_ptr<LibraryEntry>> retval;
 	auto file_metadata = m_metadata;
 
-	///qDebug() << "Track numbers:" << "???";
-
-	qDb() << M_ID_VAL(m_url);
-	qDb() << M_ID_VAL(m_total_track_number);
-	qDb() << M_ID_VAL(file_metadata.numTracks());
-
 	if(m_total_track_number == 0 || m_total_track_number == 1)
 	{
 		// Either unknown or only one track, return this.
@@ -352,7 +346,7 @@ void LibraryEntry::fromVariant(const QVariant& variant)
 //			m_is_populated = false;
 //		}
 	}
-	qDb() << "LIBRARYENTRY:" << *this;
+	// qDb() << "LIBRARYENTRY:" << *this;
 }
 
 #undef M_DATASTREAM_FIELDS

@@ -40,7 +40,7 @@
 #include "logic/ModelUserRoles.h"
 #include <logic/MetadataAbstractBase.h>
 #include <logic/LibraryEntry.h>
-#include <logic/LibraryModel.h>
+#include <logic/models/LibraryModel.h>
 #include <gui/MDITreeViewBase.h>
 #include <gui/Theme.h>
 #include <jobs/CoverArtJob.h>

@@ -16,11 +16,12 @@
  * You should have received a copy of the GNU General Public License
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
+/// @file
 
 #include "LibrarySortFilterProxyModel.h"
 
 #include <logic/LibraryEntry.h>
-#include <logic/LibraryModel.h>
+#include <logic/models/LibraryModel.h>
 
 LibrarySortFilterProxyModel::LibrarySortFilterProxyModel(QObject* parent) : QSortFilterProxyModel(parent)
 {

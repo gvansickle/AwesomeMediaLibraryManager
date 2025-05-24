@@ -41,7 +41,7 @@
 #include "DragDropTreeViewStyleProxy.h"
 
 #include "utils/DebugHelpers.h"
-#include "logic/LibraryEntryMimeData.h"
+#include "logic/models/LibraryEntryMimeData.h"
 #include "menus/PlaylistContextMenuViewport.h"
 #include "menus/PlaylistContextMenu.h"
 

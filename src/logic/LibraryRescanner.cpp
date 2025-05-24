@@ -17,7 +17,8 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/** @file LibraryRescanner.cpp
+/**
+ * @file LibraryRescanner.cpp
  * Implementation of LibraryRescanner, an asynchronous helper for LibraryModel.
  */
 
@@ -70,7 +71,7 @@
 #include <logic/serialization/SerializationHelpers.h>
 #include <utils/Stopwatch.h>
 
-#include "LibraryModel.h"
+#include "models/LibraryModel.h"
 
 
 AMLM_QREG_CALLBACK([](){
@@ -613,8 +614,6 @@ sw.print_results();
 	// dirtrav_job->start();
 
 	m_timer.lap("Leaving startAsyncDirTrav");
-
-	qDb() << "LEAVING" << __func__ << ":" << dir_url;
 }
 
 void LibraryRescanner::cancelAsyncDirectoryTraversal()

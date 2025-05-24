@@ -20,6 +20,8 @@
 #ifndef LIBRARYENTRY_H
 #define LIBRARYENTRY_H
 
+/// @file
+
 // Std C++
 #include <vector>
 #include <memory>

@@ -31,7 +31,7 @@
 #include <QClipboard>
 #include <QHeaderView>
 #include <QSaveFile>
-#include <logic/LibraryEntryMimeData.h>
+#include <logic/models/LibraryEntryMimeData.h>
 #include <logic/proxymodels/LibrarySortFilterProxyModel.h>
 #include <logic/proxymodels/ModelHelpers.h>
 #include "gui/NetworkAwareFileDialog.h"

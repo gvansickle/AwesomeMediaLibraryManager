@@ -20,6 +20,8 @@
 #ifndef AWESOMEMEDIALIBRARYMANAGER_HELPMENU_H
 #define AWESOMEMEDIALIBRARYMANAGER_HELPMENU_H
 
+/// @file
+
 #include <KHelpMenu>
 
 class KAboutData;

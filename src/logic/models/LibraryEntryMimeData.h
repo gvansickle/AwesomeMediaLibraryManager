@@ -20,6 +20,8 @@
 #ifndef LIBRARYENTRYMIMEDATA_H
 #define LIBRARYENTRYMIMEDATA_H
 
+/// @file
+
 #include <QMimeData>
 #include <QStringList>
 

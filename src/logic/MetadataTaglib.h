@@ -20,6 +20,8 @@
 #ifndef METADATATAGLIB_H
 #define METADATATAGLIB_H
 
+/// @file
+
 #include "MetadataAbstractBase.h"
 #include "TrackMetadata.h"
 #include "CueSheetParser.h"

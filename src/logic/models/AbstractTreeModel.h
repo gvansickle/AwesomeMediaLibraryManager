@@ -17,14 +17,12 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef ABSTRACTTREEMODEL_H
+#define ABSTRACTTREEMODEL_H
 /**
  * @file AbstractTreeModel.h
  * Interface of AbstractTreeModel.
  */
-
-
-#ifndef ABSTRACTTREEMODEL_H
-#define ABSTRACTTREEMODEL_H
 
 // Std C++
 #include <memory>
@@ -124,6 +122,8 @@ public:
 	 * @todo role gets lost along the way, we need to put that in.
 	 */
     QVariant data(const QModelIndex &index, int role) const override;
+
+	void multiData(const QModelIndex& index, QModelRoleDataSpan roleDataSpan) const override;
 
     /// @todo Maybe override these.
 //	QMap<int, QVariant> itemData(const QModelIndex &index) const override;

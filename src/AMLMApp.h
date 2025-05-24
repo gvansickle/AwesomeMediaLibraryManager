@@ -20,6 +20,8 @@
 #ifndef SRC_AMLMAPP_H_
 #define SRC_AMLMAPP_H_
 
+/// @file
+
 #include <config.h>
 
 // Std C++

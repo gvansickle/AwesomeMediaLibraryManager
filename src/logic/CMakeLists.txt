@@ -35,17 +35,12 @@ set(logic_subdir_SOURCES
 	AudioFileType.cpp
 	Library.cpp
 	LibraryEntry.cpp
-	LibraryEntryMimeData.cpp
-	LibraryModel.cpp
 	Metadata.cpp
 	MetadataAbstractBase.cpp
 	MetadataFromCache.cpp
 	MetadataTaglib.cpp
 	MP2.cpp
 	ntp.cpp
-	PlaylistModel.cpp
-	PlaylistModelItem.cpp
-	PlaylistSortFilterProxyModel.cpp
 	SupportedMimeTypes.cpp
     TrackIndex.cpp
 	TrackMetadata.cpp
@@ -69,17 +64,12 @@ set(logic_subdir_HEADERS
 	AudioFileType.h
 	Library.h
 	LibraryEntry.h
-	LibraryEntryMimeData.h
-	LibraryModel.h
 	Metadata.h
 	MetadataAbstractBase.h
 	MetadataFromCache.h
 	MetadataTaglib.h
 	MP2.h
 	ntp.h
-	PlaylistModel.h
-	PlaylistModelItem.h
-	PlaylistSortFilterProxyModel.h
 	SupportedMimeTypes.h
     TrackIndex.h
 	TrackMetadata.h

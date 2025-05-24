@@ -19,6 +19,9 @@
 #ifndef MODELUSERROLES_H
 #define MODELUSERROLES_H
 
+/// @file
+
+// Qt
 #include <QObject>
 #include <QMetaEnum>
 

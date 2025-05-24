@@ -17,8 +17,11 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/// @file
+
 #include "MapConverter.h"
 
+// Qt
 #include <QVariant>
 #include <QString>
 

@@ -20,6 +20,8 @@
 #ifndef SRC_UTILS_QTHELPERS_H_
 #define SRC_UTILS_QTHELPERS_H_
 
+/// @file
+
 #include <config.h>
 #include <QtCore/QSharedPointer>
 

@@ -20,6 +20,8 @@
 #ifndef SRC_UTILS_UNIQUEIDMIXIN_H_
 #define SRC_UTILS_UNIQUEIDMIXIN_H_
 
+/// @file
+
 // Standard C++
 #include <atomic>
 #include <mutex>

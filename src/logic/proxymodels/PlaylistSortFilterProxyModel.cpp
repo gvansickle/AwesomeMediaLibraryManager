@@ -16,33 +16,11 @@
  * You should have received a copy of the GNU General Public License
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
+/// @file
 
-#include "LibraryEntryMimeData.h"
+#include "PlaylistSortFilterProxyModel.h"
 
-LibraryEntryMimeData::LibraryEntryMimeData() : QMimeData ()
+PlaylistSortFilterProxyModel::PlaylistSortFilterProxyModel(QObject* parent) : QSortFilterProxyModel(parent)
 {
 
-}
-
-bool LibraryEntryMimeData::hasFormat(const QString& mimetype) const
-{
-	if(mimetype == g_additional_supported_mimetypes[0] && !m_lib_item_list.empty())
-	{
-		return true;
-	}
-	return false;
-}
-
-QStringList LibraryEntryMimeData::formats() const
-{
-	QStringList retval;
-
-	if(!m_lib_item_list.empty())
-	{
-		retval.append(g_additional_supported_mimetypes[0]);
-	}
-
-	retval += this->QMimeData::formats();
-
-	return retval;
 }
