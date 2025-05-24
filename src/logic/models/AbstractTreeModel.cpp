@@ -545,15 +545,15 @@ void AbstractTreeModel::register_item(const std::shared_ptr<AbstractTreeModelIte
 {
 	// std::unique_lock write_lock(m_rw_mutex);
 
-	qDb() << "Registering:" << M_ID_VAL(item->getId()) << M_ID_VAL(m_model_item_map.size());
+	// qDb() << "Registering:" << M_ID_VAL(item->getId()) << M_ID_VAL(m_model_item_map.size());
 
 	UUIncD id = item->getId();
 	Q_ASSERT(id.isValid());
-	qDb() << "MIM ADD:" << id;
+	// qDb() << "MIM ADD:" << id;
 	AMLM_ASSERT_X(m_model_item_map.count(id) == 0, "Item was already in model.");
 	m_model_item_map[id] = item;
 
-    qDb() << "Registered," << M_ID_VAL(m_model_item_map.size());
+    // qDb() << "Registered," << M_ID_VAL(m_model_item_map.size());
 }
 
 void AbstractTreeModel::deregister_item(UUIncD id, AbstractTreeModelItem* item)
@@ -781,7 +781,6 @@ bool AbstractTreeModel::insertRows(int insert_before_row, int num_rows, const QM
 	// Add the new children to the UUID lookup map.
 	for(const auto& item : new_children)
 	{
-		qDb() << "Adding UUIncD:" << item->getId() << item->columnCount();
 		m_model_item_map.insert({item->getId(), item});
 	}
 

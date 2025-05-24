@@ -397,8 +397,6 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 {
 	InsertionOrderedMap<QString, QVariant> map = variant.value<InsertionOrderedMap<QString, QVariant>>();
 
-    qDb() << "READING IN CLASS:" << map.get_attr("class") << "from" << __PRETTY_FUNCTION__;
-
 #define X(field_tag, tag_string, member_field) map_read_field_or_warn(map, field_tag, member_field);
 //	M_DATASTREAM_FIELDS(X);
 #undef X
@@ -429,8 +427,6 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
 	// Get this item's children.
 	qulonglong num_children = 0;
 	map_read_field_or_warn(map, XMLTAG_NUM_CHILDREN, &num_children);
-
-	qDb() << XMLTAG_NUM_CHILDREN << num_children;
 
     // Now read in our children.  We need this Item to be in a model and registered for that to work,
 	// so first add *this to the model.
