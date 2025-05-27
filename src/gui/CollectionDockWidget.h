@@ -20,6 +20,8 @@
 #ifndef COLLECTIONDOCKWIDGET_H
 #define COLLECTIONDOCKWIDGET_H
 
+/// @file
+
 #include <QDockWidget>
 #include <QWidget>
 #include <QModelIndex>
