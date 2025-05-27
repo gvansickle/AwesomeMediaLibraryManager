@@ -22,9 +22,14 @@
 
 /// @file
 
+// Std C++
+#include <memory>
+
+// Ours
+// #include <LibraryEntry.h>
 #include "logic/LibraryEntry.h"
 
-#include <memory>
+
 
 class PlaylistModelItem: public LibraryEntry
 {
