@@ -628,6 +628,14 @@ qint64 LibraryModel::getLibraryNumEntries() const
 	return m_library.getNumEntries();
 }
 
+LibraryModel::NumDirsFiles LibraryModel::getLibraryNumDirsFiles() const
+{
+	NumDirsFiles retval;
+
+	retval.files = m_library.m_num_unpopulated;
+	return retval;
+}
+
 void LibraryModel::setLibraryRootUrl(const QUrl& url)
 {
 	beginResetModel();

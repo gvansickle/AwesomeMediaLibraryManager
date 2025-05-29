@@ -155,7 +155,14 @@ public:
     QString getLibraryName() const;
 	qint64 getLibraryNumEntries() const;
 
-    virtual void setLibraryRootUrl(const QUrl& url);
+	struct NumDirsFiles
+	{
+		qint64 dirs;
+		qint64 files;
+	};
+	NumDirsFiles getLibraryNumDirsFiles() const;
+
+	virtual void setLibraryRootUrl(const QUrl& url);
 
 	virtual void stopAllBackgroundThreads();
 	virtual void close(bool delete_cache = false);
