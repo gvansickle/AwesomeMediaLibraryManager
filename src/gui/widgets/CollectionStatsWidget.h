@@ -20,6 +20,8 @@
 #ifndef COLLECTIONSTATSWIDGET_H
 #define COLLECTIONSTATSWIDGET_H
 
+/// @file
+
 // Qt
 #include <QDockWidget>
 #include <QLabel>

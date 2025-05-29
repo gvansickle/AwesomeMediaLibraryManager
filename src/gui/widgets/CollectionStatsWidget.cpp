@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
+/// @file
 
 #include "CollectionStatsWidget.h"
 
@@ -90,7 +91,8 @@ void CollectionStatsWidget::SLOT_modelChanged()
 
 	if(m_sources_model != nullptr)
 	{
-		auto num_files = m_sources_model->rowCount();
+		auto [num_dirs, num_files] = m_sources_model->getLibraryNumDirsFiles();
+
 		auto num_tracks = m_sources_model->rowCount();
 
 #if 0 // Giving QTextDocument a whirl.
