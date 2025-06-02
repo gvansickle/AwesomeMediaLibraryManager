@@ -34,7 +34,7 @@
 #include <QMultiMap>
 
 // TagLib
-#include <taglib/xiphcomment.h> ///< Unfortunately needed here for "typedef Map< String, StringList > FieldListMap".
+#include <taglib/xiphcomment.h> //< Unfortunately needed here for "typedef Map< String, StringList > FieldListMap".
 
 // Ours.
 #include <future/guideline_helpers.h>
