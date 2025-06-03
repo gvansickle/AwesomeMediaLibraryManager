@@ -112,6 +112,10 @@ AMLM_QREG_CALLBACK([](){
 
 using strviw_type = QLatin1String;
 
+#define M_SERDES_FIELDS_GENERAL(X) \
+	X(XMLTAG_FROM_EMBEDDED, m_from_embedded) \
+	X(XMLTAG_FROM_SIDECAR, m_from_sidecar)
+
 #define M_DATASTREAM_FIELDS_DISC(X) \
 	X(XMLTAG_DISC_CATALOG_NUM, m_disc_catalog_num) \
 	X(XMLTAG_DISC_ID, m_disc_id) \
@@ -131,6 +135,7 @@ using strviw_type = QLatin1String;
 
 /// Strings to use for the tags.
 #define X(field_tag, member_field) static constexpr strviw_type field_tag ( # member_field );
+	M_SERDES_FIELDS_GENERAL(X);
 	M_DATASTREAM_FIELDS_DISC(X);
 	M_DATASTREAM_FIELDS_SPECIAL_HANDLING(X);
 #undef X
@@ -233,6 +238,7 @@ QVariant CueSheet::toVariant() const
 
 	// CD-level fields.
 #define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
+	M_SERDES_FIELDS_GENERAL(X);
 	M_DATASTREAM_FIELDS_DISC(X);
 #undef X
 
@@ -262,6 +268,7 @@ void CueSheet::fromVariant(const QVariant& variant)
 
 	// CD-level fields.
 #define X(field_tag, member_field) map_read_field_or_warn(map, field_tag, &(member_field));
+	M_SERDES_FIELDS_GENERAL(X);
 	M_DATASTREAM_FIELDS_DISC(X);
 #undef X
 

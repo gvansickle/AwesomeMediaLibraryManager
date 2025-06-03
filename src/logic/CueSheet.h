@@ -39,7 +39,7 @@ class QUrl;
 #include <QDataStream>
 
 // Ours
-#include "TrackMetadata.h"  ///< Per-track cue sheet info
+#include "TrackMetadata.h"  //< Per-track cue sheet info
 #include <future/guideline_helpers.h>
 #include "CueSheetParser.h"
 #include <logic/serialization/ISerializable.h>
@@ -48,9 +48,11 @@ class QUrl;
 
 /**
  * CD cue sheet class.
- * C++ class for abstracing cuesheet info, mostly digested via libcue.
- * @link http://wiki.hydrogenaud.io/index.php?title=Cue_sheet
- * "Cue sheet contents
+ * Class for abstracting cuesheet info, mostly digested via libcue.
+ *
+ * From http://wiki.hydrogenaud.io/index.php?title=Cue_sheet:
+ *
+ * \"Cue sheet contents
  *
  * All cue sheets contain the following info:
  *
@@ -64,9 +66,9 @@ class QUrl;
  * - ISRCs (sound recording IDs to burn)
  * - Special flags for CD burning (e.g. for pre-emphasis)
  * - Gap info (how much silence to insert before or after each track)
- * - Comments (which are used by some programs to store nonstandard metadata like genre, freeDB disc ID, etc.)"
+ * - Comments (which are used by some programs to store nonstandard metadata like genre, freeDB disc ID, etc.)\"
  *
- * @link https://en.wikipedia.org/wiki/Cue_sheet_(computing)
+ * @sa https://en.wikipedia.org/wiki/Cue_sheet_(computing)
  */
 class CueSheet : public virtual ISerializable
 {
@@ -78,6 +80,9 @@ public:
      * Factory function.
      * Given a URL to an audio file, read the cue sheet either from the metadata in
      * the file itself or from a *.cue file in the same directory.
+     *
+     * @param url  URL to the audio file.
+     * @param total_length_in_ms
      */
     static std::shared_ptr<CueSheet> read_associated_cuesheet(const QUrl& url, uint64_t total_length_in_ms);
 
@@ -117,7 +122,8 @@ protected:
 
     /**
      * Populate the data of this CueSheet by parsing the given cuesheet_text.
-     *
+     * @param cuesheet_text
+     * @param total_length_in_ms  This is needed for computing the total length of the last track.
      * @return true if parsing succeeded, false otherwise.
      */
     bool parse_cue_sheet_string(const std::string& cuesheet_text, uint64_t total_length_in_ms = 0);
@@ -133,19 +139,27 @@ private:
 	/// @name File info
     /// @todo More that one file per sheet?
 
+	/// true if this CueSheet originated from a Cuesheet embedded in the audio file.
+	std::optional<bool> m_from_embedded;
+
+	/// true if this CueSheet originated from a sidecar *.cue file.
+	std::optional<bool> m_from_sidecar;
+
     /// @name Mandatory Info
     /// @{
 
 	/// "CATALOG": The Sony UPC/EAN code /AKA MMC-3 Media Catalog Number of the disc.
-	/// @link https://www.gnu.org/software/libcdio/cd-text-format.html#Text-Pack-Types
 	/// Mandatory 13 digits long.  This is always ASCII encoded.
+	/// @see https://www.gnu.org/software/libcdio/cd-text-format.html#Text-Pack-Types
 	std::string m_disc_catalog_num {};
 
 	/// CD-TEXT Pack type 0x86, "Disc Identification".  Disc, not Track.
-	/// @link https://www.gnu.org/software/libcdio/cd-text-format.html#Misc-Pack-Types
-	/// "here is how Sony describes this:
+	/// https://www.gnu.org/software/libcdio/cd-text-format.html#Misc-Pack-Types
+	///
+	/// \"here is how Sony describes this:
 	///	  Catalog Number: (use ASCII Code) Catalog Number of the album
-	/// So it is not really binary but might be non-printable, and should contain only bytes with bit 7 set to zero."
+	/// So it is not really binary but might be non-printable, and should contain only bytes with bit 7 set to zero.\"
+	///
 	/// This is not the same as the CD-TEXT "CATALOG" number, but exactly what it is is not clear.
 	/// Also, this shows up in cue sheets as "REM DISCID nnnnnnnn", note the lack of a "_".  Surveys of
 	/// my collection show the value to always be a 32-bit hex string.
