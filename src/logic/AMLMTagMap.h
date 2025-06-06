@@ -67,7 +67,7 @@ public:
 	using iterator = typename underlying_container_type::iterator;
     ///@}
 
-	/// Member functions.
+	// Member functions.
 public:
     M_GH_RULE_OF_FIVE_DEFAULT_C21(AMLMTagMap)
 	~AMLMTagMap() override = default;
@@ -84,8 +84,8 @@ public:
 
 	/**
 	 * Assignment from a TagLib FieldListMap.
-	 * For some reason the key is either a TagLib String or ByteVector depending on the file format, hence templates.
-	 * OggXiphComment: @link https://taglib.org/api/classTagLib_1_1Ogg_1_1XiphComment.html#aaad472ea2921a034bb8d7842a55459b9
+	 * For some reason, the key is either a TagLib String or ByteVector depending on the file format, hence templates.
+	 * OggXiphComment: https://taglib.org/api/classTagLib_1_1Ogg_1_1XiphComment.html#aaad472ea2921a034bb8d7842a55459b9
 	 */
 	template <class StringLike>
 	AMLMTagMap& operator=(const TagLib::Map<StringLike, TagLib::StringList>& taglib_field_list_map)
