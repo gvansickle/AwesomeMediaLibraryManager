@@ -22,6 +22,8 @@
 
 /// @file
 
+#if OBSOLETE
+
 // Std C++
 #include <set>
 #include <memory>
@@ -46,7 +48,6 @@
 #include <taglib/fileref.h>
 #include <taglib/tpropertymap.h>
 
-#if OBSOLETE
 
 class Metadata;
 class TrackMetadata;
