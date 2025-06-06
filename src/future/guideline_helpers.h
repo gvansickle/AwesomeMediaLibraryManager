@@ -47,7 +47,7 @@
 	/** Copy constructor. */ \
 	classname(const classname&&) def_noexcept = default_or_delete; \
 	/** Copy assignment. */ \
-	classname& operator=(const classname&&) def_noexcept = default_or_delete;
+    classname& operator=(classname&&) def_noexcept = default_or_delete;
 
 #define M_GH_IMPL_DEFAULT_OR_DELETE_COPY_AND_MOVE(classname, default_or_delete) \
 	/** Copy constructor. */ \
@@ -82,6 +82,9 @@
 ///
 
 #define M_GH_DELETE_COPY(classname)  M_GH_IMPL_DEFAULT_OR_DELETE_COPY(classname, delete)
+#define M_GH_DEFAULT_COPY(classname) M_GH_IMPL_DEFAULT_OR_DELETE_COPY(classname, default)
+#define M_GH_DELETE_MOVE(classname) M_GH_IMPL_DEFAULT_OR_DELETE_MOVE_WITH_NOEXCEPT(classname, delete, noexcept)
+#define M_GH_DEFAULT_MOVE(classname) M_GH_IMPL_DEFAULT_OR_DELETE_MOVE_WITH_NOEXCEPT(classname, default, noexcept)
 #define M_GH_DELETE_COPY_AND_MOVE(classname) M_GH_IMPL_DEFAULT_OR_DELETE_COPY_AND_MOVE(classname, delete)
 
 #define M_GH_RULE_OF_THREE_DEFAULT_C21(classname) IMPL_RULE_OF_THREE(classname, default)
