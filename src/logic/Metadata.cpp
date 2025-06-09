@@ -112,7 +112,7 @@ static const std::map<std::string, std::string> f_name_normalization_map =
 };
 
 /**
- * @link https://xiph.org/vorbis/doc/v-comment.html
+ * https://xiph.org/vorbis/doc/v-comment.html
  */
 static const std::map<std::string, std::vector<std::string>> f_vorbis_comment_normalization_map =
 {
@@ -171,9 +171,7 @@ Metadata Metadata::make_metadata(const QVariant& variant)
 	return retval;
 }
 
-/**
- * Read the metadata associated with the given URL with TagLib.
- */
+
 bool Metadata::read(const QUrl& url)
 {
 	// String for storing an embedded cuesheet if we have one.
@@ -246,7 +244,7 @@ bool Metadata::read(const QUrl& url)
 			// Re: TagLib::ID3v2::Tag::properties()
 			// "This function does some work to translate the hard-specified ID3v2 frame types into a free-form string-to-stringlist PropertyMap:
 			// [...and it does sound like it does a lot of decoding...]"
-			// @link https://taglib.org/api/classTagLib_1_1ID3v2_1_1Tag.html#a5094b04654b0912db9dca61de11f4663
+			// https://taglib.org/api/classTagLib_1_1ID3v2_1_1Tag.html#a5094b04654b0912db9dca61de11f4663
 			m_tm_id3v2 = file->ID3v2Tag()->properties();
 			m_tm_generic.merge(m_tm_id3v2);
 		}
@@ -282,7 +280,7 @@ bool Metadata::read(const QUrl& url)
 		if(m_has_ogg_xipfcomment)
 		{
 			// TagLib has some funky kicks going on here:
-			/// @link https://taglib.org/api/classTagLib_1_1FLAC_1_1File.html#a31ffa82b2e168f5625311cbfa030f04f
+			// https://taglib.org/api/classTagLib_1_1FLAC_1_1File.html#a31ffa82b2e168f5625311cbfa030f04f
 			// Re ->tag(): "Returns the Tag for this file. This will be a union of XiphComment, ID3v1 and ID3v2 tags."
 			// Not sure that's true, but there's also xiphComment():
 			// "Returns a pointer to the XiphComment for the file.
@@ -364,6 +362,7 @@ bool Metadata::read(const QUrl& url)
 	if(!cuesheet_str.empty())
 	{
 		cuesheet = CueSheet::TEMP_parse_cue_sheet_string(cuesheet_str, m_length_in_milliseconds);
+		cuesheet->set_origin(CueSheet::Origin::Embedded);
 		Q_ASSERT(cuesheet);
 	}
 	else
@@ -376,10 +375,10 @@ bool Metadata::read(const QUrl& url)
 	if(cuesheet)
 	{
 		m_has_cuesheet = true;
-		m_cuesheet = *cuesheet;
+		m_cuesheet_embedded = *cuesheet;
 
 		// Get the disc-level cuesheet info as an AMLMTagMap.
-		m_tm_cuesheet_disc = m_cuesheet.asAMLMTagMap_Disc();
+		m_tm_cuesheet_disc = m_cuesheet_embedded.asAMLMTagMap_Disc();
 
 		m_num_tracks_on_media = cuesheet->get_total_num_tracks();
 
@@ -624,6 +623,8 @@ using strviw_type = QLatin1String;
 #define M_DATASTREAM_FIELDS(X) \
 	/*X(XMLTAG_AUDIO_FILE_TYPE, m_audio_file_type)*/ \
 	X(XMLTAG_HAS_CUESHEET, m_has_cuesheet) \
+	X(XMLTAG_CUESHEET_EMBEDDED, m_cuesheet_embedded) \
+	X(XMLTAG_CUESHEET_SIDECAR, m_cuesheet_sidecar) \
 	X(XMLTAG_HAS_ID3V1, m_has_id3v1) \
 	X(XMLTAG_HAS_ID3V2, m_has_id3v2) \
 	X(XMLTAG_HAS_APE, m_has_ape) \
@@ -682,7 +683,8 @@ QVariant Metadata::toVariant() const
 
 	// The cuesheet, which will duplicate the track list.
 	/// @todo Somehow eliminate duplication here.
-	map_insert_or_die(map, XMLTAG_CUESHEET, m_cuesheet);
+	map_insert_or_die(map, XMLTAG_CUESHEET_EMBEDDED, m_cuesheet_embedded);
+	map_insert_or_die(map, XMLTAG_CUESHEET_SIDECAR, m_cuesheet_sidecar);
 
 	return map;
 }
@@ -703,10 +705,11 @@ void Metadata::fromVariant(const QVariant& variant)
     m_tracks = tracks_map;
     // map_read_field_or_warn(map, XMLTAG_TRACKS, &m_tracks);
 
-	map_read_field_or_warn(map, XMLTAG_CUESHEET, &m_cuesheet);
+	map_read_field_or_warn(map, XMLTAG_CUESHEET_EMBEDDED, &m_cuesheet_embedded);
+	map_read_field_or_warn(map, XMLTAG_CUESHEET_SIDECAR, &m_cuesheet_sidecar);
 
-/// @todo FIX TRACK DUPS
-/// @todo This info gets duplicated (complete with should-be-unique xml:id's)	in the CueSheet.
+	/// @todo FIX TRACK DUPS
+	/// @todo This info gets duplicated (complete with should-be-unique xml:id's)	in the CueSheet.
 	// Read in the track list.
 	QVariantHomogenousList qvar_track_list("m_track", "track");
 	map_read_field_or_warn(map, XMLTAG_TRACKS, &qvar_track_list);

@@ -57,7 +57,9 @@ public:
 
 	static std::set<std::string> getNewTags();
 
-
+	/**
+	 * Read the metadata associated with the given URL with TagLib.
+	 */
 	bool read(const QUrl& url);
 	bool hasBeenRead() const;
 	bool isError() const;
@@ -106,6 +108,8 @@ public:
 
 	/// Cue sheet support.
 	bool hasCueSheet() const { return m_has_cuesheet; }
+    bool hasCueSheetEmbedded() const { return m_cuesheet_embedded.origin() == CueSheet::Origin::Embedded; }
+	bool hasCueSheetSidecar() const { return m_cuesheet_sidecar.origin() == CueSheet::Origin::Sidecar; }
 
 	/// @todo bool hasHiddenTrackOneAudio() const { return pImpl->hasHiddenTrackOneAudio(); }
 
@@ -158,9 +162,9 @@ public:
 	/// @name Disc/full-file audio properties, obtained via TagLib.
 	/// @{
 
-	/// Per TagLib docs, "the most appropriate bit rate for the file in kb/s. For
+	/// Per TagLib docs, \"the most appropriate bit rate for the file in kb/s. For
 	/// constant bitrate formats this is simply the bitrate of the file. For variable
-	/// bitrate formats this is either the average or nominal bitrate.".
+	/// bitrate formats this is either the average or nominal bitrate.\".
 	int64_t m_bitrate_kb_sec {0};
 
 	/// Number of channels of audio.
@@ -174,8 +178,12 @@ public:
 	int64_t m_length_in_milliseconds {0};
 	/// @}
 
+	/// @name Cuesheet data members.
+	/// @{
 	bool m_has_cuesheet {false};
-	CueSheet m_cuesheet;
+	CueSheet m_cuesheet_embedded;
+	CueSheet m_cuesheet_sidecar;
+	/// @}
 
 	bool m_has_id3v1 {false};
 	bool m_has_id3v2 {false};
