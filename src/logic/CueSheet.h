@@ -93,7 +93,7 @@ public:
 
     /**
      * Factory function.
-     * Given a URL to an audio file, read any embedded cuesheet from the file.
+     * Given a URL to an audio file, check for an embedded cuesheet, and if there is one, read and parse it.
      * @param url  URL to the audio file.
      * @param total_length_in_ms
      * @returns  A shared_ptr to the decoded CueSheet, or null on error/no embedded cuesheet.
