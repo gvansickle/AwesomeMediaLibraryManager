@@ -45,6 +45,7 @@ extern "C" {
 // Ours, Qt/KF-related
 #include <utils/TheSimplestThings.h>
 #include <utils/RegisterQtMetatypes.h>
+#include <utils/EnumFlagHelpers.h>
 
 // Ours
 #include "TrackMetadata.h"  ///< Per-track cue sheet info
@@ -55,7 +56,7 @@ extern "C" {
  * Same disc ripped with two different rippers:
  *
  * Bad embedded cue sheet:
- *
+ * @verbatim
  *METADATA block #2
   type: 4 (VORBIS_COMMENT)
   is last: false
@@ -71,10 +72,10 @@ extern "C" {
     comment[6]: DISCNUMBER=1
     comment[7]: TOTALDISCS=1
     comment[8]: TOTALTRACKS=20
- *
+ * @endverbatim
  *
  * Good embedded cue sheet:
- *
+ * @verbatim
  * METADATA block #2
   type: 4 (VORBIS_COMMENT)
   is last: false
@@ -99,7 +100,7 @@ FILE "Squeeze - Greatest Hits.flac" WAVE
     PERFORMER "Squeeze"
     TITLE "Goodbye Girl"
   [...]
- *
+ * @endverbatim
  */
 
 /// Mutex for serializing access to libcue, which is not threadsafe.
@@ -108,13 +109,13 @@ std::mutex CueSheet::m_libcue_mutex;
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering CueSheet";
     qRegisterMetaType<CueSheet>();
-});
+	AMLMRegisterQEnumQStringConverters<CueSheet::Origin>();
+	});
 
 using strviw_type = QLatin1String;
 
 #define M_SERDES_FIELDS_GENERAL(X) \
-	X(XMLTAG_FROM_EMBEDDED, m_from_embedded) \
-	X(XMLTAG_FROM_SIDECAR, m_from_sidecar)
+	X(XMLTAG_ORIGIN, m_origin)
 
 #define M_DATASTREAM_FIELDS_DISC(X) \
 	X(XMLTAG_DISC_CATALOG_NUM, m_disc_catalog_num) \
@@ -143,6 +144,8 @@ using strviw_type = QLatin1String;
 
 std::shared_ptr<CueSheet> CueSheet::read_associated_cuesheet(const QUrl &url, uint64_t total_length_in_ms)
 {
+	static QRegularExpression re("\\.[[:alnum:]]+$");
+
 	auto retval = std::make_shared<CueSheet>();
     retval.reset();
 
@@ -153,7 +156,7 @@ std::shared_ptr<CueSheet> CueSheet::read_associated_cuesheet(const QUrl &url, ui
     QUrl cue_url = url;
     QString cue_url_as_str = cue_url.toString();
     Q_ASSERT(!cue_url_as_str.isEmpty());
-    cue_url_as_str.replace(QRegularExpression("\\.[[:alnum:]]+$"), ".cue");
+    cue_url_as_str.replace(re, ".cue");
     cue_url = cue_url_as_str;
     Q_ASSERT(cue_url.isValid());
 
@@ -177,6 +180,8 @@ std::shared_ptr<CueSheet> CueSheet::read_associated_cuesheet(const QUrl &url, ui
 
     retval = TEMP_parse_cue_sheet_string(ba_as_stdstr, total_length_in_ms);
 
+	retval->set_origin(Sidecar);
+
     return retval;
 }
 
@@ -195,6 +200,16 @@ std::shared_ptr<CueSheet> CueSheet::TEMP_parse_cue_sheet_string(const std::strin
     }
 
     return retval;
+}
+
+CueSheet::Origin CueSheet::origin() const
+{
+	return m_origin;
+}
+
+void CueSheet::set_origin(Origin origin)
+{
+	m_origin = origin;
 }
 
 std::map<int, TrackMetadata> CueSheet::get_track_map() const
@@ -470,6 +485,15 @@ std::string CueSheet::prep_final_cuesheet_string(const std::string& cuesheet_tex
 	std::regex s_REM_DISCID(R"!(^REM\sDISCID)!", std::regex_constants::ECMAScript);
 
 	retval = std::regex_replace(cuesheet_text, s_REM_DISCID, "DISC_ID");
+
+	// Remove any \r's.  libcue can only handle \n newlines.
+    std::erase(retval, '\r');
+
+	// Remove any trailing '\n's to avoid this bug in libcue: https://github.com/lipnitsk/libcue/issues/52
+	if(retval.ends_with('\n'))
+	{
+		retval = retval.substr(0, retval.size() - 1);
+	}
 
 	return retval;
 }

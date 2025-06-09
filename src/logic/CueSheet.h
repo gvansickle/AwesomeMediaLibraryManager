@@ -45,7 +45,6 @@ class QUrl;
 #include <logic/serialization/ISerializable.h>
 #include <logic/AMLMTagMap.h>
 
-
 /**
  * CD cue sheet class.
  * Class for abstracting cuesheet info, mostly digested via libcue.
@@ -69,24 +68,46 @@ class QUrl;
  * - Comments (which are used by some programs to store nonstandard metadata like genre, freeDB disc ID, etc.)\"
  *
  * @sa https://en.wikipedia.org/wiki/Cue_sheet_(computing)
+ * @sa https://github.com/flacon/flacon/blob/master/doc/cuesheet_syntax.md
+ * @sa https://xiph.org/vorbis/doc/Vorbis_I_spec.html#x1-860005.2.2
+ *
  */
 class CueSheet : public virtual ISerializable
 {
+	Q_GADGET
+
 public:
-    M_GH_RULE_OF_FIVE_DEFAULT_C21(CueSheet)
+	/// Enum of the possible origins of the data in this CueSheet.
+	enum Origin
+	{
+		Unknown,
+		Embedded, ///< The cuesheet data was read from an embedded cuesheet.
+		Sidecar   ///< The cuesheet data was read from a "sidecar" file.
+	};
+
+	Q_ENUM(Origin)
+
+public:
+	M_GH_RULE_OF_FIVE_DEFAULT_C21(CueSheet)
     ~CueSheet() override = default;
 
     /**
      * Factory function.
-     * Given a URL to an audio file, read the cue sheet either from the metadata in
-     * the file itself or from a *.cue file in the same directory.
-     *
+     * Given a URL to an audio file, read any embedded cuesheet from the file.
      * @param url  URL to the audio file.
      * @param total_length_in_ms
+     * @returns  A shared_ptr to the decoded CueSheet, or null on error/no embedded cuesheet.
      */
     static std::shared_ptr<CueSheet> read_associated_cuesheet(const QUrl& url, uint64_t total_length_in_ms);
 
     static std::shared_ptr<CueSheet> TEMP_parse_cue_sheet_string(const std::string& cuesheet_text, uint64_t total_length_in_ms = 0);
+
+	/**
+	 * The origin of the data in this CueSheet.
+	 * @return Where the data in this CueSheet was read from.
+	 */
+	Origin origin() const;
+	void set_origin(Origin origin);
 
     /**
      * Returns the parsed TrackMetadata entries as a std::map.
@@ -128,6 +149,11 @@ protected:
      */
     bool parse_cue_sheet_string(const std::string& cuesheet_text, uint64_t total_length_in_ms = 0);
 
+	/**
+	 * Preprocess the given @a cuesheet_text to ensure it's digestible by libcue.
+	 * @param cuesheet_text  The cuesheet text as one long string.
+	 * @return  The preprocessed version of @a cuesheet_text.
+	 */
 	std::string prep_final_cuesheet_string(const std::string& cuesheet_text) const;
 
     friend QDebug operator<<(QDebug dbg, const CueSheet &cuesheet);
@@ -136,14 +162,8 @@ private:
 	/// Mutex for serializing access to libcue.  Libcue isn't thread-safe.
 	static std::mutex m_libcue_mutex;
 
-	/// @name File info
-    /// @todo More that one file per sheet?
-
-	/// true if this CueSheet originated from a Cuesheet embedded in the audio file.
-	std::optional<bool> m_from_embedded;
-
-	/// true if this CueSheet originated from a sidecar *.cue file.
-	std::optional<bool> m_from_sidecar;
+	/// Origin of the data in this CueSheet.
+	Origin m_origin {Origin::Unknown};
 
     /// @name Mandatory Info
     /// @{
