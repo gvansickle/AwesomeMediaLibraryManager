@@ -151,7 +151,7 @@ std::vector<AMLMTagMap::key_type> AMLMTagMap::keys() const
 	return retval;
 }
 
-void AMLMTagMap::merge(AMLMTagMap& source)
+void AMLMTagMap::merge(const AMLMTagMap& source)
 {
 // M_TODO("Need to handle dups smarter, e.g. ID3v1 can chop long strings that ID3v2 can handle.");
 	AMLMTagMap::underlying_container_type merged_val;
