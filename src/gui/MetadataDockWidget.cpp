@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -37,6 +37,8 @@
 
 // Ours
 #include <AMLMApp.h>
+#include <utils/EnumFlagHelpers.h>
+
 #include "widgets/PixmapLabel.h"
 #include "logic/ModelUserRoles.h"
 #include <logic/MetadataAbstractBase.h>
@@ -49,6 +51,7 @@
 #include <logic/proxymodels/ModelHelpers.h>
 #include <logic/proxymodels/SelectionFilterProxyModel.h>
 #include <logic/AMLMTagMap.h>
+#include <utils/RegisterQtMetatypes.h> //< For at least std::optional<bool>.
 
 #include <utils/StringHelpers.h>
 
@@ -152,8 +155,8 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 	{
 		// Get a copy of the metadata.
 		Metadata md = libentry->metadata();
-M_TODO("Not getting some field here");
-//		qDb() << "METADATA:" << md.toVariant();
+// M_TODO("Not getting some field here");
+		qDb() << "METADATA:" << md.toVariant();
 
 		AMLMTagMap pimeta = libentry->getAllMetadata(); // QMap<QString, QVariant>
 		///qDebug() << "PLAYLIST ITEM METADATA: " << pimeta;
@@ -173,6 +176,7 @@ M_TODO("Not getting some field here");
             /// @todo QT6 Change here, not sure if it was ever needed due to immediately above.
             m_metadata_widget->setFirstColumnSpanned(0, m_metadata_widget->indexFromItem(metadata_types).parent(), true);
 
+            AMLMTagMap empty {};
             std::vector<std::tuple<QString, QVariant, AMLMTagMap>> md_list = {
 				{"hasGeneric?", md.hasGeneric(), md.tagmap_generic()},
 				{"hasID3v1?", md.hasID3v1(), md.tagmap_id3v1()},
@@ -181,6 +185,8 @@ M_TODO("Not getting some field here");
 				{"hasXiphComment?", md.hasXiphComment(), md.tagmap_xiph()},
 				{"hasRIFFInfoTag?", md.hasRIFFInfo(), md.tagmap_RIFFInfo()},
 				{"hasDiscCuesheet?", md.hasDiscCuesheet(), md.tagmap_cuesheet_disc()},
+                {"CuesheetEmbedded?:", EnumFlagtoqstr(md.m_cuesheet_embedded.origin()), empty},
+				{"CuesheetSidecar?:", EnumFlagtoqstr(md.m_cuesheet_sidecar.origin()), empty},
 #if 0 /// @todo
 				{"hasTrackCuesheetInfo?", md.hasTrackCuesheet(), md.tagmap_cuesheet_track()}
 #endif
@@ -228,7 +234,9 @@ M_TODO("Not getting some field here");
 //			}
 //		}
 
+		//
 		// Load and Display the cover image.
+		//
 
 		// Create the asynchronous Cover Art loader task.
 		ExtFuture<QByteArray> coverart_future = CoverArtJob::make_task(this, libentry->getUrl());
