@@ -187,7 +187,11 @@ public:
 		}
 	}
 
-	void merge(AMLMTagMap& source);
+	/**
+	 * Merge the @a source map into this AMLMTagMap.
+	 * @param source  Reference to the source AMLMTagMap.
+	 */
+	void merge(const AMLMTagMap& source);
 
 	/// @name Serialization
 	/// @{
