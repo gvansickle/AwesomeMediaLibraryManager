@@ -17,7 +17,7 @@
 # along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-# @file ./CMakeLists.txt
+# @file CMakeLists.txt
 
 # References:
 # Too many to list.  Some of the critical ones:
@@ -67,6 +67,9 @@ if(FALSE)
 #		set_property(GLOBAL PROPERTY CMAKE_CXX_COMPILER_LAUNCHER "csbuild;--print-current;-c")
 #	endif()
 endif()
+if(FALSE)
+	set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE, "include-what-you-use;-w;-Xiwyu;--verbose=7")
+endif()
 
 # Basic information about project
 # Note that here is where CMake determines compilers and loads any toolchain.cmake file.
@@ -112,6 +115,8 @@ set(AUTORCC_SOURCE_GROUP autorcc)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
+
+set(CMAKE_AUTOGEN_PARALLEL 8)
 ### @}
 
 ###
