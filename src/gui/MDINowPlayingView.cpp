@@ -224,7 +224,7 @@ void MDINowPlayingView::onDoubleClicked(const QModelIndex& index)
 	qDebug() << "Double-clicked index:" << index;
 	Q_ASSERT(index.isValid());
 
-	M_WARNING("TODO: Fix assumption");
+	// M_WARNING("TODO: Fix assumption");
 	if (true) // we're the playlist connected to the player.
 	{
 		// Keep the shuffle index synced.
@@ -236,7 +236,7 @@ void MDINowPlayingView::onDoubleClicked(const QModelIndex& index)
 
 void MDINowPlayingView::onActivated(const QModelIndex& index)
 {
-	M_WARNING("TODO: Fix assumption");
+    // M_WARNING("TODO: Fix assumption");
 	if (true) // we're the playlist connected to the player.
 	{
 		// Keep the shuffle index synced.
