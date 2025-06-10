@@ -100,7 +100,7 @@ void BaseActivityProgressStatusBarWidget::warning(KJob *kjob, const QString &tex
 {
     Q_UNUSED(kjob);
 
-M_WARNING("TODO");
+// M_WARNING("TODO");
 qWr() << "WARNING:" << text;
 }
 
@@ -147,7 +147,7 @@ void BaseActivityProgressStatusBarWidget::init(KJob* kjob)
     }
     else
     {
-M_WARNING("TODO: The if() is FOR THE MAIN BAR WHICH IS CURRENTLY JOBLESS");
+// M_WARNING("TODO: The if() is FOR THE MAIN BAR WHICH IS CURRENTLY JOBLESS");
 
         /// @todo null Job (i.e. it's the root tracker/widget).
         qDb() << "INIT() CALL FOR CUMULATIVE TRACKER WIDGET, JOB IS NULL";
