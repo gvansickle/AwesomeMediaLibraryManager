@@ -299,7 +299,7 @@ void ActivityProgressStatusBarTracker::SLOT_CancelAllKJobs()
         }
     }
 
-M_WARNING("I think we need to wait for all jobs to stop here.");
+// M_WARNING("I think we need to wait for all jobs to stop here.");
     qDb() << "CANCELLING ALL JOBS: KJobs REMAINING:" << m_amlmjob_to_widget_map.size();
 }
 
@@ -672,7 +672,7 @@ bool ActivityProgressStatusBarTracker::stopOnClose(KJob *job) const
 void ActivityProgressStatusBarTracker::setAutoDelete(KJob *kjob, bool autoDelete)
 {
     Q_CHECK_PTR(kjob);
-M_MESSAGE("This function makes no sense, the KJob has the interface and we're going through the tracker for this?");
+// M_MESSAGE("This function makes no sense, the KJob has the interface and we're going through the tracker for this?");
     kjob->setAutoDelete(autoDelete);
 }
 
