@@ -34,7 +34,7 @@
 #include <utils/RegisterQtMetatypes.h>
 
 // Ours
-#include "models/ScanResultsTreeModel.h"
+// #include "models/ScanResultsTreeModel.h"
 #include <utils/EnumFlagHelpers.h>
 #include <logic/serialization/SerializationHelpers.h>
 
@@ -75,7 +75,7 @@ QVariant DirScanResult::toVariant() const
 
 	// Add all the fields to the map.
 #define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
-	M_DATASTREAM_FIELDS(X);
+    M_DATASTREAM_FIELDS(X)
 #undef X
 
 	return map;
@@ -90,7 +90,7 @@ void DirScanResult::fromVariant(const QVariant& variant)
 
 	// Extract all the fields from the map.
 #define X(field_tag, member_field) map_read_field_or_warn(map, field_tag, &(member_field));
-	M_DATASTREAM_FIELDS(X);
+    M_DATASTREAM_FIELDS(X)
 #undef X
 }
 
@@ -109,7 +109,8 @@ void DirScanResult::determineDirProps(const QFileInfo &found_url_finfo)
 	possible_cue_url = QUrl(m_exturl_media);
 	QString cue_url_as_str = possible_cue_url.m_url.toString();
     Q_ASSERT(!cue_url_as_str.isEmpty());
-    cue_url_as_str.replace(QRegularExpression("\\.[[:alnum:]]+$"), ".cue");
+    static QRegularExpression re("\\.[[:alnum:]]+$");
+    cue_url_as_str.replace(re, ".cue");
     possible_cue_url = cue_url_as_str;
 	Q_ASSERT(possible_cue_url.m_url.isValid());
 
