@@ -80,9 +80,9 @@ public:
 
 	/// CD-Text "pack type indicators".
 	///
-	/// @link https://www.gnu.org/software/libcdio/cd-text-format.html
-	/// @link https://github.com/lipnitsk/libcue/blob/master/libcue.h
-	/// @link https://en.wikipedia.org/wiki/CD-Text
+	/// https://www.gnu.org/software/libcdio/cd-text-format.html
+	/// https://github.com/lipnitsk/libcue/blob/master/libcue.h
+	/// https://en.wikipedia.org/wiki/CD-Text
 	///
 	/// These are the character types, applicable to both Disc and Track sections unless otherwise noted.
 	/// See below for binary types.
