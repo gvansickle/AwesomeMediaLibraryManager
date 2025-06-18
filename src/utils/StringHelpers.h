@@ -58,8 +58,8 @@ enum /*QLocale::*/DataSizeFormats
 // KF
 #if HAVE_KF501 || HAVE_KF6
 #   ifndef HAVE_QLOCALE_FORMATTEDDATASIZE
-    /// Needed to format numbers into "12.3 GB" etc. until we can rely on Qt 5.10, which supports
-    /// it in QLocale.
+    // Needed to format numbers into "12.3 GB" etc. until we can rely on Qt 5.10, which supports
+    // it in QLocale.
 #   include <KFormat>
 #include <QTime>
 enum /*QLocale::*/DataSizeFormats
@@ -82,10 +82,9 @@ enum /*QLocale::*/DataSizeFormats
 #include <taglib/tag.h>
 
 // Ours
-//#include <utils/DebugHelpers.h> // For MSVC __PRETTY_FUNCTION__
-/**
+/*
  * Portable __PRETTY_FUNCTION__.
- * @see @link https://msdn.microsoft.com/library/b0084kay.aspx
+ * @see https://msdn.microsoft.com/library/b0084kay.aspx
  */
 #if defined(_MSC_VER)
 #define __PRETTY_FUNCTION__ __FUNCSIG__
@@ -95,7 +94,8 @@ enum /*QLocale::*/DataSizeFormats
 
 #include <future/cpp14_concepts.hpp>
 
-/// @name Functions for converting between the several thousand different and
+/// @name tostdstr() overloads
+/// Functions for converting between the several thousand different and
 /// non-interoperable UTF-8 string classes, one or more brought into the project per library used.
 /// There are only two assumptions made here:
 /// - Any const char* passed in is one of:
@@ -107,8 +107,13 @@ enum /*QLocale::*/DataSizeFormats
 /// @{
 
 /**
- * Convert a const char* to a std::string.  If @a cstr is nullptr, return @a if_null instead, which
+ * Convert a const char* to a std::string, with a fallback std::string if the const char * is nullptr.
+ * If @a cstr is nullptr, return @a if_null instead, which
  * defaults to a default constructed std::string().
+ *
+ * @param cstr Pointer to a null-terminated C-style string. Can be nullptr.
+ * @param if_null Default string to return if cstr is nullptr.
+ * @return A std::string object converted from cstr, or if_null if cstr is null.
  */
 std::string tostdstr(const char* cstr, const std::string& if_null = std::string());
 
@@ -147,7 +152,9 @@ static inline Glib::ustring toustring(const QString& qstr)
 }
 #endif
 
-/// From a QStringList, return the first one.  If there isn't a first one, return an empty string.
+/**
+ * From a QStringList, return the first one.  If there isn't a first one, return an empty string.
+ */
 template <typename StringListType, typename StringType = typename StringListType::value_type>
 static inline StringType get_first(const StringListType& sl)
 {
@@ -162,7 +169,9 @@ static inline StringType get_first(const StringListType& sl)
 	}
 }
 
-/// For TagLib::String.
+/**
+ * Insertion operator For tagLib::String.
+ */
 template<typename LHSType, typename T>
 std::enable_if_t<std::is_same<T,TagLib::String>::value, LHSType&>
 operator<<(LHSType& out, const T& str)
