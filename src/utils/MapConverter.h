@@ -87,7 +87,7 @@ std::expected<mapdiff_result<MultiMapType1,MultiMapType2>, std::string> mapdiff(
 
 	for(const auto& e1 : map1)
 	{
-		if (map_contains_value(map2, typename MultiMapType2::value_type(e1))/*e1.first, e1.second)*/ == false)
+		if (map_contains_value(map2, typename MultiMapType2::value_type(e1)) == false)
 		{
 			retval.m_in1not2.push_back(e1);
 		}
