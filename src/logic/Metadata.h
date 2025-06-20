@@ -79,7 +79,7 @@ public:
 	bool hasID3v1() const { return m_has_id3v1; }
 	bool hasID3v2() const { return m_has_id3v2; }
 	bool hasAPE() const { return m_has_ape; }
-	bool hasXiphComment() const { return m_has_ogg_xipfcomment; }
+	bool hasXiphComment() const { return m_has_ogg_xiphcomment; }
 	bool hasRIFFInfo() const { return m_has_riff_info; }
 	bool hasDiscCuesheet() const { return !m_tm_cuesheet_disc.empty(); }
 
@@ -87,7 +87,7 @@ public:
 	AMLMTagMap tagmap_id3v1() const { return m_tm_id3v1; }
 	AMLMTagMap tagmap_id3v2() const { return m_tm_id3v2; }
 	AMLMTagMap tagmap_ape() const { return m_tm_ape; }
-	AMLMTagMap tagmap_xiph() const { return m_tm_xipf; }
+	AMLMTagMap tagmap_xiph() const { return m_tm_xiph; }
 	AMLMTagMap tagmap_RIFFInfo() const { return m_tm_riff_info; }
 	AMLMTagMap tagmap_cuesheet_disc() const;
 	/// @}
@@ -154,8 +154,12 @@ public:
 /// @todo if(googletest) here
 // private:
 
+	void readEmbeddedCuesheet(std::string cuesheet_str, int64_t length_in_milliseconds);
+	void readSidecarCuesheet(const QUrl& audio_file_qurl, int64_t length_in_milliseconds);
+	void reconcileCueSheets();
 
-	QUrl m_audio_file_url {};
+
+	QUrl m_audio_file_url{};
 
 	AudioFileType::Type m_audio_file_type {AudioFileType::UNKNOWN};
 
@@ -188,7 +192,7 @@ public:
 	bool m_has_id3v1 {false};
 	bool m_has_id3v2 {false};
 	bool m_has_ape {false};
-	bool m_has_ogg_xipfcomment {false};
+	bool m_has_ogg_xiphcomment {false};
 	bool m_has_riff_info {false};
 
 	/// The TagMap from the generic "fr.tag()->properties()" call.
@@ -196,7 +200,7 @@ public:
 	AMLMTagMap m_tm_id3v1;
 	AMLMTagMap m_tm_id3v2;
 	AMLMTagMap m_tm_ape;
-	AMLMTagMap m_tm_xipf;
+	AMLMTagMap m_tm_xiph;
 	AMLMTagMap m_tm_riff_info;
 	/// Cuesheet-derived CD-level info.
 	AMLMTagMap m_tm_cuesheet_disc {};

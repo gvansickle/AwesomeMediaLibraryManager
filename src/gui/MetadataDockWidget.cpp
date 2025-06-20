@@ -185,8 +185,11 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 				{"hasXiphComment?", md.hasXiphComment(), md.tagmap_xiph()},
 				{"hasRIFFInfoTag?", md.hasRIFFInfo(), md.tagmap_RIFFInfo()},
 				{"hasDiscCuesheet?", md.hasDiscCuesheet(), md.tagmap_cuesheet_disc()},
-                {"CuesheetEmbedded?:", EnumFlagtoqstr(md.m_cuesheet_embedded.origin()), empty},
-				{"CuesheetSidecar?:", EnumFlagtoqstr(md.m_cuesheet_sidecar.origin()), empty},
+                {"CuesheetEmbedded?:", md.m_cuesheet_embedded.origin() == CueSheet::Embedded, empty},
+				{"CuesheetSidecar?:", md.m_cuesheet_sidecar.origin() == CueSheet::Sidecar, empty},
+            	// {"Cuesheets equal?", (md.m_cuesheet_embedded == md.m_cuesheet_sidecar), empty},
+					// {"CuesheetEmbedded?:", md.m_cuesheet_embedded.operator bool(), empty},
+					// {"CuesheetSidecar?:", md.m_cuesheet_sidecar.operator bool(), empty},
 #if 0 /// @todo
 				{"hasTrackCuesheetInfo?", md.hasTrackCuesheet(), md.tagmap_cuesheet_track()}
 #endif

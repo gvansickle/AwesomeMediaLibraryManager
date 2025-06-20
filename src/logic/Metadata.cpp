@@ -64,7 +64,7 @@
 // Ours.
 #include "TagLibHelpers.h"
 #include "MetadataTaglib.h"
-#include "MetadataFromCache.h"
+// #include "MetadataFromCache.h"
 #include "utils/MapConverter.h"
 #include <utils/DebugHelpers.h>
 #include <utils/RegisterQtMetatypes.h>
@@ -172,9 +172,11 @@ Metadata Metadata::make_metadata(const QVariant& variant)
 }
 
 
+
+
 bool Metadata::read(const QUrl& url)
 {
-	// String for storing an embedded cuesheet if we have one.
+	// String for temp storage an embedded cuesheet if we have one.
 	std::string cuesheet_str;
 
 	m_audio_file_url = url;
@@ -260,12 +262,12 @@ bool Metadata::read(const QUrl& url)
 		// "virtual TagLib::Tag* TagLib::FLAC::File::tag()	const
 		//	Returns the Tag for this file. This will be a union of XiphComment, ID3v1 and ID3v2 tags."
 		// But when you use properties() on it, it only returns the basic tags.
-//		m_tm_generic = file->tag()->properties();
+        m_tm_generic = file->tag()->properties();
 
 		m_audio_file_type = AudioFileType::FLAC;
 		m_has_id3v1 = file->hasID3v1Tag();
 		m_has_id3v2 = file->hasID3v2Tag();
-		m_has_ogg_xipfcomment = file->hasXiphComment();
+		m_has_ogg_xiphcomment = file->hasXiphComment();
 
 		if(m_has_id3v1)
 		{
@@ -277,7 +279,7 @@ bool Metadata::read(const QUrl& url)
 			m_tm_id3v2 = file->ID3v2Tag()->properties();
 			m_tm_generic.merge(m_tm_id3v2);
 		}
-		if(m_has_ogg_xipfcomment)
+		if(m_has_ogg_xiphcomment)
 		{
 			// TagLib has some funky kicks going on here:
 			// https://taglib.org/api/classTagLib_1_1FLAC_1_1File.html#a31ffa82b2e168f5625311cbfa030f04f
@@ -286,13 +288,14 @@ bool Metadata::read(const QUrl& url)
 			// "Returns a pointer to the XiphComment for the file.
 			// Note: This may return a valid pointer regardless of whether or not the file on disk has a XiphComment. Use hasXiphComment()
 			// to check if the file on disk actually has a XiphComment."
-			TagLib::Ogg::XiphComment* xipf_comment;
-			xipf_comment = file->xiphComment();
-			m_tm_xipf = xipf_comment->fieldListMap();
+			TagLib::Ogg::XiphComment* xiph_comment;
+			xiph_comment = file->xiphComment();
+			m_tm_xiph = xiph_comment->fieldListMap();
+#warning TODO
+			m_tm_xiph.dump("XIPF");
+			// m_tm_generic.merge(m_tm_xipf);
 
-			m_tm_generic.merge(m_tm_xipf);
-
-			auto field_count = xipf_comment->fieldCount();
+			auto field_count = xiph_comment->fieldCount();
 
 			// Extract any CUESHEET embedded in the XiphComment.
 			cuesheet_str = get_cue_sheet_from_OggXipfComment(file).toStdString();
@@ -306,11 +309,11 @@ bool Metadata::read(const QUrl& url)
 		m_audio_file_type = AudioFileType::OGG_VORBIS;
 		if(auto tag = file->tag())
 		{
-			m_has_ogg_xipfcomment = true;
+			m_has_ogg_xiphcomment = true;
 			TagLib::Ogg::XiphComment* xipf_comment;
 			xipf_comment = file->tag();
-			m_tm_xipf = xipf_comment->fieldListMap();
-			m_tm_generic.merge(m_tm_xipf);
+			m_tm_xiph = xipf_comment->fieldListMap();
+			m_tm_generic.merge(m_tm_xiph);
 		}
 	}
 	else if(TagLib::RIFF::WAV::File* file = dynamic_cast<TagLib::RIFF::WAV::File*>(fr.file()))
@@ -351,64 +354,10 @@ bool Metadata::read(const QUrl& url)
 		/// considers only the usual built-in tags (artist, album, ...) and only one value per key."
 	}
 
-
-	//
-	// Cuesheet handling, using libcue.
-	//
-	std::shared_ptr<CueSheet> cuesheet;
-	cuesheet.reset();
-
-	// Did we find an embedded cue sheet?
-	if(!cuesheet_str.empty())
-	{
-		cuesheet = CueSheet::TEMP_parse_cue_sheet_string(cuesheet_str, m_length_in_milliseconds);
-		cuesheet->set_origin(CueSheet::Origin::Embedded);
-		Q_ASSERT(cuesheet);
-	}
-	else
-	{
-		// Try to read a possible sidecar cue sheet file.
-		cuesheet = CueSheet::read_associated_cuesheet(m_audio_file_url, m_length_in_milliseconds);
-	}
-
-	// Did we find a cue sheet?
-	if(cuesheet)
-	{
-		m_has_cuesheet = true;
-		m_cuesheet_embedded = *cuesheet;
-
-		// Get the disc-level cuesheet info as an AMLMTagMap.
-		m_tm_cuesheet_disc = m_cuesheet_embedded.asAMLMTagMap_Disc();
-
-		m_num_tracks_on_media = cuesheet->get_total_num_tracks();
-
-		// Copy the cuesheet track info.
-		m_tracks = cuesheet->get_track_map();
-// qDb() << "####### NUM TRACKS:" << m_tracks.size();
-		Q_ASSERT(!m_tracks.empty());
-
-
-		// Ok, now do a second pass over the tracks and determine if there are any gapless sets.
-// M_TODO("WAS THIS ALREADY DONE ABOVE?")
-		// qDebug() << "Scanning for gaplessness...";
-		for(int track_num=1; track_num < m_num_tracks_on_media; ++track_num)
-		{
-//            qDb() << "TRACK:" << track_num << m_tracks[track_num];
-
-			auto next_tracknum = track_num+1;
-			TrackMetadata tm1 = m_tracks[track_num];
-			TrackMetadata tm2 = m_tracks[next_tracknum];
-			///Frames tm2_first_possible_pregap_frame = tm2.m_length_pre_gap >= 0 ? tm2.m_start_frames - tm2.m_length_pre_gap : tm2.m_start_frames;
-			Frames gap_frames_1to2 = tm2.m_length_pre_gap;/// - tm1.last_frame();
-			if(gap_frames_1to2 < 5 )
-			{
-				// There's little or no gap.
-				// qDebug() << "Found a gapless track pair in" << m_audio_file_url << ":" << tm1.toStdString() << tm2.toStdString();
-				m_tracks[track_num].m_is_part_of_gapless_set = true;
-				m_tracks[next_tracknum].m_is_part_of_gapless_set = true;
-			}
-		}
-	}
+	// Read the embedded cuesheet, if any.
+	readEmbeddedCuesheet(cuesheet_str, m_length_in_milliseconds);
+	readSidecarCuesheet(url, m_length_in_milliseconds);
+	reconcileCueSheets();
 
 	m_is_error = false;
 	m_read_has_been_attempted = true;
@@ -628,7 +577,7 @@ using strviw_type = QLatin1String;
 	X(XMLTAG_HAS_ID3V1, m_has_id3v1) \
 	X(XMLTAG_HAS_ID3V2, m_has_id3v2) \
 	X(XMLTAG_HAS_APE, m_has_ape) \
-	X(XMLTAG_HAS_OGG_XIPFCOMMENT, m_has_ogg_xipfcomment) \
+	X(XMLTAG_HAS_OGG_XIPHCOMMENT, m_has_ogg_xiphcomment) \
 	X(XMLTAG_HAS_RIFF_INFO, m_has_riff_info) \
 	X(XMLTAG_AUDIO_FILE_URL, m_audio_file_url) \
 	X(XMLTAG_NUM_TRACKS_ON_MEDIA, m_num_tracks_on_media)
@@ -638,7 +587,7 @@ using strviw_type = QLatin1String;
 	X(XMLTAG_TM_ID3V1, m_tm_id3v1) \
 	X(XMLTAG_TM_ID3V2, m_tm_id3v2) \
 	X(XMLTAG_TM_APE, m_tm_ape) \
-	X(XMLTAG_TM_XIPF, m_tm_xipf) \
+	X(XMLTAG_TM_XIPH, m_tm_xiph) \
 	X(XMLTAG_TM_RIFF_INFOTAG, m_tm_riff_info) \
 	X(XMLTAG_TM_GENERIC, m_tm_generic) \
 	X(XMLTAG_DISC_CUESHEET, m_tm_cuesheet_disc)
@@ -652,7 +601,6 @@ using strviw_type = QLatin1String;
 	M_DATASTREAM_FIELDS_MAPS(X);
 	M_DATASTREAM_FIELDS_LISTS(X);
 #undef X
-static constexpr strviw_type XMLTAG_CUESHEET("m_cuesheet");
 
 
 
@@ -732,16 +680,130 @@ void Metadata::fromVariant(const QVariant& variant)
 
 #undef M_DATASTREAM_FIELDS
 
+void Metadata::readEmbeddedCuesheet(std::string cuesheet_str, int64_t length_in_milliseconds)
+{
+	// Try to detect and read an embedded Cuesheet using libcue.
 
-QDataStream &operator<<(QDataStream &out, [[maybe_unused]] const Metadata &obj)
+	std::shared_ptr<CueSheet> cuesheet;
+	cuesheet.reset();
+
+	// Is there an embedded cue sheet?
+	if(!cuesheet_str.empty())
+	{
+		cuesheet = CueSheet::make_unique_CueSheet(cuesheet_str, length_in_milliseconds);
+		cuesheet->set_origin(CueSheet::Origin::Embedded);
+		Q_ASSERT(cuesheet);
+		m_cuesheet_embedded = *cuesheet;
+		m_has_cuesheet = true;
+	}
+}
+
+void Metadata::readSidecarCuesheet(const QUrl& audio_file_qurl, int64_t length_in_milliseconds)
+{
+	auto cuesheet = CueSheet::make_unique_CueSheet(audio_file_qurl, length_in_milliseconds);
+	if (cuesheet)
+	{
+		m_cuesheet_sidecar = *cuesheet;
+		m_has_cuesheet = true;
+	}
+}
+
+void Metadata::reconcileCueSheets()
+{
+	// Did we find any cue sheets?
+	if (!m_has_cuesheet)
+	{
+		return;
+	}
+
+	// Which cuesheet(s) did we find?
+	const CueSheet* cuesheet_ptr;
+	if (m_cuesheet_embedded.origin() && m_cuesheet_sidecar.origin())
+	{
+		qWr() << "TODO FOUND BOTH EMBEDDED AND SIDECAR CUESHEETS";
+		// qCr() << "RETURNING";
+		// Q_UNIMPLEMENTED();
+
+		auto diff = mapdiff(m_cuesheet_embedded.asAMLMTagMap_Disc(), m_cuesheet_sidecar.asAMLMTagMap_Disc());
+		qDb() << "CUESHEET NUM DIFFS:" << diff.value().size() << ", CUESHEET DIFF:" << diff.value();
+
+		if (diff.value().size() > 0)
+		{
+			// @todo We have two different cuesheets.  Figure out the one to use....
+			Q_UNIMPLEMENTED();
+			return;
+		}
+		else
+		{
+			// The two cuesheets are the same.
+			cuesheet_ptr = &m_cuesheet_embedded;
+		}
+	}
+	else if (m_cuesheet_embedded.origin())
+	{
+		// Found embedded, but not sidecar.
+		cuesheet_ptr = &m_cuesheet_embedded;
+	}
+	else if (m_cuesheet_sidecar.origin())
+	{
+		// Found sidecar, but not embedded.
+		cuesheet_ptr = &m_cuesheet_sidecar;
+	}
+	else
+	{
+		// Found no cuesheet.
+		return;
+	}
+
+	const CueSheet& cuesheet = *cuesheet_ptr;
+
+	if (cuesheet.origin())
+	{
+		// Get the disc-level cuesheet info as an AMLMTagMap.
+		m_tm_cuesheet_disc = cuesheet.asAMLMTagMap_Disc();
+
+		m_num_tracks_on_media = cuesheet.get_total_num_tracks();
+
+		// Copy the cuesheet track info.
+		m_tracks = cuesheet.get_track_map();
+		// qDb() << "####### NUM TRACKS:" << m_tracks.size();
+		Q_ASSERT(!m_tracks.empty());
+
+
+		// Ok, now do a second pass over the tracks and determine if there are any gapless sets.
+		// M_TODO("WAS THIS ALREADY DONE ABOVE?")
+		// qDebug() << "Scanning for gaplessness...";
+		for(int track_num=1; track_num < m_num_tracks_on_media; ++track_num)
+		{
+			//            qDb() << "TRACK:" << track_num << m_tracks[track_num];
+
+			auto next_tracknum = track_num+1;
+			TrackMetadata tm1 = m_tracks[track_num];
+			TrackMetadata tm2 = m_tracks[next_tracknum];
+			///Frames tm2_first_possible_pregap_frame = tm2.m_length_pre_gap >= 0 ? tm2.m_start_frames - tm2.m_length_pre_gap : tm2.m_start_frames;
+			Frames gap_frames_1to2 = tm2.m_length_pre_gap;/// - tm1.last_frame();
+			if(gap_frames_1to2 < 5 )
+			{
+				// There's little or no gap.
+				// qDebug() << "Found a gapless track pair in" << m_audio_file_url << ":" << tm1.toStdString() << tm2.toStdString();
+				m_tracks[track_num].m_is_part_of_gapless_set = true;
+				m_tracks[next_tracknum].m_is_part_of_gapless_set = true;
+			}
+		}
+	}
+}
+
+
+
+QDataStream& operator<<(QDataStream& out, [[maybe_unused]] const Metadata& obj)
 {
 	Q_ASSERT(0);
 	/// @todo
-//	out << MapConverter::TagMaptoVarMap(obj.pImpl->m_tag_map);
+	//	out << MapConverter::TagMaptoVarMap(obj.pImpl->m_tag_map);
 	return out;
 }
 
-QDataStream &operator>>(QDataStream &in, Metadata &obj)
+QDataStream& operator>>(QDataStream& in, Metadata& obj)
 {
 	Q_UNIMPLEMENTED();
 	Q_ASSERT(0);
