@@ -45,11 +45,14 @@ public:
 	static std::map<std::string, std::vector<std::string>> VarMapToTagMap(const QVariantMap& vm);
 };
 
+
 template <class MultiMapType1, class MultiMapType2>
 struct mapdiff_result
 {
 	std::deque<typename MultiMapType1::value_type> m_in1not2;
 	std::deque<typename MultiMapType2::value_type> m_in2not1;
+
+	ssize_t size() const { return m_in1not2.size() + m_in2not1.size(); }
 };
 
 template <class MultiMapType1, class MultiMapType2>
