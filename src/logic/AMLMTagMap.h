@@ -114,6 +114,9 @@ public:
 		return *this;
 	}
 
+	friend
+	bool operator==(const AMLMTagMap& lhs, const AMLMTagMap& rhs);
+
 	/**
 	 * Returns a reference to the first value of the matching key.
 	 * Performs an insertion of a default-constructed value if such key does not already exist.
@@ -187,6 +190,8 @@ public:
 		}
 	}
 
+	void dump(const std::string& name) const;
+
 	/**
 	 * Merge the @a source map into this AMLMTagMap.
 	 * @param source  Reference to the source AMLMTagMap.
@@ -210,10 +215,22 @@ private:
 	underlying_container_type m_the_map;
 };
 
+bool operator==(const AMLMTagMap& lhs, const AMLMTagMap& rhs);
+
+
 Q_DECLARE_METATYPE(AMLMTagMap);
 Q_DECLARE_METATYPE(AMLMTagMap::underlying_container_type);
 QTH_DECLARE_QDATASTREAM_OPS(AMLMTagMap);
 
+/**
+ * Helper function template which inserts <@a tagname, @a value> into @a map.
+ * If value is integral, it gets converted to a string representation and that string in inserted into the map.
+ * @tparam T
+ * @tparam Stringlike
+ * @param map            Any maplike with an .insert(std::string) member.
+ * @param tagname
+ * @param value
+ */
 template <class T, class Stringlike>
 void AMLMTagMap_convert_and_insert(AMLMTagMap& map, const Stringlike& tagname, const T& value)
 {
