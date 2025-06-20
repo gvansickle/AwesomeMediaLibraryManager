@@ -25,9 +25,10 @@
 
 #include "CueSheet.h"
 
+
 TEST_F(CueSheetTests, CueSheetAssignment)
 {
-    CueSheet cs1, cs2;
+	CueSheet cs1, cs2;
 
 	cs1.set_origin(CueSheet::Origin::Embedded);
 
@@ -35,3 +36,9 @@ TEST_F(CueSheetTests, CueSheetAssignment)
 
 	EXPECT_EQ(cs1, cs2);
 }
+
+// TEST_F(CueSheetTests, CueSheet)
+// {
+// 	CueSheet cs1, cs2;
+// }
+
