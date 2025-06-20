@@ -448,6 +448,7 @@ std::shared_ptr<LibraryEntry> LibraryModel::getItem(const QModelIndex& index) co
 		else
 		{
 			qWro() << "NULL internalPointer, returning 'None' item";
+			Q_ASSERT(0);
 			return nullptr;
 		}
 	}
