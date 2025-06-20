@@ -53,8 +53,8 @@ public:
 	/**
 	 * Default constructor creates a new UUID.
 	 */
-	explicit ISerializable()
-        : m_uuid_prefix("xmlid_"), m_uuid( QUuid::createUuid() ) {}
+    // explicit ISerializable()
+ //        : m_uuid_prefix("xmlid_"), m_uuid( QUuid::createUuid() ) {}
 	virtual ~ISerializable() = default;
     // M_GH_POLYMORPHIC_SUPPRESS_COPYING_C67(ISerializable)
     // M_GH_DEFAULT_COPY(ISerializable)
@@ -143,6 +143,8 @@ Q_DECLARE_METATYPE(ISerializable);
 //Q_DECLARE_METATYPE(ISerializable*);
 //Q_DECLARE_METATYPE(ISerializable&);
 Q_DECLARE_INTERFACE(ISerializable, "ISerializable") // define this out of namespace scope
+
+
 
 class IUUIDSerializable : public virtual ISerializable
 {
