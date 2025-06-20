@@ -17,14 +17,12 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SRC_LOGIC_CUESHEET_H_
-#define SRC_LOGIC_CUESHEET_H_
+#ifndef SRC_LOGIC_CUESHEET_H
+#define SRC_LOGIC_CUESHEET_H
 
 /**
  * @file CueSheet.h
  */
-
-#include <config.h>
 
 // Std C++
 #include <vector>
@@ -36,14 +34,15 @@
 
 // Qt
 class QUrl;
+#include <QObject>
 #include <QDataStream>
+#include <QVariant>
 
 // Ours
 #include "TrackMetadata.h"  //< Per-track cue sheet info
 #include <future/guideline_helpers.h>
-#include "CueSheetParser.h"
-#include <logic/serialization/ISerializable.h>
 #include <logic/AMLMTagMap.h>
+#include <logic/serialization/ISerializable.h>
 
 /**
  * CD cue sheet class.
@@ -69,6 +68,7 @@ class QUrl;
  *
  * @sa https://en.wikipedia.org/wiki/Cue_sheet_(computing)
  * @sa https://github.com/flacon/flacon/blob/master/doc/cuesheet_syntax.md
+ * @sa https://www.gnu.org/software/libcdio/cd-text-format.html
  * @sa https://xiph.org/vorbis/doc/Vorbis_I_spec.html#x1-860005.2.2
  *
  */
@@ -93,14 +93,22 @@ public:
 
     /**
      * Factory function.
-     * Given a URL to an audio file, check for an embedded cuesheet, and if there is one, read and parse it.
+     * Given a URL to an audio file, check for a sidecar cuesheet, and if there is one, read and parse it.
      * @param url  URL to the audio file.
      * @param total_length_in_ms
      * @returns  A shared_ptr to the decoded CueSheet, or null on error/no embedded cuesheet.
      */
-    static std::shared_ptr<CueSheet> read_associated_cuesheet(const QUrl& url, uint64_t total_length_in_ms);
+	[[nodiscard]] static std::unique_ptr<CueSheet> make_unique_CueSheet(const QUrl& url, uint64_t total_length_in_ms);
 
-    static std::shared_ptr<CueSheet> TEMP_parse_cue_sheet_string(const std::string& cuesheet_text, uint64_t total_length_in_ms = 0);
+	/**
+	 * Factory function.
+	 * Parse the given @a cuesheet_text string, and return a std::shared_ptr<CueSheet> populated with the results.
+	 * @param cuesheet_text       A std::string containing a serialized cuesheet.
+	 * @param total_length_in_ms
+	 * @return                    The populated std::shared_ptr<CueSheet>, or a shared_ptr<CueSheet> containing a nullptr.
+	 */
+	[[nodiscard]] static std::unique_ptr<CueSheet> make_unique_CueSheet(const std::string& cuesheet_text,
+																		uint64_t total_length_in_ms = 0);
 
 	/**
 	 * The origin of the data in this CueSheet.
@@ -139,6 +147,9 @@ public:
 	void fromVariant(const QVariant& variant) override;
 	/// @}
 
+	/// Equality operator
+	friend bool operator==(const CueSheet& lhs, const CueSheet& rhs);
+
 protected:
 
     /**
@@ -154,12 +165,13 @@ protected:
 	 * @param cuesheet_text  The cuesheet text as one long string.
 	 * @return  The preprocessed version of @a cuesheet_text.
 	 */
-	std::string prep_final_cuesheet_string(const std::string& cuesheet_text) const;
+	std::string preprocess_cuesheet_string(const std::string& cuesheet_text) const;
 
     friend QDebug operator<<(QDebug dbg, const CueSheet &cuesheet);
 
 private:
-	/// Mutex for serializing access to libcue.  Libcue isn't thread-safe.
+
+	/// Mutex for serializing access to libcue.  Libcue isn't thread-safe or reentrant.
 	static std::mutex m_libcue_mutex;
 
 	/// Origin of the data in this CueSheet.
@@ -215,6 +227,8 @@ private:
     std::map<int, TrackMetadata> m_tracks;
 };
 
+static_assert(std::is_default_constructible_v<CueSheet>);
+static_assert(std::is_copy_assignable_v<CueSheet>);
 
 QDebug operator<<(QDebug dbg, const CueSheet &cuesheet);
 
