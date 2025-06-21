@@ -101,4 +101,25 @@ set_property(TARGET libcue
 #install(FILES ${libcue_SOURCE_DIR}/libcue.h
 #        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
+## TagLib
+#set(CMAKE_FIND_PACKAGE_NAME "TagLibPrefix")
+#find_package(utf8cpp REQUIRED
+#	PATHS ./utfcpp-4.0.6
+#)
+set(utf8cpp_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/utfcpp-4.0.6/source)
+#set(CMAKE_FIND_PACKAGE_PREFER_CONFIG FALSE)
+#find_package(TagLib REQUIRED
+#	PATHS ./taglib
+#)
+#if(TagLib_DIR)
+#	message("FOUND TAGLIB DIR: $TagLib_DIR")
+#endif()
+#add_subdirectory(utfcpp-4.0.6)
+add_subdirectory(taglib)
+#include(ExternalProject)
+#ExternalProject_Add(taglib
+#	SOURCE_DIR ./taglib
+#)
+#set_property(TARGET TagLib::TagLib PROPERTY IMPORTED_GLOBAL TRUE)
+
 message(STATUS "Completed processing third_party/CMakeLists.txt")

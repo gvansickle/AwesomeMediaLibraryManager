@@ -577,7 +577,7 @@ if(DOXYGEN_FOUND)
 		@ONLY
 	)
 	# Custom target to generate doxygen docs.
-	add_custom_target(docs
+	add_custom_target(doxdocs
 		COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_BINARY_DIR}/Doxyfile
 		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 		COMMENT "Generating internals documentation with Doxygen"

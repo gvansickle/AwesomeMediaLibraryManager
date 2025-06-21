@@ -35,7 +35,7 @@ add_subdirectory(third_party)
 # Use the bundled version of libcue due to this issue: https://github.com/lipnitsk/libcue/commit/e60b7b01a40009c7c71c5e154a328881a6e9ae46
 set(USE_BUNDLED_LIBCUE TRUE)
 
-
+if(FALSE)
 set(TAGLIB_MIN_VERSION "1.13.0")
 find_package(Taglib ${TAGLIB_MIN_VERSION} REQUIRED)
 set_package_properties(Taglib PROPERTIES TYPE REQUIRED PURPOSE "Required for reading media file metadata.")
@@ -54,7 +54,7 @@ if(TAGLIB_FOUND)
 	cmake_print_variables(TL_INTERFACE_CFLAGS)
 	set(AMLM_TAGLIB_TARGET "taglib")
 endif()
-
+endif()
 
 if(USE_BUNDLED_LIBCUE)
 	# Use the in-tree copy of libcue.
