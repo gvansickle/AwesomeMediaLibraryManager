@@ -58,7 +58,8 @@ public:
 	static std::set<std::string> getNewTags();
 
 	/**
-	 * Read the metadata associated with the given URL with TagLib.
+	 * Read the metadata associated with the given audio file URL with TagLib.
+	 * @param url  QUrl to the audio file.
 	 */
 	bool read(const QUrl& url);
 	bool hasBeenRead() const;
@@ -158,6 +159,13 @@ public:
 	void readSidecarCuesheet(const QUrl& audio_file_qurl, int64_t length_in_milliseconds);
 	void reconcileCueSheets();
 
+	/**
+	 * Determine the final metadata from all the sources we've read:
+	 * - CueSheet(s)
+	 * - The various AMLMTagMaps
+	 * - CD-TEXT
+	 */
+	void finalizeMetadata();
 
 	QUrl m_audio_file_url{};
 
@@ -187,6 +195,7 @@ public:
 	bool m_has_cuesheet {false};
 	CueSheet m_cuesheet_embedded;
 	CueSheet m_cuesheet_sidecar;
+	CueSheet m_cuesheet_combined;
 	/// @}
 
 	bool m_has_id3v1 {false};

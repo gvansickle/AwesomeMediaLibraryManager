@@ -176,7 +176,7 @@ Metadata Metadata::make_metadata(const QVariant& variant)
 
 bool Metadata::read(const QUrl& url)
 {
-	// String for temp storage an embedded cuesheet if we have one.
+	// String for temp storage of an embedded cuesheet if we have one.
 	std::string cuesheet_str;
 
 	m_audio_file_url = url;
@@ -357,7 +357,11 @@ bool Metadata::read(const QUrl& url)
 	// Read the embedded cuesheet, if any.
 	readEmbeddedCuesheet(cuesheet_str, m_length_in_milliseconds);
 	readSidecarCuesheet(url, m_length_in_milliseconds);
+	// Decide which cuesheet to use.
 	reconcileCueSheets();
+
+	// Fixup all the metadata we just read.
+	finalizeMetadata();
 
 	m_is_error = false;
 	m_read_has_been_attempted = true;
@@ -720,9 +724,7 @@ void Metadata::reconcileCueSheets()
 	const CueSheet* cuesheet_ptr;
 	if (m_cuesheet_embedded.origin() && m_cuesheet_sidecar.origin())
 	{
-		qWr() << "TODO FOUND BOTH EMBEDDED AND SIDECAR CUESHEETS";
-		// qCr() << "RETURNING";
-		// Q_UNIMPLEMENTED();
+		qIn() << "FOUND BOTH EMBEDDED AND SIDECAR CUESHEETS";
 
 		auto diff = mapdiff(m_cuesheet_embedded.asAMLMTagMap_Disc(), m_cuesheet_sidecar.asAMLMTagMap_Disc());
 		qDb() << "CUESHEET NUM DIFFS:" << diff.value().size() << ", CUESHEET DIFF:" << diff.value();
@@ -737,17 +739,20 @@ void Metadata::reconcileCueSheets()
 		{
 			// The two cuesheets are the same.
 			cuesheet_ptr = &m_cuesheet_embedded;
+			m_cuesheet_combined = m_cuesheet_embedded;
 		}
 	}
 	else if (m_cuesheet_embedded.origin())
 	{
 		// Found embedded, but not sidecar.
 		cuesheet_ptr = &m_cuesheet_embedded;
+		m_cuesheet_combined = m_cuesheet_embedded;
 	}
 	else if (m_cuesheet_sidecar.origin())
 	{
 		// Found sidecar, but not embedded.
 		cuesheet_ptr = &m_cuesheet_sidecar;
+		m_cuesheet_combined = m_cuesheet_sidecar;
 	}
 	else
 	{
@@ -793,6 +798,71 @@ void Metadata::reconcileCueSheets()
 	}
 }
 
+void Metadata::finalizeMetadata()
+{
+	/**
+	 * Cue sheet CD entries:
+	 *  REM DISCID <8-digit hex>
+	 *  REM COMMENT "<whatever>"
+	 *  CATALOG [media-catalog-number] << 13 digits long, encoded according to UPC/EAN rules.
+	 *  PERFORMER "<performer>"
+	 *  TITLE "<album title>"
+	 *  REM COMPOSER "<composer>"
+	 *  FILE [filename] [filetype]
+	 *
+	 * libcue's cd_dump() only has mode, catalog, cdtextfile (subdump), rem (subdump), track subdump.
+	 * Except, here's the CD part of a cd_dump() for the CD above, which has a few more/different entries:
+Disc Info
+mode: 0
+catalog: 0093624905547
+cdtextfile: (null)
+cdtext:
+TITLE: An American Treasure
+PERFORMER: Tom Petty
+DISC_ID: B50C610D
+rem:
+REM 0: (null)
+REM 1: (null)
+REM 2: (null)
+REM 3: (null)
+REM 4: (null)
+	 *
+	 * Cue sheet Track entries:
+	 *   TRACK 01 AUDIO
+	 *   TITLE "Rockin' Around (With You) [2018 Remaster] - Tom Petty & The Heartbreakers"
+	 *   PERFORMER "Tom Petty"
+	 *   REM COMPOSER ""
+	 *   ISRC USRE11800567
+	 *   INDEX 01 00:00:00
+	 *
+	 * From a libcue cd_dump():
+Track 1 Info
+zero_pre: -1
+filename: Tom Petty - An American Treasure.flac
+start: 0
+length: 10928
+zero_post: -1
+mode: 0
+sub_mode: 0
+flags: 0x0
+isrc: USRE11800567
+index 1: 0
+cdtext:
+TITLE: Rockin' Around (With You) [2018 Remaster] - Tom Petty & The Heartbreakers
+PERFORMER: Tom Petty
+rem:
+REM 0: (null)
+REM 1: (null)
+REM 2: (null)
+REM 3: (null)
+REM 4: (null)
+	 */
+
+	if (m_has_cuesheet)
+	{
+		qDb() << m_cuesheet_combined;
+	}
+}
 
 
 QDataStream& operator<<(QDataStream& out, [[maybe_unused]] const Metadata& obj)
