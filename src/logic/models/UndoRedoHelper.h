@@ -135,6 +135,6 @@ std::unique_ptr<QReadLocker> rlocker(new QReadLocker(nullptr));                 
 /**
  * No-op lambda which just returns true.  For use when a real undo or redo operation isn't needed.
  */
-inline static Fun noop_undo_redo_lambda = [](){ return true; };
+inline static Fun noop_undo_redo_lambda = [](){ return true; }; // clazy:exclude=non-pod-global-static
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_UNDOREDOHELPER_H
