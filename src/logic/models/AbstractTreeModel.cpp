@@ -46,7 +46,7 @@
 #include "ColumnSpec.h"
 #include <utils/DebugHelpers.h>
 #include <logic/serialization/XmlSerializer.h>
-#include <third_party/sqlite_orm/include/sqlite_orm/sqlite_orm.h>
+// #include <third_party/sqlite_orm/include/sqlite_orm/sqlite_orm.h>
 
 // static
 std::shared_ptr<AbstractTreeModel>
