@@ -26,6 +26,9 @@
 #include <string>
 #include <cstdint>
 
+// Qt
+#include <QGlobalStatic>
+
 // KF
 #include <KJob>
 
@@ -41,7 +44,12 @@
 #include <logic/AudioFileType.h>
 
 /**
- * Why do we need this qRegisterMetaType<> mechanism?  It appears that we really don't.
+ * Why do we need this qRegisterMetaType<> mechanism?  It appears that we mostly don't.
+ * From the Qt6 docs at https://doc.qt.io/qt-6/qmetatype.html#qRegisterMetaType:
+ *
+ * \"To use the type T in QMetaType, QVariant, or with the QObject::property() API, registration is not necessary.
+ *  To use the type T in queued signal and slot connections, qRegisterMetaType<T>() must be called before the first connection is established.
+ *  [...] After a type has been registered, it can be found by its name using QMetaType::fromName().\"
  *
  * According to: https://woboq.com/blog/qmetatype-knows-your-types.html
  *
@@ -62,7 +70,7 @@
  * Docs:
  * http://doc.qt.io/qt-5/qmetatype.html#qRegisterMetaType-1
  *
- * And one more, from here: @link ftp://ftp.informatik.hu-berlin.de/pub/Linux/Qt/QT/videos/DevDays2011/TrainingDay/DevDays2011_-_Advanced_Qt_-_A_Deep_Dive.pdf
+ * And one more, from here: ftp://ftp.informatik.hu-berlin.de/pub/Linux/Qt/QT/videos/DevDays2011/TrainingDay/DevDays2011_-_Advanced_Qt_-_A_Deep_Dive.pdf
  *
  * Cross-Thread Signals/Slots with Custom Classes
  * - If you want to emit signals across threads that use custom
@@ -87,7 +95,7 @@
 #define DUP_NS_AND_NOT(X, base_type) X(base_type) X(std::base_type)
 
 /// Qt's take on construct-on-first-use.  Not sure we need it here, see reginstance() below.
-/// @link https://doc.qt.io/qt-5/qglobalstatic.html
+/// https://doc.qt.io/qt-5/qglobalstatic.html
 Q_GLOBAL_STATIC(QtRegCallbackRegistry, f_qt_reg_callback_registry);
 
 
@@ -193,20 +201,16 @@ void RegisterQtMetatypes()
 }
 
 
-int* QtRegCallbackRegistry::register_callback(std::function<void(void)> callback)
+void QtRegCallbackRegistry::register_callback(std::function<void(void)> callback)
 {
     m_registered_callbacks.push_back(callback);
     std::cerr << "Registering callback:" << &callback << ", size now:" << m_registered_callbacks.size() << "\n";
-    // Return a dummy pointer.
-    return nullptr; //reinterpret_cast<int*>(nullptr);
 }
 
-int* QtRegCallbackRegistry::register_callback(const char* name, std::function<void(void)> callback)
+void QtRegCallbackRegistry::register_callback(const char* name, std::function<void(void)> callback)
 {
 	m_registered_callbacks.push_back(callback);
 	std::cerr << "Registering callback, name:" << name << "address:" << &callback << ", size now:" << m_registered_callbacks.size() << "\n";
-	// Return a dummy pointer.
-	return reinterpret_cast<int*>(&callback);
 }
 
 void QtRegCallbackRegistry::call_registration_callbacks()
@@ -223,7 +227,7 @@ QtRegCallbackRegistry& reginstance()
 {
 	// The callback registry.  static local so that it will be created only once, on first use,
 	// Returning a ref to it so that it's accessible to all callers.
-	// @link https://isocpp.org/wiki/faq/ctors#static-init-order-on-first-use
+    // https://isocpp.org/wiki/faq/ctors#static-init-order-on-first-use
     static QtRegCallbackRegistry* retval = new QtRegCallbackRegistry();
     return *retval;
 }
