@@ -23,6 +23,10 @@
 
 #include "QVariantHomogenousList.h"
 
+// Qt
+#include <QDebug>
+
+// Ours
 #include <utils/RegisterQtMetatypes.h>
 
 AMLM_QREG_CALLBACK ([](){
