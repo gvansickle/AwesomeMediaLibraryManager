@@ -404,11 +404,12 @@ bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t
     {
         // Libcue parsed the cuesheet text, let's extract what we need.
 
-		// qDb() << "CD_DUMP:";
-		// cd_dump(cd);
-    	qDb() << "CD_REM DUMP:";
-    	auto* rem = cd_get_rem(cd);
-		rem_dump(rem);
+		qDb() << "CD_DUMP: ++++++++++++++++++++++++++++++++++++";
+		cd_dump(cd);
+  //   	qDb() << "CD_REM DUMP:";
+  //   	auto* rem = cd_get_rem(cd);
+		// rem_dump(rem);
+    	qDb() << "CD_DUMP: ++++++++++++++++++++++++++++++++++++";
 
 		//
 		// Get disc-level info from the Cd struct.
