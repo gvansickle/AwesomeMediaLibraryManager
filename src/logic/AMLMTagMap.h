@@ -48,6 +48,7 @@ Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(std::multimap);
 
 /**
  * Multimap of std::string key/std::string value pairs.
+ * @todo Pretty sure this really should be an insertion-ordered multimap.
  */
 class AMLMTagMap final : public virtual ISerializable
 {
@@ -63,6 +64,7 @@ public:
 	using key_type = Key;
 	using mapped_type = std::string;
 	using value_type = std::pair<const Key, T>;
+	using size_type = typename underlying_container_type::size_type;
 	using const_iterator = typename underlying_container_type::const_iterator;
 	using iterator = typename underlying_container_type::iterator;
     ///@}
@@ -134,12 +136,16 @@ public:
 	 */
     iterator insert(const key_type& key, const mapped_type& value) { return m_the_map.insert({key, value}); }
 
+	iterator insert_if_empty(const key_type& key, const mapped_type& value);
+
+	auto erase(auto it) { return m_the_map.erase(it); }
 
 	/// @name Lookup.
 	/// @{
 	iterator find( const Key& x );
 	const_iterator find( const Key& x ) const;
 	bool contains( const Key& key ) const;
+	size_type count(const Key& key) const;
 
 	std::pair<iterator, iterator> equal_range(const Key& key)
 	{
@@ -244,5 +250,28 @@ void AMLMTagMap_convert_and_insert(AMLMTagMap& map, const Stringlike& tagname, c
 		map.insert(tagname, value);
 	}
 }
+
+/**
+ * A work-alike to std::erase_if for AMLMTagMap.
+ */
+template <class Predicate>
+AMLMTagMap::size_type erase_if(AMLMTagMap& c, Predicate pred)
+{
+	auto original_size = c.size();
+	auto it = c.begin();
+	while (it != c.end())
+	{
+		if (pred(*it))
+		{
+			it = c.erase(it);
+		}
+		else
+		{
+			++it;
+		}
+	}
+	return original_size - c.size();
+}
+
 
 #endif /* SRC_LOGIC_AMLMTAGMAP_H_ */
