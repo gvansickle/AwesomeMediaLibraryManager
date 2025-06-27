@@ -100,6 +100,16 @@ std::vector<AMLMTagMap::mapped_type> AMLMTagMap::operator[](const AMLMTagMap::Ke
 	}
 }
 
+AMLMTagMap::iterator AMLMTagMap::insert_if_empty(const key_type& key, const mapped_type& value)
+{
+	if (!m_the_map.contains(key))
+	{
+		return m_the_map.insert(std::make_pair(key, value));
+	}
+
+    return end();
+}
+
 AMLMTagMap::iterator AMLMTagMap::find(const AMLMTagMap::Key& x)
 {
 	return m_the_map.find(x);
@@ -113,6 +123,11 @@ AMLMTagMap::const_iterator AMLMTagMap::find(const AMLMTagMap::Key& x) const
 bool AMLMTagMap::contains(const AMLMTagMap::Key& key) const
 {
 	return (m_the_map.find(key) != cend());
+}
+
+AMLMTagMap::size_type AMLMTagMap::count(const Key& key) const
+{
+	return m_the_map.count(key);
 }
 
 std::vector<AMLMTagMap::mapped_type> AMLMTagMap::equal_range_vector(const AMLMTagMap::Key& key) const
@@ -151,7 +166,17 @@ std::vector<AMLMTagMap::key_type> AMLMTagMap::keys() const
 	return retval;
 }
 
-void AMLMTagMap::merge(AMLMTagMap& source)
+void AMLMTagMap::dump(const std::string& name) const
+{
+	qDb() << "START" << name << "========";
+	for(const auto& it : m_the_map)
+	{
+		qDb() << it.first << "=" << it.second;
+	}
+	qDb() << "END" << name << "========";
+}
+
+void AMLMTagMap::merge(const AMLMTagMap& source)
 {
 // M_TODO("Need to handle dups smarter, e.g. ID3v1 can chop long strings that ID3v2 can handle.");
 	AMLMTagMap::underlying_container_type merged_val;
@@ -220,7 +245,13 @@ void AMLMTagMap::fromVariant(const QVariant& variant)
 	return;
 }
 
-QTH_DEFINE_QDEBUG_OP(AMLMTagMap, << obj.m_the_map );
+bool operator==(const AMLMTagMap& lhs, const AMLMTagMap& rhs)
+{
+	return lhs.m_the_map == rhs.m_the_map;
+}
+
+
+QTH_DEFINE_QDEBUG_OP(AMLMTagMap, << obj.m_the_map);
 
 #define DATASTREAM_FIELDS(X) \
 	X(m_the_map, m_the_map)

@@ -44,20 +44,29 @@ public:
 	/// @name Static Factory Functions
 	/// @{
 
-	/// Static factory function for creating a new empty Metadata object.
+	/**
+	 * Static factory function for creating a new empty Metadata object.
+	 */
 	static Metadata make_metadata();
 
-	/// Static factory function for creating a new Metadata from the given audio file URL.
+	/**
+	 *Static factory function for creating a new Metadata from the given audio file URL.
+	 */
 	static Metadata make_metadata(const QUrl& file_url);
 
-	/// Static factory function for creating a new Metadata from the given QVariant tree.
+	/**
+	 * Static factory function for creating a new Metadata from the given QVariant tree.
+	 */
 	static Metadata make_metadata(const QVariant& variant);
 
 	/// @}
 
 	static std::set<std::string> getNewTags();
 
-
+	/**
+	 * Read the metadata associated with the given audio file URL with TagLib.
+	 * @param url  QUrl to the audio file.
+	 */
 	bool read(const QUrl& url);
 	bool hasBeenRead() const;
 	bool isError() const;
@@ -77,7 +86,7 @@ public:
 	bool hasID3v1() const { return m_has_id3v1; }
 	bool hasID3v2() const { return m_has_id3v2; }
 	bool hasAPE() const { return m_has_ape; }
-	bool hasXiphComment() const { return m_has_ogg_xipfcomment; }
+	bool hasXiphComment() const { return m_has_ogg_xiphcomment; }
 	bool hasRIFFInfo() const { return m_has_riff_info; }
 	bool hasDiscCuesheet() const { return !m_tm_cuesheet_disc.empty(); }
 
@@ -85,7 +94,7 @@ public:
 	AMLMTagMap tagmap_id3v1() const { return m_tm_id3v1; }
 	AMLMTagMap tagmap_id3v2() const { return m_tm_id3v2; }
 	AMLMTagMap tagmap_ape() const { return m_tm_ape; }
-	AMLMTagMap tagmap_xiph() const { return m_tm_xipf; }
+	AMLMTagMap tagmap_xiph() const { return m_tm_xiph; }
 	AMLMTagMap tagmap_RIFFInfo() const { return m_tm_riff_info; }
 	AMLMTagMap tagmap_cuesheet_disc() const;
 	/// @}
@@ -106,6 +115,8 @@ public:
 
 	/// Cue sheet support.
 	bool hasCueSheet() const { return m_has_cuesheet; }
+    bool hasCueSheetEmbedded() const { return m_cuesheet_embedded.origin() == CueSheet::Origin::Embedded; }
+	bool hasCueSheetSidecar() const { return m_cuesheet_sidecar.origin() == CueSheet::Origin::Sidecar; }
 
 	/// @todo bool hasHiddenTrackOneAudio() const { return pImpl->hasHiddenTrackOneAudio(); }
 
@@ -115,7 +126,7 @@ public:
 /// @todo We need a separate AMLMTrack class here.
 
 	/// Return the number of tracks found in this file.
-	int numTracks() const { return m_num_tracks_on_media; }
+	int numTracks() const { return m_cuesheet_num_tracks_on_media; }
 	/// @todo OBSOLETE/BAD INTERFACE.
 	TrackMetadata getThisTracksMetadata() const { return m_tracks.cbegin()->second; }
 
@@ -150,17 +161,32 @@ public:
 /// @todo if(googletest) here
 // private:
 
+	void readEmbeddedCuesheet(std::string cuesheet_str, int64_t length_in_milliseconds);
+	void readSidecarCuesheet(const QUrl& audio_file_qurl, int64_t length_in_milliseconds);
+	void reconcileCueSheets();
 
-	QUrl m_audio_file_url {};
+	/**
+	 * Determine the final metadata from all the sources we've read:
+	 * - CueSheet(s)
+	 * - The various AMLMTagMaps
+	 * - CD-TEXT
+	 * - TOC
+	 * - Accurip sidecar?
+	 * - Log sidecar?
+	 * - Sidecar album art?
+	 */
+	void finalizeMetadata();
+
+	QUrl m_audio_file_url{};
 
 	AudioFileType::Type m_audio_file_type {AudioFileType::UNKNOWN};
 
 	/// @name Disc/full-file audio properties, obtained via TagLib.
 	/// @{
 
-	/// Per TagLib docs, "the most appropriate bit rate for the file in kb/s. For
+	/// Per TagLib docs, \"the most appropriate bit rate for the file in kb/s. For
 	/// constant bitrate formats this is simply the bitrate of the file. For variable
-	/// bitrate formats this is either the average or nominal bitrate.".
+	/// bitrate formats this is either the average or nominal bitrate.\".
 	int64_t m_bitrate_kb_sec {0};
 
 	/// Number of channels of audio.
@@ -174,13 +200,18 @@ public:
 	int64_t m_length_in_milliseconds {0};
 	/// @}
 
+	/// @name Cuesheet data members.
+	/// @{
 	bool m_has_cuesheet {false};
-	CueSheet m_cuesheet;
+	CueSheet m_cuesheet_embedded;
+	CueSheet m_cuesheet_sidecar;
+	CueSheet m_cuesheet_combined;
+	/// @}
 
 	bool m_has_id3v1 {false};
 	bool m_has_id3v2 {false};
 	bool m_has_ape {false};
-	bool m_has_ogg_xipfcomment {false};
+	bool m_has_ogg_xiphcomment {false};
 	bool m_has_riff_info {false};
 
 	/// The TagMap from the generic "fr.tag()->properties()" call.
@@ -188,7 +219,7 @@ public:
 	AMLMTagMap m_tm_id3v1;
 	AMLMTagMap m_tm_id3v2;
 	AMLMTagMap m_tm_ape;
-	AMLMTagMap m_tm_xipf;
+	AMLMTagMap m_tm_xiph;
 	AMLMTagMap m_tm_riff_info;
 	/// Cuesheet-derived CD-level info.
 	AMLMTagMap m_tm_cuesheet_disc {};
@@ -202,8 +233,10 @@ public:
 	/// @name Track info.
 	/// @{
 
-	/// The number of tracks on the audio file this Metadata applies to.
-	int m_num_tracks_on_media {0};
+	/**
+	 * The number of tracks on the audio file this Metadata applies to, as reported by the CueSheet.
+	 */
+	int m_cuesheet_num_tracks_on_media {0};
 
 	/// Collection of track metadata.  May be empty, may contain multiple entries for a single-file multi-song image.
     std::map<int, TrackMetadata> m_tracks {};

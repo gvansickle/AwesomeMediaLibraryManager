@@ -265,7 +265,7 @@ void print_type_in_compilation_error(T&&)
 /**
  * @name Attempts to get the compiler to print a human-readable constexpr value at compile time.
  * @note In the 21st century, this also should be a solved problem.  It isn't.
- * @link https://stackoverflow.com/a/4977816
+ * @sa https://stackoverflow.com/a/4977816
  */
 /// @{
 template<int constant>

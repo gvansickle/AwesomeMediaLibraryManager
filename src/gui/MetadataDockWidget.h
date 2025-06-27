@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -20,11 +20,10 @@
 #ifndef METADATADOCKWIDGET_H
 #define METADATADOCKWIDGET_H
 
+/// @file
+
+// Qt
 #include <QDockWidget>
-
-#include "logic/MetadataAbstractBase.h"
-
-class MDITreeViewBase;
 class QTreeWidget;
 class PixmapLabel;
 class QItemSelection;
@@ -35,6 +34,10 @@ class QTreeView;
 class SelectionFilterProxyModel;
 class ModelChangeWatcher;
 class AMLMTagMap;
+class MDITreeViewBase;
+
+// Ours
+#include "logic/MetadataAbstractBase.h"
 
 class MetadataDockWidget : public QDockWidget
 {

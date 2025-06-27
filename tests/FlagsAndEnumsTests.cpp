@@ -371,7 +371,7 @@ TEST_F(FlagsAndEnumsTests, ExtEnumSanity)
 
 	TCOUT << "TestExtEnum::Enum1: " << test_ext_enum;//).toString();
 
-//	EXPECT_EQ(second.toStdString(), std::string("TestExtEnum::Enum1"));
+	// EXPECT_EQ(second.toStdString(), std::string("TestExtEnum::Enum1"));
 }
 
 /**

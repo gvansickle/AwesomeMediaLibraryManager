@@ -464,7 +464,6 @@ void AbstractTreeModelItem::fromVariant(const QVariant& variant)
     	{
             auto child_item_map = child_item.value<InsertionOrderedMap<QString, QVariant>>();
     		class_attr = child_item_map.get_attr("class");
-            qDb() << "CLASS ATTR:" << class_attr;
     	}
     	else
     	{

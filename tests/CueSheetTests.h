@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -17,42 +17,26 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef AWESOMEMEDIALIBRARYMANAGER_AUDIOFILETYPE_H
-#define AWESOMEMEDIALIBRARYMANAGER_AUDIOFILETYPE_H
+#ifndef CUESHEETTESTS_H
+#define CUESHEETTESTS_H
 
-/**
- * @file AudioFileType.h
- */
-
-// Qt
-#include <QMetaType>
-#include <QObject>
-
-// Ours.
+/// @file
 
 
-/**
- * The AudioFileType class
- * @todo Do we really need this, or would ExtMimeType serve just as well?
- */
-class AudioFileType
+// Google Test
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
+
+class CueSheetTests : public ::testing::Test
 {
-	Q_GADGET
+	public:
 
-public:
-	enum Type
-	{
-		UNKNOWN,
-		FLAC,
-		MP3,
-		OGG_VORBIS,
-		WAV,
-	};
+ 	protected:
 
-    Q_ENUM(Type)
+	// Objects declared here can be used by all tests in this Fixture.
+
 };
 
-Q_DECLARE_METATYPE(AudioFileType);
 
 
-#endif //AWESOMEMEDIALIBRARYMANAGER_AUDIOFILETYPE_H
+#endif //CUESHEETTESTS_H

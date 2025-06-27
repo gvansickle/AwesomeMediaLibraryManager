@@ -17,7 +17,7 @@
 # along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-# @file ./CMakeLists.txt
+# @file CMakeLists.txt
 
 # References:
 # Too many to list.  Some of the critical ones:
@@ -67,6 +67,9 @@ if(FALSE)
 #		set_property(GLOBAL PROPERTY CMAKE_CXX_COMPILER_LAUNCHER "csbuild;--print-current;-c")
 #	endif()
 endif()
+if(FALSE)
+	set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE, "include-what-you-use;-w;-Xiwyu;--verbose=7")
+endif()
 
 # Basic information about project
 # Note that here is where CMake determines compilers and loads any toolchain.cmake file.
@@ -93,7 +96,7 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Min versions of Qt, KF, KF/ECM.
-set(QT_MIN_VERSION "6.8.2")
+set(QT_MIN_VERSION "6.9.0")
 set(KF_MIN_VERSION "6.11.0") ### @win temp: Only have 5.52.0
 set(ECM_MIN_VERSION "6.3.0") #"5.57.0")
 
@@ -101,6 +104,10 @@ set(ECM_MIN_VERSION "6.3.0") #"5.57.0")
 ### IDE helper setup
 ###
 source_group(TREE ${CMAKE_SOURCE_DIR})
+
+###
+### Qt setup.
+### @{
 set(AUTOGEN_SOURCE_GROUP autogen)
 set(AUTOMOC_SOURCE_GROUP automoc)
 set(AUTORCC_SOURCE_GROUP autorcc)
@@ -108,6 +115,9 @@ set(AUTORCC_SOURCE_GROUP autorcc)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
+
+set(CMAKE_AUTOGEN_PARALLEL 8)
+### @}
 
 ###
 ### ECM Setup ====================================================================================================
@@ -217,6 +227,11 @@ if(UNIX)
 ### @note This crashes when linked with non-debug libstdc++.  Can't pass containers between them.
 #ucm_add_flags(CXX -D_GLIBCXX_DEBUG=1)
 endif(UNIX)
+if(FALSE) ##CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+	set(ASAN_FLAGS "-fsanitize=address -fno-omit-frame-pointer")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ASAN_FLAGS}")
+	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ASAN_FLAGS}")
+endif()
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	message(STATUS "C++ Compiler is GCC")
 	ucm_add_flags(-fvar-tracking -fvar-tracking-assignments -gpubnames -ggnu-pubnames)
@@ -242,7 +257,7 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 		INTERFACE
 			-fforce-emit-vtables
 			)
-	ucm_add_flags(-Wthread-safety -fdebug-macro -fdiagnostics-show-template-tree -mno-omit-leaf-frame-pointer -ftime-trace=trace.json)
+	ucm_add_flags(-Wthread-safety -fdebug-macro -fdiagnostics-show-template-tree -mno-omit-leaf-frame-pointer -ftime-trace=build_time_trace.json)
 	#ucm_add_flags(-fdelayed-template-parsing -frelaxed-template-template-args)
 endif()
 if(WIN32)

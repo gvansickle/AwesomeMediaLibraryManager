@@ -1198,7 +1198,7 @@ void MainWindow::connectLibraryViewAndMainWindow(MDILibraryView *lv)
 void MainWindow::connectPlaylistViewAndMainWindow(MDIPlaylistView* plv)
 {
 	qDebug() << "TODO Connecting";
-M_WARNING("TODO: connect");
+// M_WARNING("TODO: connect");
 	qDebug() << "TODO Connected";
 }
 
@@ -2202,7 +2202,7 @@ void MainWindow::updateStyleSelectionUi(const QString& style_name)
 	// Update menu actions checked states.
 	if (m_actgroup_styles)
 	{
-		for (QAction* action : m_actgroup_styles->actions())
+        for (QAction* action : m_actgroup_styles->actions())
 		{
 			qDb() << M_ID_VAL(action->data()) << M_ID_VAL(style_name);
 			action->setChecked(action->data() == style_name);

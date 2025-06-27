@@ -74,13 +74,17 @@ list(APPEND AMLM_HEADER_FILES_TEST
 list(TRANSFORM AMLM_HEADER_FILES_TEST PREPEND "../src/")
 
 list(APPEND AMLM_SOURCE_FILES_TEST
-     ${PROJECT_SOURCE_DIR}/tests/FlagsAndEnumsTests.cpp
+	AlgorithmTests.cpp
+	${PROJECT_SOURCE_DIR}/tests/CueSheetTests.cpp
+	${PROJECT_SOURCE_DIR}/tests/FlagsAndEnumsTests.cpp
 	${PROJECT_SOURCE_DIR}/tests/treetest.cpp
 	${PROJECT_SOURCE_DIR}/tests/SerializationTests.cpp
 )
 list(APPEND AMLM_HEADER_FILES_TEST
-     ${PROJECT_SOURCE_DIR}/tests/TestHelpers.h
-     ${PROJECT_SOURCE_DIR}/tests/FlagsAndEnumsTests.h
+	AlgorithmTests.h
+	${PROJECT_SOURCE_DIR}/tests/CueSheetTests.h
+    ${PROJECT_SOURCE_DIR}/tests/TestHelpers.h
+    ${PROJECT_SOURCE_DIR}/tests/FlagsAndEnumsTests.h
 )
 
 add_executable(${TEST_EXE_TARGET} ${WIN32_OR_MACOS_BUNDLE} EXCLUDE_FROM_ALL)

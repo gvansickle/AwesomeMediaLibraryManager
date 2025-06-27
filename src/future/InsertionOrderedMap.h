@@ -67,7 +67,6 @@ public:
 	using iterator = typename underlying_container_type::iterator;
 	/// @}
 
-	int m_id = 0;
 	std::string m_class;
 
 private:
@@ -333,8 +332,6 @@ static void set_map_class_info(const T* self, MapType* map)
 	// int id = qMetaTypeId<T>();
 	// qDb() << "QMetaType:" << id << QMetaType::fromType<T>().name();
 	// QMetaType id numbers are not consistent from run to run, so we don't persist them.
-	// map->m_id = id;
-	map->m_id = 1;
 	map->m_class = QMetaType::fromType<T>().name();
 }
 

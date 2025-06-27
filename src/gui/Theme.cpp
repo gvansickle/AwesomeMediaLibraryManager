@@ -259,7 +259,7 @@ void Theme::initialize()
 //    LogIconThemeInfo();
 
 
-M_WARNING("TODO");
+// M_WARNING("TODO");
 #if 0
 
     QStringList supplemental_icon_theme_dirs;

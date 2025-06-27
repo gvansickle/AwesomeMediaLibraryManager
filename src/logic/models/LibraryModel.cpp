@@ -43,9 +43,7 @@
 #include "utils/StringHelpers.h"
 #include "utils/DebugHelpers.h"
 #include "logic/Library.h"
-#include "logic/LibraryRescanner.h" ///< For MetadataReturnVal
 #include "logic/ModelUserRoles.h"
-#include <logic/dbmodels/CollectionDatabaseModel.h>
 #include <logic/PerfectDeleter.h>
 
 #include <gui/Theme.h>
@@ -448,6 +446,7 @@ std::shared_ptr<LibraryEntry> LibraryModel::getItem(const QModelIndex& index) co
 		else
 		{
 			qWro() << "NULL internalPointer, returning 'None' item";
+			Q_ASSERT(0);
 			return nullptr;
 		}
 	}

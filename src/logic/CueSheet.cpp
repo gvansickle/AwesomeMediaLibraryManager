@@ -45,6 +45,7 @@ extern "C" {
 // Ours, Qt/KF-related
 #include <utils/TheSimplestThings.h>
 #include <utils/RegisterQtMetatypes.h>
+#include <utils/EnumFlagHelpers.h>
 
 // Ours
 #include "TrackMetadata.h"  ///< Per-track cue sheet info
@@ -55,7 +56,7 @@ extern "C" {
  * Same disc ripped with two different rippers:
  *
  * Bad embedded cue sheet:
- *
+ * @verbatim
  *METADATA block #2
   type: 4 (VORBIS_COMMENT)
   is last: false
@@ -71,10 +72,10 @@ extern "C" {
     comment[6]: DISCNUMBER=1
     comment[7]: TOTALDISCS=1
     comment[8]: TOTALTRACKS=20
- *
+ * @endverbatim
  *
  * Good embedded cue sheet:
- *
+ * @verbatim
  * METADATA block #2
   type: 4 (VORBIS_COMMENT)
   is last: false
@@ -99,7 +100,7 @@ FILE "Squeeze - Greatest Hits.flac" WAVE
     PERFORMER "Squeeze"
     TITLE "Goodbye Girl"
   [...]
- *
+ * @endverbatim
  */
 
 /// Mutex for serializing access to libcue, which is not threadsafe.
@@ -108,16 +109,20 @@ std::mutex CueSheet::m_libcue_mutex;
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering CueSheet";
     qRegisterMetaType<CueSheet>();
-});
+	AMLMRegisterQEnumQStringConverters<CueSheet::Origin>();
+	});
 
 using strviw_type = QLatin1String;
+
+#define M_SERDES_FIELDS_GENERAL(X) \
+	X(XMLTAG_ORIGIN, m_origin)
 
 #define M_DATASTREAM_FIELDS_DISC(X) \
 	X(XMLTAG_DISC_CATALOG_NUM, m_disc_catalog_num) \
 	X(XMLTAG_DISC_ID, m_disc_id) \
 	X(XMLTAG_DISC_DATE, m_disc_date) \
 	/** @todo Need to come up with an insert-as-std:string, this is a integral value. */\
-	X(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA, m_num_tracks_on_media)
+	X(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA, m_disc_num_tracks)
 
 #define M_DATASTREAM_FIELDS_TRACK(X) \
 //	X(XMLTAG_TRACK_META_LENGTH_POST_GAP, m_length_post_gap) \
@@ -126,56 +131,73 @@ using strviw_type = QLatin1String;
 
 #define M_DATASTREAM_FIELDS_SPECIAL_HANDLING(X) \
 	/** @todo See above */\
-	/*X(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA, m_num_tracks_on_media)*/ \
+	/*X(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA, m_disc_num_tracks)*/ \
 	X(XMLTAG_TRACK_METADATA, m_tracks)
 
 /// Strings to use for the tags.
 #define X(field_tag, member_field) static constexpr strviw_type field_tag ( # member_field );
+	M_SERDES_FIELDS_GENERAL(X);
 	M_DATASTREAM_FIELDS_DISC(X);
 	M_DATASTREAM_FIELDS_SPECIAL_HANDLING(X);
 #undef X
-//static const QLatin1String XMLTAG_DISC_NUM_TRACKS_ON_MEDIA("m_num_tracks_on_media");
 
-std::shared_ptr<CueSheet> CueSheet::read_associated_cuesheet(const QUrl &url, uint64_t total_length_in_ms)
+// static
+std::unique_ptr<CueSheet> CueSheet::make_unique_CueSheet(const QUrl& url, uint64_t total_length_in_ms)
 {
-	auto retval = std::make_shared<CueSheet>();
+	static QRegularExpression re("\\.[[:alnum:]]+$");
+
+	auto retval = std::make_unique<CueSheet>();
     retval.reset();
 
-    // Determine if we have a cue sheet embedded in the given file's metadata,
-    // or if we have an associated *.cue file, or neither.
+    // Determine if we have a cue sheet in a sidecar *.cue file.
 
     // Create the *.cue URL.
     QUrl cue_url = url;
     QString cue_url_as_str = cue_url.toString();
     Q_ASSERT(!cue_url_as_str.isEmpty());
-    cue_url_as_str.replace(QRegularExpression("\\.[[:alnum:]]+$"), ".cue");
+    cue_url_as_str.replace(re, ".cue");
     cue_url = cue_url_as_str;
     Q_ASSERT(cue_url.isValid());
 
-    // Try to open it.
     QFile cuefile(cue_url.toLocalFile());
-    bool status = cuefile.open(QIODevice::ReadOnly);
-    if(!status)
+	// Does the file exist?
+	if (!cuefile.exists())
+	{
+		// File doesn't exist.
+		return retval;
+	}
+	// Try to open it.
+	bool status = cuefile.open(QIODevice::ReadOnly);
+    if(!status && cuefile.exists())
     {
-        qDb() << "Couldn't open cue file:" << cue_url;
+        qCr() << "Couldn't open cue file:" << cue_url << cuefile.errorString();
         return retval;
     }
     // Read the whole file.
     QByteArray ba = cuefile.readAll();
     if(ba.isEmpty())
     {
-        qDb() << "Couldn't read cue file:" << cue_url;
+        qCr() << "Couldn't read cue file:" << cue_url;
         return retval;
     }
 
     std::string ba_as_stdstr(ba.cbegin(), ba.cend());
 
-    retval = TEMP_parse_cue_sheet_string(ba_as_stdstr, total_length_in_ms);
+	retval = make_unique_CueSheet(ba_as_stdstr, total_length_in_ms);
+
+    if(!retval)
+    {
+        qCr() << "Parsing sidecar cuesheet failed:" << cue_url;
+    	qCr() << "CUESHEET STRING:" << ba_as_stdstr;
+        return retval;
+    }
+	retval->set_origin(Sidecar);
 
     return retval;
 }
 
-std::shared_ptr<CueSheet> CueSheet::TEMP_parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t total_length_in_ms)
+// static
+std::unique_ptr<CueSheet> CueSheet::make_unique_CueSheet(const std::string& cuesheet_text, uint64_t total_length_in_ms)
 {
     auto retval = std::make_unique<CueSheet>();
 
@@ -184,12 +206,21 @@ std::shared_ptr<CueSheet> CueSheet::TEMP_parse_cue_sheet_string(const std::strin
     if(!parsed_ok)
     {
         // Parsing failed, make sure we return an empty ptr.
-//        return std::make_unique<CueSheet>();
-        /// @todo This seems pretty inefficient.
+        qCr() << "Cuesheet parsing failed";
         retval.reset();
     }
 
     return retval;
+}
+
+CueSheet::Origin CueSheet::origin() const
+{
+	return m_origin;
+}
+
+void CueSheet::set_origin(Origin origin)
+{
+	m_origin = origin;
 }
 
 std::map<int, TrackMetadata> CueSheet::get_track_map() const
@@ -204,9 +235,9 @@ AMLMTagMap CueSheet::asAMLMTagMap_Disc() const
 	// Disc-level fields.
 //#define X(field_tag, member_field) retval.insert(std::make_pair(tostdstr(field_tag), /*QVariant::fromValue*/member_field));
 #define X(field_tag, member_field) AMLMTagMap_convert_and_insert(retval, tostdstr(field_tag), member_field);
-	M_DATASTREAM_FIELDS_DISC(X);
+    M_DATASTREAM_FIELDS_DISC(X)
 #undef X
-//	retval.insert(std::make_pair(tostdstr(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA), std::to_string(m_num_tracks_on_media)));
+//	retval.insert(std::make_pair(tostdstr(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA), std::to_string(m_disc_num_tracks)));
 
 	return retval;
 }
@@ -222,7 +253,12 @@ std::vector<AMLMTagMap> CueSheet::asAMLMTagMap_Tracks() const
 
 uint8_t CueSheet::get_total_num_tracks() const
 {
-	return m_num_tracks_on_media;
+	return m_disc_num_tracks;
+}
+
+std::string CueSheet::get_album_title() const
+{
+	return m_disc_album_title;
 }
 
 QVariant CueSheet::toVariant() const
@@ -233,7 +269,8 @@ QVariant CueSheet::toVariant() const
 
 	// CD-level fields.
 #define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
-	M_DATASTREAM_FIELDS_DISC(X);
+    M_SERDES_FIELDS_GENERAL(X)
+    M_DATASTREAM_FIELDS_DISC(X)
 #undef X
 
 	// Track-level fields
@@ -248,7 +285,7 @@ QVariant CueSheet::toVariant() const
 	}
 
 	// Warn if our num tracks don't match or don't make sense.
-	AMLM_WARNIF(m_tracks.size() != m_num_tracks_on_media && m_tracks.size() != 1);
+	AMLM_WARNIF(m_tracks.size() != m_disc_num_tracks && m_tracks.size() != 1);
 
 	map_insert_or_die(map, XMLTAG_TRACK_METADATA, qvar_track_list);
 
@@ -262,7 +299,8 @@ void CueSheet::fromVariant(const QVariant& variant)
 
 	// CD-level fields.
 #define X(field_tag, member_field) map_read_field_or_warn(map, field_tag, &(member_field));
-	M_DATASTREAM_FIELDS_DISC(X);
+    M_SERDES_FIELDS_GENERAL(X)
+    M_DATASTREAM_FIELDS_DISC(X)
 #undef X
 
 	// Track-level fields
@@ -333,16 +371,26 @@ static std::string LibCueHelper_cd_get_catalog(struct Cd *cd)
 	return retval;
 }
 
-bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t length_in_ms)
+bool CueSheet::parse_cue_sheet_string(const std::string& cuesheet_text, uint64_t length_in_ms)
 {
 	// Mutex FBO libcue.  Libcue isn't thread-safe.
 	std::lock_guard<std::mutex> lock(m_libcue_mutex);
 
 	// libcue (actually flex) can't handle invalid UTF-8.
-    Q_ASSERT_X(isValidUTF8(cuesheet_text.c_str()), __func__, "Invalid UTF-8 cuesheet string.");
+	// if(!QtPrivate::isValidUtf8(cuesheet_text.c_str())) ///< Some invalid
+	QString valid = QString::fromUtf8(cuesheet_text); ///< None invalid
+	// auto toUtf8 = QStringDecoder(QStringDecoder::Utf8);   ///< Some invalid
+    // QString valid = toUtf8(cuesheet_text);
+    if(valid.isNull())
+    {
+        qCr() << "Invalid UTF-8 cuesheet string:";
+        qCr() << cuesheet_text.c_str();
+        // Q_ASSERT(0);
+        return false;
+    }
 
 	// Final adjustment of the string to compensate for some variations seen in the wild.
-	std::string final_cuesheet_string = prep_final_cuesheet_string(cuesheet_text);
+	std::string final_cuesheet_string = preprocess_cuesheet_string(cuesheet_text);
 
 	// Try to parse the cue sheet we found with libcue.
 	Cd* cd = cue_parse_string(final_cuesheet_string.c_str());
@@ -354,15 +402,18 @@ bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t
 
     if(cd == nullptr)
     {
-        qWr() << "Embedded cue sheet parsing failed.";
+        qWr() << "Cue sheet parsing failed.";
         return false;
     }
     else
     {
         // Libcue parsed the cuesheet text, let's extract what we need.
 
-//		qDb() << "CD_DUMP:";
-//		cd_dump(cd);
+		// qDb() << "CD_DUMP: ++++++++++++++++++++++++++++++++++++";
+		// cd_dump(cd);
+  //   	qDb() << "CD_REM DUMP:";
+  //   	auto* rem = cd_get_rem(cd);
+		// rem_dump(rem);
 
 		//
 		// Get disc-level info from the Cd struct.
@@ -370,6 +421,7 @@ bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t
 
 		// Not a lot of interest there, except the Catalog number and the CD-TEXT.
 		m_disc_catalog_num = LibCueHelper_cd_get_catalog(cd);
+    	/// @todo Should save this.
 		enum DiscMode disc_mode = cd_get_mode(cd);
 		qDb() << "Disc Mode:" << toqstr(tostdstr(disc_mode));
 
@@ -390,12 +442,31 @@ bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t
 			auto* disc_id_cstr = cdtext_get(PTI_DISC_ID, cdtext);
 			if(disc_id_cstr == nullptr)
 			{
-				qWr() << "No DiscID";
+				qWr() << "No Cuesheet CD-Text DiscID";
 			}
 			else
 			{
 				m_disc_id = disc_id_cstr;
 				qDb() << "##################### REM DISC_ID:" << m_disc_id;
+			}
+			auto* disc_album_title = cdtext_get(PTI_TITLE, cdtext);
+			if (disc_album_title == nullptr)
+			{
+				qWr() << "No Title";
+			}
+			else
+			{
+				m_disc_album_title = disc_album_title;
+				qDb() << "##################### REM TITLE:" << m_disc_album_title;
+			}
+			auto* disc_album_performer = cdtext_get(PTI_PERFORMER, cdtext);
+			if (disc_album_performer == nullptr)
+			{
+				qWr() << "No PTI_PERFORMER";
+			}
+			else
+			{
+				m_disc_album_performer = disc_album_performer;
 			}
 		}
 
@@ -405,19 +476,19 @@ bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t
 	    m_disc_date = tostdstr(rem_get(REM_DATE, cdrem));
 
 	    // Get the number of tracks on the media.
-        m_num_tracks_on_media = cd_get_ntrack(cd);
-		qDb() << "Num Tracks:" << m_num_tracks_on_media;
+        m_disc_num_tracks = cd_get_ntrack(cd);
+		qDb() << "Num Tracks:" << m_disc_num_tracks;
 
-        if(m_num_tracks_on_media < 2)
+        if(m_disc_num_tracks < 2)
         {
-            qWr() << "Num tracks is less than 2:" << m_num_tracks_on_media;
+            qWr() << "Num tracks is less than 2:" << m_disc_num_tracks;
         }
 
 		//
 		// Per-Track metadata.
         // Iterate over each track and get any info we can.
 		//
-        for(int track_num=1; track_num < m_num_tracks_on_media+1; ++track_num)
+        for(int track_num=1; track_num < m_disc_num_tracks+1; ++track_num)
         {
 			Track* track_ptr = cd_get_track(cd, track_num);
 
@@ -425,7 +496,7 @@ bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t
 
 			// Have the TrackMetadata class assemble itself from the cue sheet track_ptr data.
 			/// @todo Make use of the unique_ptr<> returned here.
-			tm = *TrackMetadata::make_track_metadata(track_ptr, track_num);
+			tm = *TrackMetadata::make_unique_track_metadata(track_ptr, track_num);
 
             if(tm.m_length_frames < 0)
             {
@@ -453,7 +524,7 @@ bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t
 	}
 }
 
-std::string CueSheet::prep_final_cuesheet_string(const std::string& cuesheet_text) const
+std::string CueSheet::preprocess_cuesheet_string(const std::string& cuesheet_text) const
 {
 	std::string retval;
 
@@ -464,9 +535,24 @@ std::string CueSheet::prep_final_cuesheet_string(const std::string& cuesheet_tex
 
 	retval = std::regex_replace(cuesheet_text, s_REM_DISCID, "DISC_ID");
 
+	// Remove any \r's.  libcue can only handle \n newlines.
+    std::erase(retval, '\r');
+
+	// Remove any trailing '\n's to avoid this bug in libcue: https://github.com/lipnitsk/libcue/issues/52
+	if(retval.ends_with('\n'))
+	{
+		retval = retval.substr(0, retval.size() - 1);
+	}
+
 	return retval;
 }
 
+
+bool operator==(const CueSheet& lhs, const CueSheet& rhs)
+{
+	/// @todo Make this a comprehensive comparison, maybe switch to <=> operator.
+	return lhs.m_origin == rhs.m_origin;
+}
 
 QDebug operator<<(QDebug dbg, const CueSheet &cuesheet)
 {

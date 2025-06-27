@@ -26,7 +26,6 @@
 #include <taglib/tstring.h>
 
 
-
 std::string tostdstr(const char* cstr, const std::string& if_null)
 {
 	// Handles the case where cstr == nullptr.
@@ -55,7 +54,7 @@ std::string tostdstr(const QUrl& qurl)
 std::string tostdstr(const TagLib::String& tstr)
 {
 	/* From TagLib: "Returns a deep copy of this String as an std::string.  The returned string
-	 * is encoded in UTF8 if \a unicode is true [...]."
+	 * is encoded in UTF8 if \a unicode is true [otherwise Latin 1]."
 	 */
 	return tstr.to8Bit(true);
 }

@@ -51,8 +51,8 @@ AMLM_QREG_CALLBACK([](){
 
 using strviw_type = QLatin1String;
 
-
-std::unique_ptr<TrackMetadata> TrackMetadata::make_track_metadata(const Track* track_ptr, int track_number)
+// static
+std::unique_ptr<TrackMetadata> TrackMetadata::make_unique_track_metadata(const Track* track_ptr, int track_number)
 {
 	auto retval = std::make_unique<TrackMetadata>();
 
@@ -107,7 +107,7 @@ std::unique_ptr<TrackMetadata> TrackMetadata::make_track_metadata(const Track* t
 	if(track_cdtext != nullptr)
 	{
 		// Get the track's Pack Type Indicator info as an AMLMTagMap.
-		for(int pti = Pti::PTI_TITLE; pti < Pti::PTI_END; pti++)
+        for(int pti = Pti::PTI_TITLE; pti < Pti::PTI_END; pti++)
 		{
 			const char* tcdt_value = cdtext_get((Pti)pti, track_cdtext);
 			if(tcdt_value != nullptr)
@@ -117,7 +117,7 @@ std::unique_ptr<TrackMetadata> TrackMetadata::make_track_metadata(const Track* t
 			}
 		}
 	}
-
+// #error "TODO This is where the track PERFORMERs should be getting into the metadata, but they aren't."
 	// if(tm.m_tm_track_pti.find("TITLE") != tm.m_tm_track_pti.cend())
 	// {
 	// 	qDb() << "TRACK CDTEXT INFO:" << toqstr(tm.m_tm_track_pti.find("TITLE")->second);

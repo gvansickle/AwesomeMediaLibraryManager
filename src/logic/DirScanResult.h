@@ -35,7 +35,7 @@
 #include <QDebug>
 
 // Ours
-#include <utils/RegisterQtMetatypes.h> ///< For at least std::optional<bool>.
+#include <utils/RegisterQtMetatypes.h> //< For at least std::optional<bool>.
 #include <utils/QtHelpers.h>
 #include "ExtUrl.h"
 #include <logic/models/AbstractTreeModelItem.h>

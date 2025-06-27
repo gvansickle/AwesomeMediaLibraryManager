@@ -259,7 +259,6 @@ void XmlSerializer::writeVariantOrderedMapToStream(const QVariant& variant, QXml
 
 	InsertionOrderedMap<QString, QVariant> omap = variant.value<InsertionOrderedMap<QString, QVariant>>();
 
-	xmlstream.writeAttribute("metatype_id", toqstr(std::to_string(omap.m_id)));
 	xmlstream.writeAttribute("class", toqstr(omap.m_class));
 
 	auto attrs = omap.get_attrs();

@@ -32,15 +32,16 @@
 
 // KF
 #include <KConfigGroup>
-#include <QMimeDatabase>
+class QMimeDatabase;
 
 // Ours
-#include <logic/dbmodels/CollectionDatabaseModel.h>
-#include <logic/models/AbstractTreeModel.h>
-#include <logic/models/ScanResultsTreeModel.h>
 #include <logic/PerfectDeleter.h>
+// #include <logic/dbmodels/CollectionDatabaseModel.h>
+class AbstractTreeModel;
+class ScanResultsTreeModel;
 class SupportedMimeTypes;
 class MainWindow;
+
 
 /**
  * qApp-alike macro for getting a pointer to the AMLMApp singleton.

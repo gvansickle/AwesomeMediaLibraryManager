@@ -30,7 +30,6 @@
 #include <memory>
 #include <deque>
 #include <optional>
-#include <utility> // for pair.
 #include <string>
 
 // Qt
@@ -51,7 +50,7 @@ Q_DECLARE_METATYPE(std::uint64_t);
 //Q_DECLARE_METATYPE(std::size_t);
 //Q_DECLARE_METATYPE(std::ssize_t);
 
-// Some of ours.
+// One of ours.
 inline QDebug operator<<(QDebug debug, const std::optional<bool>& optbool)
 {
 	if(optbool.has_value())
@@ -76,7 +75,7 @@ int RegisterQTRegCallback(std::function<void(void)> f);
  * immediately after the QApp has been created.
  *
  * @note Welcome to the "static initialization order fiasco":
- * @link https://isocpp.org/wiki/faq/ctors#static-init-order
+ * https://isocpp.org/wiki/faq/ctors#static-init-order
  *
  * Uses the Construct On First Use Idiom.
  * https://isocpp.org/wiki/faq/ctors#static-init-order-on-first-use
@@ -86,8 +85,8 @@ class QtRegCallbackRegistry
 public:
     QtRegCallbackRegistry() = default;
 
-    int* register_callback(std::function<void(void)> callback);
-	int* register_callback(const char* name, std::function<void(void)> callback);
+    void register_callback(std::function<void(void)> callback);
+	void register_callback(const char* name, std::function<void(void)> callback);
 
 	static void static_append(std::function<void(void)> f);
     void call_registration_callbacks();
@@ -100,65 +99,48 @@ private:
  * The QtRegCallbackRegistry singleton accessor.
  *
  * Uses the "Construct On First Use Idiom" to ensure that the singleton is:
- * a) Created once; after the first call, subsequent calls return the same object instance.
- * b) Created by the first call.
- * @link https://isocpp.org/wiki/faq/ctors#static-init-order-on-first-use
+ * 1. Created once; after the first call, subsequent calls return the same object instance.
+ * 2. Created by the first call.
+ *
+ * @see https://isocpp.org/wiki/faq/ctors#static-init-order-on-first-use
  */
 QtRegCallbackRegistry& reginstance();
 
 /**
  * We're attempting to take advantage of Deferred dynamic initialization here.
- * @link https://en.cppreference.com/w/cpp/language/initialization#Non-local_variables
+ * https://en.cppreference.com/w/cpp/language/initialization#Non-local_variables
  * Wait, no we're not.  God this language.
  */
 #define TOKEN_PASTE_HELPER(x, y) x ## y
 #define TOKEN_PASTE(x, y) TOKEN_PASTE_HELPER(x, y)
 
-template <typename T>
-struct StaticInitBaseBase
-{
-	enum
-	{
-		Defined = 0
-	};
-};
 
-template <typename T>
-struct StaticInitBase : public StaticInitBaseBase<T>
-{
-	int dummy_odr_use()
-	{
-		return rand();
-	}
-};
-
+#if 1
 /**
- * This is me trying to avoid using Q_GLOBAL_STATIC().
- * @link https://doc.qt.io/qt-5/qglobalstatic.html#Q_GLOBAL_STATIC.
+ * With this, we get an un-silenceable "-Wclazy-non-pod-global-static" warning at every point of use.  It works otherwise.
  */
-#define AMLM_QREG_CALLBACK(...) static auto TOKEN_PASTE(dummy, __COUNTER__) = (reginstance().register_callback(__VA_ARGS__), rand())
+// #define AMLM_QREG_CALLBACK(...) static auto TOKEN_PASTE(dummy, __COUNTER__) = (reginstance().register_callback(__VA_ARGS__), rand()) // clazy:exclude=non-pod-global-static
+#define AMLM_QREG_CALLBACK(...) static volatile auto TOKEN_PASTE(dummy, __COUNTER__) = (reginstance().register_callback(__VA_ARGS__), 1) // clazy:exclude=non-pod-global-static
+// #define AMLM_QREG_CALLBACK(...) static auto TOKEN_PASTE(dummy, __COUNTER__) = [](){ reginstance().register_callback(__VA_ARGS__); return 1;}();
+// _Pragma("GCC diagnostic push") \
+// _Pragma("GCC diagnostic ignored \"-Wunknown-pragmas\"") \
+// _Pragma("GCC diagnostic ignored \"-Wunknown-warning-option\"") \
+// _Pragma("GCC diagnostic ignored \"-Wclazy-non-pod-global-static\"") \
+// _Pragma("GCC diagnostic pop")
+#else
+// This doesn't work, unclear why.
+#define AMLM_QREG_CALLBACK(...) \
+    struct TOKEN_PASTE(amlm_internal_pre_main_init, __COUNTER__) { \
+		static bool init() { \
+			reginstance().register_callback(__VA_ARGS__); \
+			return true; \
+		} \
+        static inline bool initialized = init(); \
+    }
 
+// #define AMLM_QREG_CALLBACK(...) AMLM_QREG_CALLBACK_IMPL(__COUNTER__, __VA_ARGS__)
+#endif
 
-//#define AMLM_QREG_CALLBACK(...) AMLM_QREG_CALLBACK2(FIXME, __VA_ARGS__)
-
-
-#define AMLM_QREG_CALLBACK2(classname, ...) \
-	template <>\
-	struct StaticInitBase< classname >  /*classname ## _AMLM_QREG_CALLBACK*/ \
-	{\
-		StaticInitBase< classname > /*classname ## _AMLM_QREG_CALLBACK*/ () \
-        {\
-	this->m_dummy_int = __LINE__;\
-	std::cout << "TEST" << std::endl;\
-	std::cerr << "TEST2" << std::endl;\
-            reginstance().register_callback( # classname, __VA_ARGS__);\
-        }\
-	int m_dummy_int{};	\
-	};\
-	static StaticInitBase< classname > odr_use_THISISTOPREVENTACCIDENTALUSE_ ## classname ;
-
-#define AMLM_QREG_CALLBACK_ODR_USE(classname) \
-	static const auto* unused = std::addressof( odr_use_THISISTOPREVENTACCIDENTALUSE_ ## classname );
 
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_REGISTERQTMETATYPES_H

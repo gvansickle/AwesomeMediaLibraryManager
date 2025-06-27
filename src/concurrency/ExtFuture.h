@@ -1559,9 +1559,9 @@ using ExtFuture = QFuture<T>;
 template <typename T>
 QString state_str(const ExtFuture<T>& future)
 {
-	QString retval {"state("};
+    QString retval{QStringLiteral("state(")};
 
-	if(future.isRunning()) { retval += "RUN|"; }
+    if(future.isRunning()) { retval += "RUN|"; }
 	if(future.isStarted()) { retval += "START|"; }
     if(future.isFinished()) { retval += "FINISHED|"; }
     if(future.isCanceled()) { retval += "CANCELED|"; }

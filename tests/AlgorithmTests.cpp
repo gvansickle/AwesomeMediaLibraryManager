@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -16,43 +16,24 @@
  * You should have received a copy of the GNU General Public License
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
+/// @file
 
-#ifndef AWESOMEMEDIALIBRARYMANAGER_AUDIOFILETYPE_H
-#define AWESOMEMEDIALIBRARYMANAGER_AUDIOFILETYPE_H
+#include "AlgorithmTests.h"
 
-/**
- * @file AudioFileType.h
- */
+#include "DebugHelpers.h"
+#include "MapConverter.h"
 
-// Qt
-#include <QMetaType>
-#include <QObject>
-
-// Ours.
-
-
-/**
- * The AudioFileType class
- * @todo Do we really need this, or would ExtMimeType serve just as well?
- */
-class AudioFileType
+TEST_F(AlgorithmTests, mapdiff1)
 {
-	Q_GADGET
+	std::multimap<int, int> m1 {{1,1},{1,2},{1,3}};
+	std::multimap<int, int> m2 {{1,1},{1,2},{1,3},{1,4}, {1, 5}};
 
-public:
-	enum Type
-	{
-		UNKNOWN,
-		FLAC,
-		MP3,
-		OGG_VORBIS,
-		WAV,
-	};
+	auto diff = mapdiff(m1, m2);
 
-    Q_ENUM(Type)
-};
+	EXPECT_EQ(diff.value().m_in1not2.size(), 0);
+	EXPECT_EQ(diff.value().m_in2not1.size(), 2);
+	EXPECT_EQ(diff.value().m_in2not1[0].second, 4);
+	EXPECT_EQ(diff.value().m_in2not1[1].second, 5);
 
-Q_DECLARE_METATYPE(AudioFileType);
-
-
-#endif //AWESOMEMEDIALIBRARYMANAGER_AUDIOFILETYPE_H
+	qDb() << diff.value();
+}
