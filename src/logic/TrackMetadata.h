@@ -83,10 +83,10 @@ public:
 	/// https://www.gnu.org/software/libcdio/cd-text-format.html
 	/// https://github.com/lipnitsk/libcue/blob/master/libcue.h
 	/// https://en.wikipedia.org/wiki/CD-Text
-	///
+	/// For ISRC format: https://isrc.ifpi.org/en/isrc-standard/structure
 	/// These are the character types, applicable to both Disc and Track sections unless otherwise noted.
 	/// See below for binary types.
-	/// These text pack types contain a NUL-termintated string.
+	/// These text pack types contain a NUL-terminated string.
 	/// PTI_UPC_ISRC (0x8e) for the full disk is "is documented by Sony as: UPC/EAN Code (POS Code) of the album.
 	///   This field typically consists of 13 characters."  Per the Gnu link above, always ASCII.
 	/// For tracks, "ISRC code [which] typically consists of 12 characters" and is always ISO-8859-1 encoded.".
