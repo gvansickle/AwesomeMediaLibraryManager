@@ -77,10 +77,9 @@ AMLM_QREG_CALLBACK([](){
 	qRegisterMetaType<Metadata>();
 });
 
-QTH_DEFINE_DUMMY_QDEBUG_OP(Metadata);
 
 
-static std::map<AudioFileType::Type, std::string> f_filetype_to_string_map =
+static std::map<AudioFileType::Type, std::string> f_filetype_to_string_map
 {
 	{AudioFileType::UNKNOWN, "unknown"},
 	{AudioFileType::FLAC, "FLAC"},
@@ -113,6 +112,7 @@ static const std::map<std::string, std::string> f_name_normalization_map =
 
 /**
  * https://xiph.org/vorbis/doc/v-comment.html
+ * @todo This is album only, not track, except there's a "TRACKNUMBER"?
  */
 static const std::map<std::string, std::vector<std::string>> f_vorbis_comment_normalization_map =
 {
@@ -148,11 +148,13 @@ std::set<std::string> Metadata::getNewTags()
 	return f_newly_discovered_keys;
 }
 
+// static
 Metadata Metadata::make_metadata()
 {
 	return Metadata();
 }
 
+// static
 Metadata Metadata::make_metadata(const QUrl& file_url)
 {
 	Metadata retval;
@@ -160,6 +162,7 @@ Metadata Metadata::make_metadata(const QUrl& file_url)
 	return retval;
 }
 
+// static
 Metadata Metadata::make_metadata(const QVariant& variant)
 {
 	Q_ASSERT(variant.isValid());
@@ -170,8 +173,6 @@ Metadata Metadata::make_metadata(const QVariant& variant)
 	retval.fromVariant(variant);
 	return retval;
 }
-
-
 
 
 bool Metadata::read(const QUrl& url)
@@ -217,10 +218,6 @@ bool Metadata::read(const QUrl& url)
 	// Tags
 	//
 
-	// For reading TagLib's generic tags.
-//	TagLib::Tag* tag = nullptr;
-
-
 	// Downcast the FileRef to whatever type it really is.
 	if (TagLib::MPEG::File* file = dynamic_cast<TagLib::MPEG::File*>(fr.file()))
 	{
@@ -263,6 +260,7 @@ bool Metadata::read(const QUrl& url)
 		//	Returns the Tag for this file. This will be a union of XiphComment, ID3v1 and ID3v2 tags."
 		// But when you use properties() on it, it only returns the basic tags.
         m_tm_generic = file->tag()->properties();
+        qDb() << M_ID_VAL(m_tm_generic);
 
 		m_audio_file_type = AudioFileType::FLAC;
 		m_has_id3v1 = file->hasID3v1Tag();
@@ -281,17 +279,17 @@ bool Metadata::read(const QUrl& url)
 		}
 		if(m_has_ogg_xiphcomment)
 		{
-			// TagLib has some funky kicks going on here:
+            // TagLib has this going on here:
 			// https://taglib.org/api/classTagLib_1_1FLAC_1_1File.html#a31ffa82b2e168f5625311cbfa030f04f
 			// Re ->tag(): "Returns the Tag for this file. This will be a union of XiphComment, ID3v1 and ID3v2 tags."
-			// Not sure that's true, but there's also xiphComment():
+            // That appears to be true, but there's also xiphComment():
 			// "Returns a pointer to the XiphComment for the file.
 			// Note: This may return a valid pointer regardless of whether or not the file on disk has a XiphComment. Use hasXiphComment()
 			// to check if the file on disk actually has a XiphComment."
 			TagLib::Ogg::XiphComment* xiph_comment;
 			xiph_comment = file->xiphComment();
 			m_tm_xiph = xiph_comment->fieldListMap();
-#warning TODO
+#warning TODO The tag set reading and merging should be separated in here, so any fixups can be applied before the final merge.
 			m_tm_xiph.dump("XIPF");
 			// m_tm_generic.merge(m_tm_xipf);
 
@@ -405,6 +403,7 @@ Fraction Metadata::total_length_seconds() const
 	}
 }
 
+#if 1 /// @todo This looks like it should just go away.
 AMLMTagMap Metadata::filled_fields() const
 {
 // M_TODO("OBSOLETE")
@@ -437,7 +436,7 @@ AMLMTagMap Metadata::filled_fields() const
 			//			}
 			retval[key] = out_val;
 		}
-		//        qDebug() << "Returning:" << retval;
+               qDebug() << "Returning:" << retval;
 		return retval;
 	}
 	else
@@ -445,6 +444,7 @@ AMLMTagMap Metadata::filled_fields() const
 		return AMLMTagMap();
 	}
 }
+#endif
 
 AMLMTagMap Metadata::tagmap_cuesheet_track() const
 {
@@ -510,6 +510,8 @@ Metadata Metadata::get_one_track_metadata(int track_index) const
 		retval.m_tm_generic.insert({"ISRC", track_entry.m_isrc});
 	}
 
+	qDb() << "ONE TRACK METADATA:" << retval;
+
 	return retval;
 }
 
@@ -530,6 +532,16 @@ QByteArray Metadata::getCoverArtBytes() const
 	// static function in MetadataTagLib.h/.cpp.
     return getCoverArtBytes();
 }
+
+QDebug operator<<(QDebug dbg, const Metadata& obj)
+{
+	QDebugStateSaver saver(dbg);
+	dbg << "Metadata ("
+		 << obj.m_tracks.at(1)
+		 << ")";
+	return dbg;
+};
+
 
 std::string Metadata::operator[](const std::string& key) const
 {
@@ -584,7 +596,7 @@ using strviw_type = QLatin1String;
 	X(XMLTAG_HAS_OGG_XIPHCOMMENT, m_has_ogg_xiphcomment) \
 	X(XMLTAG_HAS_RIFF_INFO, m_has_riff_info) \
 	X(XMLTAG_AUDIO_FILE_URL, m_audio_file_url) \
-	X(XMLTAG_NUM_TRACKS_ON_MEDIA, m_num_tracks_on_media)
+	X(XMLTAG_NUM_TRACKS_ON_MEDIA, m_cuesheet_num_tracks_on_media)
 
 #define M_DATASTREAM_FIELDS_MAPS(X) \
 	/** AMLMTagMaps */ \
@@ -620,7 +632,7 @@ QVariant Metadata::toVariant() const
 	// M_DATASTREAM_FIELDS_LISTS(X)
 
 	// Track-level fields.
-/// @todo This info gets duplicated (complete with should-be-unique xml:id's)	in the CueSheet.
+/// @todo This info gets duplicated (complete with should-be-unique xml:id's) in the CueSheet.
 	// Add the track list to the return map.
 	QVariantHomogenousList qvar_track_map("m_track", "track");
 
@@ -733,6 +745,7 @@ void Metadata::reconcileCueSheets()
 		{
 			// @todo We have two different cuesheets.  Figure out the one to use....
 			Q_UNIMPLEMENTED();
+            Q_ASSERT(0);
 			return;
 		}
 		else
@@ -760,14 +773,14 @@ void Metadata::reconcileCueSheets()
 		return;
 	}
 
-	const CueSheet& cuesheet = *cuesheet_ptr;
+	const CueSheet& cuesheet = m_cuesheet_combined;
 
 	if (cuesheet.origin())
 	{
 		// Get the disc-level cuesheet info as an AMLMTagMap.
 		m_tm_cuesheet_disc = cuesheet.asAMLMTagMap_Disc();
 
-		m_num_tracks_on_media = cuesheet.get_total_num_tracks();
+		m_cuesheet_num_tracks_on_media = cuesheet.get_total_num_tracks();
 
 		// Copy the cuesheet track info.
 		m_tracks = cuesheet.get_track_map();
@@ -778,9 +791,9 @@ void Metadata::reconcileCueSheets()
 		// Ok, now do a second pass over the tracks and determine if there are any gapless sets.
 		// M_TODO("WAS THIS ALREADY DONE ABOVE?")
 		// qDebug() << "Scanning for gaplessness...";
-		for(int track_num=1; track_num < m_num_tracks_on_media; ++track_num)
+		for(int track_num=1; track_num < m_cuesheet_num_tracks_on_media; ++track_num)
 		{
-			//            qDb() << "TRACK:" << track_num << m_tracks[track_num];
+			qDb() << "TRACK:" << track_num << m_tracks[track_num];
 
 			auto next_tracknum = track_num+1;
 			TrackMetadata tm1 = m_tracks[track_num];
@@ -860,7 +873,40 @@ REM 4: (null)
 
 	if (m_has_cuesheet)
 	{
-		qDb() << m_cuesheet_combined;
+		// If we have a valid cue sheet, it should have > 0 tracks.
+		/// @todo Handle this error better than an assert.
+		Q_ASSERT(m_cuesheet_num_tracks_on_media > 0);
+
+		if (m_cuesheet_num_tracks_on_media > 1)
+		{
+			// This is a multi-track file per the cuesheet.
+            // Check if there's an error with the *.flac's embedded Xiph/Vorbis comments
+			// where the CD-level fields got a track's fields mixed into it.
+			// This error would have happened at the ripping stage.
+			auto tn = m_tm_generic.equal_range_vector("TRACKNUMBER");
+            if (!tn.empty())
+			{
+#warning "TODO: This file should be marked as having a bad Xipf/ID3v1/whatever comment"
+            	m_tm_generic.insert_if_empty("BAD_XIPH_COMMENT", "true");
+                // No TRACKNUMBERs should be in here.
+                m_tm_generic.erase("TRACKNUMBER");
+            	m_tm_xiph.erase("TRACKNUMBER");
+
+            	// Now we have to potentially clean up the TITLEs.
+            	auto num_TITLES = m_tm_generic.count("TITLE");
+            	if (num_TITLES > 0)
+            	{
+					m_tm_generic.erase("TITLE");
+            		m_tm_xiph.erase("TITLE");
+                    // m_tm_generic.insert("TITLE", m_cuesheet_combined.get_album_title());
+                    // Add ALBUM tag if necessary.
+                    m_tm_generic.insert_if_empty("ALBUM", m_cuesheet_combined.get_album_title());
+                   	m_tm_xiph.insert_if_empty("ALBUM", m_cuesheet_combined.get_album_title());
+            	}
+
+            	/// @todo Anything else?
+			}
+		}
 	}
 }
 
