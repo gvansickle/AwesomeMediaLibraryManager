@@ -334,7 +334,7 @@ M_WARNING("BUG: THIS IS COMING BACK WITH ONE ENTRY");
     if(cuesheet)
     {
         m_has_cuesheet = true;
-        m_num_tracks_on_media = cuesheet->get_total_num_tracks();
+        m_cuesheet_num_tracks_on_media = cuesheet->get_total_num_tracks();
 
         /// @todo MAYBE TEMP?
 //        qDb() << "CUESHEET:" << *cuesheet;
@@ -346,7 +346,7 @@ qDb() << "####### NUM TRACKS:" << m_tracks.size();
 
 		// Ok, now do a second pass over the tracks and determine if there are any gapless sets.
 		qDebug() << "Scanning for gaplessness...";
-		for(int track_num=1; track_num < m_num_tracks_on_media; ++track_num)
+		for(int track_num=1; track_num < m_cuesheet_num_tracks_on_media; ++track_num)
 		{
 //            qDb() << "TRACK:" << track_num << m_tracks[track_num];
 
