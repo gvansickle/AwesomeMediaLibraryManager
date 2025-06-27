@@ -29,10 +29,10 @@
 #include <QObject>
 
 // Ours.
-//#include <utils/RegisterQtMetatypes.h>
+
 
 /**
- * @brief The AudioFileType class
+ * The AudioFileType class
  * @todo Do we really need this, or would ExtMimeType serve just as well?
  */
 class AudioFileType
@@ -49,7 +49,7 @@ public:
 		WAV,
 	};
 
-	Q_ENUM(Type);
+    Q_ENUM(Type)
 };
 
 Q_DECLARE_METATYPE(AudioFileType);
