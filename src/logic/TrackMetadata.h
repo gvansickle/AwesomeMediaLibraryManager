@@ -55,7 +55,7 @@ public:
 
 	std::string toStdString() const;
 
-	static std::unique_ptr<TrackMetadata> make_track_metadata(const Track* track_ptr, int track_number);
+	[[nodiscard]] static std::unique_ptr<TrackMetadata> make_unique_track_metadata(const Track* track_ptr, int track_number);
 
 	/// @name Serialization
 	/// @{
