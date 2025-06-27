@@ -44,13 +44,19 @@ public:
 	/// @name Static Factory Functions
 	/// @{
 
-	/// Static factory function for creating a new empty Metadata object.
+	/**
+	 * Static factory function for creating a new empty Metadata object.
+	 */
 	static Metadata make_metadata();
 
-	/// Static factory function for creating a new Metadata from the given audio file URL.
+	/**
+	 *Static factory function for creating a new Metadata from the given audio file URL.
+	 */
 	static Metadata make_metadata(const QUrl& file_url);
 
-	/// Static factory function for creating a new Metadata from the given QVariant tree.
+	/**
+	 * Static factory function for creating a new Metadata from the given QVariant tree.
+	 */
 	static Metadata make_metadata(const QVariant& variant);
 
 	/// @}
@@ -120,7 +126,7 @@ public:
 /// @todo We need a separate AMLMTrack class here.
 
 	/// Return the number of tracks found in this file.
-	int numTracks() const { return m_num_tracks_on_media; }
+	int numTracks() const { return m_cuesheet_num_tracks_on_media; }
 	/// @todo OBSOLETE/BAD INTERFACE.
 	TrackMetadata getThisTracksMetadata() const { return m_tracks.cbegin()->second; }
 
@@ -164,6 +170,10 @@ public:
 	 * - CueSheet(s)
 	 * - The various AMLMTagMaps
 	 * - CD-TEXT
+	 * - TOC
+	 * - Accurip sidecar?
+	 * - Log sidecar?
+	 * - Sidecar album art?
 	 */
 	void finalizeMetadata();
 
@@ -223,8 +233,10 @@ public:
 	/// @name Track info.
 	/// @{
 
-	/// The number of tracks on the audio file this Metadata applies to.
-	int m_num_tracks_on_media {0};
+	/**
+	 * The number of tracks on the audio file this Metadata applies to, as reported by the CueSheet.
+	 */
+	int m_cuesheet_num_tracks_on_media {0};
 
 	/// Collection of track metadata.  May be empty, may contain multiple entries for a single-file multi-song image.
     std::map<int, TrackMetadata> m_tracks {};
