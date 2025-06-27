@@ -156,7 +156,7 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 		// Get a copy of the metadata.
 		Metadata md = libentry->metadata();
 // M_TODO("Not getting some field here");
-		qDb() << "METADATA:" << md.toVariant();
+//		qDb() << "METADATA:" << md.toVariant();
 
 		AMLMTagMap pimeta = libentry->getAllMetadata(); // QMap<QString, QVariant>
 		///qDebug() << "PLAYLIST ITEM METADATA: " << pimeta;

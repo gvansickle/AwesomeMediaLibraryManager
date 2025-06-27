@@ -258,4 +258,4 @@ QDataStream &operator>>(QDataStream &in, CueSheet &myObj);
 Q_DECLARE_METATYPE(CueSheet);
 
 
-#endif /* SRC_LOGIC_CUESHEET_H_ */
+#endif /* SRC_LOGIC_CUESHEET_H */

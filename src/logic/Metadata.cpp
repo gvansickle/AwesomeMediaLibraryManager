@@ -260,7 +260,7 @@ bool Metadata::read(const QUrl& url)
 		//	Returns the Tag for this file. This will be a union of XiphComment, ID3v1 and ID3v2 tags."
 		// But when you use properties() on it, it only returns the basic tags.
         m_tm_generic = file->tag()->properties();
-        qDb() << M_ID_VAL(m_tm_generic);
+        // qDb() << M_ID_VAL(m_tm_generic);
 
 		m_audio_file_type = AudioFileType::FLAC;
 		m_has_id3v1 = file->hasID3v1Tag();
@@ -289,8 +289,8 @@ bool Metadata::read(const QUrl& url)
 			TagLib::Ogg::XiphComment* xiph_comment;
 			xiph_comment = file->xiphComment();
 			m_tm_xiph = xiph_comment->fieldListMap();
-#warning TODO The tag set reading and merging should be separated in here, so any fixups can be applied before the final merge.
-			m_tm_xiph.dump("XIPF");
+/// @TODO The tag set reading and merging should be separated in here, so any fixups can be applied before the final merge.
+			// m_tm_xiph.dump("XIPF");
 			// m_tm_generic.merge(m_tm_xipf);
 
 			auto field_count = xiph_comment->fieldCount();
@@ -436,7 +436,7 @@ AMLMTagMap Metadata::filled_fields() const
 			//			}
 			retval[key] = out_val;
 		}
-               qDebug() << "Returning:" << retval;
+               // qDebug() << "Returning:" << retval;
 		return retval;
 	}
 	else
@@ -510,7 +510,7 @@ Metadata Metadata::get_one_track_metadata(int track_index) const
 		retval.m_tm_generic.insert({"ISRC", track_entry.m_isrc});
 	}
 
-	qDb() << "ONE TRACK METADATA:" << retval;
+	// qDb() << "ONE TRACK METADATA:" << retval;
 
 	return retval;
 }
