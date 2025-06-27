@@ -122,7 +122,7 @@ using strviw_type = QLatin1String;
 	X(XMLTAG_DISC_ID, m_disc_id) \
 	X(XMLTAG_DISC_DATE, m_disc_date) \
 	/** @todo Need to come up with an insert-as-std:string, this is a integral value. */\
-	X(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA, m_num_tracks_on_media)
+	X(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA, m_disc_num_tracks)
 
 #define M_DATASTREAM_FIELDS_TRACK(X) \
 //	X(XMLTAG_TRACK_META_LENGTH_POST_GAP, m_length_post_gap) \
@@ -131,7 +131,7 @@ using strviw_type = QLatin1String;
 
 #define M_DATASTREAM_FIELDS_SPECIAL_HANDLING(X) \
 	/** @todo See above */\
-	/*X(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA, m_num_tracks_on_media)*/ \
+	/*X(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA, m_disc_num_tracks)*/ \
 	X(XMLTAG_TRACK_METADATA, m_tracks)
 
 /// Strings to use for the tags.
@@ -237,7 +237,7 @@ AMLMTagMap CueSheet::asAMLMTagMap_Disc() const
 #define X(field_tag, member_field) AMLMTagMap_convert_and_insert(retval, tostdstr(field_tag), member_field);
     M_DATASTREAM_FIELDS_DISC(X)
 #undef X
-//	retval.insert(std::make_pair(tostdstr(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA), std::to_string(m_num_tracks_on_media)));
+//	retval.insert(std::make_pair(tostdstr(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA), std::to_string(m_disc_num_tracks)));
 
 	return retval;
 }
@@ -253,7 +253,12 @@ std::vector<AMLMTagMap> CueSheet::asAMLMTagMap_Tracks() const
 
 uint8_t CueSheet::get_total_num_tracks() const
 {
-	return m_num_tracks_on_media;
+	return m_disc_num_tracks;
+}
+
+std::string CueSheet::get_album_title() const
+{
+	return m_disc_album_title;
 }
 
 QVariant CueSheet::toVariant() const
@@ -280,7 +285,7 @@ QVariant CueSheet::toVariant() const
 	}
 
 	// Warn if our num tracks don't match or don't make sense.
-	AMLM_WARNIF(m_tracks.size() != m_num_tracks_on_media && m_tracks.size() != 1);
+	AMLM_WARNIF(m_tracks.size() != m_disc_num_tracks && m_tracks.size() != 1);
 
 	map_insert_or_die(map, XMLTAG_TRACK_METADATA, qvar_track_list);
 
@@ -366,15 +371,15 @@ static std::string LibCueHelper_cd_get_catalog(struct Cd *cd)
 	return retval;
 }
 
-bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t length_in_ms)
+bool CueSheet::parse_cue_sheet_string(const std::string& cuesheet_text, uint64_t length_in_ms)
 {
 	// Mutex FBO libcue.  Libcue isn't thread-safe.
 	std::lock_guard<std::mutex> lock(m_libcue_mutex);
 
 	// libcue (actually flex) can't handle invalid UTF-8.
-    // if(!QtPrivate::isValidUtf8(cuesheet_text.c_str())) ///< Some invalid
-    QString valid = QString::fromUtf8(cuesheet_text);     ///< None invalid
-    // auto toUtf8 = QStringDecoder(QStringDecoder::Utf8);   ///< Some invalid
+	// if(!QtPrivate::isValidUtf8(cuesheet_text.c_str())) ///< Some invalid
+	QString valid = QString::fromUtf8(cuesheet_text); ///< None invalid
+	// auto toUtf8 = QStringDecoder(QStringDecoder::Utf8);   ///< Some invalid
     // QString valid = toUtf8(cuesheet_text);
     if(valid.isNull())
     {
@@ -409,7 +414,11 @@ bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t
   //   	qDb() << "CD_REM DUMP:";
   //   	auto* rem = cd_get_rem(cd);
 		// rem_dump(rem);
-    	qDb() << "CD_DUMP: ++++++++++++++++++++++++++++++++++++";
+    	qDb() << "CD_DUMP: ------------------------------------";
+    	qDb() << "CD_REM_DUMP: ++++++++++++++++++++++++++++++++";
+    	auto* rem = cd_get_rem(cd);
+    	rem_dump(rem);
+		qDb() << "CD_REM_DUMP: --------------------------------";
 
 		//
 		// Get disc-level info from the Cd struct.
@@ -417,6 +426,7 @@ bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t
 
 		// Not a lot of interest there, except the Catalog number and the CD-TEXT.
 		m_disc_catalog_num = LibCueHelper_cd_get_catalog(cd);
+    	/// @todo Should save this.
 		enum DiscMode disc_mode = cd_get_mode(cd);
 		qDb() << "Disc Mode:" << toqstr(tostdstr(disc_mode));
 
@@ -437,12 +447,31 @@ bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t
 			auto* disc_id_cstr = cdtext_get(PTI_DISC_ID, cdtext);
 			if(disc_id_cstr == nullptr)
 			{
-				qWr() << "No DiscID";
+				qWr() << "No Cuesheet CD-Text DiscID";
 			}
 			else
 			{
 				m_disc_id = disc_id_cstr;
 				qDb() << "##################### REM DISC_ID:" << m_disc_id;
+			}
+			auto* disc_album_title = cdtext_get(PTI_TITLE, cdtext);
+			if (disc_album_title == nullptr)
+			{
+				qWr() << "No Title";
+			}
+			else
+			{
+				m_disc_album_title = disc_album_title;
+				qDb() << "##################### REM TITLE:" << m_disc_album_title;
+			}
+			auto* disc_album_performer = cdtext_get(PTI_PERFORMER, cdtext);
+			if (disc_album_performer == nullptr)
+			{
+				qWr() << "No PTI_PERFORMER";
+			}
+			else
+			{
+				m_disc_album_performer = disc_album_performer;
 			}
 		}
 
@@ -452,19 +481,19 @@ bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t
 	    m_disc_date = tostdstr(rem_get(REM_DATE, cdrem));
 
 	    // Get the number of tracks on the media.
-        m_num_tracks_on_media = cd_get_ntrack(cd);
-		qDb() << "Num Tracks:" << m_num_tracks_on_media;
+        m_disc_num_tracks = cd_get_ntrack(cd);
+		qDb() << "Num Tracks:" << m_disc_num_tracks;
 
-        if(m_num_tracks_on_media < 2)
+        if(m_disc_num_tracks < 2)
         {
-            qWr() << "Num tracks is less than 2:" << m_num_tracks_on_media;
+            qWr() << "Num tracks is less than 2:" << m_disc_num_tracks;
         }
 
 		//
 		// Per-Track metadata.
         // Iterate over each track and get any info we can.
 		//
-        for(int track_num=1; track_num < m_num_tracks_on_media+1; ++track_num)
+        for(int track_num=1; track_num < m_disc_num_tracks+1; ++track_num)
         {
 			Track* track_ptr = cd_get_track(cd, track_num);
 
@@ -472,7 +501,7 @@ bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t
 
 			// Have the TrackMetadata class assemble itself from the cue sheet track_ptr data.
 			/// @todo Make use of the unique_ptr<> returned here.
-			tm = *TrackMetadata::make_track_metadata(track_ptr, track_num);
+			tm = *TrackMetadata::make_unique_track_metadata(track_ptr, track_num);
 
             if(tm.m_length_frames < 0)
             {

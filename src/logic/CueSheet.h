@@ -66,10 +66,12 @@ class QUrl;
  * - Gap info (how much silence to insert before or after each track)
  * - Comments (which are used by some programs to store nonstandard metadata like genre, freeDB disc ID, etc.)\"
  *
+ * @sa https://wiki.hydrogenaudio.org/index.php?title=Cue_sheet
  * @sa https://en.wikipedia.org/wiki/Cue_sheet_(computing)
  * @sa https://github.com/flacon/flacon/blob/master/doc/cuesheet_syntax.md
  * @sa https://www.gnu.org/software/libcdio/cd-text-format.html
  * @sa https://xiph.org/vorbis/doc/Vorbis_I_spec.html#x1-860005.2.2
+ * @sa https://isrc.ifpi.org/en/isrc-standard/structure
  *
  */
 class CueSheet : public virtual ISerializable
@@ -86,6 +88,8 @@ public:
 	};
 
 	Q_ENUM(Origin)
+
+
 
 public:
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(CueSheet)
@@ -136,7 +140,9 @@ public:
     /// @{
 
     /// Return the total number of tracks reported by this cuesheet.
-    uint8_t get_total_num_tracks() const;
+    std::uint8_t get_total_num_tracks() const;
+
+	std::string get_album_title() const;
 
     /// @}
 
@@ -188,6 +194,8 @@ private:
 	/// CD-TEXT Pack type 0x86, "Disc Identification".  Disc, not Track.
 	/// https://www.gnu.org/software/libcdio/cd-text-format.html#Misc-Pack-Types
 	///
+	/// Source is libcue.
+	///
 	/// \"here is how Sony describes this:
 	///	  Catalog Number: (use ASCII Code) Catalog Number of the album
 	/// So it is not really binary but might be non-printable, and should contain only bytes with bit 7 set to zero.\"
@@ -196,6 +204,18 @@ private:
 	/// Also, this shows up in cue sheets as "REM DISCID nnnnnnnn", note the lack of a "_".  Surveys of
 	/// my collection show the value to always be a 32-bit hex string.
 	std::string m_disc_id {};
+
+	/**
+	 * The album title.
+	 * Source is libcue/cd-text/PTI_TITLE.
+	 */
+	std::string m_disc_album_title {};
+
+	/**
+	 * The album's performer.
+	 * @todo What if more than 1?
+	 */
+	std::string m_disc_album_performer {};
 
 	/// @todo: REM DISCNUMBER, TOTALDISCS, DATE
 	///
@@ -211,7 +231,7 @@ private:
      * @see https://xiph.org/flac/format.html#metadata_block_cuesheet
      * ""
      */
-	std::int32_t m_num_tracks_on_media {0};
+	std::int32_t m_disc_num_tracks {0};
 
     /**
      * Cue sheet-derived information on each track.
