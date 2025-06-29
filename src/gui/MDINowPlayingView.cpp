@@ -65,6 +65,7 @@ QString MDINowPlayingView::getDisplayName() const
 	return tr("Now Playing");
 }
 
+#if 0
 void MDINowPlayingView::onNumRowsChanged()
 {
 	// Resize and re-iota-ize the shuffle map.
@@ -104,7 +105,9 @@ void MDINowPlayingView::onNumRowsChanged()
 		});
 	}
 }
+#endif
 
+#if 0
 void MDINowPlayingView::next()
 {
 	QModelIndex current_index = currentIndex();
@@ -175,10 +178,11 @@ void MDINowPlayingView::shuffle(bool shuffle)
 	onNumRowsChanged();
 }
 
-void MDINowPlayingView::loopAtEnd(bool loop_at_end)
-{
-	m_loop_at_end = loop_at_end;
-}
+// void MDINowPlayingView::loopAtEnd(bool loop_at_end)
+// {
+// 	m_loop_at_end = loop_at_end;
+// }
+#endif
 
 void MDINowPlayingView::jump(const QModelIndex& index)
 {

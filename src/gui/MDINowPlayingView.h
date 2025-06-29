@@ -58,7 +58,7 @@ public Q_SLOTS:
 
 	/// @name Slots for player-connected messages.
 	/// @{
-
+#if 0
 	/**
 	 * Start next song.
 	 * Makes the next item in the model the current item in the view.
@@ -74,7 +74,8 @@ public Q_SLOTS:
 	 */
 	void shuffle(bool shuffle = false);
 
-	void loopAtEnd(bool loop_at_end = false);
+	// void loopAtEnd(bool loop_at_end = false);
+#endif
 
 	void jump(const QModelIndex& index);
 
@@ -115,6 +116,8 @@ private:
 
 	void setCurrentIndexAndRow(const QModelIndex& new_index, const QModelIndex& old_index);
 
+#if 0
+
 	/**
 	* The map of proxy indices <-> source model indices.
 	*/
@@ -128,6 +131,7 @@ private:
 
 	/// Current loop mode
 	bool m_loop_at_end {false};
+#endif
 
     BoldRowDelegate* m_brdelegate;
 

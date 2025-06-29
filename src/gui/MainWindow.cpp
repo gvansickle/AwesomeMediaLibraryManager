@@ -95,6 +95,7 @@
 
 #include <logic/models/LibraryModel.h>
 #include <logic/models/PlaylistModel.h>
+#include <proxymodels/ShuffleProxyModel.h>
 
 #include "gui/MDIArea.h"
 #include "MetadataDockWidget.h"
@@ -1164,23 +1165,31 @@ void MainWindow::connectPlayerAndControls(MP2 *player, PlayerControls *controls)
 	controls->setMuted(player->muted());
 }
 
+/// @todo RENAME
 void MainWindow::connectPlayerAndNowPlayingView(MP2 *player, MDINowPlayingView *now_playing_view)
 {
 	// Connection for the player to tell the playlist to go to the next item when the current one is over.
 	// This in turn will cause a MDINowPlayingView::nowPlayingIndexChanged() to be emitted, which the player
 	// receives and sets up the now-current track.
-	connect_or_die(player, &MP2::playlistToNext, now_playing_view, &MDINowPlayingView::next);
-	connect_or_die(now_playing_view, &MDINowPlayingView::nowPlayingIndexChanged, player, &MP2::onPlaylistPositionChanged);
+	// connect_or_die(player, &MP2::playlistToNext, now_playing_view, &MDINowPlayingView::next);
+	// connect_or_die(now_playing_view, &MDINowPlayingView::nowPlayingIndexChanged, player,
+	// 				&MP2::onPlaylistPositionChanged);
+	connect_or_die(player, &MP2::playlistToNext, m_now_playing_shuffle_proxy_model, &ShuffleProxyModel::next);
+	connect_or_die(m_now_playing_shuffle_proxy_model, &ShuffleProxyModel::nowPlayingIndexChanged, player, &MP2::onPlaylistPositionChanged);
 }
 
-void MainWindow::connectPlayerControlsAndNowPlayingView(PlayerControls *controls, MDINowPlayingView* now_playing_view)
+/// @todo RENAME
+void MainWindow::connectPlayerControlsAndNowPlayingView(PlayerControls* controls, MDINowPlayingView* now_playing_view)
 {
 	/// @note Qt::ConnectionType() cast here is due to the mixed flag/enum nature of the type.  Qt::UniqueConnection (0x80) can be bitwise-
 	/// OR-ed in with any other connection type, which are 0,1,2,3.
-    connect_or_die(controls, &PlayerControls::next, now_playing_view, &MDINowPlayingView::next, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
-    connect_or_die(controls, &PlayerControls::previous, now_playing_view, &MDINowPlayingView::previous, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
-	connect_or_die(controls, &PlayerControls::changeShuffle, now_playing_view, &MDINowPlayingView::shuffle);
-	connect_or_die(controls, &PlayerControls::changeRepeat, now_playing_view, &MDINowPlayingView::loopAtEnd);
+    connect_or_die(controls, &PlayerControls::next, m_now_playing_shuffle_proxy_model, &ShuffleProxyModel::next, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
+    connect_or_die(controls, &PlayerControls::previous, m_now_playing_shuffle_proxy_model, &ShuffleProxyModel::previous, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
+	/// @todo Delete &MDINowPlayingView::shuffle
+	// connect_or_die(controls, &PlayerControls::changeShuffle, now_playing_view, &MDINowPlayingView::shuffle);
+	// connect_or_die(controls, &PlayerControls::changeRepeat, now_playing_view, &MDINowPlayingView::loopAtEnd);
+	connect_or_die(controls, &PlayerControls::changeShuffle, m_now_playing_shuffle_proxy_model, &ShuffleProxyModel::shuffle);
+	connect_or_die(controls, &PlayerControls::changeRepeat, m_now_playing_shuffle_proxy_model, &ShuffleProxyModel::loopAtEnd);
 
 	// Connect play() signal-to-signal.
     connect_or_die(now_playing_view, &MDINowPlayingView::play, controls, &PlayerControls::play, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
@@ -1821,7 +1830,10 @@ void MainWindow::newNowPlaying()
 	// Set this view's model to be the single "Now Playing" model.
 	m_now_playing_playlist_model = child->underlyingModel();
 
-    /// @todo Do we really need to keep this as a member pointer?
+	m_now_playing_shuffle_proxy_model = new ShuffleProxyModel(this);
+	m_now_playing_shuffle_proxy_model->setSourceModel(m_now_playing_playlist_model);
+
+	/// @todo Do we really need to keep this as a member pointer?
     m_now_playing_playlist_view = child;
 
 	/// @todo Maybe refactor the "newFile()" setup to look more like the static openXxx() functions,
