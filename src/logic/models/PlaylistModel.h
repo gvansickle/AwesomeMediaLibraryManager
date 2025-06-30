@@ -56,7 +56,7 @@ class PlaylistModel : public LibraryModel
 
 public:
 	explicit PlaylistModel(QObject* parent);
-	~PlaylistModel() = default;
+    ~PlaylistModel() override = default;
 	M_GH_POLYMORPHIC_SUPPRESS_COPYING_C67(PlaylistModel)
 
 	Qt::ItemFlags flags(const QModelIndex &index) const override;
