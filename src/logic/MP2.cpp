@@ -315,7 +315,7 @@ void MP2::onPlaylistPositionChanged(const QModelIndex& current, const QModelInde
 {
 	// We get in here when the Now Playing view sends the MDINowPlayingView::nowPlayingIndexChanged signal.
 	// That signal can come from:
-	// - User input on the playlist view.
+	// - User input on the playlist view (next()/previous()).
 	// - The MP2::playlistToNext signal emitted by us (in two different places).
 
 	m_onPositionChanged_sending_playlistToNext = false;
