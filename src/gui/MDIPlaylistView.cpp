@@ -525,7 +525,7 @@ void MDIPlaylistView::onSendToNowPlaying(LibraryEntryMimeData* mime_data)
 		// Activate the index to start playing it.
 		auto proxy_index = model()->index(last_row, 0, QModelIndex());
         /// @todo This is a slot, not a signal.
-		Q_EMIT onActivated(proxy_index);
+		/*Q_EMIT*/ onActivated(proxy_index);
 	}
 
 	// Manually delete the MimeData object, since it didn't go through the normal copy/paste or drag/drop channels.
@@ -538,10 +538,12 @@ void MDIPlaylistView::playlistPositionChanged(qint64 position)
 	// Notification from the QMediaPlaylist that the current selection has changed.
 	// Since we have a QSortFilterProxyModel between us and the underlying model, we need to convert the position,
 	// which is in underlying-model coordinates, to proxy model coordinates.
-	auto proxy_model_index = from_underlying_qmodelindex(m_underlying_model->index(position, 0));
+#warning "TODO"
+	// auto proxy_model_index = from_underlying_qmodelindex(m_underlying_model->index(position, 0));
 
 	// @todo or should this change the selected index?
-	setCurrentIndex(proxy_model_index);
+	// setCurrentIndex(proxy_model_index);
+	setCurrentIndex(model()->index(position, 0, QModelIndex()));
 }
 
 void MDIPlaylistView::onContextMenuSelectedRows(QContextMenuEvent* event, const QPersistentModelIndexVec& row_indexes)

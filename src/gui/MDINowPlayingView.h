@@ -54,7 +54,7 @@ public:
 
 public Q_SLOTS:
 
-	void onNumRowsChanged();
+	// void onNumRowsChanged();
 
 	/// @name Slots for player-connected messages.
 	/// @{
@@ -75,9 +75,11 @@ public Q_SLOTS:
 	void shuffle(bool shuffle = false);
 
 	// void loopAtEnd(bool loop_at_end = false);
-#endif
 
 	void jump(const QModelIndex& index);
+#endif
+
+    void setCurrentIndexAndRow(const QModelIndex& new_index, const QModelIndex& old_index);
 
 	/// @}
 
@@ -114,7 +116,6 @@ private:
 	 */
 	void startPlaying(const QModelIndex& index);
 
-	void setCurrentIndexAndRow(const QModelIndex& new_index, const QModelIndex& old_index);
 
 #if 0
 
@@ -133,7 +134,7 @@ private:
 	bool m_loop_at_end {false};
 #endif
 
-    BoldRowDelegate* m_brdelegate;
+    QPointer<BoldRowDelegate> m_brdelegate;
 
 	Disconnector m_disconnector;
 

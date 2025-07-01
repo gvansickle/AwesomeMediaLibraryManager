@@ -35,6 +35,7 @@ MDINowPlayingView::MDINowPlayingView(QWidget *parent) : MDIPlaylistView(parent)
 	m_brdelegate = new BoldRowDelegate(this);
     setItemDelegate(m_brdelegate);
 
+    /// @todo This fails if it's connect_or_die.
     connect(model(), &QAbstractItemModel::modelAboutToBeReset, m_brdelegate, &BoldRowDelegate::clearAll);
 	connect_or_die(m_brdelegate, &BoldRowDelegate::updateRequested, this, [this]()
 	{
@@ -42,9 +43,9 @@ MDINowPlayingView::MDINowPlayingView(QWidget *parent) : MDIPlaylistView(parent)
 	});
 
 	// Hook up double-click handler.
-	connect(this, &MDINowPlayingView::doubleClicked, this, &MDINowPlayingView::onDoubleClicked);
+	connect_or_die(this, &MDINowPlayingView::doubleClicked, this, &MDINowPlayingView::onDoubleClicked);
 
-	connect_or_die(this, &MDINowPlayingView::activated, this, &MDINowPlayingView::jump);
+    // connect_or_die(this, &MDINowPlayingView::activated, this, &MDINowPlayingView::jump);
 
 	// Do not delete this window on close, just hide it.
 //This doesn't seem to work as expected, Collection Widget still segfaults if Now Playing is closed then double-clicked.
@@ -182,7 +183,6 @@ void MDINowPlayingView::shuffle(bool shuffle)
 // {
 // 	m_loop_at_end = loop_at_end;
 // }
-#endif
 
 void MDINowPlayingView::jump(const QModelIndex& index)
 {
@@ -193,6 +193,7 @@ void MDINowPlayingView::jump(const QModelIndex& index)
 		setCurrentIndexAndRow(index, old_index);
 	}
 }
+#endif
 
 void MDINowPlayingView::setModel(QAbstractItemModel* model)
 {
@@ -215,10 +216,13 @@ void MDINowPlayingView::connectToModel(QAbstractItemModel* model)
 	}
 	else
 	{
-		m_disconnector
-			<< connect_or_die(model, &QAbstractItemModel::modelReset, this, &MDINowPlayingView::onNumRowsChanged)
-			<< connect_or_die(model, &QAbstractItemModel::rowsInserted, this, &MDINowPlayingView::onNumRowsChanged)
-			<< connect_or_die(model, &QAbstractItemModel::rowsRemoved, this, &MDINowPlayingView::onNumRowsChanged);
+		// m_disconnector << connect_or_die();
+		// ShuffleProxyModel* shuffle_proxy_model = dynamic_cast<ShuffleProxyModel*>(model);
+		// m_disconnector
+		// 	<< connect_or_die(model, &QAbstractItemModel::modelReset, shuffle_proxy_model, &ShuffleProxyModel::onNumRowsChanged)
+		// 	<< connect_or_die(model, &QAbstractItemModel::rowsInserted, shuffle_proxy_model, &ShuffleProxyModel::onNumRowsChanged)
+		// 	<< connect_or_die(model, &QAbstractItemModel::rowsRemoved, shuffle_proxy_model, &ShuffleProxyModel::onNumRowsChanged);
+
 	}
 }
 
@@ -232,8 +236,8 @@ void MDINowPlayingView::onDoubleClicked(const QModelIndex& index)
 	if (true) // we're the playlist connected to the player.
 	{
 		// Keep the shuffle index synced.
-		m_current_shuffle_index = m_indices[index.row()];
-
+		// m_current_shuffle_index = m_indices[index.row()];
+#warning "TODO"
 		startPlaying(index);
 	}
 }
@@ -244,7 +248,8 @@ void MDINowPlayingView::onActivated(const QModelIndex& index)
 	if (true) // we're the playlist connected to the player.
 	{
 		// Keep the shuffle index synced.
-		m_current_shuffle_index = m_indices[index.row()];
+#warning "TODO"
+		// m_current_shuffle_index = m_indices[index.row()];
 
 		startPlaying(index);
 	}
@@ -269,6 +274,6 @@ void MDINowPlayingView::setCurrentIndexAndRow(const QModelIndex& new_index, cons
 {
 	m_brdelegate->setRow(new_index.row());
 	setCurrentIndex(new_index);
-	Q_EMIT nowPlayingIndexChanged(new_index, old_index);
+	// Q_EMIT nowPlayingIndexChanged(new_index, old_index);
 }
 

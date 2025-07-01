@@ -313,7 +313,7 @@ void MP2::onSourceChanged(const QUrl& media_url)
 
 void MP2::onPlaylistPositionChanged(const QModelIndex& current, const QModelIndex& previous)
 {
-	// We get in here when the Now Playing view sends the MDINowPlayingView::nowPlayingIndexChanged signal.
+	// We get in here when the ShuffleProxyModel sends the ShuffleProxyModel::nowPlayingIndexChanged signal.
 	// That signal can come from:
 	// - User input on the playlist view (next()/previous()).
 	// - The MP2::playlistToNext signal emitted by us (in two different places).
@@ -321,7 +321,7 @@ void MP2::onPlaylistPositionChanged(const QModelIndex& current, const QModelInde
 	m_onPositionChanged_sending_playlistToNext = false;
 	m_EndOfMedia_sending_playlistToNext = false;
 
-	qDb() << "playlistPosChanged:" << current.row();
+	qDb() << "playlistPosChanged: OLD:" << previous << "NEW:" << current;
 
 	if (!current.isValid())
 	{

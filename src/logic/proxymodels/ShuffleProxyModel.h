@@ -50,24 +50,26 @@ public:
 	 * @param shuffle true = shuffle, false = unshuffle.
 	 */
     void shuffle(bool shuffle = false);
+	bool shuffleOn() const;
 
 	void loopAtEnd(bool loop_at_end);
+	bool loopAtEndOn() const;
 
+#if 0
 	QModelIndex mapFromSource(const QModelIndex& sourceIndex) const override;
 
     QModelIndex mapToSource(const QModelIndex &proxyIndex) const override;
-
+#endif
 	void setSourceModel(QAbstractItemModel* sourceModel) override;
+
+	QModelIndex currentIndex() const;
+
+Q_SIGNALS:
+	void nowPlayingIndexChanged(const QModelIndex& current, const QModelIndex& previous);
 
 public Q_SLOTS:
 
-    void onNumRowsChanged();
-
-	/**
-	 * View-like function.
-	 * @param index
-	 */
-	void setCurrentIndex(const QModelIndex &index);
+	void onNumRowsChanged();
 
 	/**
 	 * Start next song.
@@ -80,6 +82,11 @@ public Q_SLOTS:
 	 */
 	void previous();
 
+	/**
+	 * Go to @a index and start playing.
+	 */
+	void jump(const QModelIndex& index);
+
 protected:
 	/**
 	 * Connect the necessary signals and slots between this proxy model
@@ -90,25 +97,22 @@ protected:
 
 private:
 
-	QModelIndex m_current_index {};
+	QPersistentModelIndex m_currentIndex {QModelIndex()};
 
 	/**
 	 * Sets whether shuffling is on or off.
 	 */
-
-	bool m_shuffle{false};
+	bool m_shuffle {false};
 
 	/**
 	 * Current loop mode
 	 */
-	bool m_loop_at_end {false};
+	bool m_loop_at_end {true};
 
 	bool m_shuffle_model_rows {false};
 
-	int m_current_row {0};
-
 	/// The index into m_indices which should be played.
-	int m_current_shuffle_index{-1};
+	std::int64_t m_current_shuffle_index {-1};
 
 	/**
 	* The map of proxy indices <-> source model indices.
