@@ -179,7 +179,7 @@ void MDINowPlayingView::shuffle(bool shuffle)
 	onNumRowsChanged();
 }
 
-// void MDINowPlayingView::loopAtEnd(bool loop_at_end)
+// void MDINowPlayingView::setLoopAtEnd(bool loop_at_end)
 // {
 // 	m_loop_at_end = loop_at_end;
 // }

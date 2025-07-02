@@ -202,14 +202,14 @@ void MDIPlaylistView::serializeDocument(QFileDevice& file)
 	QString fn = file.fileName();
 	if(fn.isEmpty())
 	{
-		QMessageBox::critical(0/*this*/, "Save Error", QString("Unable to determine what format to save playlist as: Filename was empty"));
+        QMessageBox::critical(nullptr/*this*/, "Save Error", QString("Unable to determine what format to save playlist as: Filename was empty"));
 	}
 
 	// Filename to mimetype.
 	QMimeType mt = QMimeDatabase().mimeTypeForFile(fn, QMimeDatabase::MatchExtension);
 	if(!mt.isValid())
 	{
-		QMessageBox::critical(0/*this*/, "Save Error", QString("Unable to determine what format to save playlist as: Filename was '%1'").arg(fn));
+        QMessageBox::critical(nullptr/*this*/, "Save Error", QString("Unable to determine what format to save playlist as: Filename was '%1'").arg(fn));
 	}
 
 	qDebug() << "Mime type is:" << mt << mt.preferredSuffix() << mt.suffixes() << mt.comment();

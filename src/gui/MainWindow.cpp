@@ -1186,12 +1186,12 @@ void MainWindow::connectPlayerControlsAndNowPlayingView(PlayerControls* controls
     connect_or_die(controls, &PlayerControls::next, m_now_playing_shuffle_proxy_model, &ShuffleProxyModel::next, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
     connect_or_die(controls, &PlayerControls::previous, m_now_playing_shuffle_proxy_model, &ShuffleProxyModel::previous, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
 	/// @todo Delete &MDINowPlayingView::shuffle
-	connect_or_die(controls, &PlayerControls::changeShuffle, m_now_playing_shuffle_proxy_model, &ShuffleProxyModel::shuffle);
-	connect_or_die(controls, &PlayerControls::changeRepeat, m_now_playing_shuffle_proxy_model, &ShuffleProxyModel::loopAtEnd);
+	connect_or_die(controls, &PlayerControls::changeShuffle, m_now_playing_shuffle_proxy_model, &ShuffleProxyModel::setShuffle);
+	connect_or_die(controls, &PlayerControls::changeRepeat, m_now_playing_shuffle_proxy_model, &ShuffleProxyModel::setLoopAtEnd);
 
 	// Set control states to their initial states.
-	controls->setShuffleMode(m_now_playing_shuffle_proxy_model->shuffleOn());
-	controls->setRepeatMode(m_now_playing_shuffle_proxy_model->loopAtEndOn());
+	controls->setShuffleMode(m_now_playing_shuffle_proxy_model->shuffle());
+	controls->setRepeatMode(m_now_playing_shuffle_proxy_model->loopAtEnd());
 
 	// Connect play() signal-to-signal.
 	connect_or_die(now_playing_view, &MDINowPlayingView::play, controls, &PlayerControls::play, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));

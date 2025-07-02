@@ -37,7 +37,7 @@ ShuffleProxyModel::ShuffleProxyModel(QObject* parent): QSortFilterProxyModel(par
 
 }
 
-void ShuffleProxyModel::shuffle(bool shuffle)
+void ShuffleProxyModel::setShuffle(bool shuffle)
 {
 	beginResetModel();
 
@@ -52,18 +52,18 @@ void ShuffleProxyModel::shuffle(bool shuffle)
 	endResetModel();
 }
 
-bool ShuffleProxyModel::shuffleOn() const
+bool ShuffleProxyModel::shuffle() const
 {
 	return m_shuffle;
 }
 
 
-void ShuffleProxyModel::loopAtEnd(bool loop_at_end)
+void ShuffleProxyModel::setLoopAtEnd(bool loop_at_end)
 {
 	m_loop_at_end = loop_at_end;
 }
 
-bool ShuffleProxyModel::loopAtEndOn() const
+bool ShuffleProxyModel::loopAtEnd() const
 {
 	return m_loop_at_end;
 }

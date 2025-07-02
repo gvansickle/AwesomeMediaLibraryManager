@@ -49,11 +49,11 @@ public:
 	 * Shuffles the proxy<->source model map.
 	 * @param shuffle true = shuffle, false = unshuffle.
 	 */
-    void shuffle(bool shuffle = false);
-	bool shuffleOn() const;
+    void setShuffle(bool shuffle = false);
+	bool shuffle() const;
 
-	void loopAtEnd(bool loop_at_end);
-	bool loopAtEndOn() const;
+	void setLoopAtEnd(bool loop_at_end);
+	bool loopAtEnd() const;
 
 #if 0
 	QModelIndex mapFromSource(const QModelIndex& sourceIndex) const override;
