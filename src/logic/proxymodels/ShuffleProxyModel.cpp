@@ -157,7 +157,7 @@ void ShuffleProxyModel::onNumRowsChanged()
         QTimer::singleShot(0, this, [this]()
 		{
 			m_current_shuffle_index = m_indices.at(0);
-			Q_EMIT nowPlayingIndexChanged(sourceModel()->index(0,0), QModelIndex());
+            Q_EMIT nowPlayingIndexChanged(sourceModel()->index(0,0), QModelIndex(), false);
 		});
 	}
 }
@@ -202,13 +202,7 @@ void ShuffleProxyModel::next()
 		Q_EMIT dataChanged(new_index, new_index, QList<int>(Qt::FontRole));
     }
 
-    if (stop_playing)
-    {
-#warning "TODO This stops the playback, but we lose the bolded line, and the current_index's aren't right."
-        new_index = QModelIndex();
-    }
-
-    Q_EMIT nowPlayingIndexChanged(new_index, old_index);
+    Q_EMIT nowPlayingIndexChanged(new_index, old_index, stop_playing);
 }
 
 // slot
@@ -225,11 +219,13 @@ void ShuffleProxyModel::previous()
 	if (m_current_shuffle_index < 0)
 	{
 		m_current_shuffle_index = m_indices.size() - 1;
+
+        if (!m_loop_at_end)
+        {
+            stop_playing = true;
+        }
 	}
-	if (!m_loop_at_end)
-	{
-		stop_playing = true;
-	}
+
 
 	auto new_row = m_indices.at(m_current_shuffle_index);
 	auto new_index = index(new_row, 0);
@@ -246,7 +242,7 @@ void ShuffleProxyModel::previous()
 	{
 		Q_EMIT dataChanged(new_index, new_index, QList<int>(Qt::FontRole));
 	}
-	Q_EMIT nowPlayingIndexChanged(new_index, old_index);
+    Q_EMIT nowPlayingIndexChanged(new_index, old_index, stop_playing);
 }
 
 void ShuffleProxyModel::jump(const QModelIndex& index)
@@ -258,7 +254,7 @@ void ShuffleProxyModel::jump(const QModelIndex& index)
 
 		// old_index might be QModelIndex() here.
 		auto old_index = currentIndex();
-		Q_EMIT nowPlayingIndexChanged(index, old_index);
+        Q_EMIT nowPlayingIndexChanged(index, old_index, false);
 	}
 }
 

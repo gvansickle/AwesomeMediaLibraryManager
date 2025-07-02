@@ -311,7 +311,7 @@ void MP2::onSourceChanged(const QUrl& media_url)
 
 
 
-void MP2::onPlaylistPositionChanged(const QModelIndex& current, const QModelIndex& previous)
+void MP2::onPlaylistPositionChanged(const QModelIndex& current, const QModelIndex& previous, bool stop_playing)
 {
 	// We get in here when the ShuffleProxyModel sends the ShuffleProxyModel::nowPlayingIndexChanged signal.
 	// That signal can come from:
@@ -336,6 +336,11 @@ void MP2::onPlaylistPositionChanged(const QModelIndex& current, const QModelInde
 		auto new_url = item->getM2Url();
 		qDb() << M_ID_VAL(new_url);
 		onSourceChanged(new_url);
+	}
+
+	if (stop_playing)
+	{
+		stop();
 	}
 }
 

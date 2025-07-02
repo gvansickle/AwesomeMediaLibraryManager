@@ -65,7 +65,7 @@ public:
 	QModelIndex currentIndex() const;
 
 Q_SIGNALS:
-	void nowPlayingIndexChanged(const QModelIndex& current, const QModelIndex& previous);
+	void nowPlayingIndexChanged(const QModelIndex& current, const QModelIndex& previous, bool stop_playing);
 
 public Q_SLOTS:
 

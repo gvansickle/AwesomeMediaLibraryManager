@@ -36,8 +36,6 @@ Q_SIGNALS:
 	/// Start playing the current song.
 	void play();
 
-	void nowPlayingIndexChanged(const QModelIndex& current, const QModelIndex& previous);
-
 	/// @}
 
 public:
