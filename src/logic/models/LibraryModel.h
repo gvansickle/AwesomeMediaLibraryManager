@@ -209,30 +209,6 @@ public Q_SLOTS:
 
 protected:
 
-    /// @name Subclass model change handlers.
-	/// Override these in subclasses if you need to do some extra work when the associated base class
-	/// function is called, but you don't need to fully override the function.
-	/// @{
-
-	/**
-	 * Called from insertRows() and appendRows() just after this base class has done its removal and just before endInsertRows().
-	 */
-	virtual void subclassesInsertRows(int first_row, int num_rows, const QModelIndex& parent = QModelIndex())
-		{ (void)parent; (void)first_row; (void)num_rows; }
-
-	/**
-	 * Called from removeRows() just after beginRemoveRows() and before any removal by this base class.
-	 */
-	virtual void subclassesRemoveRows(int first_row, int num_rows, const QModelIndex& parent = QModelIndex())
-		{ (void)parent; (void)first_row; (void)num_rows;}
-
-	/**
-	 * Called from setData() after this base class has made its changes and before dataChanged() is emitted.
-	 */
-	virtual void subclassesSetData(const QModelIndex& index, const QVariant& value, int role = Qt::EditRole)
-		{ (void)index; (void)value; (void)role;}
-	/// @}
-
 	virtual void createCacheFile(QUrl root_url);
 
 	virtual void deleteCache();

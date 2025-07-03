@@ -500,9 +500,6 @@ bool LibraryModel::setData(const QModelIndex& index, const QVariant& value, int 
 
 	m_library.replaceEntry(index.row(), replacement_item);
 
-	// Notify subclasses of the change.
-	subclassesSetData(index, value, role);
-
 	// Tell anybody that's listening that all data in this row has changed.
 	QModelIndex bottom_right_index = index.sibling(index.row(), columnCount() - 1);
 	//	qDebug() << "EMITTING DATACHANGED:" << index << index.parent() << bottom_right_index << bottom_right_index.parent() << Qt::ItemDataRole(role);
@@ -529,7 +526,7 @@ bool LibraryModel::insertRows(int row, int count, const QModelIndex& parent)
 		auto default_entry = createDefaultConstructedEntry();
 		m_library.insertEntry(i, default_entry);
 	}
-
+qDb() << "INSERT END";
 	endInsertRows();
 
 	return true;
@@ -554,9 +551,6 @@ bool LibraryModel::removeRows(int row, int count, const QModelIndex& parent)
 
 	/// @note There's a QSignalBlocker() here in the model for: https://github.com/qt/qtbase/blob/5.10/src/widgets/itemviews/qtreewidget.cpp
 	/// Not clear why, doesn't seem like we need it.
-
-	// Notify subclasses of the change.
-	subclassesRemoveRows(row, count);
 
 	// Remove the indicated rows from the underlying Library.
 	m_library.removeRows(row, count);
