@@ -193,15 +193,13 @@ bool PlaylistModel::setData(const QModelIndex& index, const QVariant& value, int
 
 	if(value.canConvert<std::shared_ptr<PlaylistModelItem>>())
 	{
-		qDebug() << "Can convert to PlaylistModelItem*: true";
-
 		std::shared_ptr<LibraryEntry> replacement_item = value.value<std::shared_ptr<PlaylistModelItem>>();
 		QVariant casted_value = QVariant::fromValue(replacement_item);
 		return LibraryModel::setData(index, casted_value, role);
 	}
 	else
 	{
-		qCritical() << "CANT CONVERT:" << value;
+		qCritical() << "CANT CONVERT to PlaylistModelItem*:" << value;
 		//Q_ASSERT(0);
 	}
 	qDebug() << "PUNTING TO BASE CLASS";
@@ -244,7 +242,7 @@ bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, i
     /// Examine the dance that QTreeWidget and its "private" model QTreeModel have to do for drag and drop.
     /// One thing you'll notice is that QTreeModel::dropMimeData() *does not perform the drop of the MimeData*.
     /// All it does adjust the drop row if it's a drop to {-1,-1}, then it calls *the view's* dropMimeData() function,
-    /// when then gets the drop-parent item's index and then calls down to QAbstractItemModel::dropMimeData(), which
+    /// which then gets the drop-parent item's index and then calls down to QAbstractItemModel::dropMimeData(), which
 	/// then (hopefully) does the actual drop.  This if course completely breaks the notion of the model and view being independent entities.
 	///
 	/// Note that the  QAbstractItemModel::dropMimeData() implementation looks like it's not what we need.
@@ -426,18 +424,4 @@ bool PlaylistModel::serializeToFileAsXSPF(QFileDevice& filedev) const
 
 }
 
-void PlaylistModel::subclassesInsertRows(int first_row, int num_rows, const QModelIndex& parent)
-{
-
-}
-
-void PlaylistModel::subclassesRemoveRows(int first_row, int num_rows, const QModelIndex& parent)
-{
-
-}
-
-void PlaylistModel::subclassesSetData(const QModelIndex& index, const QVariant& value, int role)
-{
-
-}
 

@@ -530,9 +530,6 @@ bool LibraryModel::insertRows(int row, int count, const QModelIndex& parent)
 		m_library.insertEntry(i, default_entry);
 	}
 
-	// Notify subclasses of the insertion.
-	subclassesInsertRows(row, count);
-
 	endInsertRows();
 
 	return true;
@@ -587,9 +584,6 @@ void LibraryModel::appendRows(std::vector<std::shared_ptr<LibraryEntry>> libentr
 	beginInsertRows(QModelIndex(), start_rowcount, start_rowcount+libentries.size()-1);
 
 	m_library.addNewEntries(libentries);
-
-	// Tell subclasses about the add.
-	subclassesInsertRows(start_rowcount, libentries.size());
 
 	endInsertRows();
 }
