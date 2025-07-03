@@ -1600,7 +1600,7 @@ auto streaming_then(QFuture<T> future, Function function)
 							qDebug() << "IN LAMBDA, future: " << future;
 							function(future, begin, end);
 						}, Qt::DirectConnection);
-		connect_or_die(watcher, &QFutureWatcher<T>::finished, [watcher, &loop]()
+		connect_or_die(watcher, &QFutureWatcher<T>::finished, watcher, [watcher, &loop]()
 		{
             qDebug() << "WATCHER FINISHED, DELETELATER";
 			watcher->deleteLater();
