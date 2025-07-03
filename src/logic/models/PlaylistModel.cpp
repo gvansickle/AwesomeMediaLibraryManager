@@ -317,9 +317,13 @@ bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, i
     /// So if we're in the model here with a Qt::MoveAction, we shouldn't need to do the remove.
 
 	auto libentries = qobject_cast<const LibraryEntryMimeData*>(data)->m_lib_item_list;
-	auto rows = libentries.size();
+	const auto rows = libentries.size();
+	const auto startRow = beginRow;
 
+	// Insert the blank rows.
 	insertRows(beginRow, rows, QModelIndex());
+
+	bool success = false;
 	if(action == Qt::CopyAction)
 	{
 		for(const auto& libentry : std::as_const(libentries))
@@ -332,7 +336,7 @@ bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, i
 		}
 		qDebug() << QString("Inserted and setData");
 		// Drop was successful.
-		return true;
+		success = true;
 	}
 	else if(action == Qt::MoveAction)
 	{
@@ -347,10 +351,16 @@ bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, i
                     beginRow += 1;
             }
         qDebug() << "MoveAction END";
-		return true;
+		success = true;
 	}
-	return false;
 
+	if (success)
+	{
+		// We've successfully inserted the data.  Tell the view to update.
+		Q_EMIT dataChanged(index(startRow, 0), index(startRow + rows - 1, 0));
+	}
+
+	return success;
 }
 
 void PlaylistModel::setLibraryRootUrl(const QUrl &url)
