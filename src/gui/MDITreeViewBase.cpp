@@ -279,10 +279,13 @@ QString MDITreeViewBase::getDisplayName() const
 void MDITreeViewBase::setModel(QAbstractItemModel* model)
 {
     qDebug() << "BASE SETTING MODEL:" << model;
+	QItemSelectionModel* sm = selectionModel();
 
-    m_select_all_model_watcher->disconnectFromCurrentModel();
+	m_select_all_model_watcher->disconnectFromCurrentModel();
     this->BASE_CLASS::setModel(model);
     m_select_all_model_watcher->setModelToWatch(model);
+
+	if (sm) { sm->deleteLater();}
 }
 
 //
