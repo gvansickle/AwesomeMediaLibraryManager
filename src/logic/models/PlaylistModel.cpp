@@ -191,11 +191,18 @@ bool PlaylistModel::setData(const QModelIndex& index, const QVariant& value, int
 		return false;
 	}
 
-	if(value.canConvert<std::shared_ptr<PlaylistModelItem>>())
+	// Tell anybody that's listening that all data in this row has changed.
+	QModelIndex bottom_right_index = index.sibling(index.row(), columnCount() - 1);
+
+	auto retval = false;
+
+	if (value.canConvert<std::shared_ptr<PlaylistModelItem>>())
 	{
 		std::shared_ptr<LibraryEntry> replacement_item = value.value<std::shared_ptr<PlaylistModelItem>>();
 		QVariant casted_value = QVariant::fromValue(replacement_item);
-		return LibraryModel::setData(index, casted_value, role);
+		retval = LibraryModel::setData(index, casted_value, role);
+		Q_EMIT dataChanged(index, bottom_right_index, {role});
+		return retval;
 	}
 	else
 	{
@@ -203,7 +210,12 @@ bool PlaylistModel::setData(const QModelIndex& index, const QVariant& value, int
 		//Q_ASSERT(0);
 	}
 	qDebug() << "PUNTING TO BASE CLASS";
-	return LibraryModel::setData(index, value, role);
+
+	retval = LibraryModel::setData(index, value, role);
+
+	Q_EMIT dataChanged(index, bottom_right_index, {role});
+
+	return retval;
 }
 
 QStringList PlaylistModel::mimeTypes() const
@@ -318,7 +330,7 @@ bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, i
 	const auto rows = libentries.size();
 	const auto startRow = beginRow;
 
-	// Insert the blank rows.
+	// Insert the default-constructed rows.
 	insertRows(beginRow, rows, QModelIndex());
 
 	bool success = false;
@@ -329,6 +341,7 @@ bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, i
 			qDebug() << "Inserting Copies";
 			// Create a new PlaylistModelItem to put in the model.
 			std::shared_ptr<PlaylistModelItem> plmi = PlaylistModelItem::createFromLibraryEntry(libentry);
+
 			setData(index(beginRow, 0), QVariant::fromValue(plmi));
 			beginRow += 1;
 		}

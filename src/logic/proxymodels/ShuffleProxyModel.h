@@ -28,10 +28,15 @@
 #include <vector>
 
 // Qt
-#include <ConnectHelpers.h>
+#include <QPointer>
 #include <QSortFilterProxyModel>
 #include <QModelIndex>
+class QSignalSpy;
+class QItemSelectionModel;
 
+// Ours.
+
+#include <ConnectHelpers.h>
 
 /**
 * A proxy model which shuffles the rows of the source model.
@@ -55,14 +60,12 @@ public:
 	void setLoopAtEnd(bool loop_at_end);
 	bool loopAtEnd() const;
 
-#if 0
-	QModelIndex mapFromSource(const QModelIndex& sourceIndex) const override;
-
-    QModelIndex mapToSource(const QModelIndex &proxyIndex) const override;
-#endif
 	void setSourceModel(QAbstractItemModel* sourceModel) override;
 
 	QModelIndex currentIndex() const;
+
+	/// @todo TEMP FOR TESTING
+	QPointer<QSignalSpy> m_spy;
 
 Q_SIGNALS:
 	void nowPlayingIndexChanged(const QModelIndex& current, const QModelIndex& previous, bool stop_playing);
@@ -70,6 +73,8 @@ Q_SIGNALS:
 public Q_SLOTS:
 
 	void onNumRowsChanged();
+
+	void onDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QList<int>& roles);
 
 	/**
 	 * Start next song.
@@ -95,8 +100,15 @@ protected:
 	 */
 	void connectToModel(QAbstractItemModel *model);
 
+protected Q_SLOTS:
+	void resetInternalData() override;
+
 private:
 
+	QPointer<QItemSelectionModel> m_sel_model;
+	/**
+	 * The PMI pointing to the bolded row.
+	 */
 	QPersistentModelIndex m_currentIndex {QModelIndex()};
 
 	/**
@@ -109,14 +121,14 @@ private:
 	 */
 	bool m_loop_at_end {true};
 
-	bool m_shuffle_model_rows {false};
-
 	/// The index into m_indices which should be played.
 	std::int64_t m_current_shuffle_index {-1};
 
 	/**
-	* The map of proxy indices <-> source model indices.
-	*/
+	 * The map of proxy indices <-> source model indices.
+	 * If not shuffled, this is just a 1-to-1 mapping.
+	 * If shuffled, this is a randomized mapping.
+	 */
 	std::vector<int> m_indices;
 
 	Disconnector m_disconnector;

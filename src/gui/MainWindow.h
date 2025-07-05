@@ -33,6 +33,8 @@
 #include <QUrl>
 
 class ShuffleProxyModel;
+class LibrarySortFilterProxyModel;
+
 class QActionGroup;
 class QWidget;
 class QLabel;
@@ -422,7 +424,8 @@ private:
     /// The "Now Playing" playlist model and view.
 	QPointer<PlaylistModel> m_now_playing_playlist_model;
 	QPointer<ShuffleProxyModel> m_now_playing_shuffle_proxy_model;
-    QPointer<MDIPlaylistView> m_now_playing_playlist_view;
+	QPointer<LibrarySortFilterProxyModel> m_now_playing_sortfilter_model;
+	QPointer<MDIPlaylistView> m_now_playing_playlist_view;
 
     /// The list of PlaylistModels.
 	std::vector<QPointer<PlaylistModel>> m_playlist_models;

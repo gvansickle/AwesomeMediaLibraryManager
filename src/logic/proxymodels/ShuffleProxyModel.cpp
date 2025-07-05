@@ -27,6 +27,8 @@
 
 // Qt
 #include <QTimer>
+#include <QItemSelectionModel>
+#include <QSignalSpy>
 
 // Ours
 #include <ConnectHelpers.h>
@@ -34,13 +36,19 @@
 
 ShuffleProxyModel::ShuffleProxyModel(QObject* parent): QSortFilterProxyModel(parent)
 {
+	setObjectName("ShuffleProxyModel");
 
+	m_sel_model = new QItemSelectionModel(this);
+	connect_or_die(m_sel_model, &QItemSelectionModel::selectionChanged, this,
+		[this](auto selected, auto deselected)
+		{
+			qDb() << "ShuffleProxyModel::selectionChanged:" << selected << deselected;
+		});
+	// m_spy = new QSignalSpy(this, );
 }
 
 void ShuffleProxyModel::setShuffle(bool shuffle)
 {
-	beginResetModel();
-
 	m_shuffle = shuffle;
 	m_indices.resize(sourceModel()->rowCount());
 	std::ranges::iota(m_indices, 0);
@@ -48,8 +56,6 @@ void ShuffleProxyModel::setShuffle(bool shuffle)
 	{
 		std::ranges::shuffle(m_indices, std::mt19937(std::random_device{}()));
 	}
-
-	endResetModel();
 }
 
 bool ShuffleProxyModel::shuffle() const
@@ -68,52 +74,20 @@ bool ShuffleProxyModel::loopAtEnd() const
 	return m_loop_at_end;
 }
 
-#if 0
-QModelIndex ShuffleProxyModel::mapFromSource(const QModelIndex& sourceIndex) const
-{
-	if (!sourceIndex.isValid())
-    {
-        return {};
-    }
-	if (m_shuffle_model_rows)
-	{
-		return createIndex(m_indices[sourceIndex.row()], sourceIndex.column());
-	}
-	else
-	{
-		return sourceIndex;
-	}
-}
-
-QModelIndex ShuffleProxyModel::mapToSource(const QModelIndex &proxyIndex) const
-{
-	if (!proxyIndex.isValid())
-	{
-		return {};
-	}
-
-	if (m_shuffle_model_rows)
-	{
-		return sourceModel()->index(m_indices[proxyIndex.row()], proxyIndex.column());
-	}
-	else
-	{
-		return proxyIndex;
-	}
-}
-#endif
-
 void ShuffleProxyModel::setSourceModel(QAbstractItemModel* sourceModel)
 {
+	qDb() << "ShuffleProxyModel::setSourceModel:" << sourceModel;
 	beginResetModel();
 
+	// Disconnect from old source model.
 	m_disconnector.disconnect();
 	QSortFilterProxyModel::setSourceModel(sourceModel);
 	connectToModel(sourceModel);
 
-	onNumRowsChanged();
-
 	endResetModel();
+
+	onNumRowsChanged();
+	qDb() << "ShuffleProxyModel::setSourceModel done";
 }
 
 QModelIndex ShuffleProxyModel::currentIndex() const
@@ -121,6 +95,7 @@ QModelIndex ShuffleProxyModel::currentIndex() const
 	return m_currentIndex;
 }
 
+// slot
 void ShuffleProxyModel::onNumRowsChanged()
 {
 	// Resize and re-iota-ize the shuffle map.
@@ -154,11 +129,39 @@ void ShuffleProxyModel::onNumRowsChanged()
 		// QTimer stuff here because this is segfaulting:
 		// selectionModel()->select(model()->index(0, 0),
 		//           QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
-        QTimer::singleShot(0, this, [this]()
-		{
+  // QTimer::singleShot(0, this, [this]()
+		// {
 			m_current_shuffle_index = m_indices.at(0);
             Q_EMIT nowPlayingIndexChanged(sourceModel()->index(0,0), QModelIndex(), false);
-		});
+		// });
+	}
+}
+
+static bool isInDataChangedRange(const QModelIndex& testIndex,
+						const QModelIndex& topLeft,
+						const QModelIndex& bottomRight)
+{
+	return testIndex.isValid() &&
+		testIndex.model() == topLeft.model() &&
+		testIndex.parent() == topLeft.parent() &&
+		testIndex.row() >= topLeft.row() &&
+		testIndex.row() <= bottomRight.row() &&
+		testIndex.column() >= topLeft.column() &&
+		testIndex.column() <= bottomRight.column();
+}
+
+void ShuffleProxyModel::onDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight,
+									const QList<int>& roles)
+{
+	qDb() << "onDataChanged:" << topLeft << bottomRight;
+
+	if (roles.contains(Qt::DisplayRole))
+	{
+		// Check if the update was to the index we're currently pointing at.
+		if (isInDataChangedRange(m_currentIndex, topLeft, bottomRight))
+		{
+			qDb() << "DATA CHANGED IN RANGE:" << topLeft << bottomRight;
+		}
 	}
 }
 
@@ -170,7 +173,7 @@ void ShuffleProxyModel::next()
 		return;
 	}
 
-	bool stop_playing {false};
+	bool stop_playing{false};
 
 	m_current_shuffle_index++;
 	if (m_current_shuffle_index >= m_indices.size())
@@ -245,6 +248,7 @@ void ShuffleProxyModel::previous()
     Q_EMIT nowPlayingIndexChanged(new_index, old_index, stop_playing);
 }
 
+// slot
 void ShuffleProxyModel::jump(const QModelIndex& index)
 {
 	if (index.isValid())
@@ -271,6 +275,20 @@ void ShuffleProxyModel::connectToModel(QAbstractItemModel* model)
 		m_disconnector
 			<< connect_or_die(model, &QAbstractItemModel::modelReset, this, &ShuffleProxyModel::onNumRowsChanged)
 			<< connect_or_die(model, &QAbstractItemModel::rowsInserted, this, &ShuffleProxyModel::onNumRowsChanged)
-			<< connect_or_die(model, &QAbstractItemModel::rowsRemoved, this, &ShuffleProxyModel::onNumRowsChanged);
+			<< connect_or_die(model, &QAbstractItemModel::rowsRemoved, this, &ShuffleProxyModel::onNumRowsChanged)
+			<< connect_or_die(model, &QAbstractItemModel::dataChanged, this, &ShuffleProxyModel::onDataChanged);
 	}
+}
+
+void ShuffleProxyModel::resetInternalData()
+{
+	m_currentIndex = QModelIndex();
+	m_shuffle = false;
+	m_loop_at_end = true;
+	// m_shuffle_model_rows = false;
+	m_current_shuffle_index = -1;
+	m_indices.clear();
+	m_disconnector.disconnect();
+
+	QSortFilterProxyModel::resetInternalData();
 }

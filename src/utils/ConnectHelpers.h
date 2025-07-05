@@ -85,8 +85,8 @@ connect_or_die(const T t, TPMF tpmf, const U u, UPMF upmf, Qt::ConnectionType co
     QMetaObject::Connection retval;
 
 	// Assert off the bat if we get null ptrs.
-	Q_CHECK_PTR(t);
-	Q_CHECK_PTR(u);
+	// Q_CHECK_PTR(t);
+	// Q_CHECK_PTR(u);
 
     retval = QObject::connect(t, tpmf, u, upmf, Qt::ConnectionType(connection_type | Qt::UniqueConnection));
     Q_ASSERT(static_cast<bool>(retval) != false);

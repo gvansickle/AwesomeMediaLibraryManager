@@ -25,6 +25,7 @@
 
 LibrarySortFilterProxyModel::LibrarySortFilterProxyModel(QObject* parent) : QSortFilterProxyModel(parent)
 {
+	setObjectName("LibrarySortFilterProxyModel#");
 	// Filter all columns by default.
 	setFilterKeyColumn(-1);
 }

@@ -32,11 +32,11 @@
 
 MDINowPlayingView::MDINowPlayingView(QWidget *parent) : MDIPlaylistView(parent)
 {
+	setObjectName("NowPlayingView");
 	m_brdelegate = new BoldRowDelegate(this);
     setItemDelegate(m_brdelegate);
 
-    /// @todo This fails if it's connect_or_die.
-    connect(model(), &QAbstractItemModel::modelAboutToBeReset, m_brdelegate, &BoldRowDelegate::clearAll);
+    // Partially connect to the row-bolding delegate
 	connect_or_die(m_brdelegate, &BoldRowDelegate::updateRequested, this, [this]()
 	{
 		this->viewport()->update();
@@ -218,7 +218,9 @@ void MDINowPlayingView::connectToModel(QAbstractItemModel* model)
 	{
 		// m_disconnector << connect_or_die();
 		// ShuffleProxyModel* shuffle_proxy_model = dynamic_cast<ShuffleProxyModel*>(model);
-		// m_disconnector
+		m_disconnector
+			<< connect_or_die(model, &QAbstractItemModel::modelAboutToBeReset, m_brdelegate, &BoldRowDelegate::clearAll);
+
 		// 	<< connect_or_die(model, &QAbstractItemModel::modelReset, shuffle_proxy_model, &ShuffleProxyModel::onNumRowsChanged)
 		// 	<< connect_or_die(model, &QAbstractItemModel::rowsInserted, shuffle_proxy_model, &ShuffleProxyModel::onNumRowsChanged)
 		// 	<< connect_or_die(model, &QAbstractItemModel::rowsRemoved, shuffle_proxy_model, &ShuffleProxyModel::onNumRowsChanged);

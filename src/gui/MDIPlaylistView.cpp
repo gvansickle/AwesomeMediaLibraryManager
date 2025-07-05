@@ -36,6 +36,7 @@
 #include <QKeyEvent>
 
 // Ours
+#include <QSignalSpy>
 #include <gui/delegates/ItemDelegateLength.h>
 #include <gui/menus/DropMenu.h>
 #include "DragDropTreeViewStyleProxy.h"
@@ -175,7 +176,7 @@ void MDIPlaylistView::setModel(QAbstractItemModel* model)
 	}
 	else
 	{
-		qWarning() << "Not a PlaylistModel:" << model;
+		qCr() << "Not a PlaylistModel:" << model;
 	}
 }
 
@@ -439,7 +440,7 @@ void MDIPlaylistView::onPaste()
 	auto selmodel = selectionModel();
 	if(!selmodel)
 	{
-		qWarning() << "BAD SELECTION MODEL";
+		qCr() << "BAD SELECTION MODEL";
 		return;
 	}
 
@@ -449,7 +450,7 @@ void MDIPlaylistView::onPaste()
 	QClipboard *clipboard = QGuiApplication::clipboard();
 	if(!clipboard)
 	{
-		qWarning() << "COULD NOT GET CLIPBOARD";
+		qCr() << "COULD NOT GET CLIPBOARD";
 		return;
 	}
 

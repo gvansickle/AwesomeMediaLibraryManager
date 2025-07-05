@@ -1849,6 +1849,8 @@ void MainWindow::newNowPlaying()
 
 	m_now_playing_shuffle_proxy_model = new ShuffleProxyModel(this);
 	m_now_playing_shuffle_proxy_model->setSourceModel(m_now_playing_playlist_model);
+	m_now_playing_sortfilter_model = new LibrarySortFilterProxyModel(this);
+
 
 	/// @todo Do we really need to keep this as a member pointer?
     m_now_playing_playlist_view = child;
