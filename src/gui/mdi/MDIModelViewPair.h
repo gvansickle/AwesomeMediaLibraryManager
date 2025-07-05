@@ -19,36 +19,95 @@
 
 #ifndef GUI_MDI_MDIVIEWPAIRMODEL_H
 #define GUI_MDI_MDIVIEWPAIRMODEL_H
+/**
+ * @file
+ */
 
+// Std C++.
+#include <vector>
+
+// Qt
+#include <QAbstractProxyModel>
 #include <QPointer>
-
 class QAbstractItemModel;
 class MDITreeViewBase;
 
+// Ours
+#include <utils/DebugHelpers.h>
+
+
+/**
+ * Object which olds:
+ * - A model
+ * - A stack of proxy models on top of the model
+ * - A view on top of the proxy models
+ */
 class MDIModelViewPair
 {
 public:
-	QPointer<QAbstractItemModel> m_model;
-	QPointer<MDITreeViewBase> m_view;
 
-    bool m_model_was_existing { false };
-    bool m_view_was_existing { false };
+	// template <typename T>
+	// void setModel(T* derived_model_ptr)
+	// {
+	// 	m_model_stack = derived_model_ptr;
+	// }
+	//
+	// template <typename T>
+	// void setModel(QPointer<T> derived_model_ptr)
+	// {
+	// 	m_model_stack = derived_model_ptr;
+	// }
 
 	template <typename T>
-	void setModel(T* derived_model_ptr)
+		requires (!std::is_convertible_v<QAbstractProxyModel*, T*>)
+	void appendModel(QPointer<T> model)
 	{
-		m_model = derived_model_ptr;
+		// For now anyway, this should only push a model to the bottom of the {proxy}model stack.
+		if (!m_model_stack.empty())
+		{
+			qCr() << "Model wasn't the first item pushed onto the modelstack:" << model;
+		}
+
+		m_model_stack.emplace_back(model);
 	}
 
+	/**
+	 * Append a proxy model to the top of the model stack.
+	 * Note that @a proxymodel is setSourceModel()'d to the top {proxy}model in the stack, but no other
+	 * connections are made.
+	 * @tparam T
+	 * @param proxymodel
+	 */
 	template <typename T>
-	void setModel(QPointer<T> derived_model_ptr)
+		requires std::is_convertible_v<QAbstractProxyModel*, T*>
+	void appendProxyModel(QPointer<T> proxymodel)
 	{
-		m_model = derived_model_ptr;
+		if (m_model_stack.empty())
+		{
+			qCr() << "No model to connect ProxyModel to:" << proxymodel;
+		}
+
+		m_model_stack.emplace_back(proxymodel);
+
+		proxymodel->setSourceModel(m_model_stack.begin()->data());
 	}
+
+	void appendView(QPointer<MDITreeViewBase> view);
 
 	bool hasModel() const;
 	bool hasView() const;
 	bool hasModelAndView() const;
+
+	QPointer<MDITreeViewBase> getView() const { return m_view; }
+    QPointer<QAbstractItemModel> getTopModel() const { return m_model_stack.back(); }
+
+private:
+	std::vector<QPointer<QAbstractItemModel>> m_model_stack;
+	QPointer<MDITreeViewBase> m_view {nullptr};
+
+public: /// @todo TEMP, MAKE PRIVATE
+	bool m_model_was_existing {false};
+	bool m_view_was_existing {false};
 };
 
 #endif //GUI_MDI_MDIVIEWPAIRMODEL_H

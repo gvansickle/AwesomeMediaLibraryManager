@@ -64,9 +64,9 @@ MDIPlaylistView::MDIPlaylistView(QWidget* parent) : MDITreeViewBase(parent)
 	m_underlying_model = nullptr;
 
 	// The sort and Filter proxy model.
-	m_sortfilter_model = new LibrarySortFilterProxyModel(this);
-	m_sortfilter_model->setDynamicSortFilter(false);
-	m_sortfilter_model->setSortCaseSensitivity(Qt::CaseInsensitive);
+//	 m_sortfilter_model = new LibrarySortFilterProxyModel(this);
+	// m_sortfilter_model->setDynamicSortFilter(false);
+	// m_sortfilter_model->setSortCaseSensitivity(Qt::CaseInsensitive);
 
 	// Delegates.
 	m_length_delegate = new ItemDelegateLength(this);
@@ -116,10 +116,10 @@ MDIPlaylistView::~MDIPlaylistView() = default;
 MDIModelViewPair MDIPlaylistView::openModel(QPointer<PlaylistModel> model, QWidget* parent)
 {
 	MDIModelViewPair retval;
-	retval.setModel(model);
+	retval.appendModel(model);
 
-	retval.m_view = new MDIPlaylistView(parent);
-	qobject_cast<MDIPlaylistView*>(retval.m_view)->setModel(model);
+	retval.appendView(new MDIPlaylistView(parent));
+    // qobject_cast<MDIPlaylistView*>(retval.m_view)->setModel(model);
 
 	return retval;
 }

@@ -226,7 +226,8 @@ target_compile_definitions(libapp
                            PRIVATE
 	                           # libstdc++ defs: @link https://gcc.gnu.org/onlinedocs/gcc-9.1.0/libstdc++/manual/
 	                           # Enable the libstdc++ debug mode.
-	                           #_GLIBCXX_DEBUG
+	                           _GLIBCXX_DEBUG
+								-D_GLIBCXX_DEBUG_BACKTRACE
 	                           "KXMLGUI_NO_DEPRECATED=1"
 )
 target_include_directories(libapp
@@ -264,7 +265,8 @@ target_compile_definitions(${PROJECT_NAME}
 	PUBLIC
 		# libstdc++ defs: @link https://gcc.gnu.org/onlinedocs/gcc-9.1.0/libstdc++/manual/
 		# Enable the libstdc++ debug mode.
-		#_GLIBCXX_DEBUG
+		_GLIBCXX_DEBUG
+		_GLIBCXX_DEBUG_BACKTRACE
 		"KXMLGUI_NO_DEPRECATED=1"
 	)
 target_include_directories(${PROJECT_NAME}
@@ -288,6 +290,7 @@ target_link_libraries(${PROJECT_NAME}
 		cxx_definitions_qt
 	PRIVATE
 		libapp
+		stdc++exp # For debug backtrace in the std lib.
 )
 
 # Sanitizers.  @todo Make this a CMake option.

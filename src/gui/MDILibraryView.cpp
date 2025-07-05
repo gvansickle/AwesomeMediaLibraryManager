@@ -116,10 +116,10 @@ MDIModelViewPair MDILibraryView::openFile(QUrl open_url, QWidget *parent, std::f
     // Check if a view of this URL already exists and we just need to activate it.
 	qDebug() << "Looking for existing MDIModelViewPair of" << open_url;
     auto mv_pair = find_existing_view_func(open_url);
-    if(mv_pair.m_view)
+    if(mv_pair.getView())
     {
         Q_ASSERT_X(mv_pair.m_view_was_existing == true, "openFile", "find_existing function returned a view but said it was not pre-existing.");
-        qDebug() << "View of" << open_url << "already exists, returning" << mv_pair.m_view.data();
+        qDebug() << "View of" << open_url << "already exists, returning" << mv_pair.getView().data();
         return mv_pair;
     }
 
@@ -133,8 +133,8 @@ MDIModelViewPair MDILibraryView::openFile(QUrl open_url, QWidget *parent, std::f
 	{
 		Q_ASSERT_X(mv_pair.m_model_was_existing, "openFile", "find_exisiting returned a model but said it was not pre-existing.");
 
-        qDebug() << "Model exists:" << mv_pair.m_model.data();
-		libmodel = qobject_cast<LibraryModel*>(mv_pair.m_model);
+        qDebug() << "Model exists:" << mv_pair.m_model_stack.data();
+		libmodel = qobject_cast<LibraryModel*>(mv_pair.m_model_stack);
 	}
 	else
 	{
@@ -152,7 +152,7 @@ MDIModelViewPair MDILibraryView::openFile(QUrl open_url, QWidget *parent, std::f
 		/// @todo This should be done somewhere else, so that the mvpair we get above already has this set correctly.
 		mvpair.m_model_was_existing = mv_pair.m_model_was_existing;
 
-		/// @note Need this cast due to some screwyness I mean subtleties of C++'s member access control system.
+		/// @note Need this cast due to some screwyness I mean subtleties of C++'s member access control rules.
 		/// In very shortened form: Derived member functions can only access "protected" members through
 		/// an object of the Derived type, not of the Base type.
 		qobject_cast<MDILibraryView*>(mvpair.m_view)->setCurrentFile(open_url);
@@ -161,8 +161,7 @@ MDIModelViewPair MDILibraryView::openFile(QUrl open_url, QWidget *parent, std::f
     else
     {
 		// Library import failed.
-		/// @todo Add a QMessageBox or something here.
-		QMessageBox::critical(amlmApp->IMainWindow(), "TODO: Title", "TODO: Text", QMessageBox::Ok);
+        QMessageBox::critical(amlmApp->IMainWindow(), "Error", "Library import failed", QMessageBox::Ok);
 		return MDIModelViewPair();
     }
 }
@@ -174,10 +173,11 @@ MDIModelViewPair MDILibraryView::openFile(QUrl open_url, QWidget *parent, std::f
 MDIModelViewPair MDILibraryView::openModel(QPointer<LibraryModel> model, QWidget* parent)
 {
 	MDIModelViewPair retval;
-	retval.setModel(model);
+	retval.appendModel(model);
 
-	retval.m_view = new MDILibraryView(parent);
-	qobject_cast<MDILibraryView*>(retval.m_view)->setModel(model);
+	retval.appendView(new MDILibraryView(parent));
+	/// @todo DELETE
+	// qobject_cast<MDILibraryView*>(retval.getView())->setModel(model);
 
 	return retval;
 }
@@ -237,6 +237,11 @@ void MDILibraryView::setModel(QAbstractItemModel* model)
 LibraryModel* MDILibraryView::underlyingModel() const
 {
 	return m_underlying_model;
+}
+
+LibrarySortFilterProxyModel* MDILibraryView::proxy_model() const
+{
+	return m_sortfilter_model;
 }
 
 void MDILibraryView::setEmptyModel()

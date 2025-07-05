@@ -90,13 +90,12 @@ public:
 
 	LibraryModel* underlyingModel() const override;
 
-	LibrarySortFilterProxyModel* proxy_model() const { return m_sortfilter_model; }
-
+	LibrarySortFilterProxyModel* proxy_model() const;
 
 protected:
 	QPointer<LibraryModel> m_underlying_model;
 
-	LibrarySortFilterProxyModel* m_sortfilter_model;
+	// LibrarySortFilterProxyModel* m_sortfilter_model;
 
 	ItemDelegateLength* m_length_delegate;
 	MimeTypeDelegate* m_mimetype_delegate;
