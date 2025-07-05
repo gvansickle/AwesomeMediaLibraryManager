@@ -330,7 +330,7 @@ void MP2::onPlaylistPositionChanged(const QModelIndex& current, const QModelInde
 	else
 	{
 		// Set up to play the newly-selected track.
-		QVariant libentry = current.siblingAtColumn(0).data(ModelUserRoles::PointerToItemRole);
+        QVariant libentry = current.siblingAtColumn(0).data(ModelUserRoles::PointerToItemRole);
 		Q_ASSERT(libentry.isValid());
 		std::shared_ptr<PlaylistModelItem> item = libentry.value<std::shared_ptr<PlaylistModelItem>>();
 		auto new_url = item->getM2Url();
