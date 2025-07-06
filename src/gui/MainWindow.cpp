@@ -1171,9 +1171,6 @@ void MainWindow::connectPlayerAndNowPlayingView(MP2 *player, MDINowPlayingView *
 	// Connection for the player to tell the playlist to go to the next item when the current one is over.
 	// This in turn will cause a MDINowPlayingView::nowPlayingIndexChanged() to be emitted, which the player
 	// receives and sets up the now-current track.
-	// connect_or_die(player, &MP2::playlistToNext, now_playing_view, &MDINowPlayingView::next);
-	// connect_or_die(now_playing_view, &MDINowPlayingView::nowPlayingIndexChanged, player,
-	// 				&MP2::onPlaylistPositionChanged);
 	connect_or_die(player, &MP2::playlistToNext, m_now_playing_shuffle_proxy_model, &ShuffleProxyModel::next);
 	connect_or_die(m_now_playing_shuffle_proxy_model, &ShuffleProxyModel::nowPlayingIndexChanged, player, &MP2::onPlaylistPositionChanged);
 }
@@ -1185,7 +1182,6 @@ void MainWindow::connectPlayerControlsAndNowPlayingView(PlayerControls* controls
 	/// OR-ed in with any other connection type, which are 0,1,2,3.
     connect_or_die(controls, &PlayerControls::next, m_now_playing_shuffle_proxy_model, &ShuffleProxyModel::next, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
     connect_or_die(controls, &PlayerControls::previous, m_now_playing_shuffle_proxy_model, &ShuffleProxyModel::previous, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
-	/// @todo Delete &MDINowPlayingView::shuffle
 	connect_or_die(controls, &PlayerControls::changeShuffle, m_now_playing_shuffle_proxy_model, &ShuffleProxyModel::setShuffle);
 	connect_or_die(controls, &PlayerControls::changeRepeat, m_now_playing_shuffle_proxy_model, &ShuffleProxyModel::setLoopAtEnd);
 
