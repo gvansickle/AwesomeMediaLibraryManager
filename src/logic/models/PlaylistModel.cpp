@@ -191,21 +191,31 @@ bool PlaylistModel::setData(const QModelIndex& index, const QVariant& value, int
 		return false;
 	}
 
-	if(value.canConvert<std::shared_ptr<PlaylistModelItem>>())
-	{
-		qDebug() << "Can convert to PlaylistModelItem*: true";
+	// Tell anybody that's listening that all data in this row has changed.
+	QModelIndex bottom_right_index = index.sibling(index.row(), columnCount() - 1);
 
+	auto retval = false;
+
+	if (value.canConvert<std::shared_ptr<PlaylistModelItem>>())
+	{
 		std::shared_ptr<LibraryEntry> replacement_item = value.value<std::shared_ptr<PlaylistModelItem>>();
 		QVariant casted_value = QVariant::fromValue(replacement_item);
-		return LibraryModel::setData(index, casted_value, role);
+		retval = LibraryModel::setData(index, casted_value, role);
+		Q_EMIT dataChanged(index, bottom_right_index, {role});
+		return retval;
 	}
 	else
 	{
-		qCritical() << "CANT CONVERT:" << value;
+		qCritical() << "CANT CONVERT to PlaylistModelItem*:" << value;
 		//Q_ASSERT(0);
 	}
 	qDebug() << "PUNTING TO BASE CLASS";
-	return LibraryModel::setData(index, value, role);
+
+	retval = LibraryModel::setData(index, value, role);
+
+	Q_EMIT dataChanged(index, bottom_right_index, {role});
+
+	return retval;
 }
 
 QStringList PlaylistModel::mimeTypes() const
@@ -244,7 +254,7 @@ bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, i
     /// Examine the dance that QTreeWidget and its "private" model QTreeModel have to do for drag and drop.
     /// One thing you'll notice is that QTreeModel::dropMimeData() *does not perform the drop of the MimeData*.
     /// All it does adjust the drop row if it's a drop to {-1,-1}, then it calls *the view's* dropMimeData() function,
-    /// when then gets the drop-parent item's index and then calls down to QAbstractItemModel::dropMimeData(), which
+    /// which then gets the drop-parent item's index and then calls down to QAbstractItemModel::dropMimeData(), which
 	/// then (hopefully) does the actual drop.  This if course completely breaks the notion of the model and view being independent entities.
 	///
 	/// Note that the  QAbstractItemModel::dropMimeData() implementation looks like it's not what we need.
@@ -317,9 +327,13 @@ bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, i
     /// So if we're in the model here with a Qt::MoveAction, we shouldn't need to do the remove.
 
 	auto libentries = qobject_cast<const LibraryEntryMimeData*>(data)->m_lib_item_list;
-	auto rows = libentries.size();
+	const auto rows = libentries.size();
+	const auto startRow = beginRow;
 
+	// Insert the default-constructed rows.
 	insertRows(beginRow, rows, QModelIndex());
+
+	bool success = false;
 	if(action == Qt::CopyAction)
 	{
 		for(const auto& libentry : std::as_const(libentries))
@@ -327,12 +341,13 @@ bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, i
 			qDebug() << "Inserting Copies";
 			// Create a new PlaylistModelItem to put in the model.
 			std::shared_ptr<PlaylistModelItem> plmi = PlaylistModelItem::createFromLibraryEntry(libentry);
+
 			setData(index(beginRow, 0), QVariant::fromValue(plmi));
 			beginRow += 1;
 		}
 		qDebug() << QString("Inserted and setData");
 		// Drop was successful.
-		return true;
+		success = true;
 	}
 	else if(action == Qt::MoveAction)
 	{
@@ -347,10 +362,16 @@ bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, i
                     beginRow += 1;
             }
         qDebug() << "MoveAction END";
-		return true;
+		success = true;
 	}
-	return false;
 
+	if (success)
+	{
+		// We've successfully inserted the data.  Tell the view to update.
+		Q_EMIT dataChanged(index(startRow, 0), index(startRow + rows - 1, 0));
+	}
+
+	return success;
 }
 
 void PlaylistModel::setLibraryRootUrl(const QUrl &url)
@@ -416,18 +437,4 @@ bool PlaylistModel::serializeToFileAsXSPF(QFileDevice& filedev) const
 
 }
 
-void PlaylistModel::subclassesInsertRows(int first_row, int num_rows, const QModelIndex& parent)
-{
-
-}
-
-void PlaylistModel::subclassesRemoveRows(int first_row, int num_rows, const QModelIndex& parent)
-{
-
-}
-
-void PlaylistModel::subclassesSetData(const QModelIndex& index, const QVariant& value, int role)
-{
-
-}
 

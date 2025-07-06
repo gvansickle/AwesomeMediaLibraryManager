@@ -98,7 +98,7 @@ public Q_SLOTS:
 	void seekStart();
 	void seekEnd();
 
-	void onPlaylistPositionChanged(const QModelIndex& current, const QModelIndex& previous);
+	void onPlaylistPositionChanged(const QModelIndex& current, const QModelIndex& previous, bool stop_playing);
 
 private Q_SLOTS:
 	void onPositionChanged(qint64 pos);

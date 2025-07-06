@@ -36,8 +36,6 @@ Q_SIGNALS:
 	/// Start playing the current song.
 	void play();
 
-	void nowPlayingIndexChanged(const QModelIndex& current, const QModelIndex& previous);
-
 	/// @}
 
 public:
@@ -54,31 +52,7 @@ public:
 
 public Q_SLOTS:
 
-	void onNumRowsChanged();
-
-	/// @name Slots for player-connected messages.
-	/// @{
-
-	/**
-	 * Start next song.
-	 * Makes the next item in the model the current item in the view.
-	 */
-	void next();
-
-	/// Start previous song.
-	void previous();
-
-	/**
-	 * Shuffles the unshuffled<->shuffled item index map.
-	 * @param shuffle true = shuffle, false = unshuffle.
-	 */
-	void shuffle(bool shuffle = false);
-
-	void loopAtEnd(bool loop_at_end = false);
-
-	void jump(const QModelIndex& index);
-
-	/// @}
+    void setCurrentIndexAndRow(const QModelIndex& new_index, const QModelIndex& old_index);
 
 protected:
 
@@ -113,23 +87,7 @@ private:
 	 */
 	void startPlaying(const QModelIndex& index);
 
-	void setCurrentIndexAndRow(const QModelIndex& new_index, const QModelIndex& old_index);
-
-	/**
-	* The map of proxy indices <-> source model indices.
-	*/
-	std::vector<int> m_indices;
-
-	/// The index into m_indices which should be played.
-	int m_current_shuffle_index {-1};
-
-	/// Current shuffle mode.
-	bool m_shuffle {false};
-
-	/// Current loop mode
-	bool m_loop_at_end {false};
-
-    BoldRowDelegate* m_brdelegate;
+    QPointer<BoldRowDelegate> m_brdelegate;
 
 	Disconnector m_disconnector;
 

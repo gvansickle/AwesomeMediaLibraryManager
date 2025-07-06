@@ -56,7 +56,7 @@ class PlaylistModel : public LibraryModel
 
 public:
 	explicit PlaylistModel(QObject* parent);
-	~PlaylistModel() = default;
+    ~PlaylistModel() override = default;
 	M_GH_POLYMORPHIC_SUPPRESS_COPYING_C67(PlaylistModel)
 
 	Qt::ItemFlags flags(const QModelIndex &index) const override;
@@ -91,12 +91,6 @@ public:
 	void setLibraryRootUrl(const QUrl& url) override;
 
 	bool serializeToFileAsXSPF(QFileDevice& filedev) const;
-
-protected:
-	void subclassesInsertRows(int first_row, int num_rows, const QModelIndex& parent = QModelIndex()) override;
-	void subclassesRemoveRows(int first_row, int num_rows, const QModelIndex& parent = QModelIndex()) override;
-	void subclassesSetData(const QModelIndex& index, const QVariant& value, int role = Qt::EditRole) override;
-
 };
 
 Q_DECLARE_METATYPE(PlaylistModel)

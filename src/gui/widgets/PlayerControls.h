@@ -47,6 +47,8 @@ public:
     QMediaPlayer::PlaybackState state() const;
 	bool isMuted() const { return m_playerMuted; }
     float volume() const;
+	bool isShuffle() const;
+	bool isRepeat() const;
 
 Q_SIGNALS:
     void play();
@@ -66,6 +68,8 @@ public Q_SLOTS:
     void setPlaybackState(QMediaPlayer::PlaybackState state);
     void setVolume(float volume);
     void setMuted(bool muted);
+	void setShuffleMode(bool shuffle_on);
+	void setRepeatMode(bool loop_on);
 	void onDurationChanged(qint64 duration);
 	void onPositionChanged(qint64 pos);
 

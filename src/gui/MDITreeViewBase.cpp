@@ -123,13 +123,13 @@ MDITreeViewBase::MDITreeViewBase(QWidget* parent) : QTreeView(parent)
 	setContextMenuPolicy(Qt::DefaultContextMenu);
 
 	// Connect to the activated() signal, i.e. when the user hits "Enter".
-	connect(this, &MDITreeViewBase::activated, this, &MDITreeViewBase::onActivated);
+    connect_or_die(this, &MDITreeViewBase::activated, this, &MDITreeViewBase::onActivated);
 
 	// Hook things up for our tri-state column-sorting implementation.
-	connect(header(), &QHeaderView::sectionClicked, this, &MDITreeViewBase::onSectionClicked);
+    connect_or_die(header(), &QHeaderView::sectionClicked, this, &MDITreeViewBase::onSectionClicked);
 
 	// Connect up our custom HeaderView context menu.
-	connect(header(), &QHeaderView::customContextMenuRequested, this, &MDITreeViewBase::headerMenu);
+    connect_or_die(header(), &QHeaderView::customContextMenuRequested, this, &MDITreeViewBase::headerMenu);
 }
 
 /**
@@ -279,10 +279,13 @@ QString MDITreeViewBase::getDisplayName() const
 void MDITreeViewBase::setModel(QAbstractItemModel* model)
 {
     qDebug() << "BASE SETTING MODEL:" << model;
+	QItemSelectionModel* sm = selectionModel();
 
-    m_select_all_model_watcher->disconnectFromCurrentModel();
+	m_select_all_model_watcher->disconnectFromCurrentModel();
     this->BASE_CLASS::setModel(model);
     m_select_all_model_watcher->setModelToWatch(model);
+
+	if (sm) { sm->deleteLater();}
 }
 
 //

@@ -95,6 +95,7 @@
 
 #include <logic/models/LibraryModel.h>
 #include <logic/models/PlaylistModel.h>
+#include <proxymodels/ShuffleProxyModel.h>
 
 #include "gui/MDIArea.h"
 #include "MetadataDockWidget.h"
@@ -1159,31 +1160,37 @@ void MainWindow::connectPlayerAndControls(MP2 *player, PlayerControls *controls)
 	connect_or_die(player, &MP2::positionChanged2, controls, &PlayerControls::onPositionChanged);
 
 	// Final setup.
-	// Set volume control to the current player volume.
+	// Set control states to their initial states.
 	controls->setVolume(player->volume());
 	controls->setMuted(player->muted());
 }
 
+/// @todo RENAME
 void MainWindow::connectPlayerAndNowPlayingView(MP2 *player, MDINowPlayingView *now_playing_view)
 {
 	// Connection for the player to tell the playlist to go to the next item when the current one is over.
 	// This in turn will cause a MDINowPlayingView::nowPlayingIndexChanged() to be emitted, which the player
 	// receives and sets up the now-current track.
-	connect_or_die(player, &MP2::playlistToNext, now_playing_view, &MDINowPlayingView::next);
-	connect_or_die(now_playing_view, &MDINowPlayingView::nowPlayingIndexChanged, player, &MP2::onPlaylistPositionChanged);
+	connect_or_die(player, &MP2::playlistToNext, m_now_playing_shuffle_proxy_model, &ShuffleProxyModel::next);
+	connect_or_die(m_now_playing_shuffle_proxy_model, &ShuffleProxyModel::nowPlayingIndexChanged, player, &MP2::onPlaylistPositionChanged);
 }
 
-void MainWindow::connectPlayerControlsAndNowPlayingView(PlayerControls *controls, MDINowPlayingView* now_playing_view)
+/// @todo RENAME
+void MainWindow::connectPlayerControlsAndNowPlayingView(PlayerControls* controls, MDINowPlayingView* now_playing_view)
 {
 	/// @note Qt::ConnectionType() cast here is due to the mixed flag/enum nature of the type.  Qt::UniqueConnection (0x80) can be bitwise-
 	/// OR-ed in with any other connection type, which are 0,1,2,3.
-    connect_or_die(controls, &PlayerControls::next, now_playing_view, &MDINowPlayingView::next, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
-    connect_or_die(controls, &PlayerControls::previous, now_playing_view, &MDINowPlayingView::previous, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
-	connect_or_die(controls, &PlayerControls::changeShuffle, now_playing_view, &MDINowPlayingView::shuffle);
-	connect_or_die(controls, &PlayerControls::changeRepeat, now_playing_view, &MDINowPlayingView::loopAtEnd);
+    connect_or_die(controls, &PlayerControls::next, m_now_playing_shuffle_proxy_model, &ShuffleProxyModel::next, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
+    connect_or_die(controls, &PlayerControls::previous, m_now_playing_shuffle_proxy_model, &ShuffleProxyModel::previous, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
+	connect_or_die(controls, &PlayerControls::changeShuffle, m_now_playing_shuffle_proxy_model, &ShuffleProxyModel::setShuffle);
+	connect_or_die(controls, &PlayerControls::changeRepeat, m_now_playing_shuffle_proxy_model, &ShuffleProxyModel::setLoopAtEnd);
+
+	// Set control states to their initial states.
+	controls->setShuffleMode(m_now_playing_shuffle_proxy_model->shuffle());
+	controls->setRepeatMode(m_now_playing_shuffle_proxy_model->loopAtEnd());
 
 	// Connect play() signal-to-signal.
-    connect_or_die(now_playing_view, &MDINowPlayingView::play, controls, &PlayerControls::play, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
+	connect_or_die(now_playing_view, &MDINowPlayingView::play, controls, &PlayerControls::play, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
 }
 
 void MainWindow::connectLibraryViewAndMainWindow(MDILibraryView *lv)
@@ -1208,13 +1215,28 @@ void MainWindow::connectNowPlayingViewAndMainWindow(MDINowPlayingView* now_playi
 	connect_or_die(this, &MainWindow::sendToNowPlaying, now_playing_view, &MDINowPlayingView::onSendToNowPlaying);
 	connect_or_die(this, &MainWindow::settingsChanged, now_playing_view, &MDILibraryView::onSettingsChanged);
 
+    /// @todo Break this off, it's not NowPlaying<->MainWindow.
+	connect_or_die(m_now_playing_playlist_model, &QAbstractItemModel::modelReset, m_now_playing_shuffle_proxy_model,
+					&ShuffleProxyModel::onNumRowsChanged);
+	connect_or_die(m_now_playing_playlist_model, &QAbstractItemModel::rowsInserted, m_now_playing_shuffle_proxy_model,
+					&ShuffleProxyModel::onNumRowsChanged);
+	connect_or_die(m_now_playing_playlist_model, &QAbstractItemModel::rowsRemoved, m_now_playing_shuffle_proxy_model,
+					&ShuffleProxyModel::onNumRowsChanged);
+
+    // ShuffleProxyModel -> Now Playing View
+    connect_or_die(m_now_playing_shuffle_proxy_model, &ShuffleProxyModel::nowPlayingIndexChanged, now_playing_view, &MDINowPlayingView::setCurrentIndexAndRow);
+
+    // Now Playing View -> ShuffleProxyModel
+    connect_or_die(m_now_playing_playlist_view, &MDINowPlayingView::activated, m_now_playing_shuffle_proxy_model, &ShuffleProxyModel::jump);
+
 
 	connectPlayerAndNowPlayingView(m_player, now_playing_view);
 	connectPlayerControlsAndNowPlayingView(m_controls, now_playing_view);
-    qDebug() << "Connected";
+	qDebug() << "Connected";
 }
 
-void MainWindow::connectActiveMDITreeViewBaseAndMetadataDock(MDITreeViewBase* viewbase, MetadataDockWidget* metadata_dock_widget)
+void MainWindow::connectActiveMDITreeViewBaseAndMetadataDock(MDITreeViewBase* viewbase,
+															MetadataDockWidget* metadata_dock_widget)
 {
 	metadata_dock_widget->connectToView(viewbase);
 }
@@ -1821,7 +1843,12 @@ void MainWindow::newNowPlaying()
 	// Set this view's model to be the single "Now Playing" model.
 	m_now_playing_playlist_model = child->underlyingModel();
 
-    /// @todo Do we really need to keep this as a member pointer?
+	m_now_playing_shuffle_proxy_model = new ShuffleProxyModel(this);
+	m_now_playing_shuffle_proxy_model->setSourceModel(m_now_playing_playlist_model);
+	m_now_playing_sortfilter_model = new LibrarySortFilterProxyModel(this);
+
+
+	/// @todo Do we really need to keep this as a member pointer?
     m_now_playing_playlist_view = child;
 
 	/// @todo Maybe refactor the "newFile()" setup to look more like the static openXxx() functions,
@@ -1829,7 +1856,7 @@ void MainWindow::newNowPlaying()
 	MDIModelViewPair mvpair;
 	mvpair.m_view = child;
 	mvpair.m_view_was_existing = false;
-	mvpair.setModel(m_now_playing_playlist_model);
+	mvpair.setModel(m_now_playing_shuffle_proxy_model);
 	mvpair.m_model_was_existing = false;
 
 	addChildMDIModelViewPair_Playlist(mvpair);
@@ -2023,7 +2050,9 @@ void MainWindow::addChildMDIModelViewPair_Playlist(const MDIModelViewPair& mvpai
 
 	if(mvpair.hasModel())
 	{
-		auto playlist_model = qobject_cast<PlaylistModel*>(mvpair.m_model);
+        qDb() << "REAL TYPE IS:" << mvpair.m_model->metaObject()->className();
+        auto proxy_model = qobject_cast<ShuffleProxyModel*>(mvpair.m_model);
+        auto playlist_model = qobject_cast<PlaylistModel*>(proxy_model->sourceModel());
 		Q_CHECK_PTR(playlist_model);
 
 		bool model_really_already_existed = (std::find(m_playlist_models.begin(), m_playlist_models.end(), playlist_model) != m_playlist_models.end());

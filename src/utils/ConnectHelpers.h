@@ -56,17 +56,18 @@ QMetaObject::Connection connect_clicked(Sender* sender, const Receiver* receiver
 
 /**
  * Make a connection and assert if the attempt fails.
- * This template is for the general case, including lambdas.  Unfortunately:
+ * This template is for lambdas.  Unfortunately:
  * "Qt::UniqueConnections do not work for lambdas, non-member functions and functors; they only apply
  * to connecting to member functions."
- * The overload below tries to catch the case where UniqueConnection does apply.
+ * The overload below applies in the case where UniqueConnection does apply.
  */
-template <typename... Args>
-QMetaObject::Connection connect_or_die(Args&&... args)
+template <typename TPMF, typename T=class_of_t<TPMF>*, typename U,  typename Lambda, typename... Args>
+	requires (!std::is_member_function_pointer_v<Lambda>)
+QMetaObject::Connection connect_or_die(const T t, TPMF tpmf, const U u, Lambda l, Args&&... args)
 {
     QMetaObject::Connection retval;
 
-    retval = QObject::connect(std::forward<Args>(args)...);
+    retval = QObject::connect(t, tpmf, u, l, std::forward<Args>(args)...);
     Q_ASSERT(static_cast<bool>(retval) != false);
 	return retval;
 }
@@ -76,9 +77,10 @@ QMetaObject::Connection connect_or_die(Args&&... args)
  * "Qt::UniqueConnections do not work for lambdas, non-member functions and functors; they only apply
  * to connecting to member functions."
  */
-template <class TPMF, class T = class_of_t<TPMF>, class UPMF, class U = class_of_t<UPMF>,
-          REQUIRES(std::is_member_function_pointer_v<UPMF>)>
-QMetaObject::Connection connect_or_die(const T* t, TPMF tpmf, const U* u, UPMF upmf, Qt::ConnectionType connection_type = Qt::AutoConnection)
+template <class TPMF, class T = class_of_t<TPMF>*, class UPMF, class U = class_of_t<UPMF>*>
+	requires std::is_member_function_pointer_v<TPMF> && std::is_member_function_pointer_v<UPMF>
+QMetaObject::Connection
+connect_or_die(const T t, TPMF tpmf, const U u, UPMF upmf, Qt::ConnectionType connection_type = Qt::AutoConnection)
 {
     QMetaObject::Connection retval;
 

@@ -25,6 +25,7 @@
 
 SelectionFilterProxyModel::SelectionFilterProxyModel(QObject *parent) : BASE_CLASS(parent)
 {
+	setObjectName("SelectionFilterProxyModel#");
 	setDynamicSortFilter(true);
 }
 

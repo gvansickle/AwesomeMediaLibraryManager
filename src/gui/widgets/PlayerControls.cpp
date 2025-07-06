@@ -80,7 +80,7 @@ PlayerControls::PlayerControls(QWidget *parent) : QWidget(parent)
 	m_shuffleAct->setCheckable(true);
 	m_shuffleButton = new QToolButton(this);
 	m_shuffleButton->setDefaultAction(m_shuffleAct);
-	connect(m_shuffleAct, &QAction::toggled, this, &PlayerControls::changeShuffle);
+	connect_or_die(m_shuffleAct, &QAction::toggled, this, &PlayerControls::changeShuffle);
 
 	m_repeatButton = new QToolButton(this);
 	m_repeat_icon = Theme::iconFromTheme("media-playlist-repeat");
@@ -89,7 +89,7 @@ PlayerControls::PlayerControls(QWidget *parent) : QWidget(parent)
 	m_repeatButton->setDefaultAction(m_repeat_act);
 	m_playerRepeat = false;
 	// Signal-to-signal connection, emit a changeRepeat(bool) when the "Repeat" button changes checked state.
-	connect(m_repeat_act, &QAction::toggled, this, &PlayerControls::changeRepeat);
+	connect_or_die(m_repeat_act, &QAction::toggled, this, &PlayerControls::changeRepeat);
 
 	// Mute button.
 	// Note a few things here:
@@ -201,6 +201,16 @@ float PlayerControls::volume() const
 	return linearVol;
 }
 
+bool PlayerControls::isShuffle() const
+{
+	return m_shuffleAct->isChecked();
+}
+
+bool PlayerControls::isRepeat() const
+{
+	return m_repeat_act->isChecked();
+}
+
 /**
  * Slot connected to the player, which notifies us of its current state so we can set the control states appropriately.
  * @param state
@@ -268,6 +278,17 @@ void PlayerControls::setMuted(bool muted)
 			m_mute_act->setIcon(m_icon_not_muted);
         }
     }
+}
+
+void PlayerControls::setShuffleMode(bool shuffle_on)
+{
+	m_shuffleAct->setChecked(shuffle_on);
+}
+
+void PlayerControls::setRepeatMode(bool loop_on)
+{
+	m_playerRepeat = loop_on;
+	m_repeat_act->setChecked(loop_on);
 }
 
 QMediaPlayer::PlaybackState PlayerControls::state() const

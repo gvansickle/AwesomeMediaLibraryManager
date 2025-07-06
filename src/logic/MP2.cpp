@@ -311,17 +311,17 @@ void MP2::onSourceChanged(const QUrl& media_url)
 
 
 
-void MP2::onPlaylistPositionChanged(const QModelIndex& current, const QModelIndex& previous)
+void MP2::onPlaylistPositionChanged(const QModelIndex& current, const QModelIndex& previous, bool stop_playing)
 {
-	// We get in here when the Now Playing view sends the MDINowPlayingView::nowPlayingIndexChanged signal.
+	// We get in here when the ShuffleProxyModel sends the ShuffleProxyModel::nowPlayingIndexChanged signal.
 	// That signal can come from:
-	// - User input on the playlist view.
+	// - User input on the playlist view (next()/previous()).
 	// - The MP2::playlistToNext signal emitted by us (in two different places).
 
 	m_onPositionChanged_sending_playlistToNext = false;
 	m_EndOfMedia_sending_playlistToNext = false;
 
-	qDb() << "playlistPosChanged:" << current.row();
+	qDb() << "playlistPosChanged: OLD:" << previous << "NEW:" << current;
 
 	if (!current.isValid())
 	{
@@ -330,12 +330,17 @@ void MP2::onPlaylistPositionChanged(const QModelIndex& current, const QModelInde
 	else
 	{
 		// Set up to play the newly-selected track.
-		QVariant libentry = current.siblingAtColumn(0).data(ModelUserRoles::PointerToItemRole);
+        QVariant libentry = current.siblingAtColumn(0).data(ModelUserRoles::PointerToItemRole);
 		Q_ASSERT(libentry.isValid());
 		std::shared_ptr<PlaylistModelItem> item = libentry.value<std::shared_ptr<PlaylistModelItem>>();
 		auto new_url = item->getM2Url();
 		qDb() << M_ID_VAL(new_url);
 		onSourceChanged(new_url);
+	}
+
+	if (stop_playing)
+	{
+		stop();
 	}
 }
 
