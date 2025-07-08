@@ -64,9 +64,9 @@ MDIPlaylistView::MDIPlaylistView(QWidget* parent) : MDITreeViewBase(parent)
 	m_underlying_model = nullptr;
 
 	// The sort and Filter proxy model.
-//	 m_sortfilter_model = new LibrarySortFilterProxyModel(this);
-	// m_sortfilter_model->setDynamicSortFilter(false);
-	// m_sortfilter_model->setSortCaseSensitivity(Qt::CaseInsensitive);
+	 m_sortfilter_model = new LibrarySortFilterProxyModel(this);
+	 m_sortfilter_model->setDynamicSortFilter(false);
+	 m_sortfilter_model->setSortCaseSensitivity(Qt::CaseInsensitive);
 
 	// Delegates.
 	m_length_delegate = new ItemDelegateLength(this);
