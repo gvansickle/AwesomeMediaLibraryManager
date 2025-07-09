@@ -70,7 +70,7 @@ MDILibraryView::MDILibraryView(QWidget* parent) : MDITreeViewBase(parent)
 	setSelectionMode(QAbstractItemView::ExtendedSelection);
 
 	// Hook up double-click handler.
-	connect(this, &MDILibraryView::doubleClicked, this, &MDILibraryView::onDoubleClicked);
+	connect_or_die(this, &MDILibraryView::doubleClicked, this, &MDILibraryView::onDoubleClicked);
 
 	// Configure drag and drop.
 	//// Libraries can't have items dragged around inside them.
@@ -133,8 +133,8 @@ MDIModelViewPair MDILibraryView::openFile(QUrl open_url, QWidget *parent, std::f
 	{
 		Q_ASSERT_X(mv_pair.m_model_was_existing, "openFile", "find_exisiting returned a model but said it was not pre-existing.");
 
-        qDebug() << "Model exists:" << mv_pair.m_model_stack.data();
-		libmodel = qobject_cast<LibraryModel*>(mv_pair.m_model_stack);
+        qDebug() << "Model exists:" << mv_pair.getTopModel().data();
+		libmodel = qobject_cast<LibraryModel*>(mv_pair.getRootModel());
 	}
 	else
 	{
@@ -155,7 +155,7 @@ MDIModelViewPair MDILibraryView::openFile(QUrl open_url, QWidget *parent, std::f
 		/// @note Need this cast due to some screwyness I mean subtleties of C++'s member access control rules.
 		/// In very shortened form: Derived member functions can only access "protected" members through
 		/// an object of the Derived type, not of the Base type.
-		qobject_cast<MDILibraryView*>(mvpair.m_view)->setCurrentFile(open_url);
+        qobject_cast<MDILibraryView*>(mvpair.getView())->setCurrentFile(open_url);
 		return mvpair;
     }
     else

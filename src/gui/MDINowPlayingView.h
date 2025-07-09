@@ -66,7 +66,7 @@ protected:
 
 protected Q_SLOTS:
 
-	/// Invoked when user double-clicks on an entry.
+	/// Invoked when the user double-clicks on an entry.
 	/// According to Qt docs, index will always be valid:
 	/// https://doc.qt.io/qt-6/qabstractitemview.html#doubleClicked:
 	/// "The [doubleClicked] signal is only emitted when the index is valid."

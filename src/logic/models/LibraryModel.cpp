@@ -100,10 +100,9 @@ LibraryModel::~LibraryModel()
     m_rescanner->deleteLater();
 }
 
+// static
 QPointer<LibraryModel> LibraryModel::openFile(QUrl open_url, QObject* parent)
 {
-	// This is static.
-
     // Create the new LibraryModel.
 	auto lib = QPointer<LibraryModel>(new LibraryModel(parent));
 

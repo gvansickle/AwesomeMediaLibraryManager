@@ -46,26 +46,14 @@ class MDIModelViewPair
 {
 public:
 
-	// template <typename T>
-	// void setModel(T* derived_model_ptr)
-	// {
-	// 	m_model_stack = derived_model_ptr;
-	// }
-	//
-	// template <typename T>
-	// void setModel(QPointer<T> derived_model_ptr)
-	// {
-	// 	m_model_stack = derived_model_ptr;
-	// }
-
 	template <typename T>
-		requires (!std::is_convertible_v<QAbstractProxyModel*, T*>)
+		requires (!std::is_convertible_v<T*, QAbstractProxyModel*>)
 	void appendModel(QPointer<T> model)
 	{
 		// For now anyway, this should only push a model to the bottom of the {proxy}model stack.
 		if (!m_model_stack.empty())
 		{
-			qCr() << "Model wasn't the first item pushed onto the modelstack:" << model;
+            qCr() << "Model wasn't the first item pushed onto the modelstack:" << model.get();
 		}
 
 		m_model_stack.emplace_back(model);
@@ -79,12 +67,12 @@ public:
 	 * @param proxymodel
 	 */
 	template <typename T>
-		requires std::is_convertible_v<QAbstractProxyModel*, T*>
+		requires std::is_convertible_v<T*, QAbstractProxyModel*>
 	void appendProxyModel(QPointer<T> proxymodel)
 	{
 		if (m_model_stack.empty())
 		{
-			qCr() << "No model to connect ProxyModel to:" << proxymodel;
+            qCr() << "No model to connect ProxyModel to:" << proxymodel.get();
 		}
 
 		m_model_stack.emplace_back(proxymodel);
@@ -100,6 +88,12 @@ public:
 
 	QPointer<MDITreeViewBase> getView() const { return m_view; }
     QPointer<QAbstractItemModel> getTopModel() const { return m_model_stack.back(); }
+
+	/**
+	 * @todo Seems like this should go away eventually.
+	 * @return
+	 */
+    QPointer<QAbstractItemModel> getRootModel() const { return m_model_stack.front(); }
 
 private:
 	std::vector<QPointer<QAbstractItemModel>> m_model_stack;

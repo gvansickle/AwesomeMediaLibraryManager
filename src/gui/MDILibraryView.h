@@ -95,7 +95,7 @@ public:
 protected:
 	QPointer<LibraryModel> m_underlying_model;
 
-	// LibrarySortFilterProxyModel* m_sortfilter_model;
+	LibrarySortFilterProxyModel* m_sortfilter_model;
 
 	ItemDelegateLength* m_length_delegate;
 	MimeTypeDelegate* m_mimetype_delegate;
