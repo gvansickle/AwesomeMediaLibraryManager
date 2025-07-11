@@ -44,6 +44,7 @@ class MDITreeViewBase;
  */
 class MDIModelViewPair
 {
+
 public:
 
 	template <typename T>
@@ -94,6 +95,8 @@ public:
 	 * @return
 	 */
     QPointer<QAbstractItemModel> getRootModel() const { return m_model_stack.front(); }
+
+	QPointer<QAbstractItemModel> getProxyAt(int proxymodel) const;
 
 private:
 	std::vector<QPointer<QAbstractItemModel>> m_model_stack;

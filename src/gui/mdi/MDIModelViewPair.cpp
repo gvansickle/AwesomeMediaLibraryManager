@@ -37,6 +37,8 @@ void MDIModelViewPair::appendView(QPointer<MDITreeViewBase> view)
 	}
 	m_view = view;
 
+	Q_ASSERT(m_model_stack.size() > 1);
+
 	m_view->setModel(m_model_stack.back());
 }
 
@@ -53,4 +55,9 @@ bool MDIModelViewPair::hasView() const
 bool MDIModelViewPair::hasModelAndView() const
 {
 	return (!m_model_stack.empty()) && m_view;
+}
+
+QPointer<QAbstractItemModel> MDIModelViewPair::getProxyAt(int proxymodel) const
+{
+	return m_model_stack.at(proxymodel+1);
 }
