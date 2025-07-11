@@ -23,7 +23,6 @@
 #include <config.h>
 
 // Std C++
-
 #include <vector>
 #include <utility> // For std::pair<>
 #include <memory>
@@ -421,7 +420,7 @@ private:
 	QStandardItem* m_stditem_playlist_views;
 
     /// The library models.
-	std::vector<QPointer<LibraryModel>> m_libmodels;
+    std::vector<MDIModelViewPair*> m_libmodels;
 
 	QPointer<LibrarySortFilterProxyModel> m_libraryview_sort_filter_proxy_model;
 
@@ -435,7 +434,7 @@ private:
 	/// @}
 
     /// The list of PlaylistModels.
-	std::vector<QPointer<PlaylistModel>> m_playlist_models;
+    std::vector<MDIModelViewPair*> m_playlist_models;
 
     /// @}
 

@@ -25,6 +25,7 @@
 // Std C++
 #include <functional>
 #include <algorithm>
+#include <vector>
 
 // Qt
 #include <QObject>
@@ -1404,11 +1405,27 @@ MDIModelViewPair MainWindow::findSubWindowModelViewPair(QUrl url) const
 	if(view)
     {
 		// Found an existing View, which means it's attached to an existing Model.
-        retval.getView() = view;
-        retval.m_view_was_existing = true;
-#warning "TODO Underlying vs top layer"
-		retval.m_model_stack = view->underlyingModel();
-        retval.m_model_was_existing = true;
+		for (const auto& lm : m_libmodels)
+		{
+			if (lm->getView() == view)
+			{
+				// Found the pair.
+				return *lm;
+			}
+		}
+
+		for (const auto& pm : m_playlist_models)
+		{
+			if (pm->getView() == view)
+			{
+				// Found the pair.
+				return *pm;
+			}
+		}
+
+		// If we get here, we didn't find the view in the MDIModelViewPair stores.
+		// Something is broken.
+		Q_ASSERT(false);
     }
 	else
 	{
@@ -1416,19 +1433,21 @@ MDIModelViewPair MainWindow::findSubWindowModelViewPair(QUrl url) const
 		/// @todo: Seems like there should be a cleaner way to handle this.
 		for(const auto& lm : m_libmodels)
 		{
-			if(lm->getLibRootDir() == url)
+            if(qobject_cast<LibraryModel*>(lm->getRootModel())->getLibRootDir() == url)
 			{
-                qDebug() << "Found existing LibraryModel:" << lm.data();
-				retval.m_model_stack = lm;
+                qDebug() << "Found existing LibraryModel:" << lm->getRootModel().data();
+                retval = *lm;
+                retval.m_view_was_existing = false;
 				retval.m_model_was_existing = true;
 			}
 		}
 		for(const auto& pm : m_playlist_models)
 		{
-			if(pm->getLibRootDir() == url)
+			if(qobject_cast<PlaylistModel*>(pm->getRootModel())->getLibRootDir() == url)
 			{
-                qDebug() << "Found existing PlaylistModel:" << pm.data();
-				retval.m_model_stack = pm;
+                qDebug() << "Found existing PlaylistModel:" << pm;
+                retval = *pm;
+				retval.m_view_was_existing = false;
 				retval.m_model_was_existing = true;
 			}
 		}
@@ -1469,10 +1488,7 @@ void MainWindow::view_is_closing(MDITreeViewBase* viewptr, QAbstractItemModel* m
 
 		//m_model_of_model_view_pairs->indexFromItem()
 
-		m_playlist_models.erase(std::remove(m_playlist_models.begin(),
-								  m_playlist_models.end(),
-								  modelptr),
-				   m_playlist_models.end());
+        std::erase_if(m_playlist_models, [modelptr](auto& mp){ return modelptr == mp->getRootModel(); });
 	}
 }
 
@@ -1657,7 +1673,7 @@ void MainWindow::writeLibSettings()
 	for(size_t i = 0; i < m_libmodels.size(); ++i)
 	{
 		// m_libmodels are pointers to QObject-derived, we need to push into the list manually.
-		LibraryModel* lmp = m_libmodels[i];
+        LibraryModel* lmp = qobject_cast<LibraryModel*>(m_libmodels[i]->getRootModel());
 		QVariant qv = lmp->toVariant();
 		list.push_back(qv);
 	}
@@ -1678,9 +1694,10 @@ void MainWindow::openWindows()
 
 	for(const auto& m : m_libmodels)
 	{
-		qDebug() << "Opening view on existing model:" << m->getLibraryName() << m->getLibRootDir();
+        auto mp = qobject_cast<LibraryModel*>(m->getRootModel());
+        qDebug() << "Opening view on existing model:" << mp->getLibraryName() << mp->getLibRootDir();
 
-		auto child = MDILibraryView::openModel(m, this);
+        auto child = MDILibraryView::openModel(mp, this);
 
 		/// @todo Should be encapsulated such that what we get back from openModel() is correct.
 		child.m_model_was_existing = true;
@@ -1747,9 +1764,10 @@ void MainWindow::onRescanLibrary()
 
 	for(auto& l : m_libmodels)
 	{
-//		l->startRescan();
-		lib_root_urls << l->getLibRootDir();
-		onRemoveDirFromLibrary(l);
+        auto lp = qobject_cast<LibraryModel*>(l->getRootModel());
+//		lp->startRescan();
+        lib_root_urls << lp->getLibRootDir();
+        onRemoveDirFromLibrary(lp);
 	}
 
 	for(const auto& url : std::as_const(lib_root_urls))
@@ -1762,7 +1780,8 @@ void MainWindow::onCancelRescan()
 {
 	for(const auto& l : m_libmodels)
 	{
-		l->cancelRescan();
+        auto lp = qobject_cast<LibraryModel*>(l->getRootModel());
+        lp->cancelRescan();
 	}
 }
 
@@ -1787,15 +1806,17 @@ void MainWindow::onRemoveDirFromLibrary(QPointer<LibraryModel> libmodel)
 	}
 	// Find and Delete the model.
 	size_t index = 0;
-	for(auto m : m_libmodels)
+    for(auto& m : m_libmodels)
 	{
-		if(m == libmodel)
+        auto mp = qobject_cast<LibraryModel*>(m->getRootModel());
+        if(mp == libmodel)
 		{
-            qDebug() << QString("Removing libmodel:") << m.data() << ", have" << m_libmodels.size() << "model(s).";
-			m->close(true);
+            qDebug() << QString("Removing libmodel:") << m << ", have" << m_libmodels.size() << "model(s).";
+            mp->close(true);
 			m_libmodels.erase(m_libmodels.begin() + index);
 			// Delete the model.
-			m.clear();
+			// @todo I think the erase above will delete the model.
+            // delete m;
 			break;
 		}
 		index++;
@@ -1983,25 +2004,28 @@ void MainWindow::addChildMDIModelViewPair_Library(const MDIModelViewPair& mvpair
 
 	if(mvpair.hasModel())
 	{
-#warning "This cast is wrong now"
-		QPointer<LibraryModel> libmodel = qobject_cast<LibraryModel*>(mvpair.getTopModel());
+        QPointer<LibraryModel> libmodel = qobject_cast<LibraryModel*>(mvpair.getRootModel());
 		Q_CHECK_PTR(libmodel);
 
-		bool model_really_already_existed = (std::find(m_libmodels.begin(), m_libmodels.end(), libmodel) != m_libmodels.end());
+        bool model_really_already_existed = (std::find_if(m_libmodels.begin(), m_libmodels.end(), [libmodel](auto& lmvpair){
+                                                 return lmvpair->getRootModel() == libmodel;
+                                             }) != m_libmodels.end());
 
 		// View is new, did the model already exist?
 		if(mvpair.m_model_was_existing)
 		{
-            qDebug() << "Model existed:" << mvpair.getTopModel().data() << libmodel->getLibRootDir() << libmodel->getLibraryName();
+            qDebug() << "Model existed:" << mvpair.getRootModel().data() << libmodel->getLibRootDir() << libmodel->getLibraryName();
 			Q_ASSERT(model_really_already_existed);
 		}
 		else
 		{
 			// Model is new.
-            qDebug() << "Model is new:" << mvpair.getTopModel().data() << libmodel->getLibRootDir() << libmodel->getLibraryName();
+            qDebug() << "Model is new:" << mvpair.getRootModel().data() << libmodel->getLibRootDir() << libmodel->getLibraryName();
 			Q_ASSERT(!model_really_already_existed);
 
-			m_libmodels.push_back(libmodel);
+            MDIModelViewPair* lmvpair(new MDIModelViewPair());
+			*lmvpair = mvpair;
+            m_libmodels.push_back(lmvpair);
 
             /// @todo This needs cleanup.
 			dynamic_cast<CollectionStatsWidget*>(m_collection_stats_dock_widget->widget())->setModel(libmodel);
@@ -2057,27 +2081,31 @@ void MainWindow::addChildMDIModelViewPair_Playlist(const MDIModelViewPair& mvpai
 
 	if(mvpair.hasModel())
 	{
-        qDb() << "TOP MODEL TYPE IS:" << mvpair.getTopModel()->metaObject()->className();
+        qDb() << "ROOT MODEL TYPE IS:" << mvpair.getRootModel()->metaObject()->className();
         auto proxy_model = qobject_cast<ShuffleProxyModel*>(mvpair.getTopModel());
         auto playlist_model = qobject_cast<PlaylistModel*>(proxy_model->sourceModel());
         Q_CHECK_PTR(playlist_model);
 
-		bool model_really_already_existed = (std::find(m_playlist_models.begin(), m_playlist_models.end(), playlist_model) != m_playlist_models.end());
+        bool model_really_already_existed = (std::find_if(m_playlist_models.begin(), m_playlist_models.end(), [playlist_model](auto& x){
+                                                 return x->getRootModel() == playlist_model; }) != m_playlist_models.end());
 
 		// View is new, did the model already exist?
 		if(mvpair.m_model_was_existing)
 		{
-            qDebug() << "Model existed:" << mvpair.getTopModel()->objectName() << playlist_model->getLibRootDir() << playlist_model->getLibraryName();
+            qDebug() << "Model existed:" << mvpair.getRootModel()->objectName() << playlist_model->getLibRootDir() << playlist_model->getLibraryName();
 			Q_ASSERT(model_really_already_existed);
 		}
 		else
 		{
 			// Model is new.
-            qDebug() << "Model is new:" << mvpair.getTopModel()->objectName() << playlist_model->getLibRootDir() << playlist_model->getLibraryName();
+            qDebug() << "Model is new:" << mvpair.getRootModel()->objectName() << playlist_model->getLibRootDir() << playlist_model->getLibraryName();
 			Q_ASSERT(!model_really_already_existed);
 
+            auto lmvpair = new MDIModelViewPair();
+            *lmvpair = mvpair;
+
 			// Add the underlying model to the PlaylistModel list.
-			m_playlist_models.push_back(playlist_model);
+            m_playlist_models.push_back(lmvpair);
 		}
 	}
 }
@@ -2403,7 +2431,7 @@ void MainWindow::stopAllBackgroundThreads()
 {
 	for(auto& model : m_libmodels)
 	{
-		model->stopAllBackgroundThreads();
+        qobject_cast<LibraryModel*>(model->getRootModel())->stopAllBackgroundThreads();
 	}
 }
 
