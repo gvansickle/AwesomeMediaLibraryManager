@@ -47,6 +47,7 @@
 #include <AMLMApp.h>
 #include <MainWindow.h>
 
+
 MDILibraryView::MDILibraryView(QWidget* parent) : MDITreeViewBase(parent)
 {
 	// Not sure what's going on here, but if I don't set this to something here, the tabs stay "(Untitled)".
@@ -56,11 +57,6 @@ MDILibraryView::MDILibraryView(QWidget* parent) : MDITreeViewBase(parent)
 	m_act_window->setIcon(QIcon::fromTheme("folder"));
 
 	m_underlying_model = nullptr;
-
-	// The sort and Filter proxy model.
-	m_sortfilter_model = new LibrarySortFilterProxyModel(this);
-	m_sortfilter_model->setDynamicSortFilter(false);
-	m_sortfilter_model->setSortCaseSensitivity(Qt::CaseInsensitive);
 
 	// Delegates.
 	m_length_delegate = new ItemDelegateLength(this);
@@ -129,7 +125,7 @@ MDIModelViewPair MDILibraryView::openFile(QUrl open_url, QWidget *parent, std::f
 	/// calling an overridden readFile().
 
 	QPointer<LibraryModel> libmodel;
-	if(mv_pair.hasModel())
+	if (mv_pair.hasModel())
 	{
 		Q_ASSERT_X(mv_pair.m_model_was_existing, "openFile", "find_exisiting returned a model but said it was not pre-existing.");
 
@@ -144,8 +140,8 @@ MDIModelViewPair MDILibraryView::openFile(QUrl open_url, QWidget *parent, std::f
 
 	if(libmodel != nullptr)
     {
-		// The model has either been found already existing and with no associated View, or it has been newly opened.
-		// Either way it's valid and we now create and associate a View with it.
+		// The model has either been found already existing but with no associated View, or it has been newly opened.
+		// Either way it's valid, and we now create and associate a View with it.
 
 		auto mvpair = MDILibraryView::openModel(libmodel, parent);
 
@@ -169,15 +165,21 @@ MDIModelViewPair MDILibraryView::openFile(QUrl open_url, QWidget *parent, std::f
 /**
  * static member function which opens an MDILibraryView on the given model.
  * @param model  The model to open.  Must exist and must be valid.
+ * @returns      A MDIModelViewPair with valid model, proxymodel, and view.
  */
 MDIModelViewPair MDILibraryView::openModel(QPointer<LibraryModel> model, QWidget* parent)
 {
 	MDIModelViewPair retval;
 	retval.appendModel(model);
 
+	// The sort and Filter proxy model.
+	auto sortfilter_model = new LibrarySortFilterProxyModel(parent);
+	sortfilter_model->setDynamicSortFilter(false);
+	sortfilter_model->setSortCaseSensitivity(Qt::CaseInsensitive);
+
+    retval.appendProxyModel(QPointer<LibrarySortFilterProxyModel>(sortfilter_model));
+
 	retval.appendView(new MDILibraryView(parent));
-	/// @todo DELETE
-	// qobject_cast<MDILibraryView*>(retval.getView())->setModel(model);
 
 	return retval;
 }
@@ -185,21 +187,13 @@ MDIModelViewPair MDILibraryView::openModel(QPointer<LibraryModel> model, QWidget
 void MDILibraryView::setModel(QAbstractItemModel* model)
 {
 	// Keep a ref to the real model.
-	m_underlying_model = qobject_cast<LibraryModel*>(model);
+    m_sortfilter_model = qobject_cast<LibrarySortFilterProxyModel*>(model);
+    m_underlying_model = qobject_cast<LibraryModel*>(m_sortfilter_model->sourceModel());
 
 	// Set our "current file" to the root dir of the model.
 	setCurrentFile(m_underlying_model->getLibRootDir());
 
-	m_sortfilter_model->setSourceModel(model);
-	auto old_sel_model = selectionModel();
-	// This will create a new selection model.
-	MDITreeViewBase::setModel(m_sortfilter_model);
-	Q_ASSERT((void*)m_sortfilter_model != (void*)old_sel_model);
-    if(old_sel_model != nullptr)
-    {
-        old_sel_model->deleteLater();
-    }
-
+	MDITreeViewBase::setModel(model);
 
 	// Set up the TreeView's header.
 	header()->setStretchLastSection(false);
