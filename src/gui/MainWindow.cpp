@@ -1880,9 +1880,9 @@ void MainWindow::newNowPlaying()
 	/// so we always get an MDIModelViewPair here and don't need to hand-roll it.
 	MDIModelViewPair mvpair;
 	mvpair.appendModel(m_now_playing_playlist_model);
-	mvpair.appendProxyModel(m_now_playing_library_sortfilter_model);
 	mvpair.appendProxyModel(m_now_playing_shuffle_proxy_model);
-	mvpair.appendView(m_now_playing_playlist_view);
+    mvpair.appendProxyModel(m_now_playing_library_sortfilter_model);
+    mvpair.appendView(m_now_playing_playlist_view);
 	mvpair.m_view_was_existing = false;
 	mvpair.m_model_was_existing = false;
 
@@ -2082,7 +2082,9 @@ void MainWindow::addChildMDIModelViewPair_Playlist(const MDIModelViewPair& mvpai
 	if(mvpair.hasModel())
 	{
         qDb() << "ROOT MODEL TYPE IS:" << mvpair.getRootModel()->metaObject()->className();
-        auto proxy_model = qobject_cast<ShuffleProxyModel*>(mvpair.getTopModel());
+#warning "TODO Why did I comment this out?"
+		// auto proxy_model = qobject_cast<ShuffleProxyModel*>(mvpair.getTopModel());
+        auto proxy_model = qobject_cast<LibrarySortFilterProxyModel*>(mvpair.getTopModel());
         auto playlist_model = qobject_cast<PlaylistModel*>(proxy_model->sourceModel());
         Q_CHECK_PTR(playlist_model);
 
