@@ -25,6 +25,7 @@
 
 // Std C++.
 #include <vector>
+#include <concepts>
 
 // Qt
 #include <QAbstractProxyModel>
@@ -37,7 +38,7 @@ class MDITreeViewBase;
 
 
 /**
- * Object which olds:
+ * Object which holds:
  * - A model
  * - A stack of proxy models on top of the model
  * - A view on top of the proxy models
@@ -48,13 +49,13 @@ class MDIModelViewPair
 public:
 
 	template <typename T>
-		requires (!std::is_convertible_v<T*, QAbstractProxyModel*>)
-	void appendModel(QPointer<T> model)
+        requires (std::convertible_to<T, QAbstractItemModel*> && !std::convertible_to<T, QAbstractProxyModel*>)
+    void appendModel(T model)
 	{
 		// For now anyway, this should only push a model to the bottom of the {proxy}model stack.
 		if (!m_model_stack.empty())
 		{
-            qCr() << "Model wasn't the first item pushed onto the modelstack:" << model.get();
+            qCr() << "Model wasn't the first item pushed onto the modelstack";
 		}
 
 		m_model_stack.emplace_back(model);
@@ -62,18 +63,18 @@ public:
 
 	/**
 	 * Append a proxy model to the top of the model stack.
-	 * Note that @a proxymodel is setSourceModel()'d to the top {proxy}model in the stack, but no other
+     * Note that @a proxymodel is setSourceModel()'d to the current top {proxy}model in the stack, but no other
 	 * connections are made.
 	 * @tparam T
 	 * @param proxymodel
 	 */
 	template <typename T>
-		requires std::is_convertible_v<T*, QAbstractProxyModel*>
-	void appendProxyModel(QPointer<T> proxymodel)
+        requires (std::convertible_to<T, QAbstractProxyModel*>)
+    void appendProxyModel(T proxymodel)
 	{
 		if (m_model_stack.empty())
 		{
-            qCr() << "No model to connect ProxyModel to:" << proxymodel.get();
+            qCr() << "No model to connect ProxyModel to";
 		}
 
 		m_model_stack.emplace_back(proxymodel);
