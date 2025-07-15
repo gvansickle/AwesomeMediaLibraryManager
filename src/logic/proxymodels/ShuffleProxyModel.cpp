@@ -36,7 +36,10 @@
 
 ShuffleProxyModel::ShuffleProxyModel(QObject* parent): QSortFilterProxyModel(parent)
 {
-	setObjectName("ShuffleProxyModel");
+	static int id = 0;
+	std::string name = std::format("ShuffleProxyModel{}", id);
+	++id;
+	setObjectName(name.c_str());
 
 	m_sel_model = new QItemSelectionModel(this);
 	connect_or_die(m_sel_model, &QItemSelectionModel::selectionChanged, this,
