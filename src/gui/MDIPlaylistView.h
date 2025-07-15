@@ -132,14 +132,12 @@ protected Q_SLOTS:
 	void onContextMenuSelectedRows(QContextMenuEvent* event, const QPersistentModelIndexVec& row_indexes) override;
 	void onContextMenuViewport(QContextMenuEvent* event) override;
 
-
-
 private:
     Q_DISABLE_COPY(MDIPlaylistView)
 
     std::unique_ptr<DragDropTreeViewStyleProxy> m_the_dragdropstyleproxy;
 
-    QPointer<PlaylistModel> m_underlying_model;
+    PlaylistModel* m_underlying_model;
     LibrarySortFilterProxyModel* m_sortfilter_model;
     ItemDelegateLength* m_length_delegate;
 
