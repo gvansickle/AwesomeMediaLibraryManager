@@ -94,20 +94,17 @@ public:
 
 protected:
 	QPointer<LibraryModel> m_underlying_model;
-
 	LibrarySortFilterProxyModel* m_sortfilter_model;
-
 	ItemDelegateLength* m_length_delegate;
 	MimeTypeDelegate* m_mimetype_delegate;
 
 	///
 	/// Pure virtual function overrides.
 	///
-
     void setEmptyModel() override;
 
-	virtual QString getNewFilenameTemplate() const override;
-	virtual QString defaultNameFilter() override;
+	QString getNewFilenameTemplate() const override;
+	QString defaultNameFilter() override;
 
 	/// @name Serialization
 	/// @{
@@ -115,12 +112,12 @@ protected:
 	/**
 	 * Called by openFile().
 	 */
-    virtual bool readFile(QUrl load_url) override;
+	bool readFile(QUrl load_url) override;
 
 	///@todo Override writeFile?
 
-	virtual void serializeDocument(QFileDevice& file) override;
-	virtual void deserializeDocument(QFileDevice& file) override;
+	void serializeDocument(QFileDevice& file) override;
+	void deserializeDocument(QFileDevice& file) override;
 
 	/// @}
 
