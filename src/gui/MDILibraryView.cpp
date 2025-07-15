@@ -50,6 +50,10 @@
 
 MDILibraryView::MDILibraryView(QWidget* parent) : MDITreeViewBase(parent)
 {
+	static int id = 0;
+	std::string name = std::format("MDILibraryView{}", id);
+	++id;
+	setObjectName(name);
 	// Not sure what's going on here, but if I don't set this to something here, the tabs stay "(Untitled)".
 	/// @todo Seems like we no longer need to do this.
 //	setWindowTitle("DUMMY");
@@ -186,9 +190,11 @@ MDIModelViewPair MDILibraryView::openModel(QPointer<LibraryModel> model, QWidget
 
 void MDILibraryView::setModel(QAbstractItemModel* model)
 {
-	// Keep a ref to the real model.
+	// Keep refs to the {proxy}models.
     m_sortfilter_model = qobject_cast<LibrarySortFilterProxyModel*>(model);
+	Q_CHECK_PTR(m_sortfilter_model);
     m_underlying_model = qobject_cast<LibraryModel*>(m_sortfilter_model->sourceModel());
+	Q_CHECK_PTR(m_underlying_model);
 
 	// Set our "current file" to the root dir of the model.
 	setCurrentFile(m_underlying_model->getLibRootDir());
