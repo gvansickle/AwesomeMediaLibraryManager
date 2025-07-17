@@ -36,6 +36,7 @@ Disconnector::~Disconnector()
 
 void Disconnector::addConnection(QMetaObject::Connection connection)
 {
+	Q_ASSERT(true == static_cast<bool>(connection));
 	m_connections.push_back(connection);
 }
 

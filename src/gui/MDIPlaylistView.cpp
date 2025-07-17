@@ -116,68 +116,70 @@ MDIPlaylistView::~MDIPlaylistView() = default;
 MDIModelViewPair MDIPlaylistView::openModel(QPointer<PlaylistModel> model, QWidget* parent)
 {
 	MDIModelViewPair retval;
-	retval.setModel(model);
+	retval.appendModel(model);
 
-	retval.m_view = new MDIPlaylistView(parent);
-	qobject_cast<MDIPlaylistView*>(retval.m_view)->setModel(model);
+	// The sort and Filter proxy model.
+	auto sortfilter_model = new LibrarySortFilterProxyModel(parent);
+	sortfilter_model->setDynamicSortFilter(false);
+	sortfilter_model->setSortCaseSensitivity(Qt::CaseInsensitive);
+
+	retval.appendProxyModel(QPointer<LibrarySortFilterProxyModel>(sortfilter_model));
+
+	retval.appendView(new MDIPlaylistView(parent));
 
 	return retval;
 }
 
 void MDIPlaylistView::setModel(QAbstractItemModel* model)
 {
-	// Keep a ref to the real model.
-	m_underlying_model = qobject_cast<PlaylistModel*>(model);
+	// Keep refs to the {proxy}models.
+	m_sortfilter_model = qobject_cast<LibrarySortFilterProxyModel*>(model);
+    Q_CHECK_PTR(m_sortfilter_model);
+	m_underlying_model = qobject_cast<PlaylistModel*>(m_sortfilter_model->sourceModel());
+	Q_CHECK_PTR(m_underlying_model);
 
-	if(m_underlying_model)
+	// Set our model URLs to the "current file".
+	/// @todo This is FBO the Playlist sidebar.  Should we keep the playlist model as a member of this class instead?
+	m_underlying_model->setLibraryRootUrl(m_current_url);
+
+	// m_sortfilter_model->setSourceModel(model);
+
+	// Set the top-level proxy model that this view will use.
+	// auto old_sel_model = selectionModel();
+	MDITreeViewBase::setModel(m_sortfilter_model);
+
+	// Call selectionChanged when the user changes the selection.
+	/// @todo selectionModel().selectionChanged.connect(selectionChanged)
+    // if(old_sel_model != nullptr)
+    // {
+    //     old_sel_model->deleteLater();
+    // }
+
+	// Set up the TreeView's header.
+	header()->setStretchLastSection(false);
+	header()->setSectionResizeMode(QHeaderView::Stretch);
+	header()->setContextMenuPolicy(Qt::CustomContextMenu);
+
+	// Set the resize behavior of the header's columns based on the columnspecs.
+	int num_cols = m_underlying_model->columnCount();
+	for(int c = 0; c < num_cols; ++c)
 	{
-		// Set our model URLs to the "current file".
-		/// @todo This is FBO the Playlist sidebar.  Should we keep the playlist model as a member of this class instead?
-		m_underlying_model->setLibraryRootUrl(m_current_url);
-
-		m_sortfilter_model->setSourceModel(model);
-
-		// Set the top-level proxy model that this view will use.
-		auto old_sel_model = selectionModel();
-		MDITreeViewBase::setModel(m_sortfilter_model);
-
-		// Call selectionChanged when the user changes the selection.
-		/// @todo selectionModel().selectionChanged.connect(selectionChanged)
-        if(old_sel_model != nullptr)
-        {
-            old_sel_model->deleteLater();
-        }
-
-		// Set up the TreeView's header.
-		header()->setStretchLastSection(false);
-		header()->setSectionResizeMode(QHeaderView::Stretch);
-		header()->setContextMenuPolicy(Qt::CustomContextMenu);
-
-		// Set the resize behavior of the header's columns based on the columnspecs.
-		int num_cols = m_underlying_model->columnCount();
-		for(int c = 0; c < num_cols; ++c)
+		if(m_underlying_model->headerData(c, Qt::Horizontal, ModelUserRoles::HeaderViewSectionShouldFitWidthToContents) == true)
 		{
-			if(m_underlying_model->headerData(c, Qt::Horizontal, ModelUserRoles::HeaderViewSectionShouldFitWidthToContents) == true)
-			{
-				header()->setSectionResizeMode(c, QHeaderView::ResizeToContents);
-			}
+			header()->setSectionResizeMode(c, QHeaderView::ResizeToContents);
 		}
-
-		// Find the "Length" column.
-		auto len_col = m_underlying_model->getColFromSection(SectionID::Length);
-		// Set the delegate on it.
-		setItemDelegateForColumn(len_col, m_length_delegate);
-
-		// Find the "Rating" column and set a delegate on it.
-		auto user_rating_col = m_underlying_model->getColFromSection(SectionID(PlaylistSectionID::Rating));
-		/// @todo setItemDelegateForColumn(user_rating_col, m_user_rating_delegate);
-
-		setEditTriggers(QAbstractItemView::DoubleClicked|QAbstractItemView::SelectedClicked);
 	}
-	else
-	{
-		qCr() << "Not a PlaylistModel:" << model;
-	}
+
+	// Find the "Length" column.
+	auto len_col = m_underlying_model->getColFromSection(SectionID::Length);
+	// Set the delegate on it.
+	setItemDelegateForColumn(len_col, m_length_delegate);
+
+	// Find the "Rating" column and set a delegate on it.
+	auto user_rating_col = m_underlying_model->getColFromSection(SectionID(PlaylistSectionID::Rating));
+	/// @todo setItemDelegateForColumn(user_rating_col, m_user_rating_delegate);
+
+	setEditTriggers(QAbstractItemView::DoubleClicked|QAbstractItemView::SelectedClicked);
 }
 
 QString MDIPlaylistView::getNewFilenameTemplate() const
@@ -193,8 +195,12 @@ QString MDIPlaylistView::defaultNameFilter()
 void MDIPlaylistView::setEmptyModel()
 {
 	/// @note This empty playlist model is parented to this.  Normally models are parented to the MainWindow.
+	MDIModelViewPair mvp;
 	auto new_playlist_model = new PlaylistModel(this);
-    setModel(new_playlist_model);
+	mvp.appendModel(new_playlist_model);
+	m_sortfilter_model = new LibrarySortFilterProxyModel(this);
+    mvp.appendProxyModel(m_sortfilter_model);
+    setModel(m_sortfilter_model);
 }
 
 void MDIPlaylistView::serializeDocument(QFileDevice& file)
@@ -395,7 +401,7 @@ void MDIPlaylistView::dropEvent(QDropEvent* event)
 
 PlaylistModel* MDIPlaylistView::underlyingModel() const
 {
-	return m_underlying_model.data();
+    return m_underlying_model;
 }
 
 
@@ -489,8 +495,6 @@ void MDIPlaylistView::onDelete()
  */
 void MDIPlaylistView::onSendToNowPlaying(LibraryEntryMimeData* mime_data)
 {
-// M_WARNING("TODO: Dedup")
-
 	// We first need to convert the LibraryEntry's to a PlaylistModelItem's.
 	auto new_playlist_entries = toNewPlaylistModelItems(mime_data->m_lib_item_list);
 
@@ -502,8 +506,7 @@ void MDIPlaylistView::onSendToNowPlaying(LibraryEntryMimeData* mime_data)
 	}
 
 	// Dynamically cast the list to std::shared_ptr's to LibraryEntry's.
-// M_WARNING("/// @todo This seems terribly convoluted.  Seems like this view and model should only be caring about"
-// 		  "PlaylistModelEntry's");
+	/// @todo This seems terribly convoluted.  Seems like this view and model should only be caring about PlaylistModelEntry's
 	auto new_playlist_entries_as_libentry_ptrs = toLibraryEntrySharedPtrs(new_playlist_entries);
 
 	if(mime_data->m_drop_target_instructions.m_action == DropTargetInstructions::IDAE_REPLACE)
@@ -515,7 +518,7 @@ void MDIPlaylistView::onSendToNowPlaying(LibraryEntryMimeData* mime_data)
 
 	// This will be an append, so get the last row index of the View's model.
 	// That's the one we'll activate.
-// M_WARNING("TODO: This mostly works, but can start the wrong row if e.g. this view is sorted.  Proxy vs. Underlying model issue.");
+/// @TODO: This mostly works, but can start the wrong row if e.g. this view is sorted.  Proxy vs. Underlying model issue.
 	auto last_row = model()->rowCount();
 
 	// Append to underlying model.
@@ -539,7 +542,7 @@ void MDIPlaylistView::playlistPositionChanged(qint64 position)
 	// Notification from the QMediaPlaylist that the current selection has changed.
 	// Since we have a QSortFilterProxyModel between us and the underlying model, we need to convert the position,
 	// which is in underlying-model coordinates, to proxy model coordinates.
-#warning "TODO"
+	/// @TODO: Can this be deleted?
 	// auto proxy_model_index = from_underlying_qmodelindex(m_underlying_model->index(position, 0));
 
 	// @todo or should this change the selected index?

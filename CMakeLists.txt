@@ -218,9 +218,9 @@ if(UNIX)
 	target_compile_options(cxx_compile_options
 		INTERFACE
 			-Og -ggdb3 -fno-omit-frame-pointer -fmessage-length=0 -pthread -Werror=return-type
-		-fno-eliminate-unused-debug-types)
+		-fno-eliminate-unused-debug-types -fno-inline -fmodules)
 	ucm_add_flags(-Og -ggdb3 -fno-omit-frame-pointer -fmessage-length=0 -pthread -Werror=return-type
-		-fno-eliminate-unused-debug-types)
+		-fno-eliminate-unused-debug-types -fno-inline -fmodules)
 # Flags for GNU libstdc++
 ### @todo Detect that we're actually using GNU libstdc++
 # "compiles user code using the debug mode. When defined, _GLIBCXX_ASSERTIONS is defined automatically"

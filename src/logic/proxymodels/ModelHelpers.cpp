@@ -21,13 +21,12 @@
 #include "ModelHelpers.h"
 
 
-
 QModelIndex mapToSourceRecursive(const QModelIndex& proxy_index)
 {
-    if(!proxy_index.isValid())
-    {
-        return QModelIndex();
-    }
+	if (!proxy_index.isValid())
+	{
+		return QModelIndex();
+	}
 
 	if (proxy_index.model())
 	{
@@ -36,7 +35,7 @@ QModelIndex mapToSourceRecursive(const QModelIndex& proxy_index)
 		if (proxy_model)
 		{
 			// recurse into the next proxy model.
-            return mapToSourceRecursive(proxy_model->mapToSource(proxy_index));
+			return mapToSourceRecursive(proxy_model->mapToSource(proxy_index));
 		}
 		// We've hit the true source model.
 		return proxy_index;
@@ -69,10 +68,27 @@ QModelIndexList mapToSourceRecursive(const QModelIndexList& source_indices)
 {
 	QModelIndexList retval;
 
-	for(const auto& i : source_indices)
+	for (const auto& i : source_indices)
 	{
 		retval.push_back(mapToSourceRecursive(i));
 	}
 
 	return retval;
+}
+
+QAbstractItemModel* getRootModel(QAbstractItemModel* maybe_proxy_model)
+{
+	auto proxy_model = qobject_cast<QAbstractProxyModel*>(maybe_proxy_model);
+
+	if (proxy_model && proxy_model->sourceModel())
+	{
+		// It's a proxymodel with a source model, so recurse on the source model.
+		auto source_model = proxy_model->sourceModel();
+		return getRootModel(source_model);
+	}
+	else
+	{
+		// Wasn't a proxy model.
+		return maybe_proxy_model;
+	}
 }

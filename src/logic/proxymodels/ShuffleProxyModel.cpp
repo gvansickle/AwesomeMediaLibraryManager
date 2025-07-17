@@ -32,11 +32,15 @@
 
 // Ours
 #include <ConnectHelpers.h>
+#include <ModelHelpers.h>
 
 
 ShuffleProxyModel::ShuffleProxyModel(QObject* parent): QSortFilterProxyModel(parent)
 {
-	setObjectName("ShuffleProxyModel");
+	static int id = 0;
+	std::string name = std::format("ShuffleProxyModel{}", id);
+	++id;
+	setObjectName(name.c_str());
 
 	m_sel_model = new QItemSelectionModel(this);
 	connect_or_die(m_sel_model, &QItemSelectionModel::selectionChanged, this,
@@ -126,20 +130,22 @@ void ShuffleProxyModel::onNumRowsChanged()
 	{
 		// Went from empty Now Playing to non-empty.  Set a current item and selected item,
 		// so that the play button works.
-		// QTimer stuff here because this is segfaulting:
-		// selectionModel()->select(model()->index(0, 0),
-		//           QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
-  // QTimer::singleShot(0, this, [this]()
-		// {
+		// QTimer stuff here because if we just call nowPlayingIndexChanged() directly here,
+		// drops/copies are slightly broken.  Without the timer, when you copy or drop items into NowPlaying,
+		// an empty QUrl gets sent to MP2::onPlaylistPositionChanged() and MP2::onSourceChanged(), due to the initial
+		// LibraryModel::insertRows() inserting default-constructed rows.
+		// I'm not wild about using the timer, but onDataChanged doesn't seem to be enough nor get through to MP2.
+		QTimer::singleShot(0, this, [this]()
+		{
 			m_current_shuffle_index = m_indices.at(0);
-            Q_EMIT nowPlayingIndexChanged(sourceModel()->index(0,0), QModelIndex(), false);
-		// });
+			Q_EMIT nowPlayingIndexChanged(sourceModel()->index(0, 0), QModelIndex(), false);
+		});
 	}
 }
 
 static bool isInDataChangedRange(const QModelIndex& testIndex,
-						const QModelIndex& topLeft,
-						const QModelIndex& bottomRight)
+								const QModelIndex& topLeft,
+								const QModelIndex& bottomRight)
 {
 	return testIndex.isValid() &&
 		testIndex.model() == topLeft.model() &&
@@ -150,6 +156,7 @@ static bool isInDataChangedRange(const QModelIndex& testIndex,
 		testIndex.column() <= bottomRight.column();
 }
 
+// slot
 void ShuffleProxyModel::onDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight,
 									const QList<int>& roles)
 {
@@ -276,7 +283,7 @@ void ShuffleProxyModel::connectToModel(QAbstractItemModel* model)
 			<< connect_or_die(model, &QAbstractItemModel::modelReset, this, &ShuffleProxyModel::onNumRowsChanged)
 			<< connect_or_die(model, &QAbstractItemModel::rowsInserted, this, &ShuffleProxyModel::onNumRowsChanged)
 			<< connect_or_die(model, &QAbstractItemModel::rowsRemoved, this, &ShuffleProxyModel::onNumRowsChanged)
-			<< connect_or_die(model, &QAbstractItemModel::dataChanged, this, &ShuffleProxyModel::onDataChanged);
+			<< connect_or_die(getRootModel(model), &QAbstractItemModel::dataChanged, this, &ShuffleProxyModel::onDataChanged);
 	}
 }
 
@@ -285,7 +292,6 @@ void ShuffleProxyModel::resetInternalData()
 	m_currentIndex = QModelIndex();
 	m_shuffle = false;
 	m_loop_at_end = true;
-	// m_shuffle_model_rows = false;
 	m_current_shuffle_index = -1;
 	m_indices.clear();
 	m_disconnector.disconnect();

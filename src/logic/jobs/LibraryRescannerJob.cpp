@@ -161,8 +161,8 @@ void library_metadata_rescan_task(QPromise<MetadataReturnVal>& promise, AMLMJob*
 		promise.suspendIfRequested();
 		if (promise.isCanceled())
 		{
-			// We've been cancelled.
-			qIn() << "CANCELLED";
+			// We've been canceled.
+			qIn() << "CANCELED";
 			return;
 		}
 

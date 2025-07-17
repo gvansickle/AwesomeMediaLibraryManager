@@ -125,35 +125,11 @@ T<QPersistentModelIndex> mapQPersistentModelIndexesToSource(const T<QPersistentM
 }
 
 /**
- * @warning I'm not sure this is correct.
+ * Returns the bottom-most model in a model<-proxy<-proxy...<-proxy chain.
  * @param maybe_proxy_model
  * @return
  */
-inline static QAbstractItemModel* getRootModel(QAbstractItemModel* maybe_proxy_model)
-{
-	auto proxy_model = qobject_cast<QAbstractProxyModel*>(maybe_proxy_model);
-
-	if(proxy_model)
-	{
-		qDebug() << "Is a proxy model:" << proxy_model;
-		auto source_model = proxy_model->sourceModel();
-		if(source_model)
-		{
-			qDebug() << "With source model:" << source_model;
-			return (QAbstractItemModel*)source_model;
-		}
-		else
-		{
-			return maybe_proxy_model;
-		}
-	}
-	else
-	{
-		// Wasn't a proxy model.
-		qDebug() << "Not a proxy model:" << maybe_proxy_model;
-		return maybe_proxy_model;
-	}
-}
+QAbstractItemModel* getRootModel(QAbstractItemModel* maybe_proxy_model);
 
 #endif /* MODELHELPERS_H */
 

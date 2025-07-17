@@ -25,7 +25,10 @@
 
 LibrarySortFilterProxyModel::LibrarySortFilterProxyModel(QObject* parent) : QSortFilterProxyModel(parent)
 {
-	setObjectName("LibrarySortFilterProxyModel#");
+	static int id = 0;
+	std::string name = std::format("LibrarySortFilterProxyModel{}", id);
+	id++;
+	setObjectName(name.c_str());
 	// Filter all columns by default.
 	setFilterKeyColumn(-1);
 }

@@ -47,8 +47,13 @@
 #include <AMLMApp.h>
 #include <MainWindow.h>
 
+
 MDILibraryView::MDILibraryView(QWidget* parent) : MDITreeViewBase(parent)
 {
+	static int id = 0;
+	std::string name = std::format("MDILibraryView{}", id);
+	++id;
+	setObjectName(name);
 	// Not sure what's going on here, but if I don't set this to something here, the tabs stay "(Untitled)".
 	/// @todo Seems like we no longer need to do this.
 //	setWindowTitle("DUMMY");
@@ -56,11 +61,6 @@ MDILibraryView::MDILibraryView(QWidget* parent) : MDITreeViewBase(parent)
 	m_act_window->setIcon(QIcon::fromTheme("folder"));
 
 	m_underlying_model = nullptr;
-
-	// The sort and Filter proxy model.
-	m_sortfilter_model = new LibrarySortFilterProxyModel(this);
-	m_sortfilter_model->setDynamicSortFilter(false);
-	m_sortfilter_model->setSortCaseSensitivity(Qt::CaseInsensitive);
 
 	// Delegates.
 	m_length_delegate = new ItemDelegateLength(this);
@@ -70,7 +70,7 @@ MDILibraryView::MDILibraryView(QWidget* parent) : MDITreeViewBase(parent)
 	setSelectionMode(QAbstractItemView::ExtendedSelection);
 
 	// Hook up double-click handler.
-	connect(this, &MDILibraryView::doubleClicked, this, &MDILibraryView::onDoubleClicked);
+	connect_or_die(this, &MDILibraryView::doubleClicked, this, &MDILibraryView::onDoubleClicked);
 
 	// Configure drag and drop.
 	//// Libraries can't have items dragged around inside them.
@@ -116,10 +116,10 @@ MDIModelViewPair MDILibraryView::openFile(QUrl open_url, QWidget *parent, std::f
     // Check if a view of this URL already exists and we just need to activate it.
 	qDebug() << "Looking for existing MDIModelViewPair of" << open_url;
     auto mv_pair = find_existing_view_func(open_url);
-    if(mv_pair.m_view)
+    if(mv_pair.getView())
     {
         Q_ASSERT_X(mv_pair.m_view_was_existing == true, "openFile", "find_existing function returned a view but said it was not pre-existing.");
-        qDebug() << "View of" << open_url << "already exists, returning" << mv_pair.m_view.data();
+        qDebug() << "View of" << open_url << "already exists, returning" << mv_pair.getView().data();
         return mv_pair;
     }
 
@@ -129,12 +129,12 @@ MDIModelViewPair MDILibraryView::openFile(QUrl open_url, QWidget *parent, std::f
 	/// calling an overridden readFile().
 
 	QPointer<LibraryModel> libmodel;
-	if(mv_pair.hasModel())
+	if (mv_pair.hasModel())
 	{
 		Q_ASSERT_X(mv_pair.m_model_was_existing, "openFile", "find_exisiting returned a model but said it was not pre-existing.");
 
-        qDebug() << "Model exists:" << mv_pair.m_model.data();
-		libmodel = qobject_cast<LibraryModel*>(mv_pair.m_model);
+        qDebug() << "Model exists:" << mv_pair.getTopModel().data();
+		libmodel = qobject_cast<LibraryModel*>(mv_pair.getRootModel());
 	}
 	else
 	{
@@ -144,25 +144,24 @@ MDIModelViewPair MDILibraryView::openFile(QUrl open_url, QWidget *parent, std::f
 
 	if(libmodel != nullptr)
     {
-		// The model has either been found already existing and with no associated View, or it has been newly opened.
-		// Either way it's valid and we now create and associate a View with it.
+		// The model has either been found already existing but with no associated View, or it has been newly opened.
+		// Either way it's valid, and we now create and associate a View with it.
 
 		auto mvpair = MDILibraryView::openModel(libmodel, parent);
 
 		/// @todo This should be done somewhere else, so that the mvpair we get above already has this set correctly.
 		mvpair.m_model_was_existing = mv_pair.m_model_was_existing;
 
-		/// @note Need this cast due to some screwyness I mean subtleties of C++'s member access control system.
+		/// @note Need this cast due to some screwyness I mean subtleties of C++'s member access control rules.
 		/// In very shortened form: Derived member functions can only access "protected" members through
 		/// an object of the Derived type, not of the Base type.
-		qobject_cast<MDILibraryView*>(mvpair.m_view)->setCurrentFile(open_url);
+        qobject_cast<MDILibraryView*>(mvpair.getView())->setCurrentFile(open_url);
 		return mvpair;
     }
     else
     {
 		// Library import failed.
-		/// @todo Add a QMessageBox or something here.
-		QMessageBox::critical(amlmApp->IMainWindow(), "TODO: Title", "TODO: Text", QMessageBox::Ok);
+        QMessageBox::critical(amlmApp->IMainWindow(), "Error", "Library import failed", QMessageBox::Ok);
 		return MDIModelViewPair();
     }
 }
@@ -170,36 +169,37 @@ MDIModelViewPair MDILibraryView::openFile(QUrl open_url, QWidget *parent, std::f
 /**
  * static member function which opens an MDILibraryView on the given model.
  * @param model  The model to open.  Must exist and must be valid.
+ * @returns      A MDIModelViewPair with valid model, proxymodel, and view.
  */
 MDIModelViewPair MDILibraryView::openModel(QPointer<LibraryModel> model, QWidget* parent)
 {
 	MDIModelViewPair retval;
-	retval.setModel(model);
+	retval.appendModel(model);
 
-	retval.m_view = new MDILibraryView(parent);
-	qobject_cast<MDILibraryView*>(retval.m_view)->setModel(model);
+	// The sort and Filter proxy model.
+	auto sortfilter_model = new LibrarySortFilterProxyModel(parent);
+	sortfilter_model->setDynamicSortFilter(false);
+	sortfilter_model->setSortCaseSensitivity(Qt::CaseInsensitive);
+
+    retval.appendProxyModel(QPointer<LibrarySortFilterProxyModel>(sortfilter_model));
+
+	retval.appendView(new MDILibraryView(parent));
 
 	return retval;
 }
 
 void MDILibraryView::setModel(QAbstractItemModel* model)
 {
-	// Keep a ref to the real model.
-	m_underlying_model = qobject_cast<LibraryModel*>(model);
+	// Keep refs to the {proxy}models.
+    m_sortfilter_model = qobject_cast<LibrarySortFilterProxyModel*>(model);
+	Q_CHECK_PTR(m_sortfilter_model);
+    m_underlying_model = qobject_cast<LibraryModel*>(m_sortfilter_model->sourceModel());
+	Q_CHECK_PTR(m_underlying_model);
 
 	// Set our "current file" to the root dir of the model.
 	setCurrentFile(m_underlying_model->getLibRootDir());
 
-	m_sortfilter_model->setSourceModel(model);
-	auto old_sel_model = selectionModel();
-	// This will create a new selection model.
-	MDITreeViewBase::setModel(m_sortfilter_model);
-	Q_ASSERT((void*)m_sortfilter_model != (void*)old_sel_model);
-    if(old_sel_model != nullptr)
-    {
-        old_sel_model->deleteLater();
-    }
-
+	MDITreeViewBase::setModel(model);
 
 	// Set up the TreeView's header.
 	header()->setStretchLastSection(false);
@@ -237,6 +237,11 @@ void MDILibraryView::setModel(QAbstractItemModel* model)
 LibraryModel* MDILibraryView::underlyingModel() const
 {
 	return m_underlying_model;
+}
+
+LibrarySortFilterProxyModel* MDILibraryView::proxy_model() const
+{
+	return m_sortfilter_model;
 }
 
 void MDILibraryView::setEmptyModel()
@@ -385,11 +390,6 @@ void MDILibraryView::onContextMenuViewport(QContextMenuEvent* event)
 	context_menu->exec(event->globalPos());
 }
 
-/**
- * Slot called when the user activates (hits Enter or double-clicks) on an item or items.
- * In the Library view, activating items appends the items to the "Now Playing" playlist
- * and then starts playing the first one.
- */
 void MDILibraryView::onActivated(const QModelIndex& index)
 {
 	// Should always be valid.
@@ -411,7 +411,7 @@ void MDILibraryView::onActivated(const QModelIndex& index)
 
 	// Send the tracks to the "Now Playing" playlist, by way of MainWindow.
 	LibraryEntryMimeData* mime_data = selectedRowsToMimeData(selected_row_pindexes);
-	mime_data->m_drop_target_instructions = { DropTargetInstructions::IDAE_APPEND, DropTargetInstructions::PA_START_PLAYING };
+	mime_data->m_drop_target_instructions = { DropTargetInstructions::IDAE_APPEND, DropTargetInstructions::PA_NONE };
 	Q_EMIT sendToNowPlaying(mime_data);
 }
 

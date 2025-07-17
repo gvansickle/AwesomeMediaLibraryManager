@@ -94,6 +94,10 @@ Q_SIGNALS:
 
 	void SIGNAL_appendChild(std::shared_ptr<AbstractTreeModelItem> new_child, UUIncD parent_id);
 
+    void SIGNAL_onIncomingPopulateRowWithItems_Multiple(QPersistentModelIndex, std::vector<std::shared_ptr<LibraryEntry>>);
+
+    void SIGNAL_setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole);
+
 public:
 	explicit LibraryRescanner(LibraryModel* parent);
 	~LibraryRescanner() override;

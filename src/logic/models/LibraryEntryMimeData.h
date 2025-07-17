@@ -51,15 +51,24 @@ public:
 
 	enum PostAddActionEnumerator
 	{
+		/// Take no action.
 		PA_NONE,
+		/// Start playing what was dropped.
 		PA_START_PLAYING,
+		/// Start playing what was dropped, but only if the playlist was not being played at drop time.
+		/// @todo Unused
+		PA_START_PLAYING_IF_STOPPED,
 	};
 	Q_ENUM(PostAddActionEnumerator)
 
-	/// Which item disposition action to take.
+	/**
+	 * Which item disposition action to take.
+	 */
 	ItemDispositionActionEnumerator m_action { IDAE_NA };
 
-	/// Whether to start playing or not.
+	/**
+	 * Whether to start playing or not.
+	 */
 	PostAddActionEnumerator m_start_playing { PA_NONE };
 };
 

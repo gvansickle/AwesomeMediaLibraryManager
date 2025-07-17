@@ -142,6 +142,7 @@ target_link_libraries(${TEST_EXE_TARGET}
 		${PROJECT_COMMON_LINK_LIBS}
 #		${QT_LINK_LIB_TARGETS}
 		${KF_LINK_LIB_TARGETS}
+		stdc++exp
 )
 add_test(NAME ${TEST_EXE_TARGET} COMMAND $<TARGET_FILE:${TEST_EXE_TARGET}>)
 ecm_mark_as_test(${TEST_EXE_TARGET})

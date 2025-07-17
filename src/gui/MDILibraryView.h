@@ -90,25 +90,21 @@ public:
 
 	LibraryModel* underlyingModel() const override;
 
-	LibrarySortFilterProxyModel* proxy_model() const { return m_sortfilter_model; }
-
+	LibrarySortFilterProxyModel* proxy_model() const;
 
 protected:
 	QPointer<LibraryModel> m_underlying_model;
-
 	LibrarySortFilterProxyModel* m_sortfilter_model;
-
 	ItemDelegateLength* m_length_delegate;
 	MimeTypeDelegate* m_mimetype_delegate;
 
 	///
 	/// Pure virtual function overrides.
 	///
-
     void setEmptyModel() override;
 
-	virtual QString getNewFilenameTemplate() const override;
-	virtual QString defaultNameFilter() override;
+	QString getNewFilenameTemplate() const override;
+	QString defaultNameFilter() override;
 
 	/// @name Serialization
 	/// @{
@@ -116,12 +112,12 @@ protected:
 	/**
 	 * Called by openFile().
 	 */
-    virtual bool readFile(QUrl load_url) override;
+	bool readFile(QUrl load_url) override;
 
 	///@todo Override writeFile?
 
-	virtual void serializeDocument(QFileDevice& file) override;
-	virtual void deserializeDocument(QFileDevice& file) override;
+	void serializeDocument(QFileDevice& file) override;
+	void deserializeDocument(QFileDevice& file) override;
 
 	/// @}
 
@@ -141,9 +137,9 @@ protected Q_SLOTS:
 	void onContextMenuViewport(QContextMenuEvent* event) override;
 
 	/**
-	 * Slot called when the user activates (hits Enter or double-clicks) on an item.
-	 * In the Library view, activating an item sends that item to the "Now Playing" playlist
-	 * which then starts playing it.
+	 * Slot called when the user activates (hits Enter or double-clicks) on an item or items.
+	 * In the Library view, activating items appends the items to the "Now Playing" playlist
+	 * and then starts playing the first one.
 	 */
 	void onActivated(const QModelIndex& index) override;
 

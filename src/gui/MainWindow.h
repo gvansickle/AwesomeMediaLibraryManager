@@ -23,7 +23,6 @@
 #include <config.h>
 
 // Std C++
-
 #include <vector>
 #include <utility> // For std::pair<>
 #include <memory>
@@ -34,6 +33,8 @@
 
 class ShuffleProxyModel;
 class LibrarySortFilterProxyModel;
+class PlaylistSortFilterProxyModel;
+class SelectionFilterProxyModel;
 
 class QActionGroup;
 class QWidget;
@@ -419,16 +420,21 @@ private:
 	QStandardItem* m_stditem_playlist_views;
 
     /// The library models.
-	std::vector<QPointer<LibraryModel>> m_libmodels;
+    std::vector<MDIModelViewPair*> m_libmodels;
 
-    /// The "Now Playing" playlist model and view.
+	QPointer<LibrarySortFilterProxyModel> m_libraryview_sort_filter_proxy_model;
+
+		/// @name The "Now Playing" playlist model and view.
+		/// @{
 	QPointer<PlaylistModel> m_now_playing_playlist_model;
 	QPointer<ShuffleProxyModel> m_now_playing_shuffle_proxy_model;
-	QPointer<LibrarySortFilterProxyModel> m_now_playing_sortfilter_model;
+	QPointer<LibrarySortFilterProxyModel> m_now_playing_library_sortfilter_model;
+	QPointer<PlaylistSortFilterProxyModel> m_now_playing_playlist_sortfilter_model;
 	QPointer<MDIPlaylistView> m_now_playing_playlist_view;
+	/// @}
 
     /// The list of PlaylistModels.
-	std::vector<QPointer<PlaylistModel>> m_playlist_models;
+    std::vector<MDIModelViewPair*> m_playlist_models;
 
     /// @}
 

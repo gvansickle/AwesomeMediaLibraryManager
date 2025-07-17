@@ -209,6 +209,8 @@ bool PlaylistModel::setData(const QModelIndex& index, const QVariant& value, int
 		qCritical() << "CANT CONVERT to PlaylistModelItem*:" << value;
 		//Q_ASSERT(0);
 	}
+
+	/// @TODO: Is this even a valid thing to try to do here?
 	qDebug() << "PUNTING TO BASE CLASS";
 
 	retval = LibraryModel::setData(index, value, role);

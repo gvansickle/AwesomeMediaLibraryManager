@@ -16,15 +16,35 @@
  * You should have received a copy of the GNU General Public License
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
+/**
+ * @file
+ */
 
 #include "MDIModelViewPair.h"
 
 #include <QAbstractItemModel>
 #include "gui/MDITreeViewBase.h"
 
+void MDIModelViewPair::appendView(QPointer<MDITreeViewBase> view)
+{
+	if (!m_view.isNull())
+	{
+		qFatal("MDIModelViewPair::appendView: Already have a view.");
+	}
+	if (m_model_stack.empty())
+	{
+		qFatal("MDIModelViewPair::appendView: No model.");
+	}
+	m_view = view;
+
+	Q_ASSERT(m_model_stack.size() > 1);
+
+	m_view->setModel(m_model_stack.back());
+}
+
 bool MDIModelViewPair::hasModel() const
 {
-	return m_model;
+	return !m_model_stack.empty();
 }
 
 bool MDIModelViewPair::hasView() const
@@ -34,5 +54,10 @@ bool MDIModelViewPair::hasView() const
 
 bool MDIModelViewPair::hasModelAndView() const
 {
-	return m_model && m_view;
+	return (!m_model_stack.empty()) && m_view;
+}
+
+QPointer<QAbstractItemModel> MDIModelViewPair::getProxyAt(int proxymodel) const
+{
+	return m_model_stack.at(proxymodel+1);
 }

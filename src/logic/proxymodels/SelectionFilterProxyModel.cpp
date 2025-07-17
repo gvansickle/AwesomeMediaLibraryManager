@@ -25,8 +25,11 @@
 
 SelectionFilterProxyModel::SelectionFilterProxyModel(QObject *parent) : BASE_CLASS(parent)
 {
-	setObjectName("SelectionFilterProxyModel#");
+	static int id = 0;
+	std::string name = std::format("SelectionFilterProxyModel{}", id);
+	setObjectName(name.c_str());
 	setDynamicSortFilter(true);
+	++id;
 }
 
 SelectionFilterProxyModel::~SelectionFilterProxyModel()
