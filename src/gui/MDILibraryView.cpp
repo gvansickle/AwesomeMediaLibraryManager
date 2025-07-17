@@ -390,11 +390,6 @@ void MDILibraryView::onContextMenuViewport(QContextMenuEvent* event)
 	context_menu->exec(event->globalPos());
 }
 
-/**
- * Slot called when the user activates (hits Enter or double-clicks) on an item or items.
- * In the Library view, activating items appends the items to the "Now Playing" playlist
- * and then starts playing the first one.
- */
 void MDILibraryView::onActivated(const QModelIndex& index)
 {
 	// Should always be valid.
@@ -416,7 +411,7 @@ void MDILibraryView::onActivated(const QModelIndex& index)
 
 	// Send the tracks to the "Now Playing" playlist, by way of MainWindow.
 	LibraryEntryMimeData* mime_data = selectedRowsToMimeData(selected_row_pindexes);
-	mime_data->m_drop_target_instructions = { DropTargetInstructions::IDAE_APPEND, DropTargetInstructions::PA_START_PLAYING };
+	mime_data->m_drop_target_instructions = { DropTargetInstructions::IDAE_APPEND, DropTargetInstructions::PA_NONE };
 	Q_EMIT sendToNowPlaying(mime_data);
 }
 
