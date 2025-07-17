@@ -137,9 +137,9 @@ protected Q_SLOTS:
 	void onContextMenuViewport(QContextMenuEvent* event) override;
 
 	/**
-	 * Slot called when the user activates (hits Enter or double-clicks) on an item.
-	 * In the Library view, activating an item sends that item to the "Now Playing" playlist
-	 * which then starts playing it.
+	 * Slot called when the user activates (hits Enter or double-clicks) on an item or items.
+	 * In the Library view, activating items appends the items to the "Now Playing" playlist
+	 * and then starts playing the first one.
 	 */
 	void onActivated(const QModelIndex& index) override;
 
