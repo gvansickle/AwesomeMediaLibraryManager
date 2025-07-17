@@ -495,8 +495,6 @@ void MDIPlaylistView::onDelete()
  */
 void MDIPlaylistView::onSendToNowPlaying(LibraryEntryMimeData* mime_data)
 {
-// M_WARNING("TODO: Dedup")
-
 	// We first need to convert the LibraryEntry's to a PlaylistModelItem's.
 	auto new_playlist_entries = toNewPlaylistModelItems(mime_data->m_lib_item_list);
 
@@ -508,8 +506,7 @@ void MDIPlaylistView::onSendToNowPlaying(LibraryEntryMimeData* mime_data)
 	}
 
 	// Dynamically cast the list to std::shared_ptr's to LibraryEntry's.
-// M_WARNING("/// @todo This seems terribly convoluted.  Seems like this view and model should only be caring about"
-// 		  "PlaylistModelEntry's");
+	/// @todo This seems terribly convoluted.  Seems like this view and model should only be caring about PlaylistModelEntry's
 	auto new_playlist_entries_as_libentry_ptrs = toLibraryEntrySharedPtrs(new_playlist_entries);
 
 	if(mime_data->m_drop_target_instructions.m_action == DropTargetInstructions::IDAE_REPLACE)
@@ -521,7 +518,7 @@ void MDIPlaylistView::onSendToNowPlaying(LibraryEntryMimeData* mime_data)
 
 	// This will be an append, so get the last row index of the View's model.
 	// That's the one we'll activate.
-// M_WARNING("TODO: This mostly works, but can start the wrong row if e.g. this view is sorted.  Proxy vs. Underlying model issue.");
+/// @TODO: This mostly works, but can start the wrong row if e.g. this view is sorted.  Proxy vs. Underlying model issue.
 	auto last_row = model()->rowCount();
 
 	// Append to underlying model.
@@ -545,7 +542,7 @@ void MDIPlaylistView::playlistPositionChanged(qint64 position)
 	// Notification from the QMediaPlaylist that the current selection has changed.
 	// Since we have a QSortFilterProxyModel between us and the underlying model, we need to convert the position,
 	// which is in underlying-model coordinates, to proxy model coordinates.
-#warning "TODO"
+	/// @TODO: Can this be deleted?
 	// auto proxy_model_index = from_underlying_qmodelindex(m_underlying_model->index(position, 0));
 
 	// @todo or should this change the selected index?
