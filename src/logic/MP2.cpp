@@ -17,7 +17,9 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/// @file
+/**
+ * @file
+ */
 
 #include "MP2.h"
 
@@ -174,7 +176,6 @@ void MP2::seek(int msecs)
 {
 	msecs += m_track_startpos_ms;
 	// Clamp it to end-1 so we don't cause a transition to the next song while we're seeking.
-	/// @todo Except this doesn't work.
 	if (msecs>=m_track_endpos_ms)
 	{
 		msecs -= 1;
