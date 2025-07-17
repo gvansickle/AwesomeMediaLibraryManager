@@ -44,14 +44,14 @@
 #include <KJobUiDelegate>
 #include <KIO/DirectorySizeJob>
 
-/// Ours, Qt/KF-related
+// Ours, Qt/KF-related
 #include <utils/TheSimplestThings.h>
 #include <utils/RegisterQtMetatypes.h>
 #include <utils/QtHelpers.h>
 #include "SupportedMimeTypes.h"
 
 
-/// Ours
+// Ours
 #include <AMLMApp.h>
 #include <Core.h>
 #include <gui/MainWindow.h>
@@ -89,6 +89,10 @@ LibraryRescanner::LibraryRescanner(LibraryModel* parent) : QObject(parent)
 
 	// Somewhat redundant, but keep another pointer to the LibraryModel.
 	m_current_libmodel = parent;
+
+    connect_or_die(this, &LibraryRescanner::SIGNAL_onIncomingPopulateRowWithItems_Multiple,
+                   m_current_libmodel, &LibraryModel::SLOT_onIncomingPopulateRowWithItems_Multiple);
+    connect_or_die(this, &LibraryRescanner::SIGNAL_setData, m_current_libmodel, &LibraryModel::setData);
 }
 
 LibraryRescanner::~LibraryRescanner()
@@ -279,8 +283,9 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 std::shared_ptr<AbstractTreeModelItem> root = tree_model_sptr->getRootItem();
 
 connect_or_die(this, &LibraryRescanner::SIGNAL_appendChildToRoot,
-				tree_model_sptr.get(), &AbstractTreeModel::SLOT_appendChildToRoot);
-connect_or_die(this, &LibraryRescanner::SIGNAL_appendChild, tree_model_sptr.get(), &AbstractTreeModel::SLOT_appendChild);
+				tree_model_sptr.get(), &AbstractTreeModel::SLOT_appendChildToRoot, Qt::QueuedConnection);
+connect_or_die(this, &LibraryRescanner::SIGNAL_appendChild, tree_model_sptr.get(), &AbstractTreeModel::SLOT_appendChild,
+	Qt::QueuedConnection);
 
 	streaming_then(dirresults_future, [this, tree_model_sptr, qurl_promise, tree_model_item_promise](QFuture<DirScanResult> sthen_future, int begin, int end) -> Unit {
 		// Start of the dirtrav streaming_then callback.  This should be a non-main thread.
@@ -639,7 +644,7 @@ void LibraryRescanner::SLOT_processReadyResults(MetadataReturnVal lritem_vec)
 			&& lritem_vec.m_new_libentries.size() == lritem_vec.m_num_tracks_found)
 	{
 		// It's a valid, new, multi-track entry.
-		m_current_libmodel->SLOT_onIncomingPopulateRowWithItems_Multiple(lritem_vec.m_original_pindexes[0], lritem_vec.m_new_libentries);
+        Q_EMIT SIGNAL_onIncomingPopulateRowWithItems_Multiple(lritem_vec.m_original_pindexes[0], lritem_vec.m_new_libentries);
 	}
 	else if(lritem_vec.m_new_libentries.size() == lritem_vec.m_num_tracks_found
 			&& lritem_vec.m_original_pindexes.size() == lritem_vec.m_num_tracks_found)
@@ -664,7 +669,7 @@ void LibraryRescanner::SLOT_processReadyResults(MetadataReturnVal lritem_vec)
 			auto row = initial_row_index.row();
 			qDebug() << QString("incoming single item, row %1").arg(row);
 			// Metadata's been populated.
-			m_current_libmodel->setData(initial_row_index, QVariant::fromValue(lritem_vec.m_new_libentries[i]));
+            Q_EMIT SIGNAL_setData(initial_row_index, QVariant::fromValue(lritem_vec.m_new_libentries[i]));
 		}
 	}
 	else
