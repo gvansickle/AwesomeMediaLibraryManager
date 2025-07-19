@@ -1,0 +1,21 @@
+{
+  "version": 10,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 21,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "default",
+      "displayName": "Default",
+      "description": "Default build options for GCC-compatible compilers",
+      "binaryDir": "${sourceDir}/build-clion-debug",
+      "cacheVariables": {
+        "CMAKE_C_FLAGS": "-Og -ggdb3",
+        "CMAKE_CXX_FLAGS": "-Og -ggdb3 -fmessage-length=0 -pthread",
+        "CMAKE_CXX_FLAGS_DEBUG": "-Og -ggdb3 -fno-omit-frame-pointer -Werror=return-type -fno-eliminate-unused-debug-types -fno-inline -fdiagnostics-show-template-tree -gvariable-location-views -gas-loc-support -gas-locview-support -gstatement-frontiers -ginline-points -femit-struct-debug-detailed=any -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_BACKTRACE"
+      }
+    }
+  ]
+}
