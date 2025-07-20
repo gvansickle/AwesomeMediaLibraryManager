@@ -48,17 +48,15 @@
  */
 class ISerializable
 {
-
 public:
 	/**
 	 * Default constructor creates a new UUID.
 	 */
     // explicit ISerializable()
  //        : m_uuid_prefix("xmlid_"), m_uuid( QUuid::createUuid() ) {}
+    // ISerializable() = default;
+	M_GH_RULE_OF_FIVE_DEFAULT_C21(ISerializable)
 	virtual ~ISerializable() = default;
-    // M_GH_POLYMORPHIC_SUPPRESS_COPYING_C67(ISerializable)
-    // M_GH_DEFAULT_COPY(ISerializable)
-    // M_GH_DEFAULT_MOVE(ISerializable)
 
 	/**
 	 * Override in derived classes to serialize to a QVariantMap or QVariantList.
@@ -90,53 +88,36 @@ public:
 //		set_prefixed_uuid(uuid);
 //	}
 
-    explicit operator QVariant() const { return toVariant(); }
+    explicit operator QVariant() const;
 
-    bool isUuidNull() const { return m_uuid.isNull() || m_uuid_prefix.empty(); }
+	virtual bool isUuidNull() const;
 
-//	void set_prefix(std::string prefix)
+	//	void set_prefix(std::string prefix)
 //	{
 //		Q_ASSERT(m_uuid_prefix.empty());
 //		m_uuid_prefix = prefix;
 //	}
 
-	std::string get_prefix() const
-	{
-		return m_uuid_prefix;
-	}
+	std::string get_prefix() const;
 
 	/**
 	 * Returns the prefix + UUID of this node as a string.
 	 * @return
 	 */
-	std::string get_prefixed_uuid() const
-	{
-		if(m_uuid.isNull())
-		{
-			// No valid prefix + UUID set.
-			return std::string();
-		}
-		return m_uuid_prefix + m_uuid.toString(QUuid::WithoutBraces).toStdString();
-	}
+	std::string get_prefixed_uuid() const;
 
 	/**
 	 * Split the incoming string into prefix and UUID, and sets it to the incoming value.
 	 * @param uuid_string
 	 */
-	void set_prefixed_uuid(const std::string& uuid_string)
-	{
-		m_uuid_prefix = "xmlid_"; ///< @todo
-		m_uuid = QUuid::fromString(toqstr(uuid_string).remove(toqstr(m_uuid_prefix)));
-		Q_ASSERT(!m_uuid.isNull());
-	}
+	void set_prefixed_uuid(const std::string& uuid_string);
 
 	/// EXPERIMENTAL ORM
 //	int m_int_uuid;
 	/// The GUID used to ID this item in the database etc.
-	QUuid m_uuid {QUuid::createUuid()};
+	QUuid m_uuid { QUuid::createUuid() };
 	/// The prefix to prepend if XML, since xml:id's need to start with a non-digit character.
-	std::string m_uuid_prefix {"xmlid_"};
-
+	std::string m_uuid_prefix { "xmlid_" };
 };
 
 Q_DECLARE_METATYPE(ISerializable);
@@ -145,16 +126,27 @@ Q_DECLARE_METATYPE(ISerializable);
 Q_DECLARE_INTERFACE(ISerializable, "ISerializable") // define this out of namespace scope
 
 
-
 class IUUIDSerializable : public virtual ISerializable
 {
 public:
-    M_GH_RULE_OF_FIVE_DEFAULT_C21(IUUIDSerializable)
+    // M_GH_RULE_OF_FIVE_DEFAULT_C21(IUUIDSerializable)
 	explicit IUUIDSerializable(std::string uuid_prefix)
         : m_uuid_prefix(uuid_prefix), m_uuid((!uuid_prefix.empty())?QUuid::createUuid():QUuid("null")) {}
 	~IUUIDSerializable() override = default;
+    M_GH_DEFAULT_COPY(IUUIDSerializable)
+    M_GH_DELETE_MOVE(IUUIDSerializable)
+    // IUUIDSerializable& operator=(IUUIDSerializable&& other) noexcept
+    // {
+    //     if(this != &other)
+    //     {
+    //         ISerializable::operator=(std::move(other));
+    //         m_uuid_prefix = std::move(other.m_uuid_prefix);
+    //         m_uuid = std::move(other.m_uuid);
+    //     }
+    //     return *this;
+    // }
 
-    bool isUuidNull() const { return m_uuid.isNull() || m_uuid_prefix.empty(); }
+    bool isUuidNull() const override { return m_uuid.isNull() || m_uuid_prefix.empty(); }
 
 //	std::string get_prefixed_uuid() const
 //	{
@@ -174,6 +166,7 @@ protected:
 	QUuid m_uuid;
 };
 
+Q_DECLARE_METATYPE(IUUIDSerializable);
 Q_DECLARE_METATYPE(IUUIDSerializable*);
 Q_DECLARE_INTERFACE(IUUIDSerializable, "IUUIDSerializable") // define this out of namespace scope
 
@@ -190,7 +183,7 @@ void qviomap_from_qvar_or_die(OutMapType* map_out, const QVariant& var_in)
 
 /**
  */
-class SerializableQVariantList : public QVariantHomogenousList, public virtual ISerializable
+class SerializableQVariantList final : public QVariantHomogenousList, public ISerializable
 {
 public:
     M_GH_RULE_OF_FIVE_DEFAULT_C21(SerializableQVariantList)

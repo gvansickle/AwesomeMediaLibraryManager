@@ -48,6 +48,38 @@ AMLM_QREG_CALLBACK([](){
 });
 
 
+ISerializable::operator QVariant() const
+{
+	return toVariant();
+}
+
+bool ISerializable::isUuidNull() const
+{
+	return m_uuid.isNull() || m_uuid_prefix.empty();
+}
+
+std::string ISerializable::get_prefix() const
+{
+	return m_uuid_prefix;
+}
+
+std::string ISerializable::get_prefixed_uuid() const
+{
+	if(m_uuid.isNull())
+	{
+		// No valid prefix + UUID set.
+		return std::string();
+	}
+	return m_uuid_prefix + m_uuid.toString(QUuid::WithoutBraces).toStdString();
+}
+
+void ISerializable::set_prefixed_uuid(const std::string& uuid_string)
+{
+	m_uuid_prefix = "xmlid_"; ///< @todo
+	m_uuid = QUuid::fromString(toqstr(uuid_string).remove(toqstr(m_uuid_prefix)));
+	Q_ASSERT(!m_uuid.isNull());
+}
+
 QVariant SerializableQVariantList::toVariant() const
 {
 	Q_ASSERT(!m_list_tag.isNull());
