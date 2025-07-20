@@ -128,6 +128,7 @@
 /// @note EXPERIMENTAL
 #include <gui/widgets/ExperimentalKDEView1.h>
 #include <Core.h>
+#include <DebugSequence.h>
 
 
 //
@@ -1544,6 +1545,7 @@ void MainWindow::readPreGUISettings()
 void MainWindow::readLibSettings()
 {
 	int num_libs;
+	static DebugSequence dseq;
 
 	qIn() << "START readLibSettings";
 
@@ -1580,10 +1582,12 @@ void MainWindow::readLibSettings()
 	/// @todo Get this path from settings.
 	QString overlay_filename = QDir::homePath() + "/AMLMDatabaseSerDes.xml";
 
+	dseq.expect_and_set(0,1);
+
     auto extfuture_initial_lib_load = QtConcurrent::run([=](QPromise<SerializableQVariantList>& ef) {
 
 		qIn() << "READING XML DB FROM FILE:" << overlay_filename;
-
+		dseq.expect_and_set(1,2);
 		SerializableQVariantList list("library_list", "library_list_item");
 		Stopwatch library_list_read(tostdstr(QString("Loading: ") + overlay_filename));
 		XmlSerializer xmlser;
@@ -1593,9 +1597,24 @@ void MainWindow::readLibSettings()
     	qIn() << "Load of" << overlay_filename << "success: " << success;
         ef.addResult(list);
 	})
-    .then(this, [this, overlay_filename, prog](ExtFuture<SerializableQVariantList> ef){
-
-		SerializableQVariantList list = ef.result();
+    .then(this, [this, overlay_filename, prog](QFuture<SerializableQVariantList> ef){
+    	dseq.expect_and_set(2, 3);
+                                              qDb() << M_ID_VAL(ef.isValid());
+                                              if(!ef.isValid())
+                                              {
+                                              	qWr() << "XML Deserialization failed:" << overlay_filename;
+                                              	return;
+                                              }
+                                              SerializableQVariantList list;
+                                              qDb() << M_ID_VAL(list.m_uuid);
+                                              try {
+        /*SerializableQVariantList*/ list = ef.result();
+                                              }
+                                                  catch(QException& e)
+                                              {
+                                                  qFatal() << "Exception:" << e.what();
+                                                  Q_ASSERT(0);
+                                              }
 
         qIn() << "###### READ" << list.size() << "libraries from XML DB:" << overlay_filename;
 
@@ -2082,8 +2101,7 @@ void MainWindow::addChildMDIModelViewPair_Playlist(const MDIModelViewPair& mvpai
 	if(mvpair.hasModel())
 	{
         qDb() << "ROOT MODEL TYPE IS:" << mvpair.getRootModel()->metaObject()->className();
-#warning "TODO Why did I comment this out?"
-		// auto proxy_model = qobject_cast<ShuffleProxyModel*>(mvpair.getTopModel());
+
         auto proxy_model = qobject_cast<LibrarySortFilterProxyModel*>(mvpair.getTopModel());
         auto playlist_model = qobject_cast<PlaylistModel*>(proxy_model->sourceModel());
         Q_CHECK_PTR(playlist_model);
