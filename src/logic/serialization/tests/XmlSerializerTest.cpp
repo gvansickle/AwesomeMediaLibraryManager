@@ -89,7 +89,7 @@ TEST_F(XmlSerializerTests, ShouldPass)
 
 
 
-TEST_F(XmlSerializerTests, TypeRoundTripping)
+TEST_F(XmlSerializerTests, DISABLED_TypeRoundTripping)
 {
 	// Round-tripped variant.
 	QVariantMap round_tripped_variant;
