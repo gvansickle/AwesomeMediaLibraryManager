@@ -103,16 +103,18 @@ target_include_directories(${TEST_EXE_TARGET}
                            # For config.h
                            ${PROJECT_BINARY_DIR}/src
 )
-#target_compile_features(${TEST_EXE_TARGET} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
+
 target_compile_definitions(${TEST_EXE_TARGET}
-                           PUBLIC
-                           # libstdc++ defs: @link https://gcc.gnu.org/onlinedocs/gcc-9.1.0/libstdc++/manual/
-                           # Enable the libstdc++ debug mode.
-                           #_GLIBCXX_DEBUG
                            PRIVATE
-                           "TEST_FWK_IS_GTEST=1"
+                            "TEST_FWK_IS_GTEST=1"
 )
-target_compile_definitions(${TEST_EXE_TARGET} PRIVATE "GTEST_LANGUAGE_CXX11")
+target_compile_definitions(${TEST_EXE_TARGET}
+	PUBLIC
+		"GTEST_LANGUAGE_CXX11"
+		# libstdc++ defs: @link https://gcc.gnu.org/onlinedocs/gcc-9.1.0/libstdc++/manual/
+		# Enable the libstdc++ debug mode.
+		$<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CONFIG:Debug>>:_GLIBCXX_DEBUG;_GLIBCXX_DEBUG_BACKTRACE>
+)
 target_compile_options(${TEST_EXE_TARGET} PRIVATE ${EXTRA_CXX_COMPILE_FLAGS})
 set_target_properties(${TEST_EXE_TARGET} PROPERTIES
                       AUTOMOC ON
@@ -128,10 +130,12 @@ set_property(TARGET gmock_main PROPERTY SKIP_AUTOGEN ON)
 target_link_libraries(${TEST_EXE_TARGET}
 	PUBLIC
 		# Targetized C++ compile settings.
+		cxx_compile_options
 		cxx_settings
 		# Qt-specific -D's.
 		cxx_definitions_qt
 	PRIVATE
+		stdc++exp
 #		Threads::Threads
 		gtest
 		gmock
@@ -142,7 +146,6 @@ target_link_libraries(${TEST_EXE_TARGET}
 		${PROJECT_COMMON_LINK_LIBS}
 #		${QT_LINK_LIB_TARGETS}
 		${KF_LINK_LIB_TARGETS}
-		stdc++exp
 )
 add_test(NAME ${TEST_EXE_TARGET} COMMAND $<TARGET_FILE:${TEST_EXE_TARGET}>)
 ecm_mark_as_test(${TEST_EXE_TARGET})
@@ -184,10 +187,12 @@ if(TRUE)
 	target_link_libraries(test_qtestamlmjobtests
 	                      PUBLIC
 							# Targetized C++ compile settings.
+							cxx_compile_options
 							cxx_settings
 							# Qt-specific -D's.
 							cxx_definitions_qt
 	                      PRIVATE
+								stdc++exp
 								utils
 								concurrency
 								logic
@@ -195,6 +200,7 @@ if(TRUE)
 								Qt6::Test
 								${PROJECT_COMMON_LINK_LIBS}
 								${KF_LINK_LIB_TARGETS}
+
 	)
 
 	add_test(NAME test_qtestamlmjobtests COMMAND $<TARGET_FILE:test_qtestamlmjobtests>)
@@ -222,6 +228,9 @@ target_include_directories(tests
 		${QtGui_PRIVATE_INCLUDE_DIRS}
 )
 target_link_libraries(tests
+	PUBLIC
+		cxx_compile_options
+		stdc++exp
 	PRIVATE
 		gtest
 		gmock

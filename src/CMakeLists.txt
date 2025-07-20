@@ -223,19 +223,20 @@ target_sources(libapp
                ${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
 )
 target_compile_definitions(libapp
-                           PRIVATE
-	                           # libstdc++ defs: @link https://gcc.gnu.org/onlinedocs/gcc-9.1.0/libstdc++/manual/
-	                           # Enable the libstdc++ debug mode.
-	                           _GLIBCXX_DEBUG
-								-D_GLIBCXX_DEBUG_BACKTRACE
-	                           "KXMLGUI_NO_DEPRECATED=1"
+	PUBLIC
+		# libstdc++ defs: @link https://gcc.gnu.org/onlinedocs/gcc-9.1.0/libstdc++/manual/
+		# Enable the libstdc++ debug mode.
+#		$<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CONFIG:Debug>>:_GLIBCXX_DEBUG;_GLIBCXX_DEBUG_BACKTRACE>
+		"KXMLGUI_NO_DEPRECATED=1"
 )
 target_include_directories(libapp
 								PUBLIC
 									${PROJECT_SOURCE_DIR}/src ### @todo For <future/...>
 									${PROJECT_BINARY_DIR}/src
 )
-target_compile_options(libapp PUBLIC ${EXTRA_CXX_COMPILE_FLAGS})
+target_compile_options(libapp
+	PUBLIC
+		${EXTRA_CXX_COMPILE_FLAGS})
 set_target_properties(libapp
                       PROPERTIES
 	                      AUTOMOC ON
@@ -245,6 +246,7 @@ set_target_properties(libapp
 target_link_libraries(libapp
                       PUBLIC
 	                      # Targetized C++ compile settings.
+						cxx_compile_options
 	                      cxx_settings
 	                      cxx_definitions_qt
 	                      src
@@ -265,8 +267,7 @@ target_compile_definitions(${PROJECT_NAME}
 	PUBLIC
 		# libstdc++ defs: @link https://gcc.gnu.org/onlinedocs/gcc-9.1.0/libstdc++/manual/
 		# Enable the libstdc++ debug mode.
-		_GLIBCXX_DEBUG
-		_GLIBCXX_DEBUG_BACKTRACE
+		$<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CONFIG:Debug>>:_GLIBCXX_DEBUG;_GLIBCXX_DEBUG_BACKTRACE>
 		"KXMLGUI_NO_DEPRECATED=1"
 	)
 target_include_directories(${PROJECT_NAME}
@@ -286,12 +287,28 @@ set_target_properties(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
 	PUBLIC
 		# Targetized C++ compile settings.
+		cxx_compile_options
 		cxx_settings
 		cxx_definitions_qt
 	PRIVATE
 		libapp
 		stdc++exp # For debug backtrace in the std lib.
 )
+
+record_options(${PROJECT_NAME})
+
+function(print_target_options target)
+	get_target_property(opts ${target} COMPILE_OPTIONS)
+	get_target_property(interface_opts ${target} INTERFACE_COMPILE_OPTIONS)
+	message(STATUS "Options for ${target}:")
+	message(STATUS "  PRIVATE: ${opts}")
+	message(STATUS "  INTERFACE: ${interface_opts}")
+endfunction()
+
+# Usage:
+message(STATUS "print_target_options-------------------------------")
+print_target_options(${PROJECT_NAME})
+message(STATUS "print_target_options-------------------------------")
 
 # Sanitizers.  @todo Make this a CMake option.
 #add_compile_options(-fsanitize=address)
