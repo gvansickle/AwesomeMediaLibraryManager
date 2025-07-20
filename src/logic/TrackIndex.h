@@ -38,7 +38,7 @@ using Frames = qint64;
 //#include <third_party/libcue/libcue.h>
 #include "AMLMTagMap.h"
 
-class TrackIndex : public virtual ISerializable
+class TrackIndex final : public ISerializable
 {
 public:
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(TrackIndex);

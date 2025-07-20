@@ -35,7 +35,7 @@
 #include <logic/serialization/ISerializable.h>
 
 
-class Metadata : public virtual ISerializable
+class Metadata final : public ISerializable
 {
 public:
     M_GH_RULE_OF_FIVE_DEFAULT_C21(Metadata)

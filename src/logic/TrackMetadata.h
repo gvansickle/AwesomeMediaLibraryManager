@@ -47,7 +47,7 @@ using Frames = qint64;
 /**
  * Metadata which applies to a single track on a possibly multi-track media.
  */
-class TrackMetadata : public virtual ISerializable
+class TrackMetadata final : public ISerializable
 {
 public:
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(TrackMetadata);
