@@ -73,7 +73,7 @@ private:
 	using uc_size_type = typename underlying_container_type::size_type;
 
 public:
-	M_GH_RULE_OF_FIVE_DEFAULT_C21(InsertionOrderedMap);
+	M_GH_RULE_OF_FIVE_DEFAULT_C21(InsertionOrderedMap)
 	~InsertionOrderedMap() = default;
 
 	// Copy-through-QVariant constructor.
