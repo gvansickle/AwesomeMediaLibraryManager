@@ -228,7 +228,7 @@ if(UNIX)
 	)
 	target_compile_definitions(cxx_definitions_qt
 		INTERFACE
-			$<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CONFIG:Debug>>:_GLIBCXX_DEBUG;_GLIBCXX_DEBUG_BACKTRACE>
+#			$<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CONFIG:Debug>>:_GLIBCXX_DEBUG;_GLIBCXX_DEBUG_BACKTRACE>
 	)
 #	ucm_add_flags(-Og -ggdb3 -fno-omit-frame-pointer -fmessage-length=0 -pthread -Werror=return-type
 #		-fno-eliminate-unused-debug-types -fno-inline -fmodules)
