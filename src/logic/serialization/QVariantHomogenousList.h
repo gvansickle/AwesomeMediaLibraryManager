@@ -34,7 +34,7 @@
 #include <QList>
 
 // Ours.
-// #include <ISerializable.h> //<< This includes this file.
+// #include <ISerializable.h> //<< ISerializable.h includes this file.
 #include <future/guideline_helpers.h>
 
 

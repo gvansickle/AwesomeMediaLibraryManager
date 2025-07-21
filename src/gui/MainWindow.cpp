@@ -1599,22 +1599,13 @@ void MainWindow::readLibSettings()
 	})
     .then(this, [this, overlay_filename, prog](QFuture<SerializableQVariantList> ef){
     	dseq.expect_and_set(2, 3);
-                                              qDb() << M_ID_VAL(ef.isValid());
-                                              if(!ef.isValid())
-                                              {
-                                              	qWr() << "XML Deserialization failed:" << overlay_filename;
-                                              	return;
-                                              }
-                                              SerializableQVariantList list;
-                                              qDb() << M_ID_VAL(list.m_uuid);
-                                              try {
-        /*SerializableQVariantList*/ list = ef.result();
-                                              }
-                                                  catch(QException& e)
-                                              {
-                                                  qFatal() << "Exception:" << e.what();
-                                                  Q_ASSERT(0);
-                                              }
+		if(!ef.isValid())
+		{
+			qWr() << "XML Deserialization failed:" << overlay_filename;
+			return;
+		}
+
+		SerializableQVariantList list = ef.result();
 
         qIn() << "###### READ" << list.size() << "libraries from XML DB:" << overlay_filename;
 
