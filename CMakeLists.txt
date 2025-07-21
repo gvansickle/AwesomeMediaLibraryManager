@@ -86,13 +86,6 @@ set(FULL_COPYRIGHT_STRING "Copyright (c) 2017, 2018, 2019, 2024, 2025 ${PROJECT_
 
 # Early include of some basic cmake stuff.
 include(CMakePrintHelpers)
-file(WRITE "${CMAKE_BINARY_DIR}/compile_options_report.txt" "")
-function(record_options target)
-	get_target_property(opts ${target} INTERFACE_COMPILE_OPTIONS)
-	file(APPEND "${CMAKE_BINARY_DIR}/compile_options_report.txt"
-		"Target: ${target}\nOptions: ${opts}\n\n")
-endfunction()
-
 
 ### Set the required language standards.
 # C
