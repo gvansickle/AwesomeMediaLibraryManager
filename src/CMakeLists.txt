@@ -267,7 +267,7 @@ target_compile_definitions(${PROJECT_NAME}
 	PUBLIC
 		# libstdc++ defs: @link https://gcc.gnu.org/onlinedocs/gcc-9.1.0/libstdc++/manual/
 		# Enable the libstdc++ debug mode.
-		$<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CONFIG:Debug>>:_GLIBCXX_DEBUG;_GLIBCXX_DEBUG_BACKTRACE>
+#		$<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CONFIG:Debug>>:_GLIBCXX_DEBUG;_GLIBCXX_DEBUG_BACKTRACE>
 		"KXMLGUI_NO_DEPRECATED=1"
 	)
 target_include_directories(${PROJECT_NAME}
@@ -294,21 +294,6 @@ target_link_libraries(${PROJECT_NAME}
 		libapp
 		stdc++exp # For debug backtrace in the std lib.
 )
-
-record_options(${PROJECT_NAME})
-
-function(print_target_options target)
-	get_target_property(opts ${target} COMPILE_OPTIONS)
-	get_target_property(interface_opts ${target} INTERFACE_COMPILE_OPTIONS)
-	message(STATUS "Options for ${target}:")
-	message(STATUS "  PRIVATE: ${opts}")
-	message(STATUS "  INTERFACE: ${interface_opts}")
-endfunction()
-
-# Usage:
-message(STATUS "print_target_options-------------------------------")
-print_target_options(${PROJECT_NAME})
-message(STATUS "print_target_options-------------------------------")
 
 # Sanitizers.  @todo Make this a CMake option.
 #add_compile_options(-fsanitize=address)
