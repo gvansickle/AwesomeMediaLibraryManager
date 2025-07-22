@@ -202,7 +202,7 @@ include(ECMQtDeclareLoggingCategory)
 ### END ECM Setup ====================================================================================================
 ###
 
-# Set some extra debug flags early.
+# Set the basic compile flags early.
 # https://github.com/onqtam/ucm#ucm_add_flags
 include(ucm)
 # Target-focused compile settings.
@@ -213,18 +213,18 @@ target_compile_definitions(cxx_definitions_qt INTERFACE)
 add_library(cxx_compile_options INTERFACE)
 target_compile_options(cxx_compile_options INTERFACE)
 if(UNIX)
-	target_compile_options(cxx_compile_options
-		INTERFACE
-#			$<$<CONFIG:Debug>:-Og -ggdb3 -fno-omit-frame-pointer -Werror=return-type -fno-eliminate-unused-debug-types -fno-inline>
-			$<$<COMPILE_LANGUAGE:CXX>:-fmodules>
-#			-fmessage-length=0 -pthread
-	)
-	target_compile_definitions(cxx_definitions_qt
-		INTERFACE
-#			$<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CONFIG:Debug>>:_GLIBCXX_DEBUG;_GLIBCXX_DEBUG_BACKTRACE>
-	)
-#	ucm_add_flags(-Og -ggdb3 -fno-omit-frame-pointer -fmessage-length=0 -pthread -Werror=return-type
-#		-fno-eliminate-unused-debug-types -fno-inline -fmodules)
+	# C base flags
+	ucm_add_flags(C -Og -ggdb3 -fmessage-length=0 -pthread)
+	# C++ base flags
+	ucm_add_flags(CXX -Og -ggdb3 -fmessage-length=0 -pthread -Werror=return-type -fmodules -fdiagnostics-show-option)
+	# C++ Additional Debug flags
+	ucm_add_flags(CXX -Og -ggdb3 -fno-omit-frame-pointer -fno-eliminate-unused-debug-types -fno-inline
+		-fdiagnostics-show-template-tree
+		CONFIG Debug)
+#	target_compile_definitions(cxx_definitions_qt
+#		INTERFACE
+##			$<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CONFIG:Debug>>:_GLIBCXX_DEBUG;_GLIBCXX_DEBUG_BACKTRACE>
+#	)
 # Flags for GNU libstdc++
 ### @todo Detect that we're actually using GNU libstdc++
 # "compiles user code using the debug mode. When defined, _GLIBCXX_ASSERTIONS is defined automatically"
@@ -238,20 +238,14 @@ if(FALSE) ##CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 endif()
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	message(STATUS "C++ Compiler is GCC")
-	ucm_add_flags(CXX -fvar-tracking -fvar-tracking-assignments -gpubnames -ggnu-pubnames CONFIG DEBUG)
-	# Max debug flags
-	target_compile_options(cxx_compile_options
-		INTERFACE
-#			$<$<COMPILE_LANGUAGE:CXX>:-fdiagnostics-show-template-tree>
-#			-gvariable-location-views
-#			-gas-loc-support -gas-locview-support -gstatement-frontiers -ginline-points -femit-struct-debug-detailed=any
-		)
-	ucm_add_flags(CXX -grecord-gcc-switches)
-#	ucm_add_flags(-fno-eliminate-unused-debug-types -fno-inline)
-	ucm_add_flags(
+	# GCC-specific debug flags
+	ucm_add_flags(CXX -fvar-tracking -fvar-tracking-assignments -gpubnames -ggnu-pubnames -gvariable-location-views
+		-gas-loc-support -gas-locview-support -gstatement-frontiers -ginline-points -femit-struct-debug-detailed=any
+		-ftrack-macro-expansion
 		-Wmaybe-uninitialized -Werror=maybe-uninitialized
-		-fdiagnostics-show-option)
-	ucm_add_flags(-fuse-ld=gold) # Let's try the gold linker.
+		-grecord-gcc-switches
+		CONFIG DEBUG)
+	ucm_add_flags(-fuse-ld=gold) # Let's use the gold linker.
 	# GCC 9.x suggestions.
 	add_library(cxx_suggestions INTERFACE)
 	target_compile_options(cxx_suggestions INTERFACE
@@ -261,10 +255,10 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	message(STATUS "C++ Compiler is Clang")
 	target_compile_options(cxx_compile_options
 		INTERFACE
-			-fforce-emit-vtables
-			)
-	ucm_add_flags(-Wthread-safety -fdebug-macro -fdiagnostics-show-template-tree -mno-omit-leaf-frame-pointer -ftime-trace=build_time_trace.json)
-	#ucm_add_flags(-fdelayed-template-parsing -frelaxed-template-template-args)
+	)
+	ucm_add_flags(CXX -Wthread-safety -fforce-emit-vtables -fdebug-macro
+		-mno-omit-leaf-frame-pointer -ftime-trace=build_time_trace.json
+		CONFIG Debug)
 endif()
 if(WIN32)
 	#ucm_add_flags(/showIncludes)
@@ -279,7 +273,6 @@ if(WIN32)
 endif(WIN32)
 target_link_libraries(cxx_settings INTERFACE cxx_compile_options)
 
-#set(CMAKE_CXX_FLAGS_DEBUG "-ggdb3 -ftime-trace")
 message(STATUS "C compiler supported features = ${CMAKE_C_COMPILE_FEATURES}")
 message(STATUS "C++ compiler supported features = ${CMAKE_CXX_COMPILE_FEATURES}")
 message(STATUS "C++ CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS}")
