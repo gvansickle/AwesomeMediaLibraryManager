@@ -224,9 +224,6 @@ target_sources(libapp
 )
 target_compile_definitions(libapp
 	PUBLIC
-		# libstdc++ defs: @link https://gcc.gnu.org/onlinedocs/gcc-9.1.0/libstdc++/manual/
-		# Enable the libstdc++ debug mode.
-#		$<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CONFIG:Debug>>:_GLIBCXX_DEBUG;_GLIBCXX_DEBUG_BACKTRACE>
 		"KXMLGUI_NO_DEPRECATED=1"
 )
 target_include_directories(libapp
@@ -265,9 +262,6 @@ qt_add_resources(
 )
 target_compile_definitions(${PROJECT_NAME}
 	PUBLIC
-		# libstdc++ defs: @link https://gcc.gnu.org/onlinedocs/gcc-9.1.0/libstdc++/manual/
-		# Enable the libstdc++ debug mode.
-#		$<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CONFIG:Debug>>:_GLIBCXX_DEBUG;_GLIBCXX_DEBUG_BACKTRACE>
 		"KXMLGUI_NO_DEPRECATED=1"
 	)
 target_include_directories(${PROJECT_NAME}

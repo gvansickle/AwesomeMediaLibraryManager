@@ -111,9 +111,6 @@ target_compile_definitions(${TEST_EXE_TARGET}
 target_compile_definitions(${TEST_EXE_TARGET}
 	PUBLIC
 		"GTEST_LANGUAGE_CXX11"
-		# libstdc++ defs: @link https://gcc.gnu.org/onlinedocs/gcc-9.1.0/libstdc++/manual/
-		# Enable the libstdc++ debug mode.
-#		$<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CONFIG:Debug>>:_GLIBCXX_DEBUG;_GLIBCXX_DEBUG_BACKTRACE>
 )
 target_compile_options(${TEST_EXE_TARGET} PRIVATE ${EXTRA_CXX_COMPILE_FLAGS})
 set_target_properties(${TEST_EXE_TARGET} PROPERTIES
