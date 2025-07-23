@@ -35,11 +35,11 @@
 
 class QFileDevice;
 
-class Library : public virtual ISerializable
+class Library final : public ISerializable
 {
 	Q_GADGET
 public:
-	M_GH_RULE_OF_FIVE_DEFAULT_C21(Library);
+    M_GH_RULE_OF_FIVE_DEFAULT_C21(Library)
 	~Library() override = default;
 
 	void clear();

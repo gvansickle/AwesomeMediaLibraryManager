@@ -50,7 +50,7 @@ Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(std::multimap);
  * Multimap of std::string key/std::string value pairs.
  * @todo Pretty sure this really should be an insertion-ordered multimap.
  */
-class AMLMTagMap final : public virtual ISerializable
+class AMLMTagMap final : public ISerializable
 {
 
 	/// @name Member Types

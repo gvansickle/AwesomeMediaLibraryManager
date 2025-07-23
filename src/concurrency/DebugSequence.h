@@ -20,19 +20,23 @@
 #ifndef SRC_CONCURRENCY_DEBUGSEQUENCE_H_
 #define SRC_CONCURRENCY_DEBUGSEQUENCE_H_
 
-/*
+/// @file
+
+#include <atomic>
+
+/**
  *
  */
 class DebugSequence
 {
+	std::atomic<int> m_expected_state {0};
+
 public:
 	DebugSequence();
-	virtual ~DebugSequence();
+	~DebugSequence();
 
-	enum SequencePoints
-	{
-
-	};
+	void reset(int reset);
+	bool expect_and_set(int expect, int set);
 };
 
 #endif /* SRC_CONCURRENCY_DEBUGSEQUENCE_H_ */

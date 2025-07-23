@@ -223,19 +223,17 @@ target_sources(libapp
                ${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
 )
 target_compile_definitions(libapp
-                           PRIVATE
-	                           # libstdc++ defs: @link https://gcc.gnu.org/onlinedocs/gcc-9.1.0/libstdc++/manual/
-	                           # Enable the libstdc++ debug mode.
-	                           _GLIBCXX_DEBUG
-								-D_GLIBCXX_DEBUG_BACKTRACE
-	                           "KXMLGUI_NO_DEPRECATED=1"
+	PUBLIC
+		"KXMLGUI_NO_DEPRECATED=1"
 )
 target_include_directories(libapp
 								PUBLIC
 									${PROJECT_SOURCE_DIR}/src ### @todo For <future/...>
 									${PROJECT_BINARY_DIR}/src
 )
-target_compile_options(libapp PUBLIC ${EXTRA_CXX_COMPILE_FLAGS})
+target_compile_options(libapp
+	PUBLIC
+		${EXTRA_CXX_COMPILE_FLAGS})
 set_target_properties(libapp
                       PROPERTIES
 	                      AUTOMOC ON
@@ -245,6 +243,7 @@ set_target_properties(libapp
 target_link_libraries(libapp
                       PUBLIC
 	                      # Targetized C++ compile settings.
+						cxx_compile_options
 	                      cxx_settings
 	                      cxx_definitions_qt
 	                      src
@@ -263,10 +262,6 @@ qt_add_resources(
 )
 target_compile_definitions(${PROJECT_NAME}
 	PUBLIC
-		# libstdc++ defs: @link https://gcc.gnu.org/onlinedocs/gcc-9.1.0/libstdc++/manual/
-		# Enable the libstdc++ debug mode.
-		_GLIBCXX_DEBUG
-		_GLIBCXX_DEBUG_BACKTRACE
 		"KXMLGUI_NO_DEPRECATED=1"
 	)
 target_include_directories(${PROJECT_NAME}
@@ -286,6 +281,7 @@ set_target_properties(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
 	PUBLIC
 		# Targetized C++ compile settings.
+		cxx_compile_options
 		cxx_settings
 		cxx_definitions_qt
 	PRIVATE

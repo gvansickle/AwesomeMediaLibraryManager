@@ -30,10 +30,11 @@
 
 // Qt
 #include <QString>
+#include <QVariant>
+#include <QList>
 
 // Ours.
-// #include <ISerializable.h> //<< This includes this file.
-#include <utils/DebugHelpers.h>
+// #include <ISerializable.h> //<< ISerializable.h includes this file.
 #include <future/guideline_helpers.h>
 
 
@@ -50,7 +51,7 @@ public:
 
 public:
 	// Rule-of-Zero doesn't work here, probably Qt.
-	M_GH_RULE_OF_FIVE_DEFAULT_C21(QVariantHomogenousList);
+	M_GH_RULE_OF_FIVE_DEFAULT_C21(QVariantHomogenousList)
 	virtual ~QVariantHomogenousList() = default;
 
 	QVariantHomogenousList(const QString& list_tag, const QString& list_item_tag)

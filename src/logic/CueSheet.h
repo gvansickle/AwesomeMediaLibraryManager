@@ -74,7 +74,7 @@ class QUrl;
  * @sa https://isrc.ifpi.org/en/isrc-standard/structure
  *
  */
-class CueSheet : public virtual ISerializable
+class CueSheet final : public ISerializable
 {
 	Q_GADGET
 

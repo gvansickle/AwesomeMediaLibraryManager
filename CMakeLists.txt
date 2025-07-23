@@ -202,9 +202,7 @@ include(ECMQtDeclareLoggingCategory)
 ### END ECM Setup ====================================================================================================
 ###
 
-# Set some extra debug flags early.
-# This is stupid, but I can't for the life of me figure out a better way to set the compiler options in
-# cmake and/or Qt Creator.
+# Set the basic compile flags early.
 # https://github.com/onqtam/ucm#ucm_add_flags
 include(ucm)
 # Target-focused compile settings.
@@ -215,12 +213,18 @@ target_compile_definitions(cxx_definitions_qt INTERFACE)
 add_library(cxx_compile_options INTERFACE)
 target_compile_options(cxx_compile_options INTERFACE)
 if(UNIX)
-	target_compile_options(cxx_compile_options
-		INTERFACE
-			-Og -ggdb3 -fno-omit-frame-pointer -fmessage-length=0 -pthread -Werror=return-type
-		-fno-eliminate-unused-debug-types -fno-inline -fmodules)
-	ucm_add_flags(-Og -ggdb3 -fno-omit-frame-pointer -fmessage-length=0 -pthread -Werror=return-type
-		-fno-eliminate-unused-debug-types -fno-inline -fmodules)
+	# C base flags
+	ucm_add_flags(C -Og -ggdb3 -fmessage-length=0 -pthread)
+	# C++ base flags
+	ucm_add_flags(CXX -Og -ggdb3 -fmessage-length=0 -pthread -Werror=return-type -fmodules -fdiagnostics-show-option)
+	# C++ Additional Debug flags
+	ucm_add_flags(CXX -Og -ggdb3 -fno-omit-frame-pointer -fno-eliminate-unused-debug-types -fno-inline
+		-fdiagnostics-show-template-tree
+		CONFIG Debug)
+#	target_compile_definitions(cxx_definitions_qt
+#		INTERFACE
+##			$<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CONFIG:Debug>>:_GLIBCXX_DEBUG;_GLIBCXX_DEBUG_BACKTRACE>
+#	)
 # Flags for GNU libstdc++
 ### @todo Detect that we're actually using GNU libstdc++
 # "compiles user code using the debug mode. When defined, _GLIBCXX_ASSERTIONS is defined automatically"
@@ -234,18 +238,14 @@ if(FALSE) ##CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 endif()
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	message(STATUS "C++ Compiler is GCC")
-	ucm_add_flags(-fvar-tracking -fvar-tracking-assignments -gpubnames -ggnu-pubnames)
-	# Max debug flags
-	target_compile_options(cxx_compile_options
-		INTERFACE
-			-gvariable-location-views
-			-gas-loc-support -gas-locview-support -gstatement-frontiers -ginline-points -femit-struct-debug-detailed=any
-		)
-	#ucm_add_flags(-gvariable-location-views)
-	ucm_add_flags(-grecord-gcc-switches)
-	ucm_add_flags(-fno-eliminate-unused-debug-types -fno-inline)
-	ucm_add_flags(-Wmaybe-uninitialized -Werror=maybe-uninitialized -fdiagnostics-show-template-tree -fdiagnostics-show-option)
-	ucm_add_flags(-fuse-ld=gold) # Let's try the gold linker.
+	# GCC-specific debug flags
+	ucm_add_flags(CXX -fvar-tracking -fvar-tracking-assignments -gpubnames -ggnu-pubnames -gvariable-location-views
+		-gas-loc-support -gas-locview-support -gstatement-frontiers -ginline-points -femit-struct-debug-detailed=any
+		-ftrack-macro-expansion
+		-Wmaybe-uninitialized -Werror=maybe-uninitialized
+		-grecord-gcc-switches
+		CONFIG DEBUG)
+	ucm_add_flags(-fuse-ld=gold) # Let's use the gold linker.
 	# GCC 9.x suggestions.
 	add_library(cxx_suggestions INTERFACE)
 	target_compile_options(cxx_suggestions INTERFACE
@@ -255,10 +255,10 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	message(STATUS "C++ Compiler is Clang")
 	target_compile_options(cxx_compile_options
 		INTERFACE
-			-fforce-emit-vtables
-			)
-	ucm_add_flags(-Wthread-safety -fdebug-macro -fdiagnostics-show-template-tree -mno-omit-leaf-frame-pointer -ftime-trace=build_time_trace.json)
-	#ucm_add_flags(-fdelayed-template-parsing -frelaxed-template-template-args)
+	)
+	ucm_add_flags(CXX -Wthread-safety -fforce-emit-vtables -fdebug-macro
+		-mno-omit-leaf-frame-pointer -ftime-trace=build_time_trace.json
+		CONFIG Debug)
 endif()
 if(WIN32)
 	#ucm_add_flags(/showIncludes)
@@ -273,12 +273,12 @@ if(WIN32)
 endif(WIN32)
 target_link_libraries(cxx_settings INTERFACE cxx_compile_options)
 
-#set(CMAKE_CXX_FLAGS_DEBUG "-ggdb3 -ftime-trace")
 message(STATUS "C compiler supported features = ${CMAKE_C_COMPILE_FEATURES}")
 message(STATUS "C++ compiler supported features = ${CMAKE_CXX_COMPILE_FEATURES}")
 message(STATUS "C++ CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS}")
 message(STATUS "C++ CMAKE_CXX_FLAGS_DEBUG = ${CMAKE_CXX_FLAGS_DEBUG}")
-
+message(STATUS "UCM_PRINT_FLAGS():")
+ucm_print_flags()
 ###
 
 
@@ -323,7 +323,7 @@ message("* Using CMake version ${CMAKE_VERSION}")
 message("* CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
 message("*")
 message("* From top level:")
-message("*   Source directory: ${PROJECT_SOURCE_DIR} (${AwesomeMediaLibraryManager_SOURCE_DIR})")
+message("*   Top level source directory: ${PROJECT_SOURCE_DIR} (${AwesomeMediaLibraryManager_SOURCE_DIR})")
 message("*   Top level of build tree: ${CMAKE_BINARY_DIR}")
 message("*   Build directory: ${PROJECT_BINARY_DIR} (${AwesomeMediaLibraryManager_BINARY_DIR})")
 message("*   Version: ${PROJECT_VERSION}")

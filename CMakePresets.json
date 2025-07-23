@@ -1,0 +1,22 @@
+{
+  "version": 10,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 21,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "default",
+      "displayName": "Default",
+      "description": "Default build options for GCC-compatible compilers",
+      "binaryDir": "${sourceDir}/build-clion-debug",
+      "cacheVariables": {
+        "CMAKE_C_FLAGS": "",
+        "CMAKE_CXX_FLAGS": "",
+        "CMAKE_CXX_FLAGS_DEBUG": "",
+        "$comment": ",-D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_BACKTRACE"
+      }
+    }
+  ]
+}

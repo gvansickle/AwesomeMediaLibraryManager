@@ -28,6 +28,7 @@
 
 // Ours
 #include <utils/RegisterQtMetatypes.h>
+#include <utils/DebugHelpers.h>
 
 AMLM_QREG_CALLBACK ([](){
  qIn() << "Registering QVariantHomogenousList";

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -19,6 +19,11 @@
 
 #include "DebugSequence.h"
 
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <atomic>
+
 DebugSequence::DebugSequence()
 {
 	// TODO Auto-generated constructor stub
@@ -28,5 +33,20 @@ DebugSequence::DebugSequence()
 DebugSequence::~DebugSequence()
 {
 	// TODO Auto-generated destructor stub
+}
+
+void DebugSequence::reset(int reset)
+{
+	m_expected_state = reset;
+}
+
+bool DebugSequence::expect_and_set(int expect, int set)
+{
+	int was = m_expected_state.exchange(set);
+    if (was != expect)
+	{
+		throw std::runtime_error("DebugSequence::expect_and_set: expected " + std::to_string(expect) + " but was " + std::to_string(was));
+	}
+	return was == expect;
 }
 

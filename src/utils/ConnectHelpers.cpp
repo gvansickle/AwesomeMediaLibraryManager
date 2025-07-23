@@ -52,6 +52,6 @@ void Disconnector::disconnect()
     {
     	bool status = QObject::disconnect(connection);
         Q_ASSERT(status == true);
-        m_connections.clear();
     }
+	m_connections.clear();
 }

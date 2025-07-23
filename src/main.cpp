@@ -20,8 +20,6 @@
 
 #include <config.h>
 
-#include "AMLMApp.h"
-
 // Qt
 #include <QtGlobal>
 #include <QIcon>
@@ -45,6 +43,7 @@
 #endif
 
 // Ours
+#include "AMLMApp.h"
 #include "AMLMSettings.h"
 #include "Core.h"
 #include <gui/Theme.h>
