@@ -135,4 +135,13 @@ using WEAK_PTR = QWeakPointer<T>;
 #define QTH_DECLARE_QDATASTREAM_OPS(classname) \
 	IMPL_QTH_DECLARE_QDATASTREAM_OPS(/**/, classname)
 
+/**
+ * Call this in your QObject-derived class' constructor to give each object a uniqueified name.
+ * @param the_object
+ */
+#define setNumberedObjectName(the_object) \
+    do { static int id = 0; setNumberedObjectNameInternal(the_object, id); } while(0)
+
+void setNumberedObjectNameInternal(QObject* the_object, int& id);
+
 #endif /* SRC_UTILS_QTHELPERS_H_ */

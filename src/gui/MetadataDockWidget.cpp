@@ -59,7 +59,7 @@
 
 MetadataDockWidget::MetadataDockWidget(const QString& title, QWidget *parent, Qt::WindowFlags flags) : QDockWidget(title, parent, flags)
 {
-    setObjectName("MetadataDockWidget");
+    setNumberedObjectName(this);
 
     // Set up the proxy model.
     m_proxy_model = new SelectionFilterProxyModel(this);

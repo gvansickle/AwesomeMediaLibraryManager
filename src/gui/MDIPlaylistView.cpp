@@ -54,6 +54,8 @@
 
 MDIPlaylistView::MDIPlaylistView(QWidget* parent) : MDITreeViewBase(parent)
 {
+	setNumberedObjectName(this);
+
     // Set up a Style Proxy to draw a more natural drop indicator.  setStyle doesn't take ownership of it, so we delete it in the destructor.
     m_the_dragdropstyleproxy = std::make_unique<DragDropTreeViewStyleProxy>();
     this->setStyle(m_the_dragdropstyleproxy.get());

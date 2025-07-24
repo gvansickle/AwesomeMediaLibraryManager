@@ -19,5 +19,18 @@
 
 /// @file
 
+// Qt
+#include <QObject>
+#include <QMetaObject>
+#include <QDebug>
+
+// Ours
 #include "QtHelpers.h"
 
+void setNumberedObjectNameInternal(QObject* the_object, int& id)
+{
+	const char* class_name = the_object->metaObject()->className();
+	std::string name = std::format("{}{}", class_name, id);
+	the_object->setObjectName(name.c_str());
+	id++;
+}
