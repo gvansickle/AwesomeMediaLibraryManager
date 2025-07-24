@@ -101,10 +101,12 @@ protected:
 	void connectToModel(QAbstractItemModel *model);
 
 protected Q_SLOTS:
+
+	void onModelAboutToBeReset();
 	void resetInternalData() override;
+	void onModelReset();
 
 private:
-
 	QPointer<QItemSelectionModel> m_sel_model;
 	/**
 	 * The PMI pointing to the bolded row.

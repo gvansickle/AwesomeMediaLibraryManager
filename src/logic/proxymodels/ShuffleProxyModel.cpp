@@ -33,14 +33,12 @@
 // Ours
 #include <ConnectHelpers.h>
 #include <ModelHelpers.h>
+#include <utils/QtHelpers.h>
 
 
 ShuffleProxyModel::ShuffleProxyModel(QObject* parent): QSortFilterProxyModel(parent)
 {
-	static int id = 0;
-	std::string name = std::format("ShuffleProxyModel{}", id);
-	++id;
-	setObjectName(name.c_str());
+    setNumberedObjectName(this);
 
 	m_sel_model = new QItemSelectionModel(this);
 	connect_or_die(m_sel_model, &QItemSelectionModel::selectionChanged, this,
@@ -48,6 +46,14 @@ ShuffleProxyModel::ShuffleProxyModel(QObject* parent): QSortFilterProxyModel(par
 		{
 			qDb() << "ShuffleProxyModel::selectionChanged:" << selected << deselected;
 		});
+
+	// Connect to signals before/after model is reset.
+	// We can't really override QSortFilterProxyModel::setSourceModel() because:
+	// 1. It does a lot of work.
+	// 2. It calls beginResetModel()/endResetModel(), which don't nest, so we can't call them in derived proxymodels.
+    connect_or_die(this, &QSortFilterProxyModel::modelAboutToBeReset, this, &ShuffleProxyModel::onModelAboutToBeReset);
+    connect_or_die(this, &QSortFilterProxyModel::modelReset, this, &ShuffleProxyModel::onModelReset);
+
 	// m_spy = new QSignalSpy(this, );
 }
 
@@ -81,16 +87,9 @@ bool ShuffleProxyModel::loopAtEnd() const
 void ShuffleProxyModel::setSourceModel(QAbstractItemModel* sourceModel)
 {
 	qDb() << "ShuffleProxyModel::setSourceModel:" << sourceModel;
-	beginResetModel();
 
-	// Disconnect from old source model.
-	m_disconnector.disconnect();
 	QSortFilterProxyModel::setSourceModel(sourceModel);
-	connectToModel(sourceModel);
 
-	endResetModel();
-
-	onNumRowsChanged();
 	qDb() << "ShuffleProxyModel::setSourceModel done";
 }
 
@@ -287,6 +286,12 @@ void ShuffleProxyModel::connectToModel(QAbstractItemModel* model)
 	}
 }
 
+void ShuffleProxyModel::onModelAboutToBeReset()
+{
+	// Disconnect from old source model.
+	m_disconnector.disconnect();
+}
+
 void ShuffleProxyModel::resetInternalData()
 {
 	m_currentIndex = QModelIndex();
@@ -297,4 +302,10 @@ void ShuffleProxyModel::resetInternalData()
 	m_disconnector.disconnect();
 
 	QSortFilterProxyModel::resetInternalData();
+}
+
+void ShuffleProxyModel::onModelReset()
+{
+	connectToModel(sourceModel());
+	onNumRowsChanged();
 }
