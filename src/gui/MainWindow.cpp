@@ -1218,12 +1218,6 @@ void MainWindow::connectNowPlayingViewAndMainWindow(MDINowPlayingView* now_playi
 	connect_or_die(this, &MainWindow::settingsChanged, now_playing_view, &MDILibraryView::onSettingsChanged);
 
     /// @todo Break this off, it's not NowPlaying<->MainWindow.
-	connect_or_die(m_now_playing_playlist_model, &QAbstractItemModel::modelReset, m_now_playing_shuffle_proxy_model,
-					&ShuffleProxyModel::onNumRowsChanged);
-	connect_or_die(m_now_playing_playlist_model, &QAbstractItemModel::rowsInserted, m_now_playing_shuffle_proxy_model,
-					&ShuffleProxyModel::onNumRowsChanged);
-	connect_or_die(m_now_playing_playlist_model, &QAbstractItemModel::rowsRemoved, m_now_playing_shuffle_proxy_model,
-					&ShuffleProxyModel::onNumRowsChanged);
 
     // ShuffleProxyModel -> Now Playing View
     connect_or_die(m_now_playing_shuffle_proxy_model, &ShuffleProxyModel::nowPlayingIndexChanged, now_playing_view, &MDINowPlayingView::setCurrentIndexAndRow);
@@ -1870,6 +1864,9 @@ void MainWindow::newPlaylist()
 void MainWindow::newNowPlaying()
 {
     auto child = new MDINowPlayingView(this);
+
+	qDb() << "Creating new NowPlayingView:" << child->objectName();
+
     child->newFile();
 
 	// Set this view's model to be the single "Now Playing" model.
@@ -2059,7 +2056,9 @@ void MainWindow::addChildMDIModelViewPair_Playlist(const MDIModelViewPair& mvpai
 {
 	if(mvpair.hasView())
 	{
-        auto playlist_view = qobject_cast<MDIPlaylistView*>(mvpair.getView());
+        auto playlist_view_playlist = qobject_cast<MDIPlaylistView*>(mvpair.getView());
+		auto playlist_view_nowplaying = qobject_cast<MDINowPlayingView*>(mvpair.getView());
+		auto playlist_view = playlist_view_nowplaying ? playlist_view_nowplaying : playlist_view_playlist;
 
 		Q_CHECK_PTR(playlist_view);
 
