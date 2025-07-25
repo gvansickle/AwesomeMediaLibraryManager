@@ -64,6 +64,8 @@ AMLM_QREG_CALLBACK([](){
 
 LibraryModel::LibraryModel(QObject *parent) : QAbstractItemModel(parent)
 {
+    setNumberedObjectName(this);
+
 	// App-specific cache directory.
 	m_cachedir = QUrl::fromLocalFile(QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
 	// Make sure it ends in a "/".
