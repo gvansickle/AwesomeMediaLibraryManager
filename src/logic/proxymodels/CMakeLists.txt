@@ -20,6 +20,7 @@
 # @file src/logic/proxymodels/CMakeLists.txt
 
 set(proxymodels_subdir_SOURCES
+	BaseSortFilterProxyModel.cpp
 	SelectionFilterProxyModel.cpp
 	ModelHelpers.cpp
 	LibrarySortFilterProxyModel.cpp
@@ -30,6 +31,7 @@ set(proxymodels_subdir_SOURCES
 )
 
 set(proxymodels_subdir_HEADERS
+	BaseSortFilterProxyModel.cpp
     SelectionFilterProxyModel.h
     ModelHelpers.h
     LibrarySortFilterProxyModel.h
@@ -59,7 +61,7 @@ target_link_libraries(proxymodels
 		${GTK_LINK_LIB_TARGETS}
 		#		${AMLM_TAGLIB_TARGET}
 		#		${AMLM_LIBCUE_TARGET}
-		#	PRIVATE
 		models
+	PRIVATE
 		utils
 )
