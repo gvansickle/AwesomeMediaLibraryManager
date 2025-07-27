@@ -34,7 +34,7 @@ namespace AMLM
 {
 
 /**
- * This is really a view helper, not a model helper.
+ *
  * @param model
  * @param view
  * @param context
