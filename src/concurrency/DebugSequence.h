@@ -25,7 +25,8 @@
 #include <atomic>
 
 /**
- *
+ * @class DebugSequence
+ * @brief A utility class designed for tracking and debugging arbitrary event sequences.
  */
 class DebugSequence
 {
