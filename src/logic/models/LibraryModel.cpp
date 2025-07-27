@@ -144,7 +144,8 @@ QModelIndex LibraryModel::sibling(int row, int column, const QModelIndex& idx) c
 
 QSize LibraryModel::span(const QModelIndex& index) const
 {
-	qDebug() << "SPAN CALLED";
+    // Per https://doc.qt.io/qt-6/qabstractitemmodel.html#span:
+    // "Note: Currently, span is not used."
 	return QAbstractItemModel::span(index);
 }
 
