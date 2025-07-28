@@ -34,9 +34,11 @@
 #include <QSplitter>
 #include <QRegularExpression>
 #include <QHeaderView>
+#include <QAbstractItemModelTester>
 
 // Ours
 #include <AMLMApp.h>
+#include <QAbstractItemModelTester>
 #include <utils/EnumFlagHelpers.h>
 
 #include "widgets/PixmapLabel.h"
@@ -57,12 +59,17 @@
 
 #include <logic/proxymodels/LibrarySortFilterProxyModel.h>
 
+
 MetadataDockWidget::MetadataDockWidget(const QString& title, QWidget *parent, Qt::WindowFlags flags) : QDockWidget(title, parent, flags)
 {
     setNumberedObjectName(this);
 
     // Set up the proxy model.
     m_proxy_model = new SelectionFilterProxyModel(this);
+	// Set up the model tester.
+	// See https://doc.qt.io/qt-6/qabstractitemmodeltester.html
+	// ...and https://www.kdab.com/new-in-qt-5-11-improvements-to-the-model-view-apis-part-2/
+	// new QAbstractItemModelTester(m_proxy_model, QAbstractItemModelTester::FailureReportingMode::Warning, this);
 	// Set up the watcher.
 	m_proxy_model_watcher = new ModelChangeWatcher(this);
 	m_proxy_model_watcher->setModelToWatch(m_proxy_model);
@@ -116,10 +123,30 @@ void MetadataDockWidget::connectToView(MDITreeViewBase* view)
         return;
     }
 
-    qDebug() << "Setting new source model and selection model:" << view->model() << view->selectionModel();
+	// if (view == m_connected_view)
+	// {
+	// 	qDebug() << "Already connected to this view.";
+	// 	return;
+	// }
 
-    m_proxy_model->setSourceModel(view->model());
-    m_proxy_model->setSelectionModel(view->selectionModel());
+	// m_connected_view = view;
+
+	qDebug() << "Setting new source model and selection model:" << view->model() << view->selectionModel();
+
+// #error "TODO This is resulting in no updates to the dock's view, but it's not just this"
+// 	auto old_model = m_proxy_model->sourceModel();
+//     if (old_model && (view->model() != old_model))
+// 	{
+// 		old_model->deleteLater();
+		m_proxy_model->setSourceModel(view->model());
+    // }
+
+    // auto old_selection_model = m_proxy_model->selectionModel();
+    // if (old_selection_model && (view->selectionModel() != old_selection_model))
+    // {
+        // old_selection_model->deleteLater();
+		m_proxy_model->setSelectionModel(view->selectionModel());
+    // }
 }
 
 void MetadataDockWidget::onDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QList<int>& roles)
