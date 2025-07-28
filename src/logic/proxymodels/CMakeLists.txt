@@ -62,6 +62,7 @@ target_link_libraries(proxymodels
 		#		${AMLM_TAGLIB_TARGET}
 		#		${AMLM_LIBCUE_TARGET}
 		models
-	PRIVATE
 		utils
+	PRIVATE
+#		utils
 )
