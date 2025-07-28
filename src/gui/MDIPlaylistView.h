@@ -20,6 +20,7 @@
 #ifndef MDIPLAYLISTVIEW_H
 #define MDIPLAYLISTVIEW_H
 
+/// @file
 
 #include "MDITreeViewBase.h"
 #include <logic/models/PlaylistModel.h>
@@ -137,8 +138,8 @@ private:
 
     std::unique_ptr<DragDropTreeViewStyleProxy> m_the_dragdropstyleproxy;
 
-    PlaylistModel* m_underlying_model;
-    LibrarySortFilterProxyModel* m_sortfilter_model;
+    QPointer<PlaylistModel> m_underlying_model;
+    QPointer<LibrarySortFilterProxyModel> m_sortfilter_model;
     ItemDelegateLength* m_length_delegate;
 
 	/// true == shuffle, false == sequential.

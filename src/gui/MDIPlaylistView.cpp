@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
+/// @file
 
 #include "MDIPlaylistView.h"
 
@@ -135,8 +136,15 @@ MDIModelViewPair MDIPlaylistView::openModel(QPointer<PlaylistModel> model, QWidg
 void MDIPlaylistView::setModel(QAbstractItemModel* model)
 {
 	// Keep refs to the {proxy}models.
-	m_sortfilter_model = qobject_cast<LibrarySortFilterProxyModel*>(model);
+    // LibrarySortFilterProxyModel* old_model = m_sortfilter_model;
+    m_sortfilter_model = qobject_cast<LibrarySortFilterProxyModel*>(model);
+    // if(old_model != m_sortfilter_model)
+    // {
+    //     delete old_model;
+    // }
     Q_CHECK_PTR(m_sortfilter_model);
+
+	// We don't own the models, so we don't delete the old one here.
 	m_underlying_model = qobject_cast<PlaylistModel*>(m_sortfilter_model->sourceModel());
 	Q_CHECK_PTR(m_underlying_model);
 
@@ -200,7 +208,10 @@ void MDIPlaylistView::setEmptyModel()
 	MDIModelViewPair mvp;
 	auto new_playlist_model = new PlaylistModel(this);
 	mvp.appendModel(new_playlist_model);
+
+    // auto old_sortmodel = m_sortfilter_model;
 	m_sortfilter_model = new LibrarySortFilterProxyModel(this);
+    // delete old_sortmodel;
     mvp.appendProxyModel(m_sortfilter_model);
     setModel(m_sortfilter_model);
 }
@@ -423,11 +434,6 @@ QUrl MDIPlaylistView::currentMedia() const
 //
 // Public slots
 //
-
-
-
-
-
 
 void MDIPlaylistView::onCut()
 {
