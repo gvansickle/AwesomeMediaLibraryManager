@@ -204,6 +204,10 @@ QString MDIPlaylistView::defaultNameFilter()
 
 void MDIPlaylistView::setEmptyModel()
 {
+#warning "BROKEN"
+    return;
+
+	/// @note THIS IS BROKEN
 	/// @note This empty playlist model is parented to this.  Normally models are parented to the MainWindow.
 	MDIModelViewPair mvp;
 	auto new_playlist_model = new PlaylistModel(this);

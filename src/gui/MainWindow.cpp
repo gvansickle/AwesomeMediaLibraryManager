@@ -1876,15 +1876,14 @@ void MainWindow::newNowPlaying()
     child->newFile();
 
 	// Set this view's model to be the single "Now Playing" model.
-	m_now_playing_playlist_model = child->underlyingModel();
+    // m_now_playing_playlist_model = child->underlyingModel();
+    m_now_playing_playlist_model = new PlaylistModel(this);
 
 	m_now_playing_shuffle_proxy_model = new ShuffleProxyModel(this);
-	m_now_playing_shuffle_proxy_model->setSourceModel(m_now_playing_playlist_model);
-	m_now_playing_library_sortfilter_model = new LibrarySortFilterProxyModel(this);
+
+    m_now_playing_library_sortfilter_model = new LibrarySortFilterProxyModel(this);
 	m_now_playing_library_sortfilter_model->setDynamicSortFilter(false);
 	m_now_playing_library_sortfilter_model->setSortCaseSensitivity(Qt::CaseInsensitive);
-	m_now_playing_library_sortfilter_model->setSourceModel(m_now_playing_shuffle_proxy_model);
-
 
 	/// @todo Do we really need to keep this as a member pointer?
 	m_now_playing_playlist_view = child;
