@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -25,9 +25,10 @@
 #include <logic/LibraryEntry.h>
 #include <logic/models/LibraryModel.h>
 
-LibrarySortFilterProxyModel::LibrarySortFilterProxyModel(QObject* parent) : QSortFilterProxyModel(parent)
+LibrarySortFilterProxyModel::LibrarySortFilterProxyModel(QObject* parent) : BASE_CLASS(parent)
 {
 	setNumberedObjectName(this);
+
 	// Filter all columns by default.
 	setFilterKeyColumn(-1);
 }
@@ -79,3 +80,10 @@ bool LibrarySortFilterProxyModel::lessThan(const QModelIndex &left, const QModel
 		return leftData.value<Fraction>() < rightData.value<Fraction>();
 	}
 }
+
+void LibrarySortFilterProxyModel::resetInternalData()
+{
+	BASE_CLASS::resetInternalData();
+}
+
+

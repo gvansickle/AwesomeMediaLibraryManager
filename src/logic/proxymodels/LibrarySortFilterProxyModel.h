@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -30,22 +30,30 @@
 // Qt
 #include <QSortFilterProxyModel>
 
+// Ours
+#include "BaseSortFilterProxyModel.h"
+
 class LibraryEntry;
 
-class LibrarySortFilterProxyModel : public QSortFilterProxyModel
+class LibrarySortFilterProxyModel : public BaseSortFilterProxyModel
 {
     Q_OBJECT
+
+    using BASE_CLASS = BaseSortFilterProxyModel;
 
 public:
     explicit LibrarySortFilterProxyModel(QObject* parent = Q_NULLPTR);
 
     std::shared_ptr<LibraryEntry> getItem(QModelIndex index) const;
 
-    virtual bool hasChildren(const QModelIndex &parent) const override;
+    bool hasChildren(const QModelIndex &parent) const override;
 
 protected:
     bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const override;
     bool lessThan(const QModelIndex &source_left, const QModelIndex &source_right) const override;
+
+protected Q_SLOTS:
+    void resetInternalData() override;
 
 private:
     Q_DISABLE_COPY(LibrarySortFilterProxyModel)
