@@ -18,18 +18,16 @@
  */
 /// @file
 
+#include <ConnectHelpers.h>
 #include <logic/proxymodels/ModelHelpers.h>
 #include <logic/proxymodels/SelectionFilterProxyModel.h>
 #include <QDebug>
+#include <QtHelpers.h>
 
 
 SelectionFilterProxyModel::SelectionFilterProxyModel(QObject *parent) : BASE_CLASS(parent)
 {
-	static int id = 0;
-	std::string name = std::format("SelectionFilterProxyModel{}", id);
-	setObjectName(name.c_str());
-	setDynamicSortFilter(true);
-	++id;
+	setNumberedObjectName(this);
 }
 
 SelectionFilterProxyModel::~SelectionFilterProxyModel()
@@ -38,7 +36,7 @@ SelectionFilterProxyModel::~SelectionFilterProxyModel()
 
 void SelectionFilterProxyModel::setSourceModel(QAbstractItemModel* sourceModel)
 {
-//	qDebug() << "Setting source model to:" << sourceModel << "root model is:" << getRootModel(sourceModel);
+    qDebug() << "Setting source model to:" << sourceModel << ", root model is:" << getRootModel(sourceModel);
 
 	// Clear out the old index to show, it doesn't apply to the new model.
 	m_current_selected_index = QPersistentModelIndex();
@@ -48,24 +46,39 @@ void SelectionFilterProxyModel::setSourceModel(QAbstractItemModel* sourceModel)
 
 void SelectionFilterProxyModel::setSelectionModel(QItemSelectionModel* filter_selection_model)
 {
-	if(filter_selection_model == nullptr)
+	if (filter_selection_model == nullptr)
 	{
 		qWarning() << "ATTEMPT TO SET NULL SELECTION MODEL";
 		return;
 	}
-
-	if(m_filter_selection_model)
+#if 0 /// @todo This causes Now Playing to have no selection model.
+	if (filter_selection_model == m_filter_selection_model)
 	{
-		// Already have a selection model set.  Disconnect from it.
-//		qDebug() << "Disconnecting from current selection model:" << m_filter_selection_model;
-		m_filter_selection_model->disconnect(this);
+		qWarning() << "ATTEMPT TO SET EXISTING SELECTION MODEL";
+		return;
 	}
 
-	m_filter_selection_model = filter_selection_model;
+	beginResetModel();
 
+	// Else already have a different selection model set.  Disconnect from it.
+	auto old_filter_sel = m_filter_selection_model;
+#endif
+	if (m_filter_selection_model) ///<<<
+	{
+		m_filter_selection_model->disconnect(this);
+	} ///<<<
+	m_filter_selection_model = filter_selection_model;
+#if 0 /// @todo This causes Now Playing to have no selection model.
+    if(old_filter_sel)
+    {
+        delete old_filter_sel;
+    }
+
+	endResetModel();
+#endif
 	// Connect up the signals and slots.
-	connect(m_filter_selection_model, &QItemSelectionModel::selectionChanged, this, &SelectionFilterProxyModel::onSelectionChanged);
-	connect(m_filter_selection_model, &QItemSelectionModel::modelChanged, this, &SelectionFilterProxyModel::onModelChanged);
+	connect_or_die(m_filter_selection_model, &QItemSelectionModel::selectionChanged, this, &SelectionFilterProxyModel::onSelectionChanged);
+	connect_or_die(m_filter_selection_model, &QItemSelectionModel::modelChanged, this, &SelectionFilterProxyModel::onModelChanged);
 
 	// If there's already a selection, set it up.
 	if(m_filter_selection_model && m_filter_selection_model->hasSelection())
@@ -119,9 +132,10 @@ bool SelectionFilterProxyModel::filterAcceptsRow(int sourceRow, const QModelInde
 	return false;
 }
 
-void SelectionFilterProxyModel::onSelectionChanged(const QItemSelection& selected, const QItemSelection& deselected)
+void SelectionFilterProxyModel::onSelectionChanged(const QItemSelection& selected, const QItemSelection& /*deselected*/)
 {
 	// Only pick the first selected index for now.
+	qDb() << M_ID_VAL(selected) << M_ID_VAL(m_filter_selection_model);
 	auto source_rows = m_filter_selection_model->selectedRows();
 
 	if(source_rows.isEmpty())
@@ -139,4 +153,20 @@ void SelectionFilterProxyModel::onModelChanged(QAbstractItemModel* model)
 //	qDebug() << "MODEL CHANGED:" << model;
 
 	Q_UNIMPLEMENTED();
+	Q_ASSERT(false);
 }
+
+void SelectionFilterProxyModel::onModelAboutToBeReset()
+{
+    // Clear out the old index to show, it doesn't apply to the new model.
+    m_current_selected_index = QPersistentModelIndex();
+}
+
+void SelectionFilterProxyModel::resetInternalData()
+{
+	BASE_CLASS::resetInternalData();
+
+	// Clear out the old index to show, it doesn't apply to the new model.
+// #error	// m_current_selected_index = QPersistentModelIndex();
+}
+
