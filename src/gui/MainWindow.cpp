@@ -128,7 +128,7 @@
 /// @note EXPERIMENTAL
 #include <gui/widgets/ExperimentalKDEView1.h>
 #include <Core.h>
-#include <DebugSequence.h>
+#include <utils/DebugSequence.h>
 
 
 //
@@ -1218,6 +1218,12 @@ void MainWindow::connectNowPlayingViewAndMainWindow(MDINowPlayingView* now_playi
 	connect_or_die(this, &MainWindow::settingsChanged, now_playing_view, &MDILibraryView::onSettingsChanged);
 
     /// @todo Break this off, it's not NowPlaying<->MainWindow.
+    // connect_or_die(m_now_playing_playlist_model, &QAbstractItemModel::modelReset, m_now_playing_shuffle_proxy_model,
+    // 				&ShuffleProxyModel::onNumRowsChanged);
+    // connect_or_die(m_now_playing_playlist_model, &QAbstractItemModel::rowsInserted, m_now_playing_shuffle_proxy_model,
+    // 				&ShuffleProxyModel::onNumRowsChanged);
+    // connect_or_die(m_now_playing_playlist_model, &QAbstractItemModel::rowsRemoved, m_now_playing_shuffle_proxy_model,
+    // 				&ShuffleProxyModel::onNumRowsChanged);
 
     // ShuffleProxyModel -> Now Playing View
     connect_or_die(m_now_playing_shuffle_proxy_model, &ShuffleProxyModel::nowPlayingIndexChanged, now_playing_view, &MDINowPlayingView::setCurrentIndexAndRow);
@@ -2092,8 +2098,7 @@ void MainWindow::addChildMDIModelViewPair_Playlist(const MDIModelViewPair& mvpai
 	{
         qDb() << "ROOT MODEL TYPE IS:" << mvpair.getRootModel()->metaObject()->className();
 
-        auto proxy_model = qobject_cast<LibrarySortFilterProxyModel*>(mvpair.getTopModel());
-        auto playlist_model = qobject_cast<PlaylistModel*>(proxy_model->sourceModel());
+        auto playlist_model = qobject_cast<PlaylistModel*>(mvpair.getRootModel());
         Q_CHECK_PTR(playlist_model);
 
         bool model_really_already_existed = (std::find_if(m_playlist_models.begin(), m_playlist_models.end(), [playlist_model](auto& x){
