@@ -44,7 +44,7 @@ set(utils_SOURCE_FILES
 	ConnectHelpers.cpp
 	DebugBlock.cpp
 	DebugHelpers.cpp
-	DebugSequence.h
+	DebugSequence.cpp
 	ext_iterators.cpp
 	Fraction.cpp
 	MapConverter.cpp
