@@ -50,10 +50,8 @@
 
 MDILibraryView::MDILibraryView(QWidget* parent) : MDITreeViewBase(parent)
 {
-	static int id = 0;
-	std::string name = std::format("MDILibraryView{}", id);
-	++id;
-	setObjectName(name);
+	setNumberedObjectName(this);
+
 	// Not sure what's going on here, but if I don't set this to something here, the tabs stay "(Untitled)".
 	/// @todo Seems like we no longer need to do this.
 //	setWindowTitle("DUMMY");
@@ -151,6 +149,8 @@ MDIModelViewPair MDILibraryView::openFile(QUrl open_url, QWidget *parent, std::f
 
 		/// @todo This should be done somewhere else, so that the mvpair we get above already has this set correctly.
 		mvpair.m_model_was_existing = mv_pair.m_model_was_existing;
+		qDb() << M_ID_VAL(mvpair.m_view_was_existing);
+		mvpair.m_view_was_existing = mv_pair.m_view_was_existing;
 
 		/// @note Need this cast due to some screwyness I mean subtleties of C++'s member access control rules.
 		/// In very shortened form: Derived member functions can only access "protected" members through
