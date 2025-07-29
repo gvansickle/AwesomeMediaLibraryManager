@@ -298,12 +298,13 @@ set(UPDATE_DISCONNECTED_IF_AVAILABLE "UPDATE_DISCONNECTED FALSE")
 include(DownloadProject)
 
 # Right now we need all the verbosity we can get.
-set(CMAKE_VERBOSE_MAKEFILE  YES)
+set(CMAKE_VERBOSE_MAKEFILE ON)
 # "CMake automatically analyzes the global inter-target dependency graph at the beginning of native build system generation.
 #  This property causes it to display details of its analysis to stderr."
 # GRVS: This dumps huge amounts of info.
-# set_property(GLOBAL PROPERTY GLOBAL_DEPENDS_DEBUG_MODE 1)
-set(CPACK_IFW_VERBOSE YES)
+#set_property(GLOBAL PROPERTY GLOBAL_DEPENDS_DEBUG_MODE 1)
+
+#set(CPACK_IFW_VERBOSE YES)
 #set(CMAKE_DEBUG_TARGET_PROPERTIES
 #	    INCLUDE_DIRECTORIES
 #		COMPILE_DEFINITIONS
