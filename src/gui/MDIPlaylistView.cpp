@@ -136,12 +136,20 @@ MDIModelViewPair MDIPlaylistView::openModel(QPointer<PlaylistModel> model, QWidg
 void MDIPlaylistView::setModel(QAbstractItemModel* model)
 {
 	// Keep refs to the {proxy}models.
-    // LibrarySortFilterProxyModel* old_model = m_sortfilter_model;
+
+    /// @todo THIS IS WHERE Library...Model0 GETS OVERWRITTEN BY Library...Model1:
+    // 1 MDIPlaylistView::setModel    MDIPlaylistView.cpp   140  0x52e12e
+    // 2 MDINowPlayingView::setModel  MDINowPlayingView.cpp 76   0x54088c
+    // 3 MDIModelViewPair::appendView MDIModelViewPair.cpp  42   0x544746
+    // 4 MainWindow::newNowPlaying    MainWindow.cpp        1897 0x516d7a
+    // 5 MainWindow::onStartup        MainWindow.cpp        371  0x51a346
+
+    LibrarySortFilterProxyModel* old_model = m_sortfilter_model;
     m_sortfilter_model = qobject_cast<LibrarySortFilterProxyModel*>(model);
-    // if(old_model != m_sortfilter_model)
-    // {
-    //     delete old_model;
-    // }
+    if(old_model != m_sortfilter_model)
+    {
+        delete old_model;
+    }
     Q_CHECK_PTR(m_sortfilter_model);
 
 	// We don't own the models, so we don't delete the old one here.
@@ -204,7 +212,7 @@ QString MDIPlaylistView::defaultNameFilter()
 
 void MDIPlaylistView::setEmptyModel()
 {
-#warning "BROKEN"
+	// We use the below anymore, delete?
     return;
 
 	/// @note THIS IS BROKEN
