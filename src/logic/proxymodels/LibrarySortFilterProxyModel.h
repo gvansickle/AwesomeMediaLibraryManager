@@ -28,7 +28,6 @@
 #include <memory>
 
 // Qt
-#include <QSortFilterProxyModel>
 
 // Ours
 #include "BaseSortFilterProxyModel.h"
