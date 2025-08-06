@@ -22,14 +22,16 @@
 
 /// @file
 
-#include "MDITreeViewBase.h"
-#include <logic/models/PlaylistModel.h>
-
+// Qt
 class QMediaPlaylist;
 class LibrarySortFilterProxyModel;
 class ShuffleProxyModel;
 class ItemDelegateLength;
 class DragDropTreeViewStyleProxy;
+
+// Ours
+#include "MDITreeViewBase.h"
+#include <logic/models/PlaylistModel.h>
 
 
 class MDIPlaylistView : public MDITreeViewBase
