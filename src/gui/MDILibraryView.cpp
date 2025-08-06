@@ -185,6 +185,8 @@ MDIModelViewPair MDILibraryView::openModel(QPointer<LibraryModel> model, QWidget
 
 	retval.appendView(new MDILibraryView(parent));
 
+	retval.m_view_was_existing = false;
+
 	return retval;
 }
 
@@ -421,7 +423,7 @@ void MDILibraryView::onActivated(const QModelIndex& index)
  */
 void MDILibraryView::onDoubleClicked(const QModelIndex &index)
 {
-	Q_UNUSED(index);
+	Q_UNUSED(index)
 #if 0 /// We're handling this in the onActivated() handler at the moment.
 	// Should always be valid.
 	Q_ASSERT(index.isValid());
