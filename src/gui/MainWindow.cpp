@@ -306,7 +306,7 @@ void MainWindow::init()
 
 	// Connect the MDIArea subWindowActivated signal to a slot so we know when
 	// the subwindow activation changes.
-	connect(m_mdi_area, &QMdiArea::subWindowActivated, this, &MainWindow::onSubWindowActivated);
+    connect_or_die(m_mdi_area, &QMdiArea::subWindowActivated, this, &MainWindow::onSubWindowActivated);
 
 	createActions();
 	createToolBars();
@@ -1253,7 +1253,7 @@ void MainWindow::updateConnections()
 
     if(childIsMDITreeViewBase)
     {
-//		qDebug() << "Updating connectons for activated window" << activeMdiChild()->windowTitle();
+//		qDebug() << "Updating connections for activated window" << activeMdiChild()->windowTitle();
 
 		// Connect the Metadata dock widget to the active child window's selectionModel().
 		connectActiveMDITreeViewBaseAndMetadataDock(childIsMDITreeViewBase, m_metadataDockWidget);
