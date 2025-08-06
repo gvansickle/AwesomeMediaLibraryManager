@@ -123,13 +123,13 @@ void MetadataDockWidget::connectToView(MDITreeViewBase* view)
         return;
     }
 
-	// if (view == m_connected_view)
-	// {
-	// 	qDebug() << "Already connected to this view.";
-	// 	return;
-	// }
+	if (view == m_connected_view)
+	{
+		qDebug() << "Already connected to this view.";
+		return;
+	}
 
-	// m_connected_view = view;
+	m_connected_view = view;
 
 	qDebug() << "Setting new source model and selection model:" << view->model() << view->selectionModel();
 
@@ -145,6 +145,9 @@ void MetadataDockWidget::connectToView(MDITreeViewBase* view)
     // if (old_selection_model && (view->selectionModel() != old_selection_model))
     // {
         // old_selection_model->deleteLater();
+	/// @todo Neither ever has an object name here:
+    qDb() << "CURRENT SELECTION MODEL:" << [&](){ if(m_proxy_model==nullptr || m_proxy_model->selectionModel()==nullptr) { return QString("nullptr"); } else { return m_proxy_model->selectionModel()->objectName();} }();
+    qDb() << "NEW SELECTION MODEL:" << view->selectionModel()->objectName();
 		m_proxy_model->setSelectionModel(view->selectionModel());
     // }
 }

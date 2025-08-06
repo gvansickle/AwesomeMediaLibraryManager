@@ -72,7 +72,7 @@ private:
 	 */
     QPointer<SelectionFilterProxyModel> m_proxy_model { nullptr };
 
-	// QPointer<MDITreeViewBase> m_connected_view { nullptr };
+	QPointer<MDITreeViewBase> m_connected_view { nullptr };
 
 	ModelChangeWatcher* m_proxy_model_watcher { nullptr };
 
