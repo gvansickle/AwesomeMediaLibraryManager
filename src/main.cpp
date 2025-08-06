@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
 						"%shortfunction:"
 						"%{line} - %{message}"
                        /* "%{if-fatal}%{backtrace}%{endif}" */);
-	QLoggingCategory::setFilterRules("qt.core.qobject.connect=true");
+    // QLoggingCategory::setFilterRules("qt.modeltest*=true");
 
 	// Logging test.
 	qInfo() << "LOGGING START";
