@@ -18,10 +18,13 @@
  */
 /// @file
 
+// Qt
+#include <QDebug>
+
+// Ours
 #include <ConnectHelpers.h>
 #include <logic/proxymodels/ModelHelpers.h>
 #include <logic/proxymodels/SelectionFilterProxyModel.h>
-#include <QDebug>
 #include <QtHelpers.h>
 
 
@@ -51,31 +54,18 @@ void SelectionFilterProxyModel::setSelectionModel(QItemSelectionModel* filter_se
 		qWarning() << "ATTEMPT TO SET NULL SELECTION MODEL";
 		return;
 	}
-#if 0 /// @todo This causes Now Playing to have no selection model.
 	if (filter_selection_model == m_filter_selection_model)
 	{
 		qWarning() << "ATTEMPT TO SET EXISTING SELECTION MODEL";
 		return;
 	}
 
-	beginResetModel();
-
-	// Else already have a different selection model set.  Disconnect from it.
-	auto old_filter_sel = m_filter_selection_model;
-#endif
-	if (m_filter_selection_model) ///<<<
+	if (m_filter_selection_model)
 	{
 		m_filter_selection_model->disconnect(this);
-	} ///<<<
+	}
 	m_filter_selection_model = filter_selection_model;
-#if 0 /// @todo This causes Now Playing to have no selection model.
-    if(old_filter_sel)
-    {
-        delete old_filter_sel;
-    }
 
-	endResetModel();
-#endif
 	// Connect up the signals and slots.
 	connect_or_die(m_filter_selection_model, &QItemSelectionModel::selectionChanged, this, &SelectionFilterProxyModel::onSelectionChanged);
 	connect_or_die(m_filter_selection_model, &QItemSelectionModel::modelChanged, this, &SelectionFilterProxyModel::onModelChanged);
