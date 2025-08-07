@@ -31,7 +31,7 @@
 // Ours
 #include "BaseSortFilterProxyModel.h"
 
-
+// Qt
 class QItemSelectionModel;
 
 /**
