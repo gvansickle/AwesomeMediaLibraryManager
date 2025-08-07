@@ -18,11 +18,11 @@
  */
 
 /**
- * @file ntp.cpp
- * Implementation of ntp, a Normal Play Time support class for QUrl.
+ * @file npt.cpp
+ * Implementation of npt, a Normal Play Time support class for QUrl.
  */
 
-#include "ntp.h"
+#include "npt.h"
 
 // Qt
 #include <QRegularExpression>
@@ -32,7 +32,7 @@
 
 using namespace std::literals;
 
-ntp::ntp(const QUrl& url)
+npt::npt(const QUrl& url)
 {
 	// Get the query out of the fragment area.
 	QUrlQuery qurlquery = QUrlQuery(url.fragment());
@@ -48,11 +48,11 @@ ntp::ntp(const QUrl& url)
 
 			// Full syntax of the value is as described here: https://www.w3.org/TR/media-frags/#naming-time (transitively
 			// through http://www.ietf.org/rfc/rfc2326.txt section 3.6).
-			// At the moment we will only handle the ntp: format (actual specifier is optional, since it's the default)
+			// At the moment we will only handle the npt: format (actual specifier is optional, since it's the default)
 			// and the npt-sec format of npttimedef.  Expressed as a regex:
-			// (ntp:)?(\d+\.\d*)?,(\d+\.\d*)?
+			// (npt:)?(\d+\.\d*)?,(\d+\.\d*)?
 
-            static const QRegularExpression re{R"!((?:ntp:)?(\d+\.\d*)?,(\d+\.\d*)?)!"};
+            static const QRegularExpression re{R"!((?:npt:)?(\d+\.\d*)?,(\d+\.\d*)?)!"};
 			auto mo = re.match(mf_temporal_val);
 			if(!mo.hasMatch())
 			{
@@ -89,19 +89,19 @@ ntp::ntp(const QUrl& url)
 					qCritical() << "Malformed or unsupported Media Fragment/Temporal Dimension:" << mf_temporal_val;
 				}
 
-				qDebug() << "ntp start:" << m_start_offset_secs << "end:" << m_end_offset_secs;
+				qDebug() << "npt start:" << m_start_offset_secs << "end:" << m_end_offset_secs;
 			}
 		}
 	}
 }
 
-ntp::ntp(double start_secs, double end_secs)
+npt::npt(double start_secs, double end_secs)
 {
 	m_start_offset_secs = start_secs;
 	m_end_offset_secs = end_secs;
 }
 
-keyvalue ntp::toKeyValPair() const
+keyvalue npt::toKeyValPair() const
 {
 	return keyvalue{"t"s, QString("%1,%2").arg(m_start_offset_secs,0,'f',4).arg(m_end_offset_secs,0,'f',4).toStdString()};
 }

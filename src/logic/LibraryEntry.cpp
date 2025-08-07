@@ -42,7 +42,7 @@
 #include <future/InsertionOrderedMap.h>
 #include "utils/DebugHelpers.h"
 #include "TrackMetadata.h"
-#include "ntp.h"
+#include "npt.h"
 #include <logic/serialization/SerializationHelpers.h>
 
 #define LIBRARY_ENTRY_MAGIC_NUMBER 0x98542123
@@ -246,8 +246,8 @@ QUrl LibraryEntry::getM2Url() const
 			auto decurl = m_url;
 			QUrlQuery query;
 			query.addQueryItem("track_name", getMetadata("track_name").at(0));
-			auto ntpfrag = ntp(double(m_offset_secs), double(m_offset_secs+m_length_secs));
-			auto keyval = ntpfrag.toKeyValPair();
+			auto nptfrag = npt(double(m_offset_secs), double(m_offset_secs+m_length_secs));
+			auto keyval = nptfrag.toKeyValPair();
 			query.addQueryItem(QString::fromStdString(keyval.key), QString::fromStdString(keyval.value));
 			decurl.setFragment(query.toString());
 			return decurl;
