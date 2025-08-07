@@ -46,15 +46,6 @@ ShuffleProxyModel::ShuffleProxyModel(QObject* parent): BASE_CLASS(parent)
 		{
 			qDb() << "ShuffleProxyModel::selectionChanged:" << selected << deselected;
 		});
-
-	// // Connect to signals before/after model is reset.
-	// // We can't really override QSortFilterProxyModel::setSourceModel() because:
-	// // 1. It does a lot of work.
-	// // 2. It calls beginResetModel()/endResetModel(), which don't nest, so we can't call them in derived proxymodels.
- //    connect_or_die(this, &QSortFilterProxyModel::modelAboutToBeReset, this, &ShuffleProxyModel::onModelAboutToBeReset);
- //    connect_or_die(this, &QSortFilterProxyModel::modelReset, this, &ShuffleProxyModel::onModelReset);
-
-	// m_spy = new QSignalSpy(this, );
 }
 
 void ShuffleProxyModel::setShuffle(bool shuffle)

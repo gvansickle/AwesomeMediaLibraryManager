@@ -29,7 +29,6 @@
 
 // Qt
 #include <QPointer>
-// #include <QSortFilterProxyModel>
 #include <QModelIndex>
 class QSignalSpy;
 class QItemSelectionModel;
@@ -67,7 +66,6 @@ public:
 
 	QModelIndex currentIndex() const;
 
-	/// @todo TEMP FOR TESTING
 	DebugSequence m_ds;
 	QPointer<QSignalSpy> m_spy;
 
