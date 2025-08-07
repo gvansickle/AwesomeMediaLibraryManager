@@ -41,6 +41,9 @@ protected Q_SLOTS:
 
 	virtual void onModelAboutToBeReset();
 	virtual void onModelReset();
+
+private:
+	Q_DISABLE_COPY_MOVE(BaseSortFilterProxyModel);
 };
 
 
