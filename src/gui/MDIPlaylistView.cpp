@@ -136,14 +136,6 @@ MDIModelViewPair MDIPlaylistView::openModel(QPointer<PlaylistModel> model, QWidg
 void MDIPlaylistView::setModel(QAbstractItemModel* model)
 {
 	// Keep refs to the {proxy}models.
-
-    /// @todo THIS IS WHERE Library...Model0 GETS OVERWRITTEN BY Library...Model1:
-    // 1 MDIPlaylistView::setModel    MDIPlaylistView.cpp   140  0x52e12e
-    // 2 MDINowPlayingView::setModel  MDINowPlayingView.cpp 76   0x54088c
-    // 3 MDIModelViewPair::appendView MDIModelViewPair.cpp  42   0x544746
-    // 4 MainWindow::newNowPlaying    MainWindow.cpp        1897 0x516d7a
-    // 5 MainWindow::onStartup        MainWindow.cpp        371  0x51a346
-
     LibrarySortFilterProxyModel* old_model = m_sortfilter_model;
     m_sortfilter_model = qobject_cast<LibrarySortFilterProxyModel*>(model);
     if(old_model != m_sortfilter_model)
@@ -160,18 +152,9 @@ void MDIPlaylistView::setModel(QAbstractItemModel* model)
 	/// @todo This is FBO the Playlist sidebar.  Should we keep the playlist model as a member of this class instead?
 	m_underlying_model->setLibraryRootUrl(m_current_url);
 
-	// m_sortfilter_model->setSourceModel(model);
-
 	// Set the top-level proxy model that this view will use.
 	// auto old_sel_model = selectionModel();
 	MDITreeViewBase::setModel(m_sortfilter_model);
-
-	// Call selectionChanged when the user changes the selection.
-	/// @todo selectionModel().selectionChanged.connect(selectionChanged)
-    // if(old_sel_model != nullptr)
-    // {
-    //     old_sel_model->deleteLater();
-    // }
 
 	// Set up the TreeView's header.
 	header()->setStretchLastSection(false);
@@ -212,7 +195,7 @@ QString MDIPlaylistView::defaultNameFilter()
 
 void MDIPlaylistView::setEmptyModel()
 {
-	// We use the below anymore, delete?
+	/// @todo We don't use the below anymore, delete?
     return;
 
 	/// @note THIS IS BROKEN
@@ -262,12 +245,13 @@ Q_ASSERT(0);
 
 void MDIPlaylistView::deserializeDocument(QFileDevice& file)
 {
+    Q_UNUSED(file)
 	Q_ASSERT(0);
 }
 
 bool MDIPlaylistView::isModified() const
 {
-// M_WARNING("TODO: isModified")
+M_WARNING("TODO: isModified")
 	return false;
 }
 
