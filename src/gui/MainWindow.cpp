@@ -1217,14 +1217,6 @@ void MainWindow::connectNowPlayingViewAndMainWindow(MDINowPlayingView* now_playi
 	connect_or_die(this, &MainWindow::sendToNowPlaying, now_playing_view, &MDINowPlayingView::onSendToNowPlaying);
 	connect_or_die(this, &MainWindow::settingsChanged, now_playing_view, &MDILibraryView::onSettingsChanged);
 
-    /// @todo Break this off, it's not NowPlaying<->MainWindow.
-    // connect_or_die(m_now_playing_playlist_model, &QAbstractItemModel::modelReset, m_now_playing_shuffle_proxy_model,
-    // 				&ShuffleProxyModel::onNumRowsChanged);
-    // connect_or_die(m_now_playing_playlist_model, &QAbstractItemModel::rowsInserted, m_now_playing_shuffle_proxy_model,
-    // 				&ShuffleProxyModel::onNumRowsChanged);
-    // connect_or_die(m_now_playing_playlist_model, &QAbstractItemModel::rowsRemoved, m_now_playing_shuffle_proxy_model,
-    // 				&ShuffleProxyModel::onNumRowsChanged);
-
     // ShuffleProxyModel -> Now Playing View
     connect_or_die(m_now_playing_shuffle_proxy_model, &ShuffleProxyModel::nowPlayingIndexChanged, now_playing_view, &MDINowPlayingView::setCurrentIndexAndRow);
 
