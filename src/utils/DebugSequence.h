@@ -17,20 +17,27 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef SRC_CONCURRENCY_DEBUGSEQUENCE_H_
+#define SRC_CONCURRENCY_DEBUGSEQUENCE_H_
+
 /// @file
 
-// Qt
-#include <QObject>
-#include <QMetaObject>
-#include <QDebug>
+#include <atomic>
 
-// Ours
-#include "QtHelpers.h"
-
-void setNumberedObjectNameInternal(QObject* the_object, int& id)
+/**
+ * @class DebugSequence
+ * @brief A utility class designed for tracking and debugging arbitrary event sequences.
+ */
+class DebugSequence
 {
-	const char* class_name = the_object->metaObject()->className();
-	std::string name = std::format("{}{}", class_name, id);
-	the_object->setObjectName(name.c_str());
-	id++;
-}
+	std::atomic<int> m_expected_state {0};
+
+public:
+	DebugSequence();
+	~DebugSequence();
+
+	void reset(int reset);
+	bool expect_and_set(int expect, int set);
+};
+
+#endif /* SRC_CONCURRENCY_DEBUGSEQUENCE_H_ */

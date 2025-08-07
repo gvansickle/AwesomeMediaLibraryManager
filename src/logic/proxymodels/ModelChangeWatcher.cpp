@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -20,6 +20,7 @@
 
 #include "ModelChangeWatcher.h"
 
+#include <ConnectHelpers.h>
 #include <QAbstractItemModel>
 #include <QDebug>
 
@@ -31,7 +32,7 @@ void ModelChangeWatcher::setModelToWatch(QAbstractItemModel* model)
 {
 //	qDebug() << "Connecting to model" << model;
 
-	// Disconnect any currently-connected model.
+	// Disconnect any currently connected model.
 	if(m_the_model)
 	{
 		// Disconnect all signals from m_the_model to this.
@@ -41,9 +42,9 @@ void ModelChangeWatcher::setModelToWatch(QAbstractItemModel* model)
 	m_the_model = model;
 
 	// Connect to all the signals which might change the number of rows.
-	connect(m_the_model, &QAbstractItemModel::modelReset, this, &ModelChangeWatcher::onRowCountChanged);
-	QObject::connect(m_the_model, &QAbstractItemModel::rowsInserted, this, &ModelChangeWatcher::onRowCountChanged);
-	QObject::connect(m_the_model, &QAbstractItemModel::rowsRemoved, this, &ModelChangeWatcher::onRowCountChanged);
+	connect_or_die(m_the_model, &QAbstractItemModel::modelReset, this, &ModelChangeWatcher::onRowCountChanged);
+	connect_or_die(m_the_model, &QAbstractItemModel::rowsInserted, this, &ModelChangeWatcher::onRowCountChanged);
+	connect_or_die(m_the_model, &QAbstractItemModel::rowsRemoved, this, &ModelChangeWatcher::onRowCountChanged);
 
 }
 

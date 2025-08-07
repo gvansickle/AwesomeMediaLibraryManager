@@ -56,9 +56,10 @@ public:
 		if (!m_model_stack.empty())
 		{
             qCr() << "Model wasn't the first item pushed onto the modelstack";
-		}
+            Q_ASSERT(0);
+        }
 
-		m_model_stack.emplace_back(model);
+        m_model_stack.push_back(model);
 	}
 
 	/**
@@ -75,9 +76,10 @@ public:
 		if (m_model_stack.empty())
 		{
             qCr() << "No model to connect ProxyModel to";
-		}
+            Q_ASSERT(0);
+        }
 
-		m_model_stack.emplace_back(proxymodel);
+        m_model_stack.push_back(proxymodel);
 
 		proxymodel->setSourceModel(m_model_stack.begin()->data());
 	}

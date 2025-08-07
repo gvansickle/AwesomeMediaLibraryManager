@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -18,8 +18,8 @@
  */
 
 #include "MDITreeViewBase.h"
-#include "MainWindow.h"
 
+// Qt
 #include <QGuiApplication>
 #include <QApplication>
 #include <QMdiSubWindow>
@@ -31,6 +31,9 @@
 #include <QClipboard>
 #include <QHeaderView>
 #include <QSaveFile>
+
+// Ours
+#include "MainWindow.h"
 #include <logic/models/LibraryEntryMimeData.h>
 #include <logic/proxymodels/LibrarySortFilterProxyModel.h>
 #include <logic/proxymodels/ModelHelpers.h>
@@ -52,6 +55,8 @@ MDITreeViewBase::MDITreeViewBase(QWidget* parent) : QTreeView(parent)
 	m_act_window->setCheckable(true);
 	connect_trig(m_act_window, this, &MDITreeViewBase::show);
     connect(m_act_window, SIGNAL(triggered()), this, SLOT(setFocus()));
+    // connect_or_die(m_act_window, &QAction::triggered, this, &MDITreeViewBase::setFocus); ///@todo Param mismatch.
+
 
 	// ModelChangeWatcher for keeping "Select All" status updated.
 	m_select_all_model_watcher = new ModelChangeWatcher(this);
@@ -285,7 +290,12 @@ void MDITreeViewBase::setModel(QAbstractItemModel* model)
     this->BASE_CLASS::setModel(model);
     m_select_all_model_watcher->setModelToWatch(model);
 
-	if (sm) { sm->deleteLater();}
+	if (sm)
+	{
+        qDb() << "DELETING SELECTION MODEL, NAME:" << sm->objectName();
+        sm->deleteLater();
+        // delete sm;
+	}
 }
 
 //

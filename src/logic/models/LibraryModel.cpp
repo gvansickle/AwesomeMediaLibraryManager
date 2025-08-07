@@ -64,6 +64,8 @@ AMLM_QREG_CALLBACK([](){
 
 LibraryModel::LibraryModel(QObject *parent) : QAbstractItemModel(parent)
 {
+    setNumberedObjectName(this);
+
 	// App-specific cache directory.
 	m_cachedir = QUrl::fromLocalFile(QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
 	// Make sure it ends in a "/".
@@ -142,7 +144,8 @@ QModelIndex LibraryModel::sibling(int row, int column, const QModelIndex& idx) c
 
 QSize LibraryModel::span(const QModelIndex& index) const
 {
-	qDebug() << "SPAN CALLED";
+    // Per https://doc.qt.io/qt-6/qabstractitemmodel.html#span:
+    // "Note: Currently, span is not used."
 	return QAbstractItemModel::span(index);
 }
 

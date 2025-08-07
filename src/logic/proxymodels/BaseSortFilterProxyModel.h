@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -17,26 +17,34 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SRC_CONCURRENCY_DEBUGSEQUENCE_H_
-#define SRC_CONCURRENCY_DEBUGSEQUENCE_H_
+
+#ifndef BASESORTFILTERPROXYMODEL_H
+#define BASESORTFILTERPROXYMODEL_H
 
 /// @file
 
-#include <atomic>
+#include <QSortFilterProxyModel>
+
 
 /**
- *
+ * Base class for any proxies which want to derive from QSortFilterProxyModel.
+ * Adds some infrastructure which will likely be needed in any derived class.
  */
-class DebugSequence
+class BaseSortFilterProxyModel : public QSortFilterProxyModel
 {
-	std::atomic<int> m_expected_state {0};
+	Q_OBJECT
 
 public:
-	DebugSequence();
-	~DebugSequence();
+	BaseSortFilterProxyModel(QObject* parent);
 
-	void reset(int reset);
-	bool expect_and_set(int expect, int set);
+protected Q_SLOTS:
+
+	virtual void onModelAboutToBeReset();
+	virtual void onModelReset();
+
+private:
+	Q_DISABLE_COPY_MOVE(BaseSortFilterProxyModel);
 };
 
-#endif /* SRC_CONCURRENCY_DEBUGSEQUENCE_H_ */
+
+#endif //BASESORTFILTERPROXYMODEL_H

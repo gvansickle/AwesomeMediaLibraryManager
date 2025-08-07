@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
+/// @file
 
 #include "MDIPlaylistView.h"
 
@@ -54,6 +55,8 @@
 
 MDIPlaylistView::MDIPlaylistView(QWidget* parent) : MDITreeViewBase(parent)
 {
+	setNumberedObjectName(this);
+
     // Set up a Style Proxy to draw a more natural drop indicator.  setStyle doesn't take ownership of it, so we delete it in the destructor.
     m_the_dragdropstyleproxy = std::make_unique<DragDropTreeViewStyleProxy>();
     this->setStyle(m_the_dragdropstyleproxy.get());
@@ -133,8 +136,15 @@ MDIModelViewPair MDIPlaylistView::openModel(QPointer<PlaylistModel> model, QWidg
 void MDIPlaylistView::setModel(QAbstractItemModel* model)
 {
 	// Keep refs to the {proxy}models.
-	m_sortfilter_model = qobject_cast<LibrarySortFilterProxyModel*>(model);
+    LibrarySortFilterProxyModel* old_model = m_sortfilter_model;
+    m_sortfilter_model = qobject_cast<LibrarySortFilterProxyModel*>(model);
+    if(old_model != m_sortfilter_model)
+    {
+        delete old_model;
+    }
     Q_CHECK_PTR(m_sortfilter_model);
+
+	// We don't own the models, so we don't delete the old one here.
 	m_underlying_model = qobject_cast<PlaylistModel*>(m_sortfilter_model->sourceModel());
 	Q_CHECK_PTR(m_underlying_model);
 
@@ -142,18 +152,9 @@ void MDIPlaylistView::setModel(QAbstractItemModel* model)
 	/// @todo This is FBO the Playlist sidebar.  Should we keep the playlist model as a member of this class instead?
 	m_underlying_model->setLibraryRootUrl(m_current_url);
 
-	// m_sortfilter_model->setSourceModel(model);
-
 	// Set the top-level proxy model that this view will use.
 	// auto old_sel_model = selectionModel();
 	MDITreeViewBase::setModel(m_sortfilter_model);
-
-	// Call selectionChanged when the user changes the selection.
-	/// @todo selectionModel().selectionChanged.connect(selectionChanged)
-    // if(old_sel_model != nullptr)
-    // {
-    //     old_sel_model->deleteLater();
-    // }
 
 	// Set up the TreeView's header.
 	header()->setStretchLastSection(false);
@@ -194,11 +195,18 @@ QString MDIPlaylistView::defaultNameFilter()
 
 void MDIPlaylistView::setEmptyModel()
 {
+	/// @todo We don't use the below anymore, delete?
+    return;
+
+	/// @note THIS IS BROKEN
 	/// @note This empty playlist model is parented to this.  Normally models are parented to the MainWindow.
 	MDIModelViewPair mvp;
 	auto new_playlist_model = new PlaylistModel(this);
 	mvp.appendModel(new_playlist_model);
+
+    // auto old_sortmodel = m_sortfilter_model;
 	m_sortfilter_model = new LibrarySortFilterProxyModel(this);
+    // delete old_sortmodel;
     mvp.appendProxyModel(m_sortfilter_model);
     setModel(m_sortfilter_model);
 }
@@ -237,12 +245,13 @@ Q_ASSERT(0);
 
 void MDIPlaylistView::deserializeDocument(QFileDevice& file)
 {
+    Q_UNUSED(file)
 	Q_ASSERT(0);
 }
 
 bool MDIPlaylistView::isModified() const
 {
-// M_WARNING("TODO: isModified")
+M_WARNING("TODO: isModified")
 	return false;
 }
 
@@ -421,11 +430,6 @@ QUrl MDIPlaylistView::currentMedia() const
 //
 // Public slots
 //
-
-
-
-
-
 
 void MDIPlaylistView::onCut()
 {

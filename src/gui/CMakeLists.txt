@@ -143,6 +143,7 @@ target_link_libraries(gui
 		${QT_LINK_LIB_TARGETS}
 		${KF_LINK_LIB_TARGETS}
 		${GTK_LINK_LIB_TARGETS}
+		utils
 	PRIVATE
 		widgets
 		resources

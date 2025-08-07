@@ -34,6 +34,7 @@
 
 PlaylistModel::PlaylistModel(QObject* parent) : LibraryModel(parent)
 {
+	setNumberedObjectName(this);
 	/// @todo Qt5->6: Default playlist to Sequential/Loop mode.
 	//m_qmplaylist->setPlaybackMode(QMediaPlaylist::Sequential);
 	m_columnSpecs.push_back({SectionID(PlaylistSectionID::Rating), "Rating", {"rating"}});

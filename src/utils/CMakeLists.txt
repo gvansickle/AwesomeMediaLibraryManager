@@ -23,6 +23,7 @@ set(utils_HEADER_FILES
 	ConnectHelpers.h
 	DebugBlock.h
 	DebugHelpers.h
+	DebugSequence.h
 	Fraction.h
 	in.h
 	MapConverter.h
@@ -43,6 +44,7 @@ set(utils_SOURCE_FILES
 	ConnectHelpers.cpp
 	DebugBlock.cpp
 	DebugHelpers.cpp
+	DebugSequence.cpp
 	ext_iterators.cpp
 	Fraction.cpp
 	MapConverter.cpp

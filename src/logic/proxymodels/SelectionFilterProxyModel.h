@@ -28,20 +28,24 @@
 #include <QPointer>
 #include <QItemSelection>
 
+// Ours
+#include "BaseSortFilterProxyModel.h"
+
+// Qt
 class QItemSelectionModel;
 
 /**
  * Proxy model which filters its source model based on the source model's selection.
  * Similar in concept to KDE's KSelectionProxyModel.
  */
-class SelectionFilterProxyModel : public QSortFilterProxyModel
+class SelectionFilterProxyModel : public BaseSortFilterProxyModel
 {
-    Q_OBJECT
+	Q_OBJECT
 
 	Q_PROPERTY(QItemSelectionModel *selectionModel
 		   READ selectionModel WRITE setSelectionModel NOTIFY selectionModelChanged)
 			
-	using BASE_CLASS = QSortFilterProxyModel;
+	using BASE_CLASS = BaseSortFilterProxyModel;
 
 Q_SIGNALS:
 
@@ -74,7 +78,9 @@ protected:
 protected Q_SLOTS:
 	void onSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
 	void onModelChanged(QAbstractItemModel *model);
-    
+
+	void onModelAboutToBeReset() override;
+	void resetInternalData() override;
 private:
 	Q_DISABLE_COPY(SelectionFilterProxyModel)
 
