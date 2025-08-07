@@ -155,8 +155,5 @@ void SelectionFilterProxyModel::onModelAboutToBeReset()
 void SelectionFilterProxyModel::resetInternalData()
 {
 	BASE_CLASS::resetInternalData();
-
-	// Clear out the old index to show, it doesn't apply to the new model.
-// #error	// m_current_selected_index = QPersistentModelIndex();
 }
 
