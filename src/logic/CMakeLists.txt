@@ -40,7 +40,7 @@ set(logic_subdir_SOURCES
 	MetadataFromCache.cpp
 	MetadataTaglib.cpp
 	MP2.cpp
-	ntp.cpp
+	npt.cpp
 	SupportedMimeTypes.cpp
     TrackIndex.cpp
 	TrackMetadata.cpp
@@ -69,7 +69,7 @@ set(logic_subdir_HEADERS
 	MetadataFromCache.h
 	MetadataTaglib.h
 	MP2.h
-	ntp.h
+	npt.h
 	SupportedMimeTypes.h
     TrackIndex.h
 	TrackMetadata.h

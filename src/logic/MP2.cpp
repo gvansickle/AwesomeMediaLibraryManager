@@ -34,7 +34,7 @@
 #include <models/PlaylistModelItem.h>
 #include <utils/Fraction.h>
 #include "utils/ConnectHelpers.h"
-#include "ntp.h"
+#include "npt.h"
 #include <gui/actions/ActionHelpers.h>
 
 
@@ -111,11 +111,11 @@ void MP2::getTrackInfoFromUrl(QUrl url)
 	if(url.hasFragment())
 	{
 		m_is_subtrack = true;
-		ntp ntpfrag(url);
-		if(!ntpfrag.empty())
+		npt nptfrag(url);
+		if(!nptfrag.empty())
 		{
-			m_track_startpos_ms = ntpfrag.start_secs()*1000.0;
-			m_track_endpos_ms = ntpfrag.end_secs()*1000.0;
+			m_track_startpos_ms = nptfrag.start_secs()*1000.0;
+			m_track_endpos_ms = nptfrag.end_secs()*1000.0;
 			qDb() << "SET START AND END";
 		}
 	}

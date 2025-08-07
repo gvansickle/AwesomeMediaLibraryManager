@@ -18,17 +18,17 @@
  */
 
 /**
- * @file ntp.h
- * Interface for ntp, a Normal Play Time support class for QUrl.
+ * @file npt.h
+ * Interface for npt, a Normal Play Time support class for QUrl.
  */
 
-#ifndef NTP_H
-#define NTP_H
+#ifndef NPT_H
+#define NPT_H
 
 // Std C++
 #include <string>
 
-
+// Qt
 class QUrl;
 
 struct keyvalue
@@ -43,14 +43,14 @@ struct keyvalue
  *
  * We use this for communicating the start and end times of subtracks of a single audio file to the Media Player.
  */
-class ntp
+class npt
 {
 public:
-	/// Create an ntp object from the fragment area of @a url, if any.
+	/// Create an npt object from the fragment area of @a url, if any.
 	/// Note that since this is from the fragment, it's up to the user-agent to interpret and use the encoded info.
-	ntp(const QUrl& url);
+	npt(const QUrl& url);
 
-	ntp(double start_secs, double end_secs);
+	npt(double start_secs, double end_secs);
 
 	bool empty() const { return m_start_offset_secs < 0.0 && m_end_offset_secs < 0.0; }
 
@@ -65,5 +65,5 @@ private:
 	double m_end_offset_secs { -1.0 };
 };
 
-#endif // NTP_H
+#endif // NPT_H
 
