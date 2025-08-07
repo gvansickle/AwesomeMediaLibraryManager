@@ -33,14 +33,12 @@
 // Ours
 #include <ConnectHelpers.h>
 #include <ModelHelpers.h>
+#include <utils/QtHelpers.h>
 
 
-ShuffleProxyModel::ShuffleProxyModel(QObject* parent): QSortFilterProxyModel(parent)
+ShuffleProxyModel::ShuffleProxyModel(QObject* parent): BASE_CLASS(parent)
 {
-	static int id = 0;
-	std::string name = std::format("ShuffleProxyModel{}", id);
-	++id;
-	setObjectName(name.c_str());
+    setNumberedObjectName(this);
 
 	m_sel_model = new QItemSelectionModel(this);
 	connect_or_die(m_sel_model, &QItemSelectionModel::selectionChanged, this,
@@ -48,7 +46,6 @@ ShuffleProxyModel::ShuffleProxyModel(QObject* parent): QSortFilterProxyModel(par
 		{
 			qDb() << "ShuffleProxyModel::selectionChanged:" << selected << deselected;
 		});
-	// m_spy = new QSignalSpy(this, );
 }
 
 void ShuffleProxyModel::setShuffle(bool shuffle)
@@ -81,16 +78,9 @@ bool ShuffleProxyModel::loopAtEnd() const
 void ShuffleProxyModel::setSourceModel(QAbstractItemModel* sourceModel)
 {
 	qDb() << "ShuffleProxyModel::setSourceModel:" << sourceModel;
-	beginResetModel();
 
-	// Disconnect from old source model.
-	m_disconnector.disconnect();
-	QSortFilterProxyModel::setSourceModel(sourceModel);
-	connectToModel(sourceModel);
+	BASE_CLASS::setSourceModel(sourceModel);
 
-	endResetModel();
-
-	onNumRowsChanged();
 	qDb() << "ShuffleProxyModel::setSourceModel done";
 }
 
@@ -287,14 +277,39 @@ void ShuffleProxyModel::connectToModel(QAbstractItemModel* model)
 	}
 }
 
+void ShuffleProxyModel::onModelAboutToBeReset()
+{
+	m_ds.expect_and_set(0, 1);
+
+	// Disconnect from old source model.
+    connectToModel(nullptr);
+}
+
 void ShuffleProxyModel::resetInternalData()
 {
+	m_ds.expect_and_set(1,2);
+
+	BASE_CLASS::resetInternalData();
+
 	m_currentIndex = QModelIndex();
 	m_shuffle = false;
 	m_loop_at_end = true;
 	m_current_shuffle_index = -1;
 	m_indices.clear();
-	m_disconnector.disconnect();
+    connectToModel(nullptr);
 
-	QSortFilterProxyModel::resetInternalData();
+	// Reinitialize anything we need to.
+    // if (sourceModel())
+    // {
+    // 	connectToModel(sourceModel());
+    // 	onNumRowsChanged();
+    // }
+}
+
+void ShuffleProxyModel::onModelReset()
+{
+	m_ds.expect_and_set(2, 0);
+
+	connectToModel(sourceModel());
+	onNumRowsChanged();
 }

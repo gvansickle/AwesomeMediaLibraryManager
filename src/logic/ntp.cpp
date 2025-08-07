@@ -52,7 +52,7 @@ ntp::ntp(const QUrl& url)
 			// and the npt-sec format of npttimedef.  Expressed as a regex:
 			// (ntp:)?(\d+\.\d*)?,(\d+\.\d*)?
 
-			QRegularExpression re{R"!((?:ntp:)?(\d+\.\d*)?,(\d+\.\d*)?)!"};
+            static const QRegularExpression re{R"!((?:ntp:)?(\d+\.\d*)?,(\d+\.\d*)?)!"};
 			auto mo = re.match(mf_temporal_val);
 			if(!mo.hasMatch())
 			{

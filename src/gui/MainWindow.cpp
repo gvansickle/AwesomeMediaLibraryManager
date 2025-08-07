@@ -128,7 +128,7 @@
 /// @note EXPERIMENTAL
 #include <gui/widgets/ExperimentalKDEView1.h>
 #include <Core.h>
-#include <DebugSequence.h>
+#include <utils/DebugSequence.h>
 
 
 //
@@ -306,7 +306,7 @@ void MainWindow::init()
 
 	// Connect the MDIArea subWindowActivated signal to a slot so we know when
 	// the subwindow activation changes.
-	connect(m_mdi_area, &QMdiArea::subWindowActivated, this, &MainWindow::onSubWindowActivated);
+    connect_or_die(m_mdi_area, &QMdiArea::subWindowActivated, this, &MainWindow::onSubWindowActivated);
 
 	createActions();
 	createToolBars();
@@ -1217,14 +1217,6 @@ void MainWindow::connectNowPlayingViewAndMainWindow(MDINowPlayingView* now_playi
 	connect_or_die(this, &MainWindow::sendToNowPlaying, now_playing_view, &MDINowPlayingView::onSendToNowPlaying);
 	connect_or_die(this, &MainWindow::settingsChanged, now_playing_view, &MDILibraryView::onSettingsChanged);
 
-    /// @todo Break this off, it's not NowPlaying<->MainWindow.
-	connect_or_die(m_now_playing_playlist_model, &QAbstractItemModel::modelReset, m_now_playing_shuffle_proxy_model,
-					&ShuffleProxyModel::onNumRowsChanged);
-	connect_or_die(m_now_playing_playlist_model, &QAbstractItemModel::rowsInserted, m_now_playing_shuffle_proxy_model,
-					&ShuffleProxyModel::onNumRowsChanged);
-	connect_or_die(m_now_playing_playlist_model, &QAbstractItemModel::rowsRemoved, m_now_playing_shuffle_proxy_model,
-					&ShuffleProxyModel::onNumRowsChanged);
-
     // ShuffleProxyModel -> Now Playing View
     connect_or_die(m_now_playing_shuffle_proxy_model, &ShuffleProxyModel::nowPlayingIndexChanged, now_playing_view, &MDINowPlayingView::setCurrentIndexAndRow);
 
@@ -1253,7 +1245,7 @@ void MainWindow::updateConnections()
 
     if(childIsMDITreeViewBase)
     {
-//		qDebug() << "Updating connectons for activated window" << activeMdiChild()->windowTitle();
+//		qDebug() << "Updating connections for activated window" << activeMdiChild()->windowTitle();
 
 		// Connect the Metadata dock widget to the active child window's selectionModel().
 		connectActiveMDITreeViewBaseAndMetadataDock(childIsMDITreeViewBase, m_metadataDockWidget);
@@ -1870,18 +1862,20 @@ void MainWindow::newPlaylist()
 void MainWindow::newNowPlaying()
 {
     auto child = new MDINowPlayingView(this);
+
+	qDb() << "Creating new NowPlayingView:" << child->objectName();
+
     child->newFile();
 
 	// Set this view's model to be the single "Now Playing" model.
-	m_now_playing_playlist_model = child->underlyingModel();
+    // m_now_playing_playlist_model = child->underlyingModel();
+    m_now_playing_playlist_model = new PlaylistModel(this);
 
 	m_now_playing_shuffle_proxy_model = new ShuffleProxyModel(this);
-	m_now_playing_shuffle_proxy_model->setSourceModel(m_now_playing_playlist_model);
-	m_now_playing_library_sortfilter_model = new LibrarySortFilterProxyModel(this);
+
+    m_now_playing_library_sortfilter_model = new LibrarySortFilterProxyModel(this);
 	m_now_playing_library_sortfilter_model->setDynamicSortFilter(false);
 	m_now_playing_library_sortfilter_model->setSortCaseSensitivity(Qt::CaseInsensitive);
-	m_now_playing_library_sortfilter_model->setSourceModel(m_now_playing_shuffle_proxy_model);
-
 
 	/// @todo Do we really need to keep this as a member pointer?
 	m_now_playing_playlist_view = child;
@@ -2059,7 +2053,9 @@ void MainWindow::addChildMDIModelViewPair_Playlist(const MDIModelViewPair& mvpai
 {
 	if(mvpair.hasView())
 	{
-        auto playlist_view = qobject_cast<MDIPlaylistView*>(mvpair.getView());
+        auto playlist_view_playlist = qobject_cast<MDIPlaylistView*>(mvpair.getView());
+		auto playlist_view_nowplaying = qobject_cast<MDINowPlayingView*>(mvpair.getView());
+		auto playlist_view = playlist_view_nowplaying ? playlist_view_nowplaying : playlist_view_playlist;
 
 		Q_CHECK_PTR(playlist_view);
 
@@ -2093,8 +2089,7 @@ void MainWindow::addChildMDIModelViewPair_Playlist(const MDIModelViewPair& mvpai
 	{
         qDb() << "ROOT MODEL TYPE IS:" << mvpair.getRootModel()->metaObject()->className();
 
-        auto proxy_model = qobject_cast<LibrarySortFilterProxyModel*>(mvpair.getTopModel());
-        auto playlist_model = qobject_cast<PlaylistModel*>(proxy_model->sourceModel());
+        auto playlist_model = qobject_cast<PlaylistModel*>(mvpair.getRootModel());
         Q_CHECK_PTR(playlist_model);
 
         bool model_really_already_existed = (std::find_if(m_playlist_models.begin(), m_playlist_models.end(), [playlist_model](auto& x){

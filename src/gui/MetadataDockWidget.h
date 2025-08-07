@@ -24,6 +24,7 @@
 
 // Qt
 #include <QDockWidget>
+#include <QPointer>
 class QTreeWidget;
 class PixmapLabel;
 class QItemSelection;
@@ -37,7 +38,7 @@ class AMLMTagMap;
 class MDITreeViewBase;
 
 // Ours
-#include "logic/MetadataAbstractBase.h"
+#include <utils/ConnectHelpers.h>
 
 class MetadataDockWidget : public QDockWidget
 {
@@ -64,10 +65,14 @@ protected:
 private:
     Q_DISABLE_COPY(MetadataDockWidget)
 
+	void addChildrenFromAMLMTagMap(QTreeWidgetItem* parent, const AMLMTagMap& tagmap);
+
 	/**
 	 * The proxy model we'll use to select out just the currently selected or playing track.
 	 */
-    SelectionFilterProxyModel* m_proxy_model { nullptr };
+    QPointer<SelectionFilterProxyModel> m_proxy_model { nullptr };
+
+	QPointer<MDITreeViewBase> m_connected_view { nullptr };
 
 	ModelChangeWatcher* m_proxy_model_watcher { nullptr };
 
@@ -76,8 +81,6 @@ private:
     QTreeView* m_metadata_tree_view { nullptr };
 
     PixmapLabel* m_cover_image_label { nullptr };
-
-	void addChildrenFromAMLMTagMap(QTreeWidgetItem* parent, const AMLMTagMap& tagmap);
 
 private Q_SLOTS:
 	/**

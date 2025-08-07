@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -20,15 +20,17 @@
 
 #include "LibrarySortFilterProxyModel.h"
 
+// Ours
+#include <utils/QtHelpers.h>
 #include <logic/LibraryEntry.h>
 #include <logic/models/LibraryModel.h>
+#include "ShuffleProxyModel.h"
 
-LibrarySortFilterProxyModel::LibrarySortFilterProxyModel(QObject* parent) : QSortFilterProxyModel(parent)
+
+LibrarySortFilterProxyModel::LibrarySortFilterProxyModel(QObject* parent) : BASE_CLASS(parent)
 {
-	static int id = 0;
-	std::string name = std::format("LibrarySortFilterProxyModel{}", id);
-	id++;
-	setObjectName(name.c_str());
+	setNumberedObjectName(this);
+
 	// Filter all columns by default.
 	setFilterKeyColumn(-1);
 }
@@ -37,7 +39,11 @@ std::shared_ptr<LibraryEntry> LibrarySortFilterProxyModel::getItem(QModelIndex i
 {
 	// Need to map to the source model index.
 	auto source_index = mapToSource(index);
+    /// @todo No sure why this isn't at least sometimes a ShuffleModelProxy.
+    auto* libmodel2 = qobject_cast<ShuffleProxyModel*>(sourceModel());
+    Q_ASSERT(libmodel2 == nullptr);
 	LibraryModel* libmodel = qobject_cast<LibraryModel*>(sourceModel());
+    Q_ASSERT(libmodel != nullptr);
 	return libmodel->getItem(source_index);
 }
 
@@ -71,7 +77,7 @@ bool LibrarySortFilterProxyModel::lessThan(const QModelIndex &left, const QModel
 	if(section != SectionID::Length)
 	{
 		// Not the column we need to treat differently, call the base class.
-		return QSortFilterProxyModel::lessThan(left, right);
+		return BASE_CLASS::lessThan(left, right);
 	}
 	else
 	{
@@ -80,3 +86,10 @@ bool LibrarySortFilterProxyModel::lessThan(const QModelIndex &left, const QModel
 		return leftData.value<Fraction>() < rightData.value<Fraction>();
 	}
 }
+
+void LibrarySortFilterProxyModel::resetInternalData()
+{
+	BASE_CLASS::resetInternalData();
+}
+
+

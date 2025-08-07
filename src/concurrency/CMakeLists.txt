@@ -28,7 +28,6 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	AMLMJobT.h
 	AMLMCompositeJob.h
 	ThreadsafeMap.h
-	DebugSequence.h
 	WorkerThreadBase.h
 	WorkerThreadControllerBase.h
 	)
@@ -42,7 +41,6 @@ set(SOURCE_FILES_UTILS_CONCURRENCY
 	AMLMJobT.cpp
 	AMLMCompositeJob.cpp
 	ThreadsafeMap.cpp
-	DebugSequence.cpp
 	WorkerThreadBase.cpp
 	WorkerThreadControllerBase.cpp
 	)

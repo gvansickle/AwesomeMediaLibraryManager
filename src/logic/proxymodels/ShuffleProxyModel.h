@@ -29,22 +29,24 @@
 
 // Qt
 #include <QPointer>
-#include <QSortFilterProxyModel>
 #include <QModelIndex>
 class QSignalSpy;
 class QItemSelectionModel;
 
 // Ours.
-
-#include <ConnectHelpers.h>
+#include "BaseSortFilterProxyModel.h"
+#include <utils/ConnectHelpers.h>
+#include <utils/DebugSequence.h>
 
 /**
 * A proxy model which shuffles the rows of the source model.
 * The source model is not altered.
 */
-class ShuffleProxyModel : public QSortFilterProxyModel
+class ShuffleProxyModel : public BaseSortFilterProxyModel
 {
     Q_OBJECT
+
+	using BASE_CLASS = BaseSortFilterProxyModel;
 
 public:
 	explicit ShuffleProxyModel(QObject* parent = nullptr);
@@ -64,7 +66,7 @@ public:
 
 	QModelIndex currentIndex() const;
 
-	/// @todo TEMP FOR TESTING
+	DebugSequence m_ds;
 	QPointer<QSignalSpy> m_spy;
 
 Q_SIGNALS:
@@ -101,10 +103,12 @@ protected:
 	void connectToModel(QAbstractItemModel *model);
 
 protected Q_SLOTS:
+
+	void onModelAboutToBeReset() override;
 	void resetInternalData() override;
+	void onModelReset() override;
 
 private:
-
 	QPointer<QItemSelectionModel> m_sel_model;
 	/**
 	 * The PMI pointing to the bolded row.

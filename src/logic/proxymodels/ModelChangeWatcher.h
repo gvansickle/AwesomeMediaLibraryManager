@@ -42,6 +42,7 @@ Q_SIGNALS:
 
 public:
     explicit ModelChangeWatcher(QObject *parent = Q_NULLPTR);
+    ~ModelChangeWatcher() override {};
     
     void setModelToWatch(QAbstractItemModel* model);
 	void disconnectFromCurrentModel();
@@ -50,8 +51,9 @@ protected Q_SLOTS:
     void onRowCountChanged();
     
 private:
-    Q_DISABLE_COPY(ModelChangeWatcher)
-            
+    Q_DISABLE_COPY_MOVE(ModelChangeWatcher)
+
+    /// Non-owning pointer to the model we're watching.
 	QPointer<QAbstractItemModel> m_the_model { nullptr };
 };
 

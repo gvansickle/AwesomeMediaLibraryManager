@@ -32,7 +32,8 @@
 
 MDINowPlayingView::MDINowPlayingView(QWidget *parent) : MDIPlaylistView(parent)
 {
-	setObjectName("NowPlayingView");
+	setNumberedObjectName(this);
+
 	m_brdelegate = new BoldRowDelegate(this);
     setItemDelegate(m_brdelegate);
 

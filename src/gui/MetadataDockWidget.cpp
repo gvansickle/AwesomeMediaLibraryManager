@@ -34,6 +34,7 @@
 #include <QSplitter>
 #include <QRegularExpression>
 #include <QHeaderView>
+#include <QAbstractItemModelTester>
 
 // Ours
 #include <AMLMApp.h>
@@ -57,12 +58,17 @@
 
 #include <logic/proxymodels/LibrarySortFilterProxyModel.h>
 
+
 MetadataDockWidget::MetadataDockWidget(const QString& title, QWidget *parent, Qt::WindowFlags flags) : QDockWidget(title, parent, flags)
 {
-    setObjectName("MetadataDockWidget");
+    setNumberedObjectName(this);
 
     // Set up the proxy model.
     m_proxy_model = new SelectionFilterProxyModel(this);
+	// Set up the model tester.
+	// See https://doc.qt.io/qt-6/qabstractitemmodeltester.html
+	// ...and https://www.kdab.com/new-in-qt-5-11-improvements-to-the-model-view-apis-part-2/
+	// new QAbstractItemModelTester(m_proxy_model, QAbstractItemModelTester::FailureReportingMode::Warning, this);
 	// Set up the watcher.
 	m_proxy_model_watcher = new ModelChangeWatcher(this);
 	m_proxy_model_watcher->setModelToWatch(m_proxy_model);
@@ -116,10 +122,18 @@ void MetadataDockWidget::connectToView(MDITreeViewBase* view)
         return;
     }
 
-    qDebug() << "Setting new source model and selection model:" << view->model() << view->selectionModel();
+	if (view == m_connected_view)
+	{
+		qDebug() << "Already connected to this view.";
+		return;
+	}
 
-    m_proxy_model->setSourceModel(view->model());
-    m_proxy_model->setSelectionModel(view->selectionModel());
+	m_connected_view = view;
+
+	qDebug() << "Setting new source model and selection model:" << view->model() << view->selectionModel();
+
+	m_proxy_model->setSourceModel(view->model());
+	m_proxy_model->setSelectionModel(view->selectionModel());
 }
 
 void MetadataDockWidget::onDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QList<int>& roles)
