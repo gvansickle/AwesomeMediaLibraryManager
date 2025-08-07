@@ -38,7 +38,6 @@
 
 // Ours
 #include <AMLMApp.h>
-#include <QAbstractItemModelTester>
 #include <utils/EnumFlagHelpers.h>
 
 #include "widgets/PixmapLabel.h"
@@ -133,23 +132,8 @@ void MetadataDockWidget::connectToView(MDITreeViewBase* view)
 
 	qDebug() << "Setting new source model and selection model:" << view->model() << view->selectionModel();
 
-// #error "TODO This is resulting in no updates to the dock's view, but it's not just this"
-// 	auto old_model = m_proxy_model->sourceModel();
-//     if (old_model && (view->model() != old_model))
-// 	{
-// 		old_model->deleteLater();
-		m_proxy_model->setSourceModel(view->model());
-    // }
-
-    // auto old_selection_model = m_proxy_model->selectionModel();
-    // if (old_selection_model && (view->selectionModel() != old_selection_model))
-    // {
-        // old_selection_model->deleteLater();
-	/// @todo Neither ever has an object name here:
-    qDb() << "CURRENT SELECTION MODEL:" << [&](){ if(m_proxy_model==nullptr || m_proxy_model->selectionModel()==nullptr) { return QString("nullptr"); } else { return m_proxy_model->selectionModel()->objectName();} }();
-    qDb() << "NEW SELECTION MODEL:" << view->selectionModel()->objectName();
-		m_proxy_model->setSelectionModel(view->selectionModel());
-    // }
+	m_proxy_model->setSourceModel(view->model());
+	m_proxy_model->setSelectionModel(view->selectionModel());
 }
 
 void MetadataDockWidget::onDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QList<int>& roles)
