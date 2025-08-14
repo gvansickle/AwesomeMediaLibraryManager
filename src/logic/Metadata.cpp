@@ -502,11 +502,10 @@ Metadata Metadata::get_one_track_metadata(int track_index) const
 	}
 	if(!track_entry.m_PTI_PERFORMER.empty())
 	{
-		retval.m_tm_generic["PERFORMER"].push_back(track_entry.m_PTI_PERFORMER);
+		retval.m_tm_generic.insert("PERFORMER",track_entry.m_PTI_PERFORMER);
 	}
 	if(!track_entry.m_isrc.empty())
 	{
-		//		retval.m_tag_map["ISRC"].push_back(track_entry.m_isrc);
 		retval.m_tm_generic.insert({"ISRC", track_entry.m_isrc});
 	}
 
