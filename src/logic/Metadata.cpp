@@ -403,7 +403,8 @@ Fraction Metadata::total_length_seconds() const
 	}
 }
 
-#if 1 /// @todo This looks like it should just go away.
+#if 1 /// @todo This looks like it should just go away.  It appears to only be used in LibraryEntry::getAllMetadata(),
+/// and it's not clear that's actually getting all the metadata.
 AMLMTagMap Metadata::filled_fields() const
 {
 // M_TODO("OBSOLETE")
@@ -434,7 +435,10 @@ AMLMTagMap Metadata::filled_fields() const
 			//				//qDebug() << "Value:" << val_as_utf8 << QString::fromUtf8(val_as_utf8.c_str());
 			//				out_val.push_back(value); ///@todo EXP .toCString(true));
 			//			}
-			retval[key] = out_val;
+			for(const auto& value : out_val)
+			{
+				retval.insert(key, value);
+			}
 		}
                // qDebug() << "Returning:" << retval;
 		return retval;
