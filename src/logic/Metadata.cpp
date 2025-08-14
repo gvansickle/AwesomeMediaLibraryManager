@@ -403,7 +403,8 @@ Fraction Metadata::total_length_seconds() const
 	}
 }
 
-#if 1 /// @todo This looks like it should just go away.
+#if 1 /// @todo This looks like it should just go away.  It appears to only be used in LibraryEntry::getAllMetadata(),
+/// and it's not clear that's actually getting all the metadata.
 AMLMTagMap Metadata::filled_fields() const
 {
 // M_TODO("OBSOLETE")
@@ -434,7 +435,10 @@ AMLMTagMap Metadata::filled_fields() const
 			//				//qDebug() << "Value:" << val_as_utf8 << QString::fromUtf8(val_as_utf8.c_str());
 			//				out_val.push_back(value); ///@todo EXP .toCString(true));
 			//			}
-			retval[key] = out_val;
+			for(const auto& value : out_val)
+			{
+				retval.insert(key, value);
+			}
 		}
                // qDebug() << "Returning:" << retval;
 		return retval;
@@ -502,11 +506,10 @@ Metadata Metadata::get_one_track_metadata(int track_index) const
 	}
 	if(!track_entry.m_PTI_PERFORMER.empty())
 	{
-		retval.m_tm_generic["PERFORMER"].push_back(track_entry.m_PTI_PERFORMER);
+		retval.m_tm_generic.insert("PERFORMER",track_entry.m_PTI_PERFORMER);
 	}
 	if(!track_entry.m_isrc.empty())
 	{
-		//		retval.m_tag_map["ISRC"].push_back(track_entry.m_isrc);
 		retval.m_tm_generic.insert({"ISRC", track_entry.m_isrc});
 	}
 

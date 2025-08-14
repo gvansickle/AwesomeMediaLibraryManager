@@ -498,7 +498,7 @@ bool CueSheet::parse_cue_sheet_string(const std::string& cuesheet_text, uint64_t
 			/// @todo Make use of the unique_ptr<> returned here.
 			tm = *TrackMetadata::make_unique_track_metadata(track_ptr, track_num);
 
-            if(tm.m_length_frames < 0)
+			if(tm.m_length_frames < 0)
             {
                 // This is the last track.  We have to calculate the length from the total recording time minus the start offset.
                 Q_ASSERT(m_length_in_milliseconds > 0);
@@ -506,6 +506,7 @@ bool CueSheet::parse_cue_sheet_string(const std::string& cuesheet_text, uint64_t
             }
 
 			// Using .insert() here to detect duplicate track numbers, which shouldn't ever exist per cue sheet specs.
+        	/// @todo Do this in a better way.
             auto insert_status = m_tracks.insert({track_num, tm});
             if(insert_status.second != true)
             {
