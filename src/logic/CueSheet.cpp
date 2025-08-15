@@ -325,6 +325,11 @@ void CueSheet::fromVariant(const QVariant& variant)
 #endif
 }
 
+/**
+ * Converts @a disc_mode to a std::string representation.
+ * @param disc_mode  The disc mode as returned by libcue::cd_get_mode().
+ * @return A string representation of @a disc_mode.
+ */
 static std::string tostdstr(enum DiscMode disc_mode)
 {
 	switch(disc_mode)
