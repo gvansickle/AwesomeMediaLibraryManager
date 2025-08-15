@@ -117,11 +117,6 @@ std::unique_ptr<TrackMetadata> TrackMetadata::make_unique_track_metadata(const T
 			}
 		}
 	}
-// #error "TODO This is where the track PERFORMERs should be getting into the metadata, but they aren't."
-	// if(tm.m_tm_track_pti.find("TITLE") != tm.m_tm_track_pti.cend())
-	// {
-	// 	qDb() << "TRACK CDTEXT INFO:" << toqstr(tm.m_tm_track_pti.find("TITLE")->second);
-	// }
 
 	// Get the Pack Type Indicator data.
 #define X(id) retval->m_ ## id = tostdstr(cdtext_get( id , track_cdtext ));
