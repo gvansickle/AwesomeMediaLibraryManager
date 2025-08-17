@@ -426,12 +426,11 @@ static std::vector<std::string_view> split_args(std::string_view line)
 
 std::expected<AMLMTagMap, CueSheet::ParseError> CueSheet::parse_cue_sheet_string_no_libcue(std::string cuesheet_txt) const
 {
-	std::expected<AMLMTagMap, CueSheet::ParseError> retval;
+	AMLMTagMap retval;
 
 	static const std::regex re_file_line(R"(([\s\S]*?)^\s*FILE\s.*?$\n?([\s\S]*?))", std::regex::multiline);
-    // static const std::regex re_disc_rem_line(R"([\s\S]*?^\s*REM\s(.*?)\s+(.*?)$)", std::regex::multiline);
-	// Split on the "FILE" line.
 
+	// Split on the "FILE" line.
 	auto m = std::smatch();
 	auto matched = std::regex_match(cuesheet_txt, m, re_file_line);
 	Q_ASSERT(matched);
@@ -461,20 +460,11 @@ std::expected<AMLMTagMap, CueSheet::ParseError> CueSheet::parse_cue_sheet_string
 		{
 			if (args.size() >= 2)
 			{
-				// sheet.comments.emplace_back(args[1]);
-                qDb() << "FOUND REM:" << args[0] << args[1];
+                qDb() << "FOUND CD-LEVEL REM:" << args[0] << args[1];
+				retval.insert(std::string(args[0]), std::string(args[1]));
 			}
 		}
 	}
-	// matched = std::regex_match(prefile_str, m, re_disc_rem_line);
-	// if(matched)
-	// {
-	// 	for (const auto& match : std::ranges::subrange(m.begin()+1, m.end()))
-	// 	{
-	// 		qDb() << "FOUND CD-level NAME VAL PAIR:" << match << '\n';
-	// 	}
-	// }
-
 
 	return retval;
 }

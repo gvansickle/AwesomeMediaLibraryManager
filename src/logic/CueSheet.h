@@ -202,15 +202,15 @@ private:
 	/// CD-TEXT Pack type 0x86, "Disc Identification".  Disc, not Track.
 	/// https://www.gnu.org/software/libcdio/cd-text-format.html#Misc-Pack-Types
 	///
-	/// Source is libcue.
-	///
 	/// \"here is how Sony describes this:
 	///	  Catalog Number: (use ASCII Code) Catalog Number of the album
 	/// So it is not really binary but might be non-printable, and should contain only bytes with bit 7 set to zero.\"
 	///
-	/// This is not the same as the CD-TEXT "CATALOG" number, but exactly what it is is not clear.
-	/// Also, this shows up in cue sheets as "REM DISCID nnnnnnnn", note the lack of a "_".  Surveys of
-	/// my collection show the value to always be a 32-bit hex string.
+	/// This is not the same as the CD-TEXT "CATALOG" number, nor is it what shows up in cue sheets
+	/// as "REM DISCID nnnnnnnn", note the lack of a "_".  Surveys of my collection show the value to always be
+	/// a 32-bit hex string.
+	///
+	/// This value comes from libcue::cdtext_get(PTI_DISC_ID).
 	std::string m_disc_id {};
 
 	/**
