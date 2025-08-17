@@ -241,6 +241,9 @@ private:
      */
 	std::int32_t m_disc_num_tracks {0};
 
+	std::int32_t m_disc_number {0};
+	std::int32_t m_disc_total {0};
+
     /**
      * Cue sheet-derived information on each track.
 	 * @note Map key is the track number, 1 to 99, except see below.

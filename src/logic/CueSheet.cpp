@@ -103,6 +103,19 @@ FILE "Squeeze - Greatest Hits.flac" WAVE
  * @endverbatim
  */
 
+/**
+ * All the "REM" types from .cue sheet files in my current library:
+ * REM COMMENT "<whatever>"
+ * REM COMPOSER "" <<< Literally just "".
+ * REM DATE <year>
+ * REM DISCID <8 hex digits, all caps>
+ * REM DISCNUMBER <decimal number>  <<< 1 to 5
+ * REM TOTALDISCS <decimal number>  <<< 1 to 5
+ * REM GENRE <text,sometimes a '/'> or "<text, sometimes spaces>"
+ */
+
+
+
 /// Mutex for serializing access to libcue, which is not threadsafe.
 std::mutex CueSheet::m_libcue_mutex;
 
@@ -122,7 +135,9 @@ using strviw_type = QLatin1String;
 	X(XMLTAG_DISC_ID, m_disc_id) \
 	X(XMLTAG_DISC_DATE, m_disc_date) \
 	/** @todo Need to come up with an insert-as-std:string, this is a integral value. */\
-	X(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA, m_disc_num_tracks)
+	X(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA, m_disc_num_tracks) \
+	X(XMLTAG_DISC_NUMBER, m_disc_number) \
+	X(XMLTAG_DISC_TOTAL, m_disc_total)
 
 #define M_DATASTREAM_FIELDS_TRACK(X) \
 //	X(XMLTAG_TRACK_META_LENGTH_POST_GAP, m_length_post_gap) \
@@ -430,7 +445,7 @@ std::expected<AMLMTagMap, CueSheet::ParseError> CueSheet::parse_cue_sheet_string
 
 	static const std::regex re_file_line(R"(([\s\S]*?)^\s*FILE\s.*?$\n?([\s\S]*?))", std::regex::multiline);
 
-	// Split on the "FILE" line.
+	// Split on the "FILE" line.  Above is disc-level, below is track entries.
 	auto m = std::smatch();
 	auto matched = std::regex_match(cuesheet_txt, m, re_file_line);
 	Q_ASSERT(matched);
@@ -438,8 +453,6 @@ std::expected<AMLMTagMap, CueSheet::ParseError> CueSheet::parse_cue_sheet_string
 	// qDb() << "NUM FILE LINE MATCHES:" << file_line_match.size();
 	std::string prefile_str = m[1].str();
 	std::string postfile_str = m[2].str();
-	// qDb() << "PREFILE:" << prefile_str;
-	// qDb() << "POSTFILE:" << postfile_str;
 
 	// Parse disc-level REM [identifier] [value] fields.
 	// There may not be any.
