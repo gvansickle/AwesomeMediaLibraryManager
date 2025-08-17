@@ -19,9 +19,9 @@
 
 /// @file
 
-#include <config.h>
-
 #include "CueSheet.h"
+
+#include <config.h>
 
 // Std C++
 #include <regex>
@@ -376,6 +376,109 @@ static std::string LibCueHelper_cd_get_catalog(struct Cd *cd)
 	return retval;
 }
 
+/**
+ * Trim whitespace from both ends of a string_view
+ * @param str View to the string to trim.
+ * @return The trimmed string_view.
+ */
+static std::string_view trim(std::string_view str)
+{
+	auto is_space = [](char c) { return std::isspace(c); };
+	auto start = std::ranges::find_if_not(str, is_space);
+	auto end = std::find_if_not(str.rbegin(), str.rend(), is_space).base();
+	return (start < end) ? std::string_view(start, end) : std::string_view();
+}
+
+/**
+ * Split a string by whitespace, handling quotes
+ * @param line
+ * @return
+ */
+static std::vector<std::string_view> split_args(std::string_view line)
+{
+	std::vector<std::string_view> args;
+	bool in_quotes = false;
+	size_t start = 0;
+
+	for (size_t i = 0; i < line.size(); ++i)
+	{
+		if (line[i] == '"')
+		{
+			in_quotes = !in_quotes;
+		}
+		else if (!in_quotes && std::isspace(line[i]))
+		{
+			if (i > start)
+			{
+				args.push_back(trim(line.substr(start, i - start)));
+			}
+			start = i + 1;
+		}
+	}
+
+	if (start < line.size())
+	{
+		args.push_back(trim(line.substr(start)));
+	}
+
+	return args;
+}
+
+std::expected<AMLMTagMap, CueSheet::ParseError> CueSheet::parse_cue_sheet_string_no_libcue(std::string cuesheet_txt) const
+{
+	std::expected<AMLMTagMap, CueSheet::ParseError> retval;
+
+	static const std::regex re_file_line(R"(([\s\S]*?)^\s*FILE\s.*?$\n?([\s\S]*?))", std::regex::multiline);
+    // static const std::regex re_disc_rem_line(R"([\s\S]*?^\s*REM\s(.*?)\s+(.*?)$)", std::regex::multiline);
+	// Split on the "FILE" line.
+
+	auto m = std::smatch();
+	auto matched = std::regex_match(cuesheet_txt, m, re_file_line);
+	Q_ASSERT(matched);
+	Q_ASSERT(m.size() >= 3);
+	// qDb() << "NUM FILE LINE MATCHES:" << file_line_match.size();
+	std::string prefile_str = m[1].str();
+	std::string postfile_str = m[2].str();
+	// qDb() << "PREFILE:" << prefile_str;
+	// qDb() << "POSTFILE:" << postfile_str;
+
+	// Parse disc-level REM [identifier] [value] fields.
+	// There may not be any.
+	for (auto line : prefile_str | std::views::split('\n')
+						   | std::views::transform([](auto&& r) {
+							   return trim(std::string_view(r));
+						   }))
+	{
+		if (line.empty()) { continue; }
+
+		auto args = split_args(line);
+		if (args.empty()) { continue; }
+
+		const auto command = args[0];
+		args.erase(args.begin());
+
+		if (command == "REM")
+		{
+			if (args.size() >= 2)
+			{
+				// sheet.comments.emplace_back(args[1]);
+                qDb() << "FOUND REM:" << args[0] << args[1];
+			}
+		}
+	}
+	// matched = std::regex_match(prefile_str, m, re_disc_rem_line);
+	// if(matched)
+	// {
+	// 	for (const auto& match : std::ranges::subrange(m.begin()+1, m.end()))
+	// 	{
+	// 		qDb() << "FOUND CD-level NAME VAL PAIR:" << match << '\n';
+	// 	}
+	// }
+
+
+	return retval;
+}
+
 bool CueSheet::parse_cue_sheet_string(const std::string& cuesheet_text, uint64_t length_in_ms)
 {
 	// Mutex FBO libcue.  Libcue isn't thread-safe.
@@ -396,6 +499,9 @@ bool CueSheet::parse_cue_sheet_string(const std::string& cuesheet_text, uint64_t
 
 	// Final adjustment of the string to compensate for some variations seen in the wild.
 	std::string final_cuesheet_string = preprocess_cuesheet_string(cuesheet_text);
+
+	parse_cue_sheet_string_no_libcue(final_cuesheet_string);
+
 
 	// Try to parse the cue sheet we found with libcue.
 	Cd* cd = cue_parse_string(final_cuesheet_string.c_str());
@@ -534,12 +640,22 @@ std::string CueSheet::preprocess_cuesheet_string(const std::string& cuesheet_tex
 {
 	std::string retval;
 
-	// The best I can figure is that the "REM DISCID nnnnn"'s I'm seeing in a lot of cue sheets is actually
-	// 86h "Disc Identification information" as defined by MMC-3/CD-TEXT.  Trouble is, there's no definition there,
-	// or anywhere else I can find.  A survey of the cuesheets I have all have the number as a 32-bit hex value.
-	std::regex s_REM_DISCID(R"!(^REM\sDISCID)!", std::regex_constants::ECMAScript);
+	// Per https://wiki.hydrogenaudio.org/index.php?title=Cue_sheet:
+	/*
+	 * "Cue sheet commands
+	 * [...]
+	 * REM DISCID
+	 * Although programs such as Exact Audio Copy use this to store the disc's CDDB1 value, other programs can extract
+	 * the disc's true Disc ID, which is usually the disc's label-specific catalog number (see the example TOC file on
+	 * the cdrdao page and the "DISC_ID" field for an example)."
+	 *
+	 * CDDB1 is described here: https://en.wikipedia.org/wiki/CDDB#Example_calculation_of_a_CDDB1_(FreeDB)_disc_ID
+	 * "CDDB1 identifies CDs with a 32-bit number [...]"
+	 */
+	// std::regex s_REM_DISCID(R"!(^REM\sDISCID)!", std::regex_constants::ECMAScript);
 
-	retval = std::regex_replace(cuesheet_text, s_REM_DISCID, "DISC_ID");
+	// retval = std::regex_replace(cuesheet_text, s_REM_DISCID, "DISC_ID");
+	retval = cuesheet_text;
 
 	// Remove any \r's.  libcue can only handle \n newlines.
     std::erase(retval, '\r');

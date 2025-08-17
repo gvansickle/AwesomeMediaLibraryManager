@@ -29,6 +29,7 @@
 #include <string>
 #include <memory>
 #include <cstdint>
+#include <expected>
 #include <map>
 #include <mutex>
 
@@ -89,7 +90,12 @@ public:
 
 	Q_ENUM(Origin)
 
-
+	enum ParseError
+	{
+		PE_ERROR_UNKNOWN,
+		PE_LAST
+	};
+	Q_ENUM(ParseError)
 
 public:
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(CueSheet)
@@ -158,8 +164,10 @@ public:
 
 protected:
 
+	std::expected<AMLMTagMap, ParseError> parse_cue_sheet_string_no_libcue(std::string cuesheet_txt) const;
+
     /**
-     * Populate the data of this CueSheet by parsing the given cuesheet_text.
+     * Populate the data of this CueSheet by parsing the given @a cuesheet_text.
      * @param cuesheet_text
      * @param total_length_in_ms  This is needed for computing the total length of the last track.
      * @return true if parsing succeeded, false otherwise.
