@@ -121,7 +121,7 @@ QtRegCallbackRegistry& reginstance();
  */
 // #define AMLM_QREG_CALLBACK(...) static auto TOKEN_PASTE(dummy, __COUNTER__) = (reginstance().register_callback(__VA_ARGS__), rand()) // clazy:exclude=non-pod-global-static
 #define AMLM_QREG_CALLBACK(...) static volatile auto TOKEN_PASTE(dummy, __COUNTER__) = (reginstance().register_callback(__VA_ARGS__), 1) // clazy:exclude=non-pod-global-static
-// #define AMLM_QREG_CALLBACK(...) static auto TOKEN_PASTE(dummy, __COUNTER__) = [](){ reginstance().register_callback(__VA_ARGS__); return 1;}();
+// #define AMLM_QREG_CALLBACK(...) static constinit auto TOKEN_PASTE(dummy, __COUNTER__) = (reginstance().register_callback(__VA_ARGS__), 1) // clazy:exclude=non-pod-global-static
 // _Pragma("GCC diagnostic push") \
 // _Pragma("GCC diagnostic ignored \"-Wunknown-pragmas\"") \
 // _Pragma("GCC diagnostic ignored \"-Wunknown-warning-option\"") \
