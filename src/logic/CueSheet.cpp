@@ -57,7 +57,7 @@ extern "C" {
  *
  * Bad embedded cue sheet:
  * @verbatim
- *METADATA block #2
+  METADATA block #2
   type: 4 (VORBIS_COMMENT)
   is last: false
   length: 201
@@ -72,11 +72,11 @@ extern "C" {
     comment[6]: DISCNUMBER=1
     comment[7]: TOTALDISCS=1
     comment[8]: TOTALTRACKS=20
- * @endverbatim
+@endverbatim
  *
  * Good embedded cue sheet:
  * @verbatim
- * METADATA block #2
+  METADATA block #2
   type: 4 (VORBIS_COMMENT)
   is last: false
   length: 8825
@@ -100,23 +100,52 @@ FILE "Squeeze - Greatest Hits.flac" WAVE
     PERFORMER "Squeeze"
     TITLE "Goodbye Girl"
   [...]
- * @endverbatim
+@endverbatim
+ */
+
+/**
+ * @note There may be duplication of fields between the tagmaps (e.g. m_tm_xiph) and any cuesheet.
+ * For example, from m_tm_xiph:
+ * @verbatim
+[...]
+comment[16]: ALBUM=An American Treasure
+comment[17]: ARTIST=Tom Petty
+comment[18]: GENRE=Rock
+comment[19]: DISCTOTAL=2
+comment[20]: DISCNUMBER=1
+comment[21]: DATE=2018
+[...]
+@endverbatim
+ * From the cue sheet:
+ * @verbatim
+PERFORMER "Tom Petty"
+TITLE "An American Treasure"
+CATALOG 0093624905547
+REM DATE 2018
+REM DISCNUMBER 1
+REM TOTALDISCS 2
+REM GENRE "Rock"
+@endverbatim
  */
 
 /**
  * All the "REM" types from .cue sheet files in my current library:
- * REM COMMENT "<whatever>"
- * REM COMPOSER "" <<< Literally just "".
- * REM DATE <year>
- * REM DISCID <8 hex digits, all caps>
- * REM DISCNUMBER <decimal number>  <<< 1 to 5
- * REM TOTALDISCS <decimal number>  <<< 1 to 5
- * REM GENRE <text,sometimes a '/'> or "<text, sometimes spaces>"
+ * @verbatim
+REM COMMENT "<whatever>"
+REM COMPOSER "" <<< Literally just "".
+REM DATE <year>
+REM DISCID <8 hex digits, all caps>
+REM DISCNUMBER <decimal number>  <<< 1 to 5
+REM TOTALDISCS <decimal number>  <<< 1 to 5
+REM GENRE <text,sometimes a '/'> or "<text, sometimes spaces>"
+@endverbatim
  */
 
 
 
-/// Mutex for serializing access to libcue, which is not threadsafe.
+/**
+ * Mutex for serializing access to libcue, which is not threadsafe.
+ */
 std::mutex CueSheet::m_libcue_mutex;
 
 AMLM_QREG_CALLBACK([](){
@@ -503,8 +532,17 @@ bool CueSheet::parse_cue_sheet_string(const std::string& cuesheet_text, uint64_t
 	// Final adjustment of the string to compensate for some variations seen in the wild.
 	std::string final_cuesheet_string = preprocess_cuesheet_string(cuesheet_text);
 
-	parse_cue_sheet_string_no_libcue(final_cuesheet_string);
+	// Extract any data that libcue doesn't from the cuesheet.
+	auto cuesheet_disc_rems = parse_cue_sheet_string_no_libcue(final_cuesheet_string);
+	if(cuesheet_disc_rems.has_value())
+	{
+		auto discnum_vec = cuesheet_disc_rems.value().equal_range_vector_or("DISCNUMBER", "0");
+		m_disc_number = std::stoi(discnum_vec[0]);
 
+		discnum_vec = cuesheet_disc_rems.value().equal_range_vector_or("TOTALDISCS",
+			cuesheet_disc_rems.value().equal_range_vector_or("DISCTOTAL", "0").at(0));
+		m_disc_total = std::stoi(discnum_vec[0]);
+	}
 
 	// Try to parse the cue sheet we found with libcue.
 	Cd* cd = cue_parse_string(final_cuesheet_string.c_str());

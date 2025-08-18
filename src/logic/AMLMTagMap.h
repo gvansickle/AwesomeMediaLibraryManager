@@ -162,6 +162,8 @@ public:
 	std::vector<key_type> keys() const;
 
 	std::vector<mapped_type> equal_range_vector(const Key& key) const;
+
+	std::vector<mapped_type> equal_range_vector_or(const Key& key, std::string_view or_string) const;
 	/// @}
 
 	/// Size.
