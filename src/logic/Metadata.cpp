@@ -236,6 +236,9 @@ bool Metadata::read(const QUrl& url)
 		if(m_has_id3v1)
 		{
 			m_tm_id3v1 = file->ID3v1Tag()->properties();
+			/// @todo AMLMTagMap doen't preserve/understand priorities or insertion order, so these merges put e.g.
+			/// the TITLE from V1 above the one from V2 regardless of the order we merge them here.
+			/// @see https://github.com/gvansickle/AwesomeMediaLibraryManager/issues/100
 			m_tm_generic.merge(m_tm_id3v1);
 		}
 		if(m_has_id3v2)
