@@ -52,7 +52,7 @@ extern "C" {
 #include <logic/serialization/SerializationHelpers.h>
 
 
-/**
+/** @page cuesheet_pg1 Cuesheet Good vs. Bad
  * Same disc ripped with two different rippers:
  *
  * Bad embedded cue sheet:
@@ -103,7 +103,7 @@ FILE "Squeeze - Greatest Hits.flac" WAVE
 @endverbatim
  */
 
-/**
+/** @page cuesheet_pg2 Cuesheet may have COMMENT dups
  * @note There may be duplication of fields between the tagmaps (e.g. m_tm_xiph) and any cuesheet.
  * For example, from m_tm_xiph:
  * @verbatim
@@ -128,7 +128,7 @@ REM GENRE "Rock"
 @endverbatim
  */
 
-/**
+/** @page cuesheet_pg3 Cuesheet REM types
  * All the "REM" types from .cue sheet files in my current library:
  * @verbatim
 REM COMMENT "<whatever>"
@@ -277,11 +277,13 @@ AMLMTagMap CueSheet::asAMLMTagMap_Disc() const
 	AMLMTagMap retval;
 
 	// Disc-level fields.
-//#define X(field_tag, member_field) retval.insert(std::make_pair(tostdstr(field_tag), /*QVariant::fromValue*/member_field));
 #define X(field_tag, member_field) AMLMTagMap_convert_and_insert(retval, tostdstr(field_tag), member_field);
-    M_DATASTREAM_FIELDS_DISC(X)
+	/// @temp
+	/// @todo asAMLMTagMap_Disc() is not used during serialization or cuesheet parsing.
+	/// Looks like this is only called to populated the Metadata Explorer pane, so not doing this doesn't affect anything else.
+    // M_DATASTREAM_FIELDS_DISC(X)
 #undef X
-//	retval.insert(std::make_pair(tostdstr(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA), std::to_string(m_disc_num_tracks)));
+	retval = m_tm_cuesheet_disc;
 
 	return retval;
 }
@@ -513,9 +515,6 @@ std::expected<AMLMTagMap, CueSheet::ParseError> CueSheet::parse_cue_sheet_string
 
 bool CueSheet::parse_cue_sheet_string(const std::string& cuesheet_text, uint64_t length_in_ms)
 {
-	// Mutex FBO libcue.  Libcue isn't thread-safe.
-	std::lock_guard<std::mutex> lock(m_libcue_mutex);
-
 	// libcue (actually flex) can't handle invalid UTF-8.
 	// if(!QtPrivate::isValidUtf8(cuesheet_text.c_str())) ///< Some invalid
 	QString valid = QString::fromUtf8(cuesheet_text); ///< None invalid
@@ -534,6 +533,7 @@ bool CueSheet::parse_cue_sheet_string(const std::string& cuesheet_text, uint64_t
 
 	// Extract any data that libcue doesn't from the cuesheet.
 	auto cuesheet_disc_rems = parse_cue_sheet_string_no_libcue(final_cuesheet_string);
+	m_tm_cuesheet_disc = cuesheet_disc_rems.value();
 	if(cuesheet_disc_rems.has_value())
 	{
 		auto discnum_vec = cuesheet_disc_rems.value().equal_range_vector_or("DISCNUMBER", "0");
@@ -543,6 +543,9 @@ bool CueSheet::parse_cue_sheet_string(const std::string& cuesheet_text, uint64_t
 			cuesheet_disc_rems.value().equal_range_vector_or("DISCTOTAL", "0").at(0));
 		m_disc_total = std::stoi(discnum_vec[0]);
 	}
+
+	// Lock mutex FBO libcue.  Libcue isn't thread-safe.
+	std::lock_guard<std::mutex> lock(m_libcue_mutex);
 
 	// Try to parse the cue sheet we found with libcue.
 	Cd* cd = cue_parse_string(final_cuesheet_string.c_str());
@@ -579,7 +582,8 @@ bool CueSheet::parse_cue_sheet_string(const std::string& cuesheet_text, uint64_t
 
 		// Get the disc-level CD-TEXT.
 	    Cdtext* cdtext = cd_get_cdtext(cd);
-		if(cdtext_is_empty(cdtext) == 0)
+    	AMLM_WARNIF(cdtext == nullptr);
+		if(cdtext_is_empty(cdtext) == 0) // Note: Docs are wrong, "== 0" means no CDTEXT fields, otherwise returns -1.
 		{
 			qWr() << "No CDTEXT";
 		}
@@ -588,13 +592,12 @@ bool CueSheet::parse_cue_sheet_string(const std::string& cuesheet_text, uint64_t
 			qDb() << "CDTEXT_DUMP (disc):";
 			cdtext_dump(cdtext, 0);
 		}
-	    AMLM_WARNIF(cdtext == nullptr);
-		if(cdtext != nullptr)
+		if((cdtext != nullptr) && (cdtext_is_empty(cdtext) != 0))
 		{
 			auto* disc_id_cstr = cdtext_get(PTI_DISC_ID, cdtext);
 			if(disc_id_cstr == nullptr)
 			{
-				qWr() << "No Cuesheet CD-Text DiscID";
+				qWr() << "No Cuesheet CD-Text DISC_ID";
 			}
 			else
 			{

@@ -67,6 +67,12 @@ class QUrl;
  * - Gap info (how much silence to insert before or after each track)
  * - Comments (which are used by some programs to store nonstandard metadata like genre, freeDB disc ID, etc.)\"
  *
+ * @note libcue will provide CD-Text data even if there is no real CD-Text.  In that case, libcue builds a CD‑TEXT structure from the
+ * cue sheet’s own commands (TITLE, PERFORMER, SONGWRITER, ISRC, etc.).
+ * AI says: "If there’s no CDTEXTFILE but you still get values from cdtext_get(), they’re coming from inline CUE commands."
+ * @todo We don't currently make any real/synth CDTEXT distinction here, so it's a bit confusing and probably needs some cleanup.
+ * All the "PTI_xxxx" stuff is CD-Text.
+ *
  * @sa https://wiki.hydrogenaudio.org/index.php?title=Cue_sheet
  * @sa https://en.wikipedia.org/wiki/Cue_sheet_(computing)
  * @sa https://github.com/flacon/flacon/blob/master/doc/cuesheet_syntax.md
@@ -191,6 +197,8 @@ private:
 	/// Origin of the data in this CueSheet.
 	Origin m_origin {Origin::Unknown};
 
+	AMLMTagMap m_tm_cuesheet_disc {};
+
     /// @name Mandatory Info
     /// @{
 
@@ -200,15 +208,33 @@ private:
 	std::string m_disc_catalog_num {};
 
 	/// CD-TEXT Pack type 0x86, "Disc Identification".  Disc, not Track.
-	/// https://www.gnu.org/software/libcdio/cd-text-format.html#Misc-Pack-Types
+	/// From https://www.gnu.org/software/libcdio/cd-text-format.html#Misc-Pack-Types :
 	///
 	/// \"here is how Sony describes this:
 	///	  Catalog Number: (use ASCII Code) Catalog Number of the album
 	/// So it is not really binary but might be non-printable, and should contain only bytes with bit 7 set to zero.\"
 	///
+	/// What AI says:
+	///
+	/// \"CD‑TEXT’s DISC_ID is a free‑form “disc identification” string embedded in the CD‑TEXT metadata by the
+	/// label/mastering house. Its purpose is to identify the disc within the producer’s/cataloging systems and to aid
+	/// players or databases that read CD‑TEXT in showing or mapping the correct release. [...]
+	/// - What it is: An arbitrary text field defined by the content provider. There’s no mandated format.
+	/// - Typical contents: A record‑label catalog number or an internal product code. It may match the printed
+	/// catalog number, but it doesn’t have to.
+	/// - Not the same as:
+	///		- UPC/EAN: CD‑TEXT has a separate UPC/EAN field for the barcode.
+	///		- ISRC: Track‑level recording identifiers.
+	///		- FreeDB/CDDB “discid”: A computed TOC hash; unrelated to CD‑TEXT DISC_ID.
+	/// \"
+	///
 	/// This is not the same as the CD-TEXT "CATALOG" number, nor is it what shows up in cue sheets
 	/// as "REM DISCID nnnnnnnn", note the lack of a "_".  Surveys of my collection show the value to always be
 	/// a 32-bit hex string.
+	/// Per AI:
+	/// \"What [REM] DISCID usually means
+	///	FreeDB/CDDB1 ID (most common historically): an 8-hex-digit value computed from the CD’s table of contents (TOC).
+	///	Example: 1911F314. This is what Exact Audio Copy and many older tools stored."
 	///
 	/// This value comes from libcue::cdtext_get(PTI_DISC_ID).
 	std::string m_disc_id {};
