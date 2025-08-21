@@ -67,6 +67,7 @@ if(FALSE)
 #		set_property(GLOBAL PROPERTY CMAKE_CXX_COMPILER_LAUNCHER "csbuild;--print-current;-c")
 #	endif()
 endif()
+if(FALSE)
 find_program(IWYU_EXECUTABLE include-what-you-use)
 if(IWYU_EXECUTABLE)
 
@@ -94,7 +95,7 @@ if(IWYU_EXECUTABLE)
 # separate_arguments(IWYU_CMD UNIX_COMMAND "${CMAKE_CXX_INCLUDE_WHAT_YOU_USE}")
 message(STATUS "IWYU base command: ${IWYU_CMD}")
 endif()
-
+endif()
 
 # Basic information about project
 # Note that here is where CMake determines compilers and loads any toolchain.cmake file.

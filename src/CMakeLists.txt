@@ -186,8 +186,7 @@ target_link_libraries(src
 #	message(FATAL_ERROR "NOT DEFINED: amlm_APP_ICONS: '${amlm_APP_ICONS}'")
 #endif()
 #ecm_add_app_icon(amlm_SRCS ICONS ${amlm_APP_ICONS})
-set_property(TARGET src PROPERTY CXX_INCLUDE_WHAT_YOU_USE ${IWYU_CMD})
-message(status "####################${IWYU_CMD}")
+
 
 # Qt Binary Resource (rcc) files.
 #qt_add_binary_resources(icons_oxygen "${PROJECT_SOURCE_DIR}/resources/oxygenicons.qrc")
