@@ -75,17 +75,17 @@ if(IWYU_EXECUTABLE)
 
 	# Add IWYU options
 	list(APPEND IWYU_CMD
-		#			"-Xiwyu" "-isystem=/usr/lib/clang/20/include/"
 		"-Xiwyu" "--mapping_file=${CMAKE_SOURCE_DIR}/iwyu.imp"
 		"-Xiwyu" "--mapping_file=gcc.libc.imp"
 		"-Xiwyu" "--no_fwd_decls"
 		"-Xiwyu" "--verbose=3"
-		"-Xiwyu" "--error=1"  # Exit with 0 for iwyu violations
+		"-Xiwyu" "--error=0"  # Exit with 0 for iwyu violations
+		"-Xiwyu" "--error_always=0"  # Exit with 0 for iwyu violations
 	)
 
-	# set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE "${IWYU_CMD}")
-	# set(CMAKE_C_INCLUDE_WHAT_YOU_USE ${CMAKE_CXX_INCLUDE_WHAT_YOU_USE})
-	# message(STATUS "IWYU enabled: ${CMAKE_CXX_INCLUDE_WHAT_YOU_USE}")
+#	 set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE "${IWYU_CMD}")
+#	 set(CMAKE_C_INCLUDE_WHAT_YOU_USE ${CMAKE_CXX_INCLUDE_WHAT_YOU_USE})
+#	 message(STATUS "IWYU enabled: ${CMAKE_CXX_INCLUDE_WHAT_YOU_USE}")
 
 # Only run IWYU on our source files, not system headers
 # set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE_ONLY_SOURCE_FILES TRUE)
