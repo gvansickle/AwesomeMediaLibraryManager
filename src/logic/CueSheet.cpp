@@ -157,7 +157,8 @@ AMLM_QREG_CALLBACK([](){
 using strviw_type = QLatin1String;
 
 #define M_SERDES_FIELDS_GENERAL(X) \
-	X(XMLTAG_ORIGIN, m_origin)
+	X(XMLTAG_ORIGIN, m_origin) \
+	X(XMLTAG_HAS_CDTEXT_FILE, m_has_cdtext_file)
 
 #define M_DATASTREAM_FIELDS_DISC(X) \
 	X(XMLTAG_DISC_CATALOG_NUM, m_disc_catalog_num) \
@@ -265,6 +266,11 @@ CueSheet::Origin CueSheet::origin() const
 void CueSheet::set_origin(Origin origin)
 {
 	m_origin = origin;
+}
+
+std::optional<bool> CueSheet::has_cdtext_file() const
+{
+	return m_has_cdtext_file;
 }
 
 std::map<int, TrackMetadata> CueSheet::get_track_map() const
@@ -569,6 +575,9 @@ bool CueSheet::parse_cue_sheet_string(const std::string& cuesheet_text, uint64_t
   //   	qDb() << "CD_REM DUMP:";
   //   	auto* rem = cd_get_rem(cd);
 		// rem_dump(rem);
+
+    	// Was there a real CD-TEXT file?
+    	m_has_cdtext_file = cd_get_cdtextfile(cd) != nullptr;
 
 		//
 		// Get disc-level info from the Cd struct.

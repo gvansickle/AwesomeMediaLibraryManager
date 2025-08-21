@@ -133,6 +133,8 @@ public:
 	Origin origin() const;
 	void set_origin(Origin origin);
 
+	std::optional<bool> has_cdtext_file() const;
+
     /**
      * Returns the parsed TrackMetadata entries as a std::map.
      */
@@ -196,6 +198,21 @@ private:
 
 	/// Origin of the data in this CueSheet.
 	Origin m_origin {Origin::Unknown};
+
+	/**
+	 * Indicates the presence of a CD-Text file explicitly defined in the cue sheet.
+	 *
+	 * This variable is used to determine whether a CD-Text file is specified using the `CDTEXTFILE` command in the cue sheet.
+	 * A value of `true` means that a CD-Text file is explicitly declared, while `false` indicates no such file is referenced.
+	 *
+	 * @note If this value is `false`, libcue will report CUE commands (e.g., `TITLE`, `PERFORMER`, `SONGWRITER`) as if they
+	 * were CD-Text.  I.e. the libcue functions cd_get_cdtext(), track_get_cdtext(), and cdtext_get() will still work.
+	 * This behavior ensures compatibility with cue sheets that lack an explicitly defined `CDTEXTFILE` but still specify metadata within cue commands.
+	 *
+	 * @sa https://wiki.hydrogenaudio.org/index.php?title=Cue_sheet
+	 * @sa https://www.gnu.org/software/libcdio/cd-text-format.html
+	 */
+	std::optional<bool> m_has_cdtext_file {};
 
 	AMLMTagMap m_tm_cuesheet_disc {};
 
