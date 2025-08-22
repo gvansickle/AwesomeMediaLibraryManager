@@ -17,15 +17,23 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef AWESOMEMEDIALIBRARYMANAGER_STRING_OPS_H
-#define AWESOMEMEDIALIBRARYMANAGER_STRING_OPS_H
+#ifndef AWESOMEMEDIALIBRARYMANAGER_STRING_OPS_TESTS_H
+#define AWESOMEMEDIALIBRARYMANAGER_STRING_OPS_TESTS_H
 
-/** @file string_ops.h */
+/// @file
 
-#include <string_view>
+// Google Test
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
-std::string_view trim(std::string_view str);
+class StringOpsTests : public ::testing::Test
+{
+public:
 
-std::string_view trim_quotes(std::string_view str);
+protected:
 
-#endif //AWESOMEMEDIALIBRARYMANAGER_STRING_OPS_H
+	// Objects declared here can be used by all tests in this Fixture.
+
+};
+
+#endif //AWESOMEMEDIALIBRARYMANAGER_STRING_OPS_TESTS_H

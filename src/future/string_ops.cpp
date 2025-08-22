@@ -20,7 +20,7 @@
 #include "string_ops.h"
 
 // C++
-#include <locale>
+#include <cctype>
 #include <algorithm>
 
 /**
@@ -30,8 +30,27 @@
  */
 std::string_view trim(std::string_view str)
 {
+	/// @note This may be subject to locale:
 	auto is_space = [](char c) { return std::isspace(c); };
 	auto start = std::ranges::find_if_not(str, is_space);
 	auto end = std::find_if_not(str.rbegin(), str.rend(), is_space).base();
 	return (start < end) ? std::string_view(start, end) : std::string_view();
+}
+
+std::string_view trim_quotes(std::string_view str)
+{
+	// Find the first and last quote chars, if any.
+	auto start = std::ranges::find(str, '"');
+	auto end = std::ranges::find_last(str, '"').cbegin();
+
+	if(start == str.end() || end == str.end())
+	{
+		return str;
+	}
+	// if(start == end.begin())
+	// {
+	// 	return ;
+	// }
+
+	return (start < end) ? std::string_view(start + 1, end) : str;
 }

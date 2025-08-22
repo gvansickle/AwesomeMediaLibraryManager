@@ -17,15 +17,31 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef AWESOMEMEDIALIBRARYMANAGER_STRING_OPS_H
-#define AWESOMEMEDIALIBRARYMANAGER_STRING_OPS_H
+#include "string_ops_tests.h"
 
-/** @file string_ops.h */
+// Ours
+#include <future/string_ops.h>
+#include "TestHelpers.h"
 
-#include <string_view>
 
-std::string_view trim(std::string_view str);
+TEST_F(StringOpsTests, trim_quotes1)
+{
+	std::string s = "\"hello\"";
+	auto result = trim_quotes(s);
+	EXPECT_STREQ(std::string(result).c_str(), "hello");
 
-std::string_view trim_quotes(std::string_view str);
+	std::string s2 = "\"hello";
+	auto result2 = trim_quotes(s2);
+	EXPECT_STREQ(std::string(result2).c_str(), s2.c_str());
 
-#endif //AWESOMEMEDIALIBRARYMANAGER_STRING_OPS_H
+	std::string s3 = "hello\"";
+	auto result3 = trim_quotes(s3);
+	EXPECT_STREQ(std::string(result3).c_str(), s3.c_str());
+}
+
+TEST_F(StringOpsTests, trim_quotes2)
+{
+	std::string s = "hello";
+	auto result = trim_quotes(s);
+	EXPECT_STREQ(std::string(result).c_str(), s.c_str());
+}
