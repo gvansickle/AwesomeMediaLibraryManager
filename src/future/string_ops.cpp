@@ -16,28 +16,30 @@
  * You should have received a copy of the GNU General Public License
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
+/** @file */
 
 #include "string_ops.h"
 
 // C++
 #include <cctype>
 #include <algorithm>
+#include <ranges>
 
 /**
  * Trim whitespace from both ends of a string_view
  * @param str View to the string to trim.
  * @return The trimmed string_view.
  */
-std::string_view trim(std::string_view str)
+std::string trim(std::string_view str)
 {
 	/// @note This may be subject to locale:
 	auto is_space = [](char c) { return std::isspace(c); };
 	auto start = std::ranges::find_if_not(str, is_space);
 	auto end = std::find_if_not(str.rbegin(), str.rend(), is_space).base();
-	return (start < end) ? std::string_view(start, end) : std::string_view();
+	return (start < end) ? std::string(start, end) : std::string();
 }
 
-std::string_view trim_quotes(std::string_view str)
+std::string trim_quotes(std::string_view str)
 {
 	// Find the first and last quote chars, if any.
 	auto start = std::ranges::find(str, '"');
@@ -45,12 +47,8 @@ std::string_view trim_quotes(std::string_view str)
 
 	if(start == str.end() || end == str.end())
 	{
-		return str;
+		return std::string(str);
 	}
-	// if(start == end.begin())
-	// {
-	// 	return ;
-	// }
 
-	return (start < end) ? std::string_view(start + 1, end) : str;
+	return (start < end) ? std::string(start + 1, end) : std::string(str);
 }

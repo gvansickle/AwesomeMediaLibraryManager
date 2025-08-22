@@ -45,3 +45,17 @@ TEST_F(StringOpsTests, trim_quotes2)
 	auto result = trim_quotes(s);
 	EXPECT_STREQ(std::string(result).c_str(), s.c_str());
 }
+
+TEST_F(StringOpsTests, trim_quotes_onlyquotes)
+{
+	std::string s = "\"\"";
+	auto result = trim_quotes(s);
+	EXPECT_STREQ(std::string(result).c_str(), "");
+}
+
+TEST_F(StringOpsTests, trim_quotes_emptystring)
+{
+	std::string s = "";
+	auto result = trim_quotes(s);
+	EXPECT_STREQ(std::string(result).c_str(), "");
+}

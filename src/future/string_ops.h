@@ -22,10 +22,11 @@
 
 /** @file string_ops.h */
 
+#include <string>
 #include <string_view>
 
-std::string_view trim(std::string_view str);
+std::string trim(std::string_view str);
 
-std::string_view trim_quotes(std::string_view str);
+std::string trim_quotes(std::string_view str);
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_STRING_OPS_H
