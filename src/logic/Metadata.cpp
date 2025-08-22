@@ -885,7 +885,7 @@ REM 4: (null)
 
 		if (m_cuesheet_num_tracks_on_media > 1)
 		{
-			// This is a multi-track file per the cuesheet.
+            // This is a multi-track file per the cuesheet.
             // Check if there's an error with the *.flac's embedded Xiph/Vorbis comments
 			// where the CD-level fields got a track's fields mixed into it.
 			// This error would have happened at the ripping stage.
