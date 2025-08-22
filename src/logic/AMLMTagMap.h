@@ -138,7 +138,8 @@ public:
 
 	iterator insert_if_empty(const key_type& key, const mapped_type& value);
 
-	auto erase(auto it) { return m_the_map.erase(it); }
+	size_type erase(const Key& key) { return m_the_map.erase(key); }
+	iterator erase( iterator pos ) { return m_the_map.erase(pos); }
 
 	/// @name Lookup.
 	/// @{
