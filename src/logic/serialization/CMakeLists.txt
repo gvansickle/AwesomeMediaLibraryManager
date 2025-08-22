@@ -49,6 +49,8 @@ target_sources(serialization
 	)
 
 target_link_libraries(serialization
+	PRIVATE
+		qt_pch
 	PUBLIC
 		${QT_LINK_LIB_TARGETS}
 		${KF_LINK_LIB_TARGETS}

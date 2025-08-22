@@ -73,6 +73,8 @@ target_include_directories(utils
 )
 
 target_link_libraries(utils
+	PRIVATE
+		qt_pch
 	PUBLIC
 		${QT_LINK_LIB_TARGETS}
 		${KF_LINK_LIB_TARGETS}

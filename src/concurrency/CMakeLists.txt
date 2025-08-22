@@ -64,6 +64,7 @@ target_include_directories(concurrency
 )
 target_link_libraries(concurrency
 	PRIVATE
+		qt_pch
 		${QT_LINK_LIB_TARGETS}
 		${KF_LINK_LIB_TARGETS}
 #		jobs  ### @note For LibraryEntryLoaderJob.h via LibraryModel.h.

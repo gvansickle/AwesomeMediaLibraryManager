@@ -138,6 +138,8 @@ set_target_properties(gui
     	AUTORCC ON
     	)
 target_link_libraries(gui
+	PRIVATE
+		qt_pch
 	PUBLIC
 		kconfig_target
 		${QT_LINK_LIB_TARGETS}

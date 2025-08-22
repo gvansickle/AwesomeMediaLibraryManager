@@ -54,6 +54,8 @@ target_include_directories(proxymodels
 		${PROJECT_SOURCE_DIR}/src
 	)
 target_link_libraries(proxymodels
+	PRIVATE
+		qt_pch
 	PUBLIC
 		#${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS} ### @todo "logic_subdir links to itself".
 		${QT_LINK_LIB_TARGETS}
