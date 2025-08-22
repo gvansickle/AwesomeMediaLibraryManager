@@ -436,9 +436,9 @@ static std::string LibCueHelper_cd_get_catalog(struct Cd *cd)
  * @param line
  * @return
  */
-static std::vector<std::string_view> split_args(std::string_view line)
+static std::vector<std::string> split_args(std::string_view line)
 {
-	std::vector<std::string_view> args;
+    std::vector<std::string> args;
 	bool in_quotes = false;
 	size_t start = 0;
 
@@ -500,8 +500,8 @@ std::expected<AMLMTagMap, CueSheet::ParseError> CueSheet::parse_cue_sheet_string
 		{
 			if (args.size() >= 2)
 			{
-                qDb() << "FOUND CD-LEVEL REM:" << args[0] << args[1];
-				retval.insert(std::string(args[0]), std::string(args[1]));
+                qDb() << "FOUND CD-LEVEL REM:" << args[0] << trim_quotes(args[1]);
+				retval.insert(std::string(args[0]), trim_quotes(args[1]));
 			}
 		}
 	}
