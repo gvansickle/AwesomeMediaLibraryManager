@@ -48,20 +48,19 @@ target_precompile_headers(qt_pch
 		<QString>
 		<QThread>
 		<QModelIndex>
-		<string>
-		<QSaveFile>
 		<QUrl>
 		<QVector>
 		<QItemSelection>
 		<QTreeView>
 		<QTreeWidget>
 		<QHBoxLayout>
-		<QDataWidgetMapper>
 		<QLineEdit>
-		<QSplitter>
 		<QRegularExpression>
 		<QHeaderView>
 		<QAbstractItemModelTester>
+		<string>
+		<string_view>
+
 )
 
 add_subdirectory(third_party)
