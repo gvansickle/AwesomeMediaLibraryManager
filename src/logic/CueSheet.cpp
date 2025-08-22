@@ -50,6 +50,7 @@ extern "C" {
 // Ours
 #include "TrackMetadata.h"  ///< Per-track cue sheet info
 #include <logic/serialization/SerializationHelpers.h>
+#include <future/string_ops.h>
 
 
 /** @page cuesheet_pg1 Cuesheet Good vs. Bad
@@ -428,18 +429,7 @@ static std::string LibCueHelper_cd_get_catalog(struct Cd *cd)
 	return retval;
 }
 
-/**
- * Trim whitespace from both ends of a string_view
- * @param str View to the string to trim.
- * @return The trimmed string_view.
- */
-static std::string_view trim(std::string_view str)
-{
-	auto is_space = [](char c) { return std::isspace(c); };
-	auto start = std::ranges::find_if_not(str, is_space);
-	auto end = std::find_if_not(str.rbegin(), str.rend(), is_space).base();
-	return (start < end) ? std::string_view(start, end) : std::string_view();
-}
+
 
 /**
  * Split a string by whitespace, handling quotes
