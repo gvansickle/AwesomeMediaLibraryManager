@@ -22,8 +22,12 @@
 
 /// @file
 
+// Qt
+#include <QSharedPointer>
+
+// Ours
 #include <config.h>
-#include <QtCore/QSharedPointer>
+
 
 
 /**
