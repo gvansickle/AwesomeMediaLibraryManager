@@ -45,7 +45,8 @@ std::string trim_quotes(std::string_view str)
 	auto start = str.cbegin();
 	auto end = str.crbegin();
 
-	if(*start != '\"' || *end != '\"')
+	// size() clause needed to handle this case: "\"", quote not removed.
+	if(*start != '\"' || *end != '\"' || str.size() < 2)
 	{
 		return std::string(str);
 	}

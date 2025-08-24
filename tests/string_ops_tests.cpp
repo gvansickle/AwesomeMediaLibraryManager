@@ -66,3 +66,10 @@ TEST_F(StringOpsTests, trim_quotes_not_at_ends)
 	auto result = trim_quotes(s);
 	EXPECT_STREQ(std::string(result).c_str(), s.c_str());
 }
+
+TEST_F(StringOpsTests, trim_quotes_str_is_one_quote)
+{
+	std::string s = "\"";
+	auto result = trim_quotes(s);
+	EXPECT_STREQ(std::string(result).c_str(), s.c_str());
+}
