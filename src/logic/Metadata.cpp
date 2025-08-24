@@ -739,7 +739,6 @@ void Metadata::reconcileCueSheets()
 	}
 
 	// Which cuesheet(s) did we find?
-	const CueSheet* cuesheet_ptr;
 	if (m_cuesheet_embedded.origin() && m_cuesheet_sidecar.origin())
 	{
 		qIn() << "FOUND BOTH EMBEDDED AND SIDECAR CUESHEETS";
@@ -778,20 +777,17 @@ void Metadata::reconcileCueSheets()
 		else
 		{
 			// The two cuesheets are the same.
-			cuesheet_ptr = &m_cuesheet_embedded;
 			m_cuesheet_combined = m_cuesheet_embedded;
 		}
 	}
 	else if (m_cuesheet_embedded.origin())
 	{
 		// Found embedded, but not sidecar.
-		cuesheet_ptr = &m_cuesheet_embedded;
 		m_cuesheet_combined = m_cuesheet_embedded;
 	}
 	else if (m_cuesheet_sidecar.origin())
 	{
 		// Found sidecar, but not embedded.
-		cuesheet_ptr = &m_cuesheet_sidecar;
 		m_cuesheet_combined = m_cuesheet_sidecar;
 	}
 	else
