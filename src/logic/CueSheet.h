@@ -133,6 +133,8 @@ public:
 	Origin origin() const;
 	void set_origin(Origin origin);
 
+	auto encoding() const { return m_encoding;};
+
 	std::optional<bool> has_cdtext_file() const;
 
     /**
@@ -198,6 +200,8 @@ private:
 
 	/// Origin of the data in this CueSheet.
 	Origin m_origin {Origin::Unknown};
+
+	std::optional<QStringConverter::Encoding> m_encoding {};
 
 	/**
 	 * Indicates the presence of a CD-Text file explicitly defined in the cue sheet.

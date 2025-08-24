@@ -744,15 +744,36 @@ void Metadata::reconcileCueSheets()
 	{
 		qIn() << "FOUND BOTH EMBEDDED AND SIDECAR CUESHEETS";
 
+		// Determine encodings of both.
+		// auto enc_embedded = QStringConverter::encodingForData(m_cuesheet_embedded.)
+
 		auto diff = mapdiff(m_cuesheet_embedded.asAMLMTagMap_Disc(), m_cuesheet_sidecar.asAMLMTagMap_Disc());
-		qDb() << "CUESHEET NUM DIFFS:" << diff.value().size() << ", CUESHEET DIFF:" << diff.value();
+		qIn() << "CUESHEET NUM DIFFS:" << diff.value().size() << ", CUESHEET DIFF:" << diff.value();
 
 		if (diff.value().size() > 0)
 		{
-			// @todo We have two different cuesheets.  Figure out the one to use....
-			Q_UNIMPLEMENTED();
-            Q_ASSERT(0);
-			return;
+			// We have two different cuesheets.  Figure out the one to use using heuristics...
+			if((m_cuesheet_embedded.encoding() == QStringDecoder::Utf8) &&
+				(m_cuesheet_sidecar.encoding() != QStringDecoder::Utf8))
+			{
+				qIn() << "USING EMBEDDED CUESHEET, IT IS UTF8 AND SIDECAR ISN'T";
+				m_cuesheet_combined = m_cuesheet_embedded;
+			}
+			else if((m_cuesheet_embedded.encoding() != QStringDecoder::Utf8) &&
+				(m_cuesheet_sidecar.encoding() == QStringDecoder::Utf8))
+			{
+				qIn() << "USING SIDECAR CUESHEET, IT IS UTF8 AND EMBEDDED ISN'T";
+				m_cuesheet_combined = m_cuesheet_sidecar;
+			}
+			else
+			{
+				/// @todo We have two different cuesheets, and they may both or neither be UTF-8.
+				Q_UNIMPLEMENTED();
+				Q_ASSERT(false);
+				// We have two different cuesheets, but they're both UTF-8.  Use the embedded one.
+				qIn() << "USING EMBEDDED CUESHEET, IT IS UTF8 AND SIDECAR ISN'T";
+				m_cuesheet_combined = m_cuesheet_embedded;
+			}
 		}
 		else
 		{

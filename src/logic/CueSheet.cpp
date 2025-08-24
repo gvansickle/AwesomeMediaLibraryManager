@@ -389,16 +389,12 @@ static std::string tostdstr(enum DiscMode disc_mode)
 	{
 	case MODE_CD_DA:  /* CD-DA */
 		return "CD-DA";
-		break;
 	case MODE_CD_ROM: /* CD-ROM mode 1 */
 		return "CD-ROM mode 1";
-		break;
 	case MODE_CD_ROM_XA:  /* CD-ROM XA and CD-I */
 		return "CD-ROM XA or CD-I";
-		break;
 	default:
 		return "UNKNOWN";
-		break;
 	}
 }
 
@@ -418,7 +414,7 @@ static std::string LibCueHelper_cd_get_catalog(struct Cd *cd)
 	/// @link https://github.com/knight-rider/cuetools
 	/// That does have an accessor and last activity was Nov 2018.
 
-	const DummyCd* dummy_cd = (const DummyCd*)cd;
+    const DummyCd* dummy_cd = (const DummyCd*)cd;
 
 	const char* catalog_cstr = dummy_cd->catalog;
 	if(catalog_cstr != nullptr)
@@ -504,6 +500,11 @@ std::expected<AMLMTagMap, CueSheet::ParseError> CueSheet::parse_cue_sheet_string
 				retval.insert(std::string(args[0]), trim_quotes(args[1]));
 			}
 		}
+		else
+		{
+            qDb() << "FOUND CD-LEVEL COMMENT:" << command;
+            retval.insert(command, trim_quotes(args[0]));
+		}
 	}
 
 	return retval;
@@ -526,6 +527,26 @@ bool CueSheet::parse_cue_sheet_string(const std::string& cuesheet_text, uint64_t
 
 	// Final adjustment of the string to compensate for some variations seen in the wild.
 	std::string final_cuesheet_string = preprocess_cuesheet_string(cuesheet_text);
+
+	// Determine the encoding of the cuesheet.
+	QByteArrayView textview {cuesheet_text.data(), static_cast<qsizetype>(cuesheet_text.size())};
+	if(auto enc = QStringConverter::encodingForData(textview))
+	{
+		m_encoding = enc;
+		///@debug Got here
+		Q_ASSERT(0);
+	}
+
+	if(!m_encoding.has_value())
+	{
+		QStringDecoder dec(QStringDecoder::Utf8);
+		QString s = dec.decode(textview);
+		if (!dec.hasError())
+		{
+			m_encoding = QStringConverter::Utf8;
+		}
+		// Q_ASSERT(0);
+	}
 
 	// Extract any data that libcue doesn't from the cuesheet.
 	auto cuesheet_disc_rems = parse_cue_sheet_string_no_libcue(final_cuesheet_string);
