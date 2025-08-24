@@ -42,13 +42,13 @@ std::string trim(std::string_view str)
 std::string trim_quotes(std::string_view str)
 {
 	// Find the first and last quote chars, if any.
-	auto start = std::ranges::find(str, '"');
-	auto end = std::ranges::find_last(str, '"').cbegin();
+	auto start = str.cbegin();
+	auto end = str.crbegin();
 
-	if(start == str.end() || end == str.end())
+	if(*start != '\"' || *end != '\"')
 	{
 		return std::string(str);
 	}
 
-	return (start < end) ? std::string(start + 1, end) : std::string(str);
+	return (start < end.base()) ? std::string(start + 1, end.base()-1) : std::string(str);
 }

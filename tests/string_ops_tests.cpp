@@ -59,3 +59,10 @@ TEST_F(StringOpsTests, trim_quotes_emptystring)
 	auto result = trim_quotes(s);
 	EXPECT_STREQ(std::string(result).c_str(), "");
 }
+
+TEST_F(StringOpsTests, trim_quotes_not_at_ends)
+{
+	std::string s = "ghj\"hello\"xyz";
+	auto result = trim_quotes(s);
+	EXPECT_STREQ(std::string(result).c_str(), s.c_str());
+}
