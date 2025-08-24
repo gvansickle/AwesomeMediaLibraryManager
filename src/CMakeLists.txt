@@ -58,9 +58,15 @@ target_precompile_headers(qt_pch
 		<QRegularExpression>
 		<QHeaderView>
 		<QAbstractItemModelTester>
+		<cctype>
 		<string>
 		<string_view>
-
+		<algorithm>
+		<ranges>
+		<memory>
+		<map>
+		<set>
+		<vector>
 )
 
 add_subdirectory(third_party)
