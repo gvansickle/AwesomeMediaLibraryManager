@@ -769,9 +769,6 @@ void Metadata::reconcileCueSheets()
 				/// @todo We have two different cuesheets, and they may both or neither be UTF-8.
 				Q_UNIMPLEMENTED();
 				Q_ASSERT(false);
-				// We have two different cuesheets, but they're both UTF-8.  Use the embedded one.
-				qIn() << "USING EMBEDDED CUESHEET, IT IS UTF8 AND SIDECAR ISN'T";
-				m_cuesheet_combined = m_cuesheet_embedded;
 			}
 		}
 		else
