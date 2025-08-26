@@ -218,6 +218,10 @@ bool Metadata::read(const QUrl& url)
 	// Tags
 	//
 
+	/// @todo Debug
+	m_tm_generic = fr.file()->tag()->properties();
+
+
 	// Downcast the FileRef to whatever type it really is.
 	if (TagLib::MPEG::File* file = dynamic_cast<TagLib::MPEG::File*>(fr.file()))
 	{
@@ -226,7 +230,7 @@ bool Metadata::read(const QUrl& url)
 		// Returns a pointer to a tag that is the union of the ID3v2 and ID3v1 tags. The ID3v2 tag is given priority in reading
 		// the information – if requested information exists in both the ID3v2 tag and the ID3v1 tag, the information from the
 		// ID3v2 tag will be returned."
-		m_tm_generic = file->tag()->properties();
+//		m_tm_generic = file->tag()->properties();
 
 		m_audio_file_type = AudioFileType::MP3;
 		m_has_ape = file->hasAPETag();
@@ -239,7 +243,7 @@ bool Metadata::read(const QUrl& url)
 			/// @todo AMLMTagMap doen't preserve/understand priorities or insertion order, so these merges put e.g.
 			/// the TITLE from V1 above the one from V2 regardless of the order we merge them here.
 			/// @see https://github.com/gvansickle/AwesomeMediaLibraryManager/issues/100
-			m_tm_generic.merge(m_tm_id3v1);
+//			m_tm_generic.merge(m_tm_id3v1);
 		}
 		if(m_has_id3v2)
 		{
@@ -248,12 +252,12 @@ bool Metadata::read(const QUrl& url)
 			// [...and it does sound like it does a lot of decoding...]"
 			// https://taglib.org/api/classTagLib_1_1ID3v2_1_1Tag.html#a5094b04654b0912db9dca61de11f4663
 			m_tm_id3v2 = file->ID3v2Tag()->properties();
-			m_tm_generic.merge(m_tm_id3v2);
+//			m_tm_generic.merge(m_tm_id3v2);
 		}
 		if(m_has_ape)
 		{
 			m_tm_ape = file->APETag()->properties();
-			m_tm_generic.merge(m_tm_ape);
+//			m_tm_generic.merge(m_tm_ape);
 		}
 	}
 	else if(TagLib::FLAC::File* file = dynamic_cast<TagLib::FLAC::File*>(fr.file()))
@@ -262,7 +266,7 @@ bool Metadata::read(const QUrl& url)
 		// "virtual TagLib::Tag* TagLib::FLAC::File::tag()	const
 		//	Returns the Tag for this file. This will be a union of XiphComment, ID3v1 and ID3v2 tags."
 		// But when you use properties() on it, it only returns the basic tags.
-        m_tm_generic = file->tag()->properties();
+//        m_tm_generic = file->tag()->properties();
         // qDb() << M_ID_VAL(m_tm_generic);
 
 		m_audio_file_type = AudioFileType::FLAC;
@@ -273,12 +277,12 @@ bool Metadata::read(const QUrl& url)
 		if(m_has_id3v1)
 		{
 			m_tm_id3v1 = file->ID3v1Tag()->properties();
-			m_tm_generic.merge(m_tm_id3v1);
+//			m_tm_generic.merge(m_tm_id3v1);
 		}
 		if(m_has_id3v2)
 		{
 			m_tm_id3v2 = file->ID3v2Tag()->properties();
-			m_tm_generic.merge(m_tm_id3v2);
+//			m_tm_generic.merge(m_tm_id3v2);
 		}
 		if(m_has_ogg_xiphcomment)
 		{
@@ -305,7 +309,7 @@ bool Metadata::read(const QUrl& url)
 	else if(TagLib::Ogg::Vorbis::File* file = dynamic_cast<TagLib::Ogg::Vorbis::File*>(fr.file()))
 	{
 		// "Returns the XiphComment for this file."
-		m_tm_generic = file->tag()->properties();
+//		m_tm_generic = file->tag()->properties();
 
 		m_audio_file_type = AudioFileType::OGG_VORBIS;
 		if(auto tag = file->tag())
@@ -314,7 +318,7 @@ bool Metadata::read(const QUrl& url)
 			TagLib::Ogg::XiphComment* xipf_comment;
 			xipf_comment = file->tag();
 			m_tm_xiph = xipf_comment->fieldListMap();
-			m_tm_generic.merge(m_tm_xiph);
+//			m_tm_generic.merge(m_tm_xiph);
 		}
 	}
 	else if(TagLib::RIFF::WAV::File* file = dynamic_cast<TagLib::RIFF::WAV::File*>(fr.file()))
@@ -322,7 +326,7 @@ bool Metadata::read(const QUrl& url)
 		// Wav file.  TagLib only supports ID3v2 and RIFF info for WAV files.
 		// "Returns the ID3v2 Tag for this file.
 		// Note: This method does not return all the tags for this file for backward compatibility. Will be fixed in TagLib 2.0."
-		m_tm_generic = file->tag()->properties();
+//		m_tm_generic = file->tag()->properties();
 
 		m_audio_file_type = AudioFileType::WAV;
 		m_has_id3v2 = file->hasID3v2Tag();
@@ -331,12 +335,12 @@ bool Metadata::read(const QUrl& url)
 		if(m_has_id3v2)
 		{
 			m_tm_id3v2 = file->ID3v2Tag()->properties();
-			m_tm_generic.merge(m_tm_id3v2);
+//			m_tm_generic.merge(m_tm_id3v2);
 		}
 		if(m_has_riff_info)
 		{
 			m_tm_riff_info = file->InfoTag()->properties();
-			m_tm_generic.merge(m_tm_riff_info);
+//			m_tm_generic.merge(m_tm_riff_info);
 		}
 	}
 
