@@ -224,6 +224,12 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 
 		}
 
+		// Add the technical info.
+		auto tech_info_tree = new QTreeWidgetItem({"Technical Info", ""});
+		m_metadata_widget->addTopLevelItem(tech_info_tree);
+		tech_info_tree->setExpanded(true);
+		tech_info_tree->setFirstColumnSpanned(true);
+
 		auto length = libentry->get_length_secs();
 		std::vector<std::pair<QString, QVariant>> list = {
 			{"Subtrack?", libentry->isSubtrack()},
@@ -234,7 +240,8 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 		};
 		for(const auto& p: list)
 		{
-            m_metadata_widget->addTopLevelItem(new QTreeWidgetItem({p.first, p.second.toString()}));
+			tech_info_tree->addChild(new QTreeWidgetItem({p.first, p.second.toString()}));
+			tech_info_tree->setExpanded(true);
 		}
 
 		/// Dump all the metadata.
