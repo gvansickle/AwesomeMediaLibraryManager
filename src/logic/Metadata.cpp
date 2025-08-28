@@ -218,7 +218,7 @@ bool Metadata::read(const QUrl& url)
 	// Tags
 	//
 
-	/// @todo Debug
+	// Get the basic amalgamated tags from TagLib.
 	m_tm_generic = fr.file()->tag()->properties();
 
 
@@ -230,7 +230,17 @@ bool Metadata::read(const QUrl& url)
 		// Returns a pointer to a tag that is the union of the ID3v2 and ID3v1 tags. The ID3v2 tag is given priority in reading
 		// the information – if requested information exists in both the ID3v2 tag and the ID3v1 tag, the information from the
 		// ID3v2 tag will be returned."
-//		m_tm_generic = file->tag()->properties();
+		/// @note The above info is incomplete.  The tags returned are a subset of all available tags in (v2+v1); not
+		/// all tags will be returned here.  The tags that are returned are at least these:
+		/// ALBUM, ARTIST, COMMENT, DATE, GENRE, TITLE, TRACKNUMBER
+		/// Tags that are not returned are at least these:
+		/// ALBUMARTIST, COMMENT:ITUN*, COMPOSER, DISCNUMBER, ENCODEDBY, LABEL, REPLAYGAIN_TRACK_*
+		/// The "v2 overrides v1" does appear to work as documented.
+		AMLMTagMap tm_generic;
+		tm_generic = file->tag()->properties();
+		auto tempdiff = mapdiff(m_tm_generic, tm_generic);
+		Q_ASSERT(tempdiff.value().size() == 0);
+
 
 		m_audio_file_type = AudioFileType::MP3;
 		m_has_ape = file->hasAPETag();
