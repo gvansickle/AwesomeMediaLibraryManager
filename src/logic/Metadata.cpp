@@ -219,7 +219,20 @@ bool Metadata::read(const QUrl& url)
 	//
 
 	// Get the basic amalgamated tags from TagLib.
-	m_tm_generic = fr.file()->tag()->properties();
+	/// @see https://taglib.org/api/classTagLib_1_1Tag.html#ac55deef920269950c69bda8ca16f2710
+	/// "Exports the tags of the file as dictionary mapping (human readable) tag names (Strings) to StringLists of tag
+	/// values. The default implementation in this class considers only the usual built-in tags (artist, album, ...)
+	/// and only one value per key."
+	/// @see https://taglib.org/api/classTagLib_1_1File.html#a3f2a59083f0ed7896a33d088b7935569
+	/// "virtual PropertyMap TagLib::File::properties() const
+	/// Exports the tags of the file as dictionary mapping (human readable) tag names (uppercase Strings) to StringLists
+	/// of tag values. Calls the according specialization in the File subclasses. For each metadata object of the file
+	/// that could not be parsed into the PropertyMap format, the returned map's unsupportedData() list will contain
+	/// one entry identifying that object (e.g. the frame type for ID3v2 tags). Use removeUnsupportedProperties() to
+	/// remove (a subset of) them. For files that contain more than one tag (e.g. an MP3 with both an ID3v1 and an
+	/// ID3v2 tag) only the most "modern" one will be exported (ID3v2 in this case)."
+	// m_tm_generic = fr.file()->tag()->properties();
+	m_tm_generic = fr.file()->properties();
 
 
 	// Downcast the FileRef to whatever type it really is.
@@ -236,10 +249,10 @@ bool Metadata::read(const QUrl& url)
 		/// Tags that are not returned are at least these:
 		/// ALBUMARTIST, COMMENT:ITUN*, COMPOSER, DISCNUMBER, ENCODEDBY, LABEL, REPLAYGAIN_TRACK_*
 		/// The "v2 overrides v1" does appear to work as documented.
-		AMLMTagMap tm_generic;
-		tm_generic = file->tag()->properties();
-		auto tempdiff = mapdiff(m_tm_generic, tm_generic);
-		Q_ASSERT(tempdiff.value().size() == 0);
+//		AMLMTagMap tm_generic;
+//		tm_generic = file->tag()->properties();
+//		auto tempdiff = mapdiff(m_tm_generic, tm_generic);
+//		Q_ASSERT(tempdiff.value().size() == 0);
 
 
 		m_audio_file_type = AudioFileType::MP3;
@@ -250,10 +263,6 @@ bool Metadata::read(const QUrl& url)
 		if(m_has_id3v1)
 		{
 			m_tm_id3v1 = file->ID3v1Tag()->properties();
-			/// @todo AMLMTagMap doen't preserve/understand priorities or insertion order, so these merges put e.g.
-			/// the TITLE from V1 above the one from V2 regardless of the order we merge them here.
-			/// @see https://github.com/gvansickle/AwesomeMediaLibraryManager/issues/100
-//			m_tm_generic.merge(m_tm_id3v1);
 		}
 		if(m_has_id3v2)
 		{
@@ -262,12 +271,10 @@ bool Metadata::read(const QUrl& url)
 			// [...and it does sound like it does a lot of decoding...]"
 			// https://taglib.org/api/classTagLib_1_1ID3v2_1_1Tag.html#a5094b04654b0912db9dca61de11f4663
 			m_tm_id3v2 = file->ID3v2Tag()->properties();
-//			m_tm_generic.merge(m_tm_id3v2);
 		}
 		if(m_has_ape)
 		{
 			m_tm_ape = file->APETag()->properties();
-//			m_tm_generic.merge(m_tm_ape);
 		}
 	}
 	else if(TagLib::FLAC::File* file = dynamic_cast<TagLib::FLAC::File*>(fr.file()))
@@ -275,9 +282,7 @@ bool Metadata::read(const QUrl& url)
 		// For TagLib::FLAC::File* file, per TagLib docs:
 		// "virtual TagLib::Tag* TagLib::FLAC::File::tag()	const
 		//	Returns the Tag for this file. This will be a union of XiphComment, ID3v1 and ID3v2 tags."
-		// But when you use properties() on it, it only returns the basic tags.
-//        m_tm_generic = file->tag()->properties();
-        // qDb() << M_ID_VAL(m_tm_generic);
+		// This appears to be inaccurate.  When you do a file->tag()->properties() on it, it only returns the basic tags.
 
 		m_audio_file_type = AudioFileType::FLAC;
 		m_has_id3v1 = file->hasID3v1Tag();
@@ -287,30 +292,28 @@ bool Metadata::read(const QUrl& url)
 		if(m_has_id3v1)
 		{
 			m_tm_id3v1 = file->ID3v1Tag()->properties();
-//			m_tm_generic.merge(m_tm_id3v1);
 		}
 		if(m_has_id3v2)
 		{
 			m_tm_id3v2 = file->ID3v2Tag()->properties();
-//			m_tm_generic.merge(m_tm_id3v2);
 		}
 		if(m_has_ogg_xiphcomment)
 		{
             // TagLib has this going on here:
 			// https://taglib.org/api/classTagLib_1_1FLAC_1_1File.html#a31ffa82b2e168f5625311cbfa030f04f
 			// Re ->tag(): "Returns the Tag for this file. This will be a union of XiphComment, ID3v1 and ID3v2 tags."
-            // That appears to be true, but there's also xiphComment():
+			// This appears to be inaccurate.  When you do a file->tag()->properties() on it, it only returns the basic tags.
+            // But there's also xiphComment():
 			// "Returns a pointer to the XiphComment for the file.
 			// Note: This may return a valid pointer regardless of whether or not the file on disk has a XiphComment. Use hasXiphComment()
 			// to check if the file on disk actually has a XiphComment."
 			TagLib::Ogg::XiphComment* xiph_comment;
 			xiph_comment = file->xiphComment();
+			// See https://taglib.org/api/classTagLib_1_1Ogg_1_1XiphComment.html#a4a26b8eb6b46525b94b5a3524ee9bcd9
+			// "Returns a reference to the map of field lists."
+			// The fields listed at the link are a "standard [sub]set" of all possible fields.  Is this maybe why
+			// file->tag()->properties() only returns a small subset?
 			m_tm_xiph = xiph_comment->fieldListMap();
-/// @TODO The tag set reading and merging should be separated in here, so any fixups can be applied before the final merge.
-			// m_tm_xiph.dump("XIPF");
-			// m_tm_generic.merge(m_tm_xipf);
-
-			auto field_count = xiph_comment->fieldCount();
 
 			// Extract any CUESHEET embedded in the XiphComment.
 			cuesheet_str = get_cue_sheet_from_OggXipfComment(file).toStdString();
@@ -318,9 +321,6 @@ bool Metadata::read(const QUrl& url)
 	}
 	else if(TagLib::Ogg::Vorbis::File* file = dynamic_cast<TagLib::Ogg::Vorbis::File*>(fr.file()))
 	{
-		// "Returns the XiphComment for this file."
-//		m_tm_generic = file->tag()->properties();
-
 		m_audio_file_type = AudioFileType::OGG_VORBIS;
 		if(auto tag = file->tag())
 		{
@@ -328,7 +328,6 @@ bool Metadata::read(const QUrl& url)
 			TagLib::Ogg::XiphComment* xipf_comment;
 			xipf_comment = file->tag();
 			m_tm_xiph = xipf_comment->fieldListMap();
-//			m_tm_generic.merge(m_tm_xiph);
 		}
 	}
 	else if(TagLib::RIFF::WAV::File* file = dynamic_cast<TagLib::RIFF::WAV::File*>(fr.file()))
@@ -345,12 +344,10 @@ bool Metadata::read(const QUrl& url)
 		if(m_has_id3v2)
 		{
 			m_tm_id3v2 = file->ID3v2Tag()->properties();
-//			m_tm_generic.merge(m_tm_id3v2);
 		}
 		if(m_has_riff_info)
 		{
 			m_tm_riff_info = file->InfoTag()->properties();
-//			m_tm_generic.merge(m_tm_riff_info);
 		}
 	}
 
@@ -360,13 +357,10 @@ bool Metadata::read(const QUrl& url)
 	}
 	else
 	{
-// M_WARNING("BUG: Pulls data from bad cuesheet embeds in FLAC, such as some produced by EAC");
-	/// @todo The sidecar cue sheet support will then also kick in, and you get weirdness like a track will have two names.
-	/// Need to do some kind of comparison/validity check.
-
 		/// @note TagLib docs: "Exports the tags of the file as dictionary mapping (human readable)
 		/// tag names (Strings) to StringLists of tag values. The default implementation in this class
 		/// considers only the usual built-in tags (artist, album, ...) and only one value per key."
+		/// @see https://taglib.org/api/classTagLib_1_1Tag.html#ac55deef920269950c69bda8ca16f2710
 	}
 
 	// Read the embedded cuesheet, if any.
