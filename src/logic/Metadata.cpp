@@ -223,6 +223,9 @@ bool Metadata::read(const QUrl& url)
 	/// "Exports the tags of the file as dictionary mapping (human readable) tag names (Strings) to StringLists of tag
 	/// values. The default implementation in this class considers only the usual built-in tags (artist, album, ...)
 	/// and only one value per key."
+	m_tm_generic = fr.file()->tag()->properties();
+	/// @todo We really want to be using this next one instead, but currently it ends up putting the first PERFORMER
+	/// it finds in the "Artist" column, which isn't what we want.
 	/// @see https://taglib.org/api/classTagLib_1_1File.html#a3f2a59083f0ed7896a33d088b7935569
 	/// "virtual PropertyMap TagLib::File::properties() const
 	/// Exports the tags of the file as dictionary mapping (human readable) tag names (uppercase Strings) to StringLists
@@ -231,8 +234,7 @@ bool Metadata::read(const QUrl& url)
 	/// one entry identifying that object (e.g. the frame type for ID3v2 tags). Use removeUnsupportedProperties() to
 	/// remove (a subset of) them. For files that contain more than one tag (e.g. an MP3 with both an ID3v1 and an
 	/// ID3v2 tag) only the most "modern" one will be exported (ID3v2 in this case)."
-	// m_tm_generic = fr.file()->tag()->properties();
-	m_tm_generic = fr.file()->properties();
+	// m_tm_generic = fr.file()->properties();
 
 
 	// Downcast the FileRef to whatever type it really is.
