@@ -32,12 +32,14 @@ set(HEADER_FILES_SRC_FUTURE
 	InsertionOrderedMap.h
 	overloaded.h
 	preproc.h
+	string_ops.h
 	Unit.hpp
 	)
 set(SOURCE_FILES_SRC_FUTURE
 	function_traits.cpp
 	guideline_helpers.cpp
 	InsertionOrderedMap.cpp
+	string_ops.cpp
 	)
 
 add_library(future STATIC EXCLUDE_FROM_ALL)

@@ -29,6 +29,46 @@ set(SOURCE_FILES_THIRD_PARTY "")
 set(AMLM_LIBCUE_TARGET "")
 set(AMLM_TAGLIB_TARGET "")
 
+add_library(qt_pch INTERFACE)
+#target_compile_definitions(qt_pch
+#	INTERFACE
+##		cxx_compile_options
+##		cxx_settings
+#		cxx_definitions_qt)
+target_precompile_headers(qt_pch
+	INTERFACE
+		<QtGlobal>
+		<QObject>
+		<QDebug>
+		<QMetaType>
+		<QAbstractItemModel>
+		<QFuture>
+		<QVariant>
+		<QSharedPointer>
+		<QString>
+		<QThread>
+		<QModelIndex>
+		<QUrl>
+		<QVector>
+		<QItemSelection>
+		<QTreeView>
+		<QTreeWidget>
+		<QHBoxLayout>
+		<QLineEdit>
+		<QRegularExpression>
+		<QHeaderView>
+		<QAbstractItemModelTester>
+		<cctype>
+		<string>
+		<string_view>
+		<algorithm>
+		<ranges>
+		<memory>
+		<map>
+		<set>
+		<vector>
+)
+
 add_subdirectory(third_party)
 
 
@@ -168,11 +208,13 @@ list(APPEND amlm_SRCS ${SOURCE_FILES} ${HEADER_FILES}
 # @link http://kfunk.org/2017/12/20/tips-streamlining-kde-application-for-deployment-microsoft-windows/
 add_library(src STATIC EXCLUDE_FROM_ALL)
 target_include_directories(src
-   PRIVATE
-       logic
-       utils
+	PRIVATE
+		logic
+		utils
 )
 target_link_libraries(src
+	PRIVATE
+		qt_pch
 	PUBLIC
 		logic
 		concurrency
@@ -219,8 +261,8 @@ endif()
 add_library(libapp STATIC EXCLUDE_FROM_ALL)
 target_sources(libapp
 		PRIVATE
-               ${amlm_SRCS}
-               ${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
+			${amlm_SRCS}
+			${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
 )
 target_compile_definitions(libapp
 	PUBLIC
@@ -241,12 +283,14 @@ set_target_properties(libapp
 	                      #CXX_CLANG_TIDY "clang-tidy;-checks=-*,readability-*"
 )
 target_link_libraries(libapp
-                      PUBLIC
-	                      # Targetized C++ compile settings.
-						cxx_compile_options
-	                      cxx_settings
-	                      cxx_definitions_qt
-	                      src
+	PRIVATE
+		qt_pch
+	PUBLIC
+		# Targetized C++ compile settings.
+		cxx_compile_options
+		cxx_settings
+		cxx_definitions_qt
+		src
 )
 
 ###

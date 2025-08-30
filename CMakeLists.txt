@@ -68,7 +68,33 @@ if(FALSE)
 #	endif()
 endif()
 if(FALSE)
-	set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE, "include-what-you-use;-w;-Xiwyu;--verbose=7")
+find_program(IWYU_EXECUTABLE include-what-you-use)
+if(IWYU_EXECUTABLE)
+
+	# Build IWYU command
+	set(IWYU_CMD "${IWYU_EXECUTABLE}")
+
+	# Add IWYU options
+	list(APPEND IWYU_CMD
+		"-Xiwyu" "--mapping_file=${CMAKE_SOURCE_DIR}/iwyu.imp"
+		"-Xiwyu" "--mapping_file=gcc.libc.imp"
+		"-Xiwyu" "--no_fwd_decls"
+		"-Xiwyu" "--verbose=3"
+		"-Xiwyu" "--error=0"  # Exit with 0 for iwyu violations
+		"-Xiwyu" "--error_always=0"  # Exit with 0 for iwyu violations
+	)
+
+#	 set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE "${IWYU_CMD}")
+#	 set(CMAKE_C_INCLUDE_WHAT_YOU_USE ${CMAKE_CXX_INCLUDE_WHAT_YOU_USE})
+#	 message(STATUS "IWYU enabled: ${CMAKE_CXX_INCLUDE_WHAT_YOU_USE}")
+
+# Only run IWYU on our source files, not system headers
+# set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE_ONLY_SOURCE_FILES TRUE)
+
+# Print what will be executed
+# separate_arguments(IWYU_CMD UNIX_COMMAND "${CMAKE_CXX_INCLUDE_WHAT_YOU_USE}")
+message(STATUS "IWYU base command: ${IWYU_CMD}")
+endif()
 endif()
 
 # Basic information about project
@@ -148,7 +174,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake
 # @link https://api.kde.org/ecm/kde-module/KDECMakeSettings.html#runtime-paths
 include(KDEInstallDirs6)  ##< Replaces/uses GNUInstallDirs.
 #set(APPLE_FORCE_X11 ON) # This applies to KDECMakeSettings.
-set(ENABLE_CLAZY ON) # This applies to KDECMakeSettings.
+set(ENABLE_CLAZY OFF) # This applies to KDECMakeSettings.
 include(KDECMakeSettings NO_POLICY_SCOPE)
 
 # CMake macros.
@@ -298,7 +324,7 @@ set(UPDATE_DISCONNECTED_IF_AVAILABLE "UPDATE_DISCONNECTED FALSE")
 include(DownloadProject)
 
 # Right now we need all the verbosity we can get.
-set(CMAKE_VERBOSE_MAKEFILE ON)
+set(CMAKE_VERBOSE_MAKEFILE OFF)
 # "CMake automatically analyzes the global inter-target dependency graph at the beginning of native build system generation.
 #  This property causes it to display details of its analysis to stderr."
 # GRVS: This dumps huge amounts of info.

@@ -221,14 +221,15 @@ public:
 	AMLMTagMap m_tm_ape;
 	AMLMTagMap m_tm_xiph;
 	AMLMTagMap m_tm_riff_info;
-	/// Cuesheet-derived CD-level info.
+
+	/**
+	 * Cuesheet-derived CD-level info.
+	 */
 	AMLMTagMap m_tm_cuesheet_disc {};
 
 	bool m_read_has_been_attempted {false};
 	bool m_is_error {false};
 	bool m_is_from_cache {false};
-
-
 
 	/// @name Track info.
 	/// @{

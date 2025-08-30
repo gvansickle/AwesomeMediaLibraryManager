@@ -79,12 +79,15 @@ list(APPEND AMLM_SOURCE_FILES_TEST
 	${PROJECT_SOURCE_DIR}/tests/FlagsAndEnumsTests.cpp
 	${PROJECT_SOURCE_DIR}/tests/treetest.cpp
 	${PROJECT_SOURCE_DIR}/tests/SerializationTests.cpp
+	${PROJECT_SOURCE_DIR}/tests/string_ops_tests.cpp
+
 )
 list(APPEND AMLM_HEADER_FILES_TEST
 	AlgorithmTests.h
 	${PROJECT_SOURCE_DIR}/tests/CueSheetTests.h
     ${PROJECT_SOURCE_DIR}/tests/TestHelpers.h
     ${PROJECT_SOURCE_DIR}/tests/FlagsAndEnumsTests.h
+	${PROJECT_SOURCE_DIR}/tests/string_ops_tests.h
 )
 
 add_executable(${TEST_EXE_TARGET} ${WIN32_OR_MACOS_BUNDLE} EXCLUDE_FROM_ALL)

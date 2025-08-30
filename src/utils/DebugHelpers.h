@@ -74,8 +74,8 @@ inline static QDebug& operator<<(QDebug& d, const std::string& s)
 /// @}
 
 /// Stream out a warning of @a cond holds true.
-#define AMLM_WARNIF(cond) if((cond)) { qWr() << #cond << (cond); }
-#define AMLM_WARNIF_NOT(cond) if(!(cond)) { qWr() << #cond << (cond); }
+#define AMLM_WARNIF(cond) do { if((cond)) { qWr() << #cond << (cond); } } while(0)
+#define AMLM_WARNIF_NOT(cond) do { if(!(cond)) { qWr() << #cond << (cond); } } while(0)
 
 /// @name Assert helpers which should come as std equipment in the 21st century, but inexplicably don't.
 /// @{
