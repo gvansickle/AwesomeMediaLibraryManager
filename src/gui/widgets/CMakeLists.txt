@@ -1,5 +1,5 @@
 #
-# Copyright 2018, 2024 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2018, 2024, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -50,6 +50,8 @@ set_target_properties(widgets
 		AUTORCC ON
 		)
 target_link_libraries(widgets
+	PRIVATE
+		qt_pch
 	PUBLIC
 		${QT_LINK_LIB_TARGETS}
 		${KF_LINK_LIB_TARGETS}

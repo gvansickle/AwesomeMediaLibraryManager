@@ -138,7 +138,8 @@ public:
 
 	iterator insert_if_empty(const key_type& key, const mapped_type& value);
 
-	auto erase(auto it) { return m_the_map.erase(it); }
+	size_type erase(const Key& key) { return m_the_map.erase(key); }
+	iterator erase( iterator pos ) { return m_the_map.erase(pos); }
 
 	/// @name Lookup.
 	/// @{
@@ -162,6 +163,8 @@ public:
 	std::vector<key_type> keys() const;
 
 	std::vector<mapped_type> equal_range_vector(const Key& key) const;
+
+	std::vector<mapped_type> equal_range_vector_or(const Key& key, std::string_view or_string) const;
 	/// @}
 
 	/// Size.

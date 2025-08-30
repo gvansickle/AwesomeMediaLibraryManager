@@ -142,6 +142,21 @@ std::vector<AMLMTagMap::mapped_type> AMLMTagMap::equal_range_vector(const AMLMTa
 	return retval;
 }
 
+std::vector<AMLMTagMap::mapped_type> AMLMTagMap::equal_range_vector_or(const Key& key, std::string_view or_string) const
+{
+	auto range = equal_range_vector(key);
+	if(range.empty())
+	{
+		std::vector<mapped_type> retval;
+		retval.emplace_back(or_string);
+		return retval;
+	}
+	else
+	{
+		return range;
+	}
+}
+
 void AMLMTagMap::clear()
 {
 	m_the_map.clear();

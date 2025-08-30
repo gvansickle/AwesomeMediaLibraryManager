@@ -201,6 +201,7 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 				{"hasDiscCuesheet?", md.hasDiscCuesheet(), md.tagmap_cuesheet_disc()},
                 {"CuesheetEmbedded?:", md.m_cuesheet_embedded.origin() == CueSheet::Embedded, empty},
 				{"CuesheetSidecar?:", md.m_cuesheet_sidecar.origin() == CueSheet::Sidecar, empty},
+            	{"hasCDTextFile?", QVariant::fromValue(md.m_cuesheet_combined.has_cdtext_file()), empty}
             	// {"Cuesheets equal?", (md.m_cuesheet_embedded == md.m_cuesheet_sidecar), empty},
 					// {"CuesheetEmbedded?:", md.m_cuesheet_embedded.operator bool(), empty},
 					// {"CuesheetSidecar?:", md.m_cuesheet_sidecar.operator bool(), empty},
@@ -223,6 +224,12 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 
 		}
 
+		// Add the technical info.
+		auto tech_info_tree = new QTreeWidgetItem({"Technical Info", ""});
+		m_metadata_widget->addTopLevelItem(tech_info_tree);
+		tech_info_tree->setExpanded(true);
+		tech_info_tree->setFirstColumnSpanned(true);
+
 		auto length = libentry->get_length_secs();
 		std::vector<std::pair<QString, QVariant>> list = {
 			{"Subtrack?", libentry->isSubtrack()},
@@ -233,7 +240,8 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 		};
 		for(const auto& p: list)
 		{
-            m_metadata_widget->addTopLevelItem(new QTreeWidgetItem({p.first, p.second.toString()}));
+			tech_info_tree->addChild(new QTreeWidgetItem({p.first, p.second.toString()}));
+			tech_info_tree->setExpanded(true);
 		}
 
 		/// Dump all the metadata.

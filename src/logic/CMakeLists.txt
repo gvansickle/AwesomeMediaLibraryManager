@@ -114,6 +114,7 @@ target_link_libraries(logic
 		Taglib::Taglib
 		#tree_model
 	PRIVATE
+		qt_pch
 		gui
 		${QT_LINK_LIB_TARGETS}
 		${KF_LINK_LIB_TARGETS}

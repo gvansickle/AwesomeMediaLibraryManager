@@ -19,9 +19,9 @@
 
 /// @file
 
-#include <config.h>
-
 #include "CueSheet.h"
+
+#include <config.h>
 
 // Std C++
 #include <regex>
@@ -50,14 +50,15 @@ extern "C" {
 // Ours
 #include "TrackMetadata.h"  ///< Per-track cue sheet info
 #include <logic/serialization/SerializationHelpers.h>
+#include <future/string_ops.h>
 
 
-/**
+/** @page cuesheet_pg1 Cuesheet Good vs. Bad
  * Same disc ripped with two different rippers:
  *
  * Bad embedded cue sheet:
  * @verbatim
- *METADATA block #2
+  METADATA block #2
   type: 4 (VORBIS_COMMENT)
   is last: false
   length: 201
@@ -72,11 +73,11 @@ extern "C" {
     comment[6]: DISCNUMBER=1
     comment[7]: TOTALDISCS=1
     comment[8]: TOTALTRACKS=20
- * @endverbatim
+@endverbatim
  *
  * Good embedded cue sheet:
  * @verbatim
- * METADATA block #2
+  METADATA block #2
   type: 4 (VORBIS_COMMENT)
   is last: false
   length: 8825
@@ -100,10 +101,52 @@ FILE "Squeeze - Greatest Hits.flac" WAVE
     PERFORMER "Squeeze"
     TITLE "Goodbye Girl"
   [...]
- * @endverbatim
+@endverbatim
  */
 
-/// Mutex for serializing access to libcue, which is not threadsafe.
+/** @page cuesheet_pg2 Cuesheet may have COMMENT dups
+ * @note There may be duplication of fields between the tagmaps (e.g. m_tm_xiph) and any cuesheet.
+ * For example, from m_tm_xiph:
+ * @verbatim
+[...]
+comment[16]: ALBUM=An American Treasure
+comment[17]: ARTIST=Tom Petty
+comment[18]: GENRE=Rock
+comment[19]: DISCTOTAL=2
+comment[20]: DISCNUMBER=1
+comment[21]: DATE=2018
+[...]
+@endverbatim
+ * From the cue sheet:
+ * @verbatim
+PERFORMER "Tom Petty"
+TITLE "An American Treasure"
+CATALOG 0093624905547
+REM DATE 2018
+REM DISCNUMBER 1
+REM TOTALDISCS 2
+REM GENRE "Rock"
+@endverbatim
+ */
+
+/** @page cuesheet_pg3 Cuesheet REM types
+ * All the "REM" types from .cue sheet files in my current library:
+ * @verbatim
+REM COMMENT "<whatever>"
+REM COMPOSER "" <<< Literally just "".
+REM DATE <year>
+REM DISCID <8 hex digits, all caps>
+REM DISCNUMBER <decimal number>  <<< 1 to 5
+REM TOTALDISCS <decimal number>  <<< 1 to 5
+REM GENRE <text,sometimes a '/'> or "<text, sometimes spaces>"
+@endverbatim
+ */
+
+
+
+/**
+ * Mutex for serializing access to libcue, which is not threadsafe.
+ */
 std::mutex CueSheet::m_libcue_mutex;
 
 AMLM_QREG_CALLBACK([](){
@@ -115,14 +158,17 @@ AMLM_QREG_CALLBACK([](){
 using strviw_type = QLatin1String;
 
 #define M_SERDES_FIELDS_GENERAL(X) \
-	X(XMLTAG_ORIGIN, m_origin)
+	X(XMLTAG_ORIGIN, m_origin) \
+	X(XMLTAG_HAS_CDTEXT_FILE, m_has_cdtext_file)
 
 #define M_DATASTREAM_FIELDS_DISC(X) \
 	X(XMLTAG_DISC_CATALOG_NUM, m_disc_catalog_num) \
 	X(XMLTAG_DISC_ID, m_disc_id) \
 	X(XMLTAG_DISC_DATE, m_disc_date) \
 	/** @todo Need to come up with an insert-as-std:string, this is a integral value. */\
-	X(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA, m_disc_num_tracks)
+	X(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA, m_disc_num_tracks) \
+	X(XMLTAG_DISC_NUMBER, m_disc_number) \
+	X(XMLTAG_DISC_TOTAL, m_disc_total)
 
 #define M_DATASTREAM_FIELDS_TRACK(X) \
 //	X(XMLTAG_TRACK_META_LENGTH_POST_GAP, m_length_post_gap) \
@@ -223,6 +269,11 @@ void CueSheet::set_origin(Origin origin)
 	m_origin = origin;
 }
 
+std::optional<bool> CueSheet::has_cdtext_file() const
+{
+	return m_has_cdtext_file;
+}
+
 std::map<int, TrackMetadata> CueSheet::get_track_map() const
 {
 	return m_tracks;
@@ -233,11 +284,13 @@ AMLMTagMap CueSheet::asAMLMTagMap_Disc() const
 	AMLMTagMap retval;
 
 	// Disc-level fields.
-//#define X(field_tag, member_field) retval.insert(std::make_pair(tostdstr(field_tag), /*QVariant::fromValue*/member_field));
 #define X(field_tag, member_field) AMLMTagMap_convert_and_insert(retval, tostdstr(field_tag), member_field);
-    M_DATASTREAM_FIELDS_DISC(X)
+	/// @temp
+	/// @todo asAMLMTagMap_Disc() is not used during serialization or cuesheet parsing.
+	/// Looks like this is only called to populated the Metadata Explorer pane, so not doing this doesn't affect anything else.
+    // M_DATASTREAM_FIELDS_DISC(X)
 #undef X
-//	retval.insert(std::make_pair(tostdstr(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA), std::to_string(m_disc_num_tracks)));
+	retval = m_tm_cuesheet_disc;
 
 	return retval;
 }
@@ -325,22 +378,23 @@ void CueSheet::fromVariant(const QVariant& variant)
 #endif
 }
 
+/**
+ * Converts @a disc_mode to a std::string representation.
+ * @param disc_mode  The disc mode as returned by libcue::cd_get_mode().
+ * @return A string representation of @a disc_mode.
+ */
 static std::string tostdstr(enum DiscMode disc_mode)
 {
 	switch(disc_mode)
 	{
 	case MODE_CD_DA:  /* CD-DA */
 		return "CD-DA";
-		break;
 	case MODE_CD_ROM: /* CD-ROM mode 1 */
 		return "CD-ROM mode 1";
-		break;
 	case MODE_CD_ROM_XA:  /* CD-ROM XA and CD-I */
 		return "CD-ROM XA or CD-I";
-		break;
 	default:
 		return "UNKNOWN";
-		break;
 	}
 }
 
@@ -360,7 +414,7 @@ static std::string LibCueHelper_cd_get_catalog(struct Cd *cd)
 	/// @link https://github.com/knight-rider/cuetools
 	/// That does have an accessor and last activity was Nov 2018.
 
-	const DummyCd* dummy_cd = (const DummyCd*)cd;
+    const DummyCd* dummy_cd = (const DummyCd*)cd;
 
 	const char* catalog_cstr = dummy_cd->catalog;
 	if(catalog_cstr != nullptr)
@@ -371,11 +425,93 @@ static std::string LibCueHelper_cd_get_catalog(struct Cd *cd)
 	return retval;
 }
 
+
+
+/**
+ * Split a string by whitespace, handling quotes
+ * @param line
+ * @return
+ */
+static std::vector<std::string> split_args(std::string_view line)
+{
+    std::vector<std::string> args;
+	bool in_quotes = false;
+	size_t start = 0;
+
+	for (size_t i = 0; i < line.size(); ++i)
+	{
+		if (line[i] == '"')
+		{
+			in_quotes = !in_quotes;
+		}
+		else if (!in_quotes && std::isspace(line[i]))
+		{
+			if (i > start)
+			{
+				args.push_back(trim(line.substr(start, i - start)));
+			}
+			start = i + 1;
+		}
+	}
+
+	if (start < line.size())
+	{
+		args.push_back(trim(line.substr(start)));
+	}
+
+	return args;
+}
+
+std::expected<AMLMTagMap, CueSheet::ParseError> CueSheet::parse_cue_sheet_string_no_libcue(std::string cuesheet_txt) const
+{
+	AMLMTagMap retval;
+
+	static const std::regex re_file_line(R"(([\s\S]*?)^\s*FILE\s.*?$\n?([\s\S]*?))", std::regex::multiline);
+
+	// Split on the "FILE" line.  Above is disc-level, below is track entries.
+	auto m = std::smatch();
+	auto matched = std::regex_match(cuesheet_txt, m, re_file_line);
+	Q_ASSERT(matched);
+	Q_ASSERT(m.size() >= 3);
+	// qDb() << "NUM FILE LINE MATCHES:" << file_line_match.size();
+	std::string prefile_str = m[1].str();
+	std::string postfile_str = m[2].str();
+
+	// Parse disc-level REM [identifier] [value] fields.
+	// There may not be any.
+	for (auto line : prefile_str | std::views::split('\n')
+						   | std::views::transform([](auto&& r) {
+							   return trim(std::string_view(r));
+						   }))
+	{
+		if (line.empty()) { continue; }
+
+		auto args = split_args(line);
+		if (args.empty()) { continue; }
+
+		const auto command = args[0];
+		args.erase(args.begin());
+
+		if (command == "REM")
+		{
+			if (args.size() >= 2)
+			{
+                qDb() << "FOUND CD-LEVEL REM:" << args[0] << trim_quotes(args[1]);
+				retval.insert(std::string(args[0]), trim_quotes(args[1]));
+			}
+		}
+		else
+		{
+            qDb() << "FOUND CD-LEVEL COMMENT:" << command;
+            retval.insert(command, trim_quotes(args[0]));
+		}
+	}
+
+	return retval;
+}
+
 bool CueSheet::parse_cue_sheet_string(const std::string& cuesheet_text, uint64_t length_in_ms)
 {
-	// Mutex FBO libcue.  Libcue isn't thread-safe.
-	std::lock_guard<std::mutex> lock(m_libcue_mutex);
-
 	// libcue (actually flex) can't handle invalid UTF-8.
 	// if(!QtPrivate::isValidUtf8(cuesheet_text.c_str())) ///< Some invalid
 	QString valid = QString::fromUtf8(cuesheet_text); ///< None invalid
@@ -391,6 +527,42 @@ bool CueSheet::parse_cue_sheet_string(const std::string& cuesheet_text, uint64_t
 
 	// Final adjustment of the string to compensate for some variations seen in the wild.
 	std::string final_cuesheet_string = preprocess_cuesheet_string(cuesheet_text);
+
+	// Determine the encoding of the cuesheet.
+	QByteArrayView textview {cuesheet_text.data(), static_cast<qsizetype>(cuesheet_text.size())};
+	if(auto enc = QStringConverter::encodingForData(textview))
+	{
+		m_encoding = enc;
+		///@debug Got here
+		Q_ASSERT(0);
+	}
+
+	if(!m_encoding.has_value())
+	{
+		QStringDecoder dec(QStringDecoder::Utf8);
+		QString s = dec.decode(textview);
+		if (!dec.hasError())
+		{
+			m_encoding = QStringConverter::Utf8;
+		}
+		// Q_ASSERT(0);
+	}
+
+	// Extract any data that libcue doesn't from the cuesheet.
+	auto cuesheet_disc_rems = parse_cue_sheet_string_no_libcue(final_cuesheet_string);
+	m_tm_cuesheet_disc = cuesheet_disc_rems.value();
+	if(cuesheet_disc_rems.has_value())
+	{
+		auto discnum_vec = cuesheet_disc_rems.value().equal_range_vector_or("DISCNUMBER", "0");
+		m_disc_number = std::stoi(discnum_vec[0]);
+
+		discnum_vec = cuesheet_disc_rems.value().equal_range_vector_or("TOTALDISCS",
+			cuesheet_disc_rems.value().equal_range_vector_or("DISCTOTAL", "0").at(0));
+		m_disc_total = std::stoi(discnum_vec[0]);
+	}
+
+	// Lock mutex FBO libcue.  Libcue isn't thread-safe.
+	std::lock_guard<std::mutex> lock(m_libcue_mutex);
 
 	// Try to parse the cue sheet we found with libcue.
 	Cd* cd = cue_parse_string(final_cuesheet_string.c_str());
@@ -415,6 +587,9 @@ bool CueSheet::parse_cue_sheet_string(const std::string& cuesheet_text, uint64_t
   //   	auto* rem = cd_get_rem(cd);
 		// rem_dump(rem);
 
+    	// Was there a real CD-TEXT file?
+    	m_has_cdtext_file = cd_get_cdtextfile(cd) != nullptr;
+
 		//
 		// Get disc-level info from the Cd struct.
 		//
@@ -427,7 +602,8 @@ bool CueSheet::parse_cue_sheet_string(const std::string& cuesheet_text, uint64_t
 
 		// Get the disc-level CD-TEXT.
 	    Cdtext* cdtext = cd_get_cdtext(cd);
-		if(cdtext_is_empty(cdtext) == 0)
+    	AMLM_WARNIF(cdtext == nullptr);
+		if(cdtext_is_empty(cdtext) == 0) // Note: Docs are wrong, "== 0" means no CDTEXT fields, otherwise returns -1.
 		{
 			qWr() << "No CDTEXT";
 		}
@@ -436,13 +612,12 @@ bool CueSheet::parse_cue_sheet_string(const std::string& cuesheet_text, uint64_t
 			qDb() << "CDTEXT_DUMP (disc):";
 			cdtext_dump(cdtext, 0);
 		}
-	    AMLM_WARNIF(cdtext == nullptr);
-		if(cdtext != nullptr)
+		if((cdtext != nullptr) && (cdtext_is_empty(cdtext) != 0))
 		{
 			auto* disc_id_cstr = cdtext_get(PTI_DISC_ID, cdtext);
 			if(disc_id_cstr == nullptr)
 			{
-				qWr() << "No Cuesheet CD-Text DiscID";
+				qWr() << "No Cuesheet CD-Text DISC_ID";
 			}
 			else
 			{
@@ -529,12 +704,22 @@ std::string CueSheet::preprocess_cuesheet_string(const std::string& cuesheet_tex
 {
 	std::string retval;
 
-	// The best I can figure is that the "REM DISCID nnnnn"'s I'm seeing in a lot of cue sheets is actually
-	// 86h "Disc Identification information" as defined by MMC-3/CD-TEXT.  Trouble is, there's no definition there,
-	// or anywhere else I can find.  A survey of the cuesheets I have all have the number as a 32-bit hex value.
-	std::regex s_REM_DISCID(R"!(^REM\sDISCID)!", std::regex_constants::ECMAScript);
+	// Per https://wiki.hydrogenaudio.org/index.php?title=Cue_sheet:
+	/*
+	 * "Cue sheet commands
+	 * [...]
+	 * REM DISCID
+	 * Although programs such as Exact Audio Copy use this to store the disc's CDDB1 value, other programs can extract
+	 * the disc's true Disc ID, which is usually the disc's label-specific catalog number (see the example TOC file on
+	 * the cdrdao page and the "DISC_ID" field for an example)."
+	 *
+	 * CDDB1 is described here: https://en.wikipedia.org/wiki/CDDB#Example_calculation_of_a_CDDB1_(FreeDB)_disc_ID
+	 * "CDDB1 identifies CDs with a 32-bit number [...]"
+	 */
+	// std::regex s_REM_DISCID(R"!(^REM\sDISCID)!", std::regex_constants::ECMAScript);
 
-	retval = std::regex_replace(cuesheet_text, s_REM_DISCID, "DISC_ID");
+	// retval = std::regex_replace(cuesheet_text, s_REM_DISCID, "DISC_ID");
+	retval = cuesheet_text;
 
 	// Remove any \r's.  libcue can only handle \n newlines.
     std::erase(retval, '\r');
