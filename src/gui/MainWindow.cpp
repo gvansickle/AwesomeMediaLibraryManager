@@ -1845,10 +1845,15 @@ void MainWindow::newPlaylist()
 	/// @todo Maybe refactor the "newFile()" setup to look more like the static openXxx() functions,
 	/// so we always get an MDIModelViewPair here and don't need to hand-roll it.
 	MDIModelViewPair mvpair;
-    mvpair.appendModel(QPointer<PlaylistModel>(child->underlyingModel()));
-    mvpair.m_model_was_existing = false;
+    // mvpair.appendModel(QPointer<PlaylistModel>(child->underlyingModel()));
+	mvpair.appendModel(QPointer<PlaylistModel>(new PlaylistModel(this)));
+	mvpair.appendProxyModel(new ShuffleProxyModel(this));
+	mvpair.appendProxyModel(new LibrarySortFilterProxyModel(this));
+	// m_now_playing_library_sortfilter_model->setDynamicSortFilter(false);
+	// m_now_playing_library_sortfilter_model->setSortCaseSensitivity(Qt::CaseInsensitive);
     mvpair.appendView(child);
 	mvpair.m_view_was_existing = false;
+    mvpair.m_model_was_existing = false;
 
 	addChildMDIModelViewPair_Playlist(mvpair);
 
