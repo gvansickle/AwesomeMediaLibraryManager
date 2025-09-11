@@ -99,6 +99,11 @@ public:
 	 */
     QPointer<QAbstractItemModel> getRootModel() const { return m_model_stack.front(); }
 
+	/**
+	 *
+	 * @param proxymodel The 0-based index of the desired proxy model.
+	 * @return
+	 */
 	QPointer<QAbstractItemModel> getProxyAt(int proxymodel) const;
 
 private:
