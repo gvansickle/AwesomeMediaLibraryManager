@@ -1849,8 +1849,9 @@ void MainWindow::newPlaylist()
 	mvpair.appendModel(QPointer<PlaylistModel>(new PlaylistModel(this)));
 	mvpair.appendProxyModel(new ShuffleProxyModel(this));
 	mvpair.appendProxyModel(new LibrarySortFilterProxyModel(this));
-	// m_now_playing_library_sortfilter_model->setDynamicSortFilter(false);
-	// m_now_playing_library_sortfilter_model->setSortCaseSensitivity(Qt::CaseInsensitive);
+	auto lib_sort_model = qobject_cast<LibrarySortFilterProxyModel*>(mvpair.getProxyAt(1));
+	lib_sort_model->setDynamicSortFilter(false);
+	lib_sort_model->setSortRole(Qt::CaseInsensitive);
     mvpair.appendView(child);
 	mvpair.m_view_was_existing = false;
     mvpair.m_model_was_existing = false;
