@@ -197,7 +197,7 @@ include(ECMQtDeclareLoggingCategory)
 # The sanitizers "address", "memory" and "thread" are mutually exclusive. You cannot enable two of them in the same build.
 # "leak" requires the "address" sanitizer.
 ### @note KDECompileFlags includes include(ECMEnableSanitizers).
-#set(ECM_ENABLE_SANITIZERS "leak;address")
+set(ECM_ENABLE_SANITIZERS "leak;address")
 #include(ECMEnableSanitizers)
 
 # KDE macros.
