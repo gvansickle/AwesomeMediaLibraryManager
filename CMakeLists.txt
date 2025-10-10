@@ -247,6 +247,8 @@ if(UNIX)
 	ucm_add_flags(CXX -Og -ggdb3 -fno-omit-frame-pointer -fno-eliminate-unused-debug-types -fno-inline
 		-fdiagnostics-show-template-tree
 		CONFIG Debug)
+	# C and C++ linker
+	set(CMAKE_LINKER_TYPE MOLD)
 #	target_compile_definitions(cxx_definitions_qt
 #		INTERFACE
 ##			$<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CONFIG:Debug>>:_GLIBCXX_DEBUG;_GLIBCXX_DEBUG_BACKTRACE>
