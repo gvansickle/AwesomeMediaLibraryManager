@@ -26,10 +26,10 @@
 #include <QPromise>
 
 // Ours
-#include "LibraryRescannerMapItem.h"
-#include "LibraryRescanner.h" ///< For MetadataReturnVal
-#include "ExtFuture.h"
-#include "AMLMJob.h"
+#include <logic/LibraryRescannerMapItem.h>
+#include <logic/LibraryRescanner.h> ///< For MetadataReturnVal
+#include <concurrency/ExtFuture.h>
+#include <concurrency/AMLMJob.h>
 
 
 class LibraryModel;
