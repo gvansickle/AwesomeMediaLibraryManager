@@ -373,72 +373,13 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 		m_timer.lap("Finished qurl_future");
 
         return unit;
-    });
-
-#if 1 /// @todo THIS NEEDS TO BE REMOVED, it's the block between Library dirscan and metadata pop.
-
-	///
-	/// Convert SharedItemContainerType's into TreeModelItems, then Append TreeModelItems to the ScanResultsTreeModel tree_model.
-	///
-/// streaming_then() ############################################
-    streaming_then(tree_model_item_future,
-                              [this](ExtFuture<SharedItemContType> new_items_future, int begin, int end){
-		AMLM_ASSERT_NOT_IN_GUITHREAD();
-
-Stopwatch sw("Populate LibraryEntry");
-
-		qDb() << "START: tree_model_item_future.stap(), new_items_future count:" << new_items_future.resultCount();
-
-		// For each QList<SharedItemContType> entry.
-		for(int index = begin; index < end; ++index)
-		{
-			auto result = new_items_future.resultAt(index);
-			const SharedItemContType& new_items_vector_ptr = result;
-
-			// Append ScanResultsTreeModelItem entries to the ScanResultsTreeModel.
-			for(std::shared_ptr<AbstractTreeModelItem>& entry : *new_items_vector_ptr)
-			{
-				// Make sure the entry wasn't moved from.
-				Q_ASSERT(bool(entry) == true);
-//				Q_ASSERT(entry->isInModel());
-				auto entry_dp = std::dynamic_pointer_cast<ScanResultsTreeModelItem>(entry);
-				Q_ASSERT(entry_dp);
-
-				// Here we're only dealing with the per-file LibraryEntry's.
-
-				// Populate the LibraryEntry in this non-GUI thread.
-sw.start("LibEntry");
-				std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(entry_dp->data(1).toString());
-				lib_entry->populate(true);
-sw.lap("Populate Complete");
-sw.lap("SRTMItem_LibEntry created");
-			}
-
-			// Finally, move the new model items to their new home.
-			Q_ASSERT(new_items_vector_ptr->at(0));
-
-sw.stop();
-sw.print_results();
-		}
-	})
-#endif
-	/// .then() ############################################
-    .then(qApp, [&](ExtFuture<void> f)-> Unit {
-		Q_ASSERT(f.isFinished());
-		Q_ASSERT(m_model_ready_to_save_to_db == false);
-		m_model_ready_to_save_to_db = true;
-
-        m_timer.lap("TreeModelItems sthen() finished.");
-		return unit;
-	})
+    })
 	/// .then() ############################################
 	.then(qApp, [this,
 			rescan_items_in_promise = std::move(rescan_items_in_promise)
 			](ExtFuture<Unit> future_unit) mutable {
 		AMLM_ASSERT_IN_GUITHREAD();
 
-		/// @note The time between this and the immediately previous "Finished qurl_future" takes all the time
-		///       (about 271 secs atm).
 		m_timer.lap("GUI Thread dirtrav over start.");
 
 		expect_and_set(3, 4);
@@ -451,6 +392,7 @@ sw.print_results();
 		qIn() << "Directory scan time params:";
 		m_timer.print_results();
 
+        m_model_ready_to_save_to_db = true; /// @todo REMOVE
 		Q_ASSERT(m_model_ready_to_save_to_db == true);
 		m_model_ready_to_save_to_db = false;
 
