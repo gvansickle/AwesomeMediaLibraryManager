@@ -108,11 +108,14 @@ public:
 
 public Q_SLOTS:
 	void startAsyncDirectoryTraversal(const QUrl& dir_url);
+	void OLD_startAsyncDirectoryTraversal(const QUrl& dir_url);
+
 	void cancelAsyncDirectoryTraversal();
 
 //	void onDirTravFinished();
 	/**
-	 * Slot which accepts the incoming metadata.
+	 * Slot which accepts the incoming metadata from the async scan.
+	 * Emits signals SIGNAL_onIncomingPopulateRowWithItems_Multiple(), SIGNAL_setData().
 	 */
 	void SLOT_processReadyResults(MetadataReturnVal lritem_vec);
 
