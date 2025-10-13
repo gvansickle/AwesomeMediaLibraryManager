@@ -1581,7 +1581,7 @@ QString state_str(const ExtFuture<T>& future)
  * @tparam T
  * @tparam Function
  * @param future
- * @param function
+ * @param function    The function to be called when QFutureWatcher fires a resultsReadyAt() signal.
  * @return  A copy of the passed-in @a future.
  */
 template <typename T, typename Function,
