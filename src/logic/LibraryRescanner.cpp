@@ -252,16 +252,11 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	auto qurl_promise = std::make_shared<QPromise<QString>>();
 	QFuture<QString> qurl_future = qurl_promise->future();
 
-	// Create a future so we can attach a continuation to get the results to the main thread.
-	auto tree_model_item_promise = std::make_shared<QPromise<SharedItemContType>>();
-	QFuture<SharedItemContType> tree_model_item_future = tree_model_item_promise->future();
-
 	m_timer.lap("End setup, start continuation attachments");
 
 	qurl_promise->start();
-	tree_model_item_promise->start();
 
-	streaming_then(dirresults_future, [this, qurl_promise, tree_model_item_promise](QFuture<DirScanResult> sthen_future, int begin, int end) -> Unit {
+	streaming_then(dirresults_future, [this, qurl_promise](QFuture<DirScanResult> sthen_future, int begin, int end) -> Unit {
 		// Start of the dirtrav streaming_then callback.  This should be a non-main thread.
 		// This will be called multiple times by streaming_then() as DirScanResult's become available.
 
@@ -311,10 +306,6 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 			if(new_items->empty())
 			{
                 qWr() << "sthen_callback saw finished/empty new_items";
-
-//M_TODO("This needs to reportFinished before the next steps below which save the DB, NOT WORKING HERE");
-//tree_model_item_future.reportFinished();
-
 				return unit;
 			}
             qIn() << "sthen_callback saw finished, but with" << new_items->size() << "outstanding results.";
@@ -335,9 +326,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
             qurl_promise->addResult(entry->data(1).toString());
 		}
 
-		/// @note This could also be a signal emit.
 		Q_ASSERT(new_items->size() == 1);
-        tree_model_item_promise->addResult(new_items);
 #endif
     	return unit;
     })
@@ -350,9 +339,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 		return unit;
 	})
 /// .then() ############################################
-	// Finish the two output futures.
-    .then([this, tree_model_item_future, tree_model_item_promise = std::move(tree_model_item_promise),
-    			qurl_future, qurl_promise=std::move(qurl_promise)](ExtFuture<Unit> future) mutable {
+	// Finish the output future.
+    .then([this, qurl_future, qurl_promise=std::move(qurl_promise)](ExtFuture<Unit> future) mutable {
 
         future.waitForFinished();
 
@@ -361,11 +349,6 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 
 		expect_and_set(2, 3);
 		AMLM_ASSERT_NOT_IN_GUITHREAD();
-
-		qDb() << "FINISHING TREE MODEL FUTURE:" << M_ID_VAL(tree_model_item_future); // == (Running|Started)
-        tree_model_item_promise->finish();
-		qDb() << "FINISHED TREE MODEL FUTURE:" << M_ID_VAL(tree_model_item_future); // == (Started|Finished)
-		m_timer.lap("Finished tree_model_item_future");
 
 		qDb() << "FINISHING:" << M_ID_VAL(qurl_future);
         qurl_promise->finish();
@@ -470,12 +453,6 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	{
 		qDb() << "lib_rescan_future sthen complete.";
 	});
-
-	// Make sure the above job gets canceled and deleted.
-    // AMLMApp::IPerfectDeleter().addQFuture(QFuture<void>(tail_future));
-
-// M_TODO("???? I think we're already started");
-	// dirtrav_job->start();
 
 	m_timer.lap("Leaving startAsyncDirTrav");
 }
