@@ -106,7 +106,7 @@ LibraryModel::~LibraryModel()
 QPointer<LibraryModel> LibraryModel::openFile(QUrl open_url, QObject* parent)
 {
     // Create the new LibraryModel.
-	auto lib = QPointer<LibraryModel>(new LibraryModel(parent));
+    auto lib = QPointer<LibraryModel>(new LibraryModel(parent)); /// @todo memcheck leak
 
 // M_MESSAGE("TODO: Find a better way to start async operations and/or connect");
     lib->setLibraryRootUrl(open_url);
@@ -746,7 +746,7 @@ void LibraryModel::SLOT_processReadyResults(MetadataReturnVal lritem_vec)
     // We got one of ??? things back:
     // - A single pindex and associated LibraryEntry*, maybe new, maybe a rescan..
     // - A single pindex and more than one LibraryEntry*, the result of the first scan after the file was found.
-    // - Multiple pindexs and LibraryEntry*'s.  The result of a multi-track file rescan.
+    // - Multiple pindexes and LibraryEntry*'s. The result of a multi-track file rescan.
 
     if(lritem_vec.m_num_tracks_found == 0)
     {

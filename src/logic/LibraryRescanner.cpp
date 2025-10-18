@@ -317,9 +317,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 		// Got all the ready results, send them to the model(s).
         // Because of Qt's model/view system not being threadsafeable, we have to do at least the final
 		// model item entry from the GUI thread.
-//		qIn() << "Sending" << new_items->size() << "scan results to models";
-#if 1 // DEBUG!!!
-        /// @todo Obsoleting... very... slowly.
+
 		for(std::shared_ptr<AbstractTreeModelItem> entry : *new_items)
 		{
 			// Send the URL ~dsr.getMediaExtUrl().m_url.toString()) to the LibraryModel.
@@ -327,7 +325,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 		}
 
 		Q_ASSERT(new_items->size() == 1);
-#endif
+
     	return unit;
     })
 /// .then() ############################################
