@@ -224,6 +224,10 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
     // Get a list of the file extensions we're looking for.
     auto extensions = SupportedMimeTypes::instance().supportedAudioMimeTypesAsSuffixStringList();
 
+	connect_or_die(this, &LibraryRescanner::SIGNAL_FileUrlQString,
+		m_current_libmodel, &LibraryModel::SLOT_onIncomingFilename,
+		Qt::QueuedConnection);
+
     // Set up the directory scan to run in another thread.
     QFuture<DirScanResult> dirresults_future = QtConcurrent::run(DirScanFunction,
                                                                      dir_url,
@@ -235,7 +239,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	// Create/Attach an AMLMJobT to the dirscan future.
 	QPointer<AMLMJobT<ExtFuture<DirScanResult>>> dirtrav_job = make_async_AMLMJobT(dirresults_future, "DirResultsJob", AMLMApp::instance());
 
-	// The future that we'll use to move the LibraryRescannerMapItems to the library_metadata_rescan_task().
+	// The promise/future that we'll use to move the LibraryRescannerMapItems to the library_metadata_rescan_task().
     QPromise<VecLibRescannerMapItems> rescan_items_in_promise;
     QFuture<VecLibRescannerMapItems> rescan_items_in_future = rescan_items_in_promise.future();
 
@@ -248,15 +252,9 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	// Make a new AMLMJobT for the metadata rescan.
 	AMLMJobT<ExtFuture<MetadataReturnVal>>* lib_rescan_job = make_async_AMLMJobT(lib_rescan_future, "LibRescanJob", AMLMApp::instance());
 
-	// Create a future so we can attach a watcher to get the QUrl results to the main thread.
-	auto qurl_promise = std::make_shared<QPromise<QString>>();
-	QFuture<QString> qurl_future = qurl_promise->future();
-
 	m_timer.lap("End setup, start continuation attachments");
 
-	qurl_promise->start();
-
-	streaming_then(dirresults_future, [this, qurl_promise](QFuture<DirScanResult> sthen_future, int begin, int end) -> Unit {
+	streaming_then(dirresults_future, [this](QFuture<DirScanResult> sthen_future, int begin, int end) -> Unit {
 		// Start of the dirtrav streaming_then callback.  This should be a non-main thread.
 		// This will be called multiple times by streaming_then() as DirScanResult's become available.
 
@@ -277,7 +275,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 			DirScanResult dsr = sthen_future.resultAt(i);
 
 			// Add another entry to the vector we'll send to the model.
-			/// @note It looks like this can be simplified.
+			/// @note It looks like this can be simplified, no longer a need for ScanResultsTreeModelItem in here.
             std::shared_ptr<ScanResultsTreeModelItem> new_item = ScanResultsTreeModelItem::create(dsr);
             new_items->push_back(new_item);
 
@@ -321,7 +319,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 		for(std::shared_ptr<AbstractTreeModelItem> entry : *new_items)
 		{
 			// Send the URL ~dsr.getMediaExtUrl().m_url.toString()) to the LibraryModel.
-            qurl_promise->addResult(entry->data(1).toString());
+			Q_EMIT SIGNAL_FileUrlQString(entry->data(1).toString());
 		}
 
 		Q_ASSERT(new_items->size() == 1);
@@ -338,20 +336,12 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	})
 /// .then() ############################################
 	// Finish the output future.
-    .then([this, qurl_future, qurl_promise=std::move(qurl_promise)](ExtFuture<Unit> future) mutable {
+    .then([this](ExtFuture<Unit> future) mutable {
 
-        future.waitForFinished();
-
-		// Finish a couple futures we started in this, and since this is done, there should be no more
-		// results coming for them.
-
-		expect_and_set(2, 3);
+    	expect_and_set(2, 3);
 		AMLM_ASSERT_NOT_IN_GUITHREAD();
 
-		qDb() << "FINISHING:" << M_ID_VAL(qurl_future);
-        qurl_promise->finish();
-		qDb() << "FINISHED:" << M_ID_VAL(qurl_future);
-		m_timer.lap("Finished qurl_future");
+        future.waitForFinished();
 
         return unit;
     })
@@ -368,12 +358,13 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 		qDb() << "DIRTRAV COMPLETE, NOW IN GUI THREAD";
 
 		// Succeeded, but we may still have outgoing filenames in flight.
+		/// @todo Do we need to do something for potential in-flight filenames?
 		qIn() << "DIRTRAV SUCCEEDED";
 		m_timer.lap("DirTrav succeeded");
 		qIn() << "Directory scan time params:";
 		m_timer.print_results();
 
-        m_model_ready_to_save_to_db = true; /// @todo REMOVE
+        m_model_ready_to_save_to_db = true; /// @todo REMOVE?
 		Q_ASSERT(m_model_ready_to_save_to_db == true);
 		m_model_ready_to_save_to_db = false;
 
@@ -420,25 +411,6 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	master_job_tracker->registerJob(lib_rescan_job);
 //	master_job_tracker->setAutoDelete(lib_rescan_job, false);
 //	master_job_tracker->setStopOnClose(lib_rescan_job, true);
-
-
-	//
-	// Hook up future watchers.
-	//
-
-	//
-	// qurl_promise ->  ... -> LibraryModel::SLOT_onIncomingFilename [create and appendRow() as new unpopulated LibraryEntry]
-	//
-	auto* qurl_future_watcher = new QFutureWatcher<QString>();
-	connect_or_die(qurl_future_watcher, &QFutureWatcher<QString>::resultReadyAt, qurl_future_watcher, [this, qurl_future](int i){
-			/// @todo Maybe coming in out of order.
-			QString url_str = qurl_future.resultAt(i);
-			Q_EMIT SIGNAL_FileUrlQString(url_str);
-	});
-	connect_or_die(this, &LibraryRescanner::SIGNAL_FileUrlQString, m_current_libmodel, &LibraryModel::SLOT_onIncomingFilename);
-	// Set self-destruct.
-	connect_or_die(qurl_future_watcher, &QFutureWatcher<QString>::finished, qurl_future_watcher, &QFutureWatcher<QString>::deleteLater);
-	qurl_future_watcher->setFuture(qurl_future);
 
     streaming_then(lib_rescan_future, [this](QFuture<MetadataReturnVal> lib_rescan_future, int begin, int end){
 		for(int i = begin; i<end; ++i)

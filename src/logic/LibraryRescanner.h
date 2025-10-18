@@ -107,7 +107,17 @@ public:
 	qint64 m_last_elapsed_time_dirscan {0};
 
 public Q_SLOTS:
+	/**
+	 * Slot which starts both a directory traversal (for finding media files) and a metadata read (after all URLs
+	 * are added to the LibraryModel.
+	 * @param dir_url  The directory to scan.
+	 */
 	void startAsyncDirectoryTraversal(const QUrl& dir_url);
+
+	/**
+	 * @todo OBSOLETE
+	 * @param dir_url
+	 */
 	void OLD_startAsyncDirectoryTraversal(const QUrl& dir_url);
 
 	void cancelAsyncDirectoryTraversal();
