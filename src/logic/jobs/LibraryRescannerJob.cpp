@@ -132,9 +132,8 @@ MetadataReturnVal refresher_callback(const VecLibRescannerMapItems &mapitem)
 }
 
 
-void library_metadata_rescan_task(QPromise<MetadataReturnVal>& promise, AMLMJob* /*the_job*/,
-								ExtFuture<VecLibRescannerMapItems> in_future,
-								LibraryModel* current_libmodel)
+void library_metadata_rescan_task(QPromise<MetadataReturnVal>& promise,
+								ExtFuture<VecLibRescannerMapItems> in_future)
 {
 	qDb() << "ENTER library_metadata_rescan_task with" << M_ID_VAL(in_future.resultCount());
 

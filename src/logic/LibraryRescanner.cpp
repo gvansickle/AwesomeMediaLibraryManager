@@ -247,8 +247,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
     /// Start the library_metadata_rescan_task.
     ///
 	ExtFuture<MetadataReturnVal> lib_rescan_future = QtConcurrent::run(library_metadata_rescan_task,
-																							 nullptr, rescan_items_in_future,
-																							 nullptr /*m_current_libmodel*/);
+																							 rescan_items_in_future
+																							 );
 	// Make a new AMLMJobT for the metadata rescan.
 	AMLMJobT<ExtFuture<MetadataReturnVal>>* lib_rescan_job = make_async_AMLMJobT(lib_rescan_future, "LibRescanJob", AMLMApp::instance());
 
@@ -275,7 +275,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 			DirScanResult dsr = sthen_future.resultAt(i);
 
 			// Add another entry to the vector we'll send to the model.
-			/// @note It looks like this can be simplified, no longer a need for ScanResultsTreeModelItem in here.
+			/// @todo It looks like this can be simplified, no longer a need for ScanResultsTreeModelItem in here.
             std::shared_ptr<ScanResultsTreeModelItem> new_item = ScanResultsTreeModelItem::create(dsr);
             new_items->push_back(new_item);
 
@@ -460,9 +460,7 @@ void LibraryRescanner::OLD_startAsyncDirectoryTraversal(const QUrl& dir_url)
     ///
     /// Start the library_metadata_rescan_task.
     ///
-	ExtFuture<MetadataReturnVal> lib_rescan_future = QtConcurrent::run(library_metadata_rescan_task,
-																							 nullptr, rescan_items_in_future,
-																							 nullptr /*m_current_libmodel*/);
+	ExtFuture<MetadataReturnVal> lib_rescan_future = QtConcurrent::run(library_metadata_rescan_task,rescan_items_in_future);
 	// Make a new AMLMJobT for the metadata rescan.
 	AMLMJobT<ExtFuture<MetadataReturnVal>>* lib_rescan_job = make_async_AMLMJobT(lib_rescan_future, "LibRescanJob", AMLMApp::instance());
 

@@ -40,11 +40,9 @@ class LibraryModel;
  *
  * @param promise
  * @param in_future
- * @param current_libmodel
  */
-void library_metadata_rescan_task(QPromise<MetadataReturnVal>& promise, AMLMJob*,
-                                  ExtFuture<VecLibRescannerMapItems> in_future,
-                                  LibraryModel* current_libmodel);
+void library_metadata_rescan_task(QPromise<MetadataReturnVal>& promise,
+								ExtFuture<VecLibRescannerMapItems> in_future);
 
 
 #endif /* SRC_LOGIC_JOBS_LIBRARYRESCANNERJOB_H_ */
