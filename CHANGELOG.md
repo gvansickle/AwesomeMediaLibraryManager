@@ -15,4 +15,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed empty "PERFORMER" (Artist) column for some files (#78).
 - Fixed accesses to LibraryModel from non-GUI threads (#83).
-- Fixed false dependency of async LibraryModel metadata refresh on ScanResultsTreeModel population (#32).
+- Fixed false dependency of async LibraryModel metadata refresh on ScanResultsTreeModel population (#68).
