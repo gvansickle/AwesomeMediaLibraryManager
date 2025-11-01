@@ -114,12 +114,6 @@ public Q_SLOTS:
 	 */
 	void startAsyncDirectoryTraversal(const QUrl& dir_url);
 
-	/**
-	 * @todo OBSOLETE
-	 * @param dir_url
-	 */
-	void OLD_startAsyncDirectoryTraversal(const QUrl& dir_url);
-
 	void cancelAsyncDirectoryTraversal();
 
 //	void onDirTravFinished();
