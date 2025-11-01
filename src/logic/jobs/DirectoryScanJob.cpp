@@ -56,6 +56,7 @@ void DirScanFunction(QPromise<DirScanResult>& promise,
 		qWr() << file_info << file_info.exists() << file_info.isReadable() << file_info.isDir();
 		/// @todo Need to report something here.  Or maybe throw?
 		Q_UNIMPLEMENTED();
+		Q_ASSERT(0);
 //        setSuccessFlag(false);
 		return;
 	}
@@ -151,13 +152,13 @@ void DirScanFunction(QPromise<DirScanResult>& promise,
         promise.suspendIfRequested();
         if(promise.isCanceled())
 		{
-			// We've been cancelled.
+			// We've been canceled.
 			qIn() << "CANCELLED";
 			break;
 		}
 	}
 
-	// We've either completed our work or been cancelled.
+	// We've either completed our work or been canceled.
 	num_possible_files = num_files_found_so_far;
 	if (!promise.isCanceled())
 	{

@@ -43,7 +43,7 @@ class MDITreeViewBase;
  * - A stack of proxy models on top of the model
  * - A view on top of the proxy models
  */
-class MDIModelViewPair
+class MDIModelViewPair /// @todo memcheck leak, operator=()
 {
 
 public:

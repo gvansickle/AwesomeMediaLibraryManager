@@ -1875,9 +1875,9 @@ void MainWindow::newNowPlaying()
 
 	// Set this view's model to be the single "Now Playing" model.
     // m_now_playing_playlist_model = child->underlyingModel();
-    m_now_playing_playlist_model = new PlaylistModel(this);
+    m_now_playing_playlist_model = new PlaylistModel(this); /// @todo memcheck leak
 
-	m_now_playing_shuffle_proxy_model = new ShuffleProxyModel(this);
+    m_now_playing_shuffle_proxy_model = new ShuffleProxyModel(this); /// @todo memcheck leak
 
     m_now_playing_library_sortfilter_model = new LibrarySortFilterProxyModel(this);
 	m_now_playing_library_sortfilter_model->setDynamicSortFilter(false);
@@ -2033,7 +2033,7 @@ void MainWindow::addChildMDIModelViewPair_Library(const MDIModelViewPair& mvpair
             qDebug() << "Model is new:" << mvpair.getRootModel().data() << libmodel->getLibRootDir() << libmodel->getLibraryName();
 			Q_ASSERT(!model_really_already_existed);
 
-            MDIModelViewPair* lmvpair(new MDIModelViewPair());
+            MDIModelViewPair* lmvpair(new MDIModelViewPair()); /// @todo memcheck leak
 			*lmvpair = mvpair;
             m_libmodels.push_back(lmvpair);
 
@@ -2113,7 +2113,7 @@ void MainWindow::addChildMDIModelViewPair_Playlist(const MDIModelViewPair& mvpai
             qDebug() << "Model is new:" << mvpair.getRootModel()->objectName() << playlist_model->getLibRootDir() << playlist_model->getLibraryName();
 			Q_ASSERT(!model_really_already_existed);
 
-            auto lmvpair = new MDIModelViewPair();
+            auto lmvpair = new MDIModelViewPair(); /// @todo memcheck leak
             *lmvpair = mvpair;
 
 			// Add the underlying model to the PlaylistModel list.
