@@ -224,9 +224,13 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
     // Get a list of the file extensions we're looking for.
     auto extensions = SupportedMimeTypes::instance().supportedAudioMimeTypesAsSuffixStringList();
 
+	// We use a blocking queue here to ensure we don't start metadata scanning before the dir scanning is completed.
+	// This is overly conservative; we only need the total population of the model to be finished before proceeding,
+	// not every individual filename entry.  But it's easy, and at the time of writing it doesn't seem to have a
+	// meaningful performance penalty (prob. swamped by disk I/O).
 	connect_or_die(this, &LibraryRescanner::SIGNAL_FileUrlQString,
 		m_current_libmodel, &LibraryModel::SLOT_onIncomingFilename,
-		Qt::QueuedConnection);
+		Qt::BlockingQueuedConnection);
 
     // Set up the directory scan to run in another thread.
     QFuture<DirScanResult> dirresults_future = QtConcurrent::run(DirScanFunction,
@@ -243,9 +247,9 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
     QPromise<VecLibRescannerMapItems> rescan_items_in_promise;
     QFuture<VecLibRescannerMapItems> rescan_items_in_future = rescan_items_in_promise.future();
 
-    ///
-    /// Start the library_metadata_rescan_task.
-    ///
+    //
+    // Start the library_metadata_rescan_task.
+    //
 	ExtFuture<MetadataReturnVal> lib_rescan_future = QtConcurrent::run(library_metadata_rescan_task,
 																							 rescan_items_in_future
 																							 );
@@ -375,7 +379,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 		QVector<VecLibRescannerMapItems> rescan_items;
 
 		qDb() << "GETTING RESCAN ITEMS";
-
+		/// @todo What do we need to do with potential in-flight filenames that haven't landed in the model yet?
 		rescan_items = m_current_libmodel->getLibRescanItems();
 
 		qDb() << M_ID_VAL(rescan_items.size());
@@ -820,12 +824,6 @@ sw.print_results();
 	{
 		qDb() << "lib_rescan_future sthen complete.";
 	});
-
-	// Make sure the above job gets canceled and deleted.
-    // AMLMApp::IPerfectDeleter().addQFuture(QFuture<void>(tail_future));
-
-// M_TODO("???? I think we're already started");
-	// dirtrav_job->start();
 
 	m_timer.lap("Leaving startAsyncDirTrav");
 }
