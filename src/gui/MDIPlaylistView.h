@@ -44,9 +44,15 @@ public:
     explicit MDIPlaylistView(QWidget *parent = Q_NULLPTR);
     ~MDIPlaylistView() override;
 
+	/**
+	 * Open the specified QUrl.  Called by open(QWidget*).
+	 * Among other things, this function is responsible for calling setCurrentFilename().
+	 */
+	static MDIModelViewPair openFile(QUrl open_url, QWidget* parent,
+									std::function<MDIModelViewPair(QUrl)> find_existing_view_func = nullptr);
 
     /**
-     * static member function which opens an MDILibraryView on the given model.
+     * static member function which opens an MDIPlaylistView on the given model.
      */
     static MDIModelViewPair openModel(QPointer<PlaylistModel> model, QWidget* parent);
 

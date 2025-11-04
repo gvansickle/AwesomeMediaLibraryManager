@@ -109,8 +109,8 @@ public:
 	 * Among other things, this function is responsible for calling setCurrentFilename().
      */
 	static MDIModelViewPair openModel(QSharedPointer<QAbstractItemModel> model, QWidget* parent) { return nullptr; }
-    /// @}
 #endif
+	/// @}
 
     /// Returns the current basename of this window's backing file.
     QString userFriendlyCurrentFile() const;

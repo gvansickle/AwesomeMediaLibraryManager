@@ -1932,11 +1932,24 @@ void MainWindow::newCollectionView()
 /**
  * Top-level menu/toolbar action for opening an existing playlist.
  * ~= "File->Open...".
+ * @todo This is almost a copy/paste of openFileLibrary(), probably should consolidate the two functions/codepaths.
  */
-void MainWindow::openPlaylist()
+void MainWindow::openPlaylist(const QUrl& filename)
 {
-	qCritical() << "Not implemented";
-}
+	auto check_for_existing_view = [this](QUrl url) -> MDIModelViewPair {
+		auto mvpair = findSubWindowModelViewPair(url);
+		return mvpair;
+	};
+
+	auto child = MDIPlaylistView::openFile(filename, this, check_for_existing_view);
+	if(child.getView())
+	{
+		addChildMDIModelViewPair_Playlist(child);
+	}
+	else
+	{
+		qCritical() << "MDIPlaylistView::open() returned nullptr";
+	}}
 
 void MainWindow::onSendEntryToPlaylist(std::shared_ptr<LibraryEntry> libentry, QPointer<PlaylistModel> playlist_model)
 {

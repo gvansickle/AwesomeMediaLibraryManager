@@ -191,7 +191,7 @@ public Q_SLOTS:
      * Open an existing playlist.
      * ~= "File->Open...".
      */
-    void openPlaylist();
+    void openPlaylist(const QUrl& filename);
 
     void savePlaylistAs();
 

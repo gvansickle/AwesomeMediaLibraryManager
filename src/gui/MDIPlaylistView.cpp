@@ -133,6 +133,67 @@ MDIModelViewPair MDIPlaylistView::openModel(QPointer<PlaylistModel> model, QWidg
 	return retval;
 }
 
+/**
+ * Static member function which opens a view on the given @a open_url.
+ * Among other things, this function is responsible for calling setCurrentFile().
+ */
+MDIModelViewPair MDIPlaylistView::openFile(QUrl open_url, QWidget *parent, std::function<MDIModelViewPair(QUrl)> find_existing_view_func)
+{
+    // Check if a view of this URL already exists and we just need to activate it.
+	qDebug() << "Looking for existing MDIModelViewPair of" << open_url;
+    auto mv_pair = find_existing_view_func(open_url);
+    if(mv_pair.getView())
+    {
+        Q_ASSERT_X(mv_pair.m_view_was_existing == true, "openFile", "find_existing function returned a view but said it was not pre-existing.");
+        qDebug() << "View of" << open_url << "already exists, returning" << mv_pair.getView().data();
+        return mv_pair;
+    }
+
+	// No existing view.  Open a new one.
+
+	// @todo This should probably be creating an empty View here and then
+	// calling an overridden readFile().
+
+	QPointer<PlaylistModel> playlist_model;
+	if (mv_pair.hasModel())
+	{
+		Q_ASSERT_X(mv_pair.m_model_was_existing, "openFile", "find_exisiting returned a model but said it was not pre-existing.");
+
+        qDebug() << "Model exists:" << mv_pair.getTopModel().data();
+		playlist_model = qobject_cast<PlaylistModel*>(mv_pair.getRootModel());
+	}
+	else
+	{
+		qDebug() << "Opening new model on URL" << open_url;
+		playlist_model = qobject_cast<PlaylistModel*>(PlaylistModel::openFile(open_url, parent).get());
+	}
+
+	if(playlist_model != nullptr)
+    {
+		// The model has either been found already existing but with no associated View, or it has been newly opened.
+		// Either way it's valid, and we now create and associate a View with it.
+
+		auto mvpair = MDIPlaylistView::openModel(playlist_model, parent);
+
+		/// @todo This should be done somewhere else, so that the mvpair we get above already has this set correctly.
+		mvpair.m_model_was_existing = mv_pair.m_model_was_existing;
+		qDb() << M_ID_VAL(mvpair.m_view_was_existing);
+		mvpair.m_view_was_existing = mv_pair.m_view_was_existing;
+
+		/// @note Need this cast due to some screwyness I mean subtleties of C++'s member access control rules.
+		/// In very shortened form: Derived member functions can only access "protected" members through
+		/// an object of the Derived type, not of the Base type.
+        qobject_cast<MDIPlaylistView*>(mvpair.getView())->setCurrentFile(open_url);
+		return mvpair;
+    }
+    else
+    {
+		// Library import failed.
+        QMessageBox::critical(amlmApp->IMainWindow(), "Error", "Library import failed", QMessageBox::Ok);
+		return MDIModelViewPair();
+    }
+}
+
 void MDIPlaylistView::setModel(QAbstractItemModel* model)
 {
 	// Keep refs to the {proxy}models.
