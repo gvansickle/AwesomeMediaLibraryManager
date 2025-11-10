@@ -17,7 +17,6 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <gui/delegates/ItemDelegateLength.h>
 #include "MDILibraryView.h"
 
 // Qt
@@ -30,6 +29,7 @@
 #include <QMessageBox>
 
 // Ours
+#include <gui/delegates/ItemDelegateLength.h>
 #include <gui/MDIPlaylistView.h>
 #include <logic/models/LibraryModel.h>
 #include <logic/models/PlaylistModel.h>
@@ -91,7 +91,7 @@ QString MDILibraryView::getDisplayName() const
 MDIModelViewPair MDILibraryView::open(QWidget *parent, std::function<MDIModelViewPair(QUrl)> find_existing_view_func)
 {
 	auto liburl = NetworkAwareFileDialog::getExistingDirectoryUrl(parent, "Select a directory to import",
-		QUrl(""), AMLMSettings::NAFDDialogId::ImportDir);
+		QUrl(""), AMLMSettings::NAFDDialogId::SavePlaylist);
     QUrl lib_url = liburl.first;
 
     if(lib_url.isEmpty())

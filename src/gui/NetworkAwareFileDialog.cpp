@@ -129,6 +129,34 @@ NetworkAwareFileDialog::~NetworkAwareFileDialog()
 
 }
 
+std::pair<QUrl, QString> NetworkAwareFileDialog::getOpenFileUrl(QWidget* parent, const QString& caption, const QUrl& dir, const QString& filter,
+																AMLMSettings::NAFDDialogId dialog_id, QFileDialog::Options options,
+																const QStringList& supportedSchemes)
+{
+	std::unique_ptr<NetworkAwareFileDialog> nafdlg = std::make_unique<NetworkAwareFileDialog>(parent, caption, dir, filter, dialog_id);
+
+	auto dlg = nafdlg->m_the_qfiledialog;
+
+	if(options)
+	{
+		dlg->setOptions(options);
+	}
+	dlg->setAcceptMode(QFileDialog::AcceptOpen);
+	if(!supportedSchemes.empty())
+	{
+		dlg->setSupportedSchemes(supportedSchemes);
+	}
+
+	qWarning() << "is_dlg_native:" << nafdlg->is_dlg_native();
+
+	if(!nafdlg->exec())
+	{
+		return {QUrl(), ""};
+	}
+
+	return std::make_pair(dlg->selectedUrls()[0], dlg->selectedNameFilter());
+}
+
 /**
  * Static member for creating a "Save File" dialog.
  */

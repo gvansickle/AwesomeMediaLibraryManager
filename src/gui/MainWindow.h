@@ -175,8 +175,10 @@ public Q_SLOTS:
     void onStartup();
 
 
-    /// Slot corresponding to the "Open Directory as new Library" action.
-    /// This is ~= a "File->Open" action.
+    /**
+     * Slot corresponding to the "Open Directory as new Library" action.
+     * This is ~= a "File->Open" action.
+     */
     void importLib();
 
 	void openFileLibrary(const QUrl& filename);
@@ -187,9 +189,16 @@ public Q_SLOTS:
      */
     void newPlaylist();
 
+	/**
+	 * Open an existing playlist.
+	 * ~= "File->Open...".
+	 */
+	void onOpenPlaylist();
+
     /**
      * Open an existing playlist.
      * ~= "File->Open...".
+     * @todo Not a slot?
      */
     void openPlaylist(const QUrl& filename);
 

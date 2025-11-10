@@ -40,6 +40,8 @@
 
 // Ours
 #include <AMLMApp.h>
+#include <gui/MainWindow.h> // For MainWindow declaration, used in QMessageBox::critical() calls.
+#include <gui/NetworkAwareFileDialog.h>
 #include <gui/delegates/ItemDelegateLength.h>
 #include <gui/menus/DropMenu.h>
 #include "DragDropTreeViewStyleProxy.h"
@@ -79,8 +81,6 @@ MDIPlaylistView::MDIPlaylistView(QWidget* parent) : MDITreeViewBase(parent)
 	// Configure selection.
 	setSelectionMode(QAbstractItemView::ExtendedSelection);
 
-
-
 	// Configure drag and drop.
     // http://doc.qt.io/qt-5/model-view-programming.html#using-drag-and-drop-with-item-views
 	// Playlists can have items dragged into them as well as out of them.
@@ -117,6 +117,23 @@ MDIPlaylistView::MDIPlaylistView(QWidget* parent) : MDITreeViewBase(parent)
 }
 
 MDIPlaylistView::~MDIPlaylistView() = default;
+
+MDIModelViewPair MDIPlaylistView::open(QWidget* parent, std::function<MDIModelViewPair(QUrl)> find_existing_view_func)
+{
+	auto liburl = NetworkAwareFileDialog::getOpenFileUrl(parent, "Select a playlist file to open",
+	QUrl(""), tr("XML Shareable Playlist Format (*.xspf)"), AMLMSettings::NAFDDialogId::SavePlaylist);
+	QUrl lib_url = liburl.first;
+
+	if(lib_url.isEmpty())
+	{
+		qDebug() << "User cancelled.";
+		return MDIModelViewPair();
+	}
+
+	// Open the directory the user chose as an MDILibraryView and associated model.
+	// Note that openFile() may return an already-existing view if one is found by find_existing_view_func().
+	return openFile(lib_url, parent, find_existing_view_func);
+}
 
 MDIModelViewPair MDIPlaylistView::openModel(QPointer<PlaylistModel> model, QWidget* parent)
 {
@@ -191,7 +208,7 @@ MDIModelViewPair MDIPlaylistView::openFile(QUrl open_url, QWidget *parent, std::
     else
     {
 		// Library import failed.
-        QMessageBox::critical(amlmApp->IMainWindow(), "Error", "Library import failed", QMessageBox::Ok);
+        QMessageBox::critical(amlmApp->IMainWindow(), "Error", "Playlist open failed", QMessageBox::Ok);
 		return MDIModelViewPair();
     }
 }
@@ -248,7 +265,7 @@ void MDIPlaylistView::setModel(QAbstractItemModel* model)
 
 QString MDIPlaylistView::getNewFilenameTemplate() const
 {
-	return QString("Playlist%1.json");
+	return QString("Playlist%1.xspf");
 }
 
 QString MDIPlaylistView::defaultNameFilter()

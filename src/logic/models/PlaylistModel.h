@@ -59,6 +59,11 @@ public:
     ~PlaylistModel() override = default;
 	M_GH_POLYMORPHIC_SUPPRESS_COPYING_C67(PlaylistModel)
 
+	/**
+	 * Open a new LibraryModel on the specified QUrl.
+	 */
+	static QPointer<LibraryModel> openFile(QUrl open_url, QObject* parent);
+
 	Qt::ItemFlags flags(const QModelIndex &index) const override;
 	QVariant data(const QModelIndex &index, int role) const override;
 
@@ -91,6 +96,7 @@ public:
 	void setLibraryRootUrl(const QUrl& url) override;
 
 	bool serializeToFileAsXSPF(QFileDevice& filedev) const;
+	bool deserializeFromFileAsXSPF(QFileDevice& filedev); /// @todo Implement
 };
 
 Q_DECLARE_METATYPE(PlaylistModel)

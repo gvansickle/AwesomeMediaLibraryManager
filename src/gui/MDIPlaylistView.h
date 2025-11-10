@@ -45,6 +45,15 @@ public:
     ~MDIPlaylistView() override;
 
 	/**
+	 * Pop up an 'Open file" dialog and open a new View on the file specified by the user.
+	 * ~= "File->Open..."
+	 *
+	 * @param find_existing_view_func  Function which, if specified, should search for an existing instance of
+	 *                                 a view with the same open_url open, and return a pointer to it, or null if none was found.
+	 */
+	static MDIModelViewPair open(QWidget* parent, std::function<MDIModelViewPair(QUrl)> find_existing_view_func = nullptr);
+
+	/**
 	 * Open the specified QUrl.  Called by open(QWidget*).
 	 * Among other things, this function is responsible for calling setCurrentFilename().
 	 */

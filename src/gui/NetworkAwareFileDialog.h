@@ -104,6 +104,18 @@ public:
 	/// @{
 
 	/**
+	 * Get a URL to a file to open.
+	 * @returns A std::pair containing a QUrl to the file and a QString representing the filter the user selected.
+	 *          Returned QUrl is empty if the user cancels.
+	 */
+	static std::pair<QUrl, QString> getOpenFileUrl(QWidget *parent = Q_NULLPTR, const QString &caption = QString(),
+													const QUrl &dir = QUrl(),
+													const QString &filter = QString(),
+													AMLMSettings::NAFDDialogId dialog_id = AMLMSettings::NAFDDialogId::unused,
+													QFileDialog::Options options = QFileDialog::Options(),
+													const QStringList &supportedSchemes = QStringList());
+
+	/**
 	 * Get a URL to save a file to.
 	 */
 	static std::pair<QUrl, QString> getSaveFileUrl(QWidget *parent = Q_NULLPTR, const QString &caption = QString(),

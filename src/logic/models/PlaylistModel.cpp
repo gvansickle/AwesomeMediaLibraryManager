@@ -41,6 +41,14 @@ PlaylistModel::PlaylistModel(QObject* parent) : LibraryModel(parent)
 	m_columnSpecs.push_back({SectionID(PlaylistSectionID::Blacklist), "Blacklist", {"blacklist"}});
 }
 
+QPointer<LibraryModel> PlaylistModel::openFile(QUrl open_url, QObject* parent)
+{
+	QPointer<PlaylistModel> retval = nullptr;
+	/// @todo Call deserializeFromFileXspf() here.
+	Q_ASSERT(false);
+	return retval;
+}
+
 Qt::ItemFlags PlaylistModel::flags(const QModelIndex& index) const
 {
 	auto defaultFlags = LibraryModel::flags(index);

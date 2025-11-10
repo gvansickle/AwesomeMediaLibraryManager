@@ -556,6 +556,7 @@ void MainWindow::createActions()
 	m_openPlaylistAct = make_action(QIcon::fromTheme("document-open"), "&Open playlist...", this,
                                 QKeySequence::Open,
                                 "Open an existing playlist");
+	connect_trig(m_openPlaylistAct, this, &MainWindow::onOpenPlaylist);
 	addAction("open_playlist", m_openPlaylistAct);
 
 	m_savePlaylistAct = make_action(QIcon::fromTheme("document-save"), "&Save playlist as...", this,
@@ -1859,6 +1860,24 @@ void MainWindow::newPlaylist()
 	addChildMDIModelViewPair_Playlist(mvpair);
 
 	statusBar()->showMessage(tr("Opened new Playlist '%1'").arg(child->windowTitle()));
+}
+
+void MainWindow::onOpenPlaylist()
+{
+	auto check_for_existing_view = [this](QUrl url) -> MDIModelViewPair {
+		auto mvpair = findSubWindowModelViewPair(url);
+		return mvpair;
+	};
+
+	auto child = MDIPlaylistView::open(this, check_for_existing_view);
+	if(child.getView())
+	{
+		addChildMDIModelViewPair_Playlist(child);
+	}
+	else
+	{
+		qCritical() << "MDIPlaylistView::open() returned nullptr";
+	}
 }
 
 /**
