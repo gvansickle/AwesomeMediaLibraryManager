@@ -35,9 +35,11 @@
 #include <QClipboard>
 #include <QPoint>
 #include <QKeyEvent>
+#include <QSignalSpy>
+
 
 // Ours
-#include <QSignalSpy>
+#include <AMLMApp.h>
 #include <gui/delegates/ItemDelegateLength.h>
 #include <gui/menus/DropMenu.h>
 #include "DragDropTreeViewStyleProxy.h"
