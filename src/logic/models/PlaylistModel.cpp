@@ -403,6 +403,80 @@ void PlaylistModel::setLibraryRootUrl(const QUrl &url)
     endResetModel();
 }
 
+/**
+ * @page xspf Notes on XSPF playlist support.
+ * - Audacious
+ *   - Decent support of multi-track flac files.
+ *   - Uses a lot of <meta> to capture subtrack info (they call them "subsongs").
+ *   - Example:
+\code{.xml}
+<?xml version="1.0" encoding="UTF-8"?>
+<playlist version="1" xmlns="http://xspf.org/ns/0/">
+  <title>GRVSPlaylist1</title>
+  <trackList>
+  <!-- ..... -->
+	<track>
+	  <location>file:///run/user/[...]/Wham%21/1984%20-%20Make%20It%20Big/Wham%21%20-%20Make%20It%20Big.cue?7</location>
+	  <title>Credit Card Baby</title>
+	  <creator>Wham!</creator>
+	  <album>Make It Big</album>
+	  <meta rel="album-artist">Wham!</meta>
+	  <annotation>CUERipper v2.1.6 Copyright (C) 2008-13 Grigory Chudov</annotation>
+	  <meta rel="year">1984</meta>
+	  <trackNum>7</trackNum>
+	  <duration>309934</duration>
+	  <meta rel="bitrate">789</meta>
+	  <meta rel="codec">Free Lossless Audio Codec (FLAC)</meta>
+	  <meta rel="quality">lossless</meta>
+	  <meta rel="audio-file">file:///run/user/[...]/Wham%21/1984%20-%20Make%20It%20Big/Wham%21%20-%20Make%20It%20Big.flac</meta>
+	  <meta rel="subsong-id">7</meta>    <!-- NOTE this is the ".cue?7" at the end of <location> above -->
+	  <meta rel="seg-start">1598226</meta>
+	  <meta rel="seg-end">1908160</meta>
+	</track>
+	<track>
+	  <location>file:///run/user/[...]/Wham%21/1984%20-%20Make%20It%20Big/Wham%21%20-%20Make%20It%20Big.cue?8</location>
+	  <title>Careless Whisper</title>
+	  <creator>Wham!</creator>
+	  <album>Make It Big</album>
+	  <meta rel="album-artist">Wham!</meta>
+	  <annotation>CUERipper v2.1.6 Copyright (C) 2008-13 Grigory Chudov</annotation>
+	  <meta rel="year">1984</meta>
+	  <trackNum>8</trackNum>
+	  <duration>391840</duration>
+	  <meta rel="bitrate">789</meta>
+	  <meta rel="codec">Free Lossless Audio Codec (FLAC)</meta>
+	  <meta rel="quality">lossless</meta>
+	  <meta rel="audio-file">file:///run/user/[...]/Wham%21/1984%20-%20Make%20It%20Big/Wham%21%20-%20Make%20It%20Big.flac</meta>
+	  <meta rel="subsong-id">8</meta>
+	  <meta rel="seg-start">1908160</meta>  <!-- NOTE missing seg-end on last track -->
+	</track>
+  </trackList>
+</playlist>
+\endcode
+ * - Amarok
+ *   - Doesn't support multi-track flac files, simply considers them one long song.
+ *   - Example:
+\code{.xml}
+<?xml version="1.0" encoding="UTF-8"?>
+<playlist version="1" xmlns="http://xspf.org/ns/0/">
+  <trackList>
+	<track>
+	  <location>../../run/user/[...different from Audacious ...]/CDRips/Boy George/1993 - At Worst… The Best of Boy George and Culture Club/Boy George - At Worst… The Best of Boy George and Culture Club.flac</location>
+	  <identifier>amarok-sqltrackuid://eebf97d1ebb8702e5e6750059dcee579</identifier>
+	  <title>At Worst… The Best of Boy George and Culture Club</title>
+	  <creator>Boy George</creator>
+	  <annotation>CUERipper v2.1.5 Copyright (C) 2008-13 Grigory Chudov</annotation>
+	  <album>At Worst… The Best of Boy George and Culture Club</album>
+	  <duration>4510827</duration>
+	</track>
+  </trackList>
+  <extension application="http://amarok.kde.org">
+	<queue/>
+  </extension>
+</playlist>
+\endcode
+ *
+ */
 bool PlaylistModel::serializeToFileAsXSPF(QFileDevice& filedev) const
 {
 	QXmlStreamWriter stream(&filedev);
@@ -446,6 +520,12 @@ bool PlaylistModel::serializeToFileAsXSPF(QFileDevice& filedev) const
 
 	return true;
 
+}
+
+bool PlaylistModel::deserializeFromFileAsXSPF(QFileDevice& filedev)
+{
+	Q_UNIMPLEMENTED();
+	Q_ASSERT(0);
 }
 
 
