@@ -512,7 +512,7 @@ bool PlaylistModel::serializeToFileAsXSPF(QFileDevice& filedev) const
 			stream.writeTextElement("creator", "");
 			stream.writeTextElement("album", toqstr(pmi->metadata()["album_name"]));
 			stream.writeTextElement("duration", "");
-			stream.writeTextElement("trackNum", "");
+			stream.writeTextElement("trackNum", std::to_string(pmi->getTrackNumber()));
 			stream.writeTextElement("image", "");
 		stream.writeEndElement(); // track
 	}
