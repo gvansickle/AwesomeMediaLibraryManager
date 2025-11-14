@@ -614,7 +614,7 @@ if(DOXYGEN_FOUND)
 	# Set directories.
 	set(DOXYGEN_INPUT "${CMAKE_SOURCE_DIR}/src")
 	set(DOXYGEN_OUTPUT "${CMAKE_BINARY_DIR}/docs")
-	# Configure Doxyfile.
+	# Configure the Doxyfile.
 	configure_file(
 		${CMAKE_SOURCE_DIR}/Doxyfile.in
 		${CMAKE_BINARY_DIR}/Doxyfile
@@ -623,6 +623,8 @@ if(DOXYGEN_FOUND)
 	# Custom target to generate doxygen docs.
 	add_custom_target(docs
 		COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_BINARY_DIR}/Doxyfile
+		COMMAND cmake -E echo "Doxygen docs can be accessed at this URL:"
+		COMMAND cmake -E echo "file://${CMAKE_BINARY_DIR}/docs/html/index.html"
 		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 		COMMENT "Generating internals documentation with Doxygen"
 		VERBATIM
