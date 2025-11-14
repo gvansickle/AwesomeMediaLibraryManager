@@ -403,6 +403,14 @@ void PlaylistModel::setLibraryRootUrl(const QUrl &url)
     endResetModel();
 }
 
+void writeXspfMetaElement(QXmlStreamWriter& stream, QAnyStringView key, QAnyStringView value)
+{
+	stream.writeStartElement("meta");
+	stream.writeAttribute("rel", key);
+	stream.writeCharacters(value);
+	stream.writeEndElement();
+}
+
 /**
  * @page xspf Notes on XSPF playlist support.
  * - Audacious
@@ -511,9 +519,17 @@ bool PlaylistModel::serializeToFileAsXSPF(QFileDevice& filedev) const
 			stream.writeTextElement("title", toqstr(pmi->metadata()["track_name"]));
 			stream.writeTextElement("creator", "");
 			stream.writeTextElement("album", toqstr(pmi->metadata()["album_name"]));
-			stream.writeTextElement("duration", "");
+			stream.writeTextElement("duration", std::to_string(static_cast<double>(pmi->get_length_secs())*1000.0));
 			stream.writeTextElement("trackNum", std::to_string(pmi->getTrackNumber()));
 			stream.writeTextElement("image", "");
+			if(pmi->isSubtrack() /** @todo & PlaylistSubformat == Audacious */)
+			{
+				// Subtrack metadata.
+				/// @todo Need to get the "rel=" into attributes.
+				writeXspfMetaElement(stream, "subsong-id", "??subsong-id??");
+				writeXspfMetaElement(stream, "seg-start", pmi->get_offset_secs());
+				writeXspfMetaElement(stream, "seg-end", pmi->get_offset_secs() + pmi->get_length_secs());
+			}
 		stream.writeEndElement(); // track
 	}
 	stream.writeEndDocument();
