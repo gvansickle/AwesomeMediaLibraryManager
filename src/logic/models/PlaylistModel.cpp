@@ -527,7 +527,7 @@ bool PlaylistModel::serializeToFileAsXSPF(QFileDevice& filedev) const
 				// Subtrack metadata.
 				/// @todo Need to get the "rel=" into attributes.
 				writeXspfMetaElement(stream, "subsong-id", "??subsong-id??");
-				writeXspfMetaElement(stream, "seg-start", pmi->get_offset_secs());
+				writeXspfMetaElement(stream, "seg-start", std::to_string(static_cast<double>(pmi->get_offset_secs())*1000.0));
 				writeXspfMetaElement(stream, "seg-end", pmi->get_offset_secs() + pmi->get_length_secs());
 			}
 		stream.writeEndElement(); // track
