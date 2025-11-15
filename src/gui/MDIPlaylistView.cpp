@@ -207,7 +207,7 @@ MDIModelViewPair MDIPlaylistView::openFile(QUrl open_url, QWidget *parent, std::
     }
     else
     {
-		// Library import failed.
+		// Playlist open failed.
         QMessageBox::critical(amlmApp->IMainWindow(), "Error", "Playlist open failed", QMessageBox::Ok);
 		return MDIModelViewPair();
     }

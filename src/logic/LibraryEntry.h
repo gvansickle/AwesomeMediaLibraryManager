@@ -103,7 +103,15 @@ public:
 	/// @todo What are we expecting here for semantics?
 	AMLMTagMap getAllMetadata() const;
 
+	/**
+	 *
+	 * @return The start of the track's pre-gap, if any, in seconds relative to the start of the file.
+	 */
 	Fraction get_pre_gap_offset_secs() const { return m_pre_gap_offset_secs; }
+	/**
+	 *
+	 * @return The start of the actual track audio, in seconds relative to the start of the file.
+	 */
 	Fraction get_offset_secs() const { return m_offset_secs; }
 	Fraction get_length_secs() const { return m_length_secs; }
 
@@ -115,11 +123,11 @@ public:
 
 protected:
 
-	// The URL to the media.
+	/// The URL to the media.
 	QUrl m_url;
 
-	// All we have is (maybe) a URL, we don't have any other info on this file yet, so all other fields are
-	// not valid.
+	/// All we have is (maybe) a URL, we don't have any other info on this file yet, so all other fields are
+	/// not valid.
 	bool m_is_populated = false;
 
 	// True if there was an error trying to open or read this URL.
@@ -132,16 +140,19 @@ protected:
 	// See https://xiph.org/flac/format.html#metadata_block_cuesheet
 	bool m_is_subtrack = false;
 
-	// The track number of this track on the CD.
+	/// The track number of this track on the CD.
 	qint64 m_track_number {0};
-	// Total number of tracks on the CD.
+	/// Total number of tracks on the CD.
 	qint64 m_total_track_number {0};
 
-	Fraction m_pre_gap_offset_secs;// = 0;
-	/// Start of the audio, in secs.
-	Fraction m_offset_secs; // = 0;
+	/// The start of the track's pre-gap in seconds relative to the start of the file.
+	/// Obtained from a cue sheet track entry's "INDEX 00".
+	/// May not be present on all tracks, especially the first track on a disc.
+	Fraction m_pre_gap_offset_secs {0};
+	/// Start of the non-hidden/non-gap audio for this track, in secs.
+	Fraction m_offset_secs {0};
 	/// Length of the audio in secs.
-	Fraction m_length_secs; // = 0;
+	Fraction m_length_secs {0};
 
 	Metadata m_metadata;
 };
