@@ -353,8 +353,8 @@ qDb() << "####### NUM TRACKS:" << m_tracks.size();
 			auto next_tracknum = track_num+1;
 			TrackMetadata tm1 = m_tracks[track_num];
 			TrackMetadata tm2 = m_tracks[next_tracknum];
-            ///Frames tm2_first_possible_pregap_frame = tm2.m_length_pre_gap >= 0 ? tm2.m_start_frames - tm2.m_length_pre_gap : tm2.m_start_frames;
-            Frames gap_frames_1to2 = tm2.m_length_pre_gap;/// - tm1.last_frame();
+            ///Frames tm2_first_possible_pregap_frame = tm2.m_length_pre_gap_frames >= 0 ? tm2.m_start_frames - tm2.m_length_pre_gap_frames : tm2.m_start_frames;
+            Frames gap_frames_1to2 = tm2.m_length_pre_gap_frames;/// - tm1.last_frame();
 			if(gap_frames_1to2 < 5 )
 			{
                 // There's little or no gap.

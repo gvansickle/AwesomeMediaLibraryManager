@@ -90,11 +90,13 @@ std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::split_to_tracks()
 
 			/// @todo Scan indexes here?
 
-			m_offset_secs = Fraction(double(sheet_track.m_start_frames)/(75.0), 1);
+			// m_offset_secs = Fraction(double(sheet_track.m_start_frames)/(75.0), 1);
+			m_offset_frames = sheet_track.m_start_frames;
 			if(sheet_track.m_length_frames > 0)
 			{
 				// Not the last track.
-				m_length_secs = Fraction(double(sheet_track.m_length_frames)/(75.0), 1);
+				m_length_frames = sheet_track.m_length_frames;
+				// m_length_secs = Fraction(double(sheet_track.m_length_frames)/(75.0), 1);
 			}
 			else
 			{
@@ -111,8 +113,10 @@ std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::split_to_tracks()
 
 			new_entry->m_total_track_number = file_metadata.numTracks();
 			new_entry->m_metadata = track_metadata;
-			new_entry->m_offset_secs = m_offset_secs;
-			new_entry->m_length_secs = m_length_secs;
+			// new_entry->m_offset_secs = m_offset_secs;
+			// new_entry->m_length_secs = m_length_secs;
+			new_entry->m_offset_frames = m_offset_frames;
+			new_entry->m_length_frames = m_length_frames;
 			new_entry->m_is_subtrack = (file_metadata.numTracks() > 1);
 			new_entry->m_is_populated = true;
 			new_entry->m_is_error = false;
@@ -163,7 +167,8 @@ void LibraryEntry::populate(bool force_refresh)
 			// Couldn't load a cue sheet, this is probably a single-song file.
 //			qDebug() << "No cuesheet for file" << this->m_url;
 			m_metadata = file_metadata;
-			m_length_secs = file_metadata.total_length_seconds();
+			// m_length_secs = file_metadata.total_length_seconds();
+			m_length_frames = file_metadata.total_length_frames();
 			m_is_subtrack = false;
 			m_is_populated = true;
 			m_is_error = false;
@@ -177,8 +182,10 @@ void LibraryEntry::populate(bool force_refresh)
 			m_track_number = -1; /// @todo DUMMY VAL
 			m_total_track_number = file_metadata.numTracks();
 			m_metadata = file_metadata;
-			m_offset_secs = Fraction(0,1);
-			m_length_secs = file_metadata.total_length_seconds();
+			// m_offset_secs = Fraction(0,1);
+			// m_length_secs = file_metadata.total_length_seconds();
+			m_offset_frames = 0;
+			m_length_frames = file_metadata.total_length_frames();
 			m_is_subtrack = (file_metadata.numTracks() > 1);
 			m_is_populated = true;
 			m_is_error = false;
@@ -246,7 +253,9 @@ QUrl LibraryEntry::getM2Url() const
 			auto decurl = m_url;
 			QUrlQuery query;
 			query.addQueryItem("track_name", getMetadata("track_name").at(0));
-			auto nptfrag = npt(double(m_offset_secs), double(m_offset_secs+m_length_secs));
+			auto offset_secs = FramesToSeconds(m_offset_frames);
+			auto length_secs = FramesToSeconds(m_length_frames);
+			auto nptfrag = npt(double(offset_secs), double(offset_secs+length_secs));
 			auto keyval = nptfrag.toKeyValPair();
 			query.addQueryItem(QString::fromStdString(keyval.key), QString::fromStdString(keyval.value));
 			decurl.setFragment(query.toString());
@@ -272,9 +281,9 @@ QUrl LibraryEntry::getM2Url() const
 	X(XMLTAG_IS_SUBTRACK, m_is_subtrack) \
 	X(XMLTAG_TRACK_NUMBER, m_track_number) \
 	X(XMLTAG_TOTAL_TRACK_NUMBER, m_total_track_number) \
-	X(XMLTAG_PRE_GAP_OFFSET_SECS, m_pre_gap_offset_secs) \
-	X(XMLTAG_OFFSET_SECS, m_offset_secs) \
-	X(XMLTAG_LENGTH_SECS, m_length_secs) \
+	X(XMLTAG_PRE_GAP_OFFSET_FRAMES, m_pre_gap_offset_frames) \
+	X(XMLTAG_OFFSET_FRAMES, m_offset_frames) \
+	X(XMLTAG_LENGTH_FRAMES, m_length_frames) \
 	X(XMLTAG_METADATA, m_metadata)
 
 using strviw_type = QLatin1String;
@@ -432,8 +441,8 @@ QDataStream& operator<<(QDataStream& out, const LibraryEntry& myObj)
 	out << myObj.m_is_populated;
 	out << myObj.m_is_error;
 	out << myObj.m_is_subtrack;
-	out << myObj.m_offset_secs;
-	out << myObj.m_length_secs;
+	out << myObj.m_offset_frames;
+	out << myObj.m_length_frames;
     out << myObj.m_mime_type;
 //	if(isPopulated())
 //	{
@@ -467,8 +476,8 @@ QDataStream& operator>>(QDataStream& in, LibraryEntry& myObj)
 	in >> myObj.m_is_populated;
 	in >> myObj.m_is_error;
 	in >> myObj.m_is_subtrack;
-	in >> myObj.m_offset_secs;
-	in >> myObj.m_length_secs;
+	in >> myObj.m_offset_frames;
+	in >> myObj.m_length_frames;
 
 	return in;
 }

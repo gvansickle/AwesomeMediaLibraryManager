@@ -103,9 +103,13 @@ public:
 	/// @todo What are we expecting here for semantics?
 	AMLMTagMap getAllMetadata() const;
 
-	Fraction get_pre_gap_offset_secs() const { return m_pre_gap_offset_secs; }
-	Fraction get_offset_secs() const { return m_offset_secs; }
-	Fraction get_length_secs() const { return m_length_secs; }
+	double get_pre_gap_offset_secs() const { return FramesToSeconds(m_pre_gap_offset_frames); }
+	double get_offset_secs() const { return FramesToSeconds(m_offset_frames); }
+	double get_length_secs() const { return FramesToSeconds(m_length_frames); }
+
+	std::int_fast64_t get_pre_gap_offset_frames() const { return m_pre_gap_offset_frames; }
+	std::int_fast64_t get_offset_frames() const { return m_offset_frames; }
+	std::int_fast64_t get_length_frames() const { return m_length_frames; }
 
 	Metadata metadata() const { return m_metadata; }
 	Metadata track_cuesheet_metadata() const;
@@ -137,11 +141,17 @@ protected:
 	// Total number of tracks on the CD.
 	qint64 m_total_track_number {0};
 
-	Fraction m_pre_gap_offset_secs;// = 0;
+	// std::int_fast64_t m_pre_gap_offset_ms;// = 0;
 	/// Start of the audio, in secs.
-	Fraction m_offset_secs; // = 0;
+	// Fraction m_offset_ms; // = 0;
 	/// Length of the audio in secs.
-	Fraction m_length_secs; // = 0;
+	// Fraction m_length_ms; // = 0;
+
+	qint64 m_pre_gap_offset_frames {};
+	/// Start of the audio, in Frames.
+	qint64 m_offset_frames {};
+	/// Length of the audio in Frames.
+	qint64 m_length_frames {};
 
 	Metadata m_metadata;
 };

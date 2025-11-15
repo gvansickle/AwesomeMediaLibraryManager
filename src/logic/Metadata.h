@@ -102,6 +102,14 @@ public:
 	/// @name Audio stream properites.
 	/// @{
 	Fraction total_length_seconds() const;
+
+	/**
+	 * @warning  This currently does not come from a cue sheet, but is calculated from the TagLib::File::length()
+	 *           function, which is in units of milliseconds.  If there is a cue sheet, this could be calculated from
+	 *           it, but right now it isn't.
+	 * @return
+	 */
+	Frames total_length_frames() const;
 	/// @}
 
 	/// Return the first entry matching the key, or an empty string if no such key.
@@ -197,7 +205,11 @@ public:
 
 	/// Length of the entire file in ms.
 	/// We need this for the CueSheet so we can determine the length of the final track.
+	/// @note This value comes from TagLib.
 	int64_t m_length_in_milliseconds {0};
+
+	/// @note This comes from the cue sheet.
+	// int64_t m_length_in_frames {0};
 	/// @}
 
 	/// @name Cuesheet data members.
