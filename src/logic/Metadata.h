@@ -31,7 +31,6 @@
 #include "CueSheet.h"
 #include "AudioFileType.h"
 #include "TrackMetadata.h"
-#include <utils/Fraction.h>
 #include <logic/serialization/ISerializable.h>
 
 
@@ -101,7 +100,7 @@ public:
 
 	/// @name Audio stream properites.
 	/// @{
-	Fraction total_length_seconds() const;
+	double total_length_seconds() const;
 
 	/**
 	 * @warning  This currently does not come from a cue sheet, but is calculated from the TagLib::File::length()
@@ -208,7 +207,7 @@ public:
 	/// @note This value comes from TagLib::AudioProperties, which only has
 	///       units of ms available (not frames).  This is currently the only
 	///       exception to the "Frames are single point of truth, secs etc. are calculated".
-	int64_t m_length_in_milliseconds {0};
+	int64_t m_length_in_ms {0};
 
 	/// @note This should be the single point of truth for the cd length, but
 	/// currently there's no known way to get it.
