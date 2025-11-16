@@ -205,10 +205,14 @@ public:
 
 	/// Length of the entire file in ms.
 	/// We need this for the CueSheet so we can determine the length of the final track.
-	/// @note This value comes from TagLib.
+	/// @note This value comes from TagLib::AudioProperties, which only has
+	///       units of ms available (not frames).  This is currently the only
+	///       exception to the "Frames are single point of truth, secs etc. are calculated".
 	int64_t m_length_in_milliseconds {0};
 
-	/// @note This comes from the cue sheet.
+	/// @note This should be the single point of truth for the cd length, but
+	/// currently there's no known way to get it.
+	/// @see m_length_in_milliseconds
 	// int64_t m_length_in_frames {0};
 	/// @}
 

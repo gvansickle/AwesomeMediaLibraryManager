@@ -107,9 +107,9 @@ public:
 	double get_offset_secs() const { return FramesToSeconds(m_offset_frames); }
 	double get_length_secs() const { return FramesToSeconds(m_length_frames); }
 
-	std::int_fast64_t get_pre_gap_offset_frames() const { return m_pre_gap_offset_frames; }
-	std::int_fast64_t get_offset_frames() const { return m_offset_frames; }
-	std::int_fast64_t get_length_frames() const { return m_length_frames; }
+	qint64 get_pre_gap_offset_frames() const { return m_pre_gap_offset_frames; }
+	qint64 get_offset_frames() const { return m_offset_frames; }
+	qint64 get_length_frames() const { return m_length_frames; }
 
 	Metadata metadata() const { return m_metadata; }
 	Metadata track_cuesheet_metadata() const;
@@ -136,19 +136,14 @@ protected:
 	// See https://xiph.org/flac/format.html#metadata_block_cuesheet
 	bool m_is_subtrack = false;
 
-	// The track number of this track on the CD.
+	/// The track number of this track on the CD.
 	qint64 m_track_number {0};
-	// Total number of tracks on the CD.
+	/// Total number of tracks on the CD.
 	qint64 m_total_track_number {0};
 
-	// std::int_fast64_t m_pre_gap_offset_ms;// = 0;
-	/// Start of the audio, in secs.
-	// Fraction m_offset_ms; // = 0;
-	/// Length of the audio in secs.
-	// Fraction m_length_ms; // = 0;
-
+	/// Start of the pre-gap, in Frames from the  of the disc.
 	qint64 m_pre_gap_offset_frames {};
-	/// Start of the audio, in Frames.
+	/// Start of the audio, in Frames from the start of the disc.
 	qint64 m_offset_frames {};
 	/// Length of the audio in Frames.
 	qint64 m_length_frames {};

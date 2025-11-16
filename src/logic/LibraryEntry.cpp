@@ -90,13 +90,11 @@ std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::split_to_tracks()
 
 			/// @todo Scan indexes here?
 
-			// m_offset_secs = Fraction(double(sheet_track.m_start_frames)/(75.0), 1);
 			m_offset_frames = sheet_track.m_start_frames;
 			if(sheet_track.m_length_frames > 0)
 			{
 				// Not the last track.
 				m_length_frames = sheet_track.m_length_frames;
-				// m_length_secs = Fraction(double(sheet_track.m_length_frames)/(75.0), 1);
 			}
 			else
 			{
@@ -113,8 +111,6 @@ std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::split_to_tracks()
 
 			new_entry->m_total_track_number = file_metadata.numTracks();
 			new_entry->m_metadata = track_metadata;
-			// new_entry->m_offset_secs = m_offset_secs;
-			// new_entry->m_length_secs = m_length_secs;
 			new_entry->m_offset_frames = m_offset_frames;
 			new_entry->m_length_frames = m_length_frames;
 			new_entry->m_is_subtrack = (file_metadata.numTracks() > 1);
@@ -167,7 +163,6 @@ void LibraryEntry::populate(bool force_refresh)
 			// Couldn't load a cue sheet, this is probably a single-song file.
 //			qDebug() << "No cuesheet for file" << this->m_url;
 			m_metadata = file_metadata;
-			// m_length_secs = file_metadata.total_length_seconds();
 			m_length_frames = file_metadata.total_length_frames();
 			m_is_subtrack = false;
 			m_is_populated = true;
@@ -182,8 +177,6 @@ void LibraryEntry::populate(bool force_refresh)
 			m_track_number = -1; /// @todo DUMMY VAL
 			m_total_track_number = file_metadata.numTracks();
 			m_metadata = file_metadata;
-			// m_offset_secs = Fraction(0,1);
-			// m_length_secs = file_metadata.total_length_seconds();
 			m_offset_frames = 0;
 			m_length_frames = file_metadata.total_length_frames();
 			m_is_subtrack = (file_metadata.numTracks() > 1);
@@ -255,7 +248,7 @@ QUrl LibraryEntry::getM2Url() const
 			query.addQueryItem("track_name", getMetadata("track_name").at(0));
 			auto offset_secs = FramesToSeconds(m_offset_frames);
 			auto length_secs = FramesToSeconds(m_length_frames);
-			auto nptfrag = npt(double(offset_secs), double(offset_secs+length_secs));
+			auto nptfrag = npt(offset_secs, offset_secs+length_secs);
 			auto keyval = nptfrag.toKeyValPair();
 			query.addQueryItem(QString::fromStdString(keyval.key), QString::fromStdString(keyval.value));
 			decurl.setFragment(query.toString());
