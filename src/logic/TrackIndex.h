@@ -30,20 +30,8 @@
 #include <QVariant>
 
 // Ours
-//#include "Frames.h"
-using Frames = qint64;
-inline double FramesToSeconds(Frames frames)
-{
-	return frames / 75.0;
-}
-inline std::int64_t FramesToMilliseconds(Frames frames)
-{
-	return FramesToSeconds(frames) * 1000.0;
-}
-inline Frames MsToFrames(std::int64_t milliseconds)
-{
-	return (milliseconds*75)/1000 ;
-}
+#include "Frames.h"
+
 //#include "TrackMetadata.h"
 #include <logic/serialization/ISerializable.h>
 #include <future/guideline_helpers.h>

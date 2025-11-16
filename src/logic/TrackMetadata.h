@@ -33,8 +33,8 @@
 struct Cdtext;
 
 // Ours.
-//#include "Frames.h"
-using Frames = qint64;
+#include "Frames.h"
+
 #include <logic/serialization/ISerializable.h>
 #include <future/guideline_helpers.h>
 #include <third_party/libcue/libcue.h>
