@@ -33,8 +33,8 @@
 struct Cdtext;
 
 // Ours.
-//#include "Frames.h"
-using Frames = qint64;
+#include "Frames.h"
+
 #include <logic/serialization/ISerializable.h>
 #include <future/guideline_helpers.h>
 #include <third_party/libcue/libcue.h>
@@ -67,7 +67,7 @@ public:
 	qint64 m_track_number {0};
 
 	/// Length (? or offset from the beginning of the file?) of the pre-audio gap, in frames.
-    Frames m_length_pre_gap {0};
+    Frames m_length_pre_gap_frames {0};
 	/// Start of the audio from the beginning of the file, in frames.
 	/// Exactly the value returned by Libcue track_get_start().
 	/// Corresponds to INDEX 01.
@@ -76,7 +76,7 @@ public:
 	/// Exactly the value returned by track_get_length().
 	Frames m_length_frames {0};
 	/// Length (? or offset from the beginning of the file?) of the post-audio gap, in frames.
-	Frames m_length_post_gap {0};
+	Frames m_length_post_gap_frames {0};
 
 	/// CD-Text "pack type indicators".
 	///

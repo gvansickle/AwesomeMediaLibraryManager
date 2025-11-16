@@ -235,8 +235,8 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 			{"Subtrack?", libentry->isSubtrack()},
 			{"Track No.", libentry->getTrackNumber()},
 			{"Track Total", libentry->getTrackTotal()},
-			{"Pre-gap offset", libentry->get_pre_gap_offset_secs().toQString()},
-			{"Length", libentry->get_length_secs().toQString()}
+			{"Pre-gap offset", QString::number(libentry->get_pre_gap_offset_secs())},
+			{"Length", QString::number(libentry->get_length_secs())}
 		};
 		for(const auto& p: list)
 		{

@@ -66,10 +66,11 @@ std::unique_ptr<TrackMetadata> TrackMetadata::make_unique_track_metadata(const T
 	tm.m_isrc = tostdstr(track_get_isrc(track_ptr));
 
 	// The track's audio data location info, as parsed by libcue.
-	tm.m_length_pre_gap = track_get_zero_pre(track_ptr);
+	// The libcue functions here return values in units of Frames (1/75 of a second).
+	tm.m_length_pre_gap_frames = track_get_zero_pre(track_ptr);
 	tm.m_start_frames = track_get_start(track_ptr);
 	tm.m_length_frames = track_get_length(track_ptr);
-	tm.m_length_post_gap = track_get_zero_post(track_ptr);
+	tm.m_length_post_gap_frames = track_get_zero_post(track_ptr);
 
 	// The track's indexes, which should simply duplicate the above.
 	for(auto i = 0; i<=99; ++i)
@@ -139,18 +140,18 @@ std::string TrackMetadata::toStdString() const
 	std::string retval;
 
     retval = M_IDSTR(m_PTI_TITLE) M_IDSTR(m_PTI_PERFORMER) "";
-    retval += M_IDSTR(m_track_number) /*M_IDSTR(m_total_track_number)*/ M_IDSTR(m_length_pre_gap) M_IDSTR(m_start_frames) "";
-	retval += M_IDSTR(m_length_frames) M_IDSTR(m_length_post_gap) M_IDSTR(m_isrc) "";
+    retval += M_IDSTR(m_track_number) /*M_IDSTR(m_total_track_number)*/ M_IDSTR(m_length_pre_gap_frames) M_IDSTR(m_start_frames) "";
+	retval += M_IDSTR(m_length_frames) M_IDSTR(m_length_post_gap_frames) M_IDSTR(m_isrc) "";
 
 	return retval;
 }
 
 #define M_DATASTREAM_FIELDS(X) \
 	X(XMLTAG_TRACK_META_TRACK_NUM, m_track_number) \
-	X(XMLTAG_TRACK_META_LEN_PREGAP, m_length_pre_gap) \
+	X(XMLTAG_TRACK_META_LEN_PREGAP, m_length_pre_gap_frames) \
 	X(XMLTAG_TRACK_META_START_FRAMES, m_start_frames) \
 	X(XMLTAG_TRACK_META_LENGTH_FRAMES, m_length_frames) \
-	X(XMLTAG_TRACK_META_LENGTH_POST_GAP, m_length_post_gap) \
+	X(XMLTAG_TRACK_META_LENGTH_POST_GAP, m_length_post_gap_frames) \
 	X(XMLTAG_TRACK_META_ISRC, m_isrc) \
 	X(XMLTAG_TRACK_META_IS_PART_OF_GAPLESS_SET, m_is_part_of_gapless_set) \
 	X(XMLTAG_TRACK_PTI_VALUES, m_tm_track_pti)

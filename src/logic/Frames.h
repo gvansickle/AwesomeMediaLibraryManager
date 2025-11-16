@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2019, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -26,8 +26,21 @@
 // Std C++.
 #include <cstdint>
 
-
-#if 0
+#if 1
+using Frames = qint64;
+inline double FramesToSeconds(Frames frames)
+{
+	return frames / 75.0;
+}
+inline std::int64_t FramesToMilliseconds(Frames frames)
+{
+	return FramesToSeconds(frames) * 1000.0;
+}
+inline Frames MsToFrames(std::int64_t milliseconds)
+{
+	return (milliseconds*75)/1000 ;
+}
+#else
 /**
  * Arithmetic type for units of CD Cue Sheet Frames == 1/75th of a second.
  */
@@ -60,4 +73,5 @@ private:
 	int64_t m_frames;
 };
 #endif
+
 #endif /* SRC_LOGIC_FRAMES_H_ */
