@@ -146,6 +146,7 @@ protected:
 	/// Start of the audio, in Frames from the start of the disc.
 	qint64 m_offset_frames {0};
 	/// Length of the audio in Frames.
+	/// @note This is relative to @a m_offset_frames, not the start of the disc.
 	qint64 m_length_frames {0};
 
 	Metadata m_metadata;

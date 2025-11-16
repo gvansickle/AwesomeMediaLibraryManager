@@ -73,7 +73,7 @@ public:
 	/// Exactly the value returned by Libcue track_get_start().
 	/// Corresponds to INDEX 01.
 	Frames m_start_frames {0};
-	/// Length of the audio from the beginning of the file, in frames.
+	/// Length of the audio from @a m_start_frames, in frames.
 	/// Exactly the value returned by track_get_length().
 	Frames m_length_frames {0};
 	/// Length (? or offset from the beginning of the file?) of the post-audio gap, in frames.

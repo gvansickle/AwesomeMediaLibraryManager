@@ -411,6 +411,14 @@ void writeXspfMetaElement(QXmlStreamWriter& stream, QAnyStringView key, QAnyStri
 	stream.writeEndElement();
 }
 
+template<typename T>
+requires std::integral<T>
+void writeXspfMetaElement(QXmlStreamWriter& stream, QAnyStringView key, T value)
+{
+	auto value_as_qstr = QString::number(value);
+	writeXspfMetaElement(stream, key, value_as_qstr);
+}
+
 /**
  * @page xspf Notes on XSPF playlist support.
  * - Audacious
@@ -527,15 +535,14 @@ bool PlaylistModel::serializeToFileAsXSPF(QFileDevice& filedev) const
 				// Subtrack metadata.
 				/// @todo Need to get the "rel=" into attributes.
 				writeXspfMetaElement(stream, "subsong-id", "??subsong-id??");
-				writeXspfMetaElement(stream, "seg-start", std::to_string(static_cast<double>(pmi->get_offset_secs())*1000.0));
-				writeXspfMetaElement(stream, "seg-end", pmi->get_offset_secs() + pmi->get_length_secs());
+				writeXspfMetaElement(stream, "seg-start", FramesToMilliseconds(pmi->get_offset_frames()));
+				writeXspfMetaElement(stream, "seg-end", FramesToMilliseconds(pmi->get_offset_frames() + pmi->get_length_frames()));
 			}
 		stream.writeEndElement(); // track
 	}
 	stream.writeEndDocument();
 
 	return true;
-
 }
 
 bool PlaylistModel::deserializeFromFileAsXSPF(QFileDevice& filedev)
