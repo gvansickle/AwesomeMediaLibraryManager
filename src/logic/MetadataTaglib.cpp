@@ -307,7 +307,7 @@ M_WARNING("BUG: THIS IS COMING BACK WITH ONE ENTRY");
 	if(audio_properties != nullptr)
 	{
 		m_length_in_milliseconds = audio_properties->lengthInMilliseconds();
-		//qDebug() << "Length in ms" << m_length_in_milliseconds;
+		//qDebug() << "Length in ms" << m_length_in_ms;
 	}
 	else
 	{
