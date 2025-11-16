@@ -33,8 +33,6 @@
 // Ours
 #include <future/future_type_traits.hpp>
 #include <future/cpp14_concepts.hpp>
-#include <boost/callable_traits/function_type.hpp>
-// #include <logic/DirScanResult.h>
 #include "ISerializable.h"
 
 /**
