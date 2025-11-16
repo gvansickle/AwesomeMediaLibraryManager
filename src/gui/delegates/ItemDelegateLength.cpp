@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -20,7 +20,6 @@
 #include "ItemDelegateLength.h"
 
 #include <QTime>
-#include <utils/Fraction.h>
 
 ItemDelegateLength::ItemDelegateLength(QObject* parent) : QStyledItemDelegate(parent)
 {
@@ -31,9 +30,9 @@ QString ItemDelegateLength::displayText(const QVariant& value, const QLocale& /*
 {
 	// Delegate for displaying track length as (HH:)?MM:SS
 
-	// Convert from QVariant to Fraction.
-	Fraction frac = value.value<Fraction>();
-	double total_seconds = qint64(frac);
+	// Convert from QVariant to double.
+	double total_seconds = value.toDouble();
+
 	// fromMSecsSinceStartOfDay() takes an int, which is 32 bits on at least x86_64/Linux,
 	// so this wraps and probably fails for total_seconds values >= 2147483.648 secs == ~595.5 hours.
 	// So probably OK for track lengths.

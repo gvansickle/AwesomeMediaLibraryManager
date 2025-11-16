@@ -205,7 +205,7 @@ bool Metadata::read(const QUrl& url)
 		// Got some audio properties.
 		m_bitrate_kb_sec = audio_properties->bitrate();
 		m_num_channels = audio_properties->channels();
-		m_length_in_milliseconds = audio_properties->lengthInMilliseconds();
+		m_length_in_ms = audio_properties->lengthInMilliseconds();
 		m_sample_rate = audio_properties->sampleRate();
 	}
 	else
@@ -366,8 +366,8 @@ bool Metadata::read(const QUrl& url)
 	}
 
 	// Read the embedded cuesheet, if any.
-	readEmbeddedCuesheet(cuesheet_str, m_length_in_milliseconds);
-	readSidecarCuesheet(url, m_length_in_milliseconds);
+	readEmbeddedCuesheet(cuesheet_str, m_length_in_ms);
+	readSidecarCuesheet(url, m_length_in_ms);
 	// Decide which cuesheet to use.
 	reconcileCueSheets();
 
@@ -404,17 +404,31 @@ AMLMTagMap Metadata::tagmap_cuesheet_disc() const
 	return m_tm_cuesheet_disc;
 }
 
-Fraction Metadata::total_length_seconds() const
+double Metadata::total_length_seconds() const
 {
 	if(hasBeenRead() && !isError())
 	{
-		return Fraction(m_length_in_milliseconds, 1000);
+		return m_length_in_ms * 1000;
 	}
 	else
 	{
-		return Fraction(0, 1);
+		return 0.0;
 	}
 }
+
+
+Frames Metadata::total_length_frames() const
+{
+	if(hasBeenRead() && !isError())
+	{
+		return MsToFrames(m_length_in_ms);
+	}
+	else
+	{
+		return 0;
+	}
+}
+
 
 #if 1 /// @todo This looks like it should just go away.  It appears to only be used in LibraryEntry::getAllMetadata(),
 /// and it's not clear that's actually getting all the metadata.
@@ -828,8 +842,8 @@ void Metadata::reconcileCueSheets()
 			auto next_tracknum = track_num+1;
 			TrackMetadata tm1 = m_tracks[track_num];
 			TrackMetadata tm2 = m_tracks[next_tracknum];
-			///Frames tm2_first_possible_pregap_frame = tm2.m_length_pre_gap >= 0 ? tm2.m_start_frames - tm2.m_length_pre_gap : tm2.m_start_frames;
-			Frames gap_frames_1to2 = tm2.m_length_pre_gap;/// - tm1.last_frame();
+			///Frames tm2_first_possible_pregap_frame = tm2.m_length_pre_gap_frames >= 0 ? tm2.m_start_frames - tm2.m_length_pre_gap_frames : tm2.m_start_frames;
+			Frames gap_frames_1to2 = tm2.m_length_pre_gap_frames;/// - tm1.last_frame();
 			if(gap_frames_1to2 < 5 )
 			{
 				// There's little or no gap.

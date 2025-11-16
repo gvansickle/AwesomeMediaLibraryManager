@@ -30,8 +30,8 @@
 #include <QVariant>
 
 // Ours
-//#include "Frames.h"
-using Frames = qint64;
+#include "Frames.h"
+
 //#include "TrackMetadata.h"
 #include <logic/serialization/ISerializable.h>
 #include <future/guideline_helpers.h>

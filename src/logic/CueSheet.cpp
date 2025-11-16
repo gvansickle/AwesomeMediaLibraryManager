@@ -261,7 +261,7 @@ using strviw_type = QLatin1String;
 	X(XMLTAG_DISC_TOTAL, m_disc_total)
 
 #define M_DATASTREAM_FIELDS_TRACK(X) \
-//	X(XMLTAG_TRACK_META_LENGTH_POST_GAP, m_length_post_gap) \
+//	X(XMLTAG_TRACK_META_LENGTH_POST_GAP, m_length_post_gap_frames) \
 //	X(XMLTAG_TRACK_META_ISRC, m_isrc) \
 //	X(XMLTAG_TRACK_META_IS_PART_OF_GAPLESS_SET, m_is_part_of_gapless_set)
 

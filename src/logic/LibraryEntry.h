@@ -103,17 +103,13 @@ public:
 	/// @todo What are we expecting here for semantics?
 	AMLMTagMap getAllMetadata() const;
 
-	/**
-	 *
-	 * @return The start of the track's pre-gap, if any, in seconds relative to the start of the file.
-	 */
-	Fraction get_pre_gap_offset_secs() const { return m_pre_gap_offset_secs; }
-	/**
-	 *
-	 * @return The start of the actual track audio, in seconds relative to the start of the file.
-	 */
-	Fraction get_offset_secs() const { return m_offset_secs; }
-	Fraction get_length_secs() const { return m_length_secs; }
+	double get_pre_gap_offset_secs() const { return FramesToSeconds(m_pre_gap_offset_frames); }
+	double get_offset_secs() const { return FramesToSeconds(m_offset_frames); }
+	double get_length_secs() const { return FramesToSeconds(m_length_frames); }
+
+	qint64 get_pre_gap_offset_frames() const { return m_pre_gap_offset_frames; }
+	qint64 get_offset_frames() const { return m_offset_frames; }
+	qint64 get_length_frames() const { return m_length_frames; }
 
 	Metadata metadata() const { return m_metadata; }
 	Metadata track_cuesheet_metadata() const;
@@ -145,14 +141,12 @@ protected:
 	/// Total number of tracks on the CD.
 	qint64 m_total_track_number {0};
 
-	/// The start of the track's pre-gap in seconds relative to the start of the file.
-	/// Obtained from a cue sheet track entry's "INDEX 00".
-	/// May not be present on all tracks, especially the first track on a disc.
-	Fraction m_pre_gap_offset_secs {0};
-	/// Start of the non-hidden/non-gap audio for this track, in secs.
-	Fraction m_offset_secs {0};
-	/// Length of the audio in secs.
-	Fraction m_length_secs {0};
+	/// Start of the pre-gap, in Frames from the  of the disc.
+	qint64 m_pre_gap_offset_frames {0};
+	/// Start of the audio, in Frames from the start of the disc.
+	qint64 m_offset_frames {0};
+	/// Length of the audio in Frames.
+	qint64 m_length_frames {0};
 
 	Metadata m_metadata;
 };
