@@ -142,11 +142,11 @@ protected:
 	qint64 m_total_track_number {0};
 
 	/// Start of the pre-gap, in Frames from the  of the disc.
-	qint64 m_pre_gap_offset_frames {};
+	qint64 m_pre_gap_offset_frames {0};
 	/// Start of the audio, in Frames from the start of the disc.
-	qint64 m_offset_frames {};
+	qint64 m_offset_frames {0};
 	/// Length of the audio in Frames.
-	qint64 m_length_frames {};
+	qint64 m_length_frames {0};
 
 	Metadata m_metadata;
 };
