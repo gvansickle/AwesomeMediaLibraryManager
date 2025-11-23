@@ -1,5 +1,5 @@
 /*
- * Copyright 2017, 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018, 2019, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -69,8 +69,11 @@ public:
 	bool read(const QUrl& url);
 	bool hasBeenRead() const;
 	bool isError() const;
-	/// Return true if the object was read from a cache rather than the actual file.
-	/// Intent is that if this returns true, it shouldn't be written back to the cache.
+	
+	/**
+	 * Return true if the object was read from a cache rather than the actual file.
+	 * Intent is that if this returns true, it shouldn't be written back to the cache.
+	 */
 	bool isFromCache() const;
 
 	/// Conversion to bool.  Returns true if Metadata has been read successfully.
@@ -111,7 +114,9 @@ public:
 	Frames total_length_frames() const;
 	/// @}
 
-	/// Return the first entry matching the key, or an empty string if no such key.
+	/**
+	 * Return the first entry matching the key, or an empty string if no such key.
+	 */
 	std::string operator[](const std::string& key) const;
 
 	/// Overload for const char *'s.

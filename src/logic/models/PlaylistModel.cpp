@@ -421,9 +421,11 @@ void writeXspfMetaElement(QXmlStreamWriter& stream, QAnyStringView key, T value)
 
 /**
  * @page xspf Notes on XSPF playlist support.
+ * Note that the XSPF tags are not the same as standard Vorbis Comments described here: https://taglib.org/api/p_propertymapping.html
  * - Audacious
  *   - Decent support of multi-track flac files.
  *   - Uses a lot of <meta> to capture subtrack info (they call them "subsongs").
+ *   - Doesn't appear to use XSPF's <extension> feature.
  *   - Example:
 \code{.xml}
 <?xml version="1.0" encoding="UTF-8"?>
@@ -471,6 +473,7 @@ void writeXspfMetaElement(QXmlStreamWriter& stream, QAnyStringView key, T value)
 \endcode
  * - Amarok
  *   - Doesn't support multi-track flac files, simply considers them one long song.
+ *   - Does use XSPF's <extension> feature.  Not clear what for.
  *   - Example:
 \code{.xml}
 <?xml version="1.0" encoding="UTF-8"?>
@@ -519,25 +522,39 @@ bool PlaylistModel::serializeToFileAsXSPF(QFileDevice& filedev) const
 		std::shared_ptr<PlaylistModelItem> pmi = std::dynamic_pointer_cast<PlaylistModelItem>(getItem(mi));
 		Q_ASSERT(pmi != nullptr);
 		stream.writeStartElement("track");
+		{
 			// Location
 			// "URI of resource to be rendered. Probably an audio resource, but MAY be any type of resource with a well-known duration, such as video,
 			// a SMIL document, or an XSPF document. The duration of the resource defined in this element defines the duration of rendering. xspf:track
 			// elements MAY contain zero or more location elements, but a user-agent MUST NOT render more than one of the named resources.
+			auto pmi_metadata = pmi->metadata();
 			stream.writeTextElement("location", pmi->getUrl().toString());
 			stream.writeTextElement("title", toqstr(pmi->metadata()["track_name"]));
-			stream.writeTextElement("creator", "");
+			// <creator> Audacious uses this to populate the "Artist" field.
+			/// Definition:
+			/// https://www.xspf.org/spec#41122-creator
+			/// 4.1.1.2.14.1.1.1.4 creator
+			/// Human-readable name of the entity (author, authors, group, company, etc) that authored the resource
+			/// which defines the duration of track rendering. This value is primarily for fuzzy lookups, though a
+			/// user-agent may display it. xspf:track elements MAY contain exactly one.
+			stream.writeTextElement("creator", pmi->metadata()["track_performer"]);//["artist_name"]);
 			stream.writeTextElement("album", toqstr(pmi->metadata()["album_name"]));
-			stream.writeTextElement("duration", std::to_string(static_cast<double>(pmi->get_length_secs())*1000.0));
+			// For Audacious compatibility.
+			writeXspfMetaElement(stream, "album-artist", pmi_metadata["track_performer"]);
+			/// @todo <annotation>
+			writeXspfMetaElement(stream, "year", pmi_metadata[""]);
+			stream.writeTextElement("duration", std::to_string(FramesToMilliseconds(pmi->get_length_frames())));
 			stream.writeTextElement("trackNum", std::to_string(pmi->getTrackNumber()));
 			stream.writeTextElement("image", "");
 			if(pmi->isSubtrack() /** @todo & PlaylistSubformat == Audacious */)
 			{
 				// Subtrack metadata.
-				/// @todo Need to get the "rel=" into attributes.
+				writeXspfMetaElement(stream, "album-artist", pmi_metadata["track_performer"]);
 				writeXspfMetaElement(stream, "subsong-id", "??subsong-id??");
 				writeXspfMetaElement(stream, "seg-start", FramesToMilliseconds(pmi->get_offset_frames()));
 				writeXspfMetaElement(stream, "seg-end", FramesToMilliseconds(pmi->get_offset_frames() + pmi->get_length_frames()));
 			}
+		}
 		stream.writeEndElement(); // track
 	}
 	stream.writeEndDocument();
