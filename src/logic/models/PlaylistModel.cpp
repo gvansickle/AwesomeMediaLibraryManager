@@ -525,12 +525,15 @@ bool PlaylistModel::serializeToFileAsXSPF(QFileDevice& filedev) const
 		Q_ASSERT(pmi != nullptr);
 		stream.writeStartElement("track");
 		{
+			auto pmi_metadata = pmi->metadata();
+
 			// <location>
 			// "URI of resource to be rendered. Probably an audio resource, but MAY be any type of resource with a well-known duration, such as video,
 			// a SMIL document, or an XSPF document. The duration of the resource defined in this element defines the duration of rendering. xspf:track
 			// elements MAY contain zero or more location elements, but a user-agent MUST NOT render more than one of the named resources.
-			auto pmi_metadata = pmi->metadata();
-			stream.writeTextElement("location", pmi->getUrl().toString());
+			// Note the encoding requirements for <location> at https://www.xspf.org/spec#62-relative-paths.
+			//
+			stream.writeTextElement("location", pmi->getUrl().toString(QUrl::FullyEncoded | QUrl::NormalizePathSegments));
 			stream.writeTextElement("title", toqstr(pmi->metadata()["track_name"]));
 			// <creator> Audacious uses this to populate the "Artist" field.
 			/// Definition:
