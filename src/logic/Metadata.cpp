@@ -92,6 +92,7 @@ static std::set<std::string> f_newly_discovered_keys;
 
 /// Interface name to Taglib name map.
 /// @see http://wiki.hydrogenaud.io/index.php?title=Tag_Mapping
+/// @todo SEE THESE STANDARD TAGS: https://age.hobba.nl/audio/mirroredpages/ogg-tagging.html
 static const std::map<std::string, std::string> f_name_normalization_map =
 {
 	{"track_name", "TITLE"},
@@ -104,6 +105,7 @@ static const std::map<std::string, std::string> f_name_normalization_map =
 	{"composer_name", "COMPOSER"},
 	{"conductor_name", "CONDUCTOR"},
 	{"genre", "GENRE"},
+	{"date", "DATE"},
 	{"media", "MEDIA"},
 	{"ISRC", "ISRC"},
 	{"catalog", "CATALOGNUMBER"},
@@ -112,7 +114,7 @@ static const std::map<std::string, std::string> f_name_normalization_map =
 
 /**
  * https://xiph.org/vorbis/doc/v-comment.html
- * @todo This is album only, not track, except there's a "TRACKNUMBER"?
+ * @todo This is album only, not track, except there's a "TRACKNUMBER"?  Also currently unused.
  */
 static const std::map<std::string, std::vector<std::string>> f_vorbis_comment_normalization_map =
 {

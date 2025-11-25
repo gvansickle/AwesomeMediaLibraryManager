@@ -130,6 +130,8 @@ public:
     bool hasCueSheetEmbedded() const { return m_cuesheet_embedded.origin() == CueSheet::Origin::Embedded; }
 	bool hasCueSheetSidecar() const { return m_cuesheet_sidecar.origin() == CueSheet::Origin::Sidecar; }
 
+	const CueSheet& cuesheet() const { return m_cuesheet_combined; }
+
 	/// @todo bool hasHiddenTrackOneAudio() const { return pImpl->hasHiddenTrackOneAudio(); }
 
 	/// @name Track metadata.
@@ -145,6 +147,7 @@ public:
 	bool hasTrackCuesheet() const { return numTracks() < 2; }
 	AMLMTagMap tagmap_cuesheet_track() const;
 
+	auto bitrate_kb_sec() const { return m_bitrate_kb_sec; }
 
 	/// Return the TrackMetadata for the specified track.
 	/// @note @a index is 1-based.
@@ -171,7 +174,7 @@ public:
 	/// @}
 
 /// @todo if(googletest) here
-// private:
+private:
 
 	void readEmbeddedCuesheet(std::string cuesheet_str, int64_t length_in_milliseconds);
 	void readSidecarCuesheet(const QUrl& audio_file_qurl, int64_t length_in_milliseconds);

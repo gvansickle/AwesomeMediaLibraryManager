@@ -496,6 +496,8 @@ void writeXspfMetaElement(QXmlStreamWriter& stream, QAnyStringView key, T value)
 \endcode
  *
  */
+
+
 bool PlaylistModel::serializeToFileAsXSPF(QFileDevice& filedev) const
 {
 	QXmlStreamWriter stream(&filedev);
@@ -523,7 +525,7 @@ bool PlaylistModel::serializeToFileAsXSPF(QFileDevice& filedev) const
 		Q_ASSERT(pmi != nullptr);
 		stream.writeStartElement("track");
 		{
-			// Location
+			// <location>
 			// "URI of resource to be rendered. Probably an audio resource, but MAY be any type of resource with a well-known duration, such as video,
 			// a SMIL document, or an XSPF document. The duration of the resource defined in this element defines the duration of rendering. xspf:track
 			// elements MAY contain zero or more location elements, but a user-agent MUST NOT render more than one of the named resources.
@@ -539,18 +541,24 @@ bool PlaylistModel::serializeToFileAsXSPF(QFileDevice& filedev) const
 			/// user-agent may display it. xspf:track elements MAY contain exactly one.
 			stream.writeTextElement("creator", pmi->metadata()["track_performer"]);//["artist_name"]);
 			stream.writeTextElement("album", toqstr(pmi->metadata()["album_name"]));
-			// For Audacious compatibility.
+			// For Audacious compatibility. /// @todo "track_performer" isn't the first choice for key here.
 			writeXspfMetaElement(stream, "album-artist", pmi_metadata["track_performer"]);
-			/// @todo <annotation>
-			writeXspfMetaElement(stream, "year", pmi_metadata[""]);
-			stream.writeTextElement("duration", std::to_string(FramesToMilliseconds(pmi->get_length_frames())));
+			// <annotation>, this is where Audacious puts the cuesheet COMMENT=CUERipper[...].
+			stream.writeTextElement("annotation", pmi_metadata["comment"]);
+			/// @todo "DATE" may not be only a year here?
+			writeXspfMetaElement(stream, "year", pmi_metadata["date"]);
 			stream.writeTextElement("trackNum", std::to_string(pmi->getTrackNumber()));
+			stream.writeTextElement("duration", std::to_string(FramesToMilliseconds(pmi->get_length_frames())));
+			writeXspfMetaElement(stream, "bitrate", pmi->metadata().bitrate_kb_sec());
+			writeXspfMetaElement(stream, "codec", "");
+			writeXspfMetaElement(stream, "quality", "");
 			stream.writeTextElement("image", "");
 			if(pmi->isSubtrack() /** @todo & PlaylistSubformat == Audacious */)
 			{
 				// Subtrack metadata.
-				writeXspfMetaElement(stream, "album-artist", pmi_metadata["track_performer"]);
-				writeXspfMetaElement(stream, "subsong-id", "??subsong-id??");
+				/// @todo For a single .flac containing multiple subsongs, this is probably fine,
+				/// but it probably will break on a multi-disc set.
+				writeXspfMetaElement(stream, "subsong-id", std::to_string(pmi->getTrackNumber()));
 				writeXspfMetaElement(stream, "seg-start", FramesToMilliseconds(pmi->get_offset_frames()));
 				writeXspfMetaElement(stream, "seg-end", FramesToMilliseconds(pmi->get_offset_frames() + pmi->get_length_frames()));
 			}
