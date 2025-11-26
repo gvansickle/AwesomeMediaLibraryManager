@@ -284,8 +284,13 @@ QString NetworkAwareFileDialog::filter_to_suffix(const QString &filter)
 	QRegularExpressionMatch mo = re.match(filter);
 	if(!mo.hasMatch())
 	{
-		QMessageBox::critical(m_parent_widget, QApplication::applicationDisplayName(),
-							 "Can't determine file extension");
+		// Debug code for when we get in here with no match:
+		// QMessageBox::critical(m_parent_widget, QApplication::applicationDisplayName(),
+		// 					 "Can't determine file extension");
+
+		// We do get in here twice when calling getSaveFileUrl() (maybe others?). onFilterSelected() is signalled twice,
+		// first with an empty filter and second with a non-empty one.
+		return QString();
 	}
     auto savefile_ext = mo.captured(1);
 
@@ -349,10 +354,15 @@ void NetworkAwareFileDialog::setDefaultSidebarUrls()
 
 void NetworkAwareFileDialog::onFilterSelected(const QString& filter)
 {
-	if(m_the_qfiledialog->fileMode() != QFileDialog::Directory && m_the_qfiledialog->options() != QFileDialog::ShowDirsOnly)
+	if(m_the_qfiledialog->fileMode() != QFileDialog::Directory
+		&& !m_the_qfiledialog->options().testFlag(QFileDialog::ShowDirsOnly))
 	{
 		qDebug() << "Filter selected:" << filter;
-		m_the_qfiledialog->setDefaultSuffix(filter_to_suffix(filter));
+		const QString suffix = filter_to_suffix(filter);
+		if(!suffix.isEmpty())
+		{
+			m_the_qfiledialog->setDefaultSuffix(filter_to_suffix(filter));
+		}
 	}
 }
 
@@ -404,6 +414,8 @@ void NetworkAwareFileDialog::onFinished(int result)
 QDialog::DialogCode NetworkAwareFileDialog::exec_qfiledialog()
 {
     setDefaultSidebarUrls();
+
+#if 0 /// @todo AI says we don't need this, onFilterSelected() will keep the default suffix up to date.
     // On Windows at least, we don't have to do this for a native file dialog.
     if(!isDirSelectDialog() && !use_native_dlg())
     {
@@ -411,6 +423,7 @@ QDialog::DialogCode NetworkAwareFileDialog::exec_qfiledialog()
         qDebug() << QString("Initial selected name filter:") << snf;
         m_the_qfiledialog->setDefaultSuffix(filter_to_suffix(m_the_qfiledialog->selectedNameFilter()));
     }
+#endif
 
     // Force non-native dialog if that's what we want.
     if(!use_native_dlg())
