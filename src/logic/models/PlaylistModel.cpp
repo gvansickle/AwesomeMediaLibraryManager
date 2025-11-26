@@ -405,10 +405,13 @@ void PlaylistModel::setLibraryRootUrl(const QUrl &url)
 
 void writeXspfMetaElement(QXmlStreamWriter& stream, QAnyStringView key, QAnyStringView value)
 {
-	stream.writeStartElement("meta");
-	stream.writeAttribute("rel", key);
-	stream.writeCharacters(value);
-	stream.writeEndElement();
+	if(!value.isEmpty())
+	{
+		stream.writeStartElement("meta");
+		stream.writeAttribute("rel", key);
+		stream.writeCharacters(value);
+		stream.writeEndElement();
+	}
 }
 
 template<typename T>
@@ -425,6 +428,7 @@ void writeXspfMetaElement(QXmlStreamWriter& stream, QAnyStringView key, T value)
  * - Audacious
  *   - Decent support of multi-track flac files.
  *   - Uses a lot of <meta> to capture subtrack info (they call them "subsongs").
+ *   - Does not appear to emit <meta> tags when it has no data for the field.
  *   - Doesn't appear to use XSPF's <extension> feature.
  *   - Example:
 \code{.xml}
@@ -553,8 +557,8 @@ bool PlaylistModel::serializeToFileAsXSPF(QFileDevice& filedev) const
 			stream.writeTextElement("trackNum", std::to_string(pmi->getTrackNumber()));
 			stream.writeTextElement("duration", std::to_string(FramesToMilliseconds(pmi->get_length_frames())));
 			writeXspfMetaElement(stream, "bitrate", pmi->metadata().bitrate_kb_sec());
-			writeXspfMetaElement(stream, "codec", "");
-			writeXspfMetaElement(stream, "quality", "");
+			writeXspfMetaElement(stream, "codec", "?");
+			writeXspfMetaElement(stream, "quality", "?");
 			stream.writeTextElement("image", "");
 			if(pmi->isSubtrack() /** @todo & PlaylistSubformat == Audacious */)
 			{
