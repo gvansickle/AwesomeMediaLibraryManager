@@ -77,7 +77,7 @@ class NetworkAwareFileDialog : public QWidget
      * - Gnome/gvfs/gio: If you're on Gnome and you want access to e.g. a Samba share under Gnome GVFS/GIO, which
      *   in the real Gtk+ file dialog you can browse to and double click to automount under /run/user/.../gvfs/,
      *   you're SOL: QFileDialog (native and non-native) will give you neither a "Network Neighborhood" or any
-     *   other means to do that.  The only QFileDIalog-based partial workaround is to add /run/user/.../gvfs/
+     *   other means to do that.  The only QFileDialog-based partial workaround is to add /run/user/.../gvfs/
      *   to the sidebar URLs, and have the user use e.g. Nemo to automount a dir, then have him go
      *   into your app's QFileDialog and select the dir/file under the sidebar "gvfs" path.
      *   Yeah, pretty horrible.  Appears to be a deliberate decision at the QPA level.
