@@ -502,7 +502,7 @@ void writeXspfMetaElement(QXmlStreamWriter& stream, QAnyStringView key, T value)
  */
 
 
-bool PlaylistModel::serializeToFileAsXSPF(QFileDevice& filedev) const
+bool PlaylistModel::serializeToFileAsXSPF(QFileDevice& filedev, const std::vector<int>& order_mapping) const
 {
 	QXmlStreamWriter stream(&filedev);
 
@@ -522,7 +522,7 @@ bool PlaylistModel::serializeToFileAsXSPF(QFileDevice& filedev) const
 
 	stream.writeStartElement("trackList");
 	// Write the tracks.
-	for(qint64 row = 0; row < rowCount(); ++row)
+	for(auto row : order_mapping)
 	{
 		QModelIndex mi = index(row, 0, QModelIndex());
 		std::shared_ptr<PlaylistModelItem> pmi = std::dynamic_pointer_cast<PlaylistModelItem>(getItem(mi));

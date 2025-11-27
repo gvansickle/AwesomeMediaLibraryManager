@@ -21,11 +21,13 @@
 #define MDITREEVIEWBASE_H
 
 /// @file
+
+// Qt
 #include <QTreeView>
 #include <QUrl>
 
+// Ours
 #include "mdi/MDIModelViewPair.h"
-//#include "logic/proxymodels/ModelHelpers.h"
 
 class QMdiSubWindow;
 class QContextMenuEvent;
@@ -172,6 +174,14 @@ protected:
     /// Override in derived classes to set an empty model.
     /// Used when newFile() is called.
     virtual void setEmptyModel() = 0;
+
+	/**
+	 * Calculates a std::vector<int> which maps 0-NumRows to the view's proxy model's sort order.
+	 * Used in Playlist serialization.
+	 * @note This is another thing that probably should be pushed into MDITreeViewBase.
+	 * @return
+	 */
+	virtual std::vector<int> getSortOrderMapping() const = 0;
 
 	bool saveFile(const QUrl& filename, const QString& filter);
 

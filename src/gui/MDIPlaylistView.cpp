@@ -273,6 +273,24 @@ QString MDIPlaylistView::defaultNameFilter()
     return "M3U8 (*.m3u8);;M3U (*.m3u);;PLS (*.pls);;Windows media player playlist (*.wpl);;XSPF (*.xspf)";
 }
 
+std::vector<int> MDIPlaylistView::getSortOrderMapping() const
+{
+	std::vector<int> retval;
+
+	if (m_sortfilter_model)
+	{
+		auto* src = underlyingModel();
+		retval.reserve(m_sortfilter_model->rowCount());
+		for (int r = 0; r < m_sortfilter_model->rowCount(); ++r)
+		{
+			const QModelIndex srcIdx = m_sortfilter_model->mapToSource(m_sortfilter_model->index(r, 0));
+			retval.push_back(srcIdx.row());
+		}
+	}
+
+	return retval;
+}
+
 void MDIPlaylistView::setEmptyModel()
 {
 	/// @todo We don't use the below anymore, delete?
@@ -312,7 +330,8 @@ void MDIPlaylistView::serializeDocument(QFileDevice& file)
 	if(mt.inherits("application/xspf+xml"))
 	{
 		// Save it in XSPF format.
-		underlyingModel()->serializeToFileAsXSPF(file);
+		auto mapping = getSortOrderMapping();
+		underlyingModel()->serializeToFileAsXSPF(file, mapping);
 	}
 	else if(mt.inherits("application/vnd.apple.mpegurl"))
 	{

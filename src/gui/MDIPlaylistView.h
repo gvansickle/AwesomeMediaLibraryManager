@@ -112,6 +112,8 @@ protected:
     QString getNewFilenameTemplate() const override;
     QString defaultNameFilter() override;
 
+	std::vector<int> getSortOrderMapping() const override;
+
     void setEmptyModel() override;
 
     void serializeDocument(QFileDevice& file) override;

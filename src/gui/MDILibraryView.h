@@ -103,6 +103,12 @@ protected:
 	///
     void setEmptyModel() override;
 
+	/**
+	 * Currently unused.
+	 * @return
+	 */
+	std::vector<int> getSortOrderMapping() const override { Q_UNIMPLEMENTED(); Q_ASSERT(0); return std::vector<int>(); };
+
 	QString getNewFilenameTemplate() const override;
 	QString defaultNameFilter() override;
 
