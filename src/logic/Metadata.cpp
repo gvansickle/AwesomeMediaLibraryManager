@@ -621,7 +621,10 @@ std::string Metadata::operator[](const std::string& key) const
 using strviw_type = QLatin1String;
 
 #define M_DATASTREAM_FIELDS(X) \
-	/*X(XMLTAG_AUDIO_FILE_TYPE, m_audio_file_type)*/ \
+	X(XMLTAG_BITRATE, m_bitrate_kb_sec) \
+	X(XMLTAG_NUM_CHANNELS, m_num_channels) \
+	X(XMLTAG_SAMPLE_RATE, m_sample_rate) \
+	X(XMLTAG_LENGTH_IN_MS, m_length_in_ms) \
 	X(XMLTAG_HAS_CUESHEET, m_has_cuesheet) \
 	X(XMLTAG_CUESHEET_EMBEDDED, m_cuesheet_embedded) \
 	X(XMLTAG_CUESHEET_SIDECAR, m_cuesheet_sidecar) \

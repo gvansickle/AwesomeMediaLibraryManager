@@ -205,7 +205,7 @@ private:
 	int64_t m_bitrate_kb_sec {0};
 
 	/// Number of channels of audio.
-	int8_t m_num_channels {0};
+	int64_t m_num_channels {0};
 
 	/// Sample rate in samples/sec.
 	int64_t m_sample_rate {0};
@@ -221,6 +221,7 @@ private:
 	/// currently there's no known way to get it.
 	/// @see m_length_in_milliseconds
 	// int64_t m_length_in_frames {0};
+
 	/// @}
 
 	/// @name Cuesheet data members.

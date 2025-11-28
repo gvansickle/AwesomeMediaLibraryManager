@@ -564,6 +564,7 @@ bool PlaylistModel::serializeToFileAsXSPF(QFileDevice& filedev, QAnyStringView p
 			writeXspfMetaElement(stream, "genre", pmi_metadata["genre"]);
 			/// @todo "DATE" may not be only a year here?
 			writeXspfMetaElement(stream, "year", pmi_metadata["date"]);
+			writeXspfMetaElement(stream, "composer_name", pmi_metadata["composer"]);
 			stream.writeTextElement("trackNum", std::to_string(pmi->getTrackNumber()));
 			stream.writeTextElement("duration", std::to_string(FramesToMilliseconds(pmi->get_length_frames())));
 			if(pmi_metadata.bitrate_kb_sec() > 0)
