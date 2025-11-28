@@ -95,7 +95,7 @@ public:
 
 	void setLibraryRootUrl(const QUrl& url) override;
 
-	bool serializeToFileAsXSPF(QFileDevice& filedev, const std::vector<int>& order_mapping) const;
+	bool serializeToFileAsXSPF(QFileDevice& filedev, QAnyStringView playlist_name, const std::vector<int>& order_mapping) const;
 	bool deserializeFromFileAsXSPF(QFileDevice& filedev); /// @todo Implement
 };
 

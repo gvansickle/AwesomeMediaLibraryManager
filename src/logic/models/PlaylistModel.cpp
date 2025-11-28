@@ -502,7 +502,7 @@ void writeXspfMetaElement(QXmlStreamWriter& stream, QAnyStringView key, T value)
  */
 
 
-bool PlaylistModel::serializeToFileAsXSPF(QFileDevice& filedev, const std::vector<int>& order_mapping) const
+bool PlaylistModel::serializeToFileAsXSPF(QFileDevice& filedev, QAnyStringView playlist_name, const std::vector<int>& order_mapping) const
 {
 	QXmlStreamWriter stream(&filedev);
 
@@ -514,12 +514,15 @@ bool PlaylistModel::serializeToFileAsXSPF(QFileDevice& filedev, const std::vecto
 
 	/// @todo Add Playlist metadata here.
 	/// http://www.xspf.org/xspf-v1.html#rfc.section.2.3.1
-	/// <title> "A human-readable title for the playlist. xspf:playlist elements MAY contain exactly one."
 	/// <creator> "Human-readable name of the entity (author, authors, group, company, etc) that authored the playlist. xspf:playlist elements MAY contain exactly one."
 	/// ...
 	/// <date>	"Creation date (not last-modified date) of the playlist, formatted as a XML schema dateTime. xspf:playlist elements MAY contain exactly one.
 	///	A sample date is "2005-01-08T17:10:47-05:00".
 
+	/// <title> "A human-readable title for the playlist. xspf:playlist elements MAY contain exactly one."
+	stream.writeTextElement("title", playlist_name);
+
+	// Now add the list of tracks.
 	stream.writeStartElement("trackList");
 	// Write the tracks.
 	for(auto row : order_mapping)
@@ -557,9 +560,9 @@ bool PlaylistModel::serializeToFileAsXSPF(QFileDevice& filedev, const std::vecto
 			stream.writeTextElement("trackNum", std::to_string(pmi->getTrackNumber()));
 			stream.writeTextElement("duration", std::to_string(FramesToMilliseconds(pmi->get_length_frames())));
 			writeXspfMetaElement(stream, "bitrate", pmi->metadata().bitrate_kb_sec());
-			writeXspfMetaElement(stream, "codec", "?");
-			writeXspfMetaElement(stream, "quality", "?");
-			stream.writeTextElement("image", "");
+//			writeXspfMetaElement(stream, "codec", "?");
+//			writeXspfMetaElement(stream, "quality", "?");
+//			stream.writeTextElement("image", "");
 			if(pmi->isSubtrack() /** @todo & PlaylistSubformat == Audacious */)
 			{
 				// Subtrack metadata.

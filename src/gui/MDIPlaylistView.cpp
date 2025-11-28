@@ -331,7 +331,7 @@ void MDIPlaylistView::serializeDocument(QFileDevice& file)
 	{
 		// Save it in XSPF format.
 		auto mapping = getSortOrderMapping();
-		underlyingModel()->serializeToFileAsXSPF(file, mapping);
+		underlyingModel()->serializeToFileAsXSPF(file, userFriendlyCurrentFile(), mapping);
 	}
 	else if(mt.inherits("application/vnd.apple.mpegurl"))
 	{
