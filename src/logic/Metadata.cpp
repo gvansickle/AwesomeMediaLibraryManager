@@ -92,6 +92,7 @@ static std::set<std::string> f_newly_discovered_keys;
 
 /// Interface name to Taglib name map.
 /// @see http://wiki.hydrogenaud.io/index.php?title=Tag_Mapping
+/// @see https://xiph.org/vorbis/doc/v-comment.html
 /// @todo SEE THESE STANDARD TAGS: https://age.hobba.nl/audio/mirroredpages/ogg-tagging.html
 static const std::map<std::string, std::string> f_name_normalization_map =
 {

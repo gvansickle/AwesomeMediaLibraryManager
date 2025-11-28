@@ -532,7 +532,7 @@ bool PlaylistModel::serializeToFileAsXSPF(QFileDevice& filedev, QAnyStringView p
 		Q_ASSERT(pmi != nullptr);
 		stream.writeStartElement("track");
 		{
-			auto pmi_metadata = pmi->metadata();
+			const auto& pmi_metadata = pmi->metadata();
 
 			// <location>
 			// "URI of resource to be rendered. Probably an audio resource, but MAY be any type of resource with a well-known duration, such as video,
@@ -541,7 +541,7 @@ bool PlaylistModel::serializeToFileAsXSPF(QFileDevice& filedev, QAnyStringView p
 			// Note the encoding requirements for <location> at https://www.xspf.org/spec#62-relative-paths.
 			//
 			stream.writeTextElement("location", pmi->getUrl().toString(QUrl::FullyEncoded | QUrl::NormalizePathSegments));
-			stream.writeTextElement("title", toqstr(pmi->metadata()["track_name"]));
+			stream.writeTextElement("title", toqstr(pmi_metadata["track_name"]));
 			// <creator> Audacious uses this to populate the "Artist" field.
 			/// Definition:
 			/// https://www.xspf.org/spec#41122-creator
@@ -549,7 +549,8 @@ bool PlaylistModel::serializeToFileAsXSPF(QFileDevice& filedev, QAnyStringView p
 			/// Human-readable name of the entity (author, authors, group, company, etc) that authored the resource
 			/// which defines the duration of track rendering. This value is primarily for fuzzy lookups, though a
 			/// user-agent may display it. xspf:track elements MAY contain exactly one.
-			stream.writeTextElement("creator", pmi->metadata()["track_performer"]);//["artist_name"]);
+#error
+			stream.writeTextElement("creator", pmi_metadata["track_performer"]);//["artist_name"]);
 			stream.writeTextElement("album", toqstr(pmi->metadata()["album_name"]));
 			// For Audacious compatibility. /// @todo "track_performer" isn't the first choice for key here.
 			writeXspfMetaElement(stream, "album-artist", pmi_metadata["track_performer"]);
@@ -559,7 +560,10 @@ bool PlaylistModel::serializeToFileAsXSPF(QFileDevice& filedev, QAnyStringView p
 			writeXspfMetaElement(stream, "year", pmi_metadata["date"]);
 			stream.writeTextElement("trackNum", std::to_string(pmi->getTrackNumber()));
 			stream.writeTextElement("duration", std::to_string(FramesToMilliseconds(pmi->get_length_frames())));
-			writeXspfMetaElement(stream, "bitrate", pmi->metadata().bitrate_kb_sec());
+			if(pmi_metadata.bitrate_kb_sec() > 0)
+			{
+				writeXspfMetaElement(stream, "bitrate", pmi_metadata.bitrate_kb_sec());
+			}
 //			writeXspfMetaElement(stream, "codec", "?");
 //			writeXspfMetaElement(stream, "quality", "?");
 //			stream.writeTextElement("image", "");
