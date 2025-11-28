@@ -549,13 +549,19 @@ bool PlaylistModel::serializeToFileAsXSPF(QFileDevice& filedev, QAnyStringView p
 			/// Human-readable name of the entity (author, authors, group, company, etc) that authored the resource
 			/// which defines the duration of track rendering. This value is primarily for fuzzy lookups, though a
 			/// user-agent may display it. xspf:track elements MAY contain exactly one.
-#error
-			stream.writeTextElement("creator", pmi_metadata["track_performer"]);//["artist_name"]);
+			constexpr static auto creator_keys = {"track_artist", "track_performer"};
+			static auto creator_values_view = creator_keys | std::views::transform([&](const auto& s) { return pmi_metadata[s]; });
+			auto resolved_creator_str_it = std::ranges::find_if(creator_values_view, [](const std::string& s) { return !s.empty();});
+			if(resolved_creator_str_it != std::ranges::end(creator_values_view))
+			{
+				stream.writeTextElement("creator", *resolved_creator_str_it);
+			}
 			stream.writeTextElement("album", toqstr(pmi->metadata()["album_name"]));
 			// For Audacious compatibility. /// @todo "track_performer" isn't the first choice for key here.
-			writeXspfMetaElement(stream, "album-artist", pmi_metadata["track_performer"]);
+			writeXspfMetaElement(stream, "album-artist", pmi_metadata["album_artist"]);
 			// <annotation>, this is where Audacious puts the cuesheet COMMENT=CUERipper[...].
 			stream.writeTextElement("annotation", pmi_metadata["comment"]);
+			writeXspfMetaElement(stream, "genre", pmi_metadata["genre"]);
 			/// @todo "DATE" may not be only a year here?
 			writeXspfMetaElement(stream, "year", pmi_metadata["date"]);
 			stream.writeTextElement("trackNum", std::to_string(pmi->getTrackNumber()));
