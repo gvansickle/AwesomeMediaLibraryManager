@@ -45,6 +45,7 @@ QPointer<LibraryModel> PlaylistModel::openFile(QUrl open_url, QObject* parent)
 {
 	QPointer<PlaylistModel> retval = nullptr;
 	/// @todo Call deserializeFromFileXspf() here.
+	// deserializeFromFileAsXSPF();
 	Q_ASSERT(false);
 	return retval;
 }
@@ -54,7 +55,7 @@ Qt::ItemFlags PlaylistModel::flags(const QModelIndex& index) const
 	auto defaultFlags = LibraryModel::flags(index);
 	if(index.isValid())
 	{
-		// An existing item.  Allow it to be dragged, alow drops onto it.
+		// An existing item.  Allow it to be dragged, allow drops onto it.
 		return defaultFlags | Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemNeverHasChildren | Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
 	}
 	else
@@ -557,14 +558,17 @@ bool PlaylistModel::serializeToFileAsXSPF(QFileDevice& filedev, QAnyStringView p
 				stream.writeTextElement("creator", *resolved_creator_str_it);
 			}
 			stream.writeTextElement("album", toqstr(pmi->metadata()["album_name"]));
-			// For Audacious compatibility. /// @todo "track_performer" isn't the first choice for key here.
+			// For Audacious compatibility.
 			writeXspfMetaElement(stream, "album-artist", pmi_metadata["album_artist"]);
 			// <annotation>, this is where Audacious puts the cuesheet COMMENT=CUERipper[...].
-			stream.writeTextElement("annotation", pmi_metadata["comment"]);
+			if(pmi_metadata["comment"].empty() == false)
+			{
+				stream.writeTextElement("annotation", pmi_metadata["comment"]);
+			}
 			writeXspfMetaElement(stream, "genre", pmi_metadata["genre"]);
 			/// @todo "DATE" may not be only a year here?
 			writeXspfMetaElement(stream, "year", pmi_metadata["date"]);
-			writeXspfMetaElement(stream, "composer_name", pmi_metadata["composer"]);
+			writeXspfMetaElement(stream, "composer", pmi_metadata["composer_name"]);
 			stream.writeTextElement("trackNum", std::to_string(pmi->getTrackNumber()));
 			stream.writeTextElement("duration", std::to_string(FramesToMilliseconds(pmi->get_length_frames())));
 			if(pmi_metadata.bitrate_kb_sec() > 0)
