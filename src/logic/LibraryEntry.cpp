@@ -161,8 +161,8 @@ void LibraryEntry::populate(bool force_refresh)
 		if(!file_metadata.hasCueSheet())
 		{
 			// Couldn't load a cue sheet, this is probably a single-song file.
-//			qDebug() << "No cuesheet for file" << this->m_url;
 			m_metadata = file_metadata;
+			m_track_number = file_metadata["track_number"].empty() ? -1 : atoi(file_metadata["track_number"].c_str());
 			m_length_frames = file_metadata.total_length_frames();
 			m_is_subtrack = false;
 			m_is_populated = true;

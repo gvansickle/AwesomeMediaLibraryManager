@@ -94,13 +94,14 @@ static std::set<std::string> f_newly_discovered_keys;
 /// @see http://wiki.hydrogenaud.io/index.php?title=Tag_Mapping
 /// @see https://xiph.org/vorbis/doc/v-comment.html
 /// @todo SEE THESE STANDARD TAGS: https://age.hobba.nl/audio/mirroredpages/ogg-tagging.html
-static const std::map<std::string, std::string> f_name_normalization_map =
+static const std::multimap<std::string, std::string> f_name_normalization_map =
 {
 	{"track_name", "TITLE"},
 	{"track_number", "TRACKNUMBER"},
 	{"track_total", ""},
 	{"album_name", "ALBUM"},
 	{"album_artist", "ALBUMARTIST"},
+	{"album_artist", "ALBUM ARTIST"},
 	{"track_artist", "ARTIST"},
 	{"track_performer", "PERFORMER"},
 	{"composer_name", "COMPOSER"},
@@ -580,42 +581,20 @@ QDebug operator<<(QDebug dbg, const Metadata& obj)
 
 std::string Metadata::operator[](const std::string& key) const
 {
-	std::string native_key_string;
+	auto range = f_name_normalization_map.equal_range(key);
+	for(auto i = range.first; i != range.second; ++i)
+	{
+		std::string native_key_string = i->second;
 
-	auto it = f_name_normalization_map.find(key);
-	if(it != f_name_normalization_map.end())
-	{
-		// Found it.
-		native_key_string = it->second;
-	}
-	else
-	{
-		// Didn't find it.
-		native_key_string = "";
-		return native_key_string;
+		std::vector<std::string> stringlist = m_tm_generic.equal_range_vector(native_key_string);
+
+		if(!stringlist.empty())
+		{
+			return stringlist[0];
+		}
 	}
 
-	//	TagLib::StringList stringlist = m_pm[native_key_string];
-	std::vector<std::string> stringlist = m_tm_generic.equal_range_vector(native_key_string);
-
-	//	auto strlist_it = m_tag_map.find(native_key_string);
-	//	if(strlist_it != m_tag_map.cend())
-	//	{
-	//		stringlist = strlist_it->second;
-	//	}
-	//	else
-	//	{
-	////		qDebug() << "No such key:" << native_key_string;
-	//	}
-
-	if(stringlist.empty())
-	{
-		return "";
-	}
-	else
-	{
-		return stringlist[0];
-	}
+	return "";
 }
 
 using strviw_type = QLatin1String;

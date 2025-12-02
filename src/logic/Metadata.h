@@ -115,7 +115,7 @@ public:
 	/// @}
 
 	/**
-	 * Return the first entry matching the key, or an empty string if no such key.
+	 * Returns the first value matching the @a key, or an empty string if no such key.
 	 */
 	std::string operator[](const std::string& key) const;
 
