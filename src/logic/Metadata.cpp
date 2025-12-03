@@ -221,16 +221,7 @@ bool Metadata::read(const QUrl& url)
 	//
 	// Tags
 	//
-#if 0
-	// Get the basic amalgamated tags from TagLib.
-	/// @see https://taglib.org/api/classTagLib_1_1Tag.html#ac55deef920269950c69bda8ca16f2710
-	/// "Exports the tags of the file as dictionary mapping (human readable) tag names (Strings) to StringLists of tag
-	/// values. The default implementation in this class considers only the usual built-in tags (artist, album, ...)
-	/// and only one value per key."
-	m_tm_generic = fr.file()->tag()->properties();
-	/// @todo We really want to be using this next one instead, but currently it ends up putting the first PERFORMER
-	/// it finds in the "Artist" column, which isn't what we want.
-#else
+
 	/// @see https://taglib.org/api/classTagLib_1_1File.html#a3f2a59083f0ed7896a33d088b7935569
 	/// "virtual PropertyMap TagLib::File::properties() const
 	/// Exports the tags of the file as dictionary mapping (human readable) tag names (uppercase Strings) to StringLists
@@ -240,7 +231,6 @@ bool Metadata::read(const QUrl& url)
 	/// remove (a subset of) them. For files that contain more than one tag (e.g. an MP3 with both an ID3v1 and an
 	/// ID3v2 tag) only the most "modern" one will be exported (ID3v2 in this case)."
 	m_tm_generic = fr.file()->properties();
-#endif
 
 
 	// Downcast the FileRef to whatever type it really is.
@@ -600,6 +590,7 @@ std::string Metadata::operator[](const std::string& key) const
 using strviw_type = QLatin1String;
 
 #define M_DATASTREAM_FIELDS(X) \
+	X(XMLTAG_AUDIO, m_audio_file_type) \
 	X(XMLTAG_BITRATE, m_bitrate_kb_sec) \
 	X(XMLTAG_NUM_CHANNELS, m_num_channels) \
 	X(XMLTAG_SAMPLE_RATE, m_sample_rate) \
