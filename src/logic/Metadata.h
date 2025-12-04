@@ -173,7 +173,6 @@ public:
 
 	/// @}
 
-/// @todo if(googletest) here
 private:
 
 	void readEmbeddedCuesheet(std::string cuesheet_str, int64_t length_in_milliseconds);
