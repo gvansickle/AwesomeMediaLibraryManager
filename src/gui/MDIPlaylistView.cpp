@@ -121,8 +121,11 @@ MDIPlaylistView::~MDIPlaylistView() = default;
 // static
 MDIModelViewPair MDIPlaylistView::open(QWidget* parent, std::function<MDIModelViewPair(QUrl)> find_existing_view_func)
 {
-	auto liburl = NetworkAwareFileDialog::getOpenFileUrl(parent, "Select a playlist file to open",
-	QUrl(""), tr("XML Shareable Playlist Format (*.xspf)"), AMLMSettings::NAFDDialogId::SavePlaylist);
+	auto liburl = NetworkAwareFileDialog::getOpenFileUrl(parent, tr("Select a playlist file to open"),
+		QUrl(""),
+		/*defaultNameFilter(),*/
+		tr("XML Shareable Playlist Format (*.xspf)"),
+		AMLMSettings::NAFDDialogId::SavePlaylist);
 	QUrl lib_url = liburl.first;
 
 	if(lib_url.isEmpty())
@@ -131,7 +134,7 @@ MDIModelViewPair MDIPlaylistView::open(QWidget* parent, std::function<MDIModelVi
 		return MDIModelViewPair();
 	}
 
-	// Open the directory the user chose as an MDILibraryView and associated model.
+	// Open the file the user chose as an MDIPlaylistView and associated model.
 	// Note that openFile() may return an already-existing view if one is found by find_existing_view_func().
 	return openFile(lib_url, parent, find_existing_view_func);
 }
@@ -174,6 +177,7 @@ MDIModelViewPair MDIPlaylistView::openFile(QUrl open_url, QWidget *parent, std::
 
 	// @todo This should probably be creating an empty View here and then
 	// calling an overridden readFile().
+
 
 	QPointer<PlaylistModel> playlist_model;
 	if (mv_pair.hasModel())

@@ -27,6 +27,7 @@
 
 // Ours.
 #include <QFile>
+#include <QMessageBox>
 
 #include "utils/StringHelpers.h"
 #include "utils/DebugHelpers.h"
@@ -46,13 +47,28 @@ PlaylistModel::PlaylistModel(QObject* parent) : LibraryModel(parent)
 // static
 QPointer<PlaylistModel> PlaylistModel::openFile(QUrl open_url, QObject* parent)
 {
+	/**
+	 * @todo This code is 90% copy/paste from MDITreeViewBase::readFile(QUrl).  We need to move UI stuff out of this (model) and into the view.
+	 */
+
+	QFile file(open_url.toLocalFile());
+	if(!file.open(QFile::ReadOnly | QFile::Text))
+	{
+		QMessageBox::warning(nullptr, qApp->applicationDisplayName(),
+							QString("Cannot read file %1:\n%2.").arg(open_url.toString(), file.errorString()));
+		return nullptr;
+	}
+
+	QApplication::setOverrideCursor(Qt::WaitCursor);
+
 	QPointer<PlaylistModel> retval = new PlaylistModel(parent);
 
-	// QFile* file = new QFile(open_url);
-	/// @todo Call deserializeFromFileXspf() here.
+	retval->deserializeFromFileAsXSPF(file);
 
-	// deserializeFromFileAsXSPF();
-	Q_ASSERT(false);
+	QApplication::restoreOverrideCursor();
+
+	// setCurrentFile(load_url);
+
 	return retval;
 }
 
