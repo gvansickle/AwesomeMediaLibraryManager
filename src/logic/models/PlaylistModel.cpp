@@ -26,6 +26,8 @@
 #include <QXmlStreamWriter>
 
 // Ours.
+#include <QFile>
+
 #include "utils/StringHelpers.h"
 #include "utils/DebugHelpers.h"
 #include "LibraryEntryMimeData.h"
@@ -41,10 +43,14 @@ PlaylistModel::PlaylistModel(QObject* parent) : LibraryModel(parent)
 	m_columnSpecs.push_back({SectionID(PlaylistSectionID::Blacklist), "Blacklist", {"blacklist"}});
 }
 
-QPointer<LibraryModel> PlaylistModel::openFile(QUrl open_url, QObject* parent)
+// static
+QPointer<PlaylistModel> PlaylistModel::openFile(QUrl open_url, QObject* parent)
 {
-	QPointer<PlaylistModel> retval = nullptr;
+	QPointer<PlaylistModel> retval = new PlaylistModel(parent);
+
+	// QFile* file = new QFile(open_url);
 	/// @todo Call deserializeFromFileXspf() here.
+
 	// deserializeFromFileAsXSPF();
 	Q_ASSERT(false);
 	return retval;

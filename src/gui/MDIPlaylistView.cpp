@@ -118,6 +118,7 @@ MDIPlaylistView::MDIPlaylistView(QWidget* parent) : MDITreeViewBase(parent)
 
 MDIPlaylistView::~MDIPlaylistView() = default;
 
+// static
 MDIModelViewPair MDIPlaylistView::open(QWidget* parent, std::function<MDIModelViewPair(QUrl)> find_existing_view_func)
 {
 	auto liburl = NetworkAwareFileDialog::getOpenFileUrl(parent, "Select a playlist file to open",
@@ -135,6 +136,7 @@ MDIModelViewPair MDIPlaylistView::open(QWidget* parent, std::function<MDIModelVi
 	return openFile(lib_url, parent, find_existing_view_func);
 }
 
+// static
 MDIModelViewPair MDIPlaylistView::openModel(QPointer<PlaylistModel> model, QWidget* parent)
 {
 	MDIModelViewPair retval;

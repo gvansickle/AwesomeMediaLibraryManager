@@ -62,7 +62,7 @@ public:
 	/**
 	 * Open a new LibraryModel on the specified QUrl.
 	 */
-	static QPointer<LibraryModel> openFile(QUrl open_url, QObject* parent);
+	static QPointer<PlaylistModel> openFile(QUrl open_url, QObject* parent);
 
 	Qt::ItemFlags flags(const QModelIndex &index) const override;
 	QVariant data(const QModelIndex &index, int role) const override;
