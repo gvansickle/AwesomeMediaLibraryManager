@@ -619,6 +619,47 @@ bool PlaylistModel::serializeToFileAsXSPF(QFileDevice& filedev, QAnyStringView p
 
 bool PlaylistModel::deserializeFromFileAsXSPF(QFileDevice& filedev)
 {
+	QXmlStreamReader stream(&filedev);
+
+	// Make sure the file is really xspf.
+	if(stream.readNextStartElement())
+	{
+		if((stream.name() == "playlist")
+			&& stream.namespaceUri() == "http://xspf.org/ns/0/"
+			&& (stream.attributes().value("version") == "1"
+				|| stream.attributes().value("version") == "1.0")) // Not certain we need the "1.0".
+		{
+			// It's an xspf file.
+
+			// In here, we don't really care about most of the data in an xspf file if it's one that we wrote.
+			// We just need each:
+			// - <track> <location>
+			// - <trackNum>
+			// Then we'll do essentially the same type of asynchronous scan we do for the LibraryModel.
+			while (stream.readNextStartElement())
+			{
+				if (stream.name() == "title")
+				{
+					Q_ASSERT(0);
+				}
+				// else if (stream.name() == "folder")
+				// 	readFolder(nullptr);
+				// else if (stream.name() == "bookmark")
+				// 	readBookmark(nullptr);
+				// else if (stream.name() == "separator")
+				// 	readSeparator(nullptr);
+				else
+					stream.skipCurrentElement();
+			}
+
+			Q_ASSERT(0);
+		}
+		else
+		{
+			stream.raiseError();
+		}
+	}
+
 	Q_UNIMPLEMENTED();
 	Q_ASSERT(0);
 }
