@@ -26,6 +26,7 @@
 #include "PlaylistModelItem.h"
 
 #include <memory>
+#include <QXmlStreamReader>
 
 class QMediaPlaylist;
 
@@ -97,6 +98,10 @@ public:
 
 	bool serializeToFileAsXSPF(QFileDevice& filedev, QAnyStringView playlist_name, const std::vector<int>& order_mapping) const;
 	bool deserializeFromFileAsXSPF(QFileDevice& filedev); /// @todo Implement
+
+private:
+	void readXSPFTrack(QXmlStreamReader& stream);
+	void readXSPFTrackList(QXmlStreamReader& stream);
 };
 
 Q_DECLARE_METATYPE(PlaylistModel)

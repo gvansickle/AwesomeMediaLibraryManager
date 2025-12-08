@@ -632,7 +632,9 @@ bool PlaylistModel::deserializeFromFileAsXSPF(QFileDevice& filedev)
 			// It's an xspf file.
 
 			// In here, we don't really care about most of the data in an xspf file if it's one that we wrote.
-			// We just need each:
+			// We just need:
+			// <title>
+			// then for each track:
 			// - <track> <location>
 			// - <trackNum>
 			// Then we'll do essentially the same type of asynchronous scan we do for the LibraryModel.
@@ -640,16 +642,16 @@ bool PlaylistModel::deserializeFromFileAsXSPF(QFileDevice& filedev)
 			{
 				if (stream.name() == "title")
 				{
-					Q_ASSERT(0);
+					auto playlist_title = stream.readElementText();
 				}
-				// else if (stream.name() == "folder")
-				// 	readFolder(nullptr);
-				// else if (stream.name() == "bookmark")
-				// 	readBookmark(nullptr);
-				// else if (stream.name() == "separator")
-				// 	readSeparator(nullptr);
+				else if (stream.name() == "trackList")
+				{
+					readXSPFTrackList(stream);
+				}
 				else
+				{
 					stream.skipCurrentElement();
+				}
 			}
 
 			Q_ASSERT(0);
@@ -662,6 +664,49 @@ bool PlaylistModel::deserializeFromFileAsXSPF(QFileDevice& filedev)
 
 	Q_UNIMPLEMENTED();
 	Q_ASSERT(0);
+}
+
+void PlaylistModel::readXSPFTrack(QXmlStreamReader& stream)
+{
+	Q_ASSERT(stream.isStartElement() && stream.name() == "track");
+
+	while (stream.readNextStartElement())
+	{
+		if(stream.name() == "location")
+		{
+			auto location_str = stream.readElementText();
+			QUrl location_url = QUrl::fromEncoded(location_str.toUtf8());
+			qDb() << "Location URL:" << location_url;
+			Q_ASSERT(location_url.isValid());
+			Q_ASSERT(location_url.isLocalFile());
+		}
+		else if(stream.name() == "trackNum")
+		{
+			auto track_num_str = stream.readElementText();
+		}
+		else
+		{
+			stream.skipCurrentElement();
+		}
+	}
+}
+
+void PlaylistModel::readXSPFTrackList(QXmlStreamReader& stream)
+{
+	Q_ASSERT(stream.isStartElement() && stream.name() == "trackList");
+
+	while (stream.readNextStartElement())
+	{
+		if(stream.name() == "track")
+		{
+			qDb() << "Found track";
+			readXSPFTrack(stream);
+		}
+		else
+		{
+			stream.skipCurrentElement();
+		}
+	}
 }
 
 
