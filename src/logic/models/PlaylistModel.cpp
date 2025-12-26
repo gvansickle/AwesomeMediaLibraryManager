@@ -683,6 +683,7 @@ void PlaylistModel::readXSPFTrack(QXmlStreamReader& stream)
 		else if(stream.name() == "trackNum")
 		{
 			auto track_num_str = stream.readElementText();
+			qDb() << "Track number:" << track_num_str;
 		}
 		else
 		{
