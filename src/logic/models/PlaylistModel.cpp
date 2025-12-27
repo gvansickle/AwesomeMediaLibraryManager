@@ -617,9 +617,14 @@ bool PlaylistModel::serializeToFileAsXSPF(QFileDevice& filedev, QAnyStringView p
 	return true;
 }
 
+
+
 bool PlaylistModel::deserializeFromFileAsXSPF(QFileDevice& filedev)
 {
 	QXmlStreamReader stream(&filedev);
+
+	QString playlist_title;
+	std::deque<PlaylistReadEntry> playlist_tracks;
 
 	// Make sure the file is really xspf.
 	if(stream.readNextStartElement())
@@ -642,19 +647,23 @@ bool PlaylistModel::deserializeFromFileAsXSPF(QFileDevice& filedev)
 			{
 				if (stream.name() == "title")
 				{
-					auto playlist_title = stream.readElementText();
+					if(!playlist_title.isEmpty())
+					{
+						// Playlist title was already read, this is a second, so a malformed XSPF file.
+						stream.raiseError("Found second playlist title in XSPF file.");
+						return false;
+					}
+					playlist_title = stream.readElementText();
 				}
 				else if (stream.name() == "trackList")
 				{
-					readXSPFTrackList(stream);
+					readXSPFTrackList(stream, playlist_tracks);
 				}
 				else
 				{
 					stream.skipCurrentElement();
 				}
 			}
-
-			Q_ASSERT(0);
 		}
 		else
 		{
@@ -662,13 +671,16 @@ bool PlaylistModel::deserializeFromFileAsXSPF(QFileDevice& filedev)
 		}
 	}
 
-	Q_UNIMPLEMENTED();
-	Q_ASSERT(0);
+	qDb() << M_ID_VAL(playlist_tracks.size());
+
+	return true;
 }
 
-void PlaylistModel::readXSPFTrack(QXmlStreamReader& stream)
+void PlaylistModel::readXSPFTrack(QXmlStreamReader& stream, std::deque<PlaylistReadEntry>& playlist_read_entries)
 {
 	Q_ASSERT(stream.isStartElement() && stream.name() == "track");
+
+	PlaylistReadEntry entry;
 
 	while (stream.readNextStartElement())
 	{
@@ -677,22 +689,30 @@ void PlaylistModel::readXSPFTrack(QXmlStreamReader& stream)
 			auto location_str = stream.readElementText();
 			QUrl location_url = QUrl::fromEncoded(location_str.toUtf8());
 			qDb() << "Location URL:" << location_url;
+			entry.m_track_url = location_url;
 			Q_ASSERT(location_url.isValid());
 			Q_ASSERT(location_url.isLocalFile());
 		}
 		else if(stream.name() == "trackNum")
 		{
 			auto track_num_str = stream.readElementText();
+			entry.m_track_num = track_num_str.toInt();
 			qDb() << "Track number:" << track_num_str;
 		}
 		else
 		{
+			if(!entry.empty())
+			{
+				playlist_read_entries.push_back(entry);
+				entry.clear();
+			}
 			stream.skipCurrentElement();
 		}
+
 	}
 }
 
-void PlaylistModel::readXSPFTrackList(QXmlStreamReader& stream)
+void PlaylistModel::readXSPFTrackList(QXmlStreamReader& stream, std::deque<PlaylistReadEntry>& playlist_read_entries)
 {
 	Q_ASSERT(stream.isStartElement() && stream.name() == "trackList");
 
@@ -701,7 +721,7 @@ void PlaylistModel::readXSPFTrackList(QXmlStreamReader& stream)
 		if(stream.name() == "track")
 		{
 			qDb() << "Found track";
-			readXSPFTrack(stream);
+			readXSPFTrack(stream, playlist_read_entries);
 		}
 		else
 		{

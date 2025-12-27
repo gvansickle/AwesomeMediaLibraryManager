@@ -22,6 +22,11 @@
 
 /// @file
 
+#include <deque>
+#include <deque>
+#include <deque>
+#include <deque>
+
 #include "LibraryModel.h"
 #include "PlaylistModelItem.h"
 
@@ -100,8 +105,15 @@ public:
 	bool deserializeFromFileAsXSPF(QFileDevice& filedev); /// @todo Implement
 
 private:
-	void readXSPFTrack(QXmlStreamReader& stream);
-	void readXSPFTrackList(QXmlStreamReader& stream);
+	struct PlaylistReadEntry
+	{
+		QUrl m_track_url;
+		std::int64_t m_track_num;
+		bool empty() const { return m_track_url.isEmpty(); }
+		void clear() { m_track_url.clear(); m_track_num = -1; }
+	};
+	void readXSPFTrack(QXmlStreamReader& stream, std::deque<PlaylistReadEntry>& playlist_read_entries);
+	void readXSPFTrackList(QXmlStreamReader& stream, std::deque<PlaylistReadEntry>& playlist_read_entries);
 };
 
 Q_DECLARE_METATYPE(PlaylistModel)
