@@ -92,18 +92,22 @@ static std::set<std::string> f_newly_discovered_keys;
 
 /// Interface name to Taglib name map.
 /// @see http://wiki.hydrogenaud.io/index.php?title=Tag_Mapping
-static const std::map<std::string, std::string> f_name_normalization_map =
+/// @see https://xiph.org/vorbis/doc/v-comment.html
+/// @todo SEE THESE STANDARD TAGS: https://age.hobba.nl/audio/mirroredpages/ogg-tagging.html
+static const std::multimap<std::string, std::string> f_name_normalization_map =
 {
 	{"track_name", "TITLE"},
 	{"track_number", "TRACKNUMBER"},
 	{"track_total", ""},
 	{"album_name", "ALBUM"},
 	{"album_artist", "ALBUMARTIST"},
+	{"album_artist", "ALBUM ARTIST"},
 	{"track_artist", "ARTIST"},
 	{"track_performer", "PERFORMER"},
 	{"composer_name", "COMPOSER"},
 	{"conductor_name", "CONDUCTOR"},
 	{"genre", "GENRE"},
+	{"date", "DATE"},
 	{"media", "MEDIA"},
 	{"ISRC", "ISRC"},
 	{"catalog", "CATALOGNUMBER"},
@@ -112,7 +116,7 @@ static const std::map<std::string, std::string> f_name_normalization_map =
 
 /**
  * https://xiph.org/vorbis/doc/v-comment.html
- * @todo This is album only, not track, except there's a "TRACKNUMBER"?
+ * @todo This is album only, not track, except there's a "TRACKNUMBER"?  Also currently unused.
  */
 static const std::map<std::string, std::vector<std::string>> f_vorbis_comment_normalization_map =
 {
@@ -218,14 +222,6 @@ bool Metadata::read(const QUrl& url)
 	// Tags
 	//
 
-	// Get the basic amalgamated tags from TagLib.
-	/// @see https://taglib.org/api/classTagLib_1_1Tag.html#ac55deef920269950c69bda8ca16f2710
-	/// "Exports the tags of the file as dictionary mapping (human readable) tag names (Strings) to StringLists of tag
-	/// values. The default implementation in this class considers only the usual built-in tags (artist, album, ...)
-	/// and only one value per key."
-	m_tm_generic = fr.file()->tag()->properties();
-	/// @todo We really want to be using this next one instead, but currently it ends up putting the first PERFORMER
-	/// it finds in the "Artist" column, which isn't what we want.
 	/// @see https://taglib.org/api/classTagLib_1_1File.html#a3f2a59083f0ed7896a33d088b7935569
 	/// "virtual PropertyMap TagLib::File::properties() const
 	/// Exports the tags of the file as dictionary mapping (human readable) tag names (uppercase Strings) to StringLists
@@ -234,7 +230,7 @@ bool Metadata::read(const QUrl& url)
 	/// one entry identifying that object (e.g. the frame type for ID3v2 tags). Use removeUnsupportedProperties() to
 	/// remove (a subset of) them. For files that contain more than one tag (e.g. an MP3 with both an ID3v1 and an
 	/// ID3v2 tag) only the most "modern" one will be exported (ID3v2 in this case)."
-	// m_tm_generic = fr.file()->properties();
+	m_tm_generic = fr.file()->properties();
 
 
 	// Downcast the FileRef to whatever type it really is.
@@ -575,48 +571,30 @@ QDebug operator<<(QDebug dbg, const Metadata& obj)
 
 std::string Metadata::operator[](const std::string& key) const
 {
-	std::string native_key_string;
+	auto range = f_name_normalization_map.equal_range(key);
+	for(auto i = range.first; i != range.second; ++i)
+	{
+		std::string native_key_string = i->second;
 
-	auto it = f_name_normalization_map.find(key);
-	if(it != f_name_normalization_map.end())
-	{
-		// Found it.
-		native_key_string = it->second;
-	}
-	else
-	{
-		// Didn't find it.
-		native_key_string = "";
-		return native_key_string;
+		std::vector<std::string> stringlist = m_tm_generic.equal_range_vector(native_key_string);
+
+		if(!stringlist.empty())
+		{
+			return stringlist[0];
+		}
 	}
 
-	//	TagLib::StringList stringlist = m_pm[native_key_string];
-	std::vector<std::string> stringlist = m_tm_generic.equal_range_vector(native_key_string);
-
-	//	auto strlist_it = m_tag_map.find(native_key_string);
-	//	if(strlist_it != m_tag_map.cend())
-	//	{
-	//		stringlist = strlist_it->second;
-	//	}
-	//	else
-	//	{
-	////		qDebug() << "No such key:" << native_key_string;
-	//	}
-
-	if(stringlist.empty())
-	{
-		return "";
-	}
-	else
-	{
-		return stringlist[0];
-	}
+	return "";
 }
 
 using strviw_type = QLatin1String;
 
 #define M_DATASTREAM_FIELDS(X) \
-	/*X(XMLTAG_AUDIO_FILE_TYPE, m_audio_file_type)*/ \
+	/* This breaks reading for some reason: X(XMLTAG_AUDIO_FILE_TYPE, m_audio_file_type)*/ \
+	X(XMLTAG_BITRATE, m_bitrate_kb_sec) \
+	X(XMLTAG_NUM_CHANNELS, m_num_channels) \
+	X(XMLTAG_SAMPLE_RATE, m_sample_rate) \
+	X(XMLTAG_LENGTH_IN_MS, m_length_in_ms) \
 	X(XMLTAG_HAS_CUESHEET, m_has_cuesheet) \
 	X(XMLTAG_CUESHEET_EMBEDDED, m_cuesheet_embedded) \
 	X(XMLTAG_CUESHEET_SIDECAR, m_cuesheet_sidecar) \

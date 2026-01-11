@@ -22,10 +22,16 @@
 
 /// @file
 
+#include <deque>
+#include <deque>
+#include <deque>
+#include <deque>
+
 #include "LibraryModel.h"
 #include "PlaylistModelItem.h"
 
 #include <memory>
+#include <QXmlStreamReader>
 
 class QMediaPlaylist;
 
@@ -59,6 +65,11 @@ public:
     ~PlaylistModel() override = default;
 	M_GH_POLYMORPHIC_SUPPRESS_COPYING_C67(PlaylistModel)
 
+	/**
+	 * Open a new LibraryModel on the specified QUrl.
+	 */
+	static QPointer<PlaylistModel> openFile(QUrl open_url, QObject* parent);
+
 	Qt::ItemFlags flags(const QModelIndex &index) const override;
 	QVariant data(const QModelIndex &index, int role) const override;
 
@@ -90,7 +101,19 @@ public:
 
 	void setLibraryRootUrl(const QUrl& url) override;
 
-	bool serializeToFileAsXSPF(QFileDevice& filedev) const;
+	bool serializeToFileAsXSPF(QFileDevice& filedev, QAnyStringView playlist_name, const std::vector<int>& order_mapping) const;
+	bool deserializeFromFileAsXSPF(QFileDevice& filedev);
+
+private:
+	struct PlaylistReadEntry
+	{
+		QUrl m_track_url {};
+		std::int64_t m_track_num {-1};
+		bool empty() const { return m_track_url.isEmpty(); }
+		void clear() { m_track_url.clear(); m_track_num = -1; }
+	};
+	void readXSPFTrack(QXmlStreamReader& stream, std::deque<PlaylistReadEntry>& playlist_read_entries);
+	void readXSPFTrackList(QXmlStreamReader& stream, std::deque<PlaylistReadEntry>& playlist_read_entries);
 };
 
 Q_DECLARE_METATYPE(PlaylistModel)

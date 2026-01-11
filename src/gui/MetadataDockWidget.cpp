@@ -199,9 +199,9 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 				{"hasXiphComment?", md.hasXiphComment(), md.tagmap_xiph()},
 				{"hasRIFFInfoTag?", md.hasRIFFInfo(), md.tagmap_RIFFInfo()},
 				{"hasDiscCuesheet?", md.hasDiscCuesheet(), md.tagmap_cuesheet_disc()},
-                {"CuesheetEmbedded?:", md.m_cuesheet_embedded.origin() == CueSheet::Embedded, empty},
-				{"CuesheetSidecar?:", md.m_cuesheet_sidecar.origin() == CueSheet::Sidecar, empty},
-            	{"hasCDTextFile?", QVariant::fromValue(md.m_cuesheet_combined.has_cdtext_file()), empty}
+                {"CuesheetEmbedded?:", md.hasCueSheetEmbedded(), empty},
+				{"CuesheetSidecar?:", md.hasCueSheetSidecar(), empty},
+            	{"hasCDTextFile?", QVariant::fromValue(md.cuesheet().has_cdtext_file()), empty}
             	// {"Cuesheets equal?", (md.m_cuesheet_embedded == md.m_cuesheet_sidecar), empty},
 					// {"CuesheetEmbedded?:", md.m_cuesheet_embedded.operator bool(), empty},
 					// {"CuesheetSidecar?:", md.m_cuesheet_sidecar.operator bool(), empty},

@@ -92,7 +92,7 @@ void Core::build()
 //	/*auto new_grandchild =*/ new_child->insertChild(0, new_grandchild);
 	auto new_grandchild = the_etm->append_child(fields, new_child);
 	fields.clear();
-	fields << QString("GHI") << QString("JKL");
+    fields << QStringLiteral("GHI") << QStringLiteral("JKL");
 	the_etm->append_child(fields, new_grandchild);
 
 	QVector<QVariant> fields2({QString("First"), QString("Second")});

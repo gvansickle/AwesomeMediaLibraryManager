@@ -44,9 +44,24 @@ public:
     explicit MDIPlaylistView(QWidget *parent = Q_NULLPTR);
     ~MDIPlaylistView() override;
 
+	/**
+	 * Pop up an 'Open file" dialog and open a new View on the file specified by the user.
+	 * ~= "File->Open..."
+	 *
+	 * @param find_existing_view_func  Function which, if specified, should search for an existing instance of
+	 *                                 a view with the same open_url open, and return a pointer to it, or null if none was found.
+	 */
+	static MDIModelViewPair open(QWidget* parent, std::function<MDIModelViewPair(QUrl)> find_existing_view_func = nullptr);
+
+	/**
+	 * Open the specified QUrl.  Called by open(QWidget*).
+	 * Among other things, this function is responsible for calling setCurrentFilename().
+	 */
+	static MDIModelViewPair openFile(QUrl open_url, QWidget* parent,
+									std::function<MDIModelViewPair(QUrl)> find_existing_view_func = nullptr);
 
     /**
-     * static member function which opens an MDILibraryView on the given model.
+     * static member function which opens an MDIPlaylistView on the given model.
      */
     static MDIModelViewPair openModel(QPointer<PlaylistModel> model, QWidget* parent);
 
@@ -96,6 +111,8 @@ protected:
     ///
     QString getNewFilenameTemplate() const override;
     QString defaultNameFilter() override;
+
+	std::vector<int> getSortOrderMapping() const override;
 
     void setEmptyModel() override;
 

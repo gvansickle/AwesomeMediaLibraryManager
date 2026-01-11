@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2019, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -29,13 +29,13 @@
 #include <QObject>
 
 // Ours.
-
+#include <logic/serialization/ISerializable.h>
 
 /**
  * The AudioFileType class
  * @todo Do we really need this, or would ExtMimeType serve just as well?
  */
-class AudioFileType
+class AudioFileType : public ISerializable
 {
 	Q_GADGET
 

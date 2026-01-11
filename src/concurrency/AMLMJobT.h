@@ -21,6 +21,7 @@
 #define AWESOMEMEDIALIBRARYMANAGER_AMLMJOBT_H
 
 // Std C++
+#include <chrono>
 
 // Qt
 #ifdef QT_NO_EXCEPTIONS
@@ -302,12 +303,14 @@ protected:
 	 */
 	void pre_start()
 	{
+        using namespace std::chrono_literals;
+
 		// Hook up signals and such to the ExtFutureWatcher<T>.
 		this->HookUpExtFutureSignals(m_ext_watcher);
 
 		// Start the speed calculation timer.
 		m_speed_timer->setTimerType(Qt::TimerType::PreciseTimer);
-		m_speed_timer->setInterval(1000);
+        m_speed_timer->setInterval(1s);
 		m_speed_timer->start();
 	}
 
@@ -606,7 +609,7 @@ protected:
                 // Some other error.
                 // KJob
                 setError(KJob::UserDefinedError);
-                setErrorText(QString("Unknown, non-Killed-Job error on %1: %2")
+                setErrorText(QStringLiteral("Unknown, non-Killed-Job error on %1: %2")
                              .arg(this->metaObject()->className())
                              .arg(this->objectName()));
             }

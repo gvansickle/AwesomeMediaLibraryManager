@@ -31,7 +31,7 @@ if(WIN32)
     # C:\CraftRoot\build\dev-utils\flexbison\image-Debug-2.5.14\dev-utils\bin\win_bison.exe
         # We also need png2ico on Windows, which is here:
         # C:\CraftRoot\dev-utils\bin\png2ico.exe
-    set(CMAKE_VERBOSE_MAKEFILE ON)
+    set(CMAKE_VERBOSE_MAKEFILE OFF)
     set(FLEX_FLAGS_EXTRA --wincompat)
     set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH};C:/CraftRoot/dev-utils/bin;C:/Qt/5.12.0/Src/gnuwin32/bin)
 endif()

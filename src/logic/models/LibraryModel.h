@@ -130,6 +130,11 @@ public:
 	/// of an entry derived from LibraryEntry.  Used by insertRows().
 	virtual std::shared_ptr<LibraryEntry> createDefaultConstructedEntry() const;
 
+	/**
+	 * Return a shared_ptr to the LibraryEntry at @a index.
+	 * @param index
+	 * @return
+	 */
 	virtual std::shared_ptr<LibraryEntry> getItem(const QModelIndex& index) const;
 
 	bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;

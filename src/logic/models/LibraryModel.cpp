@@ -79,7 +79,7 @@ LibraryModel::LibraryModel(QObject *parent) : QAbstractItemModel(parent)
 	m_columnSpecs.clear();
     m_columnSpecs.push_back({SectionID::Status, "?", QStringList("status_icon"), true});
 	m_columnSpecs.push_back({SectionID::Title, "Title", QStringList("track_name")});
-	m_columnSpecs.push_back({SectionID::Artist, "Artist", QStringList({"track_performer", "track_artist", "album_artist"})});
+	m_columnSpecs.push_back({SectionID::Artist, "Artist", QStringList({"track_artist", "track_performer"})});
 	m_columnSpecs.push_back({SectionID::Album, "Album", QStringList("album_name")});
 	m_columnSpecs.push_back({SectionID::Length, "Length", {"length"}, true});
 	m_columnSpecs.push_back({SectionID::MIMEType, "Type", {"filetype"}, true});
@@ -488,16 +488,7 @@ bool LibraryModel::setData(const QModelIndex& index, const QVariant& value, int 
 
 	std::shared_ptr<LibraryEntry> replacement_item;
 
-	//	if(role == ModelUserRoles::PointerToItemRole)
-	//	{
-	// Set a std::shared_ptr<> to the item at this index/role.
 	replacement_item = value.value<std::shared_ptr<LibraryEntry>>();
-	Q_ASSERT(replacement_item);
-	//		qDebug() << "Setting pointer to item with Url:" << replacement_item->getUrl();
-	//	}
-
-	///qDebug() << "Can convert to LibraryEntry*:" << value.canConvert<LibraryEntry*>();
-
 	Q_ASSERT(replacement_item);
 
 	m_library.replaceEntry(index.row(), replacement_item);

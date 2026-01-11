@@ -26,6 +26,9 @@
 #include <QXmlStreamWriter>
 
 // Ours.
+#include <QFile>
+#include <QMessageBox>
+
 #include "utils/StringHelpers.h"
 #include "utils/DebugHelpers.h"
 #include "LibraryEntryMimeData.h"
@@ -41,12 +44,40 @@ PlaylistModel::PlaylistModel(QObject* parent) : LibraryModel(parent)
 	m_columnSpecs.push_back({SectionID(PlaylistSectionID::Blacklist), "Blacklist", {"blacklist"}});
 }
 
+// static
+QPointer<PlaylistModel> PlaylistModel::openFile(QUrl open_url, QObject* parent)
+{
+	/**
+	 * @todo This code is 90% copy/paste from MDITreeViewBase::readFile(QUrl).  We need to move UI stuff out of this (model) and into the view.
+	 */
+
+	QFile file(open_url.toLocalFile());
+	if(!file.open(QFile::ReadOnly | QFile::Text))
+	{
+		QMessageBox::warning(nullptr, qApp->applicationDisplayName(),
+							QString("Cannot read file %1:\n%2.").arg(open_url.toString(), file.errorString()));
+		return nullptr;
+	}
+
+	QApplication::setOverrideCursor(Qt::WaitCursor);
+
+	QPointer<PlaylistModel> retval = new PlaylistModel(parent);
+
+	retval->deserializeFromFileAsXSPF(file);
+
+	QApplication::restoreOverrideCursor();
+
+	// setCurrentFile(load_url);
+
+	return retval;
+}
+
 Qt::ItemFlags PlaylistModel::flags(const QModelIndex& index) const
 {
 	auto defaultFlags = LibraryModel::flags(index);
 	if(index.isValid())
 	{
-		// An existing item.  Allow it to be dragged, alow drops onto it.
+		// An existing item.  Allow it to be dragged, allow drops onto it.
 		return defaultFlags | Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemNeverHasChildren | Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
 	}
 	else
@@ -395,7 +426,106 @@ void PlaylistModel::setLibraryRootUrl(const QUrl &url)
     endResetModel();
 }
 
-bool PlaylistModel::serializeToFileAsXSPF(QFileDevice& filedev) const
+void writeXspfMetaElement(QXmlStreamWriter& stream, QAnyStringView key, QAnyStringView value)
+{
+	if(!value.isEmpty())
+	{
+		stream.writeStartElement("meta");
+		stream.writeAttribute("rel", key);
+		stream.writeCharacters(value);
+		stream.writeEndElement();
+	}
+}
+
+template<typename T>
+requires std::integral<T>
+void writeXspfMetaElement(QXmlStreamWriter& stream, QAnyStringView key, T value)
+{
+	auto value_as_qstr = QString::number(value);
+	writeXspfMetaElement(stream, key, value_as_qstr);
+}
+
+/**
+ * @page xspf Notes on XSPF playlist support.
+ * Note that the XSPF tags are not the same as standard Vorbis Comments described here: https://taglib.org/api/p_propertymapping.html
+ * - Audacious
+ *   - Decent support of multi-track flac files.
+ *   - Uses a lot of <meta> to capture subtrack info (they call them "subsongs").
+ *   - Does not appear to emit <meta> tags when it has no data for the field.
+ *   - Doesn't appear to use XSPF's <extension> feature.
+ *   - Example:
+\code{.xml}
+<?xml version="1.0" encoding="UTF-8"?>
+<playlist version="1" xmlns="http://xspf.org/ns/0/">
+  <title>GRVSPlaylist1</title>
+  <trackList>
+  <!-- ..... -->
+	<track>
+	  <location>file:///run/user/[...]/Wham%21/1984%20-%20Make%20It%20Big/Wham%21%20-%20Make%20It%20Big.cue?7</location>
+	  <title>Credit Card Baby</title>
+	  <creator>Wham!</creator>
+	  <album>Make It Big</album>
+	  <meta rel="album-artist">Wham!</meta>
+	  <annotation>CUERipper v2.1.6 Copyright (C) 2008-13 Grigory Chudov</annotation>
+	  <meta rel="year">1984</meta>
+	  <trackNum>7</trackNum>
+	  <duration>309934</duration>
+	  <meta rel="bitrate">789</meta>
+	  <meta rel="codec">Free Lossless Audio Codec (FLAC)</meta>
+	  <meta rel="quality">lossless</meta>
+	  <meta rel="audio-file">file:///run/user/[...]/Wham%21/1984%20-%20Make%20It%20Big/Wham%21%20-%20Make%20It%20Big.flac</meta>
+	  <meta rel="subsong-id">7</meta>    <!-- NOTE this is the ".cue?7" at the end of <location> above -->
+	  <meta rel="seg-start">1598226</meta>
+	  <meta rel="seg-end">1908160</meta>
+	</track>
+	<track>
+	  <location>file:///run/user/[...]/Wham%21/1984%20-%20Make%20It%20Big/Wham%21%20-%20Make%20It%20Big.cue?8</location>
+	  <title>Careless Whisper</title>
+	  <creator>Wham!</creator>
+	  <album>Make It Big</album>
+	  <meta rel="album-artist">Wham!</meta>
+	  <annotation>CUERipper v2.1.6 Copyright (C) 2008-13 Grigory Chudov</annotation>
+	  <meta rel="year">1984</meta>
+	  <trackNum>8</trackNum>
+	  <duration>391840</duration>
+	  <meta rel="bitrate">789</meta>
+	  <meta rel="codec">Free Lossless Audio Codec (FLAC)</meta>
+	  <meta rel="quality">lossless</meta>
+	  <meta rel="audio-file">file:///run/user/[...]/Wham%21/1984%20-%20Make%20It%20Big/Wham%21%20-%20Make%20It%20Big.flac</meta>
+	  <meta rel="subsong-id">8</meta>
+	  <meta rel="seg-start">1908160</meta>  <!-- NOTE missing seg-end on last track -->
+	</track>
+  </trackList>
+</playlist>
+\endcode
+ * - Amarok
+ *   - Doesn't support multi-track flac files, simply considers them one long song.
+ *   - Does use XSPF's <extension> feature.  Not clear what for.
+ *   - Example:
+\code{.xml}
+<?xml version="1.0" encoding="UTF-8"?>
+<playlist version="1" xmlns="http://xspf.org/ns/0/">
+  <trackList>
+	<track>
+	  <location>../../run/user/[...different from Audacious ...]/CDRips/Boy George/1993 - At Worst… The Best of Boy George and Culture Club/Boy George - At Worst… The Best of Boy George and Culture Club.flac</location>
+	  <identifier>amarok-sqltrackuid://eebf97d1ebb8702e5e6750059dcee579</identifier>
+	  <title>At Worst… The Best of Boy George and Culture Club</title>
+	  <creator>Boy George</creator>
+	  <annotation>CUERipper v2.1.5 Copyright (C) 2008-13 Grigory Chudov</annotation>
+	  <album>At Worst… The Best of Boy George and Culture Club</album>
+	  <duration>4510827</duration>
+	</track>
+  </trackList>
+  <extension application="http://amarok.kde.org">
+	<queue/>
+  </extension>
+</playlist>
+\endcode
+ *
+ */
+
+
+bool PlaylistModel::serializeToFileAsXSPF(QFileDevice& filedev, QAnyStringView playlist_name, const std::vector<int>& order_mapping) const
 {
 	QXmlStreamWriter stream(&filedev);
 
@@ -407,37 +537,203 @@ bool PlaylistModel::serializeToFileAsXSPF(QFileDevice& filedev) const
 
 	/// @todo Add Playlist metadata here.
 	/// http://www.xspf.org/xspf-v1.html#rfc.section.2.3.1
-	/// <title> "A human-readable title for the playlist. xspf:playlist elements MAY contain exactly one."
 	/// <creator> "Human-readable name of the entity (author, authors, group, company, etc) that authored the playlist. xspf:playlist elements MAY contain exactly one."
 	/// ...
 	/// <date>	"Creation date (not last-modified date) of the playlist, formatted as a XML schema dateTime. xspf:playlist elements MAY contain exactly one.
 	///	A sample date is "2005-01-08T17:10:47-05:00".
 
+	/// <title> "A human-readable title for the playlist. xspf:playlist elements MAY contain exactly one."
+	stream.writeTextElement("title", playlist_name);
+
+	// Now add the list of tracks.
 	stream.writeStartElement("trackList");
 	// Write the tracks.
-	for(qint64 row = 0; row < rowCount(); ++row)
+	for(auto row : order_mapping)
 	{
 		QModelIndex mi = index(row, 0, QModelIndex());
 		std::shared_ptr<PlaylistModelItem> pmi = std::dynamic_pointer_cast<PlaylistModelItem>(getItem(mi));
 		Q_ASSERT(pmi != nullptr);
 		stream.writeStartElement("track");
-			// Location
+		{
+			const auto& pmi_metadata = pmi->metadata();
+
+			// <location>
 			// "URI of resource to be rendered. Probably an audio resource, but MAY be any type of resource with a well-known duration, such as video,
 			// a SMIL document, or an XSPF document. The duration of the resource defined in this element defines the duration of rendering. xspf:track
 			// elements MAY contain zero or more location elements, but a user-agent MUST NOT render more than one of the named resources.
-			stream.writeTextElement("location", pmi->getUrl().toString());
-			stream.writeTextElement("title", toqstr(pmi->metadata()["track_name"]));
-			stream.writeTextElement("creator", "");
+			// Note the encoding requirements for <location> at https://www.xspf.org/spec#62-relative-paths.
+			//
+			stream.writeTextElement("location", pmi->getUrl().toString(QUrl::FullyEncoded | QUrl::NormalizePathSegments));
+			stream.writeTextElement("title", toqstr(pmi_metadata["track_name"]));
+			// <creator> Audacious uses this to populate the "Artist" field.
+			/// Definition:
+			/// https://www.xspf.org/spec#41122-creator
+			/// 4.1.1.2.14.1.1.1.4 creator
+			/// Human-readable name of the entity (author, authors, group, company, etc) that authored the resource
+			/// which defines the duration of track rendering. This value is primarily for fuzzy lookups, though a
+			/// user-agent may display it. xspf:track elements MAY contain exactly one.
+			constexpr static auto creator_keys = {"track_artist", "track_performer"};
+			static auto creator_values_view = creator_keys | std::views::transform([&](const auto& s) { return pmi_metadata[s]; });
+			auto resolved_creator_str_it = std::ranges::find_if(creator_values_view, [](const std::string& s) { return !s.empty();});
+			if(resolved_creator_str_it != std::ranges::end(creator_values_view))
+			{
+				stream.writeTextElement("creator", *resolved_creator_str_it);
+			}
 			stream.writeTextElement("album", toqstr(pmi->metadata()["album_name"]));
-			stream.writeTextElement("duration", "");
-			stream.writeTextElement("trackNum", "");
-			stream.writeTextElement("image", "");
+			// For Audacious compatibility.
+			writeXspfMetaElement(stream, "album-artist", pmi_metadata["album_artist"]);
+			// <annotation>, this is where Audacious puts the cuesheet COMMENT=CUERipper[...].
+			if(pmi_metadata["comment"].empty() == false)
+			{
+				stream.writeTextElement("annotation", pmi_metadata["comment"]);
+			}
+			writeXspfMetaElement(stream, "genre", pmi_metadata["genre"]);
+			/// @todo "DATE" may not be only a year here?
+			writeXspfMetaElement(stream, "year", pmi_metadata["date"]);
+			writeXspfMetaElement(stream, "composer", pmi_metadata["composer_name"]);
+			stream.writeTextElement("trackNum", std::to_string(pmi->getTrackNumber()));
+			stream.writeTextElement("duration", std::to_string(FramesToMilliseconds(pmi->get_length_frames())));
+			if(pmi_metadata.bitrate_kb_sec() > 0)
+			{
+				writeXspfMetaElement(stream, "bitrate", pmi_metadata.bitrate_kb_sec());
+			}
+//			writeXspfMetaElement(stream, "codec", "?");
+//			writeXspfMetaElement(stream, "quality", "?");
+//			stream.writeTextElement("image", "");
+			if(pmi->isSubtrack() /** @todo & PlaylistSubformat == Audacious */)
+			{
+				// Subtrack metadata.
+				/// @todo For a single .flac containing multiple subsongs, this is probably fine,
+				/// but it probably will break on a multi-disc set.
+				writeXspfMetaElement(stream, "subsong-id", std::to_string(pmi->getTrackNumber()));
+				writeXspfMetaElement(stream, "seg-start", FramesToMilliseconds(pmi->get_offset_frames()));
+				writeXspfMetaElement(stream, "seg-end", FramesToMilliseconds(pmi->get_offset_frames() + pmi->get_length_frames()));
+			}
+		}
 		stream.writeEndElement(); // track
 	}
 	stream.writeEndDocument();
 
 	return true;
+}
 
+
+
+bool PlaylistModel::deserializeFromFileAsXSPF(QFileDevice& filedev)
+{
+	QXmlStreamReader stream(&filedev);
+
+	QString playlist_title;
+	std::deque<PlaylistReadEntry> playlist_tracks;
+
+	// Make sure the file is really xspf.
+	if(stream.readNextStartElement())
+	{
+		if((stream.name() == "playlist")
+			&& stream.namespaceUri() == "http://xspf.org/ns/0/"
+			&& (stream.attributes().value("version") == "1"
+				|| stream.attributes().value("version") == "1.0")) // Not certain we need the "1.0".
+		{
+			// It's an xspf file.
+
+			// In here, we don't really care about most of the data in an xspf file if it's one that we wrote.
+			// We just need:
+			// <title>
+			// then for each track:
+			// - <track> <location>
+			// - <trackNum>
+			// Then we'll do essentially the same type of asynchronous scan we do for the LibraryModel.
+			while (stream.readNextStartElement())
+			{
+				if (stream.name() == "title")
+				{
+					if(!playlist_title.isEmpty())
+					{
+						// Playlist title was already read, this is a second, so a malformed XSPF file.
+						stream.raiseError("Found second playlist title in XSPF file.");
+						return false;
+					}
+					playlist_title = stream.readElementText();
+				}
+				else if (stream.name() == "trackList")
+				{
+					readXSPFTrackList(stream, playlist_tracks);
+				}
+				else
+				{
+					stream.skipCurrentElement();
+				}
+			}
+		}
+		else
+		{
+			stream.raiseError();
+		}
+	}
+
+	qDb() << M_ID_VAL(playlist_tracks.size());
+	qDb() << M_ID_VAL(playlist_title);
+
+	if(!stream.hasError())
+	{
+#warning "TODO"
+	}
+
+	return true;
+}
+
+void PlaylistModel::readXSPFTrack(QXmlStreamReader& stream, std::deque<PlaylistReadEntry>& playlist_read_entries)
+{
+	Q_ASSERT(stream.isStartElement() && stream.name() == "track");
+
+	PlaylistReadEntry entry;
+
+	while (stream.readNextStartElement())
+	{
+		if(stream.name() == "location")
+		{
+			auto location_str = stream.readElementText();
+			QUrl location_url = QUrl::fromEncoded(location_str.toUtf8());
+			qDb() << "Location URL:" << location_url;
+			entry.m_track_url = location_url;
+			Q_ASSERT(location_url.isValid());
+			Q_ASSERT(location_url.isLocalFile());
+		}
+		else if(stream.name() == "trackNum")
+		{
+			auto track_num_str = stream.readElementText();
+			entry.m_track_num = track_num_str.toInt();
+			qDb() << "Track number:" << track_num_str;
+		}
+		else
+		{
+			if(!entry.empty())
+			{
+				playlist_read_entries.push_back(entry);
+				entry.clear();
+			}
+			stream.skipCurrentElement();
+		}
+
+	}
+}
+
+void PlaylistModel::readXSPFTrackList(QXmlStreamReader& stream, std::deque<PlaylistReadEntry>& playlist_read_entries)
+{
+	Q_ASSERT(stream.isStartElement() && stream.name() == "trackList");
+
+	while (stream.readNextStartElement())
+	{
+		if(stream.name() == "track")
+		{
+			qDb() << "Found track";
+			readXSPFTrack(stream, playlist_read_entries);
+		}
+		else
+		{
+			stream.skipCurrentElement();
+		}
+	}
 }
 
 

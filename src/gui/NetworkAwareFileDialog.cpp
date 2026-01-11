@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -129,6 +129,34 @@ NetworkAwareFileDialog::~NetworkAwareFileDialog()
 
 }
 
+std::pair<QUrl, QString> NetworkAwareFileDialog::getOpenFileUrl(QWidget* parent, const QString& caption, const QUrl& dir, const QString& filter,
+																AMLMSettings::NAFDDialogId dialog_id, QFileDialog::Options options,
+																const QStringList& supportedSchemes)
+{
+	std::unique_ptr<NetworkAwareFileDialog> nafdlg = std::make_unique<NetworkAwareFileDialog>(parent, caption, dir, filter, dialog_id);
+
+	auto dlg = nafdlg->m_the_qfiledialog;
+
+	if(options)
+	{
+		dlg->setOptions(options);
+	}
+	dlg->setAcceptMode(QFileDialog::AcceptOpen);
+	if(!supportedSchemes.empty())
+	{
+		dlg->setSupportedSchemes(supportedSchemes);
+	}
+
+	qWarning() << "is_dlg_native:" << nafdlg->is_dlg_native();
+
+	if(!nafdlg->exec())
+	{
+		return {QUrl(), ""};
+	}
+
+	return std::make_pair(dlg->selectedUrls()[0], dlg->selectedNameFilter());
+}
+
 /**
  * Static member for creating a "Save File" dialog.
  */
@@ -256,8 +284,13 @@ QString NetworkAwareFileDialog::filter_to_suffix(const QString &filter)
 	QRegularExpressionMatch mo = re.match(filter);
 	if(!mo.hasMatch())
 	{
-		QMessageBox::critical(m_parent_widget, QApplication::applicationDisplayName(),
-							 "Can't determine file extension");
+		// Debug code for when we get in here with no match:
+		// QMessageBox::critical(m_parent_widget, QApplication::applicationDisplayName(),
+		// 					 "Can't determine file extension");
+
+		// We do get in here twice when calling getSaveFileUrl() (maybe others?). onFilterSelected() is signalled twice,
+		// first with an empty filter and second with a non-empty one.
+		return QString();
 	}
     auto savefile_ext = mo.captured(1);
 
@@ -307,10 +340,10 @@ void NetworkAwareFileDialog::setDefaultSidebarUrls()
     if(!use_native_dlg())
 	{
 		QList<QUrl> urls;
-		urls << QUrl::fromLocalFile(QStandardPaths::standardLocations(QStandardPaths::MusicLocation)[0])
-			<< QUrl::fromLocalFile(QStandardPaths::standardLocations(QStandardPaths::HomeLocation)[0])
+        urls << QUrl::fromLocalFile(QStandardPaths::standardLocations(QStandardPaths::MusicLocation).at(0))
+             << QUrl::fromLocalFile(QStandardPaths::standardLocations(QStandardPaths::HomeLocation).at(0))
 			/// @todo if linux && gvfs
-			<< QUrl::fromLocalFile(QStandardPaths::standardLocations(QStandardPaths::RuntimeLocation)[0] + "/gvfs");
+            << QUrl::fromLocalFile(QStandardPaths::standardLocations(QStandardPaths::RuntimeLocation).at(0) + "/gvfs");
 		for(const auto& url : std::as_const(urls))
 		{
 			qDebug() << "Adding Sidebar URL:" << url;
@@ -321,10 +354,15 @@ void NetworkAwareFileDialog::setDefaultSidebarUrls()
 
 void NetworkAwareFileDialog::onFilterSelected(const QString& filter)
 {
-	if(m_the_qfiledialog->fileMode() != QFileDialog::Directory && m_the_qfiledialog->options() != QFileDialog::ShowDirsOnly)
+	if(m_the_qfiledialog->fileMode() != QFileDialog::Directory
+		&& !m_the_qfiledialog->options().testFlag(QFileDialog::ShowDirsOnly))
 	{
 		qDebug() << "Filter selected:" << filter;
-		m_the_qfiledialog->setDefaultSuffix(filter_to_suffix(filter));
+		const QString suffix = filter_to_suffix(filter);
+		if(!suffix.isEmpty())
+		{
+			m_the_qfiledialog->setDefaultSuffix(filter_to_suffix(filter));
+		}
 	}
 }
 
@@ -376,6 +414,8 @@ void NetworkAwareFileDialog::onFinished(int result)
 QDialog::DialogCode NetworkAwareFileDialog::exec_qfiledialog()
 {
     setDefaultSidebarUrls();
+
+#if 0 /// @todo AI says we don't need this, onFilterSelected() will keep the default suffix up to date.
     // On Windows at least, we don't have to do this for a native file dialog.
     if(!isDirSelectDialog() && !use_native_dlg())
     {
@@ -383,6 +423,7 @@ QDialog::DialogCode NetworkAwareFileDialog::exec_qfiledialog()
         qDebug() << QString("Initial selected name filter:") << snf;
         m_the_qfiledialog->setDefaultSuffix(filter_to_suffix(m_the_qfiledialog->selectedNameFilter()));
     }
+#endif
 
     // Force non-native dialog if that's what we want.
     if(!use_native_dlg())

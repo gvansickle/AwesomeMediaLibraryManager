@@ -161,8 +161,8 @@ void LibraryEntry::populate(bool force_refresh)
 		if(!file_metadata.hasCueSheet())
 		{
 			// Couldn't load a cue sheet, this is probably a single-song file.
-//			qDebug() << "No cuesheet for file" << this->m_url;
 			m_metadata = file_metadata;
+			m_track_number = file_metadata["track_number"].empty() ? -1 : atoi(file_metadata["track_number"].c_str());
 			m_length_frames = file_metadata.total_length_frames();
 			m_is_subtrack = false;
 			m_is_populated = true;
@@ -282,7 +282,7 @@ QUrl LibraryEntry::getM2Url() const
 using strviw_type = QLatin1String;
 
 /// Strings to use for the tags.
-#define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
+#define X(field_tag, member_field) static constexpr strviw_type field_tag ( # member_field );
 	M_DATASTREAM_FIELDS(X);
 #undef X
 

@@ -556,6 +556,7 @@ void MainWindow::createActions()
 	m_openPlaylistAct = make_action(QIcon::fromTheme("document-open"), "&Open playlist...", this,
                                 QKeySequence::Open,
                                 "Open an existing playlist");
+	connect_trig(m_openPlaylistAct, this, &MainWindow::onOpenPlaylist);
 	addAction("open_playlist", m_openPlaylistAct);
 
 	m_savePlaylistAct = make_action(QIcon::fromTheme("document-save"), "&Save playlist as...", this,
@@ -1861,6 +1862,24 @@ void MainWindow::newPlaylist()
 	statusBar()->showMessage(tr("Opened new Playlist '%1'").arg(child->windowTitle()));
 }
 
+void MainWindow::onOpenPlaylist()
+{
+	auto check_for_existing_view = [this](QUrl url) -> MDIModelViewPair {
+		auto mvpair = findSubWindowModelViewPair(url);
+		return mvpair;
+	};
+
+	auto child = MDIPlaylistView::open(this, check_for_existing_view);
+	if(child.getView())
+	{
+		addChildMDIModelViewPair_Playlist(child);
+	}
+	else
+	{
+		qCritical() << "MDIPlaylistView::open() returned nullptr";
+	}
+}
+
 /**
  * Top-level menu/toolbar action for creating a new, empty "Now Playing" playlist.
  * ~= "File->New", except there is no user action for creating the "Now Playing" view/model.
@@ -1932,11 +1951,24 @@ void MainWindow::newCollectionView()
 /**
  * Top-level menu/toolbar action for opening an existing playlist.
  * ~= "File->Open...".
+ * @todo This is almost a copy/paste of openFileLibrary(), probably should consolidate the two functions/codepaths.
  */
-void MainWindow::openPlaylist()
+void MainWindow::openPlaylist(const QUrl& filename)
 {
-	qCritical() << "Not implemented";
-}
+	auto check_for_existing_view = [this](QUrl url) -> MDIModelViewPair {
+		auto mvpair = findSubWindowModelViewPair(url);
+		return mvpair;
+	};
+
+	auto child = MDIPlaylistView::openFile(filename, this, check_for_existing_view);
+	if(child.getView())
+	{
+		addChildMDIModelViewPair_Playlist(child);
+	}
+	else
+	{
+		qCritical() << "MDIPlaylistView::open() returned nullptr";
+	}}
 
 void MainWindow::onSendEntryToPlaylist(std::shared_ptr<LibraryEntry> libentry, QPointer<PlaylistModel> playlist_model)
 {

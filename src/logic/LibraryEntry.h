@@ -119,11 +119,11 @@ public:
 
 protected:
 
-	// The URL to the media.
+	/// The URL to the media.
 	QUrl m_url;
 
-	// All we have is (maybe) a URL, we don't have any other info on this file yet, so all other fields are
-	// not valid.
+	/// All we have is (maybe) a URL, we don't have any other info on this file yet, so all other fields are
+	/// not valid.
 	bool m_is_populated = false;
 
 	// True if there was an error trying to open or read this URL.
@@ -146,6 +146,7 @@ protected:
 	/// Start of the audio, in Frames from the start of the disc.
 	qint64 m_offset_frames {0};
 	/// Length of the audio in Frames.
+	/// @note This is relative to @a m_offset_frames, not the start of the disc.
 	qint64 m_length_frames {0};
 
 	Metadata m_metadata;

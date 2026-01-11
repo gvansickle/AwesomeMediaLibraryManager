@@ -1561,17 +1561,17 @@ QString state_str(const ExtFuture<T>& future)
 {
     QString retval{QStringLiteral("state(")};
 
-    if(future.isRunning()) { retval += "RUN|"; }
-	if(future.isStarted()) { retval += "START|"; }
-    if(future.isFinished()) { retval += "FINISHED|"; }
-    if(future.isCanceled()) { retval += "CANCELED|"; }
-    if(future.isSuspended()) { retval += "SUSPENDED|"; }
-    if(future.isSuspending()) { retval += "SUSPENDING|"; }
-    if(future.isValid()) { retval += "VALID|"; }
+    if(future.isRunning()) { retval += QLatin1String("RUN|"); }
+    if(future.isStarted()) { retval += QLatin1String("START|"); }
+    if(future.isFinished()) { retval += QLatin1String("FINISHED|"); }
+    if(future.isCanceled()) { retval += QLatin1String("CANCELED|"); }
+    if(future.isSuspended()) { retval += QLatin1String("SUSPENDED|"); }
+    if(future.isSuspending()) { retval += QLatin1String("SUSPENDING|"); }
+    if(future.isValid()) { retval += QLatin1String("VALID|"); }
 
 	// Remove the last char, which should be a "|".
 	retval.chop(1);
-	retval += ")";
+    retval += QLatin1String(")");
 	return retval;
 }
 

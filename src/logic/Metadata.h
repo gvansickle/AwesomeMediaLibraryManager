@@ -1,5 +1,5 @@
 /*
- * Copyright 2017, 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018, 2019, 2025 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -69,8 +69,11 @@ public:
 	bool read(const QUrl& url);
 	bool hasBeenRead() const;
 	bool isError() const;
-	/// Return true if the object was read from a cache rather than the actual file.
-	/// Intent is that if this returns true, it shouldn't be written back to the cache.
+	
+	/**
+	 * Return true if the object was read from a cache rather than the actual file.
+	 * Intent is that if this returns true, it shouldn't be written back to the cache.
+	 */
 	bool isFromCache() const;
 
 	/// Conversion to bool.  Returns true if Metadata has been read successfully.
@@ -111,7 +114,9 @@ public:
 	Frames total_length_frames() const;
 	/// @}
 
-	/// Return the first entry matching the key, or an empty string if no such key.
+	/**
+	 * Returns the first value matching the @a key, or an empty string if no such key.
+	 */
 	std::string operator[](const std::string& key) const;
 
 	/// Overload for const char *'s.
@@ -124,6 +129,8 @@ public:
 	bool hasCueSheet() const { return m_has_cuesheet; }
     bool hasCueSheetEmbedded() const { return m_cuesheet_embedded.origin() == CueSheet::Origin::Embedded; }
 	bool hasCueSheetSidecar() const { return m_cuesheet_sidecar.origin() == CueSheet::Origin::Sidecar; }
+
+	const CueSheet& cuesheet() const { return m_cuesheet_combined; }
 
 	/// @todo bool hasHiddenTrackOneAudio() const { return pImpl->hasHiddenTrackOneAudio(); }
 
@@ -140,6 +147,7 @@ public:
 	bool hasTrackCuesheet() const { return numTracks() < 2; }
 	AMLMTagMap tagmap_cuesheet_track() const;
 
+	auto bitrate_kb_sec() const { return m_bitrate_kb_sec; }
 
 	/// Return the TrackMetadata for the specified track.
 	/// @note @a index is 1-based.
@@ -165,8 +173,7 @@ public:
 
 	/// @}
 
-/// @todo if(googletest) here
-// private:
+private:
 
 	void readEmbeddedCuesheet(std::string cuesheet_str, int64_t length_in_milliseconds);
 	void readSidecarCuesheet(const QUrl& audio_file_qurl, int64_t length_in_milliseconds);
@@ -197,7 +204,7 @@ public:
 	int64_t m_bitrate_kb_sec {0};
 
 	/// Number of channels of audio.
-	int8_t m_num_channels {0};
+	int64_t m_num_channels {0};
 
 	/// Sample rate in samples/sec.
 	int64_t m_sample_rate {0};
@@ -213,6 +220,7 @@ public:
 	/// currently there's no known way to get it.
 	/// @see m_length_in_milliseconds
 	// int64_t m_length_in_frames {0};
+
 	/// @}
 
 	/// @name Cuesheet data members.
