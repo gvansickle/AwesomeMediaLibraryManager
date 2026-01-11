@@ -19,4 +19,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed false dependency of async LibraryModel metadata refresh on ScanResultsTreeModel population (#68).
 - Fixed loss of the frames (HH:MM:FF) field value when working with cue sheet INDEX entries.
   Frames are now the single point of truth for such values (#106).
-- ???
+
