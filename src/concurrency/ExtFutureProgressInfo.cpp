@@ -70,7 +70,7 @@ void ExtFutureProgressInfo::fromKJobDescription(const QString& title, const QPai
 //	// join looks like it's sort of broken, it doesn't add the separator to the beginning or end of the resulting string.
 //	str = f_split_str + str + f_split_str;
 	// Prepend the unescaped type to the string.
-	str.prepend(toqstr(EncodedType::DESC) + ":");
+    str.prepend(toqstr(EncodedType::DESC) + QLatin1String(":"));
 
 //	qDb() << "DESCRIPTION:" << str;
 
@@ -85,7 +85,7 @@ void ExtFutureProgressInfo::fromKJobInfoMessage(const QString& plain, const QStr
 	strlist = escape(strlist, f_split_str);
 	auto str = strlist.join(f_split_str);
 	// Prepend the unescaped type to the string.
-	str.prepend(toqstr(EncodedType::INFO) + ":");
+    str.prepend(toqstr(EncodedType::INFO) + QLatin1String(":"));
 
 //	qDb() << "INFOMESSAGE:" << str;
 
@@ -100,7 +100,7 @@ void ExtFutureProgressInfo::fromKJobWarning(const QString& plain, const QString&
 	strlist = escape(strlist, f_split_str);
 	auto str = strlist.join(f_split_str);
 	// Prepend the unescaped type to the string.
-	str.prepend(toqstr(EncodedType::WARN) + ":");
+    str.prepend(toqstr(EncodedType::WARN) + QLatin1String(":"));
 
 //	qDb() << "WARNING:" << str;
 
@@ -111,11 +111,11 @@ void ExtFutureProgressInfo::fromSetProgressUnit(int kob_progress_unit)
 {
 	QStringList strlist;
 
-	strlist << QString("%1").arg(kob_progress_unit);
+    strlist << QStringLiteral("%1").arg(kob_progress_unit);
 	strlist = escape(strlist, f_split_str);
 	auto str = strlist.join(f_split_str);
 	// Prepend the unescaped type to the string.
-	str.prepend(toqstr(EncodedType::SET_PROGRESS_UNIT) + ":");
+    str.prepend(toqstr(EncodedType::SET_PROGRESS_UNIT) + QLatin1String(":"));
 
 	*this = str;
 }
