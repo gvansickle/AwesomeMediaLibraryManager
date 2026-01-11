@@ -46,7 +46,7 @@ public:
 
 	virtual void save(const ISerializable& serializable,
 			const QUrl& filepath,
-			const QString& rootName = "",
+            const QString& rootName = QLatin1String(""),
 			std::function<void(void)> extra_save_actions = nullptr ) = 0;
 
 	virtual bool load(ISerializable& serializable, const QUrl& filepath) = 0;
