@@ -198,7 +198,6 @@ public Q_SLOTS:
     /**
      * Open an existing playlist.
      * ~= "File->Open...".
-     * @todo Not a slot?
      */
     void openPlaylist(const QUrl& filename);
 
