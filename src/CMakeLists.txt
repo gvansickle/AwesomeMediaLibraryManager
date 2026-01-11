@@ -299,8 +299,7 @@ target_link_libraries(libapp
 add_executable(${PROJECT_NAME} ${WIN32_OR_MACOS_BUNDLE}
 		main.cpp
 )
-qt_add_resources(
-	TARGET ${PROJECT_NAME}
+qt_add_resources(${PROJECT_NAME}
 #	PREFIX "/"
 	FILES "AwesomeMediaLibraryManagerui.rc"
 )
