@@ -279,6 +279,23 @@ void MP2::onMediaStatusChanged(QMediaPlayer::MediaStatus status)
 			}
 			break;
 		}
+		// I don't think we need to handle these cases.
+		case QMediaPlayer::StalledMedia:
+		{
+			qIn() << "StalledMedia";
+		}
+		case QMediaPlayer::BufferedMedia:
+		{
+			qIn() << "BufferedMedia";
+		}
+		case QMediaPlayer::BufferingMedia:
+		{
+			qIn() << "BufferingMedia";
+		}
+		case QMediaPlayer::InvalidMedia:
+		{
+			qIn() << "InvalidMedia";
+		}
 	}
 }
 
