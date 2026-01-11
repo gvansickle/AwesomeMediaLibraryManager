@@ -61,8 +61,10 @@ TreeModel::TreeModel(const QStringList &headers, /*const QString &data,*/ QObjec
     : QAbstractItemModel(parent)
 {
     QVector<QVariant> rootData;
-    foreach (QString header, headers)
+    for (QString header : headers)
+    {
         rootData << header;
+    }
 
     /// GRVS
     m_root_item = std::make_shared<TreeItem>(rootData);

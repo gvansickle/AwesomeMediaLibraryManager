@@ -672,6 +672,12 @@ bool PlaylistModel::deserializeFromFileAsXSPF(QFileDevice& filedev)
 	}
 
 	qDb() << M_ID_VAL(playlist_tracks.size());
+	qDb() << M_ID_VAL(playlist_title);
+
+	if(!stream.hasError())
+	{
+#warning "TODO"
+	}
 
 	return true;
 }
