@@ -102,13 +102,13 @@ public:
 	void setLibraryRootUrl(const QUrl& url) override;
 
 	bool serializeToFileAsXSPF(QFileDevice& filedev, QAnyStringView playlist_name, const std::vector<int>& order_mapping) const;
-	bool deserializeFromFileAsXSPF(QFileDevice& filedev); /// @todo Implement
+	bool deserializeFromFileAsXSPF(QFileDevice& filedev);
 
 private:
 	struct PlaylistReadEntry
 	{
-		QUrl m_track_url;
-		std::int64_t m_track_num;
+		QUrl m_track_url {};
+		std::int64_t m_track_num {-1};
 		bool empty() const { return m_track_url.isEmpty(); }
 		void clear() { m_track_url.clear(); m_track_num = -1; }
 	};
