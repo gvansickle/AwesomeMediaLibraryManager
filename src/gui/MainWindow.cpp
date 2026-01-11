@@ -968,6 +968,23 @@ void MainWindow::createMenus()
 #endif // !HAVE_KF5
 }
 
+/**
+ * Semi-replacement for Qt5's associatedWidgets(), which is now deprecated in Qt6.
+ * @param action
+ * @return  The number of QWidgets @a action has associated with it.
+ */
+static qsizetype associatedWidgetCount(const QAction* action)
+{
+	qsizetype cnew {0};
+	for(auto obj : action->associatedObjects())
+	{
+		if (obj->isWidgetType())
+		{
+			cnew++;
+		}
+	}
+	return cnew;
+}
 
 void MainWindow::createToolBars()
 {
@@ -987,12 +1004,14 @@ void MainWindow::createToolBars()
 							 m_savePlaylistAct});
 
     const auto& actionlist = m_fileToolBar->actions();
+	// Check for actions with no associated QWidgets.
+	// @todo This feels like a debug check that could maybe be removed.
     for(const auto& a : actionlist)
     {
         auto cold = a->associatedObjects().count();
-        auto cnew = a->associatedWidgets().count();
+        qsizetype cnew = associatedWidgetCount(a);
         Q_ASSERT(cold == cnew);
-        if(a->associatedWidgets().empty())
+        if(cnew == 0)
         {
             qWr() << "File toolbar action" << a << "has no associatedWidgets()";
         }
