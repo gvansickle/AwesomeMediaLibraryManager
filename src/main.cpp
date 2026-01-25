@@ -214,9 +214,7 @@ int main(int argc, char *argv[])
 
 
 	// Set the application Icon.
-	///@todo Get an actual icon.
-    // QIcon appIcon = QIcon::fromTheme(QStringLiteral("preferences-desktop-sound"), QApplication::windowIcon());
-	QIcon appIcon = QIcon::fromTheme(QStringLiteral(":/appicons/128-preferences-desktop-sound.png"), QApplication::windowIcon());
+	QIcon appIcon = QIcon::fromTheme(QStringLiteral(":/appicons/AMLMAppIcon.png"), QApplication::windowIcon());
     // appIcon.addFile(":/icons/128-preferences-desktop-sound.png");
     // "KAboutData::setApplicationData() no longer sets the app window icon. For shells which do not fetch the icon name via
     // the desktop file [i.e. non-plasma], make sure to call QApplication::setWindowIcon(QIcon::fromTheme(QStringLiteral("foo")));
