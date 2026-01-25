@@ -77,6 +77,8 @@ int main(int argc, char *argv[])
 	// Make sure our compiled-in static lib resources are linked.
 	// Necessary because the resource files are compiled into a static library.
 	Q_INIT_RESOURCE(xquery_files);
+	// Q_INIT_RESOURCE(amlm);
+	Q_INIT_RESOURCE(AppIcon);
 
 	QThread::currentThread()->setObjectName("MAIN");
 
@@ -213,8 +215,9 @@ int main(int argc, char *argv[])
 
 	// Set the application Icon.
 	///@todo Get an actual icon.
-    QIcon appIcon; //= QIcon::fromTheme(QStringLiteral("preferences-desktop-sound"), QApplication::windowIcon());
-    appIcon.addFile(":/icons/128-preferences-desktop-sound.png");
+    // QIcon appIcon = QIcon::fromTheme(QStringLiteral("preferences-desktop-sound"), QApplication::windowIcon());
+	QIcon appIcon = QIcon::fromTheme(QStringLiteral(":/appicons/128-preferences-desktop-sound.png"), QApplication::windowIcon());
+    // appIcon.addFile(":/icons/128-preferences-desktop-sound.png");
     // "KAboutData::setApplicationData() no longer sets the app window icon. For shells which do not fetch the icon name via
     // the desktop file [i.e. non-plasma], make sure to call QApplication::setWindowIcon(QIcon::fromTheme(QStringLiteral("foo")));
     // (in GUI apps)."
