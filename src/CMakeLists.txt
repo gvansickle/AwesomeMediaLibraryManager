@@ -232,11 +232,11 @@ target_link_libraries(src
 
 # Qt Binary Resource (rcc) files.
 #qt_add_binary_resources(icons_oxygen "${PROJECT_SOURCE_DIR}/resources/oxygenicons.qrc")
-#set(AppIcon_qrc "${CMAKE_CURRENT_SOURCE_DIR}/../resources/AppIcon.qrc")
-#set(AppIcon_rcc_dir "${CMAKE_CURRENT_BINARY_DIR}/../bin")
-#set(AppIcon_rcc "${AppIcon_rcc_dir}/AppIcon.rcc")
+set(AppIcon_qrc "${CMAKE_CURRENT_SOURCE_DIR}/../resources/AppIcon.qrc")
+set(AppIcon_rcc_dir "${CMAKE_CURRENT_BINARY_DIR}/../bin")
+set(AppIcon_rcc "${AppIcon_rcc_dir}/AppIcon.rcc")
 # Set up the app icon for Linux, add a dep so it gets built.
-#qt_add_binary_resources(build_AppIcon_rcc ${AppIcon_qrc} DESTINATION ${AppIcon_rcc})
+qt_add_binary_resources(build_AppIcon_rcc ${AppIcon_qrc} DESTINATION ${AppIcon_rcc})
 
 # Qt non-binary Resource files.
 qt_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/AppIcon.qrc")
@@ -439,10 +439,10 @@ if(false)#WIN32)
 		COMPONENT coreapp)
 endif()
 ### @test TRYING EVERYTHING TO TRY TO GET THE DAMN ICONS TO WORK AGAIN.
-#ecm_install_icons(ICONS ${ICONS_SRCS}
-#	DESTINATION ${KDE_INSTALL_ICONDIR}
-#	THEME hicolor
-#	)
+ecm_install_icons(ICONS ${ICONS_SRCS}
+	DESTINATION ${KDE_INSTALL_ICONDIR}
+	THEME hicolor
+	)
 #ecm_install_icons(ICONS
 #    DESTINATION ${KDE_INSTALL_ICONDIR}
 #    THEME hicolor

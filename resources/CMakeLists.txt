@@ -70,7 +70,7 @@ ecm_add_app_icon(amlm_SRCS ICONS ${amlm_APP_ICONS})
 #qt_add_binary_resources(icons_oxygen oxygenicons.qrc)
 
 # Qt non-binary Resource files.
-#qt_add_resources(resources "AppIcon.qrc")
+qt_add_resources(resources "AppIcon.qrc")
 #qt_add_resources(resources "amlm.qrc")
 
 #target_sources(amlm_pseudolib

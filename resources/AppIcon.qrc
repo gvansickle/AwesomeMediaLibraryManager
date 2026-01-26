@@ -1,6 +1,7 @@
 <!DOCTYPE RCC>
 <RCC>
-    <qresource prefix="/icons">
+    <qresource prefix="/appicons">
+        <file>AMLMAppIcon.png</file>
         <file alias="AppIcon32">AppIcon32.png</file>
         <file alias="AppIcon128">AppIcon128.png</file>
         <file>48-preferences-desktop-sound.png</file>
