@@ -82,10 +82,10 @@ public:
 
 private:
 	explicit Core();
-	// Singleton ptr to us.
+	/// Singleton ptr to us.
 	static std::unique_ptr<Core> m_self;
 
-	// Shared ptr to the scan results tree model.  Will be deleted in the destructor.
+	/// Shared ptr to the scan results tree model.  Will be deleted in the destructor.
 	std::shared_ptr<ScanResultsTreeModel/*AbstractTreeModel*/> m_srtm_instance;
 //	std::shared_ptr</*ScanResultsTreeModel*/AbstractTreeModel> m_srtm_instance;
 

@@ -256,7 +256,7 @@ void Theme::initialize()
     // Interesting stuff in here by default.
     /// @note Dumps a lot, use for debug only.
 //	dump_resource_tree(":/");
-//    LogIconThemeInfo();
+    LogIconThemeInfo();
 
 
 // M_WARNING("TODO");
