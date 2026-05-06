@@ -53,8 +53,8 @@ public:
 
     bool isValid() const { return *this != null(); }
 
-    bool operator==(const UUIncD& rhs) const { return m_my_id == rhs.m_my_id; }
-    bool operator<(const UUIncD& rhs) const { return m_my_id < rhs.m_my_id; }
+    bool operator==(UUIncD rhs) const { return m_my_id == rhs.m_my_id; }
+    bool operator<(UUIncD rhs) const { return m_my_id < rhs.m_my_id; }
 
 protected:
 	explicit UUIncD(std::uint64_t id);
@@ -76,7 +76,7 @@ namespace std
 		using argument_type = UUIncD;
 		using result_type = std::size_t;
 
-		result_type operator()(argument_type const& u) const noexcept
+        result_type operator()(argument_type u) const noexcept
 		{
 			result_type const h1 ( std::hash<std::uint64_t>{}(static_cast<std::uint64_t>(u)) );
 			return h1;

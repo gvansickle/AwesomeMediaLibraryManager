@@ -48,6 +48,7 @@ public:
 	Q_ENUM(Enumerator)
 
 	SectionID() = default;
+	virtual ~SectionID() = default;
 	explicit SectionID(int val) : m_val(val) {}
 	SectionID(SectionID::Enumerator e) { m_val = e; }
 

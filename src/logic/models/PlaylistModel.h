@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017-2026 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -22,16 +22,18 @@
 
 /// @file
 
+// Standard C++
 #include <deque>
-#include <deque>
-#include <deque>
-#include <deque>
+#include <memory>
 
+// Qt
+#include <QXmlStreamReader>
+
+// Ours.
 #include "LibraryModel.h"
 #include "PlaylistModelItem.h"
 
-#include <memory>
-#include <QXmlStreamReader>
+
 
 class QMediaPlaylist;
 
@@ -51,7 +53,7 @@ public:
 
 	PlaylistSectionID() = default;
 	PlaylistSectionID(PlaylistSectionID::Enumerator e) { m_val = e; }
-	operator int() const { return m_val; }
+	operator int() const override { return m_val; }
 //	operator SectionID() { return SectionID(m_val); }
 };
 
