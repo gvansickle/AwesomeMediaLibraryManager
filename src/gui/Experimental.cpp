@@ -19,6 +19,8 @@
 
 #include "Experimental.h"
 
+#include <iostream>
+
 #if EX2 == 1
 #include <KConfigDialog>
 #include <KConfigSkeleton>

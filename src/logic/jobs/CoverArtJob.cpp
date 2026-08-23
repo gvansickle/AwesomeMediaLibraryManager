@@ -108,7 +108,8 @@ static QByteArray getCoverArtBytes_APE(TagLib::APE::Tag* tag)
     if (listMap.contains("COVER ART (FRONT)"))
     {
         const TagLib::ByteVector nullStringTerminator(1, 0);
-        TagLib::ByteVector item = listMap["COVER ART (FRONT)"].value();
+#warning "@todo From taglib upgrade. Is this correct?"
+        TagLib::ByteVector item = listMap["COVER ART (FRONT)"].binaryData(); //.value();
         const int pos = item.find(nullStringTerminator);	// Skip the filename.
         if (pos != -1)
         {
