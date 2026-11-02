@@ -182,7 +182,7 @@ public:
             {
             	// Found a signal, hook it up to the single snoop handler.
                 qDb() << "Hooking signal:" << method.methodSignature() << "of QObject:" << object;
-                QObject::connect(object, QString("2%1").arg(method.methodSignature().toStdString().c_str()).toStdString().c_str(),
+                QObject::connect(object, QStringLiteral("2%1").arg(method.methodSignature().toStdString().c_str()).toStdString().c_str(),
                                  this, SLOT(signalFired()));
             }
         }

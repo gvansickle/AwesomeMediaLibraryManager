@@ -222,7 +222,7 @@ target_link_libraries(src
 		gui
 		kconfig_target
 		utils
-		SQLite::SQLite3
+		SQLite3::SQLite3
 )
 #if(NOT DEFINED amlm_APP_ICONS)
 #	message(FATAL_ERROR "NOT DEFINED: amlm_APP_ICONS: '${amlm_APP_ICONS}'")

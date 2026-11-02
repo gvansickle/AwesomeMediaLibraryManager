@@ -29,6 +29,8 @@
 // Libcue
 // #include <libcue/libcue.h> // Currently has no version info.
 
+#include <taglib/taglib.h>
+
 // Ours
 #include <utils/StringHelpers.h>
 #include <resources/VersionInfo.h>
